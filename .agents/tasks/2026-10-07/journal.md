@@ -4977,3 +4977,34 @@ document test slice remains uncommitted and is excluded from this correction.
 No local tests, builds, formatters, linters, validators, or application launches
 were run. C07/C07.1 remain pending until all required workflows pass on a
 corrected implementation SHA.
+
+## 2026-10-12 — R2.8.98 attempt 2 launched
+
+The focused correction was committed and pushed as exact source SHA
+bef8a72e45f195b2e32d34f378f2abde3cccf55c. Seven required workflows are queued:
+quality 38218066464, desktop build 38218066535, Obsidian round-trip
+38218066617, plugin renderer 38218066561, Rust CI 38218066643, loaded-plugin
+workflows 38218066681, and inventory 38218066902. Exact run URLs and initial
+statuses are in evidence/r2.8.98-attempt-2-bef8a72.json. No local validation was
+run. Do not push until every exact-SHA workflow completes. The separate
+embedded Bases document test slice remains uncommitted. C07/C07.1 remain pending.
+
+## 2026-10-12 — R2.8.98 attempt 2 completed, not accepted
+
+Attempt 2 completed on exact source SHA
+`bef8a72e45f195b2e32d34f378f2abde3cccf55c`. Six of seven required workflows
+passed: inventory `38218066902`, quality `38218066464`, desktop build
+`38218066535`, plugin renderer `38218066561`, loaded-plugin workflows
+`38218066681`, and Obsidian vault round-trip `38218066617`. Rust CI
+`38218066643` failed on MSRV 1.95, Ubuntu, Windows, and macOS; each job reported
+111 passed and 4 failed. The failures were two Bases UI assertion/selector
+issues and two uninstall checkbox interactions outside the full-page harness
+viewport. The cross-platform round-trip passed on Linux, Windows, and macOS.
+Exact job results and all 12 artifact IDs, sizes, and digests are recorded in
+[`evidence/r2.8.98-attempt-2-bef8a72.json`](evidence/r2.8.98-attempt-2-bef8a72.json).
+
+The correction in this worktree scopes those tests to the relevant panels,
+uses native path components and the rendered snapshot label, and verifies each
+selection immediately. The separate embedded Bases document test and fixture
+remain uncommitted. C07/C07.1 remain pending. No local tests, builds,
+formatters, linters, validators, or application launches were run.

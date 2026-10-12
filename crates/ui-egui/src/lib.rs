@@ -6299,7 +6299,13 @@ mod tests {
         let vault_path = temporary.0.join("vault");
         let app_data_path = temporary.0.join("app-data");
         let app = bases_test_app(&vault_path, &app_data_path);
-        let mut harness = Harness::new_ui_state(|ui, app| app.show_ui(ui), app);
+        let mut harness = Harness::new_ui_state(
+            |ui, app| {
+                app.poll_bases_task(ui);
+                app.show_bases(ui);
+            },
+            app,
+        );
         let vault_before = existing_vault_tree_snapshot(&vault_path);
         let app_data_before = existing_vault_tree_snapshot(&app_data_path);
 
@@ -6337,17 +6343,23 @@ mod tests {
             result.snapshot_before_sha256, result.snapshot_after_sha256,
             "the panel should display an evaluation bound to one stable snapshot"
         );
+        let snapshot_label = format!(
+            "Vault snapshot SHA-256 {} → {}",
+            result.snapshot_before_sha256, result.snapshot_after_sha256
+        );
+        let displayed_base_path = result.relative_path.display().to_string();
         assert!(
             result
                 .collection_issues
                 .iter()
-                .any(|issue| { issue.relative_path == PathBuf::from("Notes/Unreadable.md") })
+                .any(|issue| {
+                    issue.relative_path == Path::new("Notes").join("Unreadable.md")
+                })
         );
 
         harness.get_by_label("Bases");
         harness.get_by_label("Base file");
         harness.get_by_label("Open tasks · view 1 · Table · 2 matching note(s) · read-only");
-        let displayed_base_path = Path::new("Boards/Tasks.base").display().to_string();
         harness.get_by_label(&format!(
             "{displayed_base_path}: Unsupported Bases formula: date(today)"
         ));
@@ -6355,13 +6367,16 @@ mod tests {
         harness.get_by_label("Group: red");
         assert!(harness.query_all_by_label("Notes/Ada.md").next().is_some());
         assert!(harness.query_all_by_label("Notes/Cora.md").next().is_some());
-        let unreadable_note_path = Path::new("Notes/Unreadable.md").display().to_string();
+        let unreadable_note_path = Path::new("Notes")
+            .join("Unreadable.md")
+            .display()
+            .to_string();
         harness.get_by_label(
             &format!(
                 "{unreadable_note_path}: Markdown note contains invalid UTF-8 in its bounded source prefix"
             ),
         );
-        harness.get_by_label("Vault snapshot SHA-256");
+        harness.get_by_label(&snapshot_label);
         assert_eq!(existing_vault_tree_snapshot(&vault_path), vault_before);
         assert_eq!(
             existing_vault_tree_snapshot(&app_data_path),
@@ -6407,29 +6422,38 @@ mod tests {
             session: Some(Arc::new(session)),
             ..OpenObsidianApp::default()
         };
-        let mut harness = Harness::new_ui_state(|ui, app| app.show_ui(ui), app);
+        let mut harness = Harness::new_ui_state(
+            |ui, app| {
+                app.poll_bases_task(ui);
+                app.show_bases(ui);
+            },
+            app,
+        );
         harness.step();
         assert!(harness.state().bases_receiver.is_none());
         harness.get_by_label("Refresh Bases files").click();
         harness.step();
         wait_for_bases_evaluation(&mut harness);
+        let alpha_base_path = Path::new("Boards").join("Alpha.base");
         assert_eq!(
             harness.state().bases_selected_path.as_deref(),
-            Some(Path::new("Boards/Alpha.base")),
+            Some(alpha_base_path.as_path()),
             "the listing should begin with its first sorted .base path"
         );
 
         harness.get_by_label("Base file").click();
         harness.step();
-        harness
-            .get_by_label(&Path::new("Boards/Tasks.base").display().to_string())
-            .click();
+        let tasks_base_label = Path::new("Boards")
+            .join("Tasks.base")
+            .display()
+            .to_string();
+        harness.get_by_label(&tasks_base_label).click();
         harness.step();
         wait_for_bases_evaluation(&mut harness);
-        let selected_path = Path::new("Boards/Tasks.base");
+        let selected_path = Path::new("Boards").join("Tasks.base");
         assert_eq!(
             harness.state().bases_selected_path.as_deref(),
-            Some(selected_path)
+            Some(selected_path.as_path())
         );
         assert_eq!(
             harness
@@ -6439,10 +6463,17 @@ mod tests {
                 .expect("selected Bases file should be evaluated")
                 .relative_path
                 .as_path(),
-            selected_path,
+            selected_path.as_path(),
             "the evaluation must use the exact selected .base path"
         );
-        let displayed_base_path = Path::new("Boards/Tasks.base").display().to_string();
+        let displayed_base_path = harness
+            .state()
+            .bases_evaluation
+            .as_ref()
+            .expect("selected Bases file should be evaluated")
+            .relative_path
+            .display()
+            .to_string();
         harness.get_by_label(&format!(
             "{displayed_base_path}: Unsupported Bases formula: date(today)"
         ));
@@ -6465,9 +6496,12 @@ mod tests {
                 .bases_evaluation
                 .as_ref()
                 .expect("selected Bases view should be evaluated");
-            assert_eq!(state.bases_selected_path.as_deref(), Some(selected_path));
+            assert_eq!(
+                state.bases_selected_path.as_deref(),
+                Some(selected_path.as_path())
+            );
             assert_eq!(state.bases_selected_view, Some(expected_index));
-            assert_eq!(evaluation.relative_path.as_path(), selected_path);
+            assert_eq!(evaluation.relative_path.as_path(), selected_path.as_path());
             assert_eq!(evaluation.evaluation.view.name.as_deref(), expected_name);
             assert_eq!(evaluation.evaluation.view.limit, Some(expected_limit));
             assert_eq!(evaluation.evaluation.rows.len(), expected_limit);
@@ -14421,7 +14455,10 @@ mod tests {
             session: Some(Arc::new(session)),
             ..OpenObsidianApp::default()
         };
-        let mut harness = Harness::new_ui_state(|ui, app| app.show_ui(ui), app);
+        let mut harness = Harness::new_ui_state(
+            |ui, app| app.show_uninstall_cleanup(ui),
+            app,
+        );
 
         assert_eq!(
             uninstall_cleanup_summary(harness.state().uninstall_cleanup),
@@ -14433,7 +14470,8 @@ mod tests {
             .as_array()
             .expect("fixture must list selected cleanup choices")
         {
-            let label = match option.as_str().expect("cleanup choice must be a string") {
+            let choice = option.as_str().expect("cleanup choice must be a string");
+            let label = match choice {
                 "app-cache" => "App cache",
                 "credentials" => "Stored credentials",
                 "recovery-history" => "Clean up recovery history",
@@ -14441,6 +14479,16 @@ mod tests {
             };
             harness.get_by_label(label).click();
             harness.step();
+            let selection = harness.state().uninstall_cleanup;
+            assert!(
+                match choice {
+                    "app-cache" => selection.app_cache,
+                    "credentials" => selection.credentials,
+                    "recovery-history" => selection.recovery_history,
+                    _ => unreachable!(),
+                },
+                "selecting {label} must update its control"
+            );
         }
 
         let selection = harness.state().uninstall_cleanup;
@@ -14489,7 +14537,10 @@ mod tests {
             session: Some(Arc::new(session)),
             ..OpenObsidianApp::default()
         };
-        let mut harness = Harness::new_ui_state(|ui, app| app.show_ui(ui), app);
+        let mut harness = Harness::new_ui_state(
+            |ui, app| app.show_uninstall_cleanup(ui),
+            app,
+        );
 
         assert_eq!(
             uninstall_cleanup_summary(harness.state().uninstall_cleanup),
@@ -14502,6 +14553,16 @@ mod tests {
         ] {
             harness.get_by_label(label).click();
             harness.step();
+            let selection = harness.state().uninstall_cleanup;
+            assert!(
+                match label {
+                    "App cache" => selection.app_cache,
+                    "Stored credentials" => selection.credentials,
+                    "Clean up recovery history" => selection.recovery_history,
+                    _ => unreachable!(),
+                },
+                "selecting {label} must update its control"
+            );
             assert_eq!(
                 existing_vault_tree_snapshot(&vault_path),
                 original_vault_tree,
