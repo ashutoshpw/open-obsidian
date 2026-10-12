@@ -301,7 +301,9 @@ export type RetrievalScope = {
 };
 
 export type RetrievalRequest = {query: string; scope?: RetrievalScope; limit?: number};
+export type RetrievalRequestEnvelope = {requestId: string; request: RetrievalRequest};
 export type RetrievalProgress = {phase: "indexing" | "complete"; processed: number; total: number; indexed: number; excluded: number; currentPath?: string};
+export type RetrievalProgressEvent = {requestId: string; progress: RetrievalProgress};
 export type RetrievalCitation = {id: string; kind: "source"; relativePath: string; revision: string; heading: string | null; lineStart: number; lineEnd: number; snippet: string};
 export type RetrievalPassage = RetrievalCitation & {score: number; keywordScore: number; semanticScore: number};
 export type RetrievalSafety = {sourceDataUntrusted: true; promptInjectionDetected: boolean; excludedContentDisclosed: false; vaultBoundary: "selected-vault-only"};
@@ -637,6 +639,11 @@ export function validateRetrievalRequest(value: unknown): RetrievalRequest {
   };
 }
 
+export function validateRetrievalRequestEnvelope(value: unknown): RetrievalRequestEnvelope {
+  if (!isRecord(value) || typeof value.requestId !== "string" || !/^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/.test(value.requestId)) throw new Error("Invalid retrieval request ID");
+  return {requestId: value.requestId, request: validateRetrievalRequest(value.request)};
+}
+
 function validateAIInstruction(value: unknown): string {
   if (typeof value !== "string" || value.trim().length === 0 || value.length > 500) throw new Error("Invalid AI instruction");
   return value.trim();
@@ -794,8 +801,8 @@ export type OpenObsidianAPI = {
   editCanvasText: (request: CanvasTextEditRequest) => Promise<CanvasView>;
   createCanvasNote: (request: CanvasCreateNoteRequest) => Promise<CanvasCreateNoteResponse>;
   base: (relativePath: string) => Promise<BaseResponse>;
-  retrieve: (request: RetrievalRequest) => Promise<RetrievalResponse>;
-  onRetrievalProgress: (listener: (progress: RetrievalProgress) => void) => () => void;
+  retrieve: (request: RetrievalRequestEnvelope) => Promise<RetrievalResponse>;
+  onRetrievalProgress: (listener: (event: RetrievalProgressEvent) => void) => () => void;
   draftAIChange: (request: AIDraftRequest) => Promise<AIChangeSet>;
   applyAIChange: (request: AIApplyChangeRequest) => Promise<AIApplyChangeResponse>;
   undoAIChange: (request: AIUndoChangeRequest) => Promise<AIUndoChangeResponse>;

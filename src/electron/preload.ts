@@ -1,5 +1,5 @@
 import {contextBridge, ipcRenderer} from "electron";
-import {CHANNELS, type AIDraftRequest, type AIApplyChangeRequest, type AIUndoChangeRequest, type AttachmentReadRequest, type ConversationExportRequest, type OpenObsidianAPI, type PopoutIntent, type PopoutOpenRequest, type ProviderCredentialRequest, type RenameApplyRequest, type RenamePlanRequest, type RetrievalProgress, type RetrievalScope, type ToggleTaskRequest, type VaultWriteRequest} from "../shared/api.js";
+import {CHANNELS, type AIDraftRequest, type AIApplyChangeRequest, type AIUndoChangeRequest, type AttachmentReadRequest, type ConversationExportRequest, type OpenObsidianAPI, type PopoutIntent, type PopoutOpenRequest, type ProviderCredentialRequest, type RenameApplyRequest, type RenamePlanRequest, type RetrievalProgressEvent, type RetrievalScope, type ToggleTaskRequest, type VaultWriteRequest} from "../shared/api.js";
 
 const api: OpenObsidianAPI = {
   selectVault: () => ipcRenderer.invoke(CHANNELS.selectVault),
@@ -63,8 +63,8 @@ const api: OpenObsidianAPI = {
     ipcRenderer.on(CHANNELS.popoutIntent, handler);
     return () => ipcRenderer.removeListener(CHANNELS.popoutIntent, handler);
   },
-  onRetrievalProgress: (listener: (progress: RetrievalProgress) => void) => {
-    const handler = (_event: Electron.IpcRendererEvent, progress: RetrievalProgress) => listener(progress);
+  onRetrievalProgress: (listener: (event: RetrievalProgressEvent) => void) => {
+    const handler = (_event: Electron.IpcRendererEvent, progress: RetrievalProgressEvent) => listener(progress);
     ipcRenderer.on(CHANNELS.retrievalProgress, handler);
     return () => ipcRenderer.removeListener(CHANNELS.retrievalProgress, handler);
   },

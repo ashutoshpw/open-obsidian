@@ -1,5 +1,5 @@
 import {expect, test} from "bun:test";
-import {CHANNELS, DEFAULT_HISTORY_POLICY, DEFAULT_PROVIDER_SETTINGS, DEFAULT_WORKSPACE_SETTINGS, validateAIDraftRequest, validateAIApplyChangeRequest, validateAIOrganizationScope, validateAIUndoChangeRequest, validateAttachmentReadRequest, validateCanvasCreateNoteRequest, validateCanvasTextEditRequest, validateChronicleCommitRequest, validateChronicleDiffRequest, validateChronicleRestoreRequest, validateConflictReadRequest, validateConflictResolutionRequest, validateConversationExportRequest, validateHistoryPolicy, validateProviderCredentialRequest, validateProviderSettings, validateRenameApplyRequest, validateRenamePlanRequest, type RenamePlanResponse, validateRetrievalRequest, validateTaskToggleRequest, validateVaultWriteRequest, validateWorkspaceSettings, validateWorkspaceState} from "../src/shared/api.js";
+import {CHANNELS, DEFAULT_HISTORY_POLICY, DEFAULT_PROVIDER_SETTINGS, DEFAULT_WORKSPACE_SETTINGS, validateAIDraftRequest, validateAIApplyChangeRequest, validateAIOrganizationScope, validateAIUndoChangeRequest, validateAttachmentReadRequest, validateCanvasCreateNoteRequest, validateCanvasTextEditRequest, validateChronicleCommitRequest, validateChronicleDiffRequest, validateChronicleRestoreRequest, validateConflictReadRequest, validateConflictResolutionRequest, validateConversationExportRequest, validateHistoryPolicy, validateProviderCredentialRequest, validateProviderSettings, validateRenameApplyRequest, validateRenamePlanRequest, type RenamePlanResponse, validateRetrievalRequest, validateRetrievalRequestEnvelope, validateTaskToggleRequest, validateVaultWriteRequest, validateWorkspaceSettings, validateWorkspaceState} from "../src/shared/api.js";
 
 test("vault IPC validation accepts canonical payloads and normalizes omitted revisions", () => {
   expect(validateVaultWriteRequest({relativePath: "note.md", base64: "aGk="})).toEqual({relativePath: "note.md", expectedRevision: null, base64: "aGk="});
@@ -128,6 +128,13 @@ test("retrieval IPC validation keeps scope and limits bounded", () => {
   expect(() => validateRetrievalRequest({query: "notes", limit: 0})).toThrow("Invalid retrieval limit");
   expect(() => validateRetrievalRequest({query: "notes", scope: {folders: ["../outside"]}})).toThrow("Invalid workspace folders");
   expect(() => validateRetrievalRequest({query: "notes", scope: {modifiedBefore: "not-a-date"}})).toThrow("Invalid retrieval end date");
+});
+
+test("retrieval IPC envelope validates request correlation IDs", () => {
+  expect(validateRetrievalRequestEnvelope({requestId: "retrieval-1", request: {query: "  local notes "}})).toEqual({requestId: "retrieval-1", request: {query: "local notes", limit: undefined}});
+  expect(() => validateRetrievalRequestEnvelope({requestId: "", request: {query: "notes"}})).toThrow("Invalid retrieval request ID");
+  expect(() => validateRetrievalRequestEnvelope({requestId: "retrieval 1", request: {query: "notes"}})).toThrow("Invalid retrieval request ID");
+  expect(() => validateRetrievalRequestEnvelope({requestId: "retrieval-1", request: {query: ""}})).toThrow("Invalid retrieval request");
 });
 
 test("reviewed AI IPC validation keeps scope, approval and undo explicit", () => {

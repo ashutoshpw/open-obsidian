@@ -25,7 +25,7 @@ import {discoverVaultConfiguration} from "../core/configuration.js";
 import {ElectronCredentialStore} from "./provider-credentials.js";
 import {parseLaunchArguments, parseDeepLinkIntent, type LaunchIntent} from "../shared/entry-points.js";
 import {parseAppearanceSettings, type VaultAppearance} from "../shared/ui/index.js";
-import {CHANNELS, DEFAULT_PROVIDER_SETTINGS, DEFAULT_WORKSPACE_SETTINGS, DEFAULT_WORKSPACE_STATE, validateAIDraftRequest, validateAIApplyChangeRequest, validateAIOrganizationScope, validateAIUndoChangeRequest, validateAttachmentReadRequest, validateCanvasCreateNoteRequest, validateCanvasTextEditRequest, validateChronicleCommitRequest, validateChronicleDiffRequest, validateChronicleRestoreRequest, validateConflictReadRequest, validateConflictResolutionRequest, validateConversationExportRequest, validateHistoryPolicy, validatePopoutOpenRequest, validateProviderCredentialRequest, validateProviderSettings, validateRenameApplyRequest, validateRenamePlanRequest, validateRetrievalRequest, validateTaskToggleRequest, validateVaultWriteRequest, validateWorkspaceSettings, validateWorkspaceState, type AIApplyChangeResponse, type AIChangeSet, type AIOrganizationResponse, type AIUndoChangeResponse, type AttachmentReadResponse, type BaseEvaluationView, type BaseResponse, type BaseValue, type CanvasCreateNoteResponse, type CanvasView, type ConflictReadResponse, type ConflictResolutionResponse, type ConversationExportRequest, type GraphView, type HistoryCleanupResult, type HistoryPlanSummary, type HistoryPolicy, type NoteContext, type PopoutIntent, type PopoutOpenResponse, type ProviderSettings, type ProviderStatus, type RenameApplyRequest, type RenamePlanResponse, type RenameResponse, type RetrievalResponse, type SyncToolDisposition, type VaultFileSummary, type VaultHistoryRecord, type VaultSearchResult, type VaultSummary, type VaultWriteRequest, type WorkspaceSettings, type WorkspaceState} from "../shared/api.js";
+import {CHANNELS, DEFAULT_PROVIDER_SETTINGS, DEFAULT_WORKSPACE_SETTINGS, DEFAULT_WORKSPACE_STATE, validateAIDraftRequest, validateAIApplyChangeRequest, validateAIOrganizationScope, validateAIUndoChangeRequest, validateAttachmentReadRequest, validateCanvasCreateNoteRequest, validateCanvasTextEditRequest, validateChronicleCommitRequest, validateChronicleDiffRequest, validateChronicleRestoreRequest, validateConflictReadRequest, validateConflictResolutionRequest, validateConversationExportRequest, validateHistoryPolicy, validatePopoutOpenRequest, validateProviderCredentialRequest, validateProviderSettings, validateRenameApplyRequest, validateRenamePlanRequest, validateRetrievalRequestEnvelope, validateTaskToggleRequest, validateVaultWriteRequest, validateWorkspaceSettings, validateWorkspaceState, type AIApplyChangeResponse, type AIChangeSet, type AIOrganizationResponse, type AIUndoChangeResponse, type AttachmentReadResponse, type BaseEvaluationView, type BaseResponse, type BaseValue, type CanvasCreateNoteResponse, type CanvasView, type ConflictReadResponse, type ConflictResolutionResponse, type ConversationExportRequest, type GraphView, type HistoryCleanupResult, type HistoryPlanSummary, type HistoryPolicy, type NoteContext, type PopoutIntent, type PopoutOpenResponse, type ProviderSettings, type ProviderStatus, type RenameApplyRequest, type RenamePlanResponse, type RenameResponse, type RetrievalResponse, type SyncToolDisposition, type VaultFileSummary, type VaultHistoryRecord, type VaultSearchResult, type VaultSummary, type VaultWriteRequest, type WorkspaceSettings, type WorkspaceState} from "../shared/api.js";
 
 const currentFile = fileURLToPath(import.meta.url);
 const currentDirectory = dirname(currentFile);
@@ -517,7 +517,7 @@ function baseRequest(_event: Electron.IpcMainInvokeEvent, value: unknown): BaseR
 }
 
 async function retrieveRequest(event: Electron.IpcMainInvokeEvent, value: unknown): Promise<RetrievalResponse> {
-  const request = validateRetrievalRequest(value);
+  const {requestId, request} = validateRetrievalRequestEnvelope(value);
   const settings = loadProviderSettings();
   const model = settings.model === "unset" ? null : createProviderRetrievalModel(settings, {
     credentials: providerCredentialStore(),
@@ -526,7 +526,7 @@ async function retrieveRequest(event: Electron.IpcMainInvokeEvent, value: unknow
     timeoutMs: 30_000,
     transport: providerTransport,
   });
-  return retrieveVaultWithModel(requireVault(), request, model, (progress) => event.sender.send(CHANNELS.retrievalProgress, progress));
+  return retrieveVaultWithModel(requireVault(), request, model, (progress) => event.sender.send(CHANNELS.retrievalProgress, {requestId, progress}));
 }
 
 function draftAIChangeRequest(_event: Electron.IpcMainInvokeEvent, value: unknown): AIChangeSet {

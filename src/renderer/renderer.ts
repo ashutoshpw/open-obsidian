@@ -1,4 +1,4 @@
-import {DEFAULT_HISTORY_POLICY, DEFAULT_PROVIDER_SETTINGS, DEFAULT_WORKSPACE_SETTINGS, DEFAULT_WORKSPACE_STATE, type AIChangeSet, type AIOrganizationResponse, type AttachmentReadResponse, type BaseEvaluationView, type BaseResponse, type BaseScalar, type BaseValue, type CanvasNodeView, type CanvasView, type ConversationTurn, type EditorMode, type GraphView, type HistoryPolicy, type NoteContext, type OpenObsidianAPI, type ProviderMode, type ProviderSettings, type ProviderStatus, type ProviderUsageCaps, type RenamePlanResponse, type RetrievalCitation, type RetrievalProgress, type RetrievalRequest, type RetrievalResponse, type SyncToolDisposition, type VaultHistoryRecord, type WorkspaceSettings, type WorkspaceState} from "../shared/api.js";
+import {DEFAULT_HISTORY_POLICY, DEFAULT_PROVIDER_SETTINGS, DEFAULT_WORKSPACE_SETTINGS, DEFAULT_WORKSPACE_STATE, type AIChangeSet, type AIOrganizationResponse, type AttachmentReadResponse, type BaseEvaluationView, type BaseResponse, type BaseScalar, type BaseValue, type CanvasNodeView, type CanvasView, type ConversationTurn, type EditorMode, type GraphView, type HistoryPolicy, type NoteContext, type OpenObsidianAPI, type ProviderMode, type ProviderSettings, type ProviderStatus, type ProviderUsageCaps, type RenamePlanResponse, type RetrievalCitation, type RetrievalProgressEvent, type RetrievalRequest, type RetrievalResponse, type SyncToolDisposition, type VaultHistoryRecord, type WorkspaceSettings, type WorkspaceState} from "../shared/api.js";
 import type {LaunchIntent} from "../shared/entry-points.js";
 import {decodeBase64, encodeBase64} from "../shared/base64.js";
 import {layoutGraph, parseInlineMarkdown, parseMarkdownPreview, resolveKeyboardCommand, styleMatchesName, themeStyleName, type KeyboardCommandId, type MarkdownInlineSegment, type MarkdownPreviewBlock, type ThemeMode, type ThemeStyleAsset, type VaultAppearance} from "../shared/ui/index.js";
@@ -219,6 +219,8 @@ let graphData: GraphView | null = null;
 let canvasData: CanvasView | null = null;
 let baseData: BaseResponse | null = null;
 let retrievalData: RetrievalResponse | null = null;
+let retrievalRequestSequence = 0;
+let activeRetrievalRequestId: string | null = null;
 let conversationTurns: ConversationTurn[] = [];
 let pendingCitation: RetrievalCitation | null = null;
 let sourceInspectorCitation: RetrievalCitation | null = null;
@@ -2646,7 +2648,9 @@ function retrievalScopeLabel(scope: RetrievalResponse["scope"]): string {
   return filters.length === 0 ? "Scope: entire selected vault" : `Scope: selected vault · ${filters.join(" · ")}`;
 }
 
-function renderRetrievalProgress(progress: RetrievalProgress): void {
+function renderRetrievalProgress(event: RetrievalProgressEvent): void {
+  if (event.requestId !== activeRetrievalRequestId) return;
+  const {progress} = event;
   if (!retrievalMeta) return;
   if (progress.phase === "complete") {
     setText(retrievalMeta, `Local index complete · ${progress.processed}/${progress.total} Markdown files visited · ${progress.indexed} passages indexed · ${progress.excluded} excluded.`);
@@ -2823,18 +2827,25 @@ function retrievalCompletionStatus(response: RetrievalResponse): string {
 }
 
 async function performRetrieval(client: OpenObsidianAPI, request: RetrievalRequest): Promise<void> {
+  const requestId = `retrieval-${++retrievalRequestSequence}`;
+  activeRetrievalRequestId = requestId;
   setDisabled(runRetrievalButton, true);
   setText(retrievalMeta, "Starting a local source index; any configured provider receives only approved citations after local ranking…");
   setHidden(retrievalAnswer, true);
   try {
-    retrievalData = await client.retrieve(request);
+    const response = await client.retrieve({requestId, request});
+    if (activeRetrievalRequestId !== requestId) return;
+    retrievalData = response;
     renderRetrieval(retrievalData);
     recordRetrievalConversation(request, retrievalData);
     setStatus(`Grounded search found ${retrievalData.passages.length} source passage${retrievalData.passages.length === 1 ? "" : "s"}; ${retrievalCompletionStatus(retrievalData)}.`);
   } catch (error) {
-    setText(retrievalMeta, errorText(error, "Unable to run grounded search."));
+    if (activeRetrievalRequestId === requestId) setText(retrievalMeta, errorText(error, "Unable to run grounded search."));
   } finally {
-    setDisabled(runRetrievalButton, false);
+    if (activeRetrievalRequestId === requestId) {
+      activeRetrievalRequestId = null;
+      setDisabled(runRetrievalButton, false);
+    }
   }
 }
 
