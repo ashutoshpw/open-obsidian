@@ -5,7 +5,7 @@ mod markdown_math;
 use egui_commonmark::{CommonMarkCache, CommonMarkViewer};
 use markdown_math::{MathRendererCache, math_render_callback};
 use openobsidian_engine::{
-    CanvasNoteCreateResult, LinkKind, LinkRenameAction, LinkResolutionStatus,
+    CanvasEditError, CanvasNoteCreateResult, LinkKind, LinkRenameAction, LinkResolutionStatus,
     MAX_NOTE_SOURCE_PREVIEW_BYTES, MarkdownPreviewDisposition, MarkdownUnsupportedSyntax,
     TransclusionBlockReason, VaultConflictAction, VaultConflictRead, VaultConflictResolution,
     VaultError, VaultHistoryCleanup, VaultHistoryKind, VaultHistoryPlan, VaultHistoryPolicy,
@@ -60,6 +60,7 @@ type NotePreviewWriteReceiver = Receiver<Result<String, String>>;
 type VaultRefreshReceiver = Receiver<Result<VaultRefreshOutcome, String>>;
 type RenameReceiver = Receiver<RenameTaskMessage>;
 type CanvasNoteReceiver = Receiver<CanvasNoteTaskMessage>;
+type CanvasTextEditReceiver = Receiver<CanvasTextEditTaskMessage>;
 
 struct LinkTaskMessage {
     resolutions: Result<Vec<VaultLinkResolution>, String>,
@@ -156,6 +157,20 @@ struct CanvasNoteCreateOutcome {
 enum CanvasNoteTaskMessage {
     Preview(Result<CanvasNoteCreationPreview, String>),
     Created(Result<Box<CanvasNoteCreateOutcome>, String>),
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+struct CanvasTextEditPreview {
+    canvas_relative_path: std::path::PathBuf,
+    expected_canvas_revision_sha256: String,
+    node_id: String,
+    original_text: String,
+    draft_text: String,
+}
+
+enum CanvasTextEditTaskMessage {
+    Preview(Result<CanvasTextEditPreview, String>),
+    Saved(Result<String, CanvasEditError>),
 }
 
 /// Display-safe storage state passed from the desktop composition boundary.
@@ -301,6 +316,13 @@ struct OpenObsidianApp {
     canvas_note_error: Option<String>,
     canvas_note_status: Option<String>,
     canvas_note_confirmation: bool,
+    canvas_text_edit_path: String,
+    canvas_text_edit_node_id: String,
+    canvas_text_edit_preview: Option<CanvasTextEditPreview>,
+    canvas_text_edit_receiver: Option<CanvasTextEditReceiver>,
+    canvas_text_edit_error: Option<String>,
+    canvas_text_edit_status: Option<String>,
+    canvas_text_edit_stale: bool,
     rename_source_path: Option<std::path::PathBuf>,
     rename_destination_path: String,
     rename_preview: Option<VaultRenamePreview>,
@@ -331,6 +353,8 @@ impl OpenObsidianApp {
             || self.vault_refresh_receiver.is_some()
             || self.rename_receiver.is_some()
             || self.canvas_note_receiver.is_some()
+            || self.canvas_text_edit_receiver.is_some()
+            || self.canvas_text_edit_preview.is_some()
             || self.note_source_editing();
         let open_vault_button = self.open_vault_action.as_ref().map(|_| {
             ui.add_enabled(
@@ -446,6 +470,13 @@ impl OpenObsidianApp {
                 self.canvas_note_error = None;
                 self.canvas_note_status = None;
                 self.canvas_note_confirmation = false;
+                self.canvas_text_edit_path.clear();
+                self.canvas_text_edit_node_id.clear();
+                self.canvas_text_edit_preview = None;
+                self.canvas_text_edit_receiver = None;
+                self.canvas_text_edit_error = None;
+                self.canvas_text_edit_status = None;
+                self.canvas_text_edit_stale = false;
             }
             Some(Ok(Err(error))) => {
                 self.vault_open_receiver = None;
@@ -468,6 +499,7 @@ impl OpenObsidianApp {
         self.poll_note_preview_write_task(ui);
         self.poll_rename_task(ui);
         self.poll_canvas_note_task(ui);
+        self.poll_canvas_text_edit_task(ui);
         if self.vault_opening {
             ui.label("Opening vault safely…");
         }
@@ -549,6 +581,7 @@ impl OpenObsidianApp {
             ui.ctx().request_repaint();
         }
         if self.session.is_some() {
+            self.show_canvas_text_edit(ui);
             self.show_canvas_note_creation(ui);
             self.show_rename(ui);
             self.show_links(ui);
@@ -593,6 +626,8 @@ impl OpenObsidianApp {
             self.vault_refresh_receiver.is_some(),
             self.rename_receiver.is_some(),
             self.canvas_note_receiver.is_some(),
+            self.canvas_text_edit_receiver.is_some(),
+            self.canvas_text_edit_preview.is_some(),
         ]
         .into_iter()
         .enumerate()
@@ -615,9 +650,11 @@ impl OpenObsidianApp {
             || self.vault_refresh_receiver.is_some()
             || self.rename_receiver.is_some()
             || self.canvas_note_receiver.is_some()
+            || self.canvas_text_edit_receiver.is_some()
+            || self.canvas_text_edit_preview.is_some()
             || self.note_source_editing();
         eprintln!(
-            "OpenObsidian CI UI state: session={}, vault_opening={}, vault_open_receiver={}, history_receiver={}, link_receiver={}, note_preview_receiver={}, note_preview_write_receiver={}, vault_refresh_receiver={}, rename_receiver={}, canvas_note_receiver={}, open_vault_enabled={}",
+            "OpenObsidian CI UI state: session={}, vault_opening={}, vault_open_receiver={}, history_receiver={}, link_receiver={}, note_preview_receiver={}, note_preview_write_receiver={}, vault_refresh_receiver={}, rename_receiver={}, canvas_note_receiver={}, canvas_text_edit_receiver={}, canvas_text_edit_preview={}, open_vault_enabled={}",
             self.session.is_some(),
             self.vault_opening,
             self.vault_open_receiver.is_some(),
@@ -628,6 +665,8 @@ impl OpenObsidianApp {
             self.vault_refresh_receiver.is_some(),
             self.rename_receiver.is_some(),
             self.canvas_note_receiver.is_some(),
+            self.canvas_text_edit_receiver.is_some(),
+            self.canvas_text_edit_preview.is_some(),
             !self.vault_opening && !vault_operation_busy,
         );
     }
@@ -655,6 +694,10 @@ impl OpenObsidianApp {
 }
 
 impl OpenObsidianApp {
+    fn canvas_text_editing(&self) -> bool {
+        self.canvas_text_edit_receiver.is_some() || self.canvas_text_edit_preview.is_some()
+    }
+
     fn note_source_editing(&self) -> bool {
         self.note_source_preview
             .as_ref()
@@ -699,7 +742,8 @@ impl OpenObsidianApp {
             || self.note_preview_write_receiver.is_some()
             || self.vault_refresh_receiver.is_some()
             || self.rename_receiver.is_some()
-            || self.canvas_note_receiver.is_some();
+            || self.canvas_note_receiver.is_some()
+            || self.canvas_text_editing();
         let note_navigation_busy = operation_busy || self.note_source_editing();
         let selected_index = note_paths
             .iter()
@@ -990,6 +1034,186 @@ impl OpenObsidianApp {
         }
     }
 
+    fn show_canvas_text_edit(&mut self, ui: &mut eframe::egui::Ui) {
+        ui.separator();
+        eframe::egui::CollapsingHeader::new("Edit Canvas text card")
+            .id_salt("canvas-text-card-edit")
+            .default_open(false)
+            .show(ui, |ui| self.show_canvas_text_edit_contents(ui));
+    }
+
+    fn show_canvas_text_edit_contents(&mut self, ui: &mut eframe::egui::Ui) {
+        ui.small(
+            "Load one text card from a vault-relative .canvas file, edit its draft, then save explicitly. Editing changes only that Canvas card and never creates a note. Canvas files over 4 MiB are rejected.",
+        );
+
+        let operation_busy = self.vault_opening
+            || self.vault_open_receiver.is_some()
+            || self.history_receiver.is_some()
+            || self.link_receiver.is_some()
+            || self.note_preview_receiver.is_some()
+            || self.note_preview_write_receiver.is_some()
+            || self.vault_refresh_receiver.is_some()
+            || self.rename_receiver.is_some()
+            || self.canvas_note_receiver.is_some()
+            || self.canvas_text_edit_receiver.is_some()
+            || self.note_source_editing();
+        let target_fields_enabled = !operation_busy && self.canvas_text_edit_preview.is_none();
+
+        let mut inputs_changed = false;
+        ui.horizontal_wrapped(|ui| {
+            let path_label = ui.label("Canvas edit path");
+            inputs_changed |= ui
+                .add_enabled(
+                    target_fields_enabled,
+                    eframe::egui::TextEdit::singleline(&mut self.canvas_text_edit_path)
+                        .hint_text("Boards/Idea.canvas")
+                        .desired_width(230.0),
+                )
+                .labelled_by(path_label.id)
+                .changed();
+            let node_label = ui.label("Canvas edit text-card ID");
+            inputs_changed |= ui
+                .add_enabled(
+                    target_fields_enabled,
+                    eframe::egui::TextEdit::singleline(&mut self.canvas_text_edit_node_id)
+                        .hint_text("text-card-id")
+                        .desired_width(160.0),
+                )
+                .labelled_by(node_label.id)
+                .changed();
+        });
+        if inputs_changed {
+            self.canvas_text_edit_preview = None;
+            self.canvas_text_edit_error = None;
+            self.canvas_text_edit_status = None;
+            self.canvas_text_edit_stale = false;
+        }
+
+        let can_load = !operation_busy
+            && self.canvas_text_edit_preview.is_none()
+            && !self.canvas_text_edit_path.trim().is_empty()
+            && !self.canvas_text_edit_node_id.trim().is_empty();
+        let load_response = ui.add_enabled(
+            can_load,
+            eframe::egui::Button::new("Load Canvas text card"),
+        );
+        if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some()
+            && ui.input(|input| !input.raw.events.is_empty())
+        {
+            eprintln!(
+                "OpenObsidian CI canvas-text-edit-load input: enabled={can_load}, response_rect={:?}, pixels_per_point={:.2}, pointer={:?}, hovered={}, clicked={}, events={:?}",
+                load_response.rect,
+                ui.ctx().pixels_per_point(),
+                ui.input(|input| input.pointer.hover_pos()),
+                load_response.hovered(),
+                load_response.clicked(),
+                ui.input(|input| input.raw.events.clone()),
+            );
+        }
+        if load_response.clicked() {
+            self.start_canvas_text_edit_preview();
+        }
+        if self.canvas_text_edit_receiver.is_some() {
+            ui.small("Reading or saving the selected Canvas text card…");
+        }
+        if let Some(error) = &self.canvas_text_edit_error {
+            ui.colored_label(eframe::egui::Color32::RED, error);
+        }
+        if let Some(status) = &self.canvas_text_edit_status {
+            ui.label(status);
+        }
+
+        let mut save_requested = false;
+        let mut reload_requested = false;
+        let mut cancel_requested = false;
+        if let Some(preview) = &mut self.canvas_text_edit_preview {
+            ui.group(|ui| {
+                ui.label(format!(
+                    "Canvas: {} · text card {}",
+                    preview.canvas_relative_path.display(),
+                    preview.node_id
+                ));
+                ui.small(format!(
+                    "Canvas revision: {}",
+                    preview.expected_canvas_revision_sha256
+                ));
+                if self.canvas_text_edit_stale {
+                    ui.colored_label(
+                        eframe::egui::Color32::YELLOW,
+                        "The Canvas changed after this draft was loaded. Save is blocked; reload to discard this draft and inspect the current card.",
+                    );
+                }
+                let draft_label = ui.label("Canvas text draft");
+                ui.add_enabled(
+                    !operation_busy && !self.canvas_text_edit_stale,
+                    eframe::egui::TextEdit::multiline(&mut preview.draft_text)
+                        .desired_rows(6)
+                        .desired_width(560.0),
+                )
+                .labelled_by(draft_label.id);
+                ui.horizontal(|ui| {
+                    let can_save = !operation_busy
+                        && !self.canvas_text_edit_stale
+                        && preview.draft_text != preview.original_text;
+                    let save_response = ui.add_enabled(
+                        can_save,
+                        eframe::egui::Button::new("Save Canvas text"),
+                    );
+                    if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some()
+                        && ui.input(|input| !input.raw.events.is_empty())
+                    {
+                        eprintln!(
+                            "OpenObsidian CI canvas-text-edit-save input: enabled={can_save}, response_rect={:?}, pixels_per_point={:.2}, pointer={:?}, hovered={}, clicked={}, events={:?}",
+                            save_response.rect,
+                            ui.ctx().pixels_per_point(),
+                            ui.input(|input| input.pointer.hover_pos()),
+                            save_response.hovered(),
+                            save_response.clicked(),
+                            ui.input(|input| input.raw.events.clone()),
+                        );
+                    }
+                    save_requested = save_response.clicked();
+                    let reload_response = ui.add_enabled(
+                        !operation_busy,
+                        eframe::egui::Button::new("Reload Canvas"),
+                    );
+                    if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some()
+                        && ui.input(|input| !input.raw.events.is_empty())
+                    {
+                        eprintln!(
+                            "OpenObsidian CI canvas-text-edit-reload input: enabled={}, response_rect={:?}, pixels_per_point={:.2}, pointer={:?}, hovered={}, clicked={}, events={:?}",
+                            !operation_busy,
+                            reload_response.rect,
+                            ui.ctx().pixels_per_point(),
+                            ui.input(|input| input.pointer.hover_pos()),
+                            reload_response.hovered(),
+                            reload_response.clicked(),
+                            ui.input(|input| input.raw.events.clone()),
+                        );
+                    }
+                    reload_requested = reload_response.clicked();
+                    cancel_requested = ui
+                        .add_enabled(
+                            !operation_busy,
+                            eframe::egui::Button::new("Cancel Canvas edit"),
+                        )
+                        .clicked();
+                });
+            });
+        }
+        if save_requested {
+            self.start_canvas_text_edit_save();
+        } else if reload_requested {
+            self.start_canvas_text_edit_preview();
+        } else if cancel_requested {
+            self.canvas_text_edit_preview = None;
+            self.canvas_text_edit_error = None;
+            self.canvas_text_edit_status = Some("Canvas edit canceled without writing.".to_owned());
+            self.canvas_text_edit_stale = false;
+        }
+    }
+
     fn show_canvas_note_creation(&mut self, ui: &mut eframe::egui::Ui) {
         ui.separator();
         eframe::egui::CollapsingHeader::new("Create note from Canvas text card")
@@ -1012,6 +1236,7 @@ impl OpenObsidianApp {
             || self.vault_refresh_receiver.is_some()
             || self.rename_receiver.is_some()
             || self.canvas_note_receiver.is_some()
+            || self.canvas_text_editing()
             || self.note_source_editing();
         let mut inputs_changed = false;
         ui.horizontal_wrapped(|ui| {
@@ -1627,6 +1852,7 @@ impl OpenObsidianApp {
             || self.vault_refresh_receiver.is_some()
             || self.rename_receiver.is_some()
             || self.canvas_note_receiver.is_some()
+            || self.canvas_text_editing()
             || self.note_source_editing();
         let selected_label = self.rename_source_path.as_ref().map_or_else(
             || "Choose a note".to_owned(),
@@ -1813,6 +2039,7 @@ impl OpenObsidianApp {
             || self.vault_refresh_receiver.is_some()
             || self.rename_receiver.is_some()
             || self.canvas_note_receiver.is_some()
+            || self.canvas_text_editing()
             || self.note_source_editing();
         if ui
             .add_enabled(
@@ -1896,6 +2123,7 @@ impl OpenObsidianApp {
             || self.vault_refresh_receiver.is_some()
             || self.rename_receiver.is_some()
             || self.canvas_note_receiver.is_some()
+            || self.canvas_text_editing()
             || self.note_source_editing();
         if self.history_records.is_empty() && self.history_plan.is_some() {
             ui.label("No recovery, failed-write, or conflict history records were found.");
@@ -2229,6 +2457,62 @@ impl OpenObsidianApp {
         self.canvas_note_receiver = Some(receiver);
     }
 
+    fn start_canvas_text_edit_preview(&mut self) {
+        let Some(session) = self.session.as_ref().cloned() else {
+            return;
+        };
+        let canvas_relative_path = std::path::PathBuf::from(
+            self.canvas_text_edit_path.trim().replace('\\', "/"),
+        );
+        let node_id = self.canvas_text_edit_node_id.trim().to_owned();
+        self.canvas_text_edit_preview = None;
+        self.canvas_text_edit_error = None;
+        self.canvas_text_edit_status = None;
+        self.canvas_text_edit_stale = false;
+        let (sender, receiver) = mpsc::channel();
+        rayon::spawn(move || {
+            let result = session
+                .preview_canvas_text_node(&canvas_relative_path, &node_id)
+                .map_err(|error| error.to_string())
+                .map(|preview| CanvasTextEditPreview {
+                    canvas_relative_path: preview.relative_path,
+                    expected_canvas_revision_sha256: preview.revision_sha256,
+                    node_id: preview.node_id,
+                    original_text: preview.text.clone(),
+                    draft_text: preview.text,
+                });
+            let _ = sender.send(CanvasTextEditTaskMessage::Preview(result));
+        });
+        self.canvas_text_edit_receiver = Some(receiver);
+    }
+
+    fn start_canvas_text_edit_save(&mut self) {
+        let Some(session) = self.session.as_ref().cloned() else {
+            return;
+        };
+        let Some(preview) = self.canvas_text_edit_preview.clone() else {
+            return;
+        };
+        if self.canvas_text_edit_stale || preview.draft_text == preview.original_text {
+            return;
+        }
+        self.canvas_text_edit_error = None;
+        self.canvas_text_edit_status = None;
+        let (sender, receiver) = mpsc::channel();
+        rayon::spawn(move || {
+            let result = session
+                .edit_canvas_text_node(
+                    &preview.canvas_relative_path,
+                    &preview.expected_canvas_revision_sha256,
+                    &preview.node_id,
+                    &preview.draft_text,
+                )
+                .map(|write| write.read.revision_sha256);
+            let _ = sender.send(CanvasTextEditTaskMessage::Saved(result));
+        });
+        self.canvas_text_edit_receiver = Some(receiver);
+    }
+
     fn start_link_resolution(&mut self) {
         let Some(session) = self.session.as_ref().cloned() else {
             return;
@@ -2519,6 +2803,7 @@ impl OpenObsidianApp {
             || self.vault_refresh_receiver.is_some()
             || self.rename_receiver.is_some()
             || self.canvas_note_receiver.is_some()
+            || self.canvas_text_editing()
             || self.note_source_editing();
         if self.vault_rescan_pending && !operation_busy {
             self.vault_rescan_pending = false;
@@ -2711,6 +2996,64 @@ impl OpenObsidianApp {
                 self.canvas_note_error = Some(
                     "The Canvas note operation stopped unexpectedly. Inspect the destination before retrying."
                         .to_owned(),
+                );
+            }
+            Some(Err(TryRecvError::Empty)) => {
+                ui.ctx().request_repaint_after(Duration::from_millis(100));
+            }
+            None => {}
+        }
+    }
+
+    fn poll_canvas_text_edit_task(&mut self, ui: &mut eframe::egui::Ui) {
+        let result = self
+            .canvas_text_edit_receiver
+            .as_ref()
+            .map(Receiver::try_recv);
+        match result {
+            Some(Ok(CanvasTextEditTaskMessage::Preview(Ok(preview)))) => {
+                self.canvas_text_edit_receiver = None;
+                self.canvas_text_edit_preview = Some(preview);
+                self.canvas_text_edit_error = None;
+                self.canvas_text_edit_status =
+                    Some("Canvas text loaded. Changes remain a draft until you save.".to_owned());
+                self.canvas_text_edit_stale = false;
+            }
+            Some(Ok(CanvasTextEditTaskMessage::Preview(Err(error)))) => {
+                self.canvas_text_edit_receiver = None;
+                self.canvas_text_edit_preview = None;
+                self.canvas_text_edit_status = None;
+                self.canvas_text_edit_error = Some(error);
+                self.canvas_text_edit_stale = false;
+            }
+            Some(Ok(CanvasTextEditTaskMessage::Saved(Ok(revision_sha256)))) => {
+                self.canvas_text_edit_receiver = None;
+                if let Some(preview) = &mut self.canvas_text_edit_preview {
+                    preview.original_text = preview.draft_text.clone();
+                    preview.expected_canvas_revision_sha256 = revision_sha256;
+                    self.canvas_text_edit_status = Some(format!(
+                        "Saved the text card in {}.",
+                        preview.canvas_relative_path.display()
+                    ));
+                }
+                self.canvas_text_edit_error = None;
+                self.canvas_text_edit_stale = false;
+            }
+            Some(Ok(CanvasTextEditTaskMessage::Saved(Err(error)))) => {
+                self.canvas_text_edit_receiver = None;
+                self.canvas_text_edit_stale = matches!(
+                    &error,
+                    CanvasEditError::StaleRevision { .. }
+                        | CanvasEditError::Vault(VaultError::RevisionConflict { .. })
+                );
+                self.canvas_text_edit_status = None;
+                self.canvas_text_edit_error = Some(error.to_string());
+            }
+            Some(Err(TryRecvError::Disconnected)) => {
+                self.canvas_text_edit_receiver = None;
+                self.canvas_text_edit_status = None;
+                self.canvas_text_edit_error = Some(
+                    "The Canvas text-card operation stopped unexpectedly. The draft remains available; inspect the Canvas before retrying.".to_owned(),
                 );
             }
             Some(Err(TryRecvError::Empty)) => {
@@ -3966,6 +4309,29 @@ mod tests {
         }
     }
 
+    fn canvas_text_edit_test_app(
+        vault_path: &Path,
+        app_data_path: &Path,
+        canvas_source: &[u8],
+    ) -> OpenObsidianApp {
+        std::fs::create_dir_all(vault_path).expect("create Canvas-text-edit test vault");
+        std::fs::create_dir_all(app_data_path).expect("create Canvas-text-edit test app data");
+        std::fs::create_dir_all(vault_path.join("Boards"))
+            .expect("create Canvas-text-edit Boards folder");
+        std::fs::create_dir_all(vault_path.join("Notes"))
+            .expect("create Canvas-text-edit Notes folder");
+        std::fs::write(vault_path.join("Boards/Idea.canvas"), canvas_source)
+            .expect("write Canvas-text-edit test Canvas");
+        let session = VaultSession::open(vault_path, app_data_path)
+            .expect("open Canvas-text-edit test vault");
+        OpenObsidianApp {
+            session: Some(Arc::new(session)),
+            canvas_text_edit_path: "Boards/Idea.canvas".to_owned(),
+            canvas_text_edit_node_id: "text-1".to_owned(),
+            ..OpenObsidianApp::default()
+        }
+    }
+
     fn wait_for_note_source_preview(harness: &mut Harness<'_, OpenObsidianApp>) {
         let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
         loop {
@@ -4035,6 +4401,40 @@ mod tests {
             );
             std::thread::sleep(std::time::Duration::from_millis(2));
         }
+    }
+
+    fn wait_for_canvas_text_edit_task(harness: &mut Harness<'_, OpenObsidianApp>) {
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
+        loop {
+            harness.step();
+            if harness.state().canvas_text_edit_receiver.is_none() {
+                return;
+            }
+            assert!(
+                std::time::Instant::now() < deadline,
+                "Canvas text-card edit operation did not finish within five seconds"
+            );
+            std::thread::sleep(std::time::Duration::from_millis(2));
+        }
+    }
+
+    fn expand_canvas_text_edit(harness: &mut Harness<'_, OpenObsidianApp>) {
+        harness.get_by_label("Edit Canvas text card").click();
+        harness.step();
+    }
+
+    fn replace_canvas_text_draft(harness: &mut Harness<'_, OpenObsidianApp>, text: &str) {
+        harness
+            .get_by_role_and_label(
+                eframe::egui::accesskit::Role::MultilineTextInput,
+                "Canvas text draft",
+            )
+            .click();
+        harness.step();
+        harness.key_press_modifiers(eframe::egui::Modifiers::COMMAND, eframe::egui::Key::A);
+        harness.step();
+        harness.event(eframe::egui::Event::Paste(text.to_owned()));
+        harness.step();
     }
 
     fn expand_canvas_note_creation(harness: &mut Harness<'_, OpenObsidianApp>) {
@@ -5032,6 +5432,238 @@ mod tests {
         count_harness
             .get_by_label("Math preview limit reached for this UI pass; showing the source.");
         count_harness.get_by_label("$x_{32}$");
+    }
+
+    #[test]
+    fn egui_canvas_text_edit_keeps_changes_as_a_draft_until_cancel() {
+        let temporary = UiTempDir::new();
+        let vault_path = temporary.0.join("vault");
+        let app_data_path = temporary.0.join("app-data");
+        let canvas_source =
+            br#"{"nodes":[{"id":"text-1","type":"text","text":"before"}],"edges":[]}"#;
+        let app = canvas_text_edit_test_app(&vault_path, &app_data_path, canvas_source);
+        let mut harness = Harness::new_ui_state(|ui, app| app.show_ui(ui), app);
+        let vault_before = existing_vault_tree_snapshot(&vault_path);
+        let app_data_before = existing_vault_tree_snapshot(&app_data_path);
+
+        harness.step();
+        expand_canvas_text_edit(&mut harness);
+        harness.get_by_label("Canvas edit path");
+        harness.get_by_label("Canvas edit text-card ID");
+        harness.get_by_label("Load Canvas text card").click();
+        harness.step();
+        assert!(harness.state().canvas_text_edit_receiver.is_some());
+        wait_for_canvas_text_edit_task(&mut harness);
+        assert_eq!(
+            harness
+                .state()
+                .canvas_text_edit_preview
+                .as_ref()
+                .map(|preview| preview.original_text.as_str()),
+            Some("before")
+        );
+
+        replace_canvas_text_draft(&mut harness, "draft only");
+        assert_eq!(
+            harness
+                .state()
+                .canvas_text_edit_preview
+                .as_ref()
+                .map(|preview| preview.draft_text.as_str()),
+            Some("draft only")
+        );
+        assert_eq!(existing_vault_tree_snapshot(&vault_path), vault_before);
+        assert_eq!(existing_vault_tree_snapshot(&app_data_path), app_data_before);
+
+        harness.get_by_label("Load Canvas text card").click();
+        harness.step();
+        assert!(harness.state().canvas_text_edit_receiver.is_none());
+        assert_eq!(
+            harness
+                .state()
+                .canvas_text_edit_preview
+                .as_ref()
+                .map(|preview| preview.draft_text.as_str()),
+            Some("draft only"),
+            "loading again cannot silently discard an active draft"
+        );
+
+        harness.get_by_label("Cancel Canvas edit").click();
+        harness.step();
+
+        assert!(harness.state().canvas_text_edit_preview.is_none());
+        assert_eq!(
+            harness.state().canvas_text_edit_status.as_deref(),
+            Some("Canvas edit canceled without writing.")
+        );
+        assert_eq!(existing_vault_tree_snapshot(&vault_path), vault_before);
+        assert_eq!(existing_vault_tree_snapshot(&app_data_path), app_data_before);
+        assert!(!vault_path.join("Notes/Created.md").exists());
+    }
+
+    #[test]
+    fn egui_canvas_text_edit_saves_only_the_selected_card_after_explicit_save() {
+        let temporary = UiTempDir::new();
+        let vault_path = temporary.0.join("vault");
+        let app_data_path = temporary.0.join("app-data");
+        let before: serde_json::Value = serde_json::json!({
+            "nodes": [
+                {
+                    "id": "text-1",
+                    "type": "text",
+                    "x": 10,
+                    "y": 20,
+                    "width": 320,
+                    "height": 140,
+                    "text": "draft text card",
+                    "color": "1",
+                    "unknownNode": {"keep": true, "nested": ["opaque", 7]}
+                },
+                {
+                    "id": "file-1",
+                    "type": "file",
+                    "x": 370,
+                    "y": 20,
+                    "width": 240,
+                    "height": 150,
+                    "file": "Notes/Target.md",
+                    "subpath": "#^block-id",
+                    "label": "Target note",
+                    "unknownFileMetadata": {"keep": [true, null]}
+                }
+            ],
+            "edges": [
+                {
+                    "id": "edge-1",
+                    "fromNode": "text-1",
+                    "fromSide": "right",
+                    "toNode": "file-1",
+                    "toSide": "left",
+                    "label": "supports",
+                    "unknownEdge": {"keep": true}
+                }
+            ],
+            "unknownRoot": {"keep": true, "items": ["opaque", {"future": false}]}
+        });
+        let canvas_source = serde_json::to_vec(&before).expect("serialize Canvas fixture");
+        let app = canvas_text_edit_test_app(&vault_path, &app_data_path, &canvas_source);
+        let mut harness = Harness::new_ui_state(|ui, app| app.show_ui(ui), app);
+        let vault_before = existing_vault_tree_snapshot(&vault_path);
+        let mut expected_after = before.clone();
+        expected_after["nodes"][0]["text"] = serde_json::Value::String("edited text card".to_owned());
+
+        harness.step();
+        expand_canvas_text_edit(&mut harness);
+        harness.get_by_label("Load Canvas text card").click();
+        harness.step();
+        wait_for_canvas_text_edit_task(&mut harness);
+        replace_canvas_text_draft(&mut harness, "edited text card");
+        assert_eq!(existing_vault_tree_snapshot(&vault_path), vault_before);
+
+        harness.get_by_label("Save Canvas text").click();
+        harness.step();
+        assert!(harness.state().canvas_text_edit_receiver.is_some());
+        wait_for_canvas_text_edit_task(&mut harness);
+
+        let actual_bytes = std::fs::read(vault_path.join("Boards/Idea.canvas")).unwrap();
+        let actual: serde_json::Value =
+            serde_json::from_slice(&actual_bytes).expect("saved Canvas must remain valid JSON");
+        assert_eq!(actual, expected_after);
+        let actual_without_canvas = existing_vault_tree_snapshot(&vault_path)
+            .into_iter()
+            .filter(|(path, _, _)| path != Path::new("Boards/Idea.canvas"))
+            .collect::<Vec<_>>();
+        let before_without_canvas = vault_before
+            .into_iter()
+            .filter(|(path, _, _)| path != Path::new("Boards/Idea.canvas"))
+            .collect::<Vec<_>>();
+        assert_eq!(actual_without_canvas, before_without_canvas);
+        assert!(!vault_path.join("Notes/Created.md").exists());
+        assert!(harness
+            .state()
+            .canvas_text_edit_status
+            .as_deref()
+            .is_some_and(|status| status.replace('\\', "/")
+                == "Saved the text card in Boards/Idea.canvas."));
+    }
+
+    #[test]
+    fn egui_canvas_text_edit_preserves_stale_draft_and_requires_explicit_reload() {
+        let temporary = UiTempDir::new();
+        let vault_path = temporary.0.join("vault");
+        let app_data_path = temporary.0.join("app-data");
+        let canvas_before =
+            br#"{"nodes":[{"id":"text-1","type":"text","text":"before"}],"edges":[]}"#;
+        let canvas_after_external_edit =
+            br#"{"nodes":[{"id":"text-1","type":"text","text":"external edit"}],"edges":[]}"#;
+        let app = canvas_text_edit_test_app(&vault_path, &app_data_path, canvas_before);
+        let mut harness = Harness::new_ui_state(|ui, app| app.show_ui(ui), app);
+        let app_data_before = existing_vault_tree_snapshot(&app_data_path);
+
+        harness.step();
+        expand_canvas_text_edit(&mut harness);
+        harness.get_by_label("Load Canvas text card").click();
+        harness.step();
+        wait_for_canvas_text_edit_task(&mut harness);
+        replace_canvas_text_draft(&mut harness, "my pending draft");
+        std::fs::write(
+            vault_path.join("Boards/Idea.canvas"),
+            canvas_after_external_edit,
+        )
+        .expect("simulate another editor changing the Canvas");
+
+        harness.get_by_label("Save Canvas text").click();
+        harness.step();
+        assert!(harness.state().canvas_text_edit_receiver.is_some());
+        wait_for_canvas_text_edit_task(&mut harness);
+
+        assert!(harness.state().canvas_text_edit_stale);
+        assert_eq!(
+            harness
+                .state()
+                .canvas_text_edit_preview
+                .as_ref()
+                .map(|preview| preview.draft_text.as_str()),
+            Some("my pending draft")
+        );
+        assert_eq!(
+            std::fs::read(vault_path.join("Boards/Idea.canvas")).unwrap(),
+            canvas_after_external_edit,
+            "the stale draft must not overwrite the external Canvas edit"
+        );
+        assert!(harness.state().canvas_text_edit_receiver.is_none());
+        assert!(harness
+            .state()
+            .canvas_text_edit_error
+            .as_deref()
+            .is_some_and(|error| error.contains("revision changed")));
+        assert_eq!(existing_vault_tree_snapshot(&app_data_path), app_data_before);
+        harness.get_by_label("Save Canvas text").click();
+        harness.step();
+        assert!(harness.state().canvas_text_edit_receiver.is_none());
+        assert_eq!(
+            std::fs::read(vault_path.join("Boards/Idea.canvas")).unwrap(),
+            canvas_after_external_edit,
+            "a stale draft remains blocked from saving until reload"
+        );
+        assert_eq!(existing_vault_tree_snapshot(&app_data_path), app_data_before);
+
+        harness.get_by_label("Reload Canvas").click();
+        harness.step();
+        assert!(harness.state().canvas_text_edit_receiver.is_some());
+        wait_for_canvas_text_edit_task(&mut harness);
+        assert!(!harness.state().canvas_text_edit_stale);
+        assert_eq!(
+            harness
+                .state()
+                .canvas_text_edit_preview
+                .as_ref()
+                .map(|preview| preview.draft_text.as_str()),
+            Some("external edit"),
+            "explicit reload discards the old draft and loads the current Canvas text"
+        );
+        assert!(!vault_path.join("Notes/Created.md").exists());
+        assert_eq!(existing_vault_tree_snapshot(&app_data_path), app_data_before);
     }
 
     #[test]

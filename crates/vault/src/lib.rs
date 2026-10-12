@@ -411,11 +411,25 @@ impl VaultRoot {
         &self,
         relative_path: impl AsRef<Path>,
     ) -> Result<VaultReadPreview, VaultError> {
+        self.read_preview_with_limit(relative_path, MAX_NOTE_SOURCE_PREVIEW_BYTES)
+    }
+
+    /// Reads at most `max_bytes` from a vault file without normalizing or writing it.
+    ///
+    /// The preview carries a revision only when the complete file fits within the
+    /// requested bound. Callers that need to edit a file must reject truncated
+    /// previews and use the revision from a complete preview for the write check.
+    pub fn read_preview_with_limit(
+        &self,
+        relative_path: impl AsRef<Path>,
+        max_bytes: usize,
+    ) -> Result<VaultReadPreview, VaultError> {
         let canonical = self.resolve_vault_path(relative_path.as_ref(), false)?;
         let mut file = fs::File::open(canonical)?;
         let before = file.metadata()?;
         let total_size_bytes = before.len();
-        let read_limit = total_size_bytes.min(MAX_NOTE_SOURCE_PREVIEW_BYTES as u64);
+        let max_bytes = max_bytes as u64;
+        let read_limit = total_size_bytes.min(max_bytes);
         let mut bytes = Vec::with_capacity(read_limit as usize);
         IoRead::by_ref(&mut file)
             .take(read_limit)
@@ -427,7 +441,7 @@ impl VaultRoot {
         {
             return Err(VaultError::SnapshotChanged);
         }
-        let truncated = total_size_bytes > MAX_NOTE_SOURCE_PREVIEW_BYTES as u64;
+        let truncated = total_size_bytes > max_bytes;
         let revision_sha256 = (!truncated).then(|| sha256_hex(&bytes));
         Ok(VaultReadPreview {
             source: RawDocument::from_bytes(bytes),
@@ -3069,6 +3083,48 @@ mod tests {
         assert_eq!(preview.source.as_bytes(), original);
         assert!(!preview.truncated);
         assert_eq!(preview.revision_sha256, Some(sha256_hex(original)));
+    }
+
+    #[test]
+    fn bounded_preview_omits_revision_when_the_requested_limit_truncates_the_file() {
+        let temp = TempDir::new();
+        let vault_path = temp.0.join("vault");
+        fs::create_dir(&vault_path).unwrap();
+        let original = (0..128).map(|index| index as u8).collect::<Vec<_>>();
+        fs::write(vault_path.join("Board.canvas"), &original).unwrap();
+        let vault = VaultRoot::open(&vault_path).unwrap();
+        let before = vault.snapshot().unwrap();
+
+        let preview = vault
+            .read_preview_with_limit("Board.canvas", 64)
+            .unwrap();
+
+        assert_eq!(preview.source.as_bytes(), &original[..64]);
+        assert_eq!(preview.total_size_bytes, original.len() as u64);
+        assert!(preview.truncated);
+        assert!(preview.revision_sha256.is_none());
+        assert_eq!(vault.snapshot().unwrap(), before);
+    }
+
+    #[test]
+    fn bounded_preview_returns_complete_content_and_revision_above_the_note_default() {
+        let temp = TempDir::new();
+        let vault_path = temp.0.join("vault");
+        fs::create_dir(&vault_path).unwrap();
+        let original = (0..MAX_NOTE_SOURCE_PREVIEW_BYTES + 37)
+            .map(|index| (index % 251) as u8)
+            .collect::<Vec<_>>();
+        fs::write(vault_path.join("Board.canvas"), &original).unwrap();
+        let vault = VaultRoot::open(&vault_path).unwrap();
+
+        let preview = vault
+            .read_preview_with_limit("Board.canvas", original.len())
+            .unwrap();
+
+        assert_eq!(preview.source.as_bytes(), original);
+        assert_eq!(preview.total_size_bytes, original.len() as u64);
+        assert!(!preview.truncated);
+        assert_eq!(preview.revision_sha256, Some(sha256_hex(&original)));
     }
 
     #[test]

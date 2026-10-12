@@ -18,6 +18,10 @@ use openobsidian_vault::{VaultCreateRequest, VaultEntry, VaultRead, VaultStore};
 use std::path::{Path, PathBuf};
 use std::time::SystemTime;
 
+/// Maximum Canvas source bytes parsed for text-card preview and editing.
+/// Markdown note previews retain their separate 16 KiB limit.
+pub const MAX_CANVAS_SOURCE_BYTES: usize = 4 * 1024 * 1024;
+
 /// Application session for a vault and its app-owned history directory.
 #[derive(Clone, Debug)]
 pub struct VaultSession {
@@ -106,21 +110,47 @@ impl VaultSession {
         text: &str,
     ) -> Result<VaultWriteResult, CanvasEditError> {
         let relative_path = normalize_portable_path(relative_path.as_ref())?;
-        let current = self.read(&relative_path)?;
-        if current.revision_sha256 != expected_revision_sha256 {
+        if !relative_path
+            .extension()
+            .is_some_and(|extension| extension.eq_ignore_ascii_case("canvas"))
+        {
+            return Err(CanvasEditError::NotCanvasFile(relative_path));
+        }
+
+        let snapshot = self
+            .store
+            .root()
+            .read_preview_with_limit(&relative_path, MAX_CANVAS_SOURCE_BYTES)?;
+        if snapshot.truncated {
+            return Err(CanvasEditError::TooLarge {
+                relative_path,
+            });
+        }
+        let current_revision = snapshot
+            .revision_sha256
+            .ok_or_else(|| CanvasEditError::TooLarge {
+                relative_path: relative_path.clone(),
+            })?;
+        if current_revision != expected_revision_sha256 {
             return Err(CanvasEditError::StaleRevision {
                 relative_path: relative_path.clone(),
                 expected_revision: expected_revision_sha256.to_owned(),
-                current_revision: current.revision_sha256,
+                current_revision,
             });
         }
 
-        let mut document = parse_canvas(current.document.as_bytes())?;
+        if text.len() > MAX_CANVAS_SOURCE_BYTES {
+            return Err(CanvasEditError::TooLarge { relative_path });
+        }
+        let mut document = parse_canvas(snapshot.source.as_bytes())?;
         document.edit_text_node(node_id, text)?;
         let bytes = encode_canvas(&document)?;
+        if bytes.len() > MAX_CANVAS_SOURCE_BYTES {
+            return Err(CanvasEditError::TooLarge { relative_path });
+        }
         Ok(self.write(VaultWriteRequest {
             relative_path: relative_path.to_path_buf(),
-            expected_revision_sha256: Some(expected_revision_sha256.to_owned()),
+            expected_revision_sha256: Some(current_revision),
             bytes,
         })?)
     }
@@ -141,7 +171,10 @@ impl VaultSession {
             return Err(CanvasTextNodePreviewError::NotCanvasFile(relative_path));
         }
 
-        let snapshot = self.read_preview(&relative_path)?;
+        let snapshot = self
+            .store
+            .root()
+            .read_preview_with_limit(&relative_path, MAX_CANVAS_SOURCE_BYTES)?;
         if snapshot.truncated {
             return Err(CanvasTextNodePreviewError::TooLarge { relative_path });
         }
@@ -162,10 +195,10 @@ impl VaultSession {
         })
     }
 
-    /// Reads one Canvas snapshot and validates it against the caller's observed
-    /// revision, then creates a note from that snapshot's exact text-card contents.
-    /// An external Canvas edit after the read is not atomically excluded. This
-    /// API never modifies the Canvas.
+    /// Reads one bounded Canvas snapshot and validates it against the caller's
+    /// observed revision, then creates a note from that snapshot's exact text-card
+    /// contents. An external Canvas edit after the read is not atomically excluded.
+    /// This API never modifies the Canvas.
     pub fn create_canvas_note_from_text_node(
         &self,
         canvas_relative_path: impl AsRef<Path>,
@@ -188,16 +221,29 @@ impl VaultSession {
             return Err(VaultError::NotMarkdownNote(note_relative_path).into());
         }
 
-        let current = self.read(&canvas_relative_path)?;
-        if current.revision_sha256 != expected_canvas_revision_sha256 {
+        let snapshot = self
+            .store
+            .root()
+            .read_preview_with_limit(&canvas_relative_path, MAX_CANVAS_SOURCE_BYTES)?;
+        if snapshot.truncated {
+            return Err(CanvasNoteCreateError::TooLarge {
+                relative_path: canvas_relative_path,
+            });
+        }
+        let current_revision = snapshot
+            .revision_sha256
+            .ok_or_else(|| CanvasNoteCreateError::TooLarge {
+                relative_path: canvas_relative_path.clone(),
+            })?;
+        if current_revision != expected_canvas_revision_sha256 {
             return Err(CanvasNoteCreateError::StaleRevision {
                 relative_path: canvas_relative_path,
                 expected_revision: expected_canvas_revision_sha256.to_owned(),
-                current_revision: current.revision_sha256,
+                current_revision,
             });
         }
 
-        let document = parse_canvas(current.document.as_bytes())?;
+        let document = parse_canvas(snapshot.source.as_bytes())?;
         let text = document.extract_text_node(node_id)?;
         let created = self.store.create_new(VaultCreateRequest {
             relative_path: note_relative_path.clone(),
@@ -352,6 +398,12 @@ fn normalize_portable_path(relative_path: &Path) -> Result<PathBuf, VaultError> 
 /// Failure to apply a revision-checked Canvas text-card edit.
 #[derive(Debug, thiserror::Error)]
 pub enum CanvasEditError {
+    /// The source path does not have a `.canvas` extension.
+    #[error("vault path is not a Canvas file: {0}")]
+    NotCanvasFile(PathBuf),
+    /// The Canvas exceeds the bounded source size accepted for text-card edits.
+    #[error("Canvas is too large to edit safely: {relative_path}")]
+    TooLarge { relative_path: PathBuf },
     /// The caller's Canvas snapshot became stale before the edit started.
     #[error("Canvas revision changed for {relative_path}; reopen it before editing")]
     StaleRevision {
@@ -373,6 +425,9 @@ pub enum CanvasNoteCreateError {
     /// The source path does not have a `.canvas` extension.
     #[error("vault path is not a Canvas file: {0}")]
     NotCanvasFile(PathBuf),
+    /// The Canvas exceeds the bounded source size accepted for text-card creation.
+    #[error("Canvas is too large to create a note safely: {relative_path}")]
+    TooLarge { relative_path: PathBuf },
     /// The caller's Canvas snapshot became stale before extraction started.
     #[error("Canvas revision changed for {relative_path}; reopen it before creating a note")]
     StaleRevision {
@@ -783,6 +838,153 @@ mod tests {
             Err(CanvasTextNodePreviewError::NotCanvasFile(path))
                 if path == *"Notes/Index.md"
         ));
+    }
+
+    #[test]
+    fn canvas_text_preview_and_edit_accept_uppercase_canvas_extension() {
+        let temporary = TempTree::new();
+        let (vault, app_data) = temporary.layout();
+        let source = br#"{"nodes":[{"id":"text-1","type":"text","text":"before"}],"edges":[]}"#;
+        fs::write(vault.join("Board.CANVAS"), source).unwrap();
+        let session = VaultSession::open(&vault, &app_data).unwrap();
+
+        let preview = session
+            .preview_canvas_text_node("Board.CANVAS", "text-1")
+            .unwrap();
+        assert_eq!(preview.text, "before");
+
+        let result = session
+            .edit_canvas_text_node(
+                "Board.CANVAS",
+                &preview.revision_sha256,
+                "text-1",
+                "after",
+            )
+            .unwrap();
+
+        let persisted = parse_canvas(result.read.document.as_bytes()).unwrap();
+        assert_eq!(persisted.extract_text_node("text-1").unwrap(), "after");
+    }
+
+    #[test]
+    fn canvas_edit_rejects_non_canvas_targets_without_mutation() {
+        let temporary = TempTree::new();
+        let (vault, app_data) = temporary.layout();
+        let source = b"This is a Markdown file, not a Canvas.";
+        fs::write(vault.join("Board.md"), source).unwrap();
+        let session = VaultSession::open(&vault, &app_data).unwrap();
+
+        let error = session
+            .edit_canvas_text_node("Board.md", "unused-revision", "text-1", "changed")
+            .expect_err("non-Canvas target must be rejected before reading or writing");
+
+        assert!(matches!(
+            error,
+            CanvasEditError::NotCanvasFile(path) if path == PathBuf::from("Board.md")
+        ));
+        assert_eq!(fs::read(vault.join("Board.md")).unwrap(), source);
+    }
+
+    #[test]
+    fn canvas_text_preview_accepts_sources_larger_than_markdown_preview_limit() {
+        let temporary = TempTree::new();
+        let (vault, app_data) = temporary.layout();
+        let body = "x".repeat(MAX_NOTE_SOURCE_PREVIEW_BYTES);
+        let source = format!(
+            "{{\"nodes\":[{{\"id\":\"text-1\",\"type\":\"text\",\"text\":\"{body}\"}}],\"edges\":[]}}"
+        );
+        assert!(source.len() > MAX_NOTE_SOURCE_PREVIEW_BYTES);
+        assert!(source.len() < MAX_CANVAS_SOURCE_BYTES);
+        fs::write(vault.join("Large.canvas"), source.as_bytes()).unwrap();
+        let session = VaultSession::open(&vault, &app_data).unwrap();
+
+        let preview = session
+            .preview_canvas_text_node("Large.canvas", "text-1")
+            .unwrap();
+
+        assert_eq!(preview.text, body);
+        assert_eq!(
+            preview.revision_sha256,
+            session.read("Large.canvas").unwrap().revision_sha256
+        );
+    }
+
+    #[test]
+    fn oversized_canvas_preview_and_edit_fail_without_mutation() {
+        let temporary = TempTree::new();
+        let (vault, app_data) = temporary.layout();
+        let source = vec![b'x'; MAX_CANVAS_SOURCE_BYTES + 1];
+        fs::write(vault.join("Huge.canvas"), &source).unwrap();
+        fs::create_dir(vault.join("Notes")).unwrap();
+        let session = VaultSession::open(&vault, &app_data).unwrap();
+
+        let preview_error = session
+            .preview_canvas_text_node("Huge.canvas", "text-1")
+            .expect_err("oversized Canvas preview must be rejected before parsing");
+        assert!(matches!(
+            preview_error,
+            CanvasTextNodePreviewError::TooLarge { relative_path }
+                if relative_path == PathBuf::from("Huge.canvas")
+        ));
+
+        let edit_error = session
+            .edit_canvas_text_node(
+                "Huge.canvas",
+                "stale-revision",
+                "text-1",
+                "changed",
+            )
+            .expect_err("oversized Canvas edit must be rejected before parsing or writing");
+        assert!(matches!(
+            edit_error,
+            CanvasEditError::TooLarge { relative_path }
+                if relative_path == PathBuf::from("Huge.canvas")
+        ));
+        assert_eq!(fs::read(vault.join("Huge.canvas")).unwrap(), source);
+
+        let note_create_error = session
+            .create_canvas_note_from_text_node(
+                "Huge.canvas",
+                "stale-revision",
+                "text-1",
+                "Notes/Created.md",
+            )
+            .expect_err("oversized Canvas note creation must fail before reading or writing it");
+        assert!(matches!(
+            note_create_error,
+            CanvasNoteCreateError::TooLarge { relative_path }
+                if relative_path == PathBuf::from("Huge.canvas")
+        ));
+        assert!(!vault.join("Notes/Created.md").exists());
+    }
+
+    #[test]
+    fn canvas_edit_rejects_an_encoded_result_over_the_source_limit_without_mutation() {
+        let temporary = TempTree::new();
+        let (vault, app_data) = temporary.layout();
+        let source = br#"{"nodes":[{"id":"text-1","type":"text","text":"before"}],"edges":[]}"#;
+        fs::write(vault.join("Board.canvas"), source).unwrap();
+        let session = VaultSession::open(&vault, &app_data).unwrap();
+        let preview = session
+            .preview_canvas_text_node("Board.canvas", "text-1")
+            .unwrap();
+        let oversized_text = "x".repeat(MAX_CANVAS_SOURCE_BYTES);
+
+        let error = session
+            .edit_canvas_text_node(
+                "Board.canvas",
+                &preview.revision_sha256,
+                "text-1",
+                &oversized_text,
+            )
+            .expect_err("encoded Canvas over the source bound must be rejected before writing");
+
+        assert!(matches!(
+            error,
+            CanvasEditError::TooLarge { relative_path }
+                if relative_path == PathBuf::from("Board.canvas")
+        ));
+        assert_eq!(fs::read(vault.join("Board.canvas")).unwrap(), source);
     }
 
     #[test]

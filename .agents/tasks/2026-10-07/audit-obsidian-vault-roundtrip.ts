@@ -46,6 +46,7 @@ const noteEmbed = "![[Assets/roundtrip image.png]]";
 const noteContents = `${noteMarker}\n\n${noteEmbed}\n`;
 const canvasPath = "C06 Reference.canvas";
 const canvasMarker = "Canvas text card";
+const canvasEditedText = "Canvas text card edited in OpenObsidian CI";
 const canvasNotePath = "Notes/Canvas text card.md";
 const canvasTargetPath = "Notes/Target.md";
 const canvasTargetMarkdown = "# Heading\n\nTarget for the C06 Canvas fixture subpath. ^block-id\n";
@@ -99,15 +100,19 @@ const report: Record<string, unknown> = {
   obsidian_authoring: {status: "pending"},
   openobsidian_open: {status: "pending"},
   obsidian_reopen: {status: "pending"},
-  canvas_reference_reopen: {status: "pending", note_creation: {status: "pending"}},
+  canvas_reference_reopen: {
+    status: "pending",
+    text_edit: {status: "pending"},
+    note_creation: {status: "pending"},
+  },
   vault_snapshots: {},
   openobsidian_app_data: {},
   workspace_state_allowlist: workspaceStateAllowlist,
   acceptance_limits: [
     "The run proves read-only startup, source preview and close, external note creation, in-place edit, and rename followed by explicit UI refresh and preview, native image-embed resolution and external attachment removal followed by refresh/re-resolution, plus explicit Canvas text-card note preview/review/confirmation before first-open and reopened-vault visibility, native folder-picker selection and cancellation, and Obsidian reopen on the recorded runner platform only; other operating systems require their own passing artifact.",
     "The deliberate external note creation, in-place note edit, attachment removal, and note rename each establish a new baseline; all subsequent no-op operations must preserve the latest applicable baseline exactly.",
-    "The Canvas check uses a dedicated reference-compatible fixture and fresh Obsidian profile, previews and explicitly creates one Markdown note with exact text-card bytes while preserving the Canvas source, exposes both the Canvas marker and referenced block content, and checks exact Canvas and note bytes after both shutdowns; the codec's rich unknown-field fixture remains covered by Rust tests and is not opened by Obsidian. This does not certify every Canvas workflow or cross-platform behavior beyond the recorded runner.",
-    "This run does not certify native in-app note editing or saving, all product C01 flows, or general plugin/theme compatibility.",
+    "The Canvas check uses a dedicated reference-compatible fixture and fresh Obsidian profile, edits one native text card with no write before explicit save, verifies the saved JSON differs only at that selected card's text while preserving sibling nodes and edges, creates one Markdown note afterward with the edited text-card bytes, exposes the edited text and referenced block content, and checks the edited Canvas and note after first-open and reopened-vault sessions. The codec's rich unknown-field fixture remains covered by Rust tests and is not opened by Obsidian. This does not certify every Canvas workflow or cross-platform behavior beyond the recorded runner.",
+    "This run does not certify all product C01 flows or general plugin/theme compatibility.",
   ],
 };
 
@@ -2891,6 +2896,18 @@ async function invokeNativeAccessibleControl(
     return await clickMacOsCanvasNotePreviewFromCiGeometry(child);
   }
 
+  const canvasTextEditAction = controlName === "Load Canvas text card"
+    ? "load"
+    : controlName === "Save Canvas text"
+      ? "save"
+      : null;
+  if (canvasTextEditAction && waitUntilEnabled && process.platform === "linux") {
+    return await clickLinuxCanvasTextEditButtonFromCiGeometry(windowId, canvasTextEditAction);
+  }
+  if (canvasTextEditAction && waitUntilEnabled && process.platform === "darwin") {
+    return await clickMacOsCanvasTextEditButtonFromCiGeometry(child, canvasTextEditAction);
+  }
+
   const canvasNoteAction = controlName === "Review and confirm note creation"
     ? "review"
     : controlName === "Confirm and create note"
@@ -3381,6 +3398,61 @@ async function clickMacOsCanvasNotePreviewFromCiGeometry(child: ChildProcess): P
   const controlName = "Preview note creation";
   const diagnosticPrefix = "OpenObsidian CI canvas-note-preview input:";
   const diagnosticLogPath = join(reportDirectory, "openobsidian-canvas-note-create.log");
+  const afterLineCount = (await readFile(diagnosticLogPath, "utf8").catch(() => ""))
+    .split(/\r?\n/)
+    .filter((line) => line.trim().length > 0).length;
+  await postMacOsPointerEvent(window.x + 5, window.y + macOSRunnerTitlebarHeightPoints + 5, false);
+  const bounds = await readOpenObsidianCiButtonBounds(
+    controlName,
+    diagnosticPrefix,
+    undefined,
+    diagnosticLogPath,
+    afterLineCount,
+  );
+  const x = Math.round(window.x + (bounds.left + bounds.right) / 2);
+  const y = Math.round(window.y + macOSRunnerTitlebarHeightPoints + (bounds.top + bounds.bottom) / 2);
+  await postMacOsPointerEvent(x, y, true);
+  return `CoreGraphics clicked ${controlName} at screen point (${x}, ${y}) from egui response geometry; window=${JSON.stringify(window)}; ${bounds.diagnostic}`;
+}
+
+async function clickLinuxCanvasTextEditButtonFromCiGeometry(
+  windowId: string,
+  action: "load" | "save",
+): Promise<string> {
+  const controlName = action === "load" ? "Load Canvas text card" : "Save Canvas text";
+  const diagnosticPrefix = `OpenObsidian CI canvas-text-edit-${action} input:`;
+  const diagnosticLogPath = join(reportDirectory, "openobsidian-canvas-text-edit.log");
+  xdotool("windowfocus", "--sync", windowId);
+  const afterLineCount = (await readFile(diagnosticLogPath, "utf8").catch(() => ""))
+    .split(/\r?\n/)
+    .filter((line) => line.trim().length > 0).length;
+  xdotool("mousemove", "--sync", "--window", windowId, "1", "1");
+  const bounds = await readOpenObsidianCiButtonBounds(
+    controlName,
+    diagnosticPrefix,
+    undefined,
+    diagnosticLogPath,
+    afterLineCount,
+  );
+  const x = Math.round(((bounds.left + bounds.right) / 2) * bounds.pixelsPerPoint);
+  const y = Math.round(((bounds.top + bounds.bottom) / 2) * bounds.pixelsPerPoint);
+  xdotool("mousemove", "--sync", "--window", windowId, String(x), String(y));
+  xdotool("mousedown", "1");
+  await delay(80);
+  xdotool("mouseup", "1");
+  return `xdotool clicked ${controlName} from CI response geometry at window coordinates (${x}, ${y}); ${bounds.diagnostic}`;
+}
+
+async function clickMacOsCanvasTextEditButtonFromCiGeometry(
+  child: ChildProcess,
+  action: "load" | "save",
+): Promise<string> {
+  await focusOpenObsidian(child);
+  const window = macOSOpenObsidianWindowBounds(child);
+  const macOSRunnerTitlebarHeightPoints = 32;
+  const controlName = action === "load" ? "Load Canvas text card" : "Save Canvas text";
+  const diagnosticPrefix = `OpenObsidian CI canvas-text-edit-${action} input:`;
+  const diagnosticLogPath = join(reportDirectory, "openobsidian-canvas-text-edit.log");
   const afterLineCount = (await readFile(diagnosticLogPath, "utf8").catch(() => ""))
     .split(/\r?\n/)
     .filter((line) => line.trim().length > 0).length;
@@ -5293,22 +5365,21 @@ async function verifyCanvasReferenceVisible(
 
 async function assertCanvasReferenceSource(
   byteBaseline: {bytes: number; sha256: string},
+  expectedDocument: unknown,
   stage: string,
 ): Promise<{
   bytes: number;
   sha256: string;
   byte_identical_to_baseline: boolean;
-  semantic_content_matches_seed: true;
+  semantic_content_matches_expected: true;
 }> {
   // Obsidian may canonicalize Canvas JSON whitespace on shutdown. OpenObsidian's
   // preview/create checks stay byte-exact; this reference-app boundary checks data.
   const bytes = await readFile(join(canvasVaultRoot, canvasPath));
   const sha256 = createHash("sha256").update(bytes).digest("hex");
   let actualDocument: unknown;
-  let seedDocument: unknown;
   try {
     actualDocument = JSON.parse(bytes.toString("utf8")) as unknown;
-    seedDocument = JSON.parse(readCanvasReferenceFixtureBytes().toString("utf8")) as unknown;
   } catch (error) {
     const evidenceFilename = stage.includes("first")
       ? "canvas-reference-after-first-close.canvas"
@@ -5316,18 +5387,18 @@ async function assertCanvasReferenceSource(
     await writeFile(join(reportDirectory, evidenceFilename), bytes);
     throw new Error(`Obsidian left invalid Canvas JSON after ${stage}: ${error instanceof Error ? error.message : "unknown JSON parse error"}`);
   }
-  if (!isDeepStrictEqual(actualDocument, seedDocument)) {
+  if (!isDeepStrictEqual(actualDocument, expectedDocument)) {
     const evidenceFilename = stage.includes("first")
       ? "canvas-reference-after-first-close.canvas"
       : "canvas-reference-after-reopen-close.canvas";
     await writeFile(join(reportDirectory, evidenceFilename), bytes);
-    throw new Error(`Obsidian changed the reference Canvas data after ${stage}; expected the fixture's exact parsed data, got ${bytes.length} bytes / ${sha256}`);
+    throw new Error(`Obsidian changed the expected Canvas data after ${stage}; got ${bytes.length} bytes / ${sha256}`);
   }
   return {
     bytes: bytes.length,
     sha256,
     byte_identical_to_baseline: bytes.length === byteBaseline.bytes && sha256 === byteBaseline.sha256,
-    semantic_content_matches_seed: true,
+    semantic_content_matches_expected: true,
   };
 }
 
@@ -5463,6 +5534,9 @@ function canvasInputLabelXOffset(controlName: string): number {
   if (controlName === "Canvas path") return 183;
   if (controlName === "Text card ID") return 146;
   if (controlName === "New Markdown path") return -415;
+  if (controlName === "Canvas edit path") return 220;
+  if (controlName === "Canvas edit text-card ID") return 240;
+  if (controlName === "Canvas text draft") return 280;
   throw new Error(`No Canvas input layout is configured for ${controlName}`);
 }
 
@@ -5470,6 +5544,9 @@ function canvasInputCropWidth(controlName: string): number {
   if (controlName === "Canvas path") return 220;
   if (controlName === "Text card ID") return 150;
   if (controlName === "New Markdown path") return 220;
+  if (controlName === "Canvas edit path") return 250;
+  if (controlName === "Canvas edit text-card ID") return 220;
+  if (controlName === "Canvas text draft") return 520;
   throw new Error(`No Canvas input crop is configured for ${controlName}`);
 }
 
@@ -5477,6 +5554,9 @@ const canvasInputHintValues: Readonly<Record<string, string>> = {
   "Canvas path": "Boards/Idea.canvas",
   "Text card ID": "text-card-id",
   "New Markdown path": "Notes/Created.md",
+  "Canvas edit path": "Boards/Idea.canvas",
+  "Canvas edit text-card ID": "text-card-id",
+  "Canvas text draft": canvasMarker,
 };
 
 async function locateCanvasTextInput(
@@ -5505,7 +5585,8 @@ async function locateCanvasTextInput(
     // The instruction above the form repeats these labels. Bound the search below its
     // opening words so OCR cannot mistake the instruction for a field label.
     const instructionBounds = findOcrPhraseBounds(tsv, "Enter a", 0)
-      ?? findOcrPhraseBounds(tsv, "Preview and confirm", 0);
+      ?? findOcrPhraseBounds(tsv, "Preview and confirm", 0)
+      ?? findOcrPhraseBounds(tsv, "Load one", 0);
     if (!instructionBounds) continue;
     const formRowMinimumTop = instructionBounds.top + instructionBounds.height;
     labelBoundsOcr = findOcrPhraseBounds(tsv, controlName, formRowMinimumTop, true);
@@ -5522,11 +5603,11 @@ async function locateCanvasTextInput(
     width: Math.max(1, Math.round(labelBoundsOcr.width / scaleX)),
     height: Math.max(1, Math.round(labelBoundsOcr.height / scaleY)),
   };
-  const rowOffset = controlName === "New Markdown path" ? 22 : 0;
+  const rowOffset = controlName === "New Markdown path" ? 22 : controlName === "Canvas text draft" ? 66 : 0;
   const centerX = Math.round(labelBoundsImage.left + canvasInputLabelXOffset(controlName));
   const centerY = Math.round(labelBoundsImage.top + labelBoundsImage.height / 2 + rowOffset);
   const cropWidth = canvasInputCropWidth(controlName);
-  const cropHeight = 32;
+  const cropHeight = controlName === "Canvas text draft" ? 72 : 32;
   const cropBounds = {
     left: Math.max(0, Math.min(imageDimensions.width - 1, Math.round(centerX - cropWidth / 2))),
     top: Math.max(0, Math.min(imageDimensions.height - 1, Math.round(centerY - cropHeight / 2))),
@@ -5885,7 +5966,7 @@ sys.exit(1)
 `;
     try {
       const hintValue = canvasInputHintValues[controlName];
-      if (!hintValue) throw new Error(`No visible Linux Canvas hint is configured for ${controlName}`);
+      if (hintValue === undefined) throw new Error(`No visible Linux Canvas hint is configured for ${controlName}`);
       const output = execFileSync("python3", ["-c", script, String(processId), controlName, hintValue, value], {
         encoding: "utf8",
         stdio: ["ignore", "pipe", "pipe"],
@@ -5904,7 +5985,7 @@ sys.exit(1)
     }
   } else if (process.platform === "darwin") {
     const hintValue = canvasInputHintValues[controlName];
-    if (!hintValue) throw new Error(`No visible macOS Canvas hint is configured for ${controlName}`);
+    if (hintValue === undefined) throw new Error(`No visible macOS Canvas hint is configured for ${controlName}`);
     const script = `on run argv
       set processId to (item 1 of argv) as integer
       set targetName to item 2 of argv
@@ -5918,7 +5999,7 @@ sys.exit(1)
         repeat with candidate in entire contents of window 1 of targetProcess
           try
             set candidateRole to role of candidate as text
-            if candidateRole is "AXTextField" then
+            if candidateRole is "AXTextField" or candidateRole is "AXTextArea" then
               set candidateName to ""
               set candidateValue to value of candidate as text
               try
@@ -5931,10 +6012,11 @@ sys.exit(1)
         end repeat
         if (count of matchingFields) is not 1 then error "Could not uniquely resolve the labeled " & targetName & " field by its label or visible hint; matching_fields=" & (count of matchingFields) & "; fields=" & fieldInventory
         set targetField to item 1 of matchingFields
+        set targetRole to role of targetField as text
         set value of targetField to replacement
         delay 0.15
         if (value of targetField as text) is not replacement then error "Accessible value did not match after replacement for " & targetName
-        return "AXTextField.setValue|" & targetName & "|exact_readback=true"
+        return targetRole & ".setValue|" & targetName & "|exact_readback=true"
       end tell
     end run`;
     try {
@@ -5972,6 +6054,7 @@ sys.exit(1)
       Add-Type -AssemblyName System.Windows.Forms
       $processId = [int]$env:OPENOBSIDIAN_WINDOW_PROCESS_ID
       $targetName = $env:OPENOBSIDIAN_ACCESSIBLE_CONTROL_NAME
+      $hintValue = $env:OPENOBSIDIAN_CANVAS_INPUT_HINT
       $replacement = $env:OPENOBSIDIAN_CANVAS_TEXT_ENTRY
       $root = [System.Windows.Automation.AutomationElement]::RootElement
       $processCondition = [System.Windows.Automation.PropertyCondition]::new(
@@ -5984,8 +6067,9 @@ sys.exit(1)
         foreach ($element in $elements) {
           try {
             $current = $element.Current
-            if ($current.Name -ne $targetName -or $current.ControlType -ne [System.Windows.Automation.ControlType]::Edit) { continue }
+            if ($current.ControlType -ne [System.Windows.Automation.ControlType]::Edit) { continue }
             $pattern = $element.GetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern)
+            if ($current.Name -ne $targetName -and [string]$pattern.Current.Value -cne $hintValue) { continue }
             if ($pattern.Current.IsReadOnly) { throw "The accessible edit field is read-only: $targetName" }
             $pattern.SetValue($replacement)
             Start-Sleep -Milliseconds 150
@@ -6055,6 +6139,7 @@ sys.exit(1)
         ...process.env,
         OPENOBSIDIAN_WINDOW_PROCESS_ID: String(processId),
         OPENOBSIDIAN_ACCESSIBLE_CONTROL_NAME: controlName,
+        OPENOBSIDIAN_CANVAS_INPUT_HINT: canvasInputHintValues[controlName] ?? "",
         OPENOBSIDIAN_CANVAS_TEXT_ENTRY: value,
       },
       stdio: ["ignore", "pipe", "pipe"],
@@ -6066,14 +6151,346 @@ sys.exit(1)
   }
 }
 
+type CanvasReferenceDocument = {
+  nodes: Array<Record<string, unknown>>;
+  edges: unknown[];
+  [key: string]: unknown;
+};
+
+function canvasReferenceDocumentsWithEditedText(text: string): {
+  seed: CanvasReferenceDocument;
+  edited: CanvasReferenceDocument;
+} {
+  const seed = JSON.parse(readCanvasReferenceFixtureBytes().toString("utf8")) as CanvasReferenceDocument;
+  const edited = JSON.parse(readCanvasReferenceFixtureBytes().toString("utf8")) as CanvasReferenceDocument;
+  const selectedNode = edited.nodes.find((node) => node.id === "text-1" && node.type === "text");
+  if (!selectedNode || selectedNode.text !== canvasMarker) {
+    throw new Error("The Canvas editor fixture does not contain the expected text-1 source card");
+  }
+  selectedNode.text = text;
+  return {seed, edited};
+}
+
+function canvasDocumentMatchesExpectedTextEdit(actual: unknown, expected: CanvasReferenceDocument): boolean {
+  return isDeepStrictEqual(actual, expected);
+}
+
+async function runOpenObsidianCanvasTextEdit(
+  seedSnapshot: SnapshotEntry[],
+  expectedSeedCanvas: {bytes: number; sha256: string},
+  seedDocument: CanvasReferenceDocument,
+  expectedEditedDocument: CanvasReferenceDocument,
+): Promise<{snapshot: SnapshotEntry[]; canvas: {bytes: number; sha256: string}}> {
+  const canvasReport = report.canvas_reference_reopen as Record<string, unknown>;
+  const editReport = canvasReport.text_edit as Record<string, unknown>;
+  const snapshots = report.vault_snapshots as Record<string, unknown>;
+  const logPath = join(reportDirectory, "openobsidian-canvas-text-edit.log");
+  const userConfigRoot = join(workDirectory, "openobsidian-canvas-edit-user-config");
+  const homeRoot = join(workDirectory, "openobsidian-canvas-edit-home");
+  const localDataRoot = join(workDirectory, "openobsidian-canvas-edit-local-data");
+  const appEnv: NodeJS.ProcessEnv = {...process.env, HOME: homeRoot};
+  let appDataRoot: string;
+  if (process.platform === "win32") {
+    appEnv.APPDATA = userConfigRoot;
+    appEnv.LOCALAPPDATA = localDataRoot;
+    appEnv.USERPROFILE = homeRoot;
+    appDataRoot = join(userConfigRoot, "OpenObsidian");
+  } else if (process.platform === "darwin") {
+    appDataRoot = join(homeRoot, "Library", "Application Support", "OpenObsidian");
+  } else {
+    appEnv.XDG_CONFIG_HOME = userConfigRoot;
+    appEnv.XDG_CACHE_HOME = join(workDirectory, "openobsidian-canvas-edit-cache");
+    appEnv.XDG_DATA_HOME = join(workDirectory, "openobsidian-canvas-edit-data");
+    appEnv.LIBGL_ALWAYS_SOFTWARE = "1";
+    appEnv.WGPU_BACKEND = "gl";
+    appDataRoot = join(userConfigRoot, "OpenObsidian");
+  }
+  await mkdir(join(homeRoot, "Desktop"), {recursive: true});
+  editReport.status = "running";
+  editReport.source_canvas_path = canvasPath;
+  editReport.source_text_node_id = "text-1";
+  editReport.edited_text = canvasEditedText;
+  editReport.accessible_labels = [
+    "Edit Canvas text card",
+    "Canvas edit path",
+    "Canvas edit text-card ID",
+    "Load Canvas text card",
+    "Canvas text draft",
+    "Save Canvas text",
+    "Reload Canvas",
+    "Cancel Canvas edit",
+  ];
+  editReport.save_policy = "The selected card is loaded into a draft; the vault must remain byte- and snapshot-identical until Save Canvas text is explicitly activated.";
+  const screenshots: Record<string, string> = {};
+  let child: ChildProcess | undefined;
+  let window: {window_id: string; title: string; geometry: string} | undefined;
+  try {
+    child = launchLogged(openObsidianBinary, [], logPath, appEnv);
+    editReport.pid = child.pid ?? null;
+    await delay(1_000);
+    if (child.exitCode !== null || child.signalCode !== null) {
+      throw new Error(`OpenObsidian exited before Canvas text editing (code=${child.exitCode}, signal=${child.signalCode})`);
+    }
+    if (process.platform === "linux") {
+      const x11Window = await waitFor("OpenObsidian Canvas text-edit window to become visible", async () => {
+        try {
+          const output = execFileSync("xdotool", ["search", "--onlyvisible", "--name", "OpenObsidian"], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]});
+          const windowId = output.trim().split(/\s+/).filter(Boolean).at(-1);
+          if (!windowId) return null;
+          const title = execFileSync("xdotool", ["getwindowname", windowId], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]}).trim();
+          const geometry = execFileSync("xdotool", ["getwindowgeometry", "--shell", windowId], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]});
+          return {window_id: windowId, title, geometry};
+        } catch {
+          return null;
+        }
+      }, (value) => value !== null, 30_000);
+      if (!x11Window) throw new Error("OpenObsidian did not expose a visible Canvas text-edit window");
+      window = x11Window;
+      xdotool("windowfocus", "--sync", window.window_id);
+    } else {
+      window = {window_id: String(child.pid ?? "unknown"), title: "OpenObsidian Canvas text-edit window", geometry: "native window bounds captured during screenshot"};
+    }
+    editReport.window = window;
+    editReport.native_picker = await selectOpenObsidianVaultFromNativePicker(
+      child,
+      window,
+      logPath,
+      canvasVaultRoot,
+      editReport,
+      "openobsidian-canvas-text-edit",
+    );
+    const initialMarkdownCount = countMarkdownFiles(seedSnapshot);
+    const opened = await waitFor("OpenObsidian to render the Canvas text-edit fixture vault", async () => {
+      await delay(750);
+      return await captureOpenObsidianScreenshot(window!.window_id, child!, "openobsidian-canvas-text-edit-selected", editReport);
+    }, (capture) => ocrTextContainsFuzzyPhrase(capture.ocrText, canvasVaultName, 1)
+      && new RegExp(`${initialMarkdownCount}\\s+Markdown files found`, "i").test(capture.ocrText), 30_000);
+    screenshots.vault_selected = relative(reportDirectory, opened.windowPngPath);
+    editReport.selected_vault_visible = true;
+    editReport.markdown_count_before_edit = initialMarkdownCount;
+
+    const canonicalVault = await realpath(canvasVaultRoot);
+    const canonicalAppData = await realpath(appDataRoot);
+    const relativeAppData = relative(canonicalVault, canonicalAppData);
+    if (relativeAppData === "" || (!relativeAppData.startsWith(`..${sep}`) && relativeAppData !== ".." && !relativeAppData.startsWith(sep))) {
+      throw new Error("OpenObsidian's Canvas text-edit application data directory is inside the selected vault");
+    }
+    editReport.app_data_root = `$RUNNER_TEMP/openobsidian-c01-roundtrip/${relative(workDirectory, appDataRoot).split(sep).join("/")}`;
+    editReport.app_data_canonical_root_is_outside_vault = true;
+
+    const beforeEdit = await snapshotTree(canvasVaultRoot);
+    ensureExactSnapshot(seedSnapshot, beforeEdit, "Canvas vault before native text-card edit");
+    const canvasBytesBefore = await readFile(join(canvasVaultRoot, canvasPath));
+    const seedHash = createHash("sha256").update(canvasBytesBefore).digest("hex");
+    if (canvasBytesBefore.length !== expectedSeedCanvas.bytes || seedHash !== expectedSeedCanvas.sha256) {
+      throw new Error("OpenObsidian changed the Canvas source before native text-card edit");
+    }
+    if (beforeEdit.some((entry) => entry.path === canvasNotePath)) {
+      throw new Error(`Canvas note destination already exists before native text-card edit: ${canvasNotePath}`);
+    }
+    editReport.vault_snapshot_before_edit = beforeEdit;
+    editReport.canvas_bytes_before_edit = {bytes: canvasBytesBefore.length, sha256: seedHash};
+    editReport.destination_absent_before_edit = true;
+
+    const interactions: Record<string, string> = {};
+    editReport.interactions = interactions;
+    interactions.expand_canvas_text_edit = await invokeNativeAccessibleControl(
+      child,
+      window.window_id,
+      "Edit Canvas text card",
+      undefined,
+      true,
+    );
+    const expandedForm = await waitFor(
+      "OpenObsidian to expose the native Canvas text-edit fields",
+      async () => await captureOpenObsidianScreenshot(window!.window_id, child!, "openobsidian-canvas-text-edit-expanded-form", editReport),
+      (capture) => ocrTextContainsPhrase(capture.ocrText, "Canvas edit path")
+        && ocrTextContainsPhrase(capture.ocrText, "Canvas edit text-card ID"),
+      30_000,
+    );
+    screenshots.expanded_form = relative(reportDirectory, expandedForm.windowPngPath);
+    editReport.expanded_form_ocr = expandedForm.ocrText.slice(0, 4_000);
+
+    const canvasPathReadback = await replaceOpenObsidianTextInput(child, window.window_id, "Canvas edit path", canvasPath);
+    const textCardIdReadback = await replaceOpenObsidianTextInput(child, window.window_id, "Canvas edit text-card ID", "text-1");
+    interactions.canvas_path = canvasPathReadback;
+    interactions.text_card_id = textCardIdReadback;
+    const inputReadbackEntries = [
+      ["Canvas edit path", canvasPathReadback],
+      ["Canvas edit text-card ID", textCardIdReadback],
+    ] as Array<[string, string]>;
+    const inputReadbacks = Object.fromEntries(inputReadbackEntries.map(([name, value]) => {
+      try {
+        const parsed = JSON.parse(value as string) as {exact_readback?: boolean; fallback?: {exact_readback?: boolean}};
+        return [name, {exact_readback: parsed.exact_readback === true || parsed.fallback?.exact_readback === true, interaction: parsed}];
+      } catch {
+        return [name, {exact_readback: false, interaction: value}];
+      }
+    }));
+    editReport.field_value_readbacks = inputReadbacks;
+    const unverifiedInputs = Object.entries(inputReadbacks)
+      .filter(([, result]) => !(result as {exact_readback?: boolean}).exact_readback)
+      .map(([name]) => name);
+    if (unverifiedInputs.length > 0) throw new Error(`Canvas edit inputs did not provide exact field-value readbacks: ${unverifiedInputs.join(", ")}`);
+
+    const afterInput = await snapshotTree(canvasVaultRoot);
+    ensureExactSnapshot(beforeEdit, afterInput, "Canvas path and text-card ID entry must not write to the vault");
+    if ((await readFile(join(canvasVaultRoot, canvasPath))).compare(canvasBytesBefore) !== 0
+      || afterInput.some((entry) => entry.path === canvasNotePath)) {
+      throw new Error("Entering native Canvas edit inputs wrote to the vault or changed its Canvas source");
+    }
+    editReport.vault_snapshot_after_input = afterInput;
+    editReport.no_write_during_input = true;
+
+    interactions.load = await invokeNativeAccessibleControl(child, window.window_id, "Load Canvas text card", undefined, true);
+    const loadedDraft = await waitFor(
+      "OpenObsidian to load the selected Canvas text-card draft",
+      async () => await captureOpenObsidianScreenshot(window!.window_id, child!, "openobsidian-canvas-text-edit-loaded", editReport),
+      (capture) => ocrTextContainsPhrase(capture.ocrText, "Canvas text draft")
+        && ocrTextContainsPhrase(capture.ocrText, "Save Canvas text")
+        && capture.ocrText.includes(canvasMarker),
+      30_000,
+    );
+    screenshots.loaded = relative(reportDirectory, loadedDraft.windowPngPath);
+    editReport.loaded_ocr = loadedDraft.ocrText.slice(0, 4_000);
+    const afterLoad = await snapshotTree(canvasVaultRoot);
+    ensureExactSnapshot(afterInput, afterLoad, "Loading the Canvas text-card draft must not write to the vault");
+    if ((await readFile(join(canvasVaultRoot, canvasPath))).compare(canvasBytesBefore) !== 0
+      || afterLoad.some((entry) => entry.path === canvasNotePath)) {
+      throw new Error("Loading the native Canvas text-card draft wrote to the vault or changed its source");
+    }
+    editReport.vault_snapshot_after_load = afterLoad;
+    editReport.no_write_during_load = true;
+
+    const draftReadback = await replaceOpenObsidianTextInput(child, window.window_id, "Canvas text draft", canvasEditedText);
+    interactions.canvas_text_draft = draftReadback;
+    let parsedDraftReadback: {exact_readback?: boolean; fallback?: {exact_readback?: boolean}};
+    try {
+      parsedDraftReadback = JSON.parse(draftReadback) as {exact_readback?: boolean; fallback?: {exact_readback?: boolean}};
+    } catch {
+      parsedDraftReadback = {};
+    }
+    editReport.draft_readback_exact = parsedDraftReadback.exact_readback === true || parsedDraftReadback.fallback?.exact_readback === true;
+    if (!editReport.draft_readback_exact) {
+      throw new Error("The native Canvas text draft did not provide an exact field-value readback");
+    }
+    const afterDraft = await snapshotTree(canvasVaultRoot);
+    ensureExactSnapshot(afterLoad, afterDraft, "Editing the Canvas draft must not write to the vault before Save Canvas text");
+    if ((await readFile(join(canvasVaultRoot, canvasPath))).compare(canvasBytesBefore) !== 0
+      || afterDraft.some((entry) => entry.path === canvasNotePath)) {
+      throw new Error("Editing the Canvas text draft wrote to the vault before explicit save");
+    }
+    editReport.vault_snapshot_after_draft = afterDraft;
+    editReport.no_write_before_save = true;
+
+    interactions.save = await invokeNativeAccessibleControl(child, window.window_id, "Save Canvas text", undefined, true);
+    const savedCanvasBytes = await waitFor("OpenObsidian to save the selected Canvas text card", async () => {
+      try {
+        const bytes = await readFile(join(canvasVaultRoot, canvasPath));
+        let document: unknown;
+        try {
+          document = JSON.parse(bytes.toString("utf8")) as unknown;
+        } catch {
+          return null;
+        }
+        return canvasDocumentMatchesExpectedTextEdit(document, expectedEditedDocument) ? bytes : null;
+      } catch {
+        return null;
+      }
+    }, (bytes) => bytes !== null, 15_000);
+    if (!savedCanvasBytes) throw new Error("Saving the Canvas text draft did not produce the exact expected Canvas document");
+    const savedCanvasHash = createHash("sha256").update(savedCanvasBytes).digest("hex");
+    let savedDocument: unknown;
+    try {
+      savedDocument = JSON.parse(savedCanvasBytes.toString("utf8")) as unknown;
+    } catch (error) {
+      throw new Error(`Saved Canvas text edit was not valid JSON: ${error instanceof Error ? error.message : "unknown parse error"}`);
+    }
+    if (!canvasDocumentMatchesExpectedTextEdit(savedDocument, expectedEditedDocument)) {
+      await writeFile(join(reportDirectory, "canvas-text-edit-incorrect-output.canvas"), savedCanvasBytes);
+      throw new Error("Saved Canvas JSON did not equal the seed document with only text-1.text changed");
+    }
+    const afterSave = await snapshotTree(canvasVaultRoot);
+    const saveChanges = changedPaths(afterDraft, afterSave);
+    if (saveChanges.length !== 1 || saveChanges[0]?.path !== canvasPath
+      || saveChanges[0]?.before?.kind !== "file" || saveChanges[0]?.after?.kind !== "file") {
+      throw new Error(`Saving Canvas text changed paths beyond the selected Canvas file: ${JSON.stringify(saveChanges).slice(0, 4_000)}`);
+    }
+    if (afterSave.some((entry) => entry.path === canvasNotePath)
+      || countMarkdownFiles(afterSave) !== countMarkdownFiles(afterDraft)) {
+      throw new Error("Saving the native Canvas text card created or changed a Markdown note");
+    }
+    const allNonTargetDataPreserved = isDeepStrictEqual(savedDocument, expectedEditedDocument)
+      && expectedEditedDocument.nodes.some((node) => node.id === "file-1")
+      && expectedEditedDocument.nodes.some((node) => node.id === "group-1")
+      && isDeepStrictEqual(expectedEditedDocument.nodes.filter((node) => node.id !== "text-1"), seedDocument.nodes.filter((node) => node.id !== "text-1"))
+      && isDeepStrictEqual(expectedEditedDocument.edges, seedDocument.edges);
+    if (!allNonTargetDataPreserved) {
+      throw new Error("Saving the Canvas edit changed a sibling node, an edge, or other non-target document data");
+    }
+    editReport.status = "passed";
+    editReport.interactions = interactions;
+    editReport.screenshots = screenshots;
+    editReport.vault_snapshot_after_save = afterSave;
+    editReport.vault_changes_from_explicit_save = saveChanges;
+    editReport.canvas_bytes_after_save = {bytes: savedCanvasBytes.length, sha256: savedCanvasHash};
+    editReport.saved_document_matches_only_selected_text_change = true;
+    editReport.selected_node_other_fields_preserved = true;
+    editReport.sibling_nodes_and_edges_preserved = true;
+    editReport.all_unselected_canvas_fields_preserved = true;
+    editReport.no_markdown_created = true;
+    snapshots.canvas_text_edit_before = beforeEdit;
+    snapshots.canvas_text_edit_after = afterSave;
+    await writeFile(join(reportDirectory, "canvas-text-edit-before.json"), `${JSON.stringify(beforeEdit, null, 2)}\n`);
+    await writeFile(join(reportDirectory, "canvas-text-edit-after.json"), `${JSON.stringify(afterSave, null, 2)}\n`);
+    await writeFile(join(reportDirectory, "canvas-text-edit-source-before.canvas"), canvasBytesBefore);
+    await writeFile(join(reportDirectory, "canvas-text-edit-source-after.canvas"), savedCanvasBytes);
+    editReport.artifacts = {
+      openobsidian_log: "openobsidian-canvas-text-edit.log",
+      before_snapshot: "canvas-text-edit-before.json",
+      after_snapshot: "canvas-text-edit-after.json",
+      source_before: "canvas-text-edit-source-before.canvas",
+      source_after: "canvas-text-edit-source-after.canvas",
+    };
+    await saveReport();
+
+    await delay(1_000);
+    await stopProcess(child);
+    child = undefined;
+    const afterClose = await snapshotTree(canvasVaultRoot);
+    ensureExactSnapshot(afterSave, afterClose, "OpenObsidian close after native Canvas text edit");
+    const closedBytes = await readFile(join(canvasVaultRoot, canvasPath));
+    if (closedBytes.compare(savedCanvasBytes) !== 0 || afterClose.some((entry) => entry.path === canvasNotePath)) {
+      throw new Error("OpenObsidian changed the saved Canvas edit on close or created a Markdown note");
+    }
+    editReport.vault_snapshot_after_close = afterClose;
+    editReport.canvas_bytes_after_close = {bytes: closedBytes.length, sha256: createHash("sha256").update(closedBytes).digest("hex")};
+    editReport.vault_unchanged_after_close = true;
+    await saveReport();
+    return {
+      snapshot: afterClose,
+      canvas: {bytes: closedBytes.length, sha256: createHash("sha256").update(closedBytes).digest("hex")},
+    };
+  } catch (error) {
+    editReport.status = "failed";
+    editReport.error = error instanceof Error ? error.message : String(error);
+    editReport.screenshots = screenshots;
+    await saveReport();
+    throw error;
+  } finally {
+    await stopProcess(child).catch(() => undefined);
+  }
+}
+
 async function runOpenObsidianCanvasNoteCreation(
   seedSnapshot: SnapshotEntry[],
   expectedCanvas: {bytes: number; sha256: string},
+  expectedText: string,
 ): Promise<SnapshotEntry[]> {
   const canvasReport = report.canvas_reference_reopen as Record<string, unknown>;
   const noteReport = canvasReport.note_creation as Record<string, unknown>;
   const snapshots = report.vault_snapshots as Record<string, unknown>;
-  const expectedNoteBytes = Buffer.from(canvasMarker, "utf8");
+  const expectedNoteBytes = Buffer.from(expectedText, "utf8");
   const expectedNoteSha256 = createHash("sha256").update(expectedNoteBytes).digest("hex");
   const userConfigRoot = join(workDirectory, "openobsidian-canvas-user-config");
   const homeRoot = join(workDirectory, "openobsidian-canvas-home");
@@ -6102,6 +6519,7 @@ async function runOpenObsidianCanvasNoteCreation(
   noteReport.output_path = canvasNotePath;
   noteReport.expected_note_bytes = expectedNoteBytes.length;
   noteReport.expected_note_sha256 = expectedNoteSha256;
+  noteReport.expected_note_text = expectedText;
   noteReport.body_is_exact_canvas_text = true;
   noteReport.accessible_labels = [
     "Create note from Canvas text card",
@@ -6405,11 +6823,23 @@ async function runCanvasReferenceProbe(): Promise<void> {
   let secondProcess: ChildProcess | undefined;
   let secondConnection: DevToolsConnection | undefined;
   try {
-    const expectedCanvas = await createCanvasReferenceFixture();
+    const seedCanvas = await createCanvasReferenceFixture();
+    const {seed: seedDocument, edited: expectedEditedDocument} = canvasReferenceDocumentsWithEditedText(canvasEditedText);
     const seedSnapshot = await snapshotTree(canvasVaultRoot);
     snapshots.canvas_reference_seed = seedSnapshot;
-    const expectedCreatedNoteBytes = Buffer.from(canvasMarker, "utf8");
-    const postCreateBaseline = await runOpenObsidianCanvasNoteCreation(seedSnapshot, expectedCanvas);
+    const textEdit = await runOpenObsidianCanvasTextEdit(
+      seedSnapshot,
+      seedCanvas,
+      seedDocument,
+      expectedEditedDocument,
+    );
+    const expectedCanvas = textEdit.canvas;
+    const editedSnapshot = textEdit.snapshot;
+    snapshots.canvas_reference_after_native_text_edit = editedSnapshot;
+    canvasReport.source_after_native_text_edit = expectedCanvas;
+    canvasReport.edited_text = canvasEditedText;
+    const expectedCreatedNoteBytes = Buffer.from(canvasEditedText, "utf8");
+    const postCreateBaseline = await runOpenObsidianCanvasNoteCreation(editedSnapshot, expectedCanvas, canvasEditedText);
     snapshots.canvas_reference_after_native_note_creation = postCreateBaseline;
     canvasReport.note_creation_baseline_includes_created_note = postCreateBaseline.some((entry) => (
       entry.path === canvasNotePath
@@ -6453,6 +6883,7 @@ async function runCanvasReferenceProbe(): Promise<void> {
     );
     firstSession.canvas_view = {
       marker_visible_in_body: firstView.body.includes(canvasMarker),
+      edited_text_visible_in_body: firstView.body.includes(canvasEditedText),
       path_visible_in_file_explorer: firstView.paths.includes(canvasPath),
       target_subpath_content_visible: firstView.body.includes(canvasTargetText),
       target_subpath_resolution_error_absent: !firstView.body.includes("Unable to find"),
@@ -6462,6 +6893,9 @@ async function runCanvasReferenceProbe(): Promise<void> {
       sha256: firstView.sha256,
       screenshot: "obsidian-canvas-first-open.png",
     };
+    if (!firstView.body.includes(canvasEditedText)) {
+      throw new Error("Obsidian's first open did not render the text saved by the native Canvas editor");
+    }
     const firstCreatedNoteView = await verifyCanvasCreatedNoteVisible(
       firstConnection,
       "obsidian-canvas-created-note-first-open.png",
@@ -6475,7 +6909,7 @@ async function runCanvasReferenceProbe(): Promise<void> {
       active_tree_path: firstCreatedNoteView.active_tree_path,
       active_view_type: firstCreatedNoteView.active_view_type,
       active_view_is_markdown: firstCreatedNoteView.active_view_is_markdown,
-      exact_text_card_body_visible: firstCreatedNoteView.active_view_text.includes(canvasMarker),
+      exact_text_card_body_visible: firstCreatedNoteView.active_view_text.includes(canvasEditedText),
       title: firstCreatedNoteView.title,
       body: firstCreatedNoteView.body.slice(0, 2_000),
       editor: firstCreatedNoteView.editor.slice(0, 2_000),
@@ -6487,7 +6921,7 @@ async function runCanvasReferenceProbe(): Promise<void> {
     if (!firstSession.created_note_view || !firstCreatedNoteView.paths.includes(canvasNotePath)
       || (firstCreatedNoteView.active_file_path !== canvasNotePath && firstCreatedNoteView.active_tree_path !== canvasNotePath)
       || !firstCreatedNoteView.active_view_is_markdown
-      || !firstCreatedNoteView.active_view_text.includes(canvasMarker)) {
+      || !firstCreatedNoteView.active_view_text.includes(canvasEditedText)) {
       throw new Error("Obsidian's first open did not activate and render the explicitly created Canvas text-card Markdown note");
     }
     await delay(2_000);
@@ -6497,7 +6931,7 @@ async function runCanvasReferenceProbe(): Promise<void> {
 
     const afterFirstClose = await snapshotTree(canvasVaultRoot);
     snapshots.canvas_reference_after_first_close = afterFirstClose;
-    const firstCloseCanvas = await assertCanvasReferenceSource(expectedCanvas, "the first Obsidian shutdown");
+    const firstCloseCanvas = await assertCanvasReferenceSource(expectedCanvas, expectedEditedDocument, "the first Obsidian shutdown");
     const firstCloseNote = await assertCanvasCreatedNoteSource(expectedCreatedNoteBytes, "the first Obsidian shutdown");
     firstSession.created_note_source_after_close = firstCloseNote;
     const firstCloseChanges = changedPaths(postCreateBaseline, afterFirstClose);
@@ -6533,6 +6967,7 @@ async function runCanvasReferenceProbe(): Promise<void> {
     );
     secondSession.canvas_view = {
       marker_visible_in_body: secondView.body.includes(canvasMarker),
+      edited_text_visible_in_body: secondView.body.includes(canvasEditedText),
       path_visible_in_file_explorer: secondView.paths.includes(canvasPath),
       target_subpath_content_visible: secondView.body.includes(canvasTargetText),
       target_subpath_resolution_error_absent: !secondView.body.includes("Unable to find"),
@@ -6542,6 +6977,9 @@ async function runCanvasReferenceProbe(): Promise<void> {
       sha256: secondView.sha256,
       screenshot: "obsidian-canvas-reopened.png",
     };
+    if (!secondView.body.includes(canvasEditedText)) {
+      throw new Error("Obsidian's reopened session did not render the text saved by the native Canvas editor");
+    }
     const secondCreatedNoteView = await verifyCanvasCreatedNoteVisible(
       secondConnection,
       "obsidian-canvas-created-note-reopened.png",
@@ -6555,7 +6993,7 @@ async function runCanvasReferenceProbe(): Promise<void> {
       active_tree_path: secondCreatedNoteView.active_tree_path,
       active_view_type: secondCreatedNoteView.active_view_type,
       active_view_is_markdown: secondCreatedNoteView.active_view_is_markdown,
-      exact_text_card_body_visible: secondCreatedNoteView.active_view_text.includes(canvasMarker),
+      exact_text_card_body_visible: secondCreatedNoteView.active_view_text.includes(canvasEditedText),
       title: secondCreatedNoteView.title,
       body: secondCreatedNoteView.body.slice(0, 2_000),
       editor: secondCreatedNoteView.editor.slice(0, 2_000),
@@ -6567,7 +7005,7 @@ async function runCanvasReferenceProbe(): Promise<void> {
     if (!secondCreatedNoteView.paths.includes(canvasNotePath)
       || (secondCreatedNoteView.active_file_path !== canvasNotePath && secondCreatedNoteView.active_tree_path !== canvasNotePath)
       || !secondCreatedNoteView.active_view_is_markdown
-      || !secondCreatedNoteView.active_view_text.includes(canvasMarker)) {
+      || !secondCreatedNoteView.active_view_text.includes(canvasEditedText)) {
       throw new Error("Obsidian's reopened session did not activate and render the explicitly created Canvas text-card Markdown note");
     }
     await delay(2_000);
@@ -6577,7 +7015,7 @@ async function runCanvasReferenceProbe(): Promise<void> {
 
     const afterSecondClose = await snapshotTree(canvasVaultRoot);
     snapshots.canvas_reference_after_reopen = afterSecondClose;
-    const secondCloseCanvas = await assertCanvasReferenceSource(firstCloseCanvas, "the reopened Obsidian shutdown");
+    const secondCloseCanvas = await assertCanvasReferenceSource(firstCloseCanvas, expectedEditedDocument, "the reopened Obsidian shutdown");
     const secondCloseNote = await assertCanvasCreatedNoteSource(expectedCreatedNoteBytes, "the reopened Obsidian shutdown");
     secondSession.created_note_source_after_close = secondCloseNote;
     const reopenChanges = changedPaths(beforeSecondOpen, afterSecondClose);
@@ -6592,9 +7030,11 @@ async function runCanvasReferenceProbe(): Promise<void> {
     }
     snapshots.canvas_reference_reopen_changes = allowedReferenceChanges;
     canvasReport.source_after_reopen = secondCloseCanvas;
-    canvasReport.source_semantics_preserved_after_both_shutdowns = firstCloseCanvas.semantic_content_matches_seed
-      && secondCloseCanvas.semantic_content_matches_seed;
-    canvasReport.seed_byte_representation_preserved_after_first_shutdown = firstCloseCanvas.byte_identical_to_baseline;
+    canvasReport.source_semantics_preserved_after_both_shutdowns = firstCloseCanvas.semantic_content_matches_expected
+      && secondCloseCanvas.semantic_content_matches_expected;
+    canvasReport.edited_text_visible_on_first_open = firstView.body.includes(canvasEditedText);
+    canvasReport.edited_text_visible_after_reopen = secondView.body.includes(canvasEditedText);
+    canvasReport.edited_byte_representation_preserved_after_first_shutdown = firstCloseCanvas.byte_identical_to_baseline;
     canvasReport.second_shutdown_bytes_match_first_close = secondCloseCanvas.byte_identical_to_baseline;
     canvasReport.first_close_canvas_bytes = firstCloseCanvas.bytes;
     canvasReport.first_close_canvas_sha256 = firstCloseCanvas.sha256;
@@ -6609,11 +7049,11 @@ async function runCanvasReferenceProbe(): Promise<void> {
     canvasReport.created_note_visible_on_first_open = firstCreatedNoteView.paths.includes(canvasNotePath)
       && (firstCreatedNoteView.active_file_path === canvasNotePath || firstCreatedNoteView.active_tree_path === canvasNotePath)
       && firstCreatedNoteView.active_view_is_markdown
-      && firstCreatedNoteView.active_view_text.includes(canvasMarker);
+      && firstCreatedNoteView.active_view_text.includes(canvasEditedText);
     canvasReport.created_note_visible_after_reopen = secondCreatedNoteView.paths.includes(canvasNotePath)
       && (secondCreatedNoteView.active_file_path === canvasNotePath || secondCreatedNoteView.active_tree_path === canvasNotePath)
       && secondCreatedNoteView.active_view_is_markdown
-      && secondCreatedNoteView.active_view_text.includes(canvasMarker);
+      && secondCreatedNoteView.active_view_text.includes(canvasEditedText);
     canvasReport.created_note_bytes_unchanged_after_both_shutdowns = firstCloseNote.sha256 === secondCloseNote.sha256
       && firstCloseNote.bytes === secondCloseNote.bytes
       && firstCloseNote.sha256 === createHash("sha256").update(expectedCreatedNoteBytes).digest("hex");
