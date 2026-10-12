@@ -1,5 +1,13 @@
 //! Application services that compose document and vault behavior without UI dependencies.
 
+mod bases;
+
+pub use bases::{
+    BaseCollectionIssue, BaseFileEvaluation, BaseFileEvaluationError, BaseFileListing,
+    BaseFileListingError, BaseFilePath, MAX_BASE_FILE_COUNT, MAX_BASE_FILE_SOURCE_BYTES,
+    MAX_BASE_NOTE_COUNT, MAX_BASE_NOTE_SOURCE_BYTES, MAX_BASE_TOTAL_SOURCE_BYTES,
+};
+
 use openobsidian_doc::{encode_canvas, parse_canvas};
 pub use openobsidian_vault::{
     LinkKind, LinkReference, LinkRenameAction, LinkResolution, LinkResolutionStatus,
@@ -52,6 +60,25 @@ impl VaultSession {
     /// Returns the current Markdown listing captured when the session opened or refreshed.
     pub fn entries(&self) -> &[VaultEntry] {
         &self.entries
+    }
+
+    /// Lists bounded, regular `.base` files from a fresh stable vault snapshot.
+    ///
+    /// Snapshotting hashes every regular vault file, so call this off the UI frame.
+    pub fn list_base_files(&self) -> Result<BaseFileListing, BaseFileListingError> {
+        bases::list_base_files(self.store.root())
+    }
+
+    /// Evaluates one `.base` file against a fresh, bounded Markdown collection.
+    ///
+    /// Snapshotting hashes every regular vault file, so call this off the UI frame.
+    pub fn evaluate_base_file(
+        &self,
+        relative_path: impl AsRef<Path>,
+        view_name: &str,
+    ) -> Result<BaseFileEvaluation, BaseFileEvaluationError> {
+        let relative_path = normalize_portable_path(relative_path.as_ref())?;
+        bases::evaluate_base_file(self.store.root(), &relative_path, view_name)
     }
 
     /// Returns the recovery outcome processed before the Markdown listing was scanned.

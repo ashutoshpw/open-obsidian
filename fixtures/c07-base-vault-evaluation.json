@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "id": "fixture:c07-base-vault-evaluation",
+  "base_path": "Boards/Tasks.base",
+  "view": "Open tasks",
+  "base_source": "filters: status == \"open\"\nformulas:\n  sourcePath: file.path\n  unsupportedDate: date(today)\nviews:\n  - type: table\n    name: Open tasks\n    groupBy: team\n    order:\n      - rank\n",
+  "notes": [
+    {
+      "path": "Notes/Cora.md",
+      "source": "---\nstatus: open\nrank: 7\nteam: blue\ntags:\n  - docs\n  - ci\ndetails:\n  owner:\n    name: Cora\n    active: true\n  blockers: []\n---\n# Cora's task\n\nReview the migration documentation.\n"
+    },
+    {
+      "path": "Notes/Closed.md",
+      "source": "---\nstatus: closed\nrank: 1\nteam: green\ntags: [blocked, archived]\nmetadata:\n  completed: true\n  score: 0.75\n---\n# Closed task\n\nThis note should be filtered out.\n"
+    },
+    {
+      "path": "Notes/Ada.md",
+      "source": "---\nstatus: open\nrank: 3\nteam: red\ntags:\n  - migration\n  - urgent\nproject:\n  name: Rust migration\n  active: true\n  estimate: 5\n---\n# Ada's task\n\nImplement the vault evaluation path.\n"
+    }
+  ],
+  "expected": {
+    "paths": ["Notes/Ada.md", "Notes/Cora.md"],
+    "groups": ["red", "blue"],
+    "issue_count": 1
+  }
+}

@@ -1311,6 +1311,16 @@
       "fixture_reader": "crates/engine"
     },
     {
+      "path": "fixtures/c07-base-vault-evaluation.json",
+      "sha256": "f464adb70370975bf209aecafc06d17c81b17850f41cbef76f73d7ff8d83bf6a",
+      "rust_owner": "crates/engine",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R2",
+      "purpose": "C07 read-only vault evaluation fixture covers a native YAML .base source, complete Markdown frontmatter with scalar/list/nested values, open-status filtering, numeric ordering, first-seen groups, a supported property formula, and one unsupported formula issue.",
+      "fixture_reader": "crates/engine"
+    },
+    {
       "path": "fixtures/c07-bases.json",
       "sha256": "a6c862ec62747626fe67d238b1683251b0cca3cdabd19a98afa6700fd846715d",
       "rust_owner": "crates/doc",
