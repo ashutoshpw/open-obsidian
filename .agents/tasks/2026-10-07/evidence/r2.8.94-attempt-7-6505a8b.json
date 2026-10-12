@@ -1,0 +1,117 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.8.94",
+  "attempt": 7,
+  "captured_at": "2026-10-12T02:29:23Z",
+  "source_sha": "6505a8b61076d88ac2d73efe746fdc6e48c9eb2f",
+  "outcome": "not_accepted",
+  "required_workflows": [
+    "Rust migration inventory",
+    "OpenObsidian quality",
+    "OpenObsidian desktop build",
+    "OpenObsidian plugin renderer matrix",
+    "OpenObsidian loaded plugin workflows",
+    "OpenObsidian Rust CI",
+    "Obsidian vault round-trip acceptance"
+  ],
+  "workflow_runs": {
+    "inventory": {
+      "id": 38195087222,
+      "head_sha": "6505a8b61076d88ac2d73efe746fdc6e48c9eb2f",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38195087222",
+      "jobs": [
+        { "id": 114635854197, "name": "inventory", "conclusion": "success" }
+      ]
+    },
+    "quality": {
+      "id": 38195087192,
+      "head_sha": "6505a8b61076d88ac2d73efe746fdc6e48c9eb2f",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38195087192",
+      "jobs": [
+        { "id": 114635854320, "name": "ubuntu-latest", "conclusion": "success" },
+        { "id": 114635854541, "name": "windows-latest", "conclusion": "success" },
+        { "id": 114635854608, "name": "macos-latest", "conclusion": "success" }
+      ]
+    },
+    "desktop_build": {
+      "id": 38195087227,
+      "head_sha": "6505a8b61076d88ac2d73efe746fdc6e48c9eb2f",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38195087227",
+      "jobs": [
+        { "id": 114635854372, "name": "windows-latest", "conclusion": "success" },
+        { "id": 114635854524, "name": "macos-latest", "conclusion": "success" },
+        { "id": 114635854537, "name": "ubuntu-latest", "conclusion": "success" }
+      ]
+    },
+    "plugin_renderer": {
+      "id": 38195087171,
+      "head_sha": "6505a8b61076d88ac2d73efe746fdc6e48c9eb2f",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38195087171",
+      "jobs": [
+        { "id": 114635854214, "name": "macos-latest", "conclusion": "success" },
+        { "id": 114635854381, "name": "windows-latest", "conclusion": "success" },
+        { "id": 114635854558, "name": "ubuntu-latest", "conclusion": "success" }
+      ]
+    },
+    "loaded_plugins": {
+      "id": 38195087230,
+      "head_sha": "6505a8b61076d88ac2d73efe746fdc6e48c9eb2f",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38195087230",
+      "jobs": [
+        { "id": 114635854219, "name": "ubuntu-latest", "conclusion": "success" },
+        { "id": 114635854378, "name": "macos-latest", "conclusion": "success" },
+        { "id": 114635854430, "name": "windows-latest", "conclusion": "success" }
+      ]
+    },
+    "rust_ci": {
+      "id": 38195087211,
+      "head_sha": "6505a8b61076d88ac2d73efe746fdc6e48c9eb2f",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38195087211",
+      "jobs": [
+        { "id": 114635854140, "name": "minimum supported Rust (1.95)", "conclusion": "success" },
+        { "id": 114635854171, "name": "rust (windows-latest)", "conclusion": "success" },
+        { "id": 114635854256, "name": "rust (macos-latest)", "conclusion": "success" },
+        { "id": 114635854307, "name": "rust (ubuntu-latest)", "conclusion": "success" }
+      ]
+    },
+    "vault_roundtrip": {
+      "id": 38195087228,
+      "head_sha": "6505a8b61076d88ac2d73efe746fdc6e48c9eb2f",
+      "conclusion": "failure",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38195087228",
+      "jobs": [
+        { "id": 114635854259, "name": "Obsidian 1.14.4 vault round-trip on macos-latest", "conclusion": "failure" },
+        { "id": 114635854386, "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04", "conclusion": "failure" },
+        { "id": 114635854477, "name": "Obsidian 1.14.4 vault round-trip on windows-latest", "conclusion": "success" }
+      ],
+      "failure_detail": "Windows passed. Linux reached the final confirmation screen but timed out because OCR read 'text' as 'bext' in the required 'from this Canvas text card' phrase; the note was not written. macOS passed the review transition, then accessibility could not locate 'Confirm and create note' and OCR could not locate the button or a fallback anchor; the note was not written. Both screenshots show the confirmation UI, and neither platform reported a vault mismatch."
+    }
+  },
+  "build_artifacts": [
+    { "workflow": "desktop_build", "platform": "macos-latest", "artifact_id": 11723320935, "sha256": "4a8710ca996247adf234cb257e93d3b45d88138c9e1c202f2b49e27008e4115b" },
+    { "workflow": "desktop_build", "platform": "windows-latest", "artifact_id": 11722433631, "sha256": "21637ac731e8a50f2dbb3b700e3afbcb3b73c590d2731c157e389170139b556e" },
+    { "workflow": "desktop_build", "platform": "ubuntu-latest", "artifact_id": 11722398650, "sha256": "5784fde1263a6324ce821ad43f961a9ab60688bc2dbeaec0c18444ed4820a6d2" },
+    { "workflow": "plugin_renderer", "platform": "ubuntu-latest", "artifact_id": 11722922761, "sha256": "5789c8bd23dbe679f23dbbc5ab83736168e62cd97589382eeb8cb67bb7556ed6" },
+    { "workflow": "plugin_renderer", "platform": "windows-latest", "artifact_id": 11722714790, "sha256": "3a089b7804f94877c9b09f37390343469ff350f66850b8ab651c0712cca8c30d" },
+    { "workflow": "plugin_renderer", "platform": "macos-latest", "artifact_id": 11722099168, "sha256": "1a737fbf5bb5c68b7c58954d159de7d1efb4ed5e9cac90f7906ca20a9c0d2bfb" },
+    { "workflow": "loaded_plugins", "platform": "macos-latest", "artifact_id": 11722987533, "sha256": "cff82679b65f2ebb6812efe2d6a37bd9e3ac4636fe26cb9336837f68b2a6ec24" },
+    { "workflow": "loaded_plugins", "platform": "windows-latest", "artifact_id": 11722983977, "sha256": "45735986c0b6f8efe6921d903479b6fd14ce7544cde56cbb4d65dbe0f517d589" },
+    { "workflow": "loaded_plugins", "platform": "ubuntu-latest", "artifact_id": 11722714774, "sha256": "bdd7f768a211687efb7ba401f08c38f3abd431359a43b1a93b98817030ab01c7" },
+    { "workflow": "rust_ci", "platform": "windows-latest", "artifact_id": 11723655460, "sha256": "68d1b9bf6ce003b8a2356a731c76a228b1cac7aa54f43ef9ef06d5cad83e3ca6" },
+    { "workflow": "rust_ci", "platform": "macos-latest", "artifact_id": 11723390904, "sha256": "7f26592e1b360d95961144cc9b3bae920f09d8bb1c24cca7004c5d2142a26a5d" },
+    { "workflow": "rust_ci", "platform": "ubuntu-latest", "artifact_id": 11722948142, "sha256": "87e8ea8e80cb1105bf02f8b6cbb3358d0354aac7ab0e3b195ad53d6cf3a8c290" },
+    { "workflow": "rust_ci", "platform": "ubuntu-latest", "artifact_id": 11722448777, "sha256": "e2767a8626de5b0d0d9e287f88b2fa6dbe07cfa119b8605bcadf324a42f93718" }
+  ],
+  "roundtrip_artifacts": [
+    { "job_id": 114635854259, "artifact_id": 11723132663, "archive_sha256": "ee45a46f5d1384bd464b898e6b6267fa98883c3086ecbc7434a00ae7fc022222" },
+    { "job_id": 114635854386, "artifact_id": 11722928576, "archive_sha256": "083d12947d685385a0817ec113ee7254b03b2198ccde0b1c8346261233467de0" },
+    { "job_id": 114635854477, "artifact_id": 11723381680, "archive_sha256": "bfb34ba2aded51528dcf8fb76b8869b22d4170f8fe68b5b979f2ba156aa8b245" }
+  ],
+  "local_executable_validation": "none; all executable validation ran in GitHub Actions CI only."
+}

@@ -4607,3 +4607,22 @@ on Linux and macOS, and requires preview-only UI text in the screenshot check.
 Only GitHub Actions will run executable validation. The migration milestone
 remains in progress until all seven required workflows pass on the exact
 correction SHA.
+
+## 2026-10-12 — R2.8.94 attempt 7 CI findings
+
+Attempt 7 ran on exact source SHA
+`6505a8b61076d88ac2d73efe746fdc6e48c9eb2f`. Inventory, quality, desktop
+build, plugin renderer, loaded plugin workflows and Rust CI passed. The
+Obsidian 1.14.4 round-trip passed on Windows and failed on Linux and macOS.
+Linux reached the final Canvas confirmation screen, but OCR read “text” as
+“bext” in the review phrase and the screenshot predicate timed out. macOS
+reached the review screen, then accessibility and OCR could not locate the
+Confirm and create note button. Neither failure wrote the note or changed the
+Canvas vault. Exact run/job IDs and artifact digests are in
+[`evidence/r2.8.94-attempt-7-6505a8b.json`](evidence/r2.8.94-attempt-7-6505a8b.json).
+
+The attempt 8 correction uses current egui response bounds for Review and
+Confirm clicks on Linux/macOS, and permits one OCR character error in the
+final review phrase while retaining exact marker and destination checks. The
+correction still requires all seven workflows on its exact pushed SHA. No
+local tests, builds, formatters, validators or application launches were run.

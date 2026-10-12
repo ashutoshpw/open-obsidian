@@ -2,14 +2,14 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-12T04:13:02+02:00",
+  "updated_at": "2026-10-12T04:29:23+02:00",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "a06faf8ebdcc4979b549ae0ce924e2a2c40ec34c",
+  "last_reconciled_head": "6505a8b61076d88ac2d73efe746fdc6e48c9eb2f",
   "current_milestone": "R2.8.94",
-  "next_action": "Commit and push the focused R2.8.94 correction for attempt 7, then collect all seven GitHub Actions results for its exact SHA. Accept the milestone only after every required workflow passes, including the Linux, macOS, and Windows Obsidian round-trip.",
-  "push_status": "origin/main contains a06faf8ebdcc4979b549ae0ce924e2a2c40ec34c; R2.8.94 attempt 6 is not accepted. Inventory, quality, desktop build, plugin renderer, loaded plugin workflows, and Rust CI passed. The Obsidian round-trip passed on Windows and failed on Linux and macOS due to Canvas input OCR and Preview interaction evidence; exact run and artifact metadata are in evidence/r2.8.94-attempt-6-a06faf8.json. The focused correction is prepared; no local executable validation ran.",
+  "next_action": "Commit the focused R2.8.94 attempt 8 correction for Canvas Review/Confirm geometry and the final review OCR phrase, push it to origin/main, then collect all seven required GitHub Actions results for its exact SHA. Accept R2.8.94 only if every workflow passes.",
+  "push_status": "origin/main contains 6505a8b61076d88ac2d73efe746fdc6e48c9eb2f. R2.8.94 attempt 7 is not accepted: inventory, quality, desktop build, plugin renderer, loaded plugins, and Rust CI passed; the Obsidian round-trip passed on Windows and failed on Linux/macOS during Canvas note confirmation. Exact run/job IDs and artifact digests are in evidence/r2.8.94-attempt-7-6505a8b.json. The attempt 8 correction is in the worktree; no local executable validation ran.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -76,6 +76,7 @@
     }
   },
   "completed_actions": [
+    "R2.8.94 attempt 7 ran on exact source SHA 6505a8b61076d88ac2d73efe746fdc6e48c9eb2f. Six required workflows passed. The Obsidian round-trip passed on Windows; Linux timed out on a one-character OCR error in the final review phrase, while macOS could not locate the Confirm button through accessibility or OCR. No note was written and no vault mismatch was reported. Exact run/job IDs and artifact digests are in evidence/r2.8.94-attempt-7-6505a8b.json. The focused attempt 8 correction uses egui response geometry for Review/Confirm on Linux/macOS and tolerant OCR. No local executable validation ran.",
     "R2.8.94 attempt 6 ran on exact source SHA a06faf8ebdcc4979b549ae0ce924e2a2c40ec34c. Inventory, quality, desktop build, plugin renderer, loaded plugin workflows, and Rust CI passed. The pinned Obsidian round-trip passed on Windows and failed on Linux because noisy field-crop OCR rejected a visibly correct Canvas path clipboard readback, and on macOS because the guessed Preview click did not start the preview. Exact run/job IDs and artifact digests are in evidence/r2.8.94-attempt-6-a06faf8.json. No local executable validation ran.",
     "R2.8.94 attempt 5 ran on exact source SHA c8db437492c50af201be4144de5389585f7be63d. Inventory, desktop build, plugin renderer, and loaded-plugin workflows passed. Quality failed only on Ubuntu before the local retrieval boundary. Rust CI failed the same two empty-vault Harness assertions on Ubuntu/macOS/Windows and Rust 1.95 because the tests did not open the collapsed Rename disclosure. The pinned Obsidian round-trip failed on Windows/macOS because OCR preprocessing erased low-contrast source-editor text; Linux passed source preview but clicked the Canvas text-card ID row 14 px too high. Exact run/job IDs and artifact digests are in evidence/r2.8.94-attempt-5-c8db437.json. No local executable validation ran.",
     "R2.8.93 attempt 2 accepted on exact source SHA 325ce3ab806f3e41564f12a8d61ef7562ffa45e9 after all seven required GitHub Actions workflows passed: Rust CI on Ubuntu/macOS/Windows and Rust 1.95, plus the pinned Obsidian 1.14.4 round-trip on Ubuntu/Windows/macOS. Exact run/job IDs, artifact IDs, and archive digests are in evidence/r2.8.93-attempt-2-325ce3a.json. Attempt 1's Ubuntu rustfmt-only failure remains in evidence/r2.8.93-attempt-1-392014b.json. Native UI and reference-app create-note behavior continue as R2.8.94; C06/C06.1 remain pending. No local tests, builds, formatters, or application launches were run for the accepted attempt.",
@@ -19134,6 +19135,67 @@
         { "name": "Obsidian 1.14.4 vault round-trip on windows-latest", "status": "completed", "conclusion": "failure", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38182281167/job/114597171930" },
         { "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04", "status": "completed", "conclusion": "failure", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38182281167/job/114597171998" }
       ]
+    },
+
+    {
+      "name": "Rust migration inventory", "run_id": 38195087222, "head_sha": "6505a8b61076d88ac2d73efe746fdc6e48c9eb2f",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38195087222", "status": "completed", "conclusion": "success",
+      "jobs": [{ "name": "inventory", "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38195087222/job/114635854197" }]
+    },
+    {
+      "name": "OpenObsidian quality", "run_id": 38195087192, "head_sha": "6505a8b61076d88ac2d73efe746fdc6e48c9eb2f",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38195087192", "status": "completed", "conclusion": "success",
+      "jobs": [
+        { "name": "ubuntu-latest", "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38195087192/job/114635854320" },
+        { "name": "windows-latest", "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38195087192/job/114635854541" },
+        { "name": "macos-latest", "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38195087192/job/114635854608" }
+      ]
+    },
+    {
+      "name": "OpenObsidian desktop build", "run_id": 38195087227, "head_sha": "6505a8b61076d88ac2d73efe746fdc6e48c9eb2f",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38195087227", "status": "completed", "conclusion": "success",
+      "jobs": [
+        { "name": "windows-latest", "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38195087227/job/114635854372" },
+        { "name": "macos-latest", "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38195087227/job/114635854524" },
+        { "name": "ubuntu-latest", "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38195087227/job/114635854537" }
+      ]
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix", "run_id": 38195087171, "head_sha": "6505a8b61076d88ac2d73efe746fdc6e48c9eb2f",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38195087171", "status": "completed", "conclusion": "success",
+      "jobs": [
+        { "name": "macos-latest", "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38195087171/job/114635854214" },
+        { "name": "windows-latest", "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38195087171/job/114635854381" },
+        { "name": "ubuntu-latest", "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38195087171/job/114635854558" }
+      ]
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows", "run_id": 38195087230, "head_sha": "6505a8b61076d88ac2d73efe746fdc6e48c9eb2f",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38195087230", "status": "completed", "conclusion": "success",
+      "jobs": [
+        { "name": "ubuntu-latest", "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38195087230/job/114635854219" },
+        { "name": "macos-latest", "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38195087230/job/114635854378" },
+        { "name": "windows-latest", "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38195087230/job/114635854430" }
+      ]
+    },
+    {
+      "name": "OpenObsidian Rust CI", "run_id": 38195087211, "head_sha": "6505a8b61076d88ac2d73efe746fdc6e48c9eb2f",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38195087211", "status": "completed", "conclusion": "success",
+      "jobs": [
+        { "name": "minimum supported Rust (1.95)", "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38195087211/job/114635854140" },
+        { "name": "rust (windows-latest)", "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38195087211/job/114635854171" },
+        { "name": "rust (macos-latest)", "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38195087211/job/114635854256" },
+        { "name": "rust (ubuntu-latest)", "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38195087211/job/114635854307" }
+      ]
+    },
+    {
+      "name": "Obsidian vault round-trip acceptance", "run_id": 38195087228, "head_sha": "6505a8b61076d88ac2d73efe746fdc6e48c9eb2f",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38195087228", "status": "completed", "conclusion": "failure",
+      "jobs": [
+        { "name": "Obsidian 1.14.4 vault round-trip on macos-latest", "status": "completed", "conclusion": "failure", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38195087228/job/114635854259" },
+        { "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04", "status": "completed", "conclusion": "failure", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38195087228/job/114635854386" },
+        { "name": "Obsidian 1.14.4 vault round-trip on windows-latest", "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38195087228/job/114635854477" }
+      ]
     }
   ],
   "milestones": {
@@ -30849,12 +30911,28 @@
             "vault_roundtrip": 38193690034
           },
           "finding": "Six workflows passed. The round-trip passed on Windows; Linux exact clipboard content was blocked by a noisy strict crop-OCR comparison, and macOS's guessed Preview click did not start preview. No vault mismatch was reported."
+        },
+        {
+          "attempt": 7,
+          "source_sha": "6505a8b61076d88ac2d73efe746fdc6e48c9eb2f",
+          "outcome": "not_accepted",
+          "evidence": "evidence/r2.8.94-attempt-7-6505a8b.json",
+          "workflow_runs": {
+            "inventory": 38195087222,
+            "quality": 38195087192,
+            "desktop_build": 38195087227,
+            "plugin_renderer": 38195087171,
+            "loaded_plugins": 38195087230,
+            "rust_ci": 38195087211,
+            "vault_roundtrip": 38195087228
+          },
+          "finding": "Six required workflows passed. The Windows Obsidian round-trip passed. Linux reached the final Canvas confirmation screen, but the exact OCR predicate read “text” as “bext” and timed out. macOS reached review, then accessibility could not locate Confirm and create note and OCR could not find the button; no note was written. Both platforms reported no vault mismatch. See evidence/r2.8.94-attempt-7-6505a8b.json for exact run/job IDs and artifact digests. No local executable validation ran."
         }
       ],
-      "implementation_sha": "a06faf8ebdcc4979b549ae0ce924e2a2c40ec34c",
-      "evidence": "evidence/r2.8.94-attempt-6-a06faf8.json",
+      "implementation_sha": "6505a8b61076d88ac2d73efe746fdc6e48c9eb2f",
+      "evidence": "evidence/r2.8.94-attempt-7-6505a8b.json",
       "accepted_attempt": null,
-      "push_status": "Attempts 1-6 are not accepted. Attempt 6 at a06faf8ebdcc4979b549ae0ce924e2a2c40ec34c passed six required workflows and failed the Obsidian round-trip only on Linux and macOS; see evidence/r2.8.94-attempt-6-a06faf8.json. A focused correction is prepared for Canvas clipboard/OCR proof and Preview button interaction. No local tests, builds, formatters, or application launches were run."
+      "push_status": "Attempts 1-7 are not accepted. Attempt 7 at 6505a8b61076d88ac2d73efe746fdc6e48c9eb2f passed six required workflows; the Obsidian round-trip passed on Windows and failed on Linux/macOS at Canvas note confirmation. See evidence/r2.8.94-attempt-7-6505a8b.json. A focused correction is prepared to use fresh egui button bounds for Review/Confirm on Linux/macOS and tolerate a one-character OCR error in the final review phrase. No local tests, builds, formatters, or application launches ran."
     }
   },
   "ci_preparation": {

@@ -2891,6 +2891,18 @@ async function invokeNativeAccessibleControl(
     return await clickMacOsCanvasNotePreviewFromCiGeometry(child);
   }
 
+  const canvasNoteAction = controlName === "Review and confirm note creation"
+    ? "review"
+    : controlName === "Confirm and create note"
+      ? "confirm"
+      : null;
+  if (canvasNoteAction && waitUntilEnabled && process.platform === "linux") {
+    return await clickLinuxCanvasNoteReviewOrConfirmFromCiGeometry(windowId, canvasNoteAction);
+  }
+  if (canvasNoteAction && waitUntilEnabled && process.platform === "darwin") {
+    return await clickMacOsCanvasNoteReviewOrConfirmFromCiGeometry(child, canvasNoteAction);
+  }
+
   if (process.platform === "linux") {
     const script = `
 import json
@@ -3368,6 +3380,61 @@ async function clickMacOsCanvasNotePreviewFromCiGeometry(child: ChildProcess): P
   const macOSRunnerTitlebarHeightPoints = 32;
   const controlName = "Preview note creation";
   const diagnosticPrefix = "OpenObsidian CI canvas-note-preview input:";
+  const diagnosticLogPath = join(reportDirectory, "openobsidian-canvas-note-create.log");
+  const afterLineCount = (await readFile(diagnosticLogPath, "utf8").catch(() => ""))
+    .split(/\r?\n/)
+    .filter((line) => line.trim().length > 0).length;
+  await postMacOsPointerEvent(window.x + 5, window.y + macOSRunnerTitlebarHeightPoints + 5, false);
+  const bounds = await readOpenObsidianCiButtonBounds(
+    controlName,
+    diagnosticPrefix,
+    undefined,
+    diagnosticLogPath,
+    afterLineCount,
+  );
+  const x = Math.round(window.x + (bounds.left + bounds.right) / 2);
+  const y = Math.round(window.y + macOSRunnerTitlebarHeightPoints + (bounds.top + bounds.bottom) / 2);
+  await postMacOsPointerEvent(x, y, true);
+  return `CoreGraphics clicked ${controlName} at screen point (${x}, ${y}) from egui response geometry; window=${JSON.stringify(window)}; ${bounds.diagnostic}`;
+}
+
+async function clickLinuxCanvasNoteReviewOrConfirmFromCiGeometry(
+  windowId: string,
+  action: "review" | "confirm",
+): Promise<string> {
+  const controlName = action === "review" ? "Review and confirm note creation" : "Confirm and create note";
+  const diagnosticPrefix = `OpenObsidian CI canvas-note-${action} input:`;
+  const diagnosticLogPath = join(reportDirectory, "openobsidian-canvas-note-create.log");
+  xdotool("windowfocus", "--sync", windowId);
+  const afterLineCount = (await readFile(diagnosticLogPath, "utf8").catch(() => ""))
+    .split(/\r?\n/)
+    .filter((line) => line.trim().length > 0).length;
+  xdotool("mousemove", "--sync", "--window", windowId, "1", "1");
+  const bounds = await readOpenObsidianCiButtonBounds(
+    controlName,
+    diagnosticPrefix,
+    undefined,
+    diagnosticLogPath,
+    afterLineCount,
+  );
+  const x = Math.round(((bounds.left + bounds.right) / 2) * bounds.pixelsPerPoint);
+  const y = Math.round(((bounds.top + bounds.bottom) / 2) * bounds.pixelsPerPoint);
+  xdotool("mousemove", "--sync", "--window", windowId, String(x), String(y));
+  xdotool("mousedown", "1");
+  await delay(80);
+  xdotool("mouseup", "1");
+  return `xdotool clicked ${controlName} from CI response geometry at window coordinates (${x}, ${y}); ${bounds.diagnostic}`;
+}
+
+async function clickMacOsCanvasNoteReviewOrConfirmFromCiGeometry(
+  child: ChildProcess,
+  action: "review" | "confirm",
+): Promise<string> {
+  await focusOpenObsidian(child);
+  const window = macOSOpenObsidianWindowBounds(child);
+  const macOSRunnerTitlebarHeightPoints = 32;
+  const controlName = action === "review" ? "Review and confirm note creation" : "Confirm and create note";
+  const diagnosticPrefix = `OpenObsidian CI canvas-note-${action} input:`;
   const diagnosticLogPath = join(reportDirectory, "openobsidian-canvas-note-create.log");
   const afterLineCount = (await readFile(diagnosticLogPath, "utf8").catch(() => ""))
     .split(/\r?\n/)
@@ -6214,7 +6281,7 @@ async function runOpenObsidianCanvasNoteCreation(
       async () => await captureOpenObsidianScreenshot(window!.window_id, child!, "openobsidian-canvas-note-create-review", noteReport),
       (capture) => capture.ocrText.includes(canvasMarker)
         && capture.ocrText.includes(canvasNotePath)
-        && capture.ocrText.includes("from this Canvas text card"),
+        && ocrTextContainsFuzzyPhrase(capture.ocrText, "from this Canvas text card", 1),
       30_000,
     );
     screenshots.review = relative(reportDirectory, review.windowPngPath);

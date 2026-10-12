@@ -1112,12 +1112,25 @@ impl OpenObsidianApp {
                         preview.note_relative_path.display()
                     ));
                     ui.horizontal(|ui| {
-                        confirm_create = ui
-                            .add_enabled(
+                        let confirm_response = ui.add_enabled(
+                            !operation_busy,
+                            eframe::egui::Button::new("Confirm and create note"),
+                        );
+                        if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some()
+                            && ui.input(|input| !input.raw.events.is_empty())
+                        {
+                            eprintln!(
+                                "OpenObsidian CI canvas-note-confirm input: enabled={}, response_rect={:?}, pixels_per_point={:.2}, pointer={:?}, hovered={}, clicked={}, events={:?}",
                                 !operation_busy,
-                                eframe::egui::Button::new("Confirm and create note"),
-                            )
-                            .clicked();
+                                confirm_response.rect,
+                                ui.ctx().pixels_per_point(),
+                                ui.input(|input| input.pointer.hover_pos()),
+                                confirm_response.hovered(),
+                                confirm_response.clicked(),
+                                ui.input(|input| input.raw.events.clone()),
+                            );
+                        }
+                        confirm_create = confirm_response.clicked();
                         cancel_review = ui.button("Cancel review").clicked();
                     });
                 }
@@ -1135,12 +1148,25 @@ impl OpenObsidianApp {
                     });
 
                 if !self.canvas_note_confirmation {
-                    request_review = ui
-                        .add_enabled(
+                    let review_response = ui.add_enabled(
+                        !operation_busy,
+                        eframe::egui::Button::new("Review and confirm note creation"),
+                    );
+                    if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some()
+                        && ui.input(|input| !input.raw.events.is_empty())
+                    {
+                        eprintln!(
+                            "OpenObsidian CI canvas-note-review input: enabled={}, response_rect={:?}, pixels_per_point={:.2}, pointer={:?}, hovered={}, clicked={}, events={:?}",
                             !operation_busy,
-                            eframe::egui::Button::new("Review and confirm note creation"),
-                        )
-                        .clicked();
+                            review_response.rect,
+                            ui.ctx().pixels_per_point(),
+                            ui.input(|input| input.pointer.hover_pos()),
+                            review_response.hovered(),
+                            review_response.clicked(),
+                            ui.input(|input| input.raw.events.clone()),
+                        );
+                    }
+                    request_review = review_response.clicked();
                 }
             });
         }
