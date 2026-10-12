@@ -7,10 +7,9 @@ use markdown_math::{MathRendererCache, math_render_callback};
 use openobsidian_engine::{
     BaseFileEvaluation, BaseFileListing, CanvasEditError, CanvasNoteCreateResult,
     EmbeddedBaseEvaluation, EmbeddedBaseListing, LinkKind, LinkRenameAction, LinkResolutionStatus,
-    MAX_NOTE_SOURCE_PREVIEW_BYTES,
-    MarkdownPreviewDisposition, MarkdownUnsupportedSyntax, TransclusionBlockReason,
-    VaultConflictAction, VaultConflictRead, VaultConflictResolution, VaultError,
-    VaultHistoryCleanup, VaultHistoryKind, VaultHistoryPlan, VaultHistoryPolicy,
+    MAX_NOTE_SOURCE_PREVIEW_BYTES, MarkdownPreviewDisposition, MarkdownUnsupportedSyntax,
+    TransclusionBlockReason, VaultConflictAction, VaultConflictRead, VaultConflictResolution,
+    VaultError, VaultHistoryCleanup, VaultHistoryKind, VaultHistoryPlan, VaultHistoryPolicy,
     VaultHistoryRecord, VaultInlineImage, VaultLinkResolution, VaultNoteEmbedDisposition,
     VaultNoteEmbedNode, VaultNoteEmbedReport, VaultRenamePreview, VaultRenameRecoveryReport,
     VaultRenameResult, VaultSession, VaultWatcher, VaultWriteRecoveryReport, VaultWriteRequest,
@@ -945,9 +944,7 @@ impl OpenObsidianApp {
                 self.embedded_base_evaluation = None;
                 self.embedded_base_error = None;
                 self.embedded_base_listing = Some(listing);
-                if let (Some(definition_index), Some(view_index)) =
-                    (definition_index, view_index)
-                {
+                if let (Some(definition_index), Some(view_index)) = (definition_index, view_index) {
                     self.start_embedded_base_evaluation(definition_index, view_index);
                 }
             }
@@ -1334,8 +1331,7 @@ impl OpenObsidianApp {
             .as_ref()
             .filter(|selected| {
                 entries.iter().any(|entry| {
-                    &entry.relative_path == *selected
-                        && is_markdown_path(&entry.relative_path)
+                    &entry.relative_path == *selected && is_markdown_path(&entry.relative_path)
                 })
             })
             .cloned()
@@ -1360,11 +1356,8 @@ impl OpenObsidianApp {
                 .filter(|entry| is_markdown_path(&entry.relative_path))
                 .position(|entry| &entry.relative_path == selected)
         });
-        let visible_note_indices = bounded_visible_indices(
-            note_count,
-            MAX_BASE_FILES_IN_SELECTOR,
-            selected_note_index,
-        );
+        let visible_note_indices =
+            bounded_visible_indices(note_count, MAX_BASE_FILES_IN_SELECTOR, selected_note_index);
         if note_count > visible_note_indices.len() {
             ui.small(format!(
                 "Showing {} of {} Markdown notes in the selector; {} omitted by the UI limit of {}.",
@@ -1389,8 +1382,8 @@ impl OpenObsidianApp {
                 }
             }
         }
-        let refresh_enabled = self.bases_receiver.is_none()
-            && !self.vault_operation_busy_except_bases();
+        let refresh_enabled =
+            self.bases_receiver.is_none() && !self.vault_operation_busy_except_bases();
         let mut note_changed = false;
         ui.add_enabled_ui(refresh_enabled, |ui| {
             eframe::egui::ComboBox::from_label("Markdown note")
@@ -1474,10 +1467,8 @@ impl OpenObsidianApp {
                     MAX_BASE_VIEWS_IN_SELECTOR,
                 ));
             }
-            let selected_definition_label = format!(
-                "Embedded Base {}",
-                selected_definition.saturating_add(1)
-            );
+            let selected_definition_label =
+                format!("Embedded Base {}", selected_definition.saturating_add(1));
             let mut definition_changed = false;
             ui.add_enabled_ui(refresh_enabled, |ui| {
                 eframe::egui::ComboBox::from_label("Embedded definition")
@@ -1562,7 +1553,11 @@ impl OpenObsidianApp {
                         );
                     }
                 } else {
-                    for issue in definition.issues.iter().take(MAX_BASE_ISSUES_PER_KIND_RENDERED) {
+                    for issue in definition
+                        .issues
+                        .iter()
+                        .take(MAX_BASE_ISSUES_PER_KIND_RENDERED)
+                    {
                         ui.colored_label(
                             eframe::egui::Color32::YELLOW,
                             format_bases_issue(
@@ -1605,10 +1600,8 @@ impl OpenObsidianApp {
                     let _ = view_status.write_str(name);
                 }
                 None => {
-                    let _ = view_status.write_fmt(format_args!(
-                        "Unnamed view {}",
-                        evaluation.view_index + 1
-                    ));
+                    let _ = view_status
+                        .write_fmt(format_args!("Unnamed view {}", evaluation.view_index + 1));
                 }
             }
             ui.label(view_status.finish());
@@ -1630,9 +1623,7 @@ impl OpenObsidianApp {
             ));
 
             ui.heading("Embedded Base issues");
-            if evaluation.evaluation.issues.is_empty()
-                && evaluation.collection_issues.is_empty()
-            {
+            if evaluation.evaluation.issues.is_empty() && evaluation.collection_issues.is_empty() {
                 ui.small("No compatibility or collection issues were reported.");
             } else {
                 for issue in evaluation
@@ -5830,11 +5821,25 @@ mod tests {
         }
     }
 
-    fn wait_for_embedded_base_evaluation(harness: &mut Harness<'_, OpenObsidianApp>) {
+    fn wait_for_embedded_base_evaluation(
+        harness: &mut Harness<'_, OpenObsidianApp>,
+        expected_definition_index: usize,
+        expected_view_index: usize,
+    ) {
         let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
         loop {
             harness.step();
             let state = harness.state();
+            let selection_matches = state.embedded_base_selected_definition
+                == Some(expected_definition_index)
+                && state.embedded_base_selected_view == Some(expected_view_index);
+            let evaluation_matches = state
+                .embedded_base_evaluation
+                .as_ref()
+                .is_some_and(|evaluation| {
+                    evaluation.definition_index == expected_definition_index
+                        && evaluation.view_index == expected_view_index
+                });
             let selected_definition_needs_no_evaluation = state
                 .embedded_base_listing
                 .as_ref()
@@ -5851,7 +5856,8 @@ mod tests {
                 });
             if state.bases_receiver.is_none()
                 && state.embedded_base_listing.is_some()
-                && (state.embedded_base_evaluation.is_some()
+                && selection_matches
+                && (evaluation_matches
                     || state.embedded_base_error.is_some()
                     || selected_definition_needs_no_evaluation)
             {
@@ -6981,7 +6987,7 @@ mod tests {
         std::fs::create_dir_all(&vault_path).expect("create embedded Bases test vault");
         std::fs::create_dir_all(&app_data_path).expect("create embedded Bases test app data");
 
-        let note_path = PathBuf::from("Notes/Dashboard.md");
+        let note_path = PathBuf::from("Notes").join("Dashboard.md");
         let fixture_note_source = fixture["source"]
             .as_str()
             .expect("fixture must provide Markdown with an embedded Base");
@@ -6993,12 +6999,15 @@ mod tests {
             "{note_source_with_second_view}\n# Second embedded Base\n~~~base\nfilters:\n  and:\n    - status == \"open\"\n    - priority >= 2\nformulas:\n  sourcePath: file.path\n  unsupportedDate: date(today)\nviews:\n  - type: table\n    name: Embedded copy\n    groupBy: team\n    order:\n      - priority\n~~~\n"
         );
         let note_file_path = vault_path.join(&note_path);
-        std::fs::create_dir_all(note_file_path.parent().expect("note path must have a parent"))
-            .expect("create embedded Bases note parent");
-        std::fs::write(&note_file_path, &note_source)
-            .expect("write embedded Bases source note");
-        let original_source = std::fs::read(&note_file_path)
-            .expect("read the exact embedded Bases source bytes");
+        std::fs::create_dir_all(
+            note_file_path
+                .parent()
+                .expect("note path must have a parent"),
+        )
+        .expect("create embedded Bases note parent");
+        std::fs::write(&note_file_path, &note_source).expect("write embedded Bases source note");
+        let original_source =
+            std::fs::read(&note_file_path).expect("read the exact embedded Bases source bytes");
 
         for row in fixture["rows"]
             .as_array()
@@ -7051,11 +7060,15 @@ mod tests {
         harness.get_by_label("Markdown note");
         harness.get_by_label("Markdown note").click();
         harness.step();
-        harness.get_by_label(&note_path.display().to_string()).click();
+        harness
+            .get_by_label(&note_path.display().to_string())
+            .click();
         harness.step();
-        harness.get_by_label("Load embedded Base definitions").click();
+        harness
+            .get_by_label("Load embedded Base definitions")
+            .click();
         harness.step();
-        wait_for_embedded_base_evaluation(&mut harness);
+        wait_for_embedded_base_evaluation(&mut harness, 0, 0);
 
         let expected_paths = fixture["expected"]["paths"]
             .as_array()
@@ -7092,9 +7105,10 @@ mod tests {
             );
             assert!(result.evaluation.rows.iter().all(|row| {
                 row.values.get("unsupportedDate").is_none()
-                    && row.values.get("sourcePath").is_some_and(|value| {
-                        value.as_str() == Some(row.path.as_str())
-                    })
+                    && row
+                        .values
+                        .get("sourcePath")
+                        .is_some_and(|value| value.as_str() == Some(row.path.as_str()))
             }));
             let issue = result
                 .evaluation
@@ -7125,7 +7139,12 @@ mod tests {
             harness.get_by_label(&issue_label);
             harness.get_by_label("Expression: date(today)");
             harness.get_by_label("Group: red");
-            assert!(harness.query_all_by_label("unsupportedDate").next().is_none());
+            assert!(
+                harness
+                    .query_all_by_label("unsupportedDate")
+                    .next()
+                    .is_none()
+            );
             for path in &expected_paths {
                 assert!(harness.query_all_by_label(path).next().is_some());
             }
@@ -7140,7 +7159,7 @@ mod tests {
         harness.step();
         harness.get_by_label("Alternate view · view 2").click();
         harness.step();
-        wait_for_embedded_base_evaluation(&mut harness);
+        wait_for_embedded_base_evaluation(&mut harness, 0, 1);
         let alternate_view = harness
             .state()
             .embedded_base_evaluation
@@ -7155,7 +7174,7 @@ mod tests {
         harness.step();
         harness.get_by_label("Embedded Base 2").click();
         harness.step();
-        wait_for_embedded_base_evaluation(&mut harness);
+        wait_for_embedded_base_evaluation(&mut harness, 1, 0);
         let second_definition = harness
             .state()
             .embedded_base_evaluation

@@ -5,9 +5,8 @@ mod bases;
 pub use bases::{
     BaseCollectionIssue, BaseFileEvaluation, BaseFileEvaluationError, BaseFileListing,
     BaseFileListingError, BaseFilePath, EmbeddedBaseEvaluation, EmbeddedBaseEvaluationError,
-    EmbeddedBaseListing, EmbeddedBaseListingError, MAX_BASE_FILE_COUNT,
-    MAX_BASE_FILE_SOURCE_BYTES, MAX_BASE_NOTE_COUNT, MAX_BASE_NOTE_SOURCE_BYTES,
-    MAX_BASE_TOTAL_SOURCE_BYTES,
+    EmbeddedBaseListing, EmbeddedBaseListingError, MAX_BASE_FILE_COUNT, MAX_BASE_FILE_SOURCE_BYTES,
+    MAX_BASE_NOTE_COUNT, MAX_BASE_NOTE_SOURCE_BYTES, MAX_BASE_TOTAL_SOURCE_BYTES,
 };
 
 use openobsidian_doc::{encode_canvas, parse_canvas};

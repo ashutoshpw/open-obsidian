@@ -1055,6 +1055,44 @@ function ocrTextContainsFuzzyPhraseAcrossLines(text: string, phrase: string, max
   return ocrTextContainsFuzzyPhrase(text.replace(/\r?\n/g, " "), phrase, maxEdits);
 }
 
+function ocrTextContainsRefreshedMarkdownCount(text: string, count: number): boolean {
+  const status = "notelistrefreshed";
+  const markdownCountLabel = "markdownfilesfound";
+  const expectedCount = String(count);
+  const statusMinLength = Math.max(1, status.length - 2);
+  const statusMaxLength = status.length + 2;
+  const labelMinLength = Math.max(1, markdownCountLabel.length - 2);
+  const labelMaxLength = markdownCountLabel.length + 2;
+
+  for (const line of text.split(/\r?\n/)) {
+    const normalizedLine = line.toLowerCase().replace(/[^a-z0-9]/g, "");
+    for (let statusLength = statusMinLength; statusLength <= statusMaxLength; statusLength += 1) {
+      for (let statusStart = 0; statusStart + statusLength <= normalizedLine.length; statusStart += 1) {
+        const candidateStatus = normalizedLine.slice(statusStart, statusStart + statusLength);
+        if (!editDistanceWithinLimit(candidateStatus, status, 2)) continue;
+
+        const afterStatus = normalizedLine.slice(statusStart + statusLength);
+        if (!afterStatus.startsWith(expectedCount)) continue;
+        const afterCount = afterStatus.slice(expectedCount.length);
+        if (/^[0-9]/.test(afterCount)) continue;
+
+        for (
+          let labelLength = labelMinLength;
+          labelLength <= Math.min(labelMaxLength, afterCount.length);
+          labelLength += 1
+        ) {
+          if (
+            editDistanceWithinLimit(afterCount.slice(0, labelLength), markdownCountLabel, 2)
+          ) {
+            return true;
+          }
+        }
+      }
+    }
+  }
+  return false;
+}
+
 function windowsSelectionConfirmsPath(action: unknown, expectedPath: string): boolean {
   if (typeof action !== "string") return false;
   try {
@@ -3789,10 +3827,7 @@ async function runReferenceExternalNoteRefresh(
     const capture = await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-after-external-note-refresh");
     refreshReport.refresh_screen_ocr = capture.ocrText.slice(0, 4_000);
     return capture;
-  }, (capture) => (
-    ocrTextContainsFuzzyPhrase(capture.ocrText, "Note list refreshed")
-    && new RegExp(`${expectedMarkdownCount}\\s+Markdown files found`, "i").test(capture.ocrText)
-  ), 30_000);
+  }, (capture) => ocrTextContainsRefreshedMarkdownCount(capture.ocrText, expectedMarkdownCount), 30_000);
   refreshReport.refreshed_list_screenshot = relative(reportDirectory, refreshedList.pngPath);
   refreshReport.refreshed_list_window_screenshot = relative(reportDirectory, refreshedList.windowPngPath);
   refreshReport.refreshed_markdown_count_visible = true;
@@ -4018,8 +4053,7 @@ async function runReferenceExternalNoteRefresh(
       return capture;
     },
     (capture) => (
-      ocrTextContainsFuzzyPhrase(capture.ocrText, "Note list refreshed")
-      && new RegExp(markdownCountAfterEdit + "\\s+Markdown files found", "i").test(capture.ocrText)
+      ocrTextContainsRefreshedMarkdownCount(capture.ocrText, markdownCountAfterEdit)
       && !capture.sourcePaneLabelVisible
       && !ocrTextContainsFuzzyPhraseAcrossLines(capture.ocrText, externalRefreshMarker, 1)
       && !ocrTextContainsFuzzyPhraseAcrossLines(capture.ocrText, externalEditedMarker, 1)
@@ -4504,10 +4538,7 @@ async function runReferenceImageAttachmentRemoval(
     const capture = await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-after-external-attachment-removal-refresh");
     removalReport.refresh_screen_ocr = capture.ocrText.slice(0, 4_000);
     return capture;
-  }, (capture) => (
-    ocrTextContainsFuzzyPhrase(capture.ocrText, "Note list refreshed")
-    && new RegExp(`${expectedMarkdownCount}\\s+Markdown files found`, "i").test(capture.ocrText)
-  ), 30_000);
+  }, (capture) => ocrTextContainsRefreshedMarkdownCount(capture.ocrText, expectedMarkdownCount), 30_000);
   removalReport.refreshed_markdown_count_visible = true;
   removalReport.refresh_screenshot = relative(reportDirectory, refreshed.pngPath);
   removalReport.refresh_window_screenshot = relative(reportDirectory, refreshed.windowPngPath);
@@ -4838,8 +4869,7 @@ async function runReferenceExternalNoteRename(
       return capture;
     },
     (capture) => (
-      ocrTextContainsFuzzyPhrase(capture.ocrText, "Note list refreshed")
-      && new RegExp(expectedMarkdownCount + "\\s+Markdown files found", "i").test(capture.ocrText)
+      ocrTextContainsRefreshedMarkdownCount(capture.ocrText, expectedMarkdownCount)
       && !capture.sourcePaneLabelVisible
       && !ocrTextContainsFuzzyPhraseAcrossLines(capture.ocrText, externalEditedMarker, 1)
     ),

@@ -2,8 +2,8 @@
 
 use openobsidian_doc::{
     BaseDocument, BaseEvaluation, BaseParseError, BaseRow, EmbeddedBaseDefinition, MarkdownSource,
-    YamlMappingEntry, YamlValue, evaluate_base, evaluate_base_by_view_index,
-    parse_base, parse_embedded_bases,
+    YamlMappingEntry, YamlValue, evaluate_base, evaluate_base_by_view_index, parse_base,
+    parse_embedded_bases,
 };
 use openobsidian_vault::{
     VaultError, VaultRoot, VaultSnapshot, VaultSnapshotEntry, VaultSnapshotEntryKind,
@@ -179,7 +179,9 @@ pub enum EmbeddedBaseEvaluationError {
     #[error("Markdown note is not valid UTF-8: {0}")]
     InvalidUtf8(PathBuf),
     /// The requested definition index is not present in the listing.
-    #[error("embedded Bases definition index {definition_index} is outside {definition_count} definitions")]
+    #[error(
+        "embedded Bases definition index {definition_index} is outside {definition_count} definitions"
+    )]
     InvalidDefinitionIndex {
         definition_index: usize,
         definition_count: usize,
@@ -191,7 +193,9 @@ pub enum EmbeddedBaseEvaluationError {
         message: String,
     },
     /// The requested view index is not present in the selected definition.
-    #[error("view index {view_index} is outside {view_count} views in embedded definition {definition_index}")]
+    #[error(
+        "view index {view_index} is outside {view_count} views in embedded definition {definition_index}"
+    )]
     InvalidViewIndex {
         definition_index: usize,
         view_index: usize,
@@ -264,9 +268,7 @@ pub(crate) fn list_embedded_bases(
         ));
     }
 
-    let before = root
-        .snapshot()
-        .map_err(map_embedded_listing_vault_error)?;
+    let before = root.snapshot().map_err(map_embedded_listing_vault_error)?;
     let before_entries = snapshot_entry_map(&before);
     let Some(note_entry) = before_entries.get(relative_path) else {
         // Read through VaultRoot to preserve its precise missing-file error.
@@ -309,9 +311,7 @@ pub(crate) fn list_embedded_bases(
         .map_err(|_| EmbeddedBaseListingError::InvalidUtf8(relative_path.to_path_buf()))?;
     let definitions = parse_embedded_bases(source);
 
-    let after = root
-        .snapshot()
-        .map_err(map_embedded_listing_vault_error)?;
+    let after = root.snapshot().map_err(map_embedded_listing_vault_error)?;
     if before.revision_sha256 != after.revision_sha256 {
         return Err(EmbeddedBaseListingError::SnapshotChanged);
     }
@@ -471,11 +471,10 @@ pub(crate) fn evaluate_embedded_base_by_view_index(
     }
 
     // The selected note is read completely for parsing and reused for its metadata row.
-    let notes = root.scan_markdown().map_err(map_embedded_evaluation_vault_error)?;
-    if !notes
-        .iter()
-        .any(|note| note.relative_path == relative_path)
-    {
+    let notes = root
+        .scan_markdown()
+        .map_err(map_embedded_evaluation_vault_error)?;
+    if !notes.iter().any(|note| note.relative_path == relative_path) {
         return Err(EmbeddedBaseEvaluationError::SnapshotChanged);
     }
     let collection = collect_embedded_note_rows(
@@ -1135,8 +1134,14 @@ mod tests {
             .expect("embedded Bases view must evaluate");
         let after_evaluation = root.snapshot().unwrap();
         assert_eq!(result.snapshot_before_sha256, before.revision_sha256);
-        assert_eq!(result.snapshot_after_sha256, after_evaluation.revision_sha256);
-        assert_eq!(before, after_evaluation, "evaluation must not write to the vault");
+        assert_eq!(
+            result.snapshot_after_sha256,
+            after_evaluation.revision_sha256
+        );
+        assert_eq!(
+            before, after_evaluation,
+            "evaluation must not write to the vault"
+        );
         assert!(result.complete);
         assert!(result.collection_issues.is_empty());
         assert_eq!(
@@ -1211,11 +1216,11 @@ mod tests {
     fn embedded_base_listing_rejects_stale_snapshots_and_oversized_notes() {
         let tree = TempTree::new();
         let (vault, app_data) = tree.layout();
-        let source = serde_json::from_str::<JsonValue>(EMBEDDED_BASE_EVALUATION_FIXTURE)
-            .unwrap()["source"]
-            .as_str()
-            .unwrap()
-            .to_owned();
+        let source =
+            serde_json::from_str::<JsonValue>(EMBEDDED_BASE_EVALUATION_FIXTURE).unwrap()["source"]
+                .as_str()
+                .unwrap()
+                .to_owned();
         write_file(&vault, "Notes/Embedded.md", source.as_bytes());
         let session = session_for(&vault, &app_data);
 

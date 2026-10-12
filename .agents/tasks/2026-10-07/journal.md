@@ -5102,3 +5102,19 @@ and Markdown listing still traverse the full vault, so their I/O and temporary
 path-list memory scale with vault size; they execute on the background worker.
 This known scaling limit is recorded for follow-up rather than described as a
 bounded whole-vault scan.
+
+
+## 2026-10-12 — R2.8.99 attempt 1 launched
+
+The C07.1 embedded Bases integration was committed as 21b275c74fdb61402d30205182cb66c1c8d4e9a4 and pushed to origin/main. Inventory run 38225556448 passed. Quality 38225556462, desktop build 38225556449, loaded-plugin workflows 38225556379, plugin renderer 38225556360, Rust CI 38225556463, and Obsidian vault round-trip 38225556423 were active or queued at initial capture. Exact job IDs/statuses, two available Linux artifacts, and capture metadata are in [evidence/r2.8.99-attempt-1-21b275c.json](evidence/r2.8.99-attempt-1-21b275c.json).
+
+No local project validation was run. Wait for all seven exact-SHA workflows, reconcile terminal results and artifacts, and do not push meanwhile.
+
+
+## 2026-10-12 — R2.8.99 attempt 1 completed, not accepted
+
+Attempt 1 completed on exact source SHA `21b275c74fdb61402d30205182cb66c1c8d4e9a4`. Five of seven required workflows passed: inventory `38225556448`, quality `38225556462`, desktop build `38225556449`, plugin renderer `38225556360`, and loaded-plugin workflows `38225556379`. Rust CI `38225556463` failed on MSRV job `114732063429` and Ubuntu, Windows, and macOS jobs `114732063616`, `114732063617`, and `114732063737`. The new embedded Bases UI test observed view index 0 instead of 1 on MSRV, Ubuntu, and macOS; Windows could not find the slash-separated `Notes/Dashboard.md` accessibility label. Ubuntu also reported rustfmt differences in touched Rust sources.
+
+Obsidian round-trip `38225556423` passed on Windows job `114732063245` and macOS job `114732063585`; Ubuntu job `114732063477` failed because OCR read “found” as “Faund” in the refreshed note-list status. The Linux artifact confirms the refresh showed three Markdown files and no app-data mutation. All 12 exact-SHA artifact IDs, sizes, archive SHA-256 digests, and expiration times are recorded in [`evidence/r2.8.99-attempt-1-21b275c.json`](evidence/r2.8.99-attempt-1-21b275c.json).
+
+The focused correction now waits for the selected definition/view evaluation, uses native `PathBuf` components for the Windows fixture, applies the rustfmt changes indicated by CI, and tolerates the observed OCR spelling error while checking the exact Markdown count on one line. It is ready for a fresh exact-SHA run. No local tests, builds, formatters, linters, validators, or application launches were run. Commit and push the correction to `origin/main`, then wait for all seven workflows to become terminal.

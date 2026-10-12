@@ -2041,11 +2041,7 @@ mod tests {
             view_type_name(result.view.view_type),
             fixture["expected"]["view_type"].as_str().unwrap()
         );
-        assert_optional_evaluation_expectations(
-            fixture["id"].as_str().unwrap(),
-            &fixture,
-            &result,
-        );
+        assert_optional_evaluation_expectations(fixture["id"].as_str().unwrap(), &fixture, &result);
 
         let expected_formula_values = fixture["expected"]["formula_values"]
             .as_object()
