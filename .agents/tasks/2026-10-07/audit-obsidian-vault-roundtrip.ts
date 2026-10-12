@@ -5714,14 +5714,14 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
   windowId: string,
   controlName: string,
   value: string,
+  logPath = join(reportDirectory, "openobsidian-canvas-note-create.log"),
 ): Promise<string> {
   const fileSafeName = controlName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-  const canvasRefreshLog = join(reportDirectory, "openobsidian-canvas-note-create.log");
   const maximumAttempts = 3;
   let lastFailure = "no field-position attempt completed";
   for (let attempt = 1; attempt <= maximumAttempts; attempt += 1) {
-    await waitForOpenObsidianRefreshIdle(0, 0, false, canvasRefreshLog);
-    const refreshBeforeCapture = await readOpenObsidianRefreshDiagnostics(canvasRefreshLog);
+    await waitForOpenObsidianRefreshIdle(0, 0, false, logPath);
+    const refreshBeforeCapture = await readOpenObsidianRefreshDiagnostics(logPath);
     const before = await captureOpenObsidianScreenshot(windowId, child, `openobsidian-canvas-input-${fileSafeName}-before`);
     const layout = await locateCanvasTextInput(before, controlName);
     const labelOcrFound = Boolean(layout.labelBoundsOcr);
@@ -5742,7 +5742,7 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
 
     // Positioning takes OCR time. If the watcher refreshes during that interval,
     // its status line can move the form after the screenshot; discard those bounds.
-    const refreshBeforeClick = await readOpenObsidianRefreshDiagnostics(canvasRefreshLog);
+    const refreshBeforeClick = await readOpenObsidianRefreshDiagnostics(logPath);
     if (openObsidianRefreshActivityChanged(refreshBeforeCapture, refreshBeforeClick)
       || (refreshBeforeClick.receiverStates.at(-1)?.busy ?? false)) {
       lastFailure = `vault refresh changed the form layout before attempt ${attempt}`;
@@ -5798,7 +5798,7 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
     } catch (error) {
       visualReadbackError = error instanceof Error ? error.message : "unknown screenshot OCR error";
     }
-    const refreshAfterVerification = await readOpenObsidianRefreshDiagnostics(canvasRefreshLog);
+    const refreshAfterVerification = await readOpenObsidianRefreshDiagnostics(logPath);
     const refreshChangedDuringInput = openObsidianRefreshActivityChanged(refreshBeforeClick, refreshAfterVerification)
       || (refreshAfterVerification.receiverStates.at(-1)?.busy ?? false);
     if (clipboardReadback === value && !refreshChangedDuringInput) {
@@ -5837,7 +5837,9 @@ async function replaceMacOSOpenObsidianTextInputWithKeyboard(
   windowId: string,
   controlName: string,
   value: string,
+  logPath = join(reportDirectory, "openobsidian-canvas-note-create.log"),
 ): Promise<string> {
+  await waitForOpenObsidianRefreshIdle(0, 0, false, logPath);
   const fileSafeName = controlName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
   const before = await captureOpenObsidianScreenshot(windowId, child, `openobsidian-canvas-input-${fileSafeName}-before`);
   const layout = await locateCanvasTextInput(before, controlName);
@@ -5912,7 +5914,9 @@ async function replaceOpenObsidianTextInput(
   windowId: string,
   controlName: string,
   value: string,
+  logPath = join(reportDirectory, "openobsidian-canvas-note-create.log"),
 ): Promise<string> {
+  await waitForOpenObsidianRefreshIdle(0, 0, false, logPath);
   const processId = child.pid;
   if (!processId) throw new Error("OpenObsidian did not expose its process id for Canvas text entry");
   if (process.platform === "linux") {
@@ -5987,7 +5991,7 @@ sys.exit(1)
       const failure = error as NodeJS.ErrnoException & {stderr?: Buffer | string; stdout?: Buffer | string};
       const output = [failure.stdout, failure.stderr].filter(Boolean).map(String).join("\n").trim();
       try {
-        return await replaceLinuxOpenObsidianTextInputWithKeyboard(child, windowId, controlName, value);
+        return await replaceLinuxOpenObsidianTextInputWithKeyboard(child, windowId, controlName, value, logPath);
       } catch (fallbackError) {
         const fallbackMessage = fallbackError instanceof Error ? fallbackError.message : "unknown keyboard fallback error";
         throw new Error(`Could not set the accessible OpenObsidian ${controlName} field: ${output || failure.message}; screenshot-verified keyboard fallback failed: ${fallbackMessage}`);
@@ -6045,7 +6049,7 @@ sys.exit(1)
       const failure = error as NodeJS.ErrnoException & {stderr?: Buffer | string; stdout?: Buffer | string};
       const output = [failure.stdout, failure.stderr].filter(Boolean).map(String).join("\n").trim();
       try {
-        const fallback = await replaceMacOSOpenObsidianTextInputWithKeyboard(child, windowId, controlName, value);
+        const fallback = await replaceMacOSOpenObsidianTextInputWithKeyboard(child, windowId, controlName, value, logPath);
         return JSON.stringify({
           name: controlName,
           accessibility_lookup_failure: output || failure.message,
@@ -6302,6 +6306,19 @@ async function runOpenObsidianCanvasTextEdit(
     editReport.canvas_bytes_before_edit = {bytes: canvasBytesBefore.length, sha256: seedHash};
     editReport.destination_absent_before_edit = true;
 
+    const settledRefreshBeforeCanvasEditor = await waitForOpenObsidianRefreshIdle(
+      0,
+      initialMarkdownCount,
+      false,
+      logPath,
+    );
+    editReport.refresh_diagnostics_before_editor = {
+      requests: settledRefreshBeforeCanvasEditor.requests,
+      consumed_results: settledRefreshBeforeCanvasEditor.consumedResults,
+      receiver_states: settledRefreshBeforeCanvasEditor.receiverStates,
+      settled_for_ms: settledRefreshBeforeCanvasEditor.settled_for_ms,
+    };
+
     const interactions: Record<string, string> = {};
     editReport.interactions = interactions;
     interactions.expand_canvas_text_edit = await invokeNativeAccessibleControl(
@@ -6321,8 +6338,8 @@ async function runOpenObsidianCanvasTextEdit(
     screenshots.expanded_form = relative(reportDirectory, expandedForm.windowPngPath);
     editReport.expanded_form_ocr = expandedForm.ocrText.slice(0, 4_000);
 
-    const canvasPathReadback = await replaceOpenObsidianTextInput(child, window.window_id, "Canvas edit path", canvasPath);
-    const textCardIdReadback = await replaceOpenObsidianTextInput(child, window.window_id, "Canvas edit text-card ID", "text-1");
+    const canvasPathReadback = await replaceOpenObsidianTextInput(child, window.window_id, "Canvas edit path", canvasPath, logPath);
+    const textCardIdReadback = await replaceOpenObsidianTextInput(child, window.window_id, "Canvas edit text-card ID", "text-1", logPath);
     interactions.canvas_path = canvasPathReadback;
     interactions.text_card_id = textCardIdReadback;
     const inputReadbackEntries = [
@@ -6352,6 +6369,7 @@ async function runOpenObsidianCanvasTextEdit(
     editReport.vault_snapshot_after_input = afterInput;
     editReport.no_write_during_input = true;
 
+    await waitForOpenObsidianRefreshIdle(0, initialMarkdownCount, false, logPath);
     interactions.load = await invokeNativeAccessibleControl(child, window.window_id, "Load Canvas text card", undefined, true);
     const loadedDraft = await waitFor(
       "OpenObsidian to load the selected Canvas text-card draft",
@@ -6372,7 +6390,7 @@ async function runOpenObsidianCanvasTextEdit(
     editReport.vault_snapshot_after_load = afterLoad;
     editReport.no_write_during_load = true;
 
-    const draftReadback = await replaceOpenObsidianTextInput(child, window.window_id, "Canvas text draft", canvasEditedText);
+    const draftReadback = await replaceOpenObsidianTextInput(child, window.window_id, "Canvas text draft", canvasEditedText, logPath);
     interactions.canvas_text_draft = draftReadback;
     let parsedDraftReadback: {exact_readback?: boolean; fallback?: {exact_readback?: boolean}};
     try {
