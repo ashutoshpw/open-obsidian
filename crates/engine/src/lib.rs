@@ -122,15 +122,14 @@ impl VaultSession {
             .root()
             .read_preview_with_limit(&relative_path, MAX_CANVAS_SOURCE_BYTES)?;
         if snapshot.truncated {
-            return Err(CanvasEditError::TooLarge {
-                relative_path,
-            });
+            return Err(CanvasEditError::TooLarge { relative_path });
         }
-        let current_revision = snapshot
-            .revision_sha256
-            .ok_or_else(|| CanvasEditError::TooLarge {
-                relative_path: relative_path.clone(),
-            })?;
+        let current_revision =
+            snapshot
+                .revision_sha256
+                .ok_or_else(|| CanvasEditError::TooLarge {
+                    relative_path: relative_path.clone(),
+                })?;
         if current_revision != expected_revision_sha256 {
             return Err(CanvasEditError::StaleRevision {
                 relative_path: relative_path.clone(),
@@ -230,11 +229,12 @@ impl VaultSession {
                 relative_path: canvas_relative_path,
             });
         }
-        let current_revision = snapshot
-            .revision_sha256
-            .ok_or_else(|| CanvasNoteCreateError::TooLarge {
-                relative_path: canvas_relative_path.clone(),
-            })?;
+        let current_revision =
+            snapshot
+                .revision_sha256
+                .ok_or_else(|| CanvasNoteCreateError::TooLarge {
+                    relative_path: canvas_relative_path.clone(),
+                })?;
         if current_revision != expected_canvas_revision_sha256 {
             return Err(CanvasNoteCreateError::StaleRevision {
                 relative_path: canvas_relative_path,
@@ -854,12 +854,7 @@ mod tests {
         assert_eq!(preview.text, "before");
 
         let result = session
-            .edit_canvas_text_node(
-                "Board.CANVAS",
-                &preview.revision_sha256,
-                "text-1",
-                "after",
-            )
+            .edit_canvas_text_node("Board.CANVAS", &preview.revision_sha256, "text-1", "after")
             .unwrap();
 
         let persisted = parse_canvas(result.read.document.as_bytes()).unwrap();
@@ -928,12 +923,7 @@ mod tests {
         ));
 
         let edit_error = session
-            .edit_canvas_text_node(
-                "Huge.canvas",
-                "stale-revision",
-                "text-1",
-                "changed",
-            )
+            .edit_canvas_text_node("Huge.canvas", "stale-revision", "text-1", "changed")
             .expect_err("oversized Canvas edit must be rejected before parsing or writing");
         assert!(matches!(
             edit_error,

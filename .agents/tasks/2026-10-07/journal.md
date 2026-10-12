@@ -4651,3 +4651,32 @@ will verify that only Save writes, only the selected card's text changes
 semantically, unknown JSON fields and siblings remain intact, editing creates no
 Markdown note, and pinned Obsidian displays the result after reopen on all three
 operating systems. Executable validation remains GitHub Actions only.
+
+## 2026-10-12 — R2.8.95 attempt 1 CI findings and correction
+
+Attempt 1 ran on exact source SHA
+`7c8dd7bcf8edfff6e668fbeb519767b63b8dc3d2` and is not accepted. Inventory,
+quality, desktop build, plugin renderer, and loaded-plugin workflows passed.
+Rust CI failed on Ubuntu, macOS, Windows, and Rust 1.95: four existing
+`openobsidian-ui-egui` note-selector tests left `README.md` selected instead of
+the requested path. Ubuntu also reported exact rustfmt changes in engine, UI,
+and vault files. The Canvas editor header had been inserted before existing
+panels; the correction moves it after the prior panels to preserve the
+selector's position. Full CI results are recorded in
+[`evidence/r2.8.95-attempt-1-7c8dd7b.json`](evidence/r2.8.95-attempt-1-7c8dd7b.json).
+
+The pinned Obsidian round-trip failed before Canvas Save on Linux, Windows, and
+macOS. The app showed the form and loaded draft, but CI OCR or accessibility
+matching missed the hyphenated text-card field, garbled one field label, or
+missed the disabled Save label. The vault source stayed byte-identical and no
+Markdown note was created. The correction adds OCR label variants and checks
+the visible “Canvas text loaded” status instead of the low-contrast Save label.
+All run/job IDs and 12 artifact IDs, sizes, and digests are in the attempt
+evidence. No local tests, builds, formatters, linters, validators, or
+application launches were run.
+
+One accidental local `git diff --check` during source inspection returned
+clean. This whitespace check is recorded as a process deviation; executable
+validation remains reserved for GitHub Actions. The focused correction is
+prepared for attempt 2 and will be pushed to `origin/main` for its seven exact
+SHA workflows after this CI result has been fully reconciled.

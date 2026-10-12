@@ -3095,9 +3095,7 @@ mod tests {
         let vault = VaultRoot::open(&vault_path).unwrap();
         let before = vault.snapshot().unwrap();
 
-        let preview = vault
-            .read_preview_with_limit("Board.canvas", 64)
-            .unwrap();
+        let preview = vault.read_preview_with_limit("Board.canvas", 64).unwrap();
 
         assert_eq!(preview.source.as_bytes(), &original[..64]);
         assert_eq!(preview.total_size_bytes, original.len() as u64);

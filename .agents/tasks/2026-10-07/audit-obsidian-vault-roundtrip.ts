@@ -5580,6 +5580,13 @@ async function locateCanvasTextInput(
   }
 
   const tsvCandidates = [runTesseractTsv(ocrImagePath, "6"), runTesseractTsv(ocrImagePath, "11")];
+  const labelPhrases = controlName.includes("text-card")
+    ? [
+      controlName,
+      controlName.replace("text-card", "text card"),
+      controlName.replace("text-card", "textcard"),
+    ]
+    : [controlName];
   let labelBoundsOcr: OcrWordBounds | null = null;
   for (const tsv of tsvCandidates) {
     // The instruction above the form repeats these labels. Bound the search below its
@@ -5589,7 +5596,10 @@ async function locateCanvasTextInput(
       ?? findOcrPhraseBounds(tsv, "Load one", 0);
     if (!instructionBounds) continue;
     const formRowMinimumTop = instructionBounds.top + instructionBounds.height;
-    labelBoundsOcr = findOcrPhraseBounds(tsv, controlName, formRowMinimumTop, true);
+    for (const labelPhrase of labelPhrases) {
+      labelBoundsOcr = findOcrPhraseBounds(tsv, labelPhrase, formRowMinimumTop, true);
+      if (labelBoundsOcr) break;
+    }
     if (labelBoundsOcr) break;
   }
   if (!labelBoundsOcr) {
@@ -6304,8 +6314,8 @@ async function runOpenObsidianCanvasTextEdit(
     const expandedForm = await waitFor(
       "OpenObsidian to expose the native Canvas text-edit fields",
       async () => await captureOpenObsidianScreenshot(window!.window_id, child!, "openobsidian-canvas-text-edit-expanded-form", editReport),
-      (capture) => ocrTextContainsPhrase(capture.ocrText, "Canvas edit path")
-        && ocrTextContainsPhrase(capture.ocrText, "Canvas edit text-card ID"),
+      (capture) => ocrTextContainsFuzzyPhrase(capture.ocrText, "Canvas edit path", 2)
+        && ocrTextContainsFuzzyPhrase(capture.ocrText, "Canvas edit text-card ID", 2),
       30_000,
     );
     screenshots.expanded_form = relative(reportDirectory, expandedForm.windowPngPath);
@@ -6347,7 +6357,7 @@ async function runOpenObsidianCanvasTextEdit(
       "OpenObsidian to load the selected Canvas text-card draft",
       async () => await captureOpenObsidianScreenshot(window!.window_id, child!, "openobsidian-canvas-text-edit-loaded", editReport),
       (capture) => ocrTextContainsPhrase(capture.ocrText, "Canvas text draft")
-        && ocrTextContainsPhrase(capture.ocrText, "Save Canvas text")
+        && ocrTextContainsPhrase(capture.ocrText, "Canvas text loaded")
         && capture.ocrText.includes(canvasMarker),
       30_000,
     );

@@ -2,14 +2,14 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-12T04:46:34+02:00",
+  "updated_at": "2026-10-12T05:14:08+02:00",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
   "last_reconciled_head": "e32331d50aeb1c7080dff20bf5ad4ea9c1be7642",
   "current_milestone": "R2.8.95",
-  "next_action": "Implement R2.8.95 as a separate native Canvas text-card editor: load a revision-stamped preview, edit a draft, and persist only on explicit Save. Cancel and stale-revision rejection must not write; stale rejection preserves the draft until explicit reload. Use a bounded Canvas read with a documented 4 MiB limit, preserve Markdown preview limits, and reject non-.canvas edit targets in the engine API. Extend UI and pinned Obsidian round-trip coverage for semantic JSON preservation, unchanged siblings, no note creation, and reopen visibility on Linux/macOS/Windows. Commit and push the focused slice to origin/main for the seven required CI workflows.",
-  "push_status": "origin/main contains accepted R2.8.94 implementation SHA e32331d50aeb1c7080dff20bf5ad4ea9c1be7642. All seven required exact-SHA workflows passed; see evidence/r2.8.94-attempt-8-e32331d.json. The R2.8.94 tracker checkpoint records this acceptance. R2.8.95 is now in progress from this baseline.",
+  "next_action": "Correct R2.8.95 from attempt 1's exact-SHA CI evidence: move the Canvas editor below the existing panels to preserve note-selector test geometry; apply rustfmt's CI-requested changes; make pinned round-trip OCR tolerate hyphen tokenization and low-contrast disabled controls. Commit and push this focused correction to origin/main as attempt 2, then require all seven workflows on its exact SHA.",
+  "push_status": "origin/main contains R2.8.95 attempt 1 SHA 7c8dd7bcf8edfff6e668fbeb519767b63b8dc3d2. Inventory, quality, desktop build, plugin renderer, and loaded-plugin workflows passed; Rust CI and the pinned Obsidian round-trip failed. Exact run/job IDs and all 12 artifact IDs, sizes, and digests are in evidence/r2.8.95-attempt-1-7c8dd7b.json. The focused attempt 2 correction is prepared locally and awaits its CI push.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -47,7 +47,7 @@
         "quality",
         "plugin-renderer"
       ],
-      "implementation_sha": "e32331d50aeb1c7080dff20bf5ad4ea9c1be7642"
+      "implementation_sha": "7c8dd7bcf8edfff6e668fbeb519767b63b8dc3d2"
     },
     "R3": {
       "status": "pending",
@@ -76,6 +76,7 @@
     }
   },
   "completed_actions": [
+    "R2.8.95 attempt 1 ran on exact source SHA 7c8dd7bcf8edfff6e668fbeb519767b63b8dc3d2 and is not accepted. Inventory, quality, desktop build, plugin renderer, and loaded-plugin workflows passed. Rust CI failed four note-selector tests on Ubuntu, macOS, Windows, and Rust 1.95 because the selected path remained README.md; Ubuntu also reported rustfmt differences. Pinned Obsidian 1.14.4 round-trip failed before Canvas Save on Linux/macOS/Windows due OCR/accessibility field targeting. Exact run/job IDs and all 12 artifact IDs, sizes, and digests are in evidence/r2.8.95-attempt-1-7c8dd7b.json. The correction moves the Canvas editor after existing panels, applies formatter changes directly from CI output, and updates round-trip OCR field-label/status matching. No local tests/builds/formatters/linters/validators/apps were run. One accidental local git diff --check is recorded in the evidence as a process deviation.",
     "R2.8.94 accepted on exact source SHA e32331d50aeb1c7080dff20bf5ad4ea9c1be7642 after all seven required GitHub Actions workflows and all 20 jobs passed. Rust CI passed on Ubuntu, macOS, Windows, and Rust 1.95; pinned Obsidian 1.14.4 Canvas note-creation round-trip passed on Linux, Windows, and macOS. Exact workflow/job IDs and 16 artifact IDs, sizes, and digests are in evidence/r2.8.94-attempt-8-e32331d.json. No local tests, builds, formatters, validators, or application launches ran.",
     "R2.8.94 attempt 7 ran on exact source SHA 6505a8b61076d88ac2d73efe746fdc6e48c9eb2f. Six required workflows passed. The Obsidian round-trip passed on Windows; Linux timed out on a one-character OCR error in the final review phrase, while macOS could not locate the Confirm button through accessibility or OCR. No note was written and no vault mismatch was reported. Exact run/job IDs and artifact digests are in evidence/r2.8.94-attempt-7-6505a8b.json. The focused attempt 8 correction uses egui response geometry for Review/Confirm on Linux/macOS and tolerant OCR. No local executable validation ran.",
     "R2.8.94 attempt 6 ran on exact source SHA a06faf8ebdcc4979b549ae0ce924e2a2c40ec34c. Inventory, quality, desktop build, plugin renderer, loaded plugin workflows, and Rust CI passed. The pinned Obsidian round-trip passed on Windows and failed on Linux because noisy field-crop OCR rejected a visibly correct Canvas path clipboard readback, and on macOS because the guessed Preview click did not start the preview. Exact run/job IDs and artifact digests are in evidence/r2.8.94-attempt-6-a06faf8.json. No local executable validation ran.",

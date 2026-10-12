@@ -581,11 +581,11 @@ impl OpenObsidianApp {
             ui.ctx().request_repaint();
         }
         if self.session.is_some() {
-            self.show_canvas_text_edit(ui);
             self.show_canvas_note_creation(ui);
             self.show_rename(ui);
             self.show_links(ui);
             self.show_history(ui);
+            self.show_canvas_text_edit(ui);
         }
         ui.separator();
         ui.heading("OS storage protection");
@@ -1094,10 +1094,8 @@ impl OpenObsidianApp {
             && self.canvas_text_edit_preview.is_none()
             && !self.canvas_text_edit_path.trim().is_empty()
             && !self.canvas_text_edit_node_id.trim().is_empty();
-        let load_response = ui.add_enabled(
-            can_load,
-            eframe::egui::Button::new("Load Canvas text card"),
-        );
+        let load_response =
+            ui.add_enabled(can_load, eframe::egui::Button::new("Load Canvas text card"));
         if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some()
             && ui.input(|input| !input.raw.events.is_empty())
         {
@@ -2461,9 +2459,8 @@ impl OpenObsidianApp {
         let Some(session) = self.session.as_ref().cloned() else {
             return;
         };
-        let canvas_relative_path = std::path::PathBuf::from(
-            self.canvas_text_edit_path.trim().replace('\\', "/"),
-        );
+        let canvas_relative_path =
+            std::path::PathBuf::from(self.canvas_text_edit_path.trim().replace('\\', "/"));
         let node_id = self.canvas_text_edit_node_id.trim().to_owned();
         self.canvas_text_edit_preview = None;
         self.canvas_text_edit_error = None;
@@ -5473,7 +5470,10 @@ mod tests {
             Some("draft only")
         );
         assert_eq!(existing_vault_tree_snapshot(&vault_path), vault_before);
-        assert_eq!(existing_vault_tree_snapshot(&app_data_path), app_data_before);
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            app_data_before
+        );
 
         harness.get_by_label("Load Canvas text card").click();
         harness.step();
@@ -5497,7 +5497,10 @@ mod tests {
             Some("Canvas edit canceled without writing.")
         );
         assert_eq!(existing_vault_tree_snapshot(&vault_path), vault_before);
-        assert_eq!(existing_vault_tree_snapshot(&app_data_path), app_data_before);
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            app_data_before
+        );
         assert!(!vault_path.join("Notes/Created.md").exists());
     }
 
@@ -5550,7 +5553,8 @@ mod tests {
         let mut harness = Harness::new_ui_state(|ui, app| app.show_ui(ui), app);
         let vault_before = existing_vault_tree_snapshot(&vault_path);
         let mut expected_after = before.clone();
-        expected_after["nodes"][0]["text"] = serde_json::Value::String("edited text card".to_owned());
+        expected_after["nodes"][0]["text"] =
+            serde_json::Value::String("edited text card".to_owned());
 
         harness.step();
         expand_canvas_text_edit(&mut harness);
@@ -5579,12 +5583,14 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(actual_without_canvas, before_without_canvas);
         assert!(!vault_path.join("Notes/Created.md").exists());
-        assert!(harness
-            .state()
-            .canvas_text_edit_status
-            .as_deref()
-            .is_some_and(|status| status.replace('\\', "/")
-                == "Saved the text card in Boards/Idea.canvas."));
+        assert!(
+            harness
+                .state()
+                .canvas_text_edit_status
+                .as_deref()
+                .is_some_and(|status| status.replace('\\', "/")
+                    == "Saved the text card in Boards/Idea.canvas.")
+        );
     }
 
     #[test]
@@ -5632,12 +5638,17 @@ mod tests {
             "the stale draft must not overwrite the external Canvas edit"
         );
         assert!(harness.state().canvas_text_edit_receiver.is_none());
-        assert!(harness
-            .state()
-            .canvas_text_edit_error
-            .as_deref()
-            .is_some_and(|error| error.contains("revision changed")));
-        assert_eq!(existing_vault_tree_snapshot(&app_data_path), app_data_before);
+        assert!(
+            harness
+                .state()
+                .canvas_text_edit_error
+                .as_deref()
+                .is_some_and(|error| error.contains("revision changed"))
+        );
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            app_data_before
+        );
         harness.get_by_label("Save Canvas text").click();
         harness.step();
         assert!(harness.state().canvas_text_edit_receiver.is_none());
@@ -5646,7 +5657,10 @@ mod tests {
             canvas_after_external_edit,
             "a stale draft remains blocked from saving until reload"
         );
-        assert_eq!(existing_vault_tree_snapshot(&app_data_path), app_data_before);
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            app_data_before
+        );
 
         harness.get_by_label("Reload Canvas").click();
         harness.step();
@@ -5663,7 +5677,10 @@ mod tests {
             "explicit reload discards the old draft and loads the current Canvas text"
         );
         assert!(!vault_path.join("Notes/Created.md").exists());
-        assert_eq!(existing_vault_tree_snapshot(&app_data_path), app_data_before);
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            app_data_before
+        );
     }
 
     #[test]
