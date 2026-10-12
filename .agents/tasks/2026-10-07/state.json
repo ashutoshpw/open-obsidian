@@ -2,14 +2,14 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-12T05:14:08+02:00",
+  "updated_at": "2026-10-12T05:39:15+02:00",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "e32331d50aeb1c7080dff20bf5ad4ea9c1be7642",
+  "last_reconciled_head": "400fec03669e8eb97d05270d1166d0e9ff7026ed",
   "current_milestone": "R2.8.95",
-  "next_action": "Correct R2.8.95 from attempt 1's exact-SHA CI evidence: move the Canvas editor below the existing panels to preserve note-selector test geometry; apply rustfmt's CI-requested changes; make pinned round-trip OCR tolerate hyphen tokenization and low-contrast disabled controls. Commit and push this focused correction to origin/main as attempt 2, then require all seven workflows on its exact SHA.",
-  "push_status": "origin/main contains R2.8.95 attempt 1 SHA 7c8dd7bcf8edfff6e668fbeb519767b63b8dc3d2. Inventory, quality, desktop build, plugin renderer, and loaded-plugin workflows passed; Rust CI and the pinned Obsidian round-trip failed. Exact run/job IDs and all 12 artifact IDs, sizes, and digests are in evidence/r2.8.95-attempt-1-7c8dd7b.json. The focused attempt 2 correction is prepared locally and awaits its CI push.",
+  "next_action": "Commit the source-reviewed R2.8.95 attempt 3 fixes as small focused commits, push the coherent batch to origin/main, and wait for all seven workflows on that exact SHA before accepting the milestone or making a follow-up change.",
+  "push_status": "R2.8.95 attempt 2 SHA 400fec03669e8eb97d05270d1166d0e9ff7026ed is not accepted. Inventory, desktop build, plugin renderer and loaded-plugin workflows passed; Ubuntu quality, all four Rust CI jobs, and all three Obsidian round-trip jobs failed. Exact results and 12 artifact IDs, sizes and digests are in evidence/r2.8.95-attempt-2-400fec0.json. Attempt 3 corrections passed independent source review and are ready for focused commits and an exact-SHA CI push.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -47,7 +47,7 @@
         "quality",
         "plugin-renderer"
       ],
-      "implementation_sha": "7c8dd7bcf8edfff6e668fbeb519767b63b8dc3d2"
+      "implementation_sha": "400fec03669e8eb97d05270d1166d0e9ff7026ed"
     },
     "R3": {
       "status": "pending",
@@ -76,6 +76,7 @@
     }
   },
   "completed_actions": [
+    "R2.8.95 attempt 2 correction commit 400fec03669e8eb97d05270d1166d0e9ff7026ed was pushed to origin/main after attempt 1's seven required runs completed. Attempt 2 completed: inventory, desktop build, plugin renderer and loaded-plugin workflows passed; Ubuntu quality failed its Electron retrieval-final-status audit; Rust CI failed the stale-draft Reload receiver assertion on Ubuntu/macOS/Windows/Rust 1.95; Obsidian round-trip failed on Linux/Windows/macOS. Exact job IDs, artifact IDs/sizes/digests and findings are in evidence/r2.8.95-attempt-2-400fec0.json. No local executable validation was run.",
     "R2.8.95 attempt 1 ran on exact source SHA 7c8dd7bcf8edfff6e668fbeb519767b63b8dc3d2 and is not accepted. Inventory, quality, desktop build, plugin renderer, and loaded-plugin workflows passed. Rust CI failed four note-selector tests on Ubuntu, macOS, Windows, and Rust 1.95 because the selected path remained README.md; Ubuntu also reported rustfmt differences. Pinned Obsidian 1.14.4 round-trip failed before Canvas Save on Linux/macOS/Windows due OCR/accessibility field targeting. Exact run/job IDs and all 12 artifact IDs, sizes, and digests are in evidence/r2.8.95-attempt-1-7c8dd7b.json. The correction moves the Canvas editor after existing panels, applies formatter changes directly from CI output, and updates round-trip OCR field-label/status matching. No local tests/builds/formatters/linters/validators/apps were run. One accidental local git diff --check is recorded in the evidence as a process deviation.",
     "R2.8.94 accepted on exact source SHA e32331d50aeb1c7080dff20bf5ad4ea9c1be7642 after all seven required GitHub Actions workflows and all 20 jobs passed. Rust CI passed on Ubuntu, macOS, Windows, and Rust 1.95; pinned Obsidian 1.14.4 Canvas note-creation round-trip passed on Linux, Windows, and macOS. Exact workflow/job IDs and 16 artifact IDs, sizes, and digests are in evidence/r2.8.94-attempt-8-e32331d.json. No local tests, builds, formatters, validators, or application launches ran.",
     "R2.8.94 attempt 7 ran on exact source SHA 6505a8b61076d88ac2d73efe746fdc6e48c9eb2f. Six required workflows passed. The Obsidian round-trip passed on Windows; Linux timed out on a one-character OCR error in the final review phrase, while macOS could not locate the Confirm button through accessibility or OCR. No note was written and no vault mismatch was reported. Exact run/job IDs and artifact digests are in evidence/r2.8.94-attempt-7-6505a8b.json. The focused attempt 8 correction uses egui response geometry for Review/Confirm on Linux/macOS and tolerant OCR. No local executable validation ran.",
@@ -30978,11 +30979,44 @@
         "OpenObsidian Rust CI",
         "Obsidian vault round-trip acceptance"
       ],
-      "attempts": [],
-      "implementation_sha": null,
-      "evidence": null,
+      "attempts": [
+        {
+          "attempt": 1,
+          "source_sha": "7c8dd7bcf8edfff6e668fbeb519767b63b8dc3d2",
+          "outcome": "not_accepted",
+          "evidence": "evidence/r2.8.95-attempt-1-7c8dd7b.json",
+          "workflow_runs": {
+            "inventory": 38198046334,
+            "quality": 38198046325,
+            "desktop_build": 38198046269,
+            "plugin_renderer": 38198046305,
+            "loaded_plugins": 38198046319,
+            "rust_ci": 38198046270,
+            "vault_roundtrip": 38198046448
+          },
+          "finding": "Rust CI failed four note-selector assertions and Ubuntu formatting; all three pinned Obsidian round-trips stopped before Save because editor controls were difficult to locate."
+        },
+        {
+          "attempt": 2,
+          "source_sha": "400fec03669e8eb97d05270d1166d0e9ff7026ed",
+          "outcome": "not_accepted",
+          "evidence": "evidence/r2.8.95-attempt-2-400fec0.json",
+          "workflow_runs": {
+            "inventory": 38199190880,
+            "quality": 38199190906,
+            "desktop_build": 38199190845,
+            "plugin_renderer": 38199190838,
+            "loaded_plugins": 38199190839,
+            "rust_ci": 38199190848,
+            "vault_roundtrip": 38199190870
+          },
+          "finding": "Four workflows passed. Ubuntu quality failed because a late retrieval progress event obscured final completion. Rust CI failed the stale-draft Reload receiver assertion on all four targets. The round-trip failed on all operating systems due to clipped editor controls, an in-progress watcher refresh, and incomplete draft readback."
+        }
+      ],
+      "implementation_sha": "400fec03669e8eb97d05270d1166d0e9ff7026ed",
+      "evidence": "evidence/r2.8.95-attempt-2-400fec0.json",
       "accepted_attempt": null,
-      "push_status": "Implementation in progress from the accepted R2.8.94 baseline; no attempt has been pushed."
+      "push_status": "Attempt 2 at 400fec03669e8eb97d05270d1166d0e9ff7026ed is not accepted; all seven exact-SHA workflows finished, with quality, Rust CI, and round-trip failures recorded in evidence/r2.8.95-attempt-2-400fec0.json. Focused attempt 3 corrections are being integrated before another push."
     }
   },
   "ci_preparation": {

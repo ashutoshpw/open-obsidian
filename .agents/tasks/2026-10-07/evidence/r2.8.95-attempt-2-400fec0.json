@@ -1,0 +1,105 @@
+{
+  "milestone": "R2.8.95",
+  "attempt": 2,
+  "source_sha": "400fec03669e8eb97d05270d1166d0e9ff7026ed",
+  "outcome": "not_accepted",
+  "captured_at": "2026-10-12T03:34:00Z",
+  "artifact_source": "GitHub Actions run, job, and artifact metadata; round-trip archives were downloaded and inspected for CI reports and screenshots only. No project executable was run locally.",
+  "workflow_runs": {
+    "inventory": {
+      "id": 38199190880,
+      "head_sha": "400fec03669e8eb97d05270d1166d0e9ff7026ed",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38199190880",
+      "jobs": [{"id": 114648550162, "name": "inventory", "conclusion": "success"}]
+    },
+    "quality": {
+      "id": 38199190906,
+      "head_sha": "400fec03669e8eb97d05270d1166d0e9ff7026ed",
+      "conclusion": "failure",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38199190906",
+      "jobs": [
+        {"id": 114648550161, "name": "ubuntu-latest", "conclusion": "failure"},
+        {"id": 114648550483, "name": "macos-latest", "conclusion": "success"},
+        {"id": 114648550258, "name": "windows-latest", "conclusion": "success"}
+      ]
+    },
+    "desktop_build": {
+      "id": 38199190845,
+      "head_sha": "400fec03669e8eb97d05270d1166d0e9ff7026ed",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38199190845",
+      "jobs": [
+        {"id": 114648550228, "name": "ubuntu-latest", "conclusion": "success"},
+        {"id": 114648550440, "name": "windows-latest", "conclusion": "success"},
+        {"id": 114648550533, "name": "macos-latest", "conclusion": "success"}
+      ]
+    },
+    "plugin_renderer": {
+      "id": 38199190838,
+      "head_sha": "400fec03669e8eb97d05270d1166d0e9ff7026ed",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38199190838",
+      "jobs": [
+        {"id": 114648550221, "name": "windows-latest", "conclusion": "success"},
+        {"id": 114648550372, "name": "macos-latest", "conclusion": "success"},
+        {"id": 114648550592, "name": "ubuntu-latest", "conclusion": "success"}
+      ]
+    },
+    "loaded_plugins": {
+      "id": 38199190839,
+      "head_sha": "400fec03669e8eb97d05270d1166d0e9ff7026ed",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38199190839",
+      "jobs": [
+        {"id": 114648550265, "name": "windows-latest", "conclusion": "success"},
+        {"id": 114648550472, "name": "ubuntu-latest", "conclusion": "success"},
+        {"id": 114648550529, "name": "macos-latest", "conclusion": "success"}
+      ]
+    },
+    "rust_ci": {
+      "id": 38199190848,
+      "head_sha": "400fec03669e8eb97d05270d1166d0e9ff7026ed",
+      "conclusion": "failure",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38199190848",
+      "jobs": [
+        {"id": 114648549938, "name": "minimum supported Rust (1.95)", "conclusion": "failure"},
+        {"id": 114648550138, "name": "rust (windows-latest)", "conclusion": "failure"},
+        {"id": 114648550170, "name": "rust (macos-latest)", "conclusion": "failure"},
+        {"id": 114648550259, "name": "rust (ubuntu-latest)", "conclusion": "failure"}
+      ]
+    },
+    "vault_roundtrip": {
+      "id": 38199190870,
+      "head_sha": "400fec03669e8eb97d05270d1166d0e9ff7026ed",
+      "conclusion": "failure",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38199190870",
+      "jobs": [
+        {"id": 114648550315, "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04", "conclusion": "failure"},
+        {"id": 114648550704, "name": "Obsidian 1.14.4 vault round-trip on windows-latest", "conclusion": "failure"},
+        {"id": 114648550528, "name": "Obsidian 1.14.4 vault round-trip on macos-latest", "conclusion": "failure"}
+      ]
+    }
+  },
+  "artifacts": [
+    {"workflow": "desktop_build", "id": 11724902382, "runner_os": "Windows", "name": "openobsidian-Windows-preview-400fec03669e8eb97d05270d1166d0e9ff7026ed", "size_in_bytes": 163005824, "archive_sha256": "e7de7e20d48d46fe5d37bb14a9dcd38ba248b759a08df0b4e8fecc595908a567"},
+    {"workflow": "desktop_build", "id": 11724613281, "runner_os": "Linux", "name": "openobsidian-Linux-preview-400fec03669e8eb97d05270d1166d0e9ff7026ed", "size_in_bytes": 125946548, "archive_sha256": "636a690c7b8cbd1902da5755ef9886252a70477055f6a23a4bd65e89590b2782"},
+    {"workflow": "desktop_build", "id": 11724302894, "runner_os": "macOS", "name": "openobsidian-macOS-preview-400fec03669e8eb97d05270d1166d0e9ff7026ed", "size_in_bytes": 397395487, "archive_sha256": "d998936f866d2f75ce92fb6ff507c63e27af5addce75d18b6d7595568af0ef42"},
+    {"workflow": "plugin_renderer", "id": 11724922212, "runner_os": "macOS", "name": "plugin-renderer-lifecycle-macOS-400fec03669e8eb97d05270d1166d0e9ff7026ed", "size_in_bytes": 3238, "archive_sha256": "c7572650078c5cf68d20b9f18fc82268a6ee24dd501297c3729bd14032443fc1"},
+    {"workflow": "plugin_renderer", "id": 11724678190, "runner_os": "Windows", "name": "plugin-renderer-lifecycle-Windows-400fec03669e8eb97d05270d1166d0e9ff7026ed", "size_in_bytes": 3242, "archive_sha256": "df8327bc052ac6f0f67c196b91fbc1b67bd9ee94511cd5513482038d15a196bb"},
+    {"workflow": "plugin_renderer", "id": 11724413873, "runner_os": "Linux", "name": "plugin-renderer-lifecycle-Linux-400fec03669e8eb97d05270d1166d0e9ff7026ed", "size_in_bytes": 3221, "archive_sha256": "adca534d5eb5dd08679e66998633003ab762021f1b7e8de40f0c0be9c8d58c23"},
+    {"workflow": "loaded_plugins", "id": 11724708063, "runner_os": "Windows", "name": "loaded-plugin-workflows-Windows-400fec03669e8eb97d05270d1166d0e9ff7026ed", "size_in_bytes": 171495, "archive_sha256": "63999a288bdd28d1332a5d44c9f6b4c221a23eb8ee0625e6aa4c198331c7326d"},
+    {"workflow": "loaded_plugins", "id": 11724603283, "runner_os": "macOS", "name": "loaded-plugin-workflows-macOS-400fec03669e8eb97d05270d1166d0e9ff7026ed", "size_in_bytes": 171515, "archive_sha256": "2dea57fa04bcd591c96f70771c9a50ab4d0dd53159a6e72e14521a7d97af4a5d"},
+    {"workflow": "loaded_plugins", "id": 11723834264, "runner_os": "Linux", "name": "loaded-plugin-workflows-Linux-400fec03669e8eb97d05270d1166d0e9ff7026ed", "size_in_bytes": 171461, "archive_sha256": "d830789556ca8c2a8d097bc6ad6f8c12a96108a14ee2fc528b477fd1bc474fdd"},
+    {"workflow": "vault_roundtrip", "id": 11725035075, "runner_os": "Linux", "name": "obsidian-vault-roundtrip-Linux-400fec03669e8eb97d05270d1166d0e9ff7026ed", "size_in_bytes": 9870756, "archive_sha256": "f6e405dd077bf4c71136a8fcbc276a533f08d801b3ca1525f26303738ce145"},
+    {"workflow": "vault_roundtrip", "id": 11725010948, "runner_os": "Windows", "name": "obsidian-vault-roundtrip-Windows-400fec03669e8eb97d05270d1166d0e9ff7026ed", "size_in_bytes": 10507022, "archive_sha256": "d6e515ad721849d2aaba2405b1a278fc750f673c4b3ce8f6b96b1cc1522e858"},
+    {"workflow": "vault_roundtrip", "id": 11724838472, "runner_os": "macOS", "name": "obsidian-vault-roundtrip-macOS-400fec03669e8eb97d05270d1166d0e9ff7026ed", "size_in_bytes": 13971273, "archive_sha256": "68a67141d8540287dd382362fbc1d6fedfe8557a60969e194fd98fe5f708c94"}
+  ],
+  "findings": [
+    "Inventory, desktop build, plugin renderer, and loaded-plugin workflows passed. Quality failed on Ubuntu because the Electron audit observed a local index completion status instead of the completed retrieval result; macOS and Windows quality jobs passed.",
+    "Rust CI failed on Ubuntu, macOS, Windows, and Rust 1.95 in egui_canvas_text_edit_preserves_stale_draft_and_requires_explicit_reload at crates/ui-egui/src/lib.rs:5667. All four failures asserted that canvas_text_edit_receiver was Some after clicking Reload Canvas; each job reported 108 passed and 1 failed.",
+    "Obsidian round-trip failed on all three operating systems. Linux could not locate an accessible Canvas edit text-card ID field and the captured form was disabled while a watcher refresh was in progress. Windows read back only 28 characters of a 42-character draft. macOS timed out waiting for the saved Canvas text card. Screenshots showed the expanded editor's lower controls clipped below the 800x600 viewport on Windows and macOS.",
+    "No vault mismatch was reported. The next correction adds visible scrolling and editor auto-scroll, waits for the correct Canvas text-edit log's watcher refresh to finish before interaction, and correlates Electron retrieval progress events with their request so late progress cannot overwrite the final result."
+  ],
+  "local_validation": "No local tests, builds, formatters, linters, validators, or application launches were run. The GitHub Actions round-trip archives were inspected for logs and screenshots only."
+}

@@ -4680,3 +4680,22 @@ clean. This whitespace check is recorded as a process deviation; executable
 validation remains reserved for GitHub Actions. The focused correction is
 prepared for attempt 2 and will be pushed to `origin/main` for its seven exact
 SHA workflows after this CI result has been fully reconciled.
+
+Attempt 2 correction commit `400fec03669e8eb97d05270d1166d0e9ff7026ed` was
+pushed to `origin/main` and is not accepted. Inventory, desktop build, plugin
+renderer and loaded-plugin workflows passed. Quality failed on Ubuntu after
+an indexing progress event overwrote the final retrieval state. Rust CI failed
+the stale-draft Reload receiver assertion on Ubuntu, macOS, Windows and Rust
+1.95. Obsidian round-trip failed on Linux, Windows and macOS; evidence showed
+clipped controls on two platforms and a disabled form during watcher refresh
+on Linux. Exact run/job IDs and 12 artifact IDs, sizes and digests are in
+[`evidence/r2.8.95-attempt-2-400fec0.json`](evidence/r2.8.95-attempt-2-400fec0.json).
+
+Attempt 3 corrections have been integrated in parallel: native app-body
+scrolling and editor auto-scroll, round-trip waits using the text-edit log,
+and request-correlated Electron retrieval progress. Independent reviewers
+found no actionable issues; the fixes are being committed as focused slices.
+No local tests, builds,
+formatters, linters, validators or application launches were run. The next
+commit will be pushed to `origin/main` for fresh exact-SHA GitHub Actions
+results after source review.
