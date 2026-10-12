@@ -1572,6 +1572,60 @@ mod tests {
     }
 
     #[test]
+    fn numeric_and_file_field_fixture_cases_use_typed_values() {
+        let fixture: Value =
+            serde_json::from_str(C07_BASES_FIXTURE).expect("C07 fixture must be JSON");
+
+        for case_id in [
+            "numeric_sort_case",
+            "numeric_filter_case",
+            "file_derived_fields_case",
+        ] {
+            let case = &fixture[case_id];
+            let source = serde_json::to_vec(&case["source"])
+                .unwrap_or_else(|error| panic!("{case_id}: source must encode: {error}"));
+            let document = parse_base(&source)
+                .unwrap_or_else(|error| panic!("{case_id}: source must parse: {error}"));
+            let result = evaluate_base(
+                &document,
+                case["view"].as_str().expect("view name must be a string"),
+                &fixture_rows(&case["rows"]),
+            )
+            .unwrap_or_else(|error| panic!("{case_id}: view must evaluate: {error}"));
+            let expected_paths = case["expected"]["paths"]
+                .as_array()
+                .expect("expected paths must be an array")
+                .iter()
+                .map(|path| path.as_str().expect("expected path must be a string"))
+                .collect::<Vec<_>>();
+            assert_eq!(
+                result.rows.iter().map(|row| row.path.as_str()).collect::<Vec<_>>(),
+                expected_paths,
+                "{case_id}: evaluated paths"
+            );
+
+            if let Some(expected_fields) = case["expected"]["fields"].as_object() {
+                for row in &result.rows {
+                    let expected = &expected_fields[row.path.as_str()];
+                    assert_eq!(
+                        row.values.get("file.name"),
+                        expected.get("name"),
+                        "{case_id}: file.name for {}",
+                        row.path
+                    );
+                    assert_eq!(
+                        row.values.get("file.ext"),
+                        expected.get("ext"),
+                        "{case_id}: file.ext for {}",
+                        row.path
+                    );
+                }
+            }
+            assert_eq!(encode_base(&document), source, "{case_id}: source retention");
+        }
+    }
+
+    #[test]
     fn unsupported_formula_fixture_returns_issue_and_no_fabricated_value() {
         let fixture: Value = serde_json::from_str(C07_UNSUPPORTED_FORMULA_FIXTURE)
             .expect("unsupported formula fixture must be JSON");

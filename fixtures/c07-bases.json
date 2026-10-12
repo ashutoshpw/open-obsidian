@@ -112,6 +112,59 @@
       "paths": ["match.md"]
     }
   },
+  "numeric_sort_case": {
+    "id": "json-numeric-sort-uses-number-order",
+    "source": {
+      "version": 1,
+      "views": [{"type": "table", "name": "Decimal order", "sort": [{"field": "ratio"}]}]
+    },
+    "view": "Decimal order",
+    "rows": [
+      {"path": "half.md", "properties": {"ratio": 0.5}},
+      {"path": "quarter.md", "properties": {"ratio": 0.25}},
+      {"path": "three-quarters.md", "properties": {"ratio": 0.75}}
+    ],
+    "expected": {"paths": ["quarter.md", "half.md", "three-quarters.md"]}
+  },
+  "numeric_filter_case": {
+    "id": "json-numeric-filter-uses-number-order",
+    "source": {
+      "version": 1,
+      "views": [{
+        "type": "list",
+        "name": "Above decimal threshold",
+        "filter": {"kind": "comparison", "field": "ratio", "operator": "gt", "value": 0.3}
+      }]
+    },
+    "view": "Above decimal threshold",
+    "rows": [
+      {"path": "quarter.md", "properties": {"ratio": 0.25}},
+      {"path": "half.md", "properties": {"ratio": 0.5}},
+      {"path": "three-quarters.md", "properties": {"ratio": 0.75}}
+    ],
+    "expected": {"paths": ["half.md", "three-quarters.md"]}
+  },
+  "file_derived_fields_case": {
+    "id": "file-derived-fields-use-basename",
+    "source": {
+      "version": 1,
+      "views": [{"type": "table", "name": "File fields", "sort": [{"field": "file.ext"}]}]
+    },
+    "view": "File fields",
+    "rows": [
+      {"path": "folder.v1/no-extension", "properties": {}},
+      {"path": "folder.v1/note.md", "properties": {}},
+      {"path": "folder.v1/archive.tar.gz", "properties": {}}
+    ],
+    "expected": {
+      "paths": ["folder.v1/no-extension", "folder.v1/archive.tar.gz", "folder.v1/note.md"],
+      "fields": {
+        "folder.v1/no-extension": {"name": "no-extension", "ext": ""},
+        "folder.v1/note.md": {"name": "note.md", "ext": "md"},
+        "folder.v1/archive.tar.gz": {"name": "archive.tar.gz", "ext": "gz"}
+      }
+    }
+  },
   "embedded_case": {
     "id": "embedded-definitions-retain-source-spans",
     "source": "# Overview\r\n\r\n\u0060\u0060\u0060base\r\nviews:\r\n  - type: list\r\n    name: Notes\r\n    unknownView: keep-me\r\n\u0060\u0060\u0060\r\n",
