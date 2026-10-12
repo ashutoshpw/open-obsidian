@@ -5,7 +5,8 @@ mod markdown_math;
 use egui_commonmark::{CommonMarkCache, CommonMarkViewer};
 use markdown_math::{MathRendererCache, math_render_callback};
 use openobsidian_engine::{
-    CanvasEditError, CanvasNoteCreateResult, LinkKind, LinkRenameAction, LinkResolutionStatus,
+    BaseFileEvaluation, BaseFileListing, CanvasEditError, CanvasNoteCreateResult, LinkKind,
+    LinkRenameAction, LinkResolutionStatus,
     MAX_NOTE_SOURCE_PREVIEW_BYTES, MarkdownPreviewDisposition, MarkdownUnsupportedSyntax,
     TransclusionBlockReason, VaultConflictAction, VaultConflictRead, VaultConflictResolution,
     VaultError, VaultHistoryCleanup, VaultHistoryKind, VaultHistoryPlan, VaultHistoryPolicy,
@@ -16,6 +17,7 @@ use openobsidian_engine::{
 };
 use std::cell::RefCell;
 use std::collections::HashMap;
+use std::fmt::{self, Write as _};
 use std::path::Path;
 use std::rc::Rc;
 use std::sync::{
@@ -29,6 +31,16 @@ const GIBIBYTE: u64 = 1024 * 1024 * 1024;
 const GIBIBYTE_F64: f64 = GIBIBYTE as f64;
 const MAX_RENAME_PREVIEW_EDITS: usize = 100;
 const MAX_LINK_STATUS_ROWS: usize = 100;
+const MAX_BASE_FILES_IN_SELECTOR: usize = 100;
+const MAX_BASE_VIEWS_IN_SELECTOR: usize = 100;
+const MAX_BASE_GROUPS_RENDERED: usize = 100;
+const MAX_BASE_ROWS_RENDERED: usize = 500;
+const MAX_BASE_PROPERTIES_PER_ROW: usize = 50;
+const MAX_BASE_ISSUES_PER_KIND_RENDERED: usize = 100;
+const MAX_BASES_DISPLAY_FIELD_BYTES: usize = 512;
+const MAX_BASES_ISSUE_COMPONENT_BYTES: usize = (MAX_BASES_DISPLAY_FIELD_BYTES - 2) / 2;
+const MAX_BASE_ROW_TEXT_BYTES: usize = 4096;
+const BASES_TRUNCATION_MARKER: &str = "… [truncated]";
 const MAX_TRANSCLUSION_PREVIEW_BYTES: usize = MAX_NOTE_SOURCE_PREVIEW_BYTES;
 const VAULT_RECONCILIATION_INTERVAL: Duration = Duration::from_secs(60);
 #[cfg(test)]
@@ -48,6 +60,9 @@ const SYNC_WATCHER_RECOVERY_FIXTURE: &str =
 const EXISTING_VAULT_FIXTURE: &str = include_str!("../../../fixtures/existing-vault.json");
 #[cfg(test)]
 const VAULT_SAFETY_FIXTURE: &str = include_str!("../../../fixtures/vault-safety.json");
+#[cfg(test)]
+const C07_BASE_VAULT_EVALUATION_FIXTURE: &str =
+    include_str!("../../../fixtures/c07-base-vault-evaluation.json");
 
 /// Receives the result of opening a user-selected vault on a background worker.
 pub type VaultOpenReceiver = Receiver<Result<VaultSession, String>>;
@@ -61,6 +76,12 @@ type VaultRefreshReceiver = Receiver<Result<VaultRefreshOutcome, String>>;
 type RenameReceiver = Receiver<RenameTaskMessage>;
 type CanvasNoteReceiver = Receiver<CanvasNoteTaskMessage>;
 type CanvasTextEditReceiver = Receiver<CanvasTextEditTaskMessage>;
+type BasesReceiver = Receiver<BasesTaskMessage>;
+
+enum BasesTaskMessage {
+    Listing(Result<BaseFileListing, String>),
+    Evaluation(Result<BaseFileEvaluation, String>),
+}
 
 struct LinkTaskMessage {
     resolutions: Result<Vec<VaultLinkResolution>, String>,
@@ -324,6 +345,12 @@ struct OpenObsidianApp {
     canvas_text_edit_status: Option<String>,
     canvas_text_edit_stale: bool,
     canvas_text_edit_was_open: bool,
+    bases_listing: Option<BaseFileListing>,
+    bases_selected_path: Option<std::path::PathBuf>,
+    bases_selected_view: Option<usize>,
+    bases_evaluation: Option<BaseFileEvaluation>,
+    bases_receiver: Option<BasesReceiver>,
+    bases_error: Option<String>,
     rename_source_path: Option<std::path::PathBuf>,
     rename_destination_path: String,
     rename_preview: Option<VaultRenamePreview>,
@@ -356,6 +383,7 @@ impl OpenObsidianApp {
     fn show_ui_content(&mut self, ui: &mut eframe::egui::Ui) {
         let vault_operation_busy = self.history_receiver.is_some()
             || self.link_receiver.is_some()
+            || self.bases_receiver.is_some()
             || self.note_preview_receiver.is_some()
             || self.note_preview_write_receiver.is_some()
             || self.vault_refresh_receiver.is_some()
@@ -434,6 +462,7 @@ impl OpenObsidianApp {
                     .map(|entry| entry.relative_path.clone());
                 self.link_source_path = self.rename_source_path.clone();
                 self.session = Some(Arc::new(session));
+                self.clear_bases_state();
                 self.vault_open_receiver = None;
                 self.vault_opening = false;
                 self.vault_open_error = None;
@@ -509,6 +538,7 @@ impl OpenObsidianApp {
         self.poll_rename_task(ui);
         self.poll_canvas_note_task(ui);
         self.poll_canvas_text_edit_task(ui);
+        self.poll_bases_task(ui);
         if self.vault_opening {
             ui.label("Opening vault safely…");
         }
@@ -595,6 +625,7 @@ impl OpenObsidianApp {
             self.show_links(ui);
             self.show_history(ui);
             self.show_canvas_text_edit(ui);
+            self.show_bases(ui);
         }
         ui.separator();
         ui.heading("OS storage protection");
@@ -637,6 +668,7 @@ impl OpenObsidianApp {
             self.canvas_note_receiver.is_some(),
             self.canvas_text_edit_receiver.is_some(),
             self.canvas_text_edit_preview.is_some(),
+            self.bases_receiver.is_some(),
         ]
         .into_iter()
         .enumerate()
@@ -654,6 +686,7 @@ impl OpenObsidianApp {
 
         let vault_operation_busy = self.history_receiver.is_some()
             || self.link_receiver.is_some()
+            || self.bases_receiver.is_some()
             || self.note_preview_receiver.is_some()
             || self.note_preview_write_receiver.is_some()
             || self.vault_refresh_receiver.is_some()
@@ -663,7 +696,7 @@ impl OpenObsidianApp {
             || self.canvas_text_edit_preview.is_some()
             || self.note_source_editing();
         eprintln!(
-            "OpenObsidian CI UI state: session={}, vault_opening={}, vault_open_receiver={}, history_receiver={}, link_receiver={}, note_preview_receiver={}, note_preview_write_receiver={}, vault_refresh_receiver={}, rename_receiver={}, canvas_note_receiver={}, canvas_text_edit_receiver={}, canvas_text_edit_preview={}, open_vault_enabled={}",
+            "OpenObsidian CI UI state: session={}, vault_opening={}, vault_open_receiver={}, history_receiver={}, link_receiver={}, note_preview_receiver={}, note_preview_write_receiver={}, vault_refresh_receiver={}, rename_receiver={}, canvas_note_receiver={}, canvas_text_edit_receiver={}, canvas_text_edit_preview={}, bases_receiver={}, open_vault_enabled={}",
             self.session.is_some(),
             self.vault_opening,
             self.vault_open_receiver.is_some(),
@@ -676,6 +709,7 @@ impl OpenObsidianApp {
             self.canvas_note_receiver.is_some(),
             self.canvas_text_edit_receiver.is_some(),
             self.canvas_text_edit_preview.is_some(),
+            self.bases_receiver.is_some(),
             !self.vault_opening && !vault_operation_busy,
         );
     }
@@ -705,6 +739,457 @@ impl OpenObsidianApp {
 impl OpenObsidianApp {
     fn canvas_text_editing(&self) -> bool {
         self.canvas_text_edit_receiver.is_some() || self.canvas_text_edit_preview.is_some()
+    }
+
+    fn vault_operation_busy_except_bases(&self) -> bool {
+        self.vault_opening
+            || self.vault_open_receiver.is_some()
+            || self.history_receiver.is_some()
+            || self.link_receiver.is_some()
+            || self.note_preview_receiver.is_some()
+            || self.note_preview_write_receiver.is_some()
+            || self.vault_refresh_receiver.is_some()
+            || self.rename_receiver.is_some()
+            || self.canvas_note_receiver.is_some()
+            || self.canvas_text_edit_receiver.is_some()
+    }
+
+    fn clear_bases_state(&mut self) {
+        self.bases_listing = None;
+        self.bases_selected_path = None;
+        self.bases_selected_view = None;
+        self.bases_evaluation = None;
+        self.bases_receiver = None;
+        self.bases_error = None;
+    }
+
+    fn invalidate_bases_snapshot(&mut self) {
+        self.bases_listing = None;
+        self.bases_evaluation = None;
+        self.bases_receiver = None;
+        self.bases_error = None;
+    }
+
+    fn start_bases_listing(&mut self) {
+        let Some(session) = self.session.as_ref().cloned() else {
+            return;
+        };
+        self.bases_listing = None;
+        self.bases_evaluation = None;
+        self.bases_error = None;
+        let (sender, receiver) = mpsc::channel();
+        rayon::spawn(move || {
+            let result = session.list_base_files().map_err(|error| {
+                format_bases_text(
+                    MAX_BASES_DISPLAY_FIELD_BYTES,
+                    format_args!("{error}"),
+                )
+            });
+            let _ = sender.send(BasesTaskMessage::Listing(result));
+        });
+        self.bases_receiver = Some(receiver);
+    }
+
+    fn start_bases_evaluation(&mut self, relative_path: std::path::PathBuf, view_index: usize) {
+        let Some(session) = self.session.as_ref().cloned() else {
+            return;
+        };
+        self.bases_selected_view = Some(view_index);
+        self.bases_evaluation = None;
+        self.bases_error = None;
+        let (sender, receiver) = mpsc::channel();
+        rayon::spawn(move || {
+            let result = session
+                .evaluate_base_file_by_view_index(&relative_path, view_index)
+                .map_err(|error| {
+                    format_bases_text(
+                        MAX_BASES_DISPLAY_FIELD_BYTES,
+                        format_args!("{error}"),
+                    )
+                });
+            let _ = sender.send(BasesTaskMessage::Evaluation(result));
+        });
+        self.bases_receiver = Some(receiver);
+    }
+
+    fn poll_bases_task(&mut self, ui: &mut eframe::egui::Ui) {
+        let result = self.bases_receiver.as_ref().map(Receiver::try_recv);
+        match result {
+            Some(Ok(BasesTaskMessage::Listing(Ok(listing)))) => {
+                self.bases_receiver = None;
+                let selected_path = self
+                    .bases_selected_path
+                    .as_ref()
+                    .filter(|selected| {
+                        listing
+                            .files
+                            .iter()
+                            .any(|file| &file.relative_path == *selected)
+                    })
+                    .cloned()
+                    .or_else(|| listing.files.first().map(|file| file.relative_path.clone()));
+                if selected_path != self.bases_selected_path {
+                    self.bases_selected_view = None;
+                }
+                self.bases_selected_path = selected_path.clone();
+                self.bases_listing = Some(listing);
+                self.bases_error = None;
+                if let Some(relative_path) = selected_path {
+                    self.start_bases_evaluation(
+                        relative_path,
+                        self.bases_selected_view.unwrap_or_default(),
+                    );
+                }
+            }
+            Some(Ok(BasesTaskMessage::Listing(Err(error)))) => {
+                self.bases_receiver = None;
+                self.bases_listing = None;
+                self.bases_evaluation = None;
+                self.bases_error = Some(format_bases_text(
+                    MAX_BASES_DISPLAY_FIELD_BYTES,
+                    format_args!("Bases files could not be listed safely: {error}"),
+                ));
+            }
+            Some(Ok(BasesTaskMessage::Evaluation(Ok(evaluation)))) => {
+                self.bases_receiver = None;
+                if self.bases_selected_view.is_none() {
+                    self.bases_selected_view = Some(0);
+                }
+                self.bases_evaluation = Some(evaluation);
+                self.bases_error = None;
+            }
+            Some(Ok(BasesTaskMessage::Evaluation(Err(error)))) => {
+                self.bases_receiver = None;
+                self.bases_evaluation = None;
+                self.bases_error = Some(format_bases_text(
+                    MAX_BASES_DISPLAY_FIELD_BYTES,
+                    format_args!("Bases evaluation could not be completed: {error}"),
+                ));
+            }
+            Some(Err(TryRecvError::Disconnected)) => {
+                self.bases_receiver = None;
+                self.bases_evaluation = None;
+                self.bases_error = Some(
+                    "The Bases operation stopped unexpectedly. Refresh the Bases files and try again."
+                        .to_owned(),
+                );
+            }
+            Some(Err(TryRecvError::Empty)) => {
+                ui.ctx().request_repaint_after(Duration::from_millis(100));
+            }
+            None => {}
+        }
+    }
+
+    fn show_bases(&mut self, ui: &mut eframe::egui::Ui) {
+        ui.separator();
+        ui.heading("Bases");
+        ui.small(
+            "Read-only projections over Markdown frontmatter. Evaluation does not write to the vault.",
+        );
+
+        let other_vault_operation_busy = self.vault_operation_busy_except_bases();
+        if self.bases_listing.is_none()
+            && self.bases_receiver.is_none()
+            && self.bases_error.is_none()
+            && !other_vault_operation_busy
+        {
+            self.start_bases_listing();
+        }
+        if self.bases_listing.is_none()
+            && self.bases_receiver.is_none()
+            && other_vault_operation_busy
+        {
+            ui.small("Waiting for current vault work to finish before reading Bases…");
+        }
+
+        let refresh_enabled =
+            self.bases_receiver.is_none() && !other_vault_operation_busy;
+        if ui
+            .add_enabled(refresh_enabled, eframe::egui::Button::new("Refresh Bases files"))
+            .clicked()
+        {
+            self.bases_selected_view = None;
+            self.start_bases_listing();
+        }
+
+        if let Some(error) = &self.bases_error {
+            ui.colored_label(eframe::egui::Color32::YELLOW, error);
+        }
+        if self.bases_receiver.is_some() {
+            ui.small("Reading a stable, bounded vault snapshot for Bases…");
+        }
+
+        let mut selected_path = self.bases_selected_path.clone();
+        let mut path_changed = false;
+        if let Some(listing) = &self.bases_listing {
+            if !listing.complete {
+                ui.colored_label(
+                    eframe::egui::Color32::YELLOW,
+                    "The Bases file list reached its bound; additional files are omitted.",
+                );
+            }
+            if listing.files.is_empty() {
+                ui.label("No regular .base files were found in this vault.");
+            } else {
+                let visible_file_indices = bounded_visible_indices(
+                    listing.files.len(),
+                    MAX_BASE_FILES_IN_SELECTOR,
+                    listing
+                        .files
+                        .iter()
+                        .position(|file| Some(&file.relative_path) == selected_path.as_ref()),
+                );
+                if listing.files.len() > visible_file_indices.len() {
+                    ui.small(format!(
+                        "Showing {} of {} .base files in the selector; {} omitted by the UI limit of {}.",
+                        visible_file_indices.len(),
+                        listing.files.len(),
+                        listing.files.len() - visible_file_indices.len(),
+                        MAX_BASE_FILES_IN_SELECTOR,
+                    ));
+                }
+                let selected_label = selected_path.as_ref().map_or_else(
+                    || "Choose a .base file".to_owned(),
+                    |path| {
+                        format_bases_text(
+                            MAX_BASES_DISPLAY_FIELD_BYTES,
+                            format_args!("{}", path.display()),
+                        )
+                    },
+                );
+                ui.add_enabled_ui(refresh_enabled, |ui| {
+                    eframe::egui::ComboBox::from_label("Base file")
+                        .selected_text(selected_label)
+                        .show_ui(ui, |ui| {
+                            for index in visible_file_indices {
+                                let file = &listing.files[index];
+                                path_changed |= ui
+                                    .selectable_value(
+                                        &mut selected_path,
+                                        Some(file.relative_path.clone()),
+                                        format_bases_text(
+                                            MAX_BASES_DISPLAY_FIELD_BYTES,
+                                            format_args!("{}", file.relative_path.display()),
+                                        ),
+                                    )
+                                    .changed();
+                            }
+                        });
+                });
+            }
+        }
+        if path_changed {
+            self.bases_selected_path = selected_path.clone();
+            self.bases_selected_view = None;
+            self.bases_evaluation = None;
+            if let Some(relative_path) = selected_path {
+                self.start_bases_evaluation(relative_path, 0);
+            }
+        }
+
+        let mut selected_view = self.bases_selected_view.unwrap_or_default();
+        let mut view_changed = false;
+        if let Some(evaluation) = &self.bases_evaluation {
+            let views = evaluation.base.views();
+            if views.len() > 1 {
+                let selected_label = views
+                    .get(selected_view)
+                    .map(|view| bases_view_label(view.name.as_deref(), selected_view))
+                    .unwrap_or_else(|| "Choose a view".to_owned());
+                let visible_view_indices = bounded_visible_indices(
+                    views.len(),
+                    MAX_BASE_VIEWS_IN_SELECTOR,
+                    Some(selected_view),
+                );
+                if views.len() > visible_view_indices.len() {
+                    ui.small(format!(
+                        "Showing {} of {} views in the selector; {} omitted by the UI limit of {}. The current view remains available.",
+                        visible_view_indices.len(),
+                        views.len(),
+                        views.len() - visible_view_indices.len(),
+                        MAX_BASE_VIEWS_IN_SELECTOR,
+                    ));
+                }
+                ui.add_enabled_ui(refresh_enabled, |ui| {
+                    eframe::egui::ComboBox::from_label("Base view")
+                        .selected_text(selected_label)
+                        .show_ui(ui, |ui| {
+                            for index in visible_view_indices {
+                                let view = &views[index];
+                                let label = bases_view_label(view.name.as_deref(), index);
+                                view_changed |= ui
+                                    .selectable_value(&mut selected_view, index, label)
+                                    .changed();
+                            }
+                        });
+                });
+            }
+        }
+        if view_changed {
+            self.bases_selected_view = Some(selected_view);
+            if let Some(relative_path) = self.bases_selected_path.clone() {
+                self.start_bases_evaluation(relative_path, selected_view);
+            }
+        }
+
+        if let Some(evaluation) = &self.bases_evaluation {
+            let path = evaluation.relative_path.display();
+            let selected_view_index = self.bases_selected_view.unwrap_or_default();
+            let view_name = evaluation.evaluation.view.name.as_deref();
+            let view_suffix = if view_name.is_some_and(|name| !name.is_empty()) {
+                format!(
+                    " · view {} · {:?} · {} matching note(s) · read-only",
+                    selected_view_index + 1,
+                    evaluation.evaluation.view.view_type,
+                    evaluation.evaluation.rows.len(),
+                )
+            } else {
+                format!(
+                    " · {:?} · {} matching note(s) · read-only",
+                    evaluation.evaluation.view.view_type,
+                    evaluation.evaluation.rows.len(),
+                )
+            };
+            let mut view_status =
+                BoundedBasesText::new(MAX_BASES_DISPLAY_FIELD_BYTES, &view_suffix);
+            match view_name {
+                Some("") => {
+                    let _ = view_status.write_fmt(format_args!(
+                        "Unnamed view {} (empty name)",
+                        selected_view_index + 1
+                    ));
+                }
+                Some(name) => {
+                    let _ = view_status.write_str(name);
+                }
+                None => {
+                    let _ = view_status.write_fmt(format_args!(
+                        "Unnamed view {}",
+                        selected_view_index + 1
+                    ));
+                }
+            }
+            ui.label(view_status.finish());
+            if evaluation.complete {
+                ui.small("Note collection is complete within the configured bounds.");
+            } else {
+                ui.colored_label(
+                    eframe::egui::Color32::YELLOW,
+                    "Results are partial because one or more notes could not be safely collected.",
+                );
+            }
+            let source_hash_suffix = format!(" · source SHA-256 {}", evaluation.base_revision_sha256);
+            let mut base_status =
+                BoundedBasesText::new(MAX_BASES_DISPLAY_FIELD_BYTES, &source_hash_suffix);
+            let _ = base_status.write_fmt(format_args!("Base: {path}"));
+            ui.small(base_status.finish());
+            ui.small(format!(
+                "Vault snapshot SHA-256 {} → {}",
+                evaluation.snapshot_before_sha256, evaluation.snapshot_after_sha256
+            ));
+
+            ui.heading("Issues");
+            if evaluation.evaluation.issues.is_empty() && evaluation.collection_issues.is_empty() {
+                ui.small("No compatibility or collection issues were reported.");
+            } else {
+                let visible_evaluator_issues = evaluation
+                    .evaluation
+                    .issues
+                    .iter()
+                    .take(MAX_BASE_ISSUES_PER_KIND_RENDERED);
+                for issue in visible_evaluator_issues {
+                    ui.colored_label(
+                        eframe::egui::Color32::YELLOW,
+                        format_bases_issue(&path, &issue.message),
+                    );
+                    if let Some(expression) = &issue.expression {
+                        ui.small(format_bases_text(
+                            MAX_BASES_DISPLAY_FIELD_BYTES,
+                            format_args!("Expression: {expression}"),
+                        ));
+                    }
+                }
+                for issue in evaluation
+                    .collection_issues
+                    .iter()
+                    .take(MAX_BASE_ISSUES_PER_KIND_RENDERED)
+                {
+                    ui.colored_label(
+                        eframe::egui::Color32::YELLOW,
+                        format_bases_issue(issue.relative_path.display(), &issue.message),
+                    );
+                }
+                let evaluator_issues_omitted = evaluation
+                    .evaluation
+                    .issues
+                    .len()
+                    .saturating_sub(MAX_BASE_ISSUES_PER_KIND_RENDERED);
+                let collection_issues_omitted = evaluation
+                    .collection_issues
+                    .len()
+                    .saturating_sub(MAX_BASE_ISSUES_PER_KIND_RENDERED);
+                if evaluator_issues_omitted > 0 || collection_issues_omitted > 0 {
+                    ui.small(format!(
+                        "Showing at most {MAX_BASE_ISSUES_PER_KIND_RENDERED} issues of each kind; {evaluator_issues_omitted} evaluator and {collection_issues_omitted} collection issue(s) omitted."
+                    ));
+                }
+            }
+
+            ui.heading("Results");
+            if !evaluation.evaluation.groups.is_empty() {
+                let total_groups = evaluation.evaluation.groups.len();
+                let total_rows = evaluation.evaluation.rows.len();
+                let visible_group_count = total_groups.min(MAX_BASE_GROUPS_RENDERED);
+                let mut remaining_rows = MAX_BASE_ROWS_RENDERED;
+                for group in evaluation
+                    .evaluation
+                    .groups
+                    .iter()
+                    .take(visible_group_count)
+                {
+                    let visible_rows = group.rows.iter().take(remaining_rows).collect::<Vec<_>>();
+                    remaining_rows = remaining_rows.saturating_sub(visible_rows.len());
+                    ui.group(|ui| {
+                        ui.label(format_bases_text(
+                            MAX_BASES_DISPLAY_FIELD_BYTES,
+                            format_args!("Group: {}", group.key),
+                        ));
+                        for row in visible_rows {
+                            show_base_row(ui, &row.path, &row.values);
+                        }
+                    });
+                }
+                let rows_rendered = MAX_BASE_ROWS_RENDERED - remaining_rows;
+                let groups_omitted = total_groups - visible_group_count;
+                let rows_omitted = total_rows.saturating_sub(rows_rendered);
+                if groups_omitted > 0 || rows_omitted > 0 {
+                    ui.small(format!(
+                        "Showing {visible_group_count} of {total_groups} groups and {rows_rendered} of {total_rows} rows; {groups_omitted} group(s) and {rows_omitted} row(s) omitted by UI limits ({} groups, {} rows).",
+                        MAX_BASE_GROUPS_RENDERED,
+                        MAX_BASE_ROWS_RENDERED,
+                    ));
+                }
+            } else if evaluation.evaluation.rows.is_empty() {
+                ui.small("No notes match this Bases view.");
+            } else {
+                for row in evaluation
+                    .evaluation
+                    .rows
+                    .iter()
+                    .take(MAX_BASE_ROWS_RENDERED)
+                {
+                    show_base_row(ui, &row.path, &row.values);
+                }
+                if evaluation.evaluation.rows.len() > MAX_BASE_ROWS_RENDERED {
+                    ui.small(format!(
+                        "Showing the first {MAX_BASE_ROWS_RENDERED} of {} matching rows; {} omitted by the UI limit.",
+                        evaluation.evaluation.rows.len(),
+                        evaluation.evaluation.rows.len() - MAX_BASE_ROWS_RENDERED,
+                    ));
+                }
+            }
+        }
     }
 
     fn note_source_editing(&self) -> bool {
@@ -747,6 +1232,7 @@ impl OpenObsidianApp {
 
         let operation_busy = self.history_receiver.is_some()
             || self.link_receiver.is_some()
+            || self.bases_receiver.is_some()
             || self.note_preview_receiver.is_some()
             || self.note_preview_write_receiver.is_some()
             || self.vault_refresh_receiver.is_some()
@@ -1067,6 +1553,7 @@ impl OpenObsidianApp {
             || self.vault_open_receiver.is_some()
             || self.history_receiver.is_some()
             || self.link_receiver.is_some()
+            || self.bases_receiver.is_some()
             || self.note_preview_receiver.is_some()
             || self.note_preview_write_receiver.is_some()
             || self.vault_refresh_receiver.is_some()
@@ -1245,6 +1732,7 @@ impl OpenObsidianApp {
             || self.vault_open_receiver.is_some()
             || self.history_receiver.is_some()
             || self.link_receiver.is_some()
+            || self.bases_receiver.is_some()
             || self.note_preview_receiver.is_some()
             || self.note_preview_write_receiver.is_some()
             || self.vault_refresh_receiver.is_some()
@@ -1861,6 +2349,7 @@ impl OpenObsidianApp {
 
         let operation_busy = self.history_receiver.is_some()
             || self.link_receiver.is_some()
+            || self.bases_receiver.is_some()
             || self.note_preview_receiver.is_some()
             || self.note_preview_write_receiver.is_some()
             || self.vault_refresh_receiver.is_some()
@@ -2048,6 +2537,7 @@ impl OpenObsidianApp {
 
         let history_busy = self.history_receiver.is_some()
             || self.link_receiver.is_some()
+            || self.bases_receiver.is_some()
             || self.note_preview_receiver.is_some()
             || self.note_preview_write_receiver.is_some()
             || self.vault_refresh_receiver.is_some()
@@ -2132,6 +2622,8 @@ impl OpenObsidianApp {
         }
 
         let history_busy = self.history_receiver.is_some()
+            || self.link_receiver.is_some()
+            || self.bases_receiver.is_some()
             || self.note_preview_receiver.is_some()
             || self.note_preview_write_receiver.is_some()
             || self.vault_refresh_receiver.is_some()
@@ -2347,6 +2839,9 @@ impl OpenObsidianApp {
             return;
         };
         let policy = self.history_policy;
+        // The resolution can commit before its follow-up history preview fails.
+        self.bases_selected_view = None;
+        self.invalidate_bases_snapshot();
         self.pending_conflict_action = None;
         self.start_history_task(move || {
             let result = session
@@ -2811,6 +3306,7 @@ impl OpenObsidianApp {
             || self.vault_open_receiver.is_some()
             || self.history_receiver.is_some()
             || self.link_receiver.is_some()
+            || self.bases_receiver.is_some()
             || self.note_preview_receiver.is_some()
             || self.note_preview_write_receiver.is_some()
             || self.vault_refresh_receiver.is_some()
@@ -2909,6 +3405,7 @@ impl OpenObsidianApp {
                 self.note_embed_error = None;
                 self.inline_image_textures.clear();
                 self.session = Some(Arc::new(session));
+                self.invalidate_bases_snapshot();
                 self.rename_destination_path.clear();
                 self.rename_preview = None;
                 self.rename_confirmation = false;
@@ -2983,6 +3480,7 @@ impl OpenObsidianApp {
                     listing_refreshed,
                 } = *outcome;
                 self.session = Some(Arc::new(session));
+                self.invalidate_bases_snapshot();
                 self.canvas_note_preview = None;
                 self.canvas_note_confirmation = false;
                 self.canvas_note_error = (!listing_refreshed).then(|| {
@@ -3041,6 +3539,7 @@ impl OpenObsidianApp {
             }
             Some(Ok(CanvasTextEditTaskMessage::Saved(Ok(revision_sha256)))) => {
                 self.canvas_text_edit_receiver = None;
+                self.invalidate_bases_snapshot();
                 if let Some(preview) = &mut self.canvas_text_edit_preview {
                     preview.original_text = preview.draft_text.clone();
                     preview.expected_canvas_revision_sha256 = revision_sha256;
@@ -3169,6 +3668,7 @@ impl OpenObsidianApp {
         match result {
             Some(Ok(Ok(revision_sha256))) => {
                 self.note_preview_write_receiver = None;
+                self.invalidate_bases_snapshot();
                 let kind = self
                     .note_preview_write_kind
                     .take()
@@ -3265,6 +3765,8 @@ impl OpenObsidianApp {
                     self.rename_source_path = note_paths.first().cloned();
                 }
                 self.session = Some(Arc::new(session));
+                self.bases_selected_view = None;
+                self.invalidate_bases_snapshot();
                 if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some() {
                     let selected_note = self
                         .link_source_path
@@ -3368,6 +3870,8 @@ impl OpenObsidianApp {
                         );
                     }
                     HistoryTaskMessage::ConflictResolution(Ok((resolution, preview))) => {
+                        self.bases_selected_view = None;
+                        self.invalidate_bases_snapshot();
                         self.apply_history_preview(preview);
                         self.conflict_inspection = None;
                         self.pending_conflict_action = None;
@@ -3566,6 +4070,217 @@ fn note_preview_write_error(error: VaultError, kind: NotePreviewWriteKind) -> St
         NotePreviewWriteKind::TaskCheckbox => note_task_write_error(error),
         NotePreviewWriteKind::MarkdownSource => note_source_write_error(error),
     }
+}
+
+fn bounded_visible_indices(total: usize, limit: usize, selected: Option<usize>) -> Vec<usize> {
+    let mut indices = (0..total.min(limit)).collect::<Vec<_>>();
+    if let Some(selected) = selected.filter(|index| *index < total && !indices.contains(index))
+        && limit > 0
+    {
+        indices.truncate(limit - 1);
+        indices.push(selected);
+    }
+    indices
+}
+
+fn bases_view_label(name: Option<&str>, index: usize) -> String {
+    let label = match name {
+        Some("") => format_bases_text(
+            MAX_BASES_DISPLAY_FIELD_BYTES,
+            format_args!("Unnamed view {} (empty name)", index + 1),
+        ),
+        Some(name) => {
+            let selection_suffix = format!(" · view {}", index + 1);
+            format_bases_text_with_suffix(
+                MAX_BASES_DISPLAY_FIELD_BYTES,
+                &selection_suffix,
+                format_args!("{name}"),
+            )
+        }
+        None => format_bases_text(
+            MAX_BASES_DISPLAY_FIELD_BYTES,
+            format_args!("Unnamed view {}", index + 1),
+        ),
+    };
+    label
+}
+
+struct BoundedBasesText<'a> {
+    text: String,
+    max_bytes: usize,
+    suffix: &'a str,
+    truncated: bool,
+}
+
+impl<'a> BoundedBasesText<'a> {
+    fn new(max_bytes: usize, suffix: &'a str) -> Self {
+        Self {
+            text: String::with_capacity(max_bytes.min(256)),
+            max_bytes,
+            suffix,
+            truncated: false,
+        }
+    }
+
+    fn is_truncated(&self) -> bool {
+        self.truncated
+    }
+
+    fn finish(mut self) -> String {
+        if self.truncated || self.suffix.len() > self.max_bytes {
+            let marker_budget = self.max_bytes.min(BASES_TRUNCATION_MARKER.len());
+            let suffix_budget = self.max_bytes.saturating_sub(marker_budget);
+            let suffix_end = unicode_prefix_end(self.suffix, suffix_budget);
+            let suffix = &self.suffix[..suffix_end];
+            let marker_budget = self.max_bytes.saturating_sub(suffix.len());
+            let marker_end = unicode_prefix_end(BASES_TRUNCATION_MARKER, marker_budget);
+            let marker = &BASES_TRUNCATION_MARKER[..marker_end];
+            let content_budget = self
+                .max_bytes
+                .saturating_sub(suffix.len())
+                .saturating_sub(marker.len());
+            let end = unicode_prefix_end(&self.text, content_budget);
+            self.text.truncate(end);
+            self.text.push_str(marker);
+            self.text.push_str(suffix);
+        } else {
+            let suffix_budget = self.max_bytes.saturating_sub(self.text.len());
+            let suffix_end = unicode_prefix_end(self.suffix, suffix_budget);
+            let content_budget = self.max_bytes.saturating_sub(suffix_end);
+            let content_end = unicode_prefix_end(&self.text, content_budget);
+            self.text.truncate(content_end);
+            self.text.push_str(&self.suffix[..suffix_end]);
+        }
+        self.text
+    }
+}
+
+impl fmt::Write for BoundedBasesText<'_> {
+    fn write_str(&mut self, text: &str) -> fmt::Result {
+        if self.truncated {
+            return Err(fmt::Error);
+        }
+
+        let content_limit = self.max_bytes.saturating_sub(self.suffix.len());
+        let remaining = content_limit.saturating_sub(self.text.len());
+        if text.len() <= remaining {
+            self.text.push_str(text);
+        } else {
+            let end = unicode_prefix_end(text, remaining);
+            self.text.push_str(&text[..end]);
+            self.truncated = true;
+            return Err(fmt::Error);
+        }
+        Ok(())
+    }
+}
+
+fn unicode_prefix_end(text: &str, max_bytes: usize) -> usize {
+    let mut end = 0;
+    for (index, character) in text.char_indices() {
+        let next = index + character.len_utf8();
+        if next > max_bytes {
+            break;
+        }
+        end = next;
+    }
+    end
+}
+
+fn format_bases_text(max_bytes: usize, arguments: fmt::Arguments<'_>) -> String {
+    format_bases_text_with_suffix(max_bytes, "", arguments)
+}
+
+fn format_bases_text_with_suffix(
+    max_bytes: usize,
+    suffix: &str,
+    arguments: fmt::Arguments<'_>,
+) -> String {
+    let mut bounded = BoundedBasesText::new(max_bytes, suffix);
+    let _ = bounded.write_fmt(arguments);
+    bounded.finish()
+}
+
+fn format_bases_issue(path: impl fmt::Display, message: &str) -> String {
+    let path = format_bases_text(
+        MAX_BASES_ISSUE_COMPONENT_BYTES,
+        format_args!("{path}"),
+    );
+    let message = format_bases_text(
+        MAX_BASES_ISSUE_COMPONENT_BYTES,
+        format_args!("{message}"),
+    );
+    format_bases_text(
+        MAX_BASES_DISPLAY_FIELD_BYTES,
+        format_args!("{path}: {message}"),
+    )
+}
+
+fn show_base_row<'a, K, V>(
+    ui: &mut eframe::egui::Ui,
+    path: &str,
+    values: impl IntoIterator<Item = (&'a K, &'a V)>,
+) where
+    K: std::fmt::Display + 'a,
+    V: std::fmt::Display + 'a,
+{
+    let mut values = values.into_iter();
+    let visible_values = values
+        .by_ref()
+        .take(MAX_BASE_PROPERTIES_PER_ROW)
+        .collect::<Vec<_>>();
+    let omitted_properties = values.count();
+    let path = format_bases_text(
+        MAX_BASES_DISPLAY_FIELD_BYTES,
+        format_args!("{path}"),
+    );
+    let property_omission = if omitted_properties > 0 {
+        format!(
+            " · {omitted_properties} additional properties omitted (per-row UI limit: {MAX_BASE_PROPERTIES_PER_ROW})."
+        )
+    } else {
+        String::new()
+    };
+    let mut row = BoundedBasesText::new(MAX_BASE_ROW_TEXT_BYTES, &property_omission);
+    let _ = row.write_str(&path);
+    let _ = row.write_str(" · ");
+    if visible_values.is_empty() {
+        let _ = row.write_str("No represented properties");
+    } else {
+        for (index, (key, value)) in visible_values.into_iter().enumerate() {
+            if row.is_truncated() {
+                break;
+            }
+            if index > 0 {
+                let _ = row.write_str(" · ");
+            }
+            if row.is_truncated() {
+                break;
+            }
+            let key = format_bases_text(
+                MAX_BASES_DISPLAY_FIELD_BYTES,
+                format_args!("{key}"),
+            );
+            let _ = row.write_str(&key);
+            let _ = row.write_str(": ");
+            if row.is_truncated() {
+                break;
+            }
+            let value = format_bases_text(
+                MAX_BASES_DISPLAY_FIELD_BYTES,
+                format_args!("{value}"),
+            );
+            let _ = row.write_str(&value);
+        }
+    }
+    let row_text = row.finish();
+    let detail_start = path.len() + " · ".len();
+    let row_path = &row_text[..path.len()];
+    let row_details = &row_text[detail_start..];
+    ui.group(|ui| {
+        ui.monospace(row_path);
+        ui.small(row_details);
+    });
 }
 
 fn show_markdown_preview(
@@ -4172,6 +4887,88 @@ mod tests {
 
     static NEXT_UI_TEMP_DIR_ID: AtomicU64 = AtomicU64::new(0);
 
+    struct CountingDisplay<'a>(&'a AtomicUsize);
+
+    impl std::fmt::Display for CountingDisplay<'_> {
+        fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            formatter.write_str(
+                "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
+            )?;
+            self.0.fetch_add(1, Ordering::Relaxed);
+            formatter.write_str("later chunk")
+        }
+    }
+
+    #[test]
+    fn bases_bounded_text_keeps_exact_limit_and_truncates_multibyte_safely() {
+        let exact_source = "x".repeat(64);
+        let exact = format_bases_text(64, format_args!("{exact_source}"));
+        assert_eq!(exact.len(), 64);
+        assert!(!exact.ends_with(BASES_TRUNCATION_MARKER));
+
+        let multibyte_source = "🧪".repeat(100);
+        let truncated = format_bases_text(64, format_args!("{multibyte_source}"));
+        assert!(truncated.len() <= 64);
+        assert!(truncated.ends_with(BASES_TRUNCATION_MARKER));
+        let source_prefix = &truncated[..truncated.len() - BASES_TRUNCATION_MARKER.len()];
+        assert_eq!(source_prefix.len() % "🧪".len(), 0);
+
+        let selected = format_bases_text_with_suffix(
+            64,
+            " · view 9",
+            format_args!("{multibyte_source}"),
+        );
+        assert!(selected.len() <= 64);
+        assert!(selected.ends_with(" · view 9"));
+        assert!(selected.contains(BASES_TRUNCATION_MARKER));
+    }
+
+    #[test]
+    fn bases_row_writer_respects_budget_and_keeps_omission_suffix() {
+        let suffix = " · 9 properties omitted";
+        let exact_source = "x".repeat(64 - suffix.len());
+        let mut exact_row = BoundedBasesText::new(64, suffix);
+        let _ = std::fmt::Write::write_str(&mut exact_row, &exact_source);
+        let exact = exact_row.finish();
+        assert_eq!(exact.len(), 64);
+        assert!(exact.ends_with(suffix));
+        assert!(!exact.contains(BASES_TRUNCATION_MARKER));
+
+        let source = "📚".repeat(100);
+        let mut row = BoundedBasesText::new(64, suffix);
+        let _ = std::fmt::Write::write_str(&mut row, &source);
+        let rendered = row.finish();
+
+        assert!(rendered.len() <= 64);
+        assert!(rendered.ends_with(suffix));
+        assert!(rendered.contains(BASES_TRUNCATION_MARKER));
+        let marker_start = rendered.len() - suffix.len() - BASES_TRUNCATION_MARKER.len();
+        assert_eq!(rendered[..marker_start].len() % "📚".len(), 0);
+    }
+
+    #[test]
+    fn bases_bounded_writer_stops_display_after_overflow() {
+        let later_chunks = AtomicUsize::new(0);
+        let rendered = format_bases_text(
+            32,
+            format_args!("{}", CountingDisplay(&later_chunks)),
+        );
+
+        assert!(rendered.len() <= 32);
+        assert!(rendered.ends_with(BASES_TRUNCATION_MARKER));
+        assert_eq!(later_chunks.load(Ordering::Relaxed), 0);
+    }
+
+    #[test]
+    fn bases_bounded_writer_keeps_tiny_limits_strict() {
+        let mut writer = BoundedBasesText::new(8, "a suffix longer than the limit");
+        let _ = std::fmt::Write::write_str(&mut writer, "content beyond the limit");
+        let rendered = writer.finish();
+
+        assert!(rendered.len() <= 8);
+        assert!(rendered.is_char_boundary(rendered.len()));
+    }
+
     struct UiTempDir(PathBuf);
 
     impl UiTempDir {
@@ -4296,6 +5093,68 @@ mod tests {
         OpenObsidianApp {
             session: Some(Arc::new(session)),
             link_source_path: Some(std::path::PathBuf::from(source_path)),
+            ..OpenObsidianApp::default()
+        }
+    }
+
+    fn bases_test_app(vault_path: &Path, app_data_path: &Path) -> OpenObsidianApp {
+        let fixture: serde_json::Value = serde_json::from_str(C07_BASE_VAULT_EVALUATION_FIXTURE)
+            .expect("C07 Bases vault evaluation fixture must be valid JSON");
+        std::fs::create_dir_all(vault_path).expect("create Bases test vault");
+        std::fs::create_dir_all(app_data_path).expect("create Bases test app data");
+
+        let base_path = PathBuf::from(
+            fixture["base_path"]
+                .as_str()
+                .expect("fixture must provide a Bases path"),
+        );
+        let base_file_path = vault_path.join(&base_path);
+        std::fs::create_dir_all(
+            base_file_path
+                .parent()
+                .expect("Bases fixture path must have a parent"),
+        )
+        .expect("create Bases fixture parents");
+        let base_source = fixture["base_source"]
+            .as_str()
+            .expect("fixture must provide Bases source");
+        let base_source = format!("{base_source}  - type: list\n    name: All tasks\n");
+        std::fs::write(base_file_path, base_source)
+        .expect("write Bases fixture source");
+
+        for note in fixture["notes"]
+            .as_array()
+            .expect("fixture notes must be an array")
+        {
+            let path = PathBuf::from(
+                note["path"]
+                    .as_str()
+                    .expect("fixture note must provide a path"),
+            );
+            let note_file_path = vault_path.join(&path);
+            std::fs::create_dir_all(
+                note_file_path
+                    .parent()
+                    .expect("fixture note path must have a parent"),
+            )
+            .expect("create Bases note parents");
+            std::fs::write(
+                note_file_path,
+                note["source"]
+                    .as_str()
+                    .expect("fixture note must provide Markdown source"),
+            )
+            .expect("write Bases fixture note");
+        }
+
+        let invalid_note_path = vault_path.join("Notes/Unreadable.md");
+        std::fs::write(&invalid_note_path, [0xff])
+            .expect("write invalid UTF-8 note for collection issue coverage");
+
+        let session = VaultSession::open(vault_path, app_data_path)
+            .expect("open Bases fixture vault");
+        OpenObsidianApp {
+            session: Some(Arc::new(session)),
             ..OpenObsidianApp::default()
         }
     }
@@ -4426,6 +5285,27 @@ mod tests {
             assert!(
                 std::time::Instant::now() < deadline,
                 "Canvas text-card edit operation did not finish within five seconds"
+            );
+            std::thread::sleep(std::time::Duration::from_millis(2));
+        }
+    }
+
+    fn wait_for_bases_evaluation(harness: &mut Harness<'_, OpenObsidianApp>) {
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
+        loop {
+            harness.step();
+            let state = harness.state();
+            if state.bases_receiver.is_none()
+                && state.bases_listing.is_some()
+                && (state.bases_selected_path.is_none()
+                    || state.bases_evaluation.is_some()
+                    || state.bases_error.is_some())
+            {
+                return;
+            }
+            assert!(
+                std::time::Instant::now() < deadline,
+                "Bases listing/evaluation did not finish within ten seconds"
             );
             std::thread::sleep(std::time::Duration::from_millis(2));
         }
@@ -5445,6 +6325,163 @@ mod tests {
         count_harness
             .get_by_label("Math preview limit reached for this UI pass; showing the source.");
         count_harness.get_by_label("$x_{32}$");
+    }
+
+    #[test]
+    fn egui_bases_panel_shows_results_issues_and_stable_read_only_status() {
+        let temporary = UiTempDir::new();
+        let vault_path = temporary.0.join("vault");
+        let app_data_path = temporary.0.join("app-data");
+        let app = bases_test_app(&vault_path, &app_data_path);
+        let mut harness = Harness::new_ui_state(|ui, app| app.show_ui(ui), app);
+        let vault_before = existing_vault_tree_snapshot(&vault_path);
+        let app_data_before = existing_vault_tree_snapshot(&app_data_path);
+
+        harness.step();
+        wait_for_bases_evaluation(&mut harness);
+
+        let result = harness
+            .state()
+            .bases_evaluation
+            .as_ref()
+            .expect("Bases panel should render a successful fixture evaluation");
+        assert_eq!(
+            result
+                .evaluation
+                .rows
+                .iter()
+                .map(|row| row.path.as_str())
+                .collect::<Vec<_>>(),
+            ["Notes/Ada.md", "Notes/Cora.md"]
+        );
+        assert!(result
+            .evaluation
+            .rows
+            .iter()
+            .all(|row| !row.values.contains_key("unsupportedDate")));
+        assert_eq!(
+            result.snapshot_before_sha256,
+            result.snapshot_after_sha256,
+            "the panel should display an evaluation bound to one stable snapshot"
+        );
+        assert!(result.collection_issues.iter().any(|issue| {
+            issue.relative_path == PathBuf::from("Notes/Unreadable.md")
+        }));
+
+        harness.get_by_label("Bases");
+        harness.get_by_label("Base file");
+        harness.get_by_label("Open tasks · view 1 · Table · 2 matching note(s) · read-only");
+        harness.get_by_label("Boards/Tasks.base: Unsupported Bases formula: date(today)");
+        harness.get_by_label("Expression: date(today)");
+        harness.get_by_label("Group: red");
+        harness.get_by_label("Notes/Ada.md");
+        harness.get_by_label("Notes/Cora.md");
+        harness.get_by_label(
+            "Notes/Unreadable.md: Markdown note contains invalid UTF-8 in its bounded source prefix",
+        );
+        harness.get_by_label("Vault snapshot SHA-256");
+        assert_eq!(existing_vault_tree_snapshot(&vault_path), vault_before);
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            app_data_before,
+            "Bases evaluation must not write app data"
+        );
+    }
+
+    #[test]
+    fn egui_bases_selectors_use_exact_paths_and_source_view_indices() {
+        let temporary = UiTempDir::new();
+        let vault_path = temporary.0.join("vault");
+        let app_data_path = temporary.0.join("app-data");
+        std::fs::create_dir_all(&vault_path).expect("create Bases selector test vault");
+        std::fs::create_dir_all(&app_data_path).expect("create Bases selector test app data");
+
+        for (relative_path, source) in [
+            (
+                "Boards/Alpha.base",
+                r#"{"version":1,"views":[{"type":"table","name":"Alpha"}]}"#,
+            ),
+            (
+                "Boards/Tasks.base",
+                r#"{"version":1,"formulas":{"unsupportedDate":"date(today)"},"views":[{"type":"table","limit":1},{"type":"table","name":"","limit":2},{"type":"table","name":"Duplicate","limit":3},{"type":"table","name":"Duplicate","limit":4}]}"#,
+            ),
+        ] {
+            let path = vault_path.join(relative_path);
+            std::fs::create_dir_all(path.parent().expect("Bases path must have a parent"))
+                .expect("create Bases selector fixture parents");
+            std::fs::write(path, source).expect("write Bases selector fixture");
+        }
+        for index in 0..4 {
+            let path = vault_path.join(format!("Notes/{index}.md"));
+            std::fs::create_dir_all(path.parent().expect("note path must have a parent"))
+                .expect("create Bases selector note parents");
+            std::fs::write(path, b"selector fixture note\n")
+                .expect("write Bases selector fixture note");
+        }
+
+        let session = VaultSession::open(&vault_path, &app_data_path)
+            .expect("open Bases selector test vault");
+        let app = OpenObsidianApp {
+            session: Some(Arc::new(session)),
+            ..OpenObsidianApp::default()
+        };
+        let mut harness = Harness::new_ui_state(|ui, app| app.show_ui(ui), app);
+        harness.step();
+        wait_for_bases_evaluation(&mut harness);
+        assert_eq!(
+            harness.state().bases_selected_path.as_deref(),
+            Some(Path::new("Boards/Alpha.base")),
+            "the listing should begin with its first sorted .base path"
+        );
+
+        harness.get_by_label("Base file").click();
+        harness.step();
+        harness.get_by_label("Boards/Tasks.base").click();
+        harness.step();
+        wait_for_bases_evaluation(&mut harness);
+        let selected_path = Path::new("Boards/Tasks.base");
+        assert_eq!(
+            harness.state().bases_selected_path.as_deref(),
+            Some(selected_path)
+        );
+        assert_eq!(
+            harness
+                .state()
+                .bases_evaluation
+                .as_ref()
+                .expect("selected Bases file should be evaluated")
+                .relative_path
+                .as_path(),
+            selected_path,
+            "the evaluation must use the exact selected .base path"
+        );
+        harness.get_by_label("Boards/Tasks.base: Unsupported Bases formula: date(today)");
+        harness.get_by_label("Expression: date(today)");
+
+        for (label, expected_index, expected_name, expected_limit) in [
+            ("Unnamed view 2 (empty name)", 1, Some(""), 2),
+            ("Unnamed view 1", 0, None, 1),
+            ("Duplicate · view 4", 3, Some("Duplicate"), 4),
+            ("Duplicate · view 3", 2, Some("Duplicate"), 3),
+        ] {
+            harness.get_by_label("Base view").click();
+            harness.step();
+            harness.get_by_label(label).click();
+            harness.step();
+            wait_for_bases_evaluation(&mut harness);
+
+            let state = harness.state();
+            let evaluation = state
+                .bases_evaluation
+                .as_ref()
+                .expect("selected Bases view should be evaluated");
+            assert_eq!(state.bases_selected_path.as_deref(), Some(selected_path));
+            assert_eq!(state.bases_selected_view, Some(expected_index));
+            assert_eq!(evaluation.relative_path.as_path(), selected_path);
+            assert_eq!(evaluation.evaluation.view.name.as_deref(), expected_name);
+            assert_eq!(evaluation.evaluation.view.limit, Some(expected_limit));
+            assert_eq!(evaluation.evaluation.rows.len(), expected_limit);
+        }
     }
 
     #[test]

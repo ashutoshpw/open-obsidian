@@ -2,14 +2,14 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-12T08:48:18+02:00",
+  "updated_at": "2026-10-12T09:07:09+02:00",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "fb7dff956188738938508f92af2a8764a03eeb98",
-  "current_milestone": "R2.8.97",
-  "next_action": "Continue R2.8.97 by completing index-based Bases view selection for unnamed, explicitly empty-name, and duplicate-name views; apply the exact CI formatting and Clippy corrections; then push the focused correction and validate its exact SHA on all seven required GitHub Actions workflows. Keep C07/C07.1 pending until app integration and visible issue reporting are accepted. Preserve the recorded compatibility limits.",
-  "push_status": "R2.8.97 attempt 1 ran on exact source SHA fb7dff956188738938508f92af2a8764a03eeb98 and is not accepted. Six of seven required workflows passed; Rust CI failed Ubuntu formatting and macOS/Windows Clippy. Rust 1.95 and all workspace test steps passed. The pinned Obsidian round-trip passed on Linux, Windows, and macOS. Exact workflow/job IDs and all 12 artifact IDs, sizes, and archive digests are in evidence/r2.8.97-attempt-1-fb7dff9.json. No local project validation was run. C07/C07.1 remain pending.",
+  "last_reconciled_head": "1db4cd36bc7f7ae371eeeacd1a428533d223985c",
+  "current_milestone": "R2.8.98",
+  "next_action": "R2.8.98 implementation and fixture-backed UI coverage for exact path/view-index selection, path-attributed compatibility and collection issues, and no-mutation behavior are complete locally. An initial review found missing selector/path assertions; they were added, and follow-up source review found no remaining acceptance gap or compile-level concern. Commit and push this focused slice, then validate the exact SHA with the seven required GitHub Actions workflows. Keep C07/C07.1 pending until their full acceptance criteria pass.",
+  "push_status": "R2.8.97 remains accepted on exact source SHA 1db4cd36bc7f7ae371eeeacd1a428533d223985c. R2.8.98 now includes bounded display/text coverage, an egui harness test for exact .base path selection and unnamed, empty-name, and duplicate-name views by source index, and a path-attributed compatibility issue assertion in the read-only fixture test. The follow-up source review found no remaining acceptance gap or source-level compile concern. No local validation was run. The focused commit and push are next; no CI attempt has started, and C07/C07.1 remain pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -47,8 +47,8 @@
         "quality",
         "plugin-renderer"
       ],
-      "implementation_sha": "01d7ad437f28667e6e79455b2450c73e7b6d3916",
-      "next_action": "Continue the bounded C07/C07.1 work by integrating Bases loading/rendering and visible unsupported-expression reporting in small reviewed phases. Keep project validation on GitHub Actions only; push focused phase or milestone commits to origin/main when CI results are needed. Preserve the recorded compatibility limits until explicitly resolved."
+      "implementation_sha": "1db4cd36bc7f7ae371eeeacd1a428533d223985c",
+      "next_action": "R2.8.98 UI source changes and independent source review are complete locally, including bounded display/text tests. Make the focused commit and push it, then validate that exact SHA using the seven required GitHub Actions workflows. Keep C07/C07.1 pending until acceptance passes."
     },
     "R3": {
       "status": "pending",
@@ -77,6 +77,7 @@
     }
   },
   "completed_actions": [
+    "R2.8.97 bounded Bases engine evaluation/discovery and index-based view selection accepted on exact source SHA 1db4cd36bc7f7ae371eeeacd1a428533d223985c after all seven required workflows and all 20 jobs passed. Rust CI passed on Rust 1.95, Ubuntu, Windows, and macOS; the Obsidian round-trip passed on Linux, Windows, and macOS. Exact workflow/job IDs and all 16 artifact IDs, sizes, and archive digests are in evidence/r2.8.97-attempt-2-1db4cd3.json. C07/C07.1 remain pending for UI loading/rendering and visible issue reporting. No local project validation was run.",
     "R2.8.96 bounded C07 document-layer parser/evaluator foundation accepted on exact source SHA 01d7ad437f28667e6e79455b2450c73e7b6d3916 after all seven required GitHub Actions workflows passed. Rust CI passed Rust 1.95, Ubuntu, Windows, and macOS. The first round-trip attempt's macOS watcher-refresh UI timing race is retained; rerunning only that failed job on the same SHA passed, leaving Linux, Windows, and macOS round-trip jobs green. Exact workflow/job IDs and all 17 artifact IDs, sizes, and archive digests are in evidence/r2.8.96-attempt-3-01d7ad4.json. C07/C07.1 remain pending. No local project checks were run.",
     "R2.8.95 attempt 6 accepted on exact source SHA adc1ddce142f41dd250c37722ed8b48b9194bd5c after all seven required GitHub Actions workflows passed, including all three pinned Obsidian round-trips. Exact run/job IDs and 16 artifact IDs, sizes, and archive digests are recorded in evidence/r2.8.95-attempt-6-adc1ddc.json. R2.8.96 starts a bounded C07 document-layer parser/evaluator foundation; C07/C07.1 remain pending until app integration and visible issue reporting.",
     "R2.8.95 attempt 2 correction commit 400fec03669e8eb97d05270d1166d0e9ff7026ed was pushed to origin/main after attempt 1's seven required runs completed. Attempt 2 completed: inventory, desktop build, plugin renderer and loaded-plugin workflows passed; Ubuntu quality failed its Electron retrieval-final-status audit; Rust CI failed the stale-draft Reload receiver assertion on Ubuntu/macOS/Windows/Rust 1.95; Obsidian round-trip failed on Linux/Windows/macOS. Exact job IDs, artifact IDs/sizes/digests and findings are in evidence/r2.8.95-attempt-2-400fec0.json. No local executable validation was run.",
@@ -32306,7 +32307,7 @@
       "push_status": "R2.8.96 accepted on exact pushed source SHA 01d7ad437f28667e6e79455b2450c73e7b6d3916 after all seven required GitHub Actions workflows passed. The macOS round-trip failed once during a watcher-refresh UI timing race and passed when only that failed job was rerun on the same SHA; the final Linux, Windows, and macOS jobs all pass. Exact workflow/job IDs and all 17 artifact IDs, sizes, and archive digests are in evidence/r2.8.96-attempt-3-01d7ad4.json. No local project validation was run. C07/C07.1 remain pending until app integration and visible issue reporting are implemented."
     },
     "R2.8.97": {
-      "status": "in_progress",
+      "status": "complete",
       "starting_sha": "01d7ad437f28667e6e79455b2450c73e7b6d3916",
       "scope": "Add bounded, read-only engine evaluation and safe discovery for native Bases files, backed by stable vault snapshots, note frontmatter projection, path-attributed collection issues, and explicit completeness reporting. C07/C07.1 remain pending until Bases loading/rendering and visible issue reporting are integrated.",
       "acceptance": [
@@ -32341,11 +32342,54 @@
             "vault_roundtrip": 38212918747
           },
           "finding": "Six of seven required workflows passed. Rust CI failed: Ubuntu job 114690929420 failed only Check formatting on three rustfmt hunks in crates/engine/src/bases.rs; macOS job 114690929345 and Windows job 114690929668 failed Run Clippy on clippy::cmp_owned at line 506. Rust 1.95 job 114690929100 and workspace test steps on Ubuntu, macOS, and Windows passed. The pinned Obsidian round-trip passed on Linux, Windows, and macOS; inventory, quality, desktop build, plugin renderer, and loaded-plugin workflows passed. Exact job and artifact IDs, sizes, and digests are in the evidence file."
+        },
+        {
+          "attempt": 2,
+          "source_sha": "1db4cd36bc7f7ae371eeeacd1a428533d223985c",
+          "outcome": "accepted",
+          "evidence": "evidence/r2.8.97-attempt-2-1db4cd3.json",
+          "workflow_runs": {
+            "inventory": 38214429821,
+            "quality": 38214428573,
+            "desktop_build": 38214428457,
+            "plugin_renderer": 38214428556,
+            "loaded_plugins": 38214428529,
+            "rust_ci": 38214428477,
+            "vault_roundtrip": 38214428519
+          },
+          "finding": "All seven required workflows and all 20 jobs passed on the exact source SHA. Rust CI passed on Rust 1.95, Ubuntu, Windows, and macOS; the Obsidian round-trip passed on Linux, Windows, and macOS. Exact workflow/job IDs and all 16 artifact IDs, sizes, and archive digests are recorded in the attempt evidence. C07/C07.1 remain pending for UI integration and visible issue reporting. No local project validation was run."
         }
       ],
-      "implementation_sha": "fb7dff956188738938508f92af2a8764a03eeb98",
-      "evidence": "evidence/r2.8.97-attempt-1-fb7dff9.json",
-      "push_status": "R2.8.97 attempt 1 is not accepted on source SHA fb7dff956188738938508f92af2a8764a03eeb98. The CI formatting and Clippy corrections and index-based view selector are implemented locally but remain unvalidated; they are awaiting a focused commit and push for a new exact-SHA attempt across all seven required workflows. No local project validation was run."
+      "accepted_attempt": 2,
+      "implementation_sha": "1db4cd36bc7f7ae371eeeacd1a428533d223985c",
+      "evidence": "evidence/r2.8.97-attempt-2-1db4cd3.json",
+      "push_status": "R2.8.97 accepted on exact pushed source SHA 1db4cd36bc7f7ae371eeeacd1a428533d223985c after all seven required GitHub Actions workflows and all 20 jobs passed. Exact workflow/job IDs and all 16 artifact IDs, sizes, and archive digests are in evidence/r2.8.97-attempt-2-1db4cd3.json. C07/C07.1 remain pending until UI loading/rendering and visible issue reporting are integrated and validated. No local project validation was run."
+    },
+    "R2.8.98": {
+      "status": "in_progress",
+      "starting_sha": "1db4cd36bc7f7ae371eeeacd1a428533d223985c",
+      "scope": "Integrate a bounded, read-only Bases egui panel with exact path and view-index selection, visible compatibility and collection issues, asynchronous snapshot-bound evaluation, operation gating and cache invalidation, and bounded UTF-8-safe display output. Keep C07/C07.1 pending until this integration is accepted.",
+      "acceptance": [
+        "The fixture-backed UI interaction test displays the expected rows and path-attributed compatibility/collection issues and proves there are no vault or app-data mutations.",
+        "Selector coverage verifies unnamed-first, explicitly empty-name, and duplicate-name views resolve by exact source index, and selected Bases files are identified by exact path.",
+        "Evaluation runs asynchronously against the snapshot-bound engine API; operations that can mutate or conflict are gated, and cached results are invalidated when the selected path, view, or vault snapshot changes.",
+        "Displayed source, values, and issues are bounded and truncated only at valid UTF-8 boundaries.",
+        "All seven required GitHub Actions workflows pass on the exact pushed source SHA; executable validation runs only in GitHub Actions."
+      ],
+      "required_workflows": [
+        "Rust migration inventory",
+        "OpenObsidian quality",
+        "OpenObsidian desktop build",
+        "OpenObsidian plugin renderer matrix",
+        "OpenObsidian loaded plugin workflows",
+        "OpenObsidian Rust CI",
+        "Obsidian vault round-trip acceptance"
+      ],
+      "attempts": [],
+      "accepted_attempt": null,
+      "implementation_sha": null,
+      "evidence": null,
+      "push_status": "R2.8.98 implementation and source-level acceptance review are complete locally. UI harness coverage verifies exact selected Bases paths, unnamed-first, explicitly empty-name, and duplicate-name views by source index, and visible path-attributed compatibility and collection issues; the existing fixture test also proves vault/app-data snapshots remain unchanged. No local validation was run. The focused commit and push are next; attempts remain empty and no CI result is recorded. C07/C07.1 remain pending."
     }
   },
   "ci_preparation": {

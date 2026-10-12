@@ -4889,3 +4889,56 @@ duplicate-name views can be selected exactly while preserving the existing
 name-based behavior. This follow-up is not validated by attempt 1 and needs a
 fresh exact-SHA Actions run. C07/C07.1 remain pending. No local project tests,
 builds, formatters, linters, validators, or application launches were run.
+
+## 2026-10-12 — R2.8.97 attempt 2 launched
+
+The focused correction was pushed as commit `1db4cd36bc7f7ae371eeeacd1a428533d223985c`.
+Attempt 1 remains not accepted; attempt 2 is pending on this exact source SHA.
+The correction includes the CI-requested formatting and Clippy fixes and the
+index-based view selector for unnamed, explicitly empty-name, and duplicate
+view names. The existing name-based selection remains supported.
+
+The seven required GitHub Actions runs are inventory `38214429821`, quality
+`38214428573`, desktop build `38214428457`, plugin renderer `38214428556`,
+loaded-plugin workflows `38214428529`, Rust CI `38214428477`, and Obsidian
+vault round-trip `38214428519`. All report the exact correction SHA. Inventory
+completed successfully; quality was queued and the other five runs were in
+progress when captured. Exact run URLs and statuses are in
+[`evidence/r2.8.97-attempt-2-1db4cd3.json`](evidence/r2.8.97-attempt-2-1db4cd3.json).
+Job conclusions and artifact IDs, sizes, and digests will be recorded after
+completion. No local project validation was run, and C07/C07.1 remain pending.
+
+## 2026-10-12 — R2.8.97 attempt 2 accepted
+
+Attempt 2 passed on exact source SHA
+`1db4cd36bc7f7ae371eeeacd1a428533d223985c`. All seven required GitHub Actions
+workflows and all 20 jobs passed: inventory run `38214429821`, quality
+`38214428573`, desktop build `38214428457`, plugin renderer `38214428556`,
+loaded-plugin workflows `38214428529`, Rust CI `38214428477`, and Obsidian
+vault round-trip `38214428519`. Rust CI passed on Rust 1.95, Ubuntu, Windows,
+and macOS; the pinned Obsidian 1.14.4 round-trip passed on Linux, Windows, and
+macOS. Exact job IDs/conclusions and all 16 artifact IDs, sizes, and archive
+SHA-256 digests are recorded in
+[`evidence/r2.8.97-attempt-2-1db4cd3.json`](evidence/r2.8.97-attempt-2-1db4cd3.json).
+
+This accepts the bounded engine Bases evaluation/discovery service and exact
+view-index selection for unnamed, explicitly empty-name, and duplicate-name
+views. C07/C07.1 remain pending until UI Bases loading/rendering and visible
+unsupported-expression reporting are integrated and validated. No local
+project tests, builds, formatters, linters, validators, or application launches
+were run; executable validation came from GitHub Actions.
+
+## 2026-10-12 — R2.8.98 UI implementation ready for CI
+
+The bounded, read-only Bases egui panel implementation is complete locally. It
+uses exact path and view-index selection, asynchronous snapshot-bound
+evaluation, visible compatibility and collection issues, operation gating,
+cache invalidation, and bounded UTF-8-safe display output. Bounded display/text
+tests are included. An initial source review found no behavioral must-fix.
+Follow-up acceptance review identified missing selector interaction and
+compatibility path assertions; those are now covered, and the latest source
+review found no remaining acceptance gap or compile-level concern.
+
+No local validation was run. The focused commit and push are next, followed by
+the seven required GitHub Actions workflows on that exact SHA. No CI attempt
+is recorded yet; C07/C07.1 remain pending.
