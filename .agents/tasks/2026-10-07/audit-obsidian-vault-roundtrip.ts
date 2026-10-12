@@ -4,6 +4,7 @@ import {lstat, mkdir, readFile, readdir, readlink, realpath, rename, unlink, wri
 import {createWriteStream} from "node:fs";
 import {basename, join, relative, resolve, sep} from "node:path";
 import {spawn, type ChildProcess} from "node:child_process";
+import {isDeepStrictEqual} from "node:util";
 
 type CdpTarget = {
   id?: string;
@@ -240,8 +241,18 @@ type OpenObsidianRefreshDiagnostics = {
   receiverStates: Array<{busy: boolean; line: number}>;
 };
 
-async function readOpenObsidianRefreshDiagnostics(): Promise<OpenObsidianRefreshDiagnostics> {
-  const log = await readFile(join(reportDirectory, "openobsidian.log"), "utf8").catch(() => "");
+function openObsidianRefreshActivityChanged(
+  before: OpenObsidianRefreshDiagnostics,
+  after: OpenObsidianRefreshDiagnostics,
+): boolean {
+  return before.requests.length !== after.requests.length
+    || before.consumedResults.length !== after.consumedResults.length;
+}
+
+async function readOpenObsidianRefreshDiagnostics(
+  logPath = join(reportDirectory, "openobsidian.log"),
+): Promise<OpenObsidianRefreshDiagnostics> {
+  const log = await readFile(logPath, "utf8").catch(() => "");
   const diagnostics: OpenObsidianRefreshDiagnostics = {requests: [], consumedResults: [], receiverStates: []};
   for (const [line, value] of log.split(/\r?\n/).entries()) {
     const request = value.match(/OpenObsidian CI vault refresh request: source=([a-z_]+)/);
@@ -262,6 +273,7 @@ async function waitForOpenObsidianRefreshIdle(
   previousRequestCount: number,
   expectedEntries: number,
   requireManualRequest: boolean,
+  logPath = join(reportDirectory, "openobsidian.log"),
 ): Promise<OpenObsidianRefreshDiagnostics & {settled_for_ms: number}> {
   let settledSince: number | null = null;
   return await waitFor(
@@ -269,7 +281,7 @@ async function waitForOpenObsidianRefreshIdle(
       ? "OpenObsidian to finish the explicit manual note-list refresh"
       : "OpenObsidian watcher refreshes to settle before the manual refresh",
     async () => {
-      const diagnostics = await readOpenObsidianRefreshDiagnostics();
+      const diagnostics = await readOpenObsidianRefreshDiagnostics(logPath);
       const latestRequest = diagnostics.requests.at(-1);
       const latestResult = diagnostics.consumedResults.at(-1);
       const receiverBusy = diagnostics.receiverStates.at(-1)?.busy ?? false;
@@ -2745,6 +2757,9 @@ async function clickVisibleOpenObsidianControl(
     } else if (controlName === "Next note") {
       xFraction = (anchor.left + anchor.width + 55 * scaleX) / ocrSize.width;
       yFraction = (anchor.top + anchor.height / 2) / ocrSize.height;
+    } else if (controlName === "Review and confirm note creation") {
+      xFraction = (anchor.left + 100 * scaleX) / ocrSize.width;
+      yFraction = (anchor.top + 77 * scaleY) / ocrSize.height;
     } else {
       let verticalControlOffset = 18;
       if (controlName === "Preview note creation") verticalControlOffset = 90;
@@ -5148,19 +5163,43 @@ async function verifyCanvasReferenceVisible(
 }
 
 async function assertCanvasReferenceSource(
-  expectedCanvas: {bytes: number; sha256: string},
+  byteBaseline: {bytes: number; sha256: string},
   stage: string,
-): Promise<{bytes: number; sha256: string}> {
+): Promise<{
+  bytes: number;
+  sha256: string;
+  byte_identical_to_baseline: boolean;
+  semantic_content_matches_seed: true;
+}> {
+  // Obsidian may canonicalize Canvas JSON whitespace on shutdown. OpenObsidian's
+  // preview/create checks stay byte-exact; this reference-app boundary checks data.
   const bytes = await readFile(join(canvasVaultRoot, canvasPath));
   const sha256 = createHash("sha256").update(bytes).digest("hex");
-  if (bytes.length !== expectedCanvas.bytes || sha256 !== expectedCanvas.sha256) {
+  let actualDocument: unknown;
+  let seedDocument: unknown;
+  try {
+    actualDocument = JSON.parse(bytes.toString("utf8")) as unknown;
+    seedDocument = JSON.parse(readCanvasReferenceFixtureBytes().toString("utf8")) as unknown;
+  } catch (error) {
     const evidenceFilename = stage.includes("first")
       ? "canvas-reference-after-first-close.canvas"
       : "canvas-reference-after-reopen-close.canvas";
     await writeFile(join(reportDirectory, evidenceFilename), bytes);
-    throw new Error(`Obsidian changed the reference Canvas source after ${stage}: expected ${expectedCanvas.bytes} bytes / ${expectedCanvas.sha256}, got ${bytes.length} bytes / ${sha256}`);
+    throw new Error(`Obsidian left invalid Canvas JSON after ${stage}: ${error instanceof Error ? error.message : "unknown JSON parse error"}`);
   }
-  return {bytes: bytes.length, sha256};
+  if (!isDeepStrictEqual(actualDocument, seedDocument)) {
+    const evidenceFilename = stage.includes("first")
+      ? "canvas-reference-after-first-close.canvas"
+      : "canvas-reference-after-reopen-close.canvas";
+    await writeFile(join(reportDirectory, evidenceFilename), bytes);
+    throw new Error(`Obsidian changed the reference Canvas data after ${stage}; expected the fixture's exact parsed data, got ${bytes.length} bytes / ${sha256}`);
+  }
+  return {
+    bytes: bytes.length,
+    sha256,
+    byte_identical_to_baseline: bytes.length === byteBaseline.bytes && sha256 === byteBaseline.sha256,
+    semantic_content_matches_seed: true,
+  };
 }
 
 async function assertCanvasCreatedNoteSource(expectedBytes: Buffer, stage: string): Promise<{bytes: number; sha256: string}> {
@@ -5457,99 +5496,117 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
   value: string,
 ): Promise<string> {
   const fileSafeName = controlName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-  const before = await captureOpenObsidianScreenshot(windowId, child, `openobsidian-canvas-input-${fileSafeName}-before`);
-  const layout = await locateCanvasTextInput(before, controlName);
-  const labelOcrFound = Boolean(layout.labelBoundsOcr);
-  const screenshotSize = await pngDimensions(before.windowPngPath);
-  const geometry = execFileSync("xdotool", ["getwindowgeometry", "--shell", windowId], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]});
-  const readGeometry = (key: string): number => Number(geometry.match(new RegExp(`^${key}=(\\d+)$`, "m"))?.[1] ?? NaN);
-  const windowWidth = readGeometry("WIDTH");
-  const windowHeight = readGeometry("HEIGHT");
-  if (!(windowWidth > 0 && windowHeight > 0 && screenshotSize.width > 0 && screenshotSize.height > 0)) {
-    throw new Error(`Could not map Linux Canvas input coordinates for ${controlName}: geometry=${geometry.trim()}; screenshot=${screenshotSize.width}x${screenshotSize.height}`);
-  }
-  if (!labelOcrFound) {
-    throw new Error(`Linux screenshot did not show the ${controlName} label before text entry: screenshot=${relative(reportDirectory, before.windowPngPath)}`);
-  }
-  if (screenshotSize.width !== 800 || screenshotSize.height !== 600 || windowWidth !== 800 || windowHeight !== 600) {
-    throw new Error(`Linux Canvas field coordinates require the captured 800x600 CI layout: window=${windowWidth}x${windowHeight}; screenshot=${screenshotSize.width}x${screenshotSize.height}`);
-  }
+  const canvasRefreshLog = join(reportDirectory, "openobsidian-canvas-note-create.log");
+  const maximumAttempts = 3;
+  let lastFailure = "no field-position attempt completed";
+  for (let attempt = 1; attempt <= maximumAttempts; attempt += 1) {
+    await waitForOpenObsidianRefreshIdle(0, 0, false, canvasRefreshLog);
+    const refreshBeforeCapture = await readOpenObsidianRefreshDiagnostics(canvasRefreshLog);
+    const before = await captureOpenObsidianScreenshot(windowId, child, `openobsidian-canvas-input-${fileSafeName}-before`);
+    const layout = await locateCanvasTextInput(before, controlName);
+    const labelOcrFound = Boolean(layout.labelBoundsOcr);
+    const screenshotSize = await pngDimensions(before.windowPngPath);
+    const geometry = execFileSync("xdotool", ["getwindowgeometry", "--shell", windowId], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]});
+    const readGeometry = (key: string): number => Number(geometry.match(new RegExp(`^${key}=(\\d+)$`, "m"))?.[1] ?? NaN);
+    const windowWidth = readGeometry("WIDTH");
+    const windowHeight = readGeometry("HEIGHT");
+    if (!(windowWidth > 0 && windowHeight > 0 && screenshotSize.width > 0 && screenshotSize.height > 0)) {
+      throw new Error(`Could not map Linux Canvas input coordinates for ${controlName}: geometry=${geometry.trim()}; screenshot=${screenshotSize.width}x${screenshotSize.height}`);
+    }
+    if (!labelOcrFound) {
+      throw new Error(`Linux screenshot did not show the ${controlName} label before text entry: screenshot=${relative(reportDirectory, before.windowPngPath)}`);
+    }
+    if (screenshotSize.width !== 800 || screenshotSize.height !== 600 || windowWidth !== 800 || windowHeight !== 600) {
+      throw new Error(`Linux Canvas field coordinates require the captured 800x600 CI layout: window=${windowWidth}x${windowHeight}; screenshot=${screenshotSize.width}x${screenshotSize.height}`);
+    }
 
-  // X follows the label-to-field layout; Y follows the label itself so optional status
-  // messages above the form cannot move the click onto the adjacent input row.
-  const clickX = Math.round(layout.fieldCenter.x * windowWidth / screenshotSize.width);
-  const clickY = Math.round(layout.fieldCenter.y * windowHeight / screenshotSize.height);
+    // Positioning takes OCR time. If the watcher refreshes during that interval,
+    // its status line can move the form after the screenshot; discard those bounds.
+    const refreshBeforeClick = await readOpenObsidianRefreshDiagnostics(canvasRefreshLog);
+    if (openObsidianRefreshActivityChanged(refreshBeforeCapture, refreshBeforeClick)
+      || (refreshBeforeClick.receiverStates.at(-1)?.busy ?? false)) {
+      lastFailure = `vault refresh changed the form layout before attempt ${attempt}`;
+      continue;
+    }
 
-  try {
-    xdotool("windowfocus", "--sync", windowId);
-    xdotool("mousemove", "--sync", "--window", windowId, String(clickX), String(clickY));
-    xdotool("click", "--clearmodifiers", "1");
-    xdotool("key", "--clearmodifiers", "ctrl+a");
-    execFileSync("xdotool", ["type", "--clearmodifiers", "--delay", "1", value], {stdio: "ignore"});
-  } catch (error) {
-    const failure = error as NodeJS.ErrnoException;
-    throw new Error(`Linux keyboard entry failed for ${controlName}: code=${failure.code ?? "unknown"}; syscall=${failure.syscall ?? "unknown"}; click=(${clickX},${clickY})`);
-  }
-
-  const verificationDeadline = Date.now() + 5_000;
-  let clipboardReadback = "";
-  let clipboardReadbackError = "";
-  let verificationAttempts = 0;
-  while (Date.now() < verificationDeadline) {
-    verificationAttempts += 1;
-    xdotool("key", "--clearmodifiers", "ctrl+a");
-    xdotool("key", "--clearmodifiers", "ctrl+c");
-    await delay(100);
+    // X follows the label-to-field layout; Y follows the label itself so optional status
+    // messages above the form cannot move the click onto the adjacent input row.
+    const clickX = Math.round(layout.fieldCenter.x * windowWidth / screenshotSize.width);
+    const clickY = Math.round(layout.fieldCenter.y * windowHeight / screenshotSize.height);
     try {
-      clipboardReadback = execFileSync("xclip", ["-selection", "clipboard", "-o"], {
-        encoding: "utf8",
-        stdio: ["ignore", "pipe", "ignore"],
-        timeout: 2_000,
-      });
-      clipboardReadbackError = "";
+      xdotool("windowfocus", "--sync", windowId);
+      xdotool("mousemove", "--sync", "--window", windowId, String(clickX), String(clickY));
+      xdotool("click", "--clearmodifiers", "1");
+      xdotool("key", "--clearmodifiers", "ctrl+a");
+      execFileSync("xdotool", ["type", "--clearmodifiers", "--delay", "1", value], {stdio: "ignore"});
     } catch (error) {
       const failure = error as NodeJS.ErrnoException;
-      clipboardReadbackError = `code=${failure.code ?? "unknown"}; syscall=${failure.syscall ?? "unknown"}`;
+      throw new Error(`Linux keyboard entry failed for ${controlName}: code=${failure.code ?? "unknown"}; syscall=${failure.syscall ?? "unknown"}; click=(${clickX},${clickY})`);
     }
-    if (clipboardReadback === value) break;
-    await delay(200);
-  }
-  xdotool("key", "--clearmodifiers", "Right");
-  const verification = await captureOpenObsidianScreenshot(
-    windowId,
-    child,
-    `openobsidian-canvas-input-${fileSafeName}-readback`,
-  );
-  let visualReadback: Awaited<ReturnType<typeof readCanvasInputScreenshotValue>> | undefined;
-  let visualReadbackError = "";
-  try {
-    visualReadback = await readCanvasInputScreenshotValue(verification, controlName, value);
-  } catch (error) {
-    visualReadbackError = error instanceof Error ? error.message : "unknown screenshot OCR error";
-  }
-  if (clipboardReadback !== value) {
-    throw new Error(`Linux clipboard readback did not confirm the exact ${controlName} value: expected_length=${value.length}; actual_length=${clipboardReadback.length}; clipboard_error=${clipboardReadbackError || "none"}; crop_ocr=${JSON.stringify(visualReadback?.text ?? "")}; visual_readback_error=${visualReadbackError || "none"}; click=(${clickX},${clickY}); attempts=${verificationAttempts}; crop=${visualReadback ? relative(reportDirectory, visualReadback.cropPath) : "unavailable"}; screenshot=${relative(reportDirectory, verification.windowPngPath)}`);
+
+    let clipboardReadback = "";
+    let clipboardReadbackError = "";
+    let verificationAttempts = 0;
+    for (verificationAttempts = 1; verificationAttempts <= 5; verificationAttempts += 1) {
+      xdotool("key", "--clearmodifiers", "ctrl+a");
+      xdotool("key", "--clearmodifiers", "ctrl+c");
+      await delay(100);
+      try {
+        clipboardReadback = execFileSync("xclip", ["-selection", "clipboard", "-o"], {
+          encoding: "utf8",
+          stdio: ["ignore", "pipe", "ignore"],
+          timeout: 2_000,
+        });
+        clipboardReadbackError = "";
+      } catch (error) {
+        const failure = error as NodeJS.ErrnoException;
+        clipboardReadbackError = `code=${failure.code ?? "unknown"}; syscall=${failure.syscall ?? "unknown"}`;
+      }
+      if (clipboardReadback === value) break;
+      await delay(150);
+    }
+    xdotool("key", "--clearmodifiers", "Right");
+    const verification = await captureOpenObsidianScreenshot(
+      windowId,
+      child,
+      `openobsidian-canvas-input-${fileSafeName}-readback`,
+    );
+    let visualReadback: Awaited<ReturnType<typeof readCanvasInputScreenshotValue>> | undefined;
+    let visualReadbackError = "";
+    try {
+      visualReadback = await readCanvasInputScreenshotValue(verification, controlName, value);
+    } catch (error) {
+      visualReadbackError = error instanceof Error ? error.message : "unknown screenshot OCR error";
+    }
+    const refreshAfterVerification = await readOpenObsidianRefreshDiagnostics(canvasRefreshLog);
+    const refreshChangedDuringInput = openObsidianRefreshActivityChanged(refreshBeforeClick, refreshAfterVerification)
+      || (refreshAfterVerification.receiverStates.at(-1)?.busy ?? false);
+    if (clipboardReadback === value && visualReadback?.exact === true && !refreshChangedDuringInput) {
+      return JSON.stringify({
+        name: controlName,
+        action: "focused the OCR-positioned field, then Ctrl+A and keyboard entry",
+        exact_readback: true,
+        readback_source: "X11 clipboard and field-specific screenshot after selecting and copying the focused field",
+        readback_ocr: visualReadback.text,
+        visual_ocr_exact: visualReadback.exact,
+        expected_length: value.length,
+        readback_length: clipboardReadback.length,
+        click_x: clickX,
+        click_y: clickY,
+        position_source: "fresh visible label bounds after a stable vault-refresh window",
+        ocr_label_found: labelOcrFound,
+        readback_attempts: verificationAttempts,
+        position_attempts: attempt,
+        before_screenshot: relative(reportDirectory, before.windowPngPath),
+        readback_screenshot: relative(reportDirectory, verification.windowPngPath),
+        readback_crop: relative(reportDirectory, visualReadback.cropPath),
+        readback_crop_bounds: visualReadback.layout.cropBounds,
+      });
+    }
+    lastFailure = `clipboard_length=${clipboardReadback.length}; clipboard_error=${clipboardReadbackError || "none"}; crop_ocr=${JSON.stringify(visualReadback?.text ?? "")}; visual_readback_error=${visualReadbackError || "none"}; visual_exact=${visualReadback?.exact ?? false}; refresh_changed=${refreshChangedDuringInput}; click=(${clickX},${clickY}); verification_attempts=${Math.min(verificationAttempts, 5)}; before=${relative(reportDirectory, before.windowPngPath)}; screenshot=${relative(reportDirectory, verification.windowPngPath)}; crop=${visualReadback ? relative(reportDirectory, visualReadback.cropPath) : "unavailable"}`;
   }
 
-  return JSON.stringify({
-    name: controlName,
-    action: "focused the OCR-positioned field, then Ctrl+A and keyboard entry",
-    exact_readback: true,
-    readback_source: "X11 clipboard after selecting and copying the focused field",
-    readback_ocr: visualReadback?.text ?? "",
-    visual_ocr_exact: visualReadback?.exact ?? false,
-    expected_length: value.length,
-    readback_length: clipboardReadback.length,
-    click_x: clickX,
-    click_y: clickY,
-    position_source: "current visible label bounds and form layout",
-    ocr_label_found: labelOcrFound,
-    readback_attempts: verificationAttempts,
-    before_screenshot: relative(reportDirectory, before.windowPngPath),
-    readback_screenshot: relative(reportDirectory, verification.windowPngPath),
-    readback_crop: visualReadback ? relative(reportDirectory, visualReadback.cropPath) : null,
-    readback_crop_bounds: visualReadback?.layout.cropBounds ?? null,
-  });
+  throw new Error(`Linux clipboard and visual readbacks did not confirm the exact ${controlName} value after ${maximumAttempts} fresh-position attempts: expected_length=${value.length}; ${lastFailure}`);
 }
 
 async function replaceMacOSOpenObsidianTextInputWithKeyboard(
@@ -6078,7 +6135,13 @@ async function runOpenObsidianCanvasNoteCreation(
     noteReport.vault_snapshot_after_preview = afterPreview;
     noteReport.no_write_during_preview = true;
 
-    interactions.review = await invokeNativeAccessibleControl(child, window.window_id, "Review and confirm note creation", undefined, true);
+    interactions.review = await invokeNativeAccessibleControl(
+      child,
+      window.window_id,
+      "Review and confirm note creation",
+      "Exact note body",
+      true,
+    );
     const review = await waitFor(
       "OpenObsidian to show the final Canvas note-creation confirmation",
       async () => await captureOpenObsidianScreenshot(window!.window_id, child!, "openobsidian-canvas-note-create-review", noteReport),
@@ -6304,13 +6367,15 @@ async function runCanvasReferenceProbe(): Promise<void> {
     const firstCloseNote = await assertCanvasCreatedNoteSource(expectedCreatedNoteBytes, "the first Obsidian shutdown");
     firstSession.created_note_source_after_close = firstCloseNote;
     const firstCloseChanges = changedPaths(postCreateBaseline, afterFirstClose);
-    const firstCloseUnexpectedChanges = firstCloseChanges.filter((change) => !workspaceStateAllowlist.includes(change.path));
+    const firstCloseUnexpectedChanges = firstCloseChanges.filter((change) => (
+      change.path !== canvasPath && !workspaceStateAllowlist.includes(change.path)
+    ));
     if (firstCloseUnexpectedChanges.length > 0) {
-      throw new Error(`Canvas reference first open changed non-workspace vault content: ${JSON.stringify(firstCloseUnexpectedChanges).slice(0, 6_000)}`);
+      throw new Error(`Canvas reference first open changed unapproved vault content: ${JSON.stringify(firstCloseUnexpectedChanges).slice(0, 6_000)}`);
     }
-    snapshots.canvas_reference_first_open_workspace_changes = firstCloseChanges;
+    snapshots.canvas_reference_first_open_vault_changes = firstCloseChanges;
     firstSession.source_after_close = firstCloseCanvas;
-    firstSession.workspace_changes_from_seed = firstCloseChanges;
+    firstSession.vault_changes_during_obsidian_session = firstCloseChanges;
 
     const beforeSecondOpen = afterFirstClose;
     snapshots.canvas_reference_before_second_open = beforeSecondOpen;
@@ -6321,14 +6386,14 @@ async function runCanvasReferenceProbe(): Promise<void> {
     const secondSession: Record<string, unknown> = {
       devtools_browser: second.browserVersion,
       first_target: {title: second.target.title ?? "", url: second.target.url ?? ""},
-      source_before_reopen: expectedCanvas,
+      source_before_reopen: firstCloseCanvas,
       created_note_source_before_reopen: noteBeforeSecondOpen,
     };
     canvasReport.second_session = secondSession;
     await chooseRestrictedMode(secondConnection, secondSession, canvasVaultName, canvasMarker);
     const secondView = await verifyCanvasReferenceVisible(
       secondConnection,
-      expectedCanvas,
+      firstCloseCanvas,
       "obsidian-canvas-reopened.png",
       "Canvas reference reopen",
     );
@@ -6378,18 +6443,29 @@ async function runCanvasReferenceProbe(): Promise<void> {
 
     const afterSecondClose = await snapshotTree(canvasVaultRoot);
     snapshots.canvas_reference_after_reopen = afterSecondClose;
-    const secondCloseCanvas = await assertCanvasReferenceSource(expectedCanvas, "the reopened Obsidian shutdown");
+    const secondCloseCanvas = await assertCanvasReferenceSource(firstCloseCanvas, "the reopened Obsidian shutdown");
     const secondCloseNote = await assertCanvasCreatedNoteSource(expectedCreatedNoteBytes, "the reopened Obsidian shutdown");
     secondSession.created_note_source_after_close = secondCloseNote;
     const reopenChanges = changedPaths(beforeSecondOpen, afterSecondClose);
-    const allowedWorkspaceChanges = reopenChanges.filter((change) => workspaceStateAllowlist.includes(change.path));
-    const unexpectedChanges = reopenChanges.filter((change) => !workspaceStateAllowlist.includes(change.path));
+    const allowedReferenceChanges = reopenChanges.filter((change) => (
+      workspaceStateAllowlist.includes(change.path) || change.path === canvasPath
+    ));
+    const unexpectedChanges = reopenChanges.filter((change) => (
+      !workspaceStateAllowlist.includes(change.path) && change.path !== canvasPath
+    ));
     if (unexpectedChanges.length > 0) {
-      throw new Error(`Canvas reference reopen changed non-workspace vault content: ${JSON.stringify(unexpectedChanges).slice(0, 6_000)}`);
+      throw new Error(`Canvas reference reopen changed unapproved vault content: ${JSON.stringify(unexpectedChanges).slice(0, 6_000)}`);
     }
-    snapshots.canvas_reference_workspace_changes = allowedWorkspaceChanges;
+    snapshots.canvas_reference_reopen_changes = allowedReferenceChanges;
     canvasReport.source_after_reopen = secondCloseCanvas;
-    canvasReport.source_unchanged_after_both_shutdowns = true;
+    canvasReport.source_semantics_preserved_after_both_shutdowns = firstCloseCanvas.semantic_content_matches_seed
+      && secondCloseCanvas.semantic_content_matches_seed;
+    canvasReport.seed_byte_representation_preserved_after_first_shutdown = firstCloseCanvas.byte_identical_to_baseline;
+    canvasReport.second_shutdown_bytes_match_first_close = secondCloseCanvas.byte_identical_to_baseline;
+    canvasReport.first_close_canvas_bytes = firstCloseCanvas.bytes;
+    canvasReport.first_close_canvas_sha256 = firstCloseCanvas.sha256;
+    canvasReport.second_close_canvas_bytes = secondCloseCanvas.bytes;
+    canvasReport.second_close_canvas_sha256 = secondCloseCanvas.sha256;
     canvasReport.marker_visible_after_reopen = secondView.body.includes(canvasMarker);
     canvasReport.path_visible_after_reopen = secondView.paths.includes(canvasPath);
     canvasReport.target_subpath_content_visible_after_reopen = secondView.body.includes(canvasTargetText);
@@ -6407,7 +6483,7 @@ async function runCanvasReferenceProbe(): Promise<void> {
     canvasReport.created_note_bytes_unchanged_after_both_shutdowns = firstCloseNote.sha256 === secondCloseNote.sha256
       && firstCloseNote.bytes === secondCloseNote.bytes
       && firstCloseNote.sha256 === createHash("sha256").update(expectedCreatedNoteBytes).digest("hex");
-    canvasReport.reopen_workspace_changes = allowedWorkspaceChanges;
+    canvasReport.reopen_vault_changes = allowedReferenceChanges;
     canvasReport.status = "passed";
   } catch (error) {
     canvasReport.status = "failed";
