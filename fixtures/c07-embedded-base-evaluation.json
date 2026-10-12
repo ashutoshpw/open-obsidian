@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "fixture:c07-embedded-base-evaluation",
+  "description": "An embedded native YAML Bases definition evaluates supported filters, formulas, sorting and grouping while retaining source and reporting unsupported formulas.",
+  "source": "# 🧭 Embedded task view\n\n~~~base\nfilters:\n  and:\n    - status == \"open\"\n    - priority >= 2\nformulas:\n  sourcePath: file.path\n  unsupportedDate: date(today)\nviews:\n  - type: table\n    name: Open tasks\n    groupBy: team\n    order:\n      - priority\n    unknownView: keep-view-field\nunknownRoot:\n  keep: root-field\n~~~\n",
+  "view_index": 0,
+  "rows": [
+    {"path": "Notes/Cora.md", "properties": {"status": "open", "priority": 7, "team": "blue"}},
+    {"path": "Notes/Closed.md", "properties": {"status": "closed", "priority": 1, "team": "green"}},
+    {"path": "Notes/Ada.md", "properties": {"status": "open", "priority": 3, "team": "red"}},
+    {"path": "Notes/Bea.md", "properties": {"status": "open", "priority": 5, "team": "red"}}
+  ],
+  "expected": {
+    "view_type": "table",
+    "paths": ["Notes/Ada.md", "Notes/Bea.md", "Notes/Cora.md"],
+    "group_names": ["red", "blue"],
+    "group_paths": {
+      "red": ["Notes/Ada.md", "Notes/Bea.md"],
+      "blue": ["Notes/Cora.md"]
+    },
+    "formula_values": {
+      "Notes/Ada.md": "Notes/Ada.md",
+      "Notes/Bea.md": "Notes/Bea.md",
+      "Notes/Cora.md": "Notes/Cora.md"
+    },
+    "issue_expression": "date(today)",
+    "issue_message": "Unsupported Bases formula: date(today)"
+  }
+}

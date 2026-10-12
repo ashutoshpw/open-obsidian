@@ -4,8 +4,10 @@ mod bases;
 
 pub use bases::{
     BaseCollectionIssue, BaseFileEvaluation, BaseFileEvaluationError, BaseFileListing,
-    BaseFileListingError, BaseFilePath, MAX_BASE_FILE_COUNT, MAX_BASE_FILE_SOURCE_BYTES,
-    MAX_BASE_NOTE_COUNT, MAX_BASE_NOTE_SOURCE_BYTES, MAX_BASE_TOTAL_SOURCE_BYTES,
+    BaseFileListingError, BaseFilePath, EmbeddedBaseEvaluation, EmbeddedBaseEvaluationError,
+    EmbeddedBaseListing, EmbeddedBaseListingError, MAX_BASE_FILE_COUNT,
+    MAX_BASE_FILE_SOURCE_BYTES, MAX_BASE_NOTE_COUNT, MAX_BASE_NOTE_SOURCE_BYTES,
+    MAX_BASE_TOTAL_SOURCE_BYTES,
 };
 
 use openobsidian_doc::{encode_canvas, parse_canvas};
@@ -69,6 +71,17 @@ impl VaultSession {
         bases::list_base_files(self.store.root())
     }
 
+    /// Parses embedded Bases definitions from one complete, stable Markdown note.
+    ///
+    /// Snapshotting hashes every regular vault file, so call this off the UI frame.
+    pub fn list_embedded_bases(
+        &self,
+        relative_path: impl AsRef<Path>,
+    ) -> Result<EmbeddedBaseListing, EmbeddedBaseListingError> {
+        let relative_path = normalize_portable_path(relative_path.as_ref())?;
+        bases::list_embedded_bases(self.store.root(), &relative_path)
+    }
+
     /// Evaluates one `.base` file against a fresh, bounded Markdown collection.
     ///
     /// Snapshotting hashes every regular vault file, so call this off the UI frame.
@@ -91,6 +104,24 @@ impl VaultSession {
     ) -> Result<BaseFileEvaluation, BaseFileEvaluationError> {
         let relative_path = normalize_portable_path(relative_path.as_ref())?;
         bases::evaluate_base_file_by_view_index(self.store.root(), &relative_path, view_index)
+    }
+
+    /// Evaluates one source-indexed view from a current embedded Bases listing.
+    ///
+    /// The note revision and full vault snapshot are checked again before and after collection.
+    /// Snapshotting hashes every regular vault file, so call this off the UI frame.
+    pub fn evaluate_embedded_base_by_view_index(
+        &self,
+        listing: &EmbeddedBaseListing,
+        definition_index: usize,
+        view_index: usize,
+    ) -> Result<EmbeddedBaseEvaluation, EmbeddedBaseEvaluationError> {
+        bases::evaluate_embedded_base_by_view_index(
+            self.store.root(),
+            listing,
+            definition_index,
+            view_index,
+        )
     }
 
     /// Returns the recovery outcome processed before the Markdown listing was scanned.

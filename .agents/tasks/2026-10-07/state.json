@@ -2,14 +2,14 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-12T08:23:39Z",
+  "updated_at": "2026-10-12T08:45:00Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "1d096a859c9d95cb0d6c047cd3cb25c858b35310",
-  "current_milestone": "R2.8.98",
-  "next_action": "R2.8.98 attempt 4 completed on exact SHA 1d096a859c9d95cb0d6c047cd3cb25c858b35310 and is not accepted. Six required workflows passed; Rust CI passed MSRV 1.95 and tests but failed Clippy on large_enum_variant and let_and_return across Ubuntu, macOS, and Windows. The focused local correction boxes the evaluation payload and returns the view-label match directly. Commit and push it with completed attempt-4 evidence for attempt 5. Keep the separate R2.8.99 embedded Bases source/fixture out of that commit. C07/C07.1 remain pending.",
-  "push_status": "origin/main remains at attempt 4 SHA 1d096a859c9d95cb0d6c047cd3cb25c858b35310, not accepted due to two Clippy lints on Ubuntu/macOS/Windows; all seven workflows are terminal and no exact-SHA checks remain active. The focused Clippy correction is prepared locally. Keep crates/doc/src/bases.rs and fixtures/c07-embedded-base-evaluation.json out of the next correction commit. No local validation was run.",
+  "last_reconciled_head": "e2b8983b243014440dcf34508fd84f3ece66653c",
+  "current_milestone": "R2.8.99",
+  "next_action": "R2.8.98 attempt 5 is accepted on exact SHA e2b8983b243014440dcf34508fd84f3ece66653c after all seven required workflows and 20 jobs passed. Source-only reviews of the C07.1 embedded Bases implementation are complete; commit and push this focused slice to origin/main, then use GitHub Actions CI only and reconcile every exact-SHA workflow before the next push. C07/C07.1 remain pending until integrated UI and visible issue reporting pass required CI.",
+  "push_status": "R2.8.98 attempt 5 commit e2b8983b243014440dcf34508fd84f3ece66653c is accepted on origin/main. All seven required workflows and 20 jobs passed, including Rust CI (MSRV 1.95 and three OSes) and Obsidian 1.14.4 round-trip (three OSes). Sixteen artifacts with IDs, sizes, and archive SHA-256 are in evidence/r2.8.98-attempt-5-e2b8983.json. No local validation was run.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -47,8 +47,8 @@
         "quality",
         "plugin-renderer"
       ],
-      "implementation_sha": "1db4cd36bc7f7ae371eeeacd1a428533d223985c",
-      "next_action": "R2.8.98 attempt 4 at exact SHA 1d096a859c9d95cb0d6c047cd3cb25c858b35310 is not accepted. Six workflows passed; Rust CI MSRV and all workspace tests passed, while Ubuntu/macOS/Windows Clippy found large_enum_variant and let_and_return in the UI Bases implementation. Commit and push the focused box/return-expression correction with reconciled attempt evidence, then await all seven exact-SHA workflows. Keep C07/C07.1 pending and preserve implementation_sha as the last accepted R2 source SHA 1db4cd36bc7f7ae371eeeacd1a428533d223985c."
+      "implementation_sha": "e2b8983b243014440dcf34508fd84f3ece66653c",
+      "next_action": "R2.8.98 attempt 5 passed all required CI and is the latest accepted R2 implementation SHA e2b8983b243014440dcf34508fd84f3ece66653c. Continue C07.1 embedded Bases integration; its engine/UI changes remain uncommitted and unvalidated."
     },
     "R3": {
       "status": "pending",
@@ -77,6 +77,7 @@
     }
   },
   "completed_actions": [
+    "R2.8.98 attempt 5 accepted on exact source SHA e2b8983b243014440dcf34508fd84f3ece66653c after all seven required GitHub Actions workflows and all 20 jobs passed. Rust CI passed on Rust 1.95, Ubuntu, Windows, and macOS; the pinned Obsidian 1.14.4 vault round-trip passed on Linux, Windows, and macOS. Inventory, quality, desktop build, loaded-plugin workflows, and plugin-renderer matrix passed. Exact run/job IDs and all 16 artifact IDs, sizes, and archive SHA-256 digests are recorded in evidence/r2.8.98-attempt-5-e2b8983.json. No local tests, builds, formatters, linters, validators, or application launches were run.",
     "R2.8.97 bounded Bases engine evaluation/discovery and index-based view selection accepted on exact source SHA 1db4cd36bc7f7ae371eeeacd1a428533d223985c after all seven required workflows and all 20 jobs passed. Rust CI passed on Rust 1.95, Ubuntu, Windows, and macOS; the Obsidian round-trip passed on Linux, Windows, and macOS. Exact workflow/job IDs and all 16 artifact IDs, sizes, and archive digests are in evidence/r2.8.97-attempt-2-1db4cd3.json. C07/C07.1 remain pending for UI loading/rendering and visible issue reporting. No local project validation was run.",
     "R2.8.96 bounded C07 document-layer parser/evaluator foundation accepted on exact source SHA 01d7ad437f28667e6e79455b2450c73e7b6d3916 after all seven required GitHub Actions workflows passed. Rust CI passed Rust 1.95, Ubuntu, Windows, and macOS. The first round-trip attempt's macOS watcher-refresh UI timing race is retained; rerunning only that failed job on the same SHA passed, leaving Linux, Windows, and macOS round-trip jobs green. Exact workflow/job IDs and all 17 artifact IDs, sizes, and archive digests are in evidence/r2.8.96-attempt-3-01d7ad4.json. C07/C07.1 remain pending. No local project checks were run.",
     "R2.8.95 attempt 6 accepted on exact source SHA adc1ddce142f41dd250c37722ed8b48b9194bd5c after all seven required GitHub Actions workflows passed, including all three pinned Obsidian round-trips. Exact run/job IDs and 16 artifact IDs, sizes, and archive digests are recorded in evidence/r2.8.95-attempt-6-adc1ddc.json. R2.8.96 starts a bounded C07 document-layer parser/evaluator foundation; C07/C07.1 remain pending until app integration and visible issue reporting.",
@@ -20932,6 +20933,203 @@
           "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38222005010/job/114720251476"
         }
       ]
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 38223392916,
+      "run_attempt": 1,
+      "head_sha": "e2b8983b243014440dcf34508fd84f3ece66653c",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38223392916",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "inventory",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38223392916/job/114724873757"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 38223392852,
+      "run_attempt": 1,
+      "head_sha": "e2b8983b243014440dcf34508fd84f3ece66653c",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38223392852",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "windows-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38223392852/job/114724873866"
+        },
+        {
+          "name": "macos-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38223392852/job/114724873969"
+        },
+        {
+          "name": "ubuntu-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38223392852/job/114724874060"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 38223392859,
+      "run_attempt": 1,
+      "head_sha": "e2b8983b243014440dcf34508fd84f3ece66653c",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38223392859",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "ubuntu-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38223392859/job/114724873737"
+        },
+        {
+          "name": "windows-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38223392859/job/114724874593"
+        },
+        {
+          "name": "macos-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38223392859/job/114724874768"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 38223392943,
+      "run_attempt": 1,
+      "head_sha": "e2b8983b243014440dcf34508fd84f3ece66653c",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38223392943",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "ubuntu-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38223392943/job/114724874503"
+        },
+        {
+          "name": "windows-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38223392943/job/114724874594"
+        },
+        {
+          "name": "macos-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38223392943/job/114724874614"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 38223392892,
+      "run_attempt": 1,
+      "head_sha": "e2b8983b243014440dcf34508fd84f3ece66653c",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38223392892",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "macos-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38223392892/job/114724874563"
+        },
+        {
+          "name": "ubuntu-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38223392892/job/114724874881"
+        },
+        {
+          "name": "windows-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38223392892/job/114724875002"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 38223392862,
+      "run_attempt": 1,
+      "head_sha": "e2b8983b243014440dcf34508fd84f3ece66653c",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38223392862",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "minimum supported Rust (1.95)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38223392862/job/114724873846"
+        },
+        {
+          "name": "rust (ubuntu-latest)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38223392862/job/114724874545"
+        },
+        {
+          "name": "rust (windows-latest)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38223392862/job/114724874573"
+        },
+        {
+          "name": "rust (macos-latest)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38223392862/job/114724874576"
+        }
+      ]
+    },
+    {
+      "name": "Obsidian vault round-trip acceptance",
+      "run_id": 38223393959,
+      "run_attempt": 1,
+      "head_sha": "e2b8983b243014440dcf34508fd84f3ece66653c",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38223393959",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "Obsidian 1.14.4 vault round-trip on macos-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38223393959/job/114724878775"
+        },
+        {
+          "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38223393959/job/114724879016"
+        },
+        {
+          "name": "Obsidian 1.14.4 vault round-trip on windows-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38223393959/job/114724879093"
+        }
+      ]
     }
   ],
   "milestones": {
@@ -32959,7 +33157,7 @@
       "push_status": "R2.8.97 accepted on exact pushed source SHA 1db4cd36bc7f7ae371eeeacd1a428533d223985c after all seven required GitHub Actions workflows and all 20 jobs passed. Exact workflow/job IDs and all 16 artifact IDs, sizes, and archive digests are in evidence/r2.8.97-attempt-2-1db4cd3.json. C07/C07.1 remain pending until UI loading/rendering and visible issue reporting are integrated and validated. No local project validation was run."
     },
     "R2.8.98": {
-      "status": "in_progress",
+      "status": "complete",
       "starting_sha": "1db4cd36bc7f7ae371eeeacd1a428533d223985c",
       "scope": "Integrate a bounded, read-only Bases egui panel with exact path and view-index selection, visible compatibility and collection issues, asynchronous snapshot-bound evaluation, operation gating and cache invalidation, and bounded UTF-8-safe display output. Keep C07/C07.1 pending until this integration is accepted.",
       "acceptance": [
@@ -33042,12 +33240,54 @@
             "vault_roundtrip": 38222005010
           },
           "finding": "Attempt 4 completed on exact source SHA 1d096a859c9d95cb0d6c047cd3cb25c858b35310 and is not accepted. Six required workflows passed: inventory, quality, desktop build, loaded-plugin workflows, plugin renderer, and Obsidian 1.14.4 vault round-trip on Linux, Windows, and macOS. Rust CI MSRV 1.95 job 114720251071 passed. Ubuntu 114720251225, macOS 114720251457, and Windows 114720251330 passed formatting where run and workspace tests (including 115 ui-egui tests) but failed Clippy on two lints: clippy::large_enum_variant at BasesTaskMessage (crates/ui-egui/src/lib.rs:81; 544-byte Evaluation variant versus 56-byte Listing, 552 bytes on Windows), and clippy::let_and_return in bases_view_label (line 4093). The local correction boxes only BaseFileEvaluation in the message and returns the match directly; it was reviewed for ownership/type handling but is not yet CI-validated. Exact job conclusions and all 12 artifact IDs, sizes, archive SHA-256 digests, and expiration times are recorded in this evidence. No local validation was run."
+        },
+        {
+          "attempt": 5,
+          "source_sha": "e2b8983b243014440dcf34508fd84f3ece66653c",
+          "outcome": "accepted",
+          "evidence": "evidence/r2.8.98-attempt-5-e2b8983.json",
+          "workflow_runs": {
+            "inventory": 38223392916,
+            "desktop_build": 38223392852,
+            "loaded_plugins": 38223392859,
+            "plugin_renderer": 38223392943,
+            "quality": 38223392892,
+            "rust_ci": 38223392862,
+            "vault_roundtrip": 38223393959
+          },
+          "finding": "All seven required GitHub Actions workflows and all 20 jobs passed on the exact source SHA. Rust CI passed on Rust 1.95, Ubuntu, Windows, and macOS; the pinned Obsidian 1.14.4 vault round-trip passed on Linux, Windows, and macOS. Sixteen artifacts were published; exact run/job IDs and artifact IDs, sizes, and archive SHA-256 digests are recorded in the evidence. No local project validation was run."
         }
       ],
+      "accepted_attempt": 5,
+      "implementation_sha": "e2b8983b243014440dcf34508fd84f3ece66653c",
+      "evidence": "evidence/r2.8.98-attempt-5-e2b8983.json",
+      "push_status": "R2.8.98 attempt 5 on exact SHA e2b8983b243014440dcf34508fd84f3ece66653c passed all seven required workflows and 20 jobs. Rust CI passed on MSRV 1.95 and Ubuntu, Windows, and macOS; Obsidian 1.14.4 round-trip passed on Linux, Windows, and macOS. Sixteen artifact IDs, sizes, and archive SHA-256 digests are recorded in the exact-SHA evidence. No local validation was run."
+    },
+    "R2.8.99": {
+      "status": "in_progress",
+      "starting_sha": "e2b8983b243014440dcf34508fd84f3ece66653c",
+      "scope": "Complete C07.1 embedded Bases integration with a bounded, source-preserving Markdown fixture, snapshot-bound engine listing/evaluation by definition and view index, and an additive asynchronous read-only egui panel with visible issues and bounded results.",
+      "acceptance": [
+        "The fixture-backed document test verifies exact embedded source spans, NativeYaml source format, retained unknown fields, supported formula values, and visible unsupported-formula diagnostics.",
+        "The engine lists embedded definitions only from a complete bounded Markdown note revision, checks stable vault snapshots and note revisions, evaluates by exact definition/view indices, reports partial collection issues, and never writes vault or app data.",
+        "The egui panel loads only on request, exposes bounded Markdown note/definition/view selectors, renders bounded rows and visible compatibility/collection issues, invalidates stale state, and adds no write path.",
+        "The fixture-backed UI interaction verifies supported and unsupported formula behavior, multiple definition/view selection, displayed issues, exact source bytes, and unchanged vault/app-data snapshots.",
+        "All seven required GitHub Actions workflows pass on the exact pushed source SHA; executable validation runs only in GitHub Actions."
+      ],
+      "required_workflows": [
+        "Rust migration inventory",
+        "OpenObsidian quality",
+        "OpenObsidian desktop build",
+        "OpenObsidian plugin renderer matrix",
+        "OpenObsidian loaded plugin workflows",
+        "OpenObsidian Rust CI",
+        "Obsidian vault round-trip acceptance"
+      ],
+      "attempts": [],
       "accepted_attempt": null,
-      "implementation_sha": "1d096a859c9d95cb0d6c047cd3cb25c858b35310",
-      "evidence": "evidence/r2.8.98-attempt-4-1d096a8.json",
-      "push_status": "Attempt 4 on exact SHA 1d096a859c9d95cb0d6c047cd3cb25c858b35310 is not accepted after Rust CI Clippy failures; all six companion workflows and MSRV 1.95 passed, including the Linux/Windows/macOS Obsidian round-trip. Exact run/job/artifact records are in evidence/r2.8.98-attempt-4-1d096a8.json. Attempt 5 box/return-expression correction is prepared locally. Keep R2.8.99 doc/fixture changes separate; the last accepted R2 implementation remains 1db4cd36bc7f7ae371eeeacd1a428533d223985c."
+      "implementation_sha": null,
+      "evidence": null,
+      "push_status": "C07.1 embedded Bases integration is ready for a focused commit from accepted base SHA e2b8983b243014440dcf34508fd84f3ece66653c after source-only reviews. The note selector materializes only its bounded visible options and clears stale errors on definition changes. Source bytes and collected rows are bounded at 512 KiB per note, 10,000 notes, and 16 MiB aggregate; the existing full-vault snapshot and Markdown path scan still scale with vault size and run off the UI frame. Changes await focused push and exact-SHA GitHub Actions CI. No local validation was run."
     }
   },
   "ci_preparation": {

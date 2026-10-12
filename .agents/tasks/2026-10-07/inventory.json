@@ -1331,6 +1331,16 @@
       "fixture_reader": "crates/doc"
     },
     {
+      "path": "fixtures/c07-embedded-base-evaluation.json",
+      "sha256": "befa8038835b14a7d54a17c18cedda8b8edafc83e367864f75b2114797f90c13",
+      "rust_owner": "crates/doc",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R2",
+      "purpose": "Embedded C07/C07.1 fixture covers source-preserving NativeYaml extraction, supported filtering and file.path formulas, sorting and grouping, explicit unsupported-formula diagnostics without fabricated values, and the bounded engine/UI no-write evaluation flow.",
+      "fixture_reader": "crates/doc, crates/engine, crates/ui-egui"
+    },
+    {
       "path": "fixtures/c07-unsupported-formula.json",
       "sha256": "ddfd92ddf593dbbeb5f6747726c5dc83404c0ab7c2291bf9a9b3bdacf97c9f0d",
       "rust_owner": "crates/doc",

@@ -5044,3 +5044,61 @@ No local project tests, builds, formatters, linters, validators, or application 
 Attempt 4 completed on exact source SHA `1d096a859c9d95cb0d6c047cd3cb25c858b35310`. Six of seven workflows passed: inventory `38222005000`, quality `38222004908`, desktop build `38222004927`, loaded-plugin workflows `38222004985`, plugin renderer `38222005087`, and Obsidian vault round-trip `38222005010`; the round-trip passed on macOS job `114720251122`, Windows `114720251260`, and Linux `114720251476`. Rust CI `38222005080` failed overall: MSRV job `114720251071` passed, while Ubuntu `114720251225`, macOS `114720251457`, and Windows `114720251330` failed `Run Clippy`. Their workspace tests passed, including 115 UI tests; Ubuntu formatting passed. Clippy reported `large_enum_variant` for `BasesTaskMessage` at `crates/ui-egui/src/lib.rs:81` and `let_and_return` in `bases_view_label` at line 4093. Both were promoted by `-D warnings`.
 
 The local focused correction boxes only the `BaseFileEvaluation` payload in the asynchronous message and returns the `bases_view_label` match directly. A read-only source review found its ownership handling sound. This change is pending exact-SHA CI. Exact run/job conclusions and all 12 artifact IDs, sizes, SHA-256 digests, and expiration times are recorded in [`evidence/r2.8.98-attempt-4-1d096a8.json`](evidence/r2.8.98-attempt-4-1d096a8.json). No local tests, builds, formatters, linters, validators, or application launches were run. The separate R2.8.99 `crates/doc/src/bases.rs` change and `fixtures/c07-embedded-base-evaluation.json` remain uncommitted and excluded. C07/C07.1 remain pending.
+
+
+## 2026-10-12 — R2.8.98 attempt 5 launched
+
+The focused correction was committed and pushed to `origin/main` as exact source SHA `e2b8983b243014440dcf34508fd84f3ece66653c`. It boxes the `BaseFileEvaluation` asynchronous message payload and returns the `bases_view_label` match directly to address attempt 4 Clippy findings. Inventory run `38223392916` passed. Quality `38223392892`, desktop build `38223392852`, loaded-plugin workflows `38223392859`, plugin renderer `38223392943`, Rust CI `38223392862`, and Obsidian vault round-trip `38223393959` were queued or running at initial capture. Exact job IDs, URLs, and captured statuses are in [`evidence/r2.8.98-attempt-5-e2b8983.json`](evidence/r2.8.98-attempt-5-e2b8983.json).
+
+No local project tests, builds, formatters, linters, validators, or application launches were run. The separate R2.8.99 `crates/doc/src/bases.rs` work and `fixtures/c07-embedded-base-evaluation.json` remain uncommitted and excluded. C07/C07.1 remain pending. Wait for all seven exact-SHA workflows before the next push.
+
+
+## 2026-10-12 — R2.8.98 attempt 5 completed and accepted
+
+Attempt 5 passed on exact source SHA
+e2b8983b243014440dcf34508fd84f3ece66653c. All seven required workflows and
+all 20 jobs passed: inventory 38223392916, quality 38223392892, desktop
+build 38223392852, loaded-plugin workflows 38223392859, plugin renderer
+38223392943, Rust CI 38223392862, and Obsidian 1.14.4 vault round-trip
+38223393959. Rust CI passed on the minimum supported Rust 1.95 toolchain and
+Ubuntu, Windows, and macOS. The round-trip passed on macOS job 114724878775,
+Linux 114724879016, and Windows 114724879093.
+
+All exact-SHA job conclusions and all 16 artifact IDs, sizes, and archive
+SHA-256 digests are recorded in
+[evidence/r2.8.98-attempt-5-e2b8983.json](evidence/r2.8.98-attempt-5-e2b8983.json).
+No local tests, builds, formatters, linters, validators, or application
+launches were run. The latest accepted R2 implementation SHA is now
+e2b8983b243014440dcf34508fd84f3ece66653c.
+
+C07.1 embedded Bases work is in progress as a separate slice: bounded engine
+listing/evaluation and additive egui integration with visible issues and no
+vault writes. The source and fixture remain outside this accepted SHA pending
+review and GitHub CI. C07/C07.1 remain pending.
+
+
+## R2.8.99 / C07.1 — embedded Bases integration in progress
+
+Started from accepted SHA e2b8983b243014440dcf34508fd84f3ece66653c. The slice
+adds a fixture for source-preserving embedded NativeYaml definitions, bounded
+snapshot- and revision-checked engine listing/evaluation, and an additive
+egui panel for note, definition, and view selection with visible compatibility
+and collection issues. The UI fixture covers multiple definitions/views,
+supported file.path output, unsupported formula diagnostics, exact source bytes,
+and unchanged vault/app-data snapshots.
+
+Read-only review found a stale error message on definition changes and a
+per-frame clone of the full Markdown path list. The UI now clears the previous
+error before switching definitions and keeps selector materialization bounded
+to the visible option set. No local tests, builds, formatters, linters,
+validators, or application launches were run. The integrated slice remains
+uncommitted and requires exact-SHA GitHub Actions CI before acceptance.
+
+
+A read-only engine audit found no path-confinement, stale-listing, or snapshot
+race bypass. The engine bounds source reads at 512 KiB per note, the aggregate
+collection at 16 MiB, and note rows at 10,000. The existing whole-vault snapshot
+and Markdown listing still traverse the full vault, so their I/O and temporary
+path-list memory scale with vault size; they execute on the background worker.
+This known scaling limit is recorded for follow-up rather than described as a
+bounded whole-vault scan.

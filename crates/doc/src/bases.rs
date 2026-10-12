@@ -1393,6 +1393,8 @@ mod tests {
     const C07_BASES_FIXTURE: &str = include_str!("../../../fixtures/c07-bases.json");
     const C07_UNSUPPORTED_FORMULA_FIXTURE: &str =
         include_str!("../../../fixtures/c07-unsupported-formula.json");
+    const C07_EMBEDDED_BASE_EVALUATION_FIXTURE: &str =
+        include_str!("../../../fixtures/c07-embedded-base-evaluation.json");
     const LEGACY_NATIVE_BASES_FIXTURE: &str = include_str!("../../../fixtures/bases-native.yaml");
 
     fn fixture_rows(value: &Value) -> Vec<BaseRow> {
@@ -1983,6 +1985,99 @@ mod tests {
             document.views()[0].raw_definition(),
             "unknownView"
         ));
+    }
+
+    #[test]
+    fn embedded_definition_fixture_evaluates_and_preserves_source_and_issues() {
+        let fixture: Value = serde_json::from_str(C07_EMBEDDED_BASE_EVALUATION_FIXTURE)
+            .expect("embedded Bases evaluation fixture must be JSON");
+        assert_eq!(fixture["schema_version"], 1);
+        assert_eq!(fixture["id"], "fixture:c07-embedded-base-evaluation");
+
+        let source = fixture["source"]
+            .as_str()
+            .expect("embedded Markdown source must be a string");
+        let definitions = parse_embedded_bases(source);
+        assert_eq!(definitions.len(), 1, "fixture contains one embedded Base");
+
+        let definition = &definitions[0];
+        assert_eq!(
+            &source[definition.start..definition.end],
+            definition.source.as_str(),
+            "embedded byte span must select the exact source"
+        );
+        assert!(definition.issues.is_empty());
+
+        let document = definition
+            .document
+            .as_ref()
+            .expect("embedded definition must parse");
+        assert_eq!(document.source_format(), BaseSourceFormat::NativeYaml);
+        assert_eq!(
+            document.source_bytes(),
+            definition.source.as_bytes(),
+            "parsed source bytes must remain unchanged"
+        );
+        assert_eq!(
+            encode_base(document).as_slice(),
+            definition.source.as_bytes(),
+            "encoding the parsed definition must return its exact source"
+        );
+        assert!(raw_field_exists(document.raw_definition(), "unknownRoot"));
+        assert!(raw_field_exists(
+            document.views()[0].raw_definition(),
+            "unknownView"
+        ));
+
+        let result = evaluate_base_by_view_index(
+            document,
+            fixture["view_index"]
+                .as_u64()
+                .expect("view index must be an unsigned integer") as usize,
+            &fixture_rows(&fixture["rows"]),
+        )
+        .expect("embedded Bases view must evaluate");
+        assert_eq!(
+            view_type_name(result.view.view_type),
+            fixture["expected"]["view_type"].as_str().unwrap()
+        );
+        assert_optional_evaluation_expectations(
+            fixture["id"].as_str().unwrap(),
+            &fixture,
+            &result,
+        );
+
+        let expected_formula_values = fixture["expected"]["formula_values"]
+            .as_object()
+            .expect("expected formula values must be an object");
+        for row in &result.rows {
+            assert_eq!(
+                row.values.get("sourcePath"),
+                expected_formula_values.get(&row.path),
+                "sourcePath formula result for {}",
+                row.path
+            );
+            assert!(
+                row.values.get("unsupportedDate").is_none(),
+                "unsupported formula must not produce a value for {}",
+                row.path
+            );
+        }
+
+        let issue = result
+            .issues
+            .iter()
+            .find(|issue| issue.kind == BaseIssueKind::UnsupportedFormula)
+            .expect("unsupported embedded formula must produce an issue");
+        assert_eq!(
+            issue.expression.as_deref(),
+            fixture["expected"]["issue_expression"].as_str()
+        );
+        assert_eq!(
+            issue.message,
+            fixture["expected"]["issue_message"].as_str().unwrap()
+        );
+        assert_eq!(result.issues.len(), 1, "fixture expects one formula issue");
     }
 
     #[test]

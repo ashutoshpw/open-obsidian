@@ -3180,7 +3180,8 @@
       "mandatory": true,
       "acceptance_criteria": "Bases fixtures evaluate supported definitions and preserve source definitions and unknown fields.",
       "fixture_ids": [
-        "fixture:c07-bases"
+        "fixture:c07-bases",
+        "fixture:c07-embedded-base-evaluation"
       ],
       "reference_versions": [
         {
@@ -3228,7 +3229,8 @@
       "mandatory": true,
       "acceptance_criteria": "An unsupported formula fixture displays a visible issue, retains original source and does not claim an incorrect evaluated result.",
       "fixture_ids": [
-        "fixture:c07-unsupported-formula"
+        "fixture:c07-unsupported-formula",
+        "fixture:c07-embedded-base-evaluation"
       ],
       "reference_versions": [
         {

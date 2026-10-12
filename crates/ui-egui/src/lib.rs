@@ -5,8 +5,9 @@ mod markdown_math;
 use egui_commonmark::{CommonMarkCache, CommonMarkViewer};
 use markdown_math::{MathRendererCache, math_render_callback};
 use openobsidian_engine::{
-    BaseFileEvaluation, BaseFileListing, CanvasEditError, CanvasNoteCreateResult, LinkKind,
-    LinkRenameAction, LinkResolutionStatus, MAX_NOTE_SOURCE_PREVIEW_BYTES,
+    BaseFileEvaluation, BaseFileListing, CanvasEditError, CanvasNoteCreateResult,
+    EmbeddedBaseEvaluation, EmbeddedBaseListing, LinkKind, LinkRenameAction, LinkResolutionStatus,
+    MAX_NOTE_SOURCE_PREVIEW_BYTES,
     MarkdownPreviewDisposition, MarkdownUnsupportedSyntax, TransclusionBlockReason,
     VaultConflictAction, VaultConflictRead, VaultConflictResolution, VaultError,
     VaultHistoryCleanup, VaultHistoryKind, VaultHistoryPlan, VaultHistoryPolicy,
@@ -63,6 +64,9 @@ const VAULT_SAFETY_FIXTURE: &str = include_str!("../../../fixtures/vault-safety.
 #[cfg(test)]
 const C07_BASE_VAULT_EVALUATION_FIXTURE: &str =
     include_str!("../../../fixtures/c07-base-vault-evaluation.json");
+#[cfg(test)]
+const C07_EMBEDDED_BASE_EVALUATION_FIXTURE: &str =
+    include_str!("../../../fixtures/c07-embedded-base-evaluation.json");
 
 /// Receives the result of opening a user-selected vault on a background worker.
 pub type VaultOpenReceiver = Receiver<Result<VaultSession, String>>;
@@ -81,6 +85,8 @@ type BasesReceiver = Receiver<BasesTaskMessage>;
 enum BasesTaskMessage {
     Listing(Result<BaseFileListing, String>),
     Evaluation(Result<Box<BaseFileEvaluation>, String>),
+    EmbeddedListing(Result<Box<EmbeddedBaseListing>, String>),
+    EmbeddedEvaluation(Result<Box<EmbeddedBaseEvaluation>, String>),
 }
 
 struct LinkTaskMessage {
@@ -351,6 +357,12 @@ struct OpenObsidianApp {
     bases_evaluation: Option<BaseFileEvaluation>,
     bases_receiver: Option<BasesReceiver>,
     bases_error: Option<String>,
+    embedded_base_listing: Option<EmbeddedBaseListing>,
+    embedded_base_selected_note: Option<std::path::PathBuf>,
+    embedded_base_selected_definition: Option<usize>,
+    embedded_base_selected_view: Option<usize>,
+    embedded_base_evaluation: Option<EmbeddedBaseEvaluation>,
+    embedded_base_error: Option<String>,
     rename_source_path: Option<std::path::PathBuf>,
     rename_destination_path: String,
     rename_preview: Option<VaultRenamePreview>,
@@ -761,6 +773,12 @@ impl OpenObsidianApp {
         self.bases_evaluation = None;
         self.bases_receiver = None;
         self.bases_error = None;
+        self.embedded_base_listing = None;
+        self.embedded_base_selected_note = None;
+        self.embedded_base_selected_definition = None;
+        self.embedded_base_selected_view = None;
+        self.embedded_base_evaluation = None;
+        self.embedded_base_error = None;
     }
 
     fn invalidate_bases_snapshot(&mut self) {
@@ -768,6 +786,11 @@ impl OpenObsidianApp {
         self.bases_evaluation = None;
         self.bases_receiver = None;
         self.bases_error = None;
+        self.embedded_base_listing = None;
+        self.embedded_base_selected_definition = None;
+        self.embedded_base_selected_view = None;
+        self.embedded_base_evaluation = None;
+        self.embedded_base_error = None;
     }
 
     fn start_bases_listing(&mut self) {
@@ -802,6 +825,51 @@ impl OpenObsidianApp {
                     format_bases_text(MAX_BASES_DISPLAY_FIELD_BYTES, format_args!("{error}"))
                 });
             let _ = sender.send(BasesTaskMessage::Evaluation(result.map(Box::new)));
+        });
+        self.bases_receiver = Some(receiver);
+    }
+
+    fn start_embedded_base_listing(&mut self, relative_path: std::path::PathBuf) {
+        let Some(session) = self.session.as_ref().cloned() else {
+            return;
+        };
+        self.embedded_base_selected_note = Some(relative_path.clone());
+        self.embedded_base_listing = None;
+        self.embedded_base_selected_definition = None;
+        self.embedded_base_selected_view = None;
+        self.embedded_base_evaluation = None;
+        self.embedded_base_error = None;
+        let (sender, receiver) = mpsc::channel();
+        rayon::spawn(move || {
+            let result = session
+                .list_embedded_bases(&relative_path)
+                .map_err(|error| {
+                    format_bases_text(MAX_BASES_DISPLAY_FIELD_BYTES, format_args!("{error}"))
+                });
+            let _ = sender.send(BasesTaskMessage::EmbeddedListing(result.map(Box::new)));
+        });
+        self.bases_receiver = Some(receiver);
+    }
+
+    fn start_embedded_base_evaluation(&mut self, definition_index: usize, view_index: usize) {
+        let Some(session) = self.session.as_ref().cloned() else {
+            return;
+        };
+        let Some(listing) = self.embedded_base_listing.as_ref().cloned() else {
+            return;
+        };
+        self.embedded_base_selected_definition = Some(definition_index);
+        self.embedded_base_selected_view = Some(view_index);
+        self.embedded_base_evaluation = None;
+        self.embedded_base_error = None;
+        let (sender, receiver) = mpsc::channel();
+        rayon::spawn(move || {
+            let result = session
+                .evaluate_embedded_base_by_view_index(&listing, definition_index, view_index)
+                .map_err(|error| {
+                    format_bases_text(MAX_BASES_DISPLAY_FIELD_BYTES, format_args!("{error}"))
+                });
+            let _ = sender.send(BasesTaskMessage::EmbeddedEvaluation(result.map(Box::new)));
         });
         self.bases_receiver = Some(receiver);
     }
@@ -860,11 +928,66 @@ impl OpenObsidianApp {
                     format_args!("Bases evaluation could not be completed: {error}"),
                 ));
             }
+            Some(Ok(BasesTaskMessage::EmbeddedListing(Ok(listing)))) => {
+                self.bases_receiver = None;
+                let listing = *listing;
+                let definition_index = (!listing.definitions.is_empty()).then_some(0);
+                let view_index = definition_index
+                    .filter(|index| {
+                        listing.definitions[*index]
+                            .document
+                            .as_ref()
+                            .is_some_and(|document| !document.views().is_empty())
+                    })
+                    .map(|_| 0);
+                self.embedded_base_selected_definition = definition_index;
+                self.embedded_base_selected_view = view_index;
+                self.embedded_base_evaluation = None;
+                self.embedded_base_error = None;
+                self.embedded_base_listing = Some(listing);
+                if let (Some(definition_index), Some(view_index)) =
+                    (definition_index, view_index)
+                {
+                    self.start_embedded_base_evaluation(definition_index, view_index);
+                }
+            }
+            Some(Ok(BasesTaskMessage::EmbeddedListing(Err(error)))) => {
+                self.bases_receiver = None;
+                self.embedded_base_listing = None;
+                self.embedded_base_evaluation = None;
+                self.embedded_base_error = Some(format_bases_text(
+                    MAX_BASES_DISPLAY_FIELD_BYTES,
+                    format_args!("Embedded Bases definitions could not be loaded safely: {error}"),
+                ));
+            }
+            Some(Ok(BasesTaskMessage::EmbeddedEvaluation(Ok(evaluation)))) => {
+                self.bases_receiver = None;
+                let evaluation = *evaluation;
+                self.embedded_base_selected_definition = Some(evaluation.definition_index);
+                self.embedded_base_selected_view = Some(evaluation.view_index);
+                self.embedded_base_evaluation = Some(evaluation);
+                self.embedded_base_error = None;
+            }
+            Some(Ok(BasesTaskMessage::EmbeddedEvaluation(Err(error)))) => {
+                self.bases_receiver = None;
+                self.embedded_base_evaluation = None;
+                self.embedded_base_error = Some(format_bases_text(
+                    MAX_BASES_DISPLAY_FIELD_BYTES,
+                    format_args!(
+                        "Embedded Base evaluation could not be completed safely; reload the note if its contents changed: {error}"
+                    ),
+                ));
+            }
             Some(Err(TryRecvError::Disconnected)) => {
                 self.bases_receiver = None;
                 self.bases_evaluation = None;
+                self.embedded_base_evaluation = None;
                 self.bases_error = Some(
                     "The Bases operation stopped unexpectedly. Refresh the Bases files and try again."
+                        .to_owned(),
+                );
+                self.embedded_base_error = Some(
+                    "The embedded Bases operation stopped unexpectedly. Reload the note and try again."
                         .to_owned(),
                 );
             }
@@ -1160,6 +1283,437 @@ impl OpenObsidianApp {
                 }
             } else if evaluation.evaluation.rows.is_empty() {
                 ui.small("No notes match this Bases view.");
+            } else {
+                for row in evaluation
+                    .evaluation
+                    .rows
+                    .iter()
+                    .take(MAX_BASE_ROWS_RENDERED)
+                {
+                    show_base_row(ui, &row.path, &row.values);
+                }
+                if evaluation.evaluation.rows.len() > MAX_BASE_ROWS_RENDERED {
+                    ui.small(format!(
+                        "Showing the first {MAX_BASE_ROWS_RENDERED} of {} matching rows; {} omitted by the UI limit.",
+                        evaluation.evaluation.rows.len(),
+                        evaluation.evaluation.rows.len() - MAX_BASE_ROWS_RENDERED,
+                    ));
+                }
+            }
+        }
+        self.show_embedded_bases(ui);
+    }
+
+    fn show_embedded_bases(&mut self, ui: &mut eframe::egui::Ui) {
+        ui.separator();
+        ui.heading("Embedded Bases");
+        ui.small(
+            "Read-only projections from embedded Base fences in Markdown notes. Evaluation is bounded and tied to the selected note revision and vault snapshot.",
+        );
+
+        let Some(session) = self.session.as_ref() else {
+            ui.label("No Markdown notes are available in this vault.");
+            return;
+        };
+        let entries = session.entries();
+        let is_markdown_path = |path: &Path| {
+            path.extension()
+                .is_some_and(|extension| extension.eq_ignore_ascii_case("md"))
+        };
+        let note_count = entries
+            .iter()
+            .filter(|entry| is_markdown_path(&entry.relative_path))
+            .count();
+        if note_count == 0 {
+            ui.label("No Markdown notes are available in this vault.");
+            return;
+        }
+
+        let mut selected_note = self
+            .embedded_base_selected_note
+            .as_ref()
+            .filter(|selected| {
+                entries.iter().any(|entry| {
+                    &entry.relative_path == *selected
+                        && is_markdown_path(&entry.relative_path)
+                })
+            })
+            .cloned()
+            .or_else(|| {
+                entries
+                    .iter()
+                    .find(|entry| is_markdown_path(&entry.relative_path))
+                    .map(|entry| entry.relative_path.clone())
+            });
+        let selected_note_label = selected_note.as_ref().map_or_else(
+            || "Choose a Markdown note".to_owned(),
+            |path| {
+                format_bases_text(
+                    MAX_BASES_DISPLAY_FIELD_BYTES,
+                    format_args!("{}", path.display()),
+                )
+            },
+        );
+        let selected_note_index = selected_note.as_ref().and_then(|selected| {
+            entries
+                .iter()
+                .filter(|entry| is_markdown_path(&entry.relative_path))
+                .position(|entry| &entry.relative_path == selected)
+        });
+        let visible_note_indices = bounded_visible_indices(
+            note_count,
+            MAX_BASE_FILES_IN_SELECTOR,
+            selected_note_index,
+        );
+        if note_count > visible_note_indices.len() {
+            ui.small(format!(
+                "Showing {} of {} Markdown notes in the selector; {} omitted by the UI limit of {}.",
+                visible_note_indices.len(),
+                note_count,
+                note_count - visible_note_indices.len(),
+                MAX_BASE_FILES_IN_SELECTOR,
+            ));
+        }
+        let mut next_visible_index = visible_note_indices.iter().copied().peekable();
+        let mut visible_note_paths = Vec::with_capacity(visible_note_indices.len());
+        for (index, entry) in entries
+            .iter()
+            .filter(|entry| is_markdown_path(&entry.relative_path))
+            .enumerate()
+        {
+            if next_visible_index.peek() == Some(&index) {
+                visible_note_paths.push(entry.relative_path.clone());
+                next_visible_index.next();
+                if next_visible_index.peek().is_none() {
+                    break;
+                }
+            }
+        }
+        let refresh_enabled = self.bases_receiver.is_none()
+            && !self.vault_operation_busy_except_bases();
+        let mut note_changed = false;
+        ui.add_enabled_ui(refresh_enabled, |ui| {
+            eframe::egui::ComboBox::from_label("Markdown note")
+                .selected_text(selected_note_label)
+                .show_ui(ui, |ui| {
+                    for path in &visible_note_paths {
+                        note_changed |= ui
+                            .selectable_value(
+                                &mut selected_note,
+                                Some(path.clone()),
+                                format_bases_text(
+                                    MAX_BASES_DISPLAY_FIELD_BYTES,
+                                    format_args!("{}", path.display()),
+                                ),
+                            )
+                            .changed();
+                    }
+                });
+        });
+        if note_changed {
+            self.embedded_base_selected_note = selected_note.clone();
+            self.embedded_base_listing = None;
+            self.embedded_base_selected_definition = None;
+            self.embedded_base_selected_view = None;
+            self.embedded_base_evaluation = None;
+            self.embedded_base_error = None;
+        } else if self.embedded_base_selected_note.is_none() {
+            self.embedded_base_selected_note = selected_note.clone();
+        }
+
+        let load_requested = ui
+            .add_enabled(
+                refresh_enabled && selected_note.is_some(),
+                eframe::egui::Button::new("Load embedded Base definitions"),
+            )
+            .clicked();
+        if load_requested && let Some(relative_path) = selected_note.clone() {
+            self.start_embedded_base_listing(relative_path);
+        }
+        if let Some(error) = &self.embedded_base_error {
+            ui.colored_label(eframe::egui::Color32::YELLOW, error);
+        }
+        if self.bases_receiver.is_some() && self.embedded_base_listing.is_none() {
+            ui.small("Reading the selected note from a bounded, stable vault snapshot…");
+        }
+
+        if let Some(listing) = self.embedded_base_listing.clone() {
+            if Some(&listing.relative_path) != selected_note.as_ref() {
+                ui.colored_label(
+                    eframe::egui::Color32::YELLOW,
+                    "The embedded Base note selection changed. Load its definitions again.",
+                );
+                return;
+            }
+            ui.small(format!(
+                "Note revision SHA-256 {} · vault snapshot SHA-256 {} → {}",
+                listing.note_revision_sha256,
+                listing.snapshot_before_sha256,
+                listing.snapshot_after_sha256,
+            ));
+            if listing.definitions.is_empty() {
+                ui.label("No embedded Base definitions were found in this note.");
+                return;
+            }
+
+            let mut selected_definition = self
+                .embedded_base_selected_definition
+                .filter(|index| *index < listing.definitions.len())
+                .unwrap_or_default();
+            let visible_definition_indices = bounded_visible_indices(
+                listing.definitions.len(),
+                MAX_BASE_VIEWS_IN_SELECTOR,
+                Some(selected_definition),
+            );
+            if listing.definitions.len() > visible_definition_indices.len() {
+                ui.small(format!(
+                    "Showing {} of {} embedded definitions; {} omitted by the UI limit of {}.",
+                    visible_definition_indices.len(),
+                    listing.definitions.len(),
+                    listing.definitions.len() - visible_definition_indices.len(),
+                    MAX_BASE_VIEWS_IN_SELECTOR,
+                ));
+            }
+            let selected_definition_label = format!(
+                "Embedded Base {}",
+                selected_definition.saturating_add(1)
+            );
+            let mut definition_changed = false;
+            ui.add_enabled_ui(refresh_enabled, |ui| {
+                eframe::egui::ComboBox::from_label("Embedded definition")
+                    .selected_text(selected_definition_label)
+                    .show_ui(ui, |ui| {
+                        for index in visible_definition_indices {
+                            definition_changed |= ui
+                                .selectable_value(
+                                    &mut selected_definition,
+                                    index,
+                                    format!("Embedded Base {}", index + 1),
+                                )
+                                .changed();
+                        }
+                    });
+            });
+            if definition_changed {
+                self.embedded_base_selected_definition = Some(selected_definition);
+                self.embedded_base_selected_view = Some(0);
+                self.embedded_base_evaluation = None;
+                self.embedded_base_error = None;
+                let can_evaluate = listing.definitions[selected_definition]
+                    .document
+                    .as_ref()
+                    .is_some_and(|document| !document.views().is_empty());
+                if can_evaluate {
+                    self.start_embedded_base_evaluation(selected_definition, 0);
+                }
+            }
+
+            let selected_definition_source = listing.definitions.get(selected_definition);
+            if let Some(definition) = selected_definition_source {
+                if let Some(document) = &definition.document {
+                    let views = document.views();
+                    let mut selected_view = self
+                        .embedded_base_selected_view
+                        .filter(|index| *index < views.len())
+                        .unwrap_or_default();
+                    let mut view_changed = false;
+                    if views.len() > 1 {
+                        let selected_label = views
+                            .get(selected_view)
+                            .map(|view| bases_view_label(view.name.as_deref(), selected_view))
+                            .unwrap_or_else(|| "Choose a view".to_owned());
+                        let visible_view_indices = bounded_visible_indices(
+                            views.len(),
+                            MAX_BASE_VIEWS_IN_SELECTOR,
+                            Some(selected_view),
+                        );
+                        ui.add_enabled_ui(refresh_enabled, |ui| {
+                            eframe::egui::ComboBox::from_label("Embedded Base view")
+                                .selected_text(selected_label)
+                                .show_ui(ui, |ui| {
+                                    for index in visible_view_indices {
+                                        let view = &views[index];
+                                        view_changed |= ui
+                                            .selectable_value(
+                                                &mut selected_view,
+                                                index,
+                                                bases_view_label(view.name.as_deref(), index),
+                                            )
+                                            .changed();
+                                    }
+                                });
+                        });
+                    }
+                    if view_changed {
+                        self.embedded_base_selected_view = Some(selected_view);
+                        self.start_embedded_base_evaluation(selected_definition, selected_view);
+                    }
+                    if views.is_empty() {
+                        ui.colored_label(
+                            eframe::egui::Color32::YELLOW,
+                            format_bases_issue(
+                                format!(
+                                    "{}#embedded-base-{}",
+                                    listing.relative_path.display(),
+                                    selected_definition + 1
+                                ),
+                                "Embedded Base has no selectable views",
+                            ),
+                        );
+                    }
+                } else {
+                    for issue in definition.issues.iter().take(MAX_BASE_ISSUES_PER_KIND_RENDERED) {
+                        ui.colored_label(
+                            eframe::egui::Color32::YELLOW,
+                            format_bases_issue(
+                                format!(
+                                    "{}#embedded-base-{}",
+                                    listing.relative_path.display(),
+                                    selected_definition + 1
+                                ),
+                                &issue.message,
+                            ),
+                        );
+                    }
+                }
+            }
+        }
+
+        if let Some(evaluation) = &self.embedded_base_evaluation {
+            let source_label = format!(
+                "{}#embedded-base-{}",
+                evaluation.relative_path.display(),
+                evaluation.definition_index + 1
+            );
+            let view_suffix = format!(
+                " · view {} · {:?} · {} matching note(s) · read-only",
+                evaluation.view_index + 1,
+                evaluation.evaluation.view.view_type,
+                evaluation.evaluation.rows.len(),
+            );
+            let mut view_status =
+                BoundedBasesText::new(MAX_BASES_DISPLAY_FIELD_BYTES, &view_suffix);
+            let _ = view_status.write_str(&source_label);
+            match evaluation.evaluation.view.name.as_deref() {
+                Some("") => {
+                    let _ = view_status.write_fmt(format_args!(
+                        "Unnamed view {} (empty name)",
+                        evaluation.view_index + 1
+                    ));
+                }
+                Some(name) => {
+                    let _ = view_status.write_str(name);
+                }
+                None => {
+                    let _ = view_status.write_fmt(format_args!(
+                        "Unnamed view {}",
+                        evaluation.view_index + 1
+                    ));
+                }
+            }
+            ui.label(view_status.finish());
+            if evaluation.complete {
+                ui.small("Note collection is complete within the configured bounds.");
+            } else {
+                ui.colored_label(
+                    eframe::egui::Color32::YELLOW,
+                    "Results are partial because one or more notes could not be safely collected.",
+                );
+            }
+            ui.small(format!(
+                "Note source SHA-256 {}",
+                evaluation.note_revision_sha256
+            ));
+            ui.small(format!(
+                "Vault snapshot SHA-256 {} → {}",
+                evaluation.snapshot_before_sha256, evaluation.snapshot_after_sha256
+            ));
+
+            ui.heading("Embedded Base issues");
+            if evaluation.evaluation.issues.is_empty()
+                && evaluation.collection_issues.is_empty()
+            {
+                ui.small("No compatibility or collection issues were reported.");
+            } else {
+                for issue in evaluation
+                    .evaluation
+                    .issues
+                    .iter()
+                    .take(MAX_BASE_ISSUES_PER_KIND_RENDERED)
+                {
+                    ui.colored_label(
+                        eframe::egui::Color32::YELLOW,
+                        format_bases_issue(&source_label, &issue.message),
+                    );
+                    if let Some(expression) = &issue.expression {
+                        ui.small(format_bases_text(
+                            MAX_BASES_DISPLAY_FIELD_BYTES,
+                            format_args!("Expression: {expression}"),
+                        ));
+                    }
+                }
+                for issue in evaluation
+                    .collection_issues
+                    .iter()
+                    .take(MAX_BASE_ISSUES_PER_KIND_RENDERED)
+                {
+                    ui.colored_label(
+                        eframe::egui::Color32::YELLOW,
+                        format_bases_issue(issue.relative_path.display(), &issue.message),
+                    );
+                }
+                let evaluator_issues_omitted = evaluation
+                    .evaluation
+                    .issues
+                    .len()
+                    .saturating_sub(MAX_BASE_ISSUES_PER_KIND_RENDERED);
+                let collection_issues_omitted = evaluation
+                    .collection_issues
+                    .len()
+                    .saturating_sub(MAX_BASE_ISSUES_PER_KIND_RENDERED);
+                if evaluator_issues_omitted > 0 || collection_issues_omitted > 0 {
+                    ui.small(format!(
+                        "Showing at most {MAX_BASE_ISSUES_PER_KIND_RENDERED} issues of each kind; {evaluator_issues_omitted} evaluator and {collection_issues_omitted} collection issue(s) omitted."
+                    ));
+                }
+            }
+
+            ui.heading("Embedded Base results");
+            if !evaluation.evaluation.groups.is_empty() {
+                let total_groups = evaluation.evaluation.groups.len();
+                let total_rows = evaluation.evaluation.rows.len();
+                let visible_group_count = total_groups.min(MAX_BASE_GROUPS_RENDERED);
+                let mut remaining_rows = MAX_BASE_ROWS_RENDERED;
+                let visible_groups = evaluation
+                    .evaluation
+                    .groups
+                    .iter()
+                    .take(visible_group_count);
+                for group in visible_groups {
+                    let visible_rows = group.rows.iter().take(remaining_rows).collect::<Vec<_>>();
+                    remaining_rows = remaining_rows.saturating_sub(visible_rows.len());
+                    ui.group(|ui| {
+                        ui.label(format_bases_text(
+                            MAX_BASES_DISPLAY_FIELD_BYTES,
+                            format_args!("Group: {}", group.key),
+                        ));
+                        for row in visible_rows {
+                            show_base_row(ui, &row.path, &row.values);
+                        }
+                    });
+                }
+                let rows_rendered = MAX_BASE_ROWS_RENDERED - remaining_rows;
+                let groups_omitted = total_groups - visible_group_count;
+                let rows_omitted = total_rows.saturating_sub(rows_rendered);
+                if groups_omitted > 0 || rows_omitted > 0 {
+                    ui.small(format!(
+                        "Showing {visible_group_count} of {total_groups} groups and {rows_rendered} of {total_rows} rows; {groups_omitted} group(s) and {rows_omitted} row(s) omitted by UI limits ({} groups, {} rows).",
+                        MAX_BASE_GROUPS_RENDERED,
+                        MAX_BASE_ROWS_RENDERED,
+                    ));
+                }
+            } else if evaluation.evaluation.rows.is_empty() {
+                ui.small("No notes match this embedded Base view.");
             } else {
                 for row in evaluation
                     .evaluation
@@ -5276,6 +5830,41 @@ mod tests {
         }
     }
 
+    fn wait_for_embedded_base_evaluation(harness: &mut Harness<'_, OpenObsidianApp>) {
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
+        loop {
+            harness.step();
+            let state = harness.state();
+            let selected_definition_needs_no_evaluation = state
+                .embedded_base_listing
+                .as_ref()
+                .and_then(|listing| {
+                    state
+                        .embedded_base_selected_definition
+                        .and_then(|index| listing.definitions.get(index))
+                })
+                .is_some_and(|definition| {
+                    definition
+                        .document
+                        .as_ref()
+                        .is_none_or(|document| document.views().is_empty())
+                });
+            if state.bases_receiver.is_none()
+                && state.embedded_base_listing.is_some()
+                && (state.embedded_base_evaluation.is_some()
+                    || state.embedded_base_error.is_some()
+                    || selected_definition_needs_no_evaluation)
+            {
+                return;
+            }
+            assert!(
+                std::time::Instant::now() < deadline,
+                "embedded Base listing/evaluation did not finish within ten seconds"
+            );
+            std::thread::sleep(std::time::Duration::from_millis(2));
+        }
+    }
+
     fn expand_canvas_text_edit(harness: &mut Harness<'_, OpenObsidianApp>) {
         harness.get_by_label("Edit Canvas text card").click();
         harness.step();
@@ -6379,6 +6968,228 @@ mod tests {
             existing_vault_tree_snapshot(&app_data_path),
             app_data_before,
             "Bases evaluation must not write app data"
+        );
+    }
+
+    #[test]
+    fn egui_embedded_bases_panel_evaluates_and_reports_issues_without_writes() {
+        let fixture: serde_json::Value = serde_json::from_str(C07_EMBEDDED_BASE_EVALUATION_FIXTURE)
+            .expect("embedded Bases evaluation fixture must be valid JSON");
+        let temporary = UiTempDir::new();
+        let vault_path = temporary.0.join("vault");
+        let app_data_path = temporary.0.join("app-data");
+        std::fs::create_dir_all(&vault_path).expect("create embedded Bases test vault");
+        std::fs::create_dir_all(&app_data_path).expect("create embedded Bases test app data");
+
+        let note_path = PathBuf::from("Notes/Dashboard.md");
+        let fixture_note_source = fixture["source"]
+            .as_str()
+            .expect("fixture must provide Markdown with an embedded Base");
+        let note_source_with_second_view = fixture_note_source.replace(
+            "    unknownView: keep-view-field\n",
+            "    unknownView: keep-view-field\n  - type: list\n    name: Alternate view\n    limit: 1\n",
+        );
+        let note_source = format!(
+            "{note_source_with_second_view}\n# Second embedded Base\n~~~base\nfilters:\n  and:\n    - status == \"open\"\n    - priority >= 2\nformulas:\n  sourcePath: file.path\n  unsupportedDate: date(today)\nviews:\n  - type: table\n    name: Embedded copy\n    groupBy: team\n    order:\n      - priority\n~~~\n"
+        );
+        let note_file_path = vault_path.join(&note_path);
+        std::fs::create_dir_all(note_file_path.parent().expect("note path must have a parent"))
+            .expect("create embedded Bases note parent");
+        std::fs::write(&note_file_path, &note_source)
+            .expect("write embedded Bases source note");
+        let original_source = std::fs::read(&note_file_path)
+            .expect("read the exact embedded Bases source bytes");
+
+        for row in fixture["rows"]
+            .as_array()
+            .expect("fixture rows must be an array")
+        {
+            let path = PathBuf::from(
+                row["path"]
+                    .as_str()
+                    .expect("fixture row must provide a path"),
+            );
+            let properties = row["properties"]
+                .as_object()
+                .expect("fixture row must provide properties");
+            let source = format!(
+                "---\nstatus: {}\npriority: {}\nteam: {}\n---\n",
+                properties["status"]
+                    .as_str()
+                    .expect("status fixture value must be a string"),
+                properties["priority"]
+                    .as_i64()
+                    .expect("priority fixture value must be an integer"),
+                properties["team"]
+                    .as_str()
+                    .expect("team fixture value must be a string"),
+            );
+            let file_path = vault_path.join(&path);
+            std::fs::create_dir_all(file_path.parent().expect("row path must have a parent"))
+                .expect("create embedded Bases row parent");
+            std::fs::write(file_path, source).expect("write embedded Bases row note");
+        }
+
+        let session = VaultSession::open(&vault_path, &app_data_path)
+            .expect("open embedded Bases fixture vault");
+        let app = OpenObsidianApp {
+            session: Some(Arc::new(session)),
+            ..OpenObsidianApp::default()
+        };
+        let mut harness = Harness::new_ui_state(
+            |ui, app| {
+                app.poll_bases_task(ui);
+                app.show_bases(ui);
+            },
+            app,
+        );
+        let vault_before = existing_vault_tree_snapshot(&vault_path);
+        let app_data_before = existing_vault_tree_snapshot(&app_data_path);
+
+        harness.step();
+        harness.get_by_label("Embedded Bases");
+        harness.get_by_label("Markdown note");
+        harness.get_by_label("Markdown note").click();
+        harness.step();
+        harness.get_by_label(&note_path.display().to_string()).click();
+        harness.step();
+        harness.get_by_label("Load embedded Base definitions").click();
+        harness.step();
+        wait_for_embedded_base_evaluation(&mut harness);
+
+        let expected_paths = fixture["expected"]["paths"]
+            .as_array()
+            .expect("fixture expected paths must be an array")
+            .iter()
+            .map(|path| path.as_str().expect("expected path must be a string"))
+            .collect::<Vec<_>>();
+        {
+            let result = harness
+                .state()
+                .embedded_base_evaluation
+                .as_ref()
+                .expect("embedded Base fixture should evaluate successfully");
+            assert_eq!(result.relative_path, note_path);
+            assert_eq!(result.definition_index, 0);
+            assert_eq!(result.view_index, 0);
+            assert_eq!(
+                result.snapshot_before_sha256, result.snapshot_after_sha256,
+                "embedded evaluation should remain bound to one stable vault snapshot"
+            );
+            assert_eq!(
+                &note_source[result.definition.start..result.definition.end],
+                result.definition.source,
+                "the selected definition span must identify the exact original source"
+            );
+            assert_eq!(
+                result
+                    .evaluation
+                    .rows
+                    .iter()
+                    .map(|row| row.path.as_str())
+                    .collect::<Vec<_>>(),
+                expected_paths
+            );
+            assert!(result.evaluation.rows.iter().all(|row| {
+                row.values.get("unsupportedDate").is_none()
+                    && row.values.get("sourcePath").is_some_and(|value| {
+                        value.as_str() == Some(row.path.as_str())
+                    })
+            }));
+            let issue = result
+                .evaluation
+                .issues
+                .iter()
+                .find(|issue| issue.expression.as_deref() == Some("date(today)"))
+                .expect("unsupported formula must remain an explicit compatibility issue");
+            assert_eq!(
+                issue.message,
+                fixture["expected"]["issue_message"]
+                    .as_str()
+                    .expect("fixture issue message must be a string")
+            );
+            assert_eq!(
+                result
+                    .evaluation
+                    .groups
+                    .iter()
+                    .map(|group| group.key.as_str())
+                    .collect::<Vec<_>>(),
+                ["red", "blue"]
+            );
+
+            let issue_label = format!(
+                "{}#embedded-base-1: Unsupported Bases formula: date(today)",
+                note_path.display()
+            );
+            harness.get_by_label(&issue_label);
+            harness.get_by_label("Expression: date(today)");
+            harness.get_by_label("Group: red");
+            assert!(harness.query_all_by_label("unsupportedDate").next().is_none());
+            for path in &expected_paths {
+                assert!(harness.query_all_by_label(path).next().is_some());
+            }
+            let snapshot_label = format!(
+                "Vault snapshot SHA-256 {} → {}",
+                result.snapshot_before_sha256, result.snapshot_after_sha256
+            );
+            harness.get_by_label(&snapshot_label);
+        }
+
+        harness.get_by_label("Embedded Base view").click();
+        harness.step();
+        harness.get_by_label("Alternate view · view 2").click();
+        harness.step();
+        wait_for_embedded_base_evaluation(&mut harness);
+        let alternate_view = harness
+            .state()
+            .embedded_base_evaluation
+            .as_ref()
+            .expect("the selected embedded view should evaluate");
+        assert_eq!(alternate_view.definition_index, 0);
+        assert_eq!(alternate_view.view_index, 1);
+        assert_eq!(alternate_view.evaluation.rows.len(), 1);
+        assert_eq!(alternate_view.evaluation.rows[0].path, "Notes/Ada.md");
+
+        harness.get_by_label("Embedded definition").click();
+        harness.step();
+        harness.get_by_label("Embedded Base 2").click();
+        harness.step();
+        wait_for_embedded_base_evaluation(&mut harness);
+        let second_definition = harness
+            .state()
+            .embedded_base_evaluation
+            .as_ref()
+            .expect("the selected embedded definition should evaluate");
+        assert_eq!(second_definition.definition_index, 1);
+        assert_eq!(second_definition.view_index, 0);
+        assert_eq!(
+            second_definition
+                .evaluation
+                .rows
+                .iter()
+                .map(|row| row.path.as_str())
+                .collect::<Vec<_>>(),
+            expected_paths
+        );
+        harness.get_by_label(&format!(
+            "{}#embedded-base-2: Unsupported Bases formula: date(today)",
+            note_path.display()
+        ));
+        assert_eq!(
+            existing_vault_tree_snapshot(&vault_path),
+            vault_before,
+            "embedded Bases evaluation must not change vault files"
+        );
+        assert_eq!(
+            std::fs::read(&note_file_path).expect("read embedded Base note after evaluation"),
+            original_source,
+            "embedded source bytes must remain unchanged"
+        );
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            app_data_before,
+            "embedded Bases evaluation must not write app data"
         );
     }
 
