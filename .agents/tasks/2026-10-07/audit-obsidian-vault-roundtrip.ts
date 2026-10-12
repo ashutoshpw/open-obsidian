@@ -2513,7 +2513,7 @@ async function cancelOpenObsidianNativePicker(
   }
   const restoredWindow = await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-vault-after-picker-cancelled");
   const restoredVaultVisible = restoredWindow.ocrText.toLowerCase().includes("roundtrip fixture");
-  const expectedNoteCountVisible = new RegExp(`${expectedMarkdownCount}\\s+Markdown files found`, "i").test(restoredWindow.ocrText);
+  const expectedNoteCountVisible = ocrTextContainsRefreshedMarkdownCount(restoredWindow.ocrText, expectedMarkdownCount);
   if (!restoredVaultVisible || !expectedNoteCountVisible) {
     throw new Error(`OpenObsidian did not restore the active vault after picker cancellation; OCR=${JSON.stringify(restoredWindow.ocrText.slice(0, 2_000))}`);
   }
@@ -5154,7 +5154,7 @@ async function runOpenObsidianPickerCancellation(
   const startupScreen = await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-vault-before-picker-cancel");
   if (
     !startupScreen.ocrText.toLowerCase().includes("roundtrip fixture")
-    || !new RegExp(`${expectedMarkdownCount}\\s+Markdown files found`, "i").test(startupScreen.ocrText)
+    || !ocrTextContainsRefreshedMarkdownCount(startupScreen.ocrText, expectedMarkdownCount)
   ) {
     throw new Error(`OpenObsidian did not display the active vault before picker cancellation; OCR=${JSON.stringify(startupScreen.ocrText.slice(0, 2_000))}`);
   }

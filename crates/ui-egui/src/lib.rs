@@ -5833,13 +5833,14 @@ mod tests {
             let selection_matches = state.embedded_base_selected_definition
                 == Some(expected_definition_index)
                 && state.embedded_base_selected_view == Some(expected_view_index);
-            let evaluation_matches = state
-                .embedded_base_evaluation
-                .as_ref()
-                .is_some_and(|evaluation| {
-                    evaluation.definition_index == expected_definition_index
-                        && evaluation.view_index == expected_view_index
-                });
+            let evaluation_matches =
+                state
+                    .embedded_base_evaluation
+                    .as_ref()
+                    .is_some_and(|evaluation| {
+                        evaluation.definition_index == expected_definition_index
+                            && evaluation.view_index == expected_view_index
+                    });
             let selected_definition_needs_no_evaluation = state
                 .embedded_base_listing
                 .as_ref()
@@ -6988,6 +6989,7 @@ mod tests {
         std::fs::create_dir_all(&app_data_path).expect("create embedded Bases test app data");
 
         let note_path = PathBuf::from("Notes").join("Dashboard.md");
+        let note_path_label = note_path.to_string_lossy().replace('\\', "/");
         let fixture_note_source = fixture["source"]
             .as_str()
             .expect("fixture must provide Markdown with an embedded Base");
@@ -7048,7 +7050,7 @@ mod tests {
         let mut harness = Harness::new_ui_state(
             |ui, app| {
                 app.poll_bases_task(ui);
-                app.show_bases(ui);
+                app.show_embedded_bases(ui);
             },
             app,
         );
@@ -7134,7 +7136,7 @@ mod tests {
 
             let issue_label = format!(
                 "{}#embedded-base-1: Unsupported Bases formula: date(today)",
-                note_path.display()
+                note_path_label
             );
             harness.get_by_label(&issue_label);
             harness.get_by_label("Expression: date(today)");
@@ -7193,7 +7195,7 @@ mod tests {
         );
         harness.get_by_label(&format!(
             "{}#embedded-base-2: Unsupported Bases formula: date(today)",
-            note_path.display()
+            note_path_label
         ));
         assert_eq!(
             existing_vault_tree_snapshot(&vault_path),

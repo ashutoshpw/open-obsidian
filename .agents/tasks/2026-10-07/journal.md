@@ -5118,3 +5118,41 @@ Attempt 1 completed on exact source SHA `21b275c74fdb61402d30205182cb66c1c8d4e9a
 Obsidian round-trip `38225556423` passed on Windows job `114732063245` and macOS job `114732063585`; Ubuntu job `114732063477` failed because OCR read “found” as “Faund” in the refreshed note-list status. The Linux artifact confirms the refresh showed three Markdown files and no app-data mutation. All 12 exact-SHA artifact IDs, sizes, archive SHA-256 digests, and expiration times are recorded in [`evidence/r2.8.99-attempt-1-21b275c.json`](evidence/r2.8.99-attempt-1-21b275c.json).
 
 The focused correction now waits for the selected definition/view evaluation, uses native `PathBuf` components for the Windows fixture, applies the rustfmt changes indicated by CI, and tolerates the observed OCR spelling error while checking the exact Markdown count on one line. It is ready for a fresh exact-SHA run. No local tests, builds, formatters, linters, validators, or application launches were run. Commit and push the correction to `origin/main`, then wait for all seven workflows to become terminal.
+
+
+## 2026-10-12 — R2.8.99 attempt 2 launched
+
+The focused correction was committed and pushed to `origin/main` as exact source SHA `18c13710a5973ef6628585c391a4d033ca9fb8fe`. Inventory run `38227415282` passed. Quality `38227415226`, desktop build `38227415248`, plugin renderer `38227415217`, loaded-plugin workflows `38227415258`, Rust CI `38227415283`, and Obsidian vault round-trip `38227415279` were queued or running at initial capture. Exact job IDs/statuses and three available Linux artifacts are recorded in [`evidence/r2.8.99-attempt-2-18c1371.json`](evidence/r2.8.99-attempt-2-18c1371.json).
+
+No local project validation was run. Wait for all seven exact-SHA workflows, reconcile terminal results and artifacts, and do not push meanwhile.
+
+
+## 2026-10-12 — R2.8.99 attempt 2 completed, not accepted
+
+Attempt 2 completed on exact source SHA
+18c13710a5973ef6628585c391a4d033ca9fb8fe. Five of seven required workflows
+passed: inventory 38227415282, quality 38227415226, desktop build 38227415248,
+plugin renderer 38227415217, and loaded-plugin workflows 38227415258.
+
+Rust CI 38227415283 failed on Ubuntu job 114738223114, Windows
+114738223406, macOS 114738223420, and minimum Rust 1.95 job 114738223485.
+Ubuntu, macOS, and MSRV timed out waiting for the selected embedded view
+evaluation after the alternate-view interaction. Windows could not find the
+expected backslash-separated issue label; the UI renders that label with
+forward slashes. Ubuntu also reported one rustfmt layout difference. Clippy
+was skipped after workspace-test failures.
+
+Vault round-trip 38227415279 passed on macOS 114738223784 and Windows
+114738223847. Linux 114738223468 failed an OCR-only count check. The
+screenshot visibly shows three Markdown files while OCR read “Faund”; the
+report records a count of three after rename and a visible refresh status.
+All exact job outcomes and 12 artifact IDs, sizes, SHA-256 digests, and
+expiration times are recorded in
+evidence/r2.8.99-attempt-2-18c1371.json.
+
+The next correction scopes the UI interaction test directly to the embedded
+Bases panel, normalizes the issue-label path to forward slashes, applies the
+rustfmt change from CI, and uses the existing count-aware OCR matcher for both
+startup and restored-vault checks. All attempt-2 jobs are terminal, so the
+next correction push is permitted. No local tests, builds, formatters,
+linters, validators, or application launches were run.
