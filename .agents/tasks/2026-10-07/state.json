@@ -2,14 +2,14 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-12T06:58:00+02:00",
+  "updated_at": "2026-10-12T07:05:02+02:00",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
   "last_reconciled_head": "adc1ddce142f41dd250c37722ed8b48b9194bd5c",
   "current_milestone": "R2.8.96",
-  "next_action": "Integrate the bounded C07 Bases parser/evaluator foundation from the isolated worktree, keep C07 and C07.1 pending until app loading/rendering and visible unsupported-expression reporting exist, then push the focused slice to origin/main and await all seven exact-SHA workflows.",
-  "push_status": "R2.8.95 attempt 6 is accepted on adc1ddce142f41dd250c37722ed8b48b9194bd5c. R2.8.96 is the in-progress C07 document-layer parser/evaluator foundation; no C07 or C07.1 requirement is being marked complete.",
+  "next_action": "Verify origin/main is still at adc1ddce142f41dd250c37722ed8b48b9194bd5c, push the focused R2.8.96 C07 document-layer slice, and inspect all seven required GitHub Actions workflows on the exact pushed SHA. Keep C07 and C07.1 pending until Bases app integration and visible issue reporting are implemented.",
+  "push_status": "R2.8.96 C07 document-layer implementation and fixture coverage are integrated locally in four focused commits through 034c3ed35ac3f43c74511dc724c82b3a0ed2189c. No CI attempt has been pushed yet; all project validation remains pending in GitHub Actions. C07/C07.1 remain pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -47,8 +47,8 @@
         "quality",
         "plugin-renderer"
       ],
-      "implementation_sha": "adc1ddce142f41dd250c37722ed8b48b9194bd5c",
-      "next_action": "Integrate the bounded C07 Bases parser/evaluator foundation from the isolated worktree, keep C07 and C07.1 pending until app loading/rendering and visible unsupported-expression reporting exist, then push the focused slice to origin/main and await all seven exact-SHA workflows."
+      "implementation_sha": "034c3ed35ac3f43c74511dc724c82b3a0ed2189c",
+      "next_action": "Verify origin/main is still at adc1ddce142f41dd250c37722ed8b48b9194bd5c, push the focused R2.8.96 C07 document-layer slice, and inspect all seven required GitHub Actions workflows on the exact pushed SHA. Keep C07 and C07.1 pending until Bases app integration and visible issue reporting are implemented."
     },
     "R3": {
       "status": "pending",
@@ -32014,7 +32014,7 @@
         "Obsidian vault round-trip acceptance"
       ],
       "attempts": [],
-      "implementation_sha": null,
+      "implementation_sha": "034c3ed35ac3f43c74511dc724c82b3a0ed2189c",
       "evidence": null,
       "accepted_attempt": null,
       "known_limits": [
@@ -32022,7 +32022,7 @@
         "C07 and C07.1 remain pending; visible unsupported-expression reporting is not implemented.",
         "The evaluator supports a bounded subset and does not claim full Bases compatibility."
       ],
-      "push_status": "Preparation in progress. The C07 code is isolated on prep/r2.8.96-bases; no implementation SHA has been integrated or pushed yet."
+      "push_status": "Integrated locally through 034c3ed35ac3f43c74511dc724c82b3a0ed2189c with focused parser, unsupported-result, typed comparison, and fixture-coverage commits. Confirm origin/main and push the exact slice for all seven required workflows; no local project validation has run."
     }
   },
   "ci_preparation": {

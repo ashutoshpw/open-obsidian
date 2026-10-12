@@ -4742,3 +4742,31 @@ This does not load or render Bases in the app. C07 and C07.1 remain pending unti
 engine/UI integration and visible compatibility issue reporting are implemented.
 The focused code commits are under independent source review; no local tests,
 builds, formatters, validators, or application launches were run.
+
+## 2026-10-12 — R2.8.96 C07 source review and CI preparation
+
+The bounded C07 document-layer implementation is integrated locally through
+four focused commits after accepted SHA `adc1ddce`: the parser/evaluator, the
+unsupported-formula collision/empty-row correction, typed comparison and file
+extension correction, and fixture-driven coverage. Independent review caught
+that the two new fixture files were missing from the exact source inventory;
+records and SHA-256 digests have been added. Review also caught lexical numeric
+ordering for decimal values, `file.ext` leaking dotted parent-folder text,
+missing derived `file.ext` sort values, and repeated unsupported-formula issues
+per row. Those behaviors now have focused coverage. `file.name` remains the
+full filename including its extension, consistent with existing behavior and the
+official Bases property table; `file.basename` (without extension) is a separate
+property in the official docs.
+
+The fixture set now covers decimal filters and sorting, dotted parent folders,
+file-derived field values, and source retention. Rust CI will run the fixture
+suite on Ubuntu, macOS, Windows, and Rust 1.95. The round-trip workflow is also
+required on this exact slice as a regression gate; its existing Canvas flow does
+not establish Bases UI acceptance. No local tests, builds, formatters, linters,
+validators, or application launches were run. C07 and C07.1 remain pending
+because no engine/UI callsite loads or renders Bases and unsupported-expression
+issues are not yet visible in the app.
+
+The next action is to confirm `origin/main` remains at accepted SHA
+`adc1ddce142f41dd250c37722ed8b48b9194bd5c`, push the prepared slice, and inspect
+all seven required workflows on its exact pushed SHA.
