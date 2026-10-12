@@ -954,7 +954,10 @@ mod existing_vault_no_op_tests {
                     .as_str()
                     .expect("fixture must state embed disposition")
             );
-            assert_eq!(actual.resolution.snapshot_sha256, before_snapshot.revision_sha256);
+            assert_eq!(
+                actual.resolution.snapshot_sha256,
+                before_snapshot.revision_sha256
+            );
         }
         assert_unchanged(vault, root, before_snapshot, expected_tree);
 
@@ -1166,7 +1169,11 @@ mod existing_vault_no_op_tests {
             .as_array()
             .expect("fixture must list Markdown paths")
             .iter()
-            .map(|path| path.as_str().expect("Markdown path must be text").to_owned())
+            .map(|path| {
+                path.as_str()
+                    .expect("Markdown path must be text")
+                    .to_owned()
+            })
             .collect::<Vec<_>>();
         let markdown_paths = vault
             .scan_markdown()
@@ -1209,7 +1216,10 @@ mod existing_vault_no_op_tests {
             reopened.snapshot().expect("snapshot reopened C08 fixture"),
             before_snapshot
         );
-        for file in fixture["files"].as_array().expect("fixture must list files") {
+        for file in fixture["files"]
+            .as_array()
+            .expect("fixture must list files")
+        {
             let relative_path = file["relative_path"]
                 .as_str()
                 .expect("fixture file must have a relative path");
