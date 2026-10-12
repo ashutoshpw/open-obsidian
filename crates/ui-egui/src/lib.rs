@@ -323,6 +323,7 @@ struct OpenObsidianApp {
     canvas_text_edit_error: Option<String>,
     canvas_text_edit_status: Option<String>,
     canvas_text_edit_stale: bool,
+    canvas_text_edit_was_open: bool,
     rename_source_path: Option<std::path::PathBuf>,
     rename_destination_path: String,
     rename_preview: Option<VaultRenamePreview>,
@@ -346,6 +347,13 @@ impl OpenObsidianApp {
         self.log_ci_open_vault_availability();
         ui.heading("OpenObsidian");
         ui.label("Native Rust migration is in progress.");
+        eframe::egui::ScrollArea::vertical()
+            .id_salt("openobsidian-main-content")
+            .auto_shrink([false, false])
+            .show(ui, |ui| self.show_ui_content(ui));
+    }
+
+    fn show_ui_content(&mut self, ui: &mut eframe::egui::Ui) {
         let vault_operation_busy = self.history_receiver.is_some()
             || self.link_receiver.is_some()
             || self.note_preview_receiver.is_some()
@@ -477,6 +485,7 @@ impl OpenObsidianApp {
                 self.canvas_text_edit_error = None;
                 self.canvas_text_edit_status = None;
                 self.canvas_text_edit_stale = false;
+                self.canvas_text_edit_was_open = false;
             }
             Some(Ok(Err(error))) => {
                 self.vault_open_receiver = None;
@@ -1036,10 +1045,17 @@ impl OpenObsidianApp {
 
     fn show_canvas_text_edit(&mut self, ui: &mut eframe::egui::Ui) {
         ui.separator();
-        eframe::egui::CollapsingHeader::new("Edit Canvas text card")
+        let response = eframe::egui::CollapsingHeader::new("Edit Canvas text card")
             .id_salt("canvas-text-card-edit")
             .default_open(false)
             .show(ui, |ui| self.show_canvas_text_edit_contents(ui));
+        let is_open = response.body_returned.is_some();
+        if is_open && !self.canvas_text_edit_was_open {
+            response
+                .header_response
+                .scroll_to_me(Some(eframe::egui::Align::Min));
+        }
+        self.canvas_text_edit_was_open = is_open;
     }
 
     fn show_canvas_text_edit_contents(&mut self, ui: &mut eframe::egui::Ui) {
@@ -5662,6 +5678,8 @@ mod tests {
             app_data_before
         );
 
+        harness.get_by_label("Reload Canvas").scroll_to_me();
+        harness.step();
         harness.get_by_label("Reload Canvas").click();
         harness.step();
         assert!(harness.state().canvas_text_edit_receiver.is_some());
