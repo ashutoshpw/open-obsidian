@@ -771,6 +771,26 @@ pub fn evaluate_base(
         })
         .map(|row| evaluate_row(row, &view, &mut issues))
         .collect::<Vec<_>>();
+    if filtered.is_empty() {
+        for expression in view.formulas.values() {
+            let trimmed_expression = expression.trim();
+            if !is_obviously_unsupported_formula(trimmed_expression)
+                || source_rows
+                    .iter()
+                    .any(|row| field_value(row, trimmed_expression).is_some())
+            {
+                continue;
+            }
+            let issue = BaseIssue::new(
+                BaseIssueKind::UnsupportedFormula,
+                format!("Unsupported Bases formula: {expression}"),
+                Some(expression.clone()),
+            );
+            if !issues.contains(&issue) {
+                issues.push(issue);
+            }
+        }
+    }
     let mut rows = filtered;
     if !view.sort.is_empty() {
         rows.sort_by(|left, right| compare_rows(left, right, &view.sort));
@@ -886,6 +906,9 @@ fn evaluate_row(row: &BaseRow, view: &BaseView, issues: &mut Vec<BaseIssue>) -> 
         Value::String(row.path.rsplit('/').next().unwrap_or(&row.path).to_owned()),
     );
     for (name, expression) in &view.formulas {
+        // A formula owns its output name. If it cannot be evaluated, a
+        // same-named source property must not masquerade as the formula value.
+        values.remove(name);
         match formula_value(expression, row) {
             Some(value) => {
                 values.insert(name.clone(), value);
@@ -902,6 +925,29 @@ fn evaluate_row(row: &BaseRow, view: &BaseView, issues: &mut Vec<BaseIssue>) -> 
         properties: row.properties.clone(),
         values,
     }
+}
+
+/// Detect unsupported expression syntax even when there are no rows to evaluate.
+fn is_obviously_unsupported_formula(expression: &str) -> bool {
+    let quoted_literal = expression.len() >= 2
+        && ((expression.starts_with('"') && expression.ends_with('"'))
+            || (expression.starts_with('\'') && expression.ends_with('\'')));
+    if quoted_literal
+        || matches!(expression, "true" | "false")
+        || is_legacy_formula_number(expression)
+    {
+        return false;
+    }
+    if expression.is_empty() {
+        return true;
+    }
+
+    expression.chars().any(|character| {
+        matches!(
+            character,
+            '(' | ')' | '+' | '*' | '/' | '%' | '=' | '>' | '<' | '!' | '&' | '|'
+        )
+    })
 }
 
 fn formula_value(expression: &str, row: &BaseRow) -> Option<Value> {
@@ -1227,6 +1273,7 @@ mod tests {
     const C07_BASES_FIXTURE: &str = include_str!("../../../fixtures/c07-bases.json");
     const C07_UNSUPPORTED_FORMULA_FIXTURE: &str =
         include_str!("../../../fixtures/c07-unsupported-formula.json");
+    const LEGACY_NATIVE_BASES_FIXTURE: &str = include_str!("../../../fixtures/bases-native.yaml");
 
     fn fixture_rows(value: &Value) -> Vec<BaseRow> {
         value
@@ -1391,6 +1438,42 @@ mod tests {
     }
 
     #[test]
+    fn parses_and_evaluates_the_existing_native_bases_fixture() {
+        let fixture: Value =
+            serde_json::from_str(C07_BASES_FIXTURE).expect("C07 Bases fixture must be JSON");
+        let case = &fixture["supported_cases"][1];
+        let document = parse_base(LEGACY_NATIVE_BASES_FIXTURE.as_bytes())
+            .expect("legacy native Bases fixture must parse");
+
+        assert_eq!(document.source_format(), BaseSourceFormat::NativeYaml);
+        assert_eq!(document.source_bytes(), LEGACY_NATIVE_BASES_FIXTURE.as_bytes());
+        let encoded = encode_base(&document);
+        assert_eq!(encoded.as_slice(), LEGACY_NATIVE_BASES_FIXTURE.as_bytes());
+        assert_eq!(document.views().len(), 2);
+        assert!(raw_field_exists(document.raw_definition(), "properties"));
+
+        let result = evaluate_base(
+            &document,
+            "Open items",
+            &fixture_rows(&case["rows"]),
+        )
+        .expect("legacy native Bases view must evaluate");
+        let expected_paths = case["expected"]["paths"]
+            .as_array()
+            .expect("expected paths must be an array")
+            .iter()
+            .map(|path| path.as_str().expect("path must be a string"))
+            .collect::<Vec<_>>();
+        let actual_paths = result
+            .rows
+            .iter()
+            .map(|row| row.path.as_str())
+            .collect::<Vec<_>>();
+        assert_eq!(actual_paths, expected_paths);
+        assert!(result.issues.is_empty());
+    }
+
+    #[test]
     fn unsupported_native_filter_is_reported_without_partial_filtering() {
         let fixture: Value =
             serde_json::from_str(C07_BASES_FIXTURE).expect("C07 fixture must be JSON");
@@ -1493,6 +1576,74 @@ mod tests {
             result.view.raw_definition(),
             "unknownView"
         ));
+
+        for case in fixture["edge_cases"]
+            .as_array()
+            .expect("unsupported formula edge cases must be an array")
+        {
+            let case_id = case["id"].as_str().expect("edge case must have an id");
+            let mut source_value = fixture["source"].clone();
+            if let Some(filter) = case.get("filter") {
+                source_value["views"][0]["filter"] = filter.clone();
+            }
+            let edge_source = serde_json::to_vec(&source_value)
+                .expect("edge-case Bases source must encode");
+            let edge_document = parse_base(&edge_source)
+                .unwrap_or_else(|error| panic!("{case_id}: source must parse: {error}"));
+            assert_eq!(
+                encode_base(&edge_document),
+                edge_source,
+                "{case_id}: source retained"
+            );
+            let edge_result = evaluate_base(
+                &edge_document,
+                fixture["view"].as_str().expect("view name must be a string"),
+                &fixture_rows(&case["rows"]),
+            )
+            .unwrap_or_else(|error| panic!("{case_id}: view must evaluate: {error}"));
+
+            assert_eq!(
+                edge_result.rows.len(),
+                case["expected"]["row_count"].as_u64().unwrap() as usize,
+                "{case_id}: surviving rows"
+            );
+            assert_eq!(
+                edge_result.issues.len(),
+                case["expected"]["issue_count"].as_u64().unwrap() as usize,
+                "{case_id}: formula issue remains visible"
+            );
+            assert_eq!(
+                edge_result.issues[0].kind,
+                BaseIssueKind::UnsupportedFormula,
+                "{case_id}: issue kind"
+            );
+            assert_eq!(
+                edge_result.issues[0].expression.as_deref(),
+                fixture["expected"]["issue_expression"].as_str(),
+                "{case_id}: issue expression"
+            );
+            assert_eq!(
+                edge_result.issues[0].message,
+                fixture["expected"]["issue_message"].as_str().unwrap(),
+                "{case_id}: issue message"
+            );
+
+            if let Some(source_property) = case["expected"]["source_property"].as_str() {
+                let formula = fixture["expected"]["formula"]
+                    .as_str()
+                    .expect("formula name must be a string");
+                assert_eq!(
+                    edge_result.rows[0].properties.get(formula).and_then(Value::as_str),
+                    Some(source_property),
+                    "{case_id}: source property is retained separately"
+                );
+                assert_eq!(
+                    edge_result.rows[0].values.get(formula).is_none(),
+                    case["expected"]["formula_value_absent"].as_bool().unwrap(),
+                    "{case_id}: source property must not masquerade as formula output"
+                );
+            }
+        }
     }
 
     #[test]

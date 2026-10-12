@@ -34,5 +34,54 @@
     "issue_kind": "unsupported-formula",
     "issue_expression": "date(today)",
     "issue_message": "Unsupported Bases formula: date(today)"
-  }
+  },
+  "edge_cases": [
+    {
+      "id": "same-named-note-property-is-not-formula-result",
+      "rows": [
+        {
+          "path": "note.md",
+          "properties": {
+            "bad": "source-property-value",
+            "status": "open"
+          }
+        }
+      ],
+      "expected": {
+        "row_count": 1,
+        "source_property": "source-property-value",
+        "formula_value_absent": true,
+        "issue_count": 1
+      }
+    },
+    {
+      "id": "unsupported-formula-with-empty-source-rows",
+      "rows": [],
+      "expected": {
+        "row_count": 0,
+        "issue_count": 1
+      }
+    },
+    {
+      "id": "unsupported-formula-when-filter-removes-all-rows",
+      "filter": {
+        "kind": "comparison",
+        "field": "status",
+        "operator": "equals",
+        "value": "open"
+      },
+      "rows": [
+        {
+          "path": "closed.md",
+          "properties": {
+            "status": "closed"
+          }
+        }
+      ],
+      "expected": {
+        "row_count": 0,
+        "issue_count": 1
+      }
+    }
+  ]
 }
