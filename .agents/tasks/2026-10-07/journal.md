@@ -4826,3 +4826,37 @@ is a deliberate strengthening required by its linked fixture.
 The nine formatter changes are committed locally as `70a98e6` and await a fresh
 exact-SHA CI attempt. No local tests, builds, formatters, linters, validators,
 or application launches were run.
+
+## 2026-10-12 — R2.8.96 attempt 3 accepted; same-SHA round-trip retry
+
+Attempt 3 ran on exact pushed source SHA
+01d7ad437f28667e6e79455b2450c73e7b6d3916 and is accepted for the bounded
+C07 document-layer parser/evaluator foundation. All seven required GitHub Actions
+workflows and all 20 jobs in the final workflow attempts passed. Rust CI passed on
+Rust 1.95, Ubuntu, Windows, and macOS. The inventory, quality, desktop build,
+plugin renderer, and loaded-plugin workflows also passed on this exact SHA.
+
+The first attempt of Obsidian round-trip run 38209751630 passed on Linux and
+Windows but failed on macOS job 114681047214, step 16. The artifact shows that
+a watcher refresh disabled and moved the Canvas Load button after the CI
+automation positioned its click, so the populated C06 Reference.canvas /
+text-1 form remained unloaded. This is recorded as a likely transient UI
+automation timing race. Only the failed macOS job was rerun on the same source
+SHA; run attempt 2 passed on Linux, Windows, and macOS, including the Canvas
+text edit/save, no-write-before-save, selected-card-only change, no-note-during-
+edit, and reopen checks. The initial failed macOS artifact remains in the
+evidence alongside the successful retry artifact.
+
+Exact workflow/job conclusions and all 17 artifact IDs, sizes, and archive
+digests—including both macOS round-trip attempts—are recorded in
+[evidence/r2.8.96-attempt-3-01d7ad4.json](evidence/r2.8.96-attempt-3-01d7ad4.json).
+This acceptance covers the scoped document-layer foundation only; Bases loading,
+rendering, and visible unsupported-expression reporting remain pending under
+C07/C07.1. The bounded compatibility notes remain: groupBy.direction is not
+applied by legacy behavior; an unknown bare identifier remains a context-
+dependent property reference absent a row or linked fixture; and the empty or
+fully filtered date(today) issue behavior is a deliberate strengthening
+required by its fixture.
+
+No local project tests, builds, formatters, linters, validators, or application
+launches were run. All executable validation evidence came from GitHub Actions.

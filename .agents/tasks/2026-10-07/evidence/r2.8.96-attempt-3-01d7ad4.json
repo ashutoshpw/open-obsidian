@@ -1,0 +1,362 @@
+{
+  "milestone": "R2.8.96",
+  "attempt": 3,
+  "source_sha": "01d7ad437f28667e6e79455b2450c73e7b6d3916",
+  "outcome": "accepted",
+  "captured_at": "2026-10-12T08:16:31+02:00",
+  "artifact_source": "Exact-SHA GitHub Actions workflow, job, and artifact API metadata. The initial failed macOS and successful retry macOS round-trip artifacts were downloaded and inspected as remote CI evidence only. No local project tests, builds, formatters, linters, validators, or application launches were run.",
+  "workflow_runs": {
+    "inventory": {
+      "id": 38209751651,
+      "head_sha": "01d7ad437f28667e6e79455b2450c73e7b6d3916",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38209751651",
+      "jobs": [
+        {
+          "id": 114681046634,
+          "name": "inventory",
+          "conclusion": "success"
+        }
+      ],
+      "artifacts": []
+    },
+    "quality": {
+      "id": 38209751615,
+      "head_sha": "01d7ad437f28667e6e79455b2450c73e7b6d3916",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38209751615",
+      "jobs": [
+        {
+          "id": 114681046831,
+          "name": "windows-latest",
+          "conclusion": "success"
+        },
+        {
+          "id": 114681047017,
+          "name": "macos-latest",
+          "conclusion": "success"
+        },
+        {
+          "id": 114681047100,
+          "name": "ubuntu-latest",
+          "conclusion": "success"
+        }
+      ],
+      "artifacts": []
+    },
+    "desktop_build": {
+      "id": 38209751679,
+      "head_sha": "01d7ad437f28667e6e79455b2450c73e7b6d3916",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38209751679",
+      "jobs": [
+        {
+          "id": 114681046960,
+          "name": "ubuntu-latest",
+          "conclusion": "success"
+        },
+        {
+          "id": 114681047184,
+          "name": "macos-latest",
+          "conclusion": "success"
+        },
+        {
+          "id": 114681047190,
+          "name": "windows-latest",
+          "conclusion": "success"
+        }
+      ]
+    },
+    "plugin_renderer": {
+      "id": 38209751607,
+      "head_sha": "01d7ad437f28667e6e79455b2450c73e7b6d3916",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38209751607",
+      "jobs": [
+        {
+          "id": 114681046608,
+          "name": "windows-latest",
+          "conclusion": "success"
+        },
+        {
+          "id": 114681046801,
+          "name": "macos-latest",
+          "conclusion": "success"
+        },
+        {
+          "id": 114681046904,
+          "name": "ubuntu-latest",
+          "conclusion": "success"
+        }
+      ]
+    },
+    "loaded_plugins": {
+      "id": 38209751668,
+      "head_sha": "01d7ad437f28667e6e79455b2450c73e7b6d3916",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38209751668",
+      "jobs": [
+        {
+          "id": 114681047478,
+          "name": "ubuntu-latest",
+          "conclusion": "success"
+        },
+        {
+          "id": 114681047487,
+          "name": "windows-latest",
+          "conclusion": "success"
+        },
+        {
+          "id": 114681048576,
+          "name": "macos-latest",
+          "conclusion": "success"
+        }
+      ]
+    },
+    "rust_ci": {
+      "id": 38209751611,
+      "head_sha": "01d7ad437f28667e6e79455b2450c73e7b6d3916",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38209751611",
+      "jobs": [
+        {
+          "id": 114681046638,
+          "name": "minimum supported Rust (1.95)",
+          "conclusion": "success"
+        },
+        {
+          "id": 114681046722,
+          "name": "rust (ubuntu-latest)",
+          "conclusion": "success"
+        },
+        {
+          "id": 114681046730,
+          "name": "rust (windows-latest)",
+          "conclusion": "success"
+        },
+        {
+          "id": 114681046804,
+          "name": "rust (macos-latest)",
+          "conclusion": "success"
+        }
+      ]
+    },
+    "vault_roundtrip": {
+      "id": 38209751630,
+      "head_sha": "01d7ad437f28667e6e79455b2450c73e7b6d3916",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38209751630",
+      "attempts": [
+        {
+          "run_attempt": 1,
+          "conclusion": "failure",
+          "jobs": [
+            {
+              "id": 114681046845,
+              "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04",
+              "conclusion": "success"
+            },
+            {
+              "id": 114681046954,
+              "name": "Obsidian 1.14.4 vault round-trip on windows-latest",
+              "conclusion": "success"
+            },
+            {
+              "id": 114681047214,
+              "name": "Obsidian 1.14.4 vault round-trip on macos-latest",
+              "conclusion": "failure",
+              "failed_step": {
+                "number": 16,
+                "name": "Author, open, snapshot, and reopen the same vault"
+              },
+              "error": "Timed out waiting for OpenObsidian to load the selected Canvas text-card draft.",
+              "diagnosis": "The artifact report confirms exact readback of C06 Reference.canvas and node text-1. The CI log shows a watcher_reconciliation refresh began after the automation hovered the Load Canvas text card button. During the refresh the control was disabled and its response rectangle moved from y=257–275 to y=288–306 while the pointer remained at y=266; the click was not registered. The screenshot shows the form still populated but no loaded draft. This is consistent with a UI automation/layout timing race rather than a confirmed Canvas decoding defect."
+            }
+          ]
+        },
+        {
+          "run_attempt": 2,
+          "conclusion": "success",
+          "retry_scope": "Only the failed macOS job was rerun; the successful Windows and Linux jobs remained successful.",
+          "jobs": [
+            {
+              "id": 114683841246,
+              "name": "Obsidian 1.14.4 vault round-trip on macos-latest",
+              "conclusion": "success"
+            },
+            {
+              "id": 114683842072,
+              "name": "Obsidian 1.14.4 vault round-trip on windows-latest",
+              "conclusion": "success"
+            },
+            {
+              "id": 114683842746,
+              "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04",
+              "conclusion": "success"
+            }
+          ],
+          "macOS_report": {
+            "source_sha": "01d7ad437f28667e6e79455b2450c73e7b6d3916",
+            "status": "passed",
+            "canvas_text_edit_status": "passed",
+            "no_write_during_input": true,
+            "no_write_before_save": true,
+            "saved_document_matches_only_selected_text_change": true,
+            "no_markdown_created_during_edit": true
+          }
+        }
+      ]
+    }
+  },
+  "artifacts": [
+    {
+      "workflow": "desktop_build",
+      "id": 11729345559,
+      "runner_os": "Linux",
+      "name": "openobsidian-Linux-preview-01d7ad437f28667e6e79455b2450c73e7b6d3916",
+      "size_in_bytes": 125946850,
+      "archive_sha256": "9f50a57e4e5042a720b1b99b9884b19af0d3205dde214700056f229c005b0121"
+    },
+    {
+      "workflow": "desktop_build",
+      "id": 11729092053,
+      "runner_os": "macOS",
+      "name": "openobsidian-macOS-preview-01d7ad437f28667e6e79455b2450c73e7b6d3916",
+      "size_in_bytes": 397395784,
+      "archive_sha256": "40ec21a9012b61c0c5ece6362b74437c065ce43fbe50c763cb47e88522be0e83"
+    },
+    {
+      "workflow": "desktop_build",
+      "id": 11728662948,
+      "runner_os": "Windows",
+      "name": "openobsidian-Windows-preview-01d7ad437f28667e6e79455b2450c73e7b6d3916",
+      "size_in_bytes": 163006126,
+      "archive_sha256": "6f08fad071ba4e04600f540adedaff480593a6b7d93c7f3d4c956d16566d3e2f"
+    },
+    {
+      "workflow": "plugin_renderer",
+      "id": 11728752769,
+      "runner_os": "Windows",
+      "name": "plugin-renderer-lifecycle-Windows-01d7ad437f28667e6e79455b2450c73e7b6d3916",
+      "size_in_bytes": 3242,
+      "archive_sha256": "dba47c16bae36688a91a7f528edda471c01df631881f7e712e427c996e7d20be"
+    },
+    {
+      "workflow": "plugin_renderer",
+      "id": 11728686824,
+      "runner_os": "Linux",
+      "name": "plugin-renderer-lifecycle-Linux-01d7ad437f28667e6e79455b2450c73e7b6d3916",
+      "size_in_bytes": 3221,
+      "archive_sha256": "91cbb817cde024e9a9698ca9465112158cc232951e9e006a59c097bd35f5fa2d"
+    },
+    {
+      "workflow": "plugin_renderer",
+      "id": 11728548094,
+      "runner_os": "macOS",
+      "name": "plugin-renderer-lifecycle-macOS-01d7ad437f28667e6e79455b2450c73e7b6d3916",
+      "size_in_bytes": 3238,
+      "archive_sha256": "83c7bc5716e2eb18b5f2423655b3c42076459e6756bb9bebb0c1aa6131d487af"
+    },
+    {
+      "workflow": "loaded_plugins",
+      "id": 11728607012,
+      "runner_os": "Linux",
+      "name": "loaded-plugin-workflows-Linux-01d7ad437f28667e6e79455b2450c73e7b6d3916",
+      "size_in_bytes": 171464,
+      "archive_sha256": "80c2ba3ccc1d2df33e418ae1a108675ff302c7e812b04e61ed2908549aa8607d"
+    },
+    {
+      "workflow": "loaded_plugins",
+      "id": 11728462413,
+      "runner_os": "macOS",
+      "name": "loaded-plugin-workflows-macOS-01d7ad437f28667e6e79455b2450c73e7b6d3916",
+      "size_in_bytes": 171513,
+      "archive_sha256": "bb1fd81491aa968ba76b2727d208e39fba77dca354e9ebb28c35477ac46472ab"
+    },
+    {
+      "workflow": "loaded_plugins",
+      "id": 11728362500,
+      "runner_os": "Windows",
+      "name": "loaded-plugin-workflows-Windows-01d7ad437f28667e6e79455b2450c73e7b6d3916",
+      "size_in_bytes": 171491,
+      "archive_sha256": "158f0a0cfee42816d506fbdc3adc8e9e67c9a654f0be28da56f918b41724909d"
+    },
+    {
+      "workflow": "vault_roundtrip",
+      "attempt": 1,
+      "id": 11729332334,
+      "runner_os": "Linux",
+      "name": "obsidian-vault-roundtrip-Linux-01d7ad437f28667e6e79455b2450c73e7b6d3916",
+      "size_in_bytes": 14855248,
+      "archive_sha256": "b19bb34fa5ae9b2f4ff119ec057e8d660f83c584e9a8c6c86a1832f11f928753"
+    },
+    {
+      "workflow": "vault_roundtrip",
+      "attempt": 2,
+      "id": 11729274378,
+      "runner_os": "macOS",
+      "name": "obsidian-vault-roundtrip-macOS-01d7ad437f28667e6e79455b2450c73e7b6d3916",
+      "size_in_bytes": 20102132,
+      "archive_sha256": "6086f4af4885aaf784bdb596c13b2c3f668755a3dfa0de1d481c48e7988b6d07"
+    },
+    {
+      "workflow": "vault_roundtrip",
+      "attempt": 1,
+      "id": 11729152713,
+      "runner_os": "Windows",
+      "name": "obsidian-vault-roundtrip-Windows-01d7ad437f28667e6e79455b2450c73e7b6d3916",
+      "size_in_bytes": 13098511,
+      "archive_sha256": "362c48525419722011c18a0ea4a029955104e53335e42f1f728d125b96d977e9"
+    },
+    {
+      "workflow": "vault_roundtrip",
+      "attempt": 1,
+      "id": 11728154351,
+      "runner_os": "macOS",
+      "name": "obsidian-vault-roundtrip-macOS-01d7ad437f28667e6e79455b2450c73e7b6d3916",
+      "size_in_bytes": 13437268,
+      "archive_sha256": "460d750a51a81a51389f679fca4b65d7323539d78b8dbe38cad35a79b9eaedc4"
+    },
+    {
+      "workflow": "rust_ci",
+      "id": 11729266681,
+      "runner_os": "macOS",
+      "name": "rust-plugin-runtime-macOS-01d7ad437f28667e6e79455b2450c73e7b6d3916",
+      "size_in_bytes": 2698,
+      "archive_sha256": "f1f0c4ab523ed4f00f61d568ac63706be62b60d0d671d64aa944b305b8add107"
+    },
+    {
+      "workflow": "rust_ci",
+      "id": 11728932640,
+      "runner_os": "native-preview",
+      "name": "openobsidian-rust-preview-01d7ad437f28667e6e79455b2450c73e7b6d3916",
+      "size_in_bytes": 10916806,
+      "archive_sha256": "33bb6f7a169944576090203ced7dcd11c1d7f3871ee9b4326d67eba31e4aa2cf"
+    },
+    {
+      "workflow": "rust_ci",
+      "id": 11728773023,
+      "runner_os": "Linux",
+      "name": "rust-plugin-runtime-Linux-01d7ad437f28667e6e79455b2450c73e7b6d3916",
+      "size_in_bytes": 2695,
+      "archive_sha256": "06b5ce39f3504b40d6fbf27000a5d6a2aedb88a058b46aa10a245b994e5eed31"
+    },
+    {
+      "workflow": "rust_ci",
+      "id": 11728502590,
+      "runner_os": "Windows",
+      "name": "rust-plugin-runtime-Windows-01d7ad437f28667e6e79455b2450c73e7b6d3916",
+      "size_in_bytes": 2715,
+      "archive_sha256": "14f4dc640f24e6d67b6cb3a1759773af72fd18a39334ae5071119f5661d71a87"
+    }
+  ],
+  "findings": [
+    "All seven required GitHub Actions workflows passed on the exact pushed source SHA 01d7ad437f28667e6e79455b2450c73e7b6d3916 after re-running the failed macOS round-trip job.",
+    "Rust CI passed on Rust 1.95, Ubuntu, Windows, and macOS. The three-platform Obsidian 1.14.4 round-trip passed in run attempt 2.",
+    "The initial round-trip attempt failed only on macOS at step 16 while loading the Canvas text-card draft. Its log and screenshot indicate the enabled button moved during watcher refresh and the coordinate click missed. The same-SHA retry passed; retain the failed attempt in the history as a likely transient UI automation race.",
+    "The successful macOS report confirms C06 Canvas text edit/save on C06 Reference.canvas/text-1, byte-identical vault snapshots through load/input/draft, an explicit save changing only the selected text card, no Markdown note created during editing, and successful close/reopen checks.",
+    "This accepted slice remains a bounded C07 document-layer parser/evaluator foundation; it does not load or render Bases in the app. C07/C07.1 and visible unsupported-expression reporting remain pending.",
+    "Compatibility review: groupBy.direction remains a bounded C07 limit/open decision; legacy behavior discards the direction. Unknown bare identifiers are context-dependent property references, not a confirmed defect without a row or linked fixture. Empty and fully filtered date(today) handling is a deliberate strengthening required by the fixture."
+  ],
+  "local_validation": "No local tests, builds, formatters, linters, validators, or application launches were run. Artifact download and report/log inspection used GitHub Actions evidence only."
+}
