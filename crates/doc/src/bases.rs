@@ -166,8 +166,15 @@ pub struct EvaluatedBaseRow {
 pub struct BaseEvaluation {
     pub view: BaseView,
     pub rows: Vec<EvaluatedBaseRow>,
-    pub groups: BTreeMap<String, Vec<EvaluatedBaseRow>>,
+    pub groups: Vec<BaseGroup>,
     pub issues: Vec<BaseIssue>,
+}
+
+/// One group in the order its first row appears after filtering, sorting, and limiting.
+#[derive(Clone, Debug, PartialEq)]
+pub struct BaseGroup {
+    pub key: String,
+    pub rows: Vec<EvaluatedBaseRow>,
 }
 
 /// Why a definition could not be parsed safely.
@@ -302,21 +309,34 @@ fn parse_json_view(value: &Value, index: usize) -> Result<BaseView, BaseParseErr
                 .collect()
         })
         .unwrap_or_default();
-    let limit = raw
-        .get("limit")
-        .and_then(Value::as_u64)
-        .and_then(|limit| usize::try_from(limit).ok());
+    let limit = raw.get("limit").and_then(json_nonnegative_usize);
 
     Ok(BaseView {
         view_type,
         name: raw.get("name").and_then(Value::as_str).map(str::to_owned),
         filter,
         sort,
-        group_by: raw.get("groupBy").and_then(Value::as_str).map(str::to_owned),
+        group_by: raw
+            .get("groupBy")
+            .and_then(Value::as_str)
+            .map(str::to_owned),
         limit,
         formulas,
         raw: BaseRawValue::Json(value.clone()),
     })
+}
+
+fn json_nonnegative_usize(value: &Value) -> Option<usize> {
+    value
+        .as_u64()
+        .and_then(|limit| usize::try_from(limit).ok())
+        .or_else(|| value.as_f64().and_then(nonnegative_float_to_usize))
+}
+
+fn nonnegative_float_to_usize(value: f64) -> Option<usize> {
+    let upper_bound = 2.0_f64.powi(usize::BITS as i32);
+    (value.is_finite() && value >= 0.0 && value.fract() == 0.0 && value < upper_bound)
+        .then_some(value as usize)
 }
 
 fn invalid_view(index: usize, reason: &str) -> BaseParseError {
@@ -482,7 +502,10 @@ fn native_filter(value: Option<&YamlValue>, issues: &mut Vec<BaseIssue>) -> Nati
     match value {
         YamlValue::String(expression) => native_comparison(expression, issues),
         YamlValue::Mapping(entries) => native_filter_mapping(entries, issues),
-        _ => invalid_native_filter("Native Bases filters must be strings or and/or/not maps", issues),
+        _ => invalid_native_filter(
+            "Native Bases filters must be strings or and/or/not maps",
+            issues,
+        ),
     }
 }
 
@@ -544,11 +567,7 @@ fn native_filter_mapping(
 }
 
 fn invalid_native_filter(message: &str, issues: &mut Vec<BaseIssue>) -> NativeFilterResult {
-    issues.push(BaseIssue::new(
-        BaseIssueKind::InvalidFilter,
-        message,
-        None,
-    ));
+    issues.push(BaseIssue::new(BaseIssueKind::InvalidFilter, message, None));
     NativeFilterResult {
         filter: None,
         supported: false,
@@ -634,12 +653,11 @@ fn native_expression_value(token: &str) -> Value {
     if trimmed.eq_ignore_ascii_case("false") {
         return Value::Bool(false);
     }
-    if is_native_number(trimmed) {
-        if let Ok(number) = trimmed.parse::<f64>()
-            && let Some(number) = Number::from_f64(number)
-        {
-            return Value::Number(number);
-        }
+    if is_native_number(trimmed)
+        && let Ok(number) = trimmed.parse::<f64>()
+        && let Some(number) = Number::from_f64(number)
+    {
+        return Value::Number(number);
     }
     Value::String(trimmed.to_owned())
 }
@@ -722,11 +740,7 @@ fn yaml_nonnegative_usize(value: &YamlValue) -> Option<usize> {
                 return Some(integer);
             }
             let number = value.parse::<f64>().ok()?;
-            (number.is_finite()
-                && number >= 0.0
-                && number.fract() == 0.0
-                && number <= usize::MAX as f64)
-                .then_some(number as usize)
+            nonnegative_float_to_usize(number)
         }
         _ => None,
     }
@@ -757,9 +771,7 @@ pub fn evaluate_base(
         .iter()
         .find(|view| view.name.as_deref() == Some(view_name))
         .or_else(|| document.views.first())
-        .ok_or_else(|| {
-            BaseParseError::InvalidDocument("Bases document has no views".to_owned())
-        })?
+        .ok_or_else(|| BaseParseError::InvalidDocument("Bases document has no views".to_owned()))?
         .clone();
     let mut issues = document.issues.clone();
     let filtered = source_rows
@@ -799,19 +811,29 @@ pub fn evaluate_base(
         rows.truncate(limit);
     }
 
-    let mut groups: BTreeMap<String, Vec<EvaluatedBaseRow>> = BTreeMap::new();
+    let mut groups = Vec::<BaseGroup>::new();
+    let mut group_indices = BTreeMap::<String, usize>::new();
     if let Some(field) = &view.group_by {
         let field = normalize_field(field);
         for row in &rows {
             let value = row
                 .values
                 .get(field)
-                .filter(|value| !value.is_null())
-                .or_else(|| row.properties.get(field).filter(|value| !value.is_null()));
-            groups
-                .entry(value.map_or_else(String::new, js_string))
-                .or_default()
-                .push(row.clone());
+                .filter(|value| !value.is_null());
+            let key = value.map_or_else(String::new, js_string);
+            let index = match group_indices.get(&key) {
+                Some(index) => *index,
+                None => {
+                    let index = groups.len();
+                    group_indices.insert(key.clone(), index);
+                    groups.push(BaseGroup {
+                        key,
+                        rows: Vec::new(),
+                    });
+                    index
+                }
+            };
+            groups[index].rows.push(row.clone());
         }
     }
     Ok(BaseEvaluation {
@@ -826,7 +848,7 @@ fn normalize_field(field: &str) -> &str {
     field.strip_prefix("note.").unwrap_or(field)
 }
 
-fn field_value<'a>(row: &'a BaseRow, field: &str) -> Option<Value> {
+fn field_value(row: &BaseRow, field: &str) -> Option<Value> {
     let field = normalize_field(field);
     match field {
         "file.path" => Some(Value::String(row.path.clone())),
@@ -867,7 +889,9 @@ fn matches_filter(filter: &BaseFilter, row: &BaseRow) -> bool {
                         .to_lowercase()
                         .contains(&js_string(value).to_lowercase()),
                 },
-                BaseComparisonOperator::Equals => compare_values(actual.as_ref(), Some(value)).is_eq(),
+                BaseComparisonOperator::Equals => {
+                    compare_values(actual.as_ref(), Some(value)).is_eq()
+                }
                 BaseComparisonOperator::NotEquals => {
                     !compare_values(actual.as_ref(), Some(value)).is_eq()
                 }
@@ -892,10 +916,10 @@ fn array_includes(values: &[Value], needle: &Value) -> bool {
     match needle {
         Value::Null => values.iter().any(Value::is_null),
         Value::Bool(needle) => values.iter().any(|value| value.as_bool() == Some(*needle)),
-        Value::Number(needle) => values
-            .iter()
-            .filter_map(Value::as_f64)
-            .any(|value| Some(value) == needle.as_f64()),
+        Value::Number(needle) => values.iter().any(|value| match value {
+            Value::Number(value) => compare_numbers(value, needle).is_eq(),
+            _ => false,
+        }),
         Value::String(needle) => values.iter().any(|value| value.as_str() == Some(needle)),
         Value::Array(_) | Value::Object(_) => false,
     }
@@ -908,7 +932,10 @@ fn evaluate_row(row: &BaseRow, view: &BaseView, issues: &mut Vec<BaseIssue>) -> 
         "file.name".to_owned(),
         Value::String(row.path.rsplit('/').next().unwrap_or(&row.path).to_owned()),
     );
-    values.insert("file.ext".to_owned(), Value::String(file_extension(&row.path)));
+    values.insert(
+        "file.ext".to_owned(),
+        Value::String(file_extension(&row.path)),
+    );
     for (name, expression) in &view.formulas {
         // A formula owns its output name. If it cannot be evaluated, a
         // same-named source property must not masquerade as the formula value.
@@ -1018,33 +1045,29 @@ fn compare_rows(
 ) -> std::cmp::Ordering {
     for sort in sorts {
         let field = normalize_field(&sort.field);
-        let left_value = left
-            .values
-            .get(field)
-            .filter(|value| !value.is_null())
-            .or_else(|| left.properties.get(field));
-        let right_value = right
-            .values
-            .get(field)
-            .filter(|value| !value.is_null())
-            .or_else(|| right.properties.get(field));
+        let left_value = left.values.get(field);
+        let right_value = right.values.get(field);
         let order = compare_values(left_value, right_value);
         if order != std::cmp::Ordering::Equal {
-            return if sort.descending { order.reverse() } else { order };
+            return if sort.descending {
+                order.reverse()
+            } else {
+                order
+            };
         }
     }
-    natural_compare(&left.path, &right.path)
+    left.path.cmp(&right.path)
 }
 
 fn compare_values(left: Option<&Value>, right: Option<&Value>) -> std::cmp::Ordering {
     use std::cmp::Ordering;
     match (left, right) {
         (None, None) | (Some(Value::Null), Some(Value::Null)) => Ordering::Equal,
-        (None, _) | (Some(Value::Null), _) => Ordering::Less,
-        (_, None) | (_, Some(Value::Null)) => Ordering::Greater,
-        (Some(Value::Number(left)), Some(Value::Number(right))) => {
-            compare_numbers(left, right)
-        }
+        (None, Some(_)) => Ordering::Less,
+        (Some(_), None) => Ordering::Greater,
+        (Some(Value::Null), Some(_)) => Ordering::Less,
+        (Some(_), Some(Value::Null)) => Ordering::Greater,
+        (Some(Value::Number(left)), Some(Value::Number(right))) => compare_numbers(left, right),
         (Some(left), Some(right)) => natural_compare(&js_string(left), &js_string(right)),
     }
 }
@@ -1052,19 +1075,39 @@ fn compare_values(left: Option<&Value>, right: Option<&Value>) -> std::cmp::Orde
 fn compare_numbers(left: &Number, right: &Number) -> std::cmp::Ordering {
     use std::cmp::Ordering;
 
+    // Keep JSON integer comparisons exact above JavaScript's 2^53 safe range; TS Number rounds.
     let integer_value = |number: &Number| {
         number
             .as_i64()
             .map(i128::from)
             .or_else(|| number.as_u64().map(i128::from))
     };
-    if let (Some(left), Some(right)) = (integer_value(left), integer_value(right)) {
-        return left.cmp(&right);
+    match (integer_value(left), integer_value(right), left.as_f64(), right.as_f64()) {
+        (Some(left), Some(right), _, _) => left.cmp(&right),
+        (Some(integer), None, _, Some(float)) => compare_integer_to_float(integer, float),
+        (None, Some(integer), Some(float), _) => compare_integer_to_float(integer, float).reverse(),
+        (_, _, Some(left), Some(right)) => left.partial_cmp(&right).unwrap_or(Ordering::Equal),
+        _ => natural_compare(&left.to_string(), &right.to_string()),
+    }
+}
+
+fn compare_integer_to_float(integer: i128, float: f64) -> std::cmp::Ordering {
+    use std::cmp::Ordering;
+
+    const I64_MINIMUM: f64 = -9_223_372_036_854_775_808.0;
+    const U64_UPPER_BOUND: f64 = 18_446_744_073_709_551_616.0;
+    if float < I64_MINIMUM {
+        return Ordering::Greater;
+    }
+    if float >= U64_UPPER_BOUND {
+        return Ordering::Less;
     }
 
-    match (left.as_f64(), right.as_f64()) {
-        (Some(left), Some(right)) => left.partial_cmp(&right).unwrap_or(Ordering::Equal),
-        _ => natural_compare(&left.to_string(), &right.to_string()),
+    let truncated = float.trunc() as i128;
+    match integer.cmp(&truncated) {
+        Ordering::Equal if float.fract() > 0.0 => Ordering::Less,
+        Ordering::Equal if float.fract() < 0.0 => Ordering::Greater,
+        order => order,
     }
 }
 
@@ -1089,7 +1132,10 @@ fn js_string(value: &Value) -> String {
     }
 }
 
-/// Deterministic case-insensitive natural comparison for strings and paths.
+/// Deterministic case-insensitive natural comparison for string values.
+///
+/// This uses Unicode lowercase and scalar ordering rather than the
+/// host-locale-dependent behavior of JavaScript `localeCompare`.
 fn natural_compare(left: &str, right: &str) -> std::cmp::Ordering {
     use std::cmp::Ordering;
     let left = left.to_lowercase().chars().collect::<Vec<_>>();
@@ -1104,14 +1150,15 @@ fn natural_compare(left: &str, right: &str) -> std::cmp::Ordering {
             let left_significant = left_digits
                 .iter()
                 .position(|character| *character != '0')
-                .map_or(&left_digits[left_digits.len()..], |start| &left_digits[start..]);
+                .map_or(&left_digits[left_digits.len()..], |start| {
+                    &left_digits[start..]
+                });
             let right_significant = right_digits
                 .iter()
                 .position(|character| *character != '0')
-                .map_or(
-                    &right_digits[right_digits.len()..],
-                    |start| &right_digits[start..],
-                );
+                .map_or(&right_digits[right_digits.len()..], |start| {
+                    &right_digits[start..]
+                });
             let order = left_significant
                 .len()
                 .cmp(&right_significant.len())
@@ -1156,20 +1203,22 @@ pub struct EmbeddedBaseDefinition {
 pub fn parse_embedded_bases(source: &str) -> Vec<EmbeddedBaseDefinition> {
     let lines = source_line_ranges(source);
     let mut definitions = Vec::new();
-    let mut open: Option<(u8, usize, usize)> = None;
+    let mut open: Option<(u8, usize, usize, bool)> = None;
     for (start, end, full_end) in lines {
         let line = &source[start..end];
-        if let Some((marker, length, content_start)) = open {
+        if let Some((marker, length, content_start, is_base)) = open {
             if closes_fence(line, marker, length) {
-                let content = source[content_start..start].to_owned();
-                definitions.push(parse_embedded_definition(content, content_start, start));
+                if is_base {
+                    let content = source[content_start..start].to_owned();
+                    definitions.push(parse_embedded_definition(content, content_start, start));
+                }
                 open = None;
             }
-        } else if let Some((marker, length)) = opens_fence(line) {
-            open = Some((marker, length, full_end));
+        } else if let Some((marker, length, is_base)) = opens_fence(line) {
+            open = Some((marker, length, full_end, is_base));
         }
     }
-    if let Some((_, _, content_start)) = open {
+    if let Some((_, _, content_start, true)) = open {
         definitions.push(EmbeddedBaseDefinition {
             source: source[content_start..].to_owned(),
             start: content_start,
@@ -1207,7 +1256,7 @@ fn source_line_ranges(source: &str) -> Vec<(usize, usize, usize)> {
     lines
 }
 
-fn opens_fence(line: &str) -> Option<(u8, usize)> {
+fn opens_fence(line: &str) -> Option<(u8, usize, bool)> {
     let bytes = line.as_bytes();
     let indent = bytes.iter().take_while(|byte| **byte == b' ').count();
     if indent > 3 {
@@ -1225,17 +1274,21 @@ fn opens_fence(line: &str) -> Option<(u8, usize)> {
         return None;
     }
     let mut remainder = &bytes[indent + run..];
-    while remainder.first().is_some_and(|byte| byte.is_ascii_whitespace()) {
-        remainder = &remainder[1..];
-    }
-    if remainder.len() < 4 || !remainder[..4].eq_ignore_ascii_case(b"base") {
+    if marker == b'`' && remainder.contains(&b'`') {
         return None;
     }
-    remainder = &remainder[4..];
-    remainder
+    while remainder
+        .first()
+        .is_some_and(|byte| byte.is_ascii_whitespace())
+    {
+        remainder = &remainder[1..];
+    }
+    let info_end = remainder
         .iter()
-        .all(|byte| byte.is_ascii_whitespace())
-        .then_some((marker, run))
+        .rposition(|byte| !byte.is_ascii_whitespace())
+        .map_or(0, |index| index + 1);
+    let is_base = remainder[..info_end].eq_ignore_ascii_case(b"base");
+    Some((marker, run, is_base))
 }
 
 fn closes_fence(line: &str, marker: u8, minimum_length: usize) -> bool {
@@ -1254,11 +1307,7 @@ fn closes_fence(line: &str, marker: u8, minimum_length: usize) -> bool {
             .all(|byte| byte.is_ascii_whitespace())
 }
 
-fn parse_embedded_definition(
-    source: String,
-    start: usize,
-    end: usize,
-) -> EmbeddedBaseDefinition {
+fn parse_embedded_definition(source: String, start: usize, end: usize) -> EmbeddedBaseDefinition {
     match parse_base(source.as_bytes()) {
         Ok(document) => EmbeddedBaseDefinition {
             issues: document.issues.clone(),
@@ -1300,8 +1349,9 @@ impl YamlValue {
 #[cfg(test)]
 mod tests {
     use super::{
-        BaseIssueKind, BaseRawValue, BaseRow, BaseSourceFormat, BaseViewType, encode_base,
-        evaluate_base, parse_base, parse_embedded_bases, YamlValue,
+        BaseEvaluation, BaseIssueKind, BaseRawValue, BaseRow, BaseSourceFormat, BaseViewType,
+        YamlValue, array_includes, compare_numbers, compare_values, encode_base, evaluate_base,
+        parse_base, parse_embedded_bases,
     };
     use serde_json::Value;
 
@@ -1328,10 +1378,77 @@ mod tests {
             .collect()
     }
 
+    fn assert_optional_evaluation_expectations(
+        case_id: &str,
+        case: &Value,
+        result: &BaseEvaluation,
+    ) {
+        if let Some(paths) = case["expected"]["paths"].as_array() {
+            let expected_paths = paths
+                .iter()
+                .map(|path| path.as_str().expect("expected path must be a string"))
+                .collect::<Vec<_>>();
+            assert_eq!(
+                result
+                    .rows
+                    .iter()
+                    .map(|row| row.path.as_str())
+                    .collect::<Vec<_>>(),
+                expected_paths,
+                "{case_id}: evaluated paths"
+            );
+        }
+
+        if let Some(names) = case["expected"]["group_names"].as_array() {
+            let expected_names = names
+                .iter()
+                .map(|name| name.as_str().expect("expected group name must be a string"))
+                .collect::<Vec<_>>();
+            assert_eq!(
+                result
+                    .groups
+                    .iter()
+                    .map(|group| group.key.as_str())
+                    .collect::<Vec<_>>(),
+                expected_names,
+                "{case_id}: group order"
+            );
+        }
+
+        if let Some(expected_groups) = case["expected"]["group_paths"].as_object() {
+            assert_eq!(
+                result.groups.len(),
+                expected_groups.len(),
+                "{case_id}: groups"
+            );
+            for group in &result.groups {
+                let paths = expected_groups
+                    .get(&group.key)
+                    .unwrap_or_else(|| panic!("{case_id}: unexpected group {:?}", group.key))
+                    .as_array()
+                    .expect("expected group paths must be an array")
+                    .iter()
+                    .map(|path| path.as_str().expect("expected path must be a string"))
+                    .collect::<Vec<_>>();
+                assert_eq!(
+                    group
+                        .rows
+                        .iter()
+                        .map(|row| row.path.as_str())
+                        .collect::<Vec<_>>(),
+                    paths,
+                    "{case_id}: group {:?} rows",
+                    group.key
+                );
+            }
+        }
+    }
+
     fn source_for_case(case: &Value) -> Vec<u8> {
         match case["format"].as_str() {
-            Some("json") => serde_json::to_vec(&case["source"])
-                .expect("fixture JSON Bases source must encode"),
+            Some("json") => {
+                serde_json::to_vec(&case["source"]).expect("fixture JSON Bases source must encode")
+            }
             Some("yaml") => case["source"]
                 .as_str()
                 .expect("fixture YAML source must be a string")
@@ -1378,9 +1495,7 @@ mod tests {
             .as_array()
             .expect("C07 fixture must contain supported cases")
         {
-            let case_id = case["id"]
-                .as_str()
-                .expect("each C07 case must have an id");
+            let case_id = case["id"].as_str().expect("each C07 case must have an id");
             let source = source_for_case(case);
             let document = parse_base(&source)
                 .unwrap_or_else(|error| panic!("{case_id}: source must parse: {error}"));
@@ -1390,8 +1505,15 @@ mod tests {
                 _ => panic!("{case_id}: fixture format must be known"),
             };
             assert_eq!(document.source_format(), expected_format, "{case_id}");
-            assert_eq!(encode_base(&document), source, "{case_id}: exact source bytes");
-            assert!(document.issues().is_empty(), "{case_id}: supported source issues");
+            assert_eq!(
+                encode_base(&document),
+                source,
+                "{case_id}: exact source bytes"
+            );
+            assert!(
+                document.issues().is_empty(),
+                "{case_id}: supported source issues"
+            );
 
             let expected_types = case["expected"]["view_types"]
                 .as_array()
@@ -1419,7 +1541,11 @@ mod tests {
                 .map(|path| path.as_str().expect("expected path must be a string"))
                 .collect::<Vec<_>>();
             assert_eq!(
-                result.rows.iter().map(|row| row.path.as_str()).collect::<Vec<_>>(),
+                result
+                    .rows
+                    .iter()
+                    .map(|row| row.path.as_str())
+                    .collect::<Vec<_>>(),
                 expected_paths,
                 "{case_id}: selected rows"
             );
@@ -1457,7 +1583,11 @@ mod tests {
                 .map(|name| name.as_str().expect("group must be a string"))
                 .collect::<Vec<_>>();
             assert_eq!(
-                result.groups.keys().map(String::as_str).collect::<Vec<_>>(),
+                result
+                    .groups
+                    .iter()
+                    .map(|group| group.key.as_str())
+                    .collect::<Vec<_>>(),
                 expected_groups,
                 "{case_id}: group keys"
             );
@@ -1481,18 +1611,17 @@ mod tests {
             .expect("legacy native Bases fixture must parse");
 
         assert_eq!(document.source_format(), BaseSourceFormat::NativeYaml);
-        assert_eq!(document.source_bytes(), LEGACY_NATIVE_BASES_FIXTURE.as_bytes());
+        assert_eq!(
+            document.source_bytes(),
+            LEGACY_NATIVE_BASES_FIXTURE.as_bytes()
+        );
         let encoded = encode_base(&document);
         assert_eq!(encoded.as_slice(), LEGACY_NATIVE_BASES_FIXTURE.as_bytes());
         assert_eq!(document.views().len(), 2);
         assert!(raw_field_exists(document.raw_definition(), "properties"));
 
-        let result = evaluate_base(
-            &document,
-            "Open items",
-            &fixture_rows(&case["rows"]),
-        )
-        .expect("legacy native Bases view must evaluate");
+        let result = evaluate_base(&document, "Open items", &fixture_rows(&case["rows"]))
+            .expect("legacy native Bases view must evaluate");
         let expected_paths = case["expected"]["paths"]
             .as_array()
             .expect("expected paths must be an array")
@@ -1513,10 +1642,7 @@ mod tests {
         let fixture: Value =
             serde_json::from_str(C07_BASES_FIXTURE).expect("C07 fixture must be JSON");
         let case = &fixture["unsupported_native_filter"];
-        assert_eq!(
-            case["id"],
-            "native-unsupported-filter-is-not-applied"
-        );
+        assert_eq!(case["id"], "native-unsupported-filter-is-not-applied");
         let source = case["source"]
             .as_str()
             .expect("unsupported native source must be a string")
@@ -1566,7 +1692,11 @@ mod tests {
             .collect::<Vec<_>>();
 
         assert_eq!(
-            result.rows.iter().map(|row| row.path.as_str()).collect::<Vec<_>>(),
+            result
+                .rows
+                .iter()
+                .map(|row| row.path.as_str())
+                .collect::<Vec<_>>(),
             expected_paths
         );
     }
@@ -1599,7 +1729,11 @@ mod tests {
                 .map(|path| path.as_str().expect("expected path must be a string"))
                 .collect::<Vec<_>>();
             assert_eq!(
-                result.rows.iter().map(|row| row.path.as_str()).collect::<Vec<_>>(),
+                result
+                    .rows
+                    .iter()
+                    .map(|row| row.path.as_str())
+                    .collect::<Vec<_>>(),
                 expected_paths,
                 "{case_id}: evaluated paths"
             );
@@ -1621,7 +1755,39 @@ mod tests {
                     );
                 }
             }
-            assert_eq!(encode_base(&document), source, "{case_id}: source retention");
+            assert_eq!(
+                encode_base(&document),
+                source,
+                "{case_id}: source retention"
+            );
+        }
+    }
+
+    #[test]
+    fn evaluation_edge_case_fixture_covers_sort_filter_limit_and_group_order() {
+        let fixture: Value =
+            serde_json::from_str(C07_BASES_FIXTURE).expect("C07 fixture must be JSON");
+        for case in fixture["evaluation_edge_cases"]
+            .as_array()
+            .expect("evaluation edge cases must be an array")
+        {
+            let case_id = case["id"].as_str().expect("edge case must have an id");
+            let source = serde_json::to_vec(&case["source"])
+                .unwrap_or_else(|error| panic!("{case_id}: source must encode: {error}"));
+            let document = parse_base(&source)
+                .unwrap_or_else(|error| panic!("{case_id}: source must parse: {error}"));
+            let result = evaluate_base(
+                &document,
+                case["view"].as_str().expect("view name must be a string"),
+                &fixture_rows(&case["rows"]),
+            )
+            .unwrap_or_else(|error| panic!("{case_id}: view must evaluate: {error}"));
+            assert_optional_evaluation_expectations(case_id, case, &result);
+            assert_eq!(
+                encode_base(&document),
+                source,
+                "{case_id}: source retention"
+            );
         }
     }
 
@@ -1631,12 +1797,14 @@ mod tests {
             .expect("unsupported formula fixture must be JSON");
         assert_eq!(fixture["schema_version"], 1);
         assert_eq!(fixture["id"], "fixture:c07-unsupported-formula");
-        let source = serde_json::to_vec(&fixture["source"])
-            .expect("unsupported formula source must encode");
+        let source =
+            serde_json::to_vec(&fixture["source"]).expect("unsupported formula source must encode");
         let document = parse_base(&source).expect("unsupported formula definition parses");
         let result = evaluate_base(
             &document,
-            fixture["view"].as_str().expect("view name must be a string"),
+            fixture["view"]
+                .as_str()
+                .expect("view name must be a string"),
             &fixture_rows(&fixture["rows"]),
         )
         .expect("unsupported formula view evaluates with an issue");
@@ -1675,8 +1843,14 @@ mod tests {
             if let Some(filter) = case.get("filter") {
                 source_value["views"][0]["filter"] = filter.clone();
             }
-            let edge_source = serde_json::to_vec(&source_value)
-                .expect("edge-case Bases source must encode");
+            if let Some(sort) = case.get("sort") {
+                source_value["views"][0]["sort"] = sort.clone();
+            }
+            if let Some(group_by) = case.get("groupBy") {
+                source_value["views"][0]["groupBy"] = group_by.clone();
+            }
+            let edge_source =
+                serde_json::to_vec(&source_value).expect("edge-case Bases source must encode");
             let edge_document = parse_base(&edge_source)
                 .unwrap_or_else(|error| panic!("{case_id}: source must parse: {error}"));
             assert_eq!(
@@ -1686,7 +1860,9 @@ mod tests {
             );
             let edge_result = evaluate_base(
                 &edge_document,
-                fixture["view"].as_str().expect("view name must be a string"),
+                fixture["view"]
+                    .as_str()
+                    .expect("view name must be a string"),
                 &fixture_rows(&case["rows"]),
             )
             .unwrap_or_else(|error| panic!("{case_id}: view must evaluate: {error}"));
@@ -1696,6 +1872,7 @@ mod tests {
                 case["expected"]["row_count"].as_u64().unwrap() as usize,
                 "{case_id}: surviving rows"
             );
+            assert_optional_evaluation_expectations(case_id, case, &edge_result);
             assert_eq!(
                 edge_result.issues.len(),
                 case["expected"]["issue_count"].as_u64().unwrap() as usize,
@@ -1722,7 +1899,10 @@ mod tests {
                     .as_str()
                     .expect("formula name must be a string");
                 assert_eq!(
-                    edge_result.rows[0].properties.get(formula).and_then(Value::as_str),
+                    edge_result.rows[0]
+                        .properties
+                        .get(formula)
+                        .and_then(Value::as_str),
                     Some(source_property),
                     "{case_id}: source property is retained separately"
                 );
@@ -1746,14 +1926,20 @@ mod tests {
             .expect("embedded source must be a string");
         let definitions = parse_embedded_bases(source);
 
-        assert_eq!(definitions.len(), case["expected_count"].as_u64().unwrap() as usize);
+        assert_eq!(
+            definitions.len(),
+            case["expected_count"].as_u64().unwrap() as usize
+        );
         let definition = &definitions[0];
         assert_eq!(
             &source[definition.start..definition.end],
             definition.source.as_str()
         );
         assert!(definition.issues.is_empty());
-        let document = definition.document.as_ref().expect("embedded definition parses");
+        let document = definition
+            .document
+            .as_ref()
+            .expect("embedded definition parses");
         assert_eq!(
             document.views()[0].name.as_deref(),
             case["expected_view"].as_str()
@@ -1786,6 +1972,54 @@ mod tests {
     }
 
     #[test]
+    fn embedded_fence_and_unicode_span_fixtures_use_top_level_byte_offsets() {
+        let fixture: Value =
+            serde_json::from_str(C07_BASES_FIXTURE).expect("C07 fixture must be JSON");
+        let nested_case = &fixture["nested_non_base_outer_fence_case"];
+        let nested_source = nested_case["source"]
+            .as_str()
+            .expect("nested fence source must be a string");
+        let nested_definitions = parse_embedded_bases(nested_source);
+        assert_eq!(
+            nested_definitions.len(),
+            nested_case["expected_count"].as_u64().unwrap() as usize
+        );
+
+        let unicode_case = &fixture["unicode_prefix_span_case"];
+        let unicode_source = unicode_case["source"]
+            .as_str()
+            .expect("Unicode prefix source must be a string");
+        let definitions = parse_embedded_bases(unicode_source);
+        assert_eq!(
+            definitions.len(),
+            unicode_case["expected_count"].as_u64().unwrap() as usize
+        );
+        let definition = &definitions[0];
+        assert_eq!(
+            definition.start,
+            unicode_case["expected_start_byte"].as_u64().unwrap() as usize
+        );
+        assert_eq!(
+            definition.end,
+            unicode_case["expected_end_byte"].as_u64().unwrap() as usize
+        );
+        assert_eq!(
+            &unicode_source[definition.start..definition.end],
+            definition.source.as_str()
+        );
+        assert_eq!(
+            definition
+                .document
+                .as_ref()
+                .expect("Unicode-prefixed embedded Base parses")
+                .views()[0]
+                .name
+                .as_deref(),
+            unicode_case["expected_view"].as_str()
+        );
+    }
+
+    #[test]
     fn numeric_filters_and_sorting_compare_json_numbers_by_value() {
         let source = serde_json::json!({
             "version": 1,
@@ -1813,10 +2047,9 @@ mod tests {
                 }
             ]
         });
-        let document = parse_base(
-            &serde_json::to_vec(&source).expect("numeric Bases source must encode"),
-        )
-        .expect("numeric Bases source must parse");
+        let document =
+            parse_base(&serde_json::to_vec(&source).expect("numeric Bases source must encode"))
+                .expect("numeric Bases source must parse");
         let row = |path: &str, score: f64, label: &str| BaseRow {
             path: path.to_owned(),
             properties: serde_json::json!({"score": score, "label": label})
@@ -1831,10 +2064,14 @@ mod tests {
             row("small.md", 0.05, "item1"),
         ];
 
-        let sorted = evaluate_base(&document, "Ascending", &rows)
-            .expect("numeric sort view must evaluate");
+        let sorted =
+            evaluate_base(&document, "Ascending", &rows).expect("numeric sort view must evaluate");
         assert_eq!(
-            sorted.rows.iter().map(|row| row.path.as_str()).collect::<Vec<_>>(),
+            sorted
+                .rows
+                .iter()
+                .map(|row| row.path.as_str())
+                .collect::<Vec<_>>(),
             ["small.md", "quarter.md", "half.md", "two.md"]
         );
 
@@ -1879,7 +2116,11 @@ mod tests {
         let result = evaluate_base(&document, "By extension", &rows)
             .expect("file metadata view must evaluate");
         assert_eq!(
-            result.rows.iter().map(|row| row.path.as_str()).collect::<Vec<_>>(),
+            result
+                .rows
+                .iter()
+                .map(|row| row.path.as_str())
+                .collect::<Vec<_>>(),
             ["folder.v1/no-extension", "folder.v1/readme.md"]
         );
         assert_eq!(
@@ -1913,6 +2154,156 @@ mod tests {
         assert_eq!(result.rows.len(), 3);
         assert_eq!(result.issues.len(), 1);
         assert_eq!(result.issues[0].expression.as_deref(), Some("date(today)"));
+    }
+
+    #[test]
+    fn mixed_integer_float_comparison_keeps_integer_precision_for_sort_and_contains() {
+        let integer = serde_json::Number::from(9_007_199_254_740_993_u64);
+        let rounded_float = serde_json::Number::from_f64(9_007_199_254_740_992.0)
+            .expect("finite fixture float must encode");
+        assert!(compare_numbers(&integer, &rounded_float).is_gt());
+        assert!(!array_includes(
+            &[Value::Number(rounded_float.clone())],
+            &Value::Number(integer.clone())
+        ));
+
+        let source = br#"{"version":1,"views":[{"type":"table","name":"Exact numbers","sort":[{"field":"score"}]}]}"#;
+        let document = parse_base(source).expect("numeric source must parse");
+        let rows = vec![
+            BaseRow {
+                path: "integer.md".to_owned(),
+                properties: serde_json::json!({"score": integer}).as_object().unwrap().clone(),
+            },
+            BaseRow {
+                path: "float.md".to_owned(),
+                properties: serde_json::json!({"score": rounded_float})
+                    .as_object()
+                    .unwrap()
+                    .clone(),
+            },
+        ];
+        let result = evaluate_base(&document, "Exact numbers", &rows)
+            .expect("numeric view must evaluate");
+        assert_eq!(
+            result
+                .rows
+                .iter()
+                .map(|row| row.path.as_str())
+                .collect::<Vec<_>>(),
+            ["float.md", "integer.md"]
+        );
+    }
+
+    #[test]
+    fn unsupported_formula_collision_does_not_leak_into_sort_or_groups() {
+        let source = br#"{"version":1,"views":[{"type":"table","name":"Unsupported","sort":[{"field":"bad"}],"groupBy":"bad","formulas":{"bad":"date(today)"}}]}"#;
+        let document = parse_base(source).expect("formula source must parse");
+        let row = |path: &str, bad: &str| BaseRow {
+            path: path.to_owned(),
+            properties: serde_json::json!({"bad": bad}).as_object().unwrap().clone(),
+        };
+        let rows = vec![row("z.md", "Ada"), row("a.md", "Zulu")];
+        let result = evaluate_base(&document, "Unsupported", &rows)
+            .expect("unsupported formula view must evaluate");
+
+        assert_eq!(
+            result
+                .rows
+                .iter()
+                .map(|row| row.path.as_str())
+                .collect::<Vec<_>>(),
+            ["a.md", "z.md"]
+        );
+        assert!(result.rows.iter().all(|row| row.values.get("bad").is_none()));
+        assert_eq!(result.groups.len(), 1);
+        assert_eq!(result.groups[0].key, "");
+        assert_eq!(result.groups[0].rows.len(), 2);
+        assert_eq!(result.issues.len(), 1);
+    }
+
+    #[test]
+    fn missing_and_explicit_null_have_a_consistent_sort_order() {
+        let null = Value::Null;
+        let value = Value::String("present".to_owned());
+        assert!(compare_values(None, Some(&null)).is_lt());
+        assert!(compare_values(Some(&null), None).is_gt());
+        assert!(compare_values(Some(&null), Some(&value)).is_lt());
+
+        let source = br#"{"version":1,"views":[{"type":"table","name":"Missing first","sort":[{"field":"optional"}]}]}"#;
+        let document = parse_base(source).expect("null sort source must parse");
+        let rows = vec![
+            BaseRow {
+                path: "null.md".to_owned(),
+                properties: serde_json::json!({"optional": null}).as_object().unwrap().clone(),
+            },
+            BaseRow {
+                path: "missing.md".to_owned(),
+                properties: serde_json::Map::new(),
+            },
+        ];
+        let result = evaluate_base(&document, "Missing first", &rows)
+            .expect("null sort view must evaluate");
+        assert_eq!(
+            result
+                .rows
+                .iter()
+                .map(|row| row.path.as_str())
+                .collect::<Vec<_>>(),
+            ["missing.md", "null.md"]
+        );
+    }
+
+    #[test]
+    fn integral_float_limit_is_applied_and_tied_rows_use_ordinary_path_order() {
+        let source = br#"{"version":1,"views":[{"type":"table","name":"Limited","sort":[{"field":"rank"}],"limit":1.0}]}"#;
+        let document = parse_base(source).expect("float limit source must parse");
+        assert_eq!(document.views()[0].limit, Some(1));
+        let rows = vec![
+            BaseRow {
+                path: "a2.md".to_owned(),
+                properties: serde_json::json!({"rank": 1}).as_object().unwrap().clone(),
+            },
+            BaseRow {
+                path: "a10.md".to_owned(),
+                properties: serde_json::json!({"rank": 1}).as_object().unwrap().clone(),
+            },
+        ];
+        let result = evaluate_base(&document, "Limited", &rows)
+            .expect("limited view must evaluate");
+        assert_eq!(result.rows.len(), 1);
+        assert_eq!(result.rows[0].path, "a10.md");
+    }
+
+    #[test]
+    fn groups_keep_first_seen_order_after_sorting() {
+        let source = br#"{"version":1,"views":[{"type":"table","name":"Grouped","sort":[{"field":"rank"}],"groupBy":"owner"}]}"#;
+        let document = parse_base(source).expect("group source must parse");
+        let row = |path: &str, owner: &str, rank: u64| BaseRow {
+            path: path.to_owned(),
+            properties: serde_json::json!({"owner": owner, "rank": rank})
+                .as_object()
+                .unwrap()
+                .clone(),
+        };
+        let rows = vec![row("ada.md", "Ada", 2), row("zulu.md", "Zulu", 1)];
+        let result = evaluate_base(&document, "Grouped", &rows)
+            .expect("group view must evaluate");
+        assert_eq!(
+            result
+                .groups
+                .iter()
+                .map(|group| group.key.as_str())
+                .collect::<Vec<_>>(),
+            ["Zulu", "Ada"]
+        );
+        assert_eq!(result.groups[0].rows[0].path, "zulu.md");
+        assert_eq!(result.groups[1].rows[0].path, "ada.md");
+    }
+
+    #[test]
+    fn embedded_base_fences_inside_other_markdown_fences_are_ignored() {
+        let source = "````markdown\n```base\nplaceholder\n```\n````\n";
+        assert!(parse_embedded_bases(source).is_empty());
     }
 
     #[test]
