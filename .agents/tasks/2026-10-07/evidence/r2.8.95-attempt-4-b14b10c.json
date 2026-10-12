@@ -1,0 +1,279 @@
+{
+  "milestone": "R2.8.95",
+  "attempt": 4,
+  "source_sha": "b14b10c7dd4678f03a4ecf1a10b571d3321693fb",
+  "outcome": "not_accepted",
+  "captured_at": "2026-10-12T06:21:00+02:00",
+  "artifact_source": "Exact-SHA GitHub Actions workflow, job, and artifact metadata. Linux, macOS, and Windows round-trip archives were downloaded and inspected for reports and screenshots only. No project executable was run locally.",
+  "workflow_runs": {
+    "inventory": {
+      "id": 38202417325,
+      "head_sha": "b14b10c7dd4678f03a4ecf1a10b571d3321693fb",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38202417325",
+      "jobs": [
+        {
+          "id": 114658475846,
+          "name": "inventory",
+          "conclusion": "success"
+        }
+      ]
+    },
+    "quality": {
+      "id": 38202417348,
+      "head_sha": "b14b10c7dd4678f03a4ecf1a10b571d3321693fb",
+      "conclusion": "failure",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38202417348",
+      "jobs": [
+        {
+          "id": 114658476249,
+          "name": "macos-latest",
+          "conclusion": "failure",
+          "failed_step": "Run Knip audit"
+        },
+        {
+          "id": 114658476430,
+          "name": "windows-latest",
+          "conclusion": "failure",
+          "failed_step": "Run Knip audit"
+        },
+        {
+          "id": 114658476433,
+          "name": "ubuntu-latest",
+          "conclusion": "failure",
+          "failed_step": "Run Knip audit"
+        }
+      ]
+    },
+    "desktop_build": {
+      "id": 38202417361,
+      "head_sha": "b14b10c7dd4678f03a4ecf1a10b571d3321693fb",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38202417361",
+      "jobs": [
+        {
+          "id": 114658476195,
+          "name": "ubuntu-latest",
+          "conclusion": "success"
+        },
+        {
+          "id": 114658476349,
+          "name": "windows-latest",
+          "conclusion": "success"
+        },
+        {
+          "id": 114658476488,
+          "name": "macos-latest",
+          "conclusion": "success"
+        }
+      ]
+    },
+    "plugin_renderer": {
+      "id": 38202417309,
+      "head_sha": "b14b10c7dd4678f03a4ecf1a10b571d3321693fb",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38202417309",
+      "jobs": [
+        {
+          "id": 114658476097,
+          "name": "ubuntu-latest",
+          "conclusion": "success"
+        },
+        {
+          "id": 114658476242,
+          "name": "windows-latest",
+          "conclusion": "success"
+        },
+        {
+          "id": 114658476365,
+          "name": "macos-latest",
+          "conclusion": "success"
+        }
+      ]
+    },
+    "loaded_plugins": {
+      "id": 38202417326,
+      "head_sha": "b14b10c7dd4678f03a4ecf1a10b571d3321693fb",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38202417326",
+      "jobs": [
+        {
+          "id": 114658476157,
+          "name": "windows-latest",
+          "conclusion": "success"
+        },
+        {
+          "id": 114658476364,
+          "name": "ubuntu-latest",
+          "conclusion": "success"
+        },
+        {
+          "id": 114658476441,
+          "name": "macos-latest",
+          "conclusion": "success"
+        }
+      ]
+    },
+    "rust_ci": {
+      "id": 38202417332,
+      "head_sha": "b14b10c7dd4678f03a4ecf1a10b571d3321693fb",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38202417332",
+      "jobs": [
+        {
+          "id": 114658476017,
+          "name": "minimum supported Rust (1.95)",
+          "conclusion": "success"
+        },
+        {
+          "id": 114658476133,
+          "name": "rust (ubuntu-latest)",
+          "conclusion": "success"
+        },
+        {
+          "id": 114658476139,
+          "name": "rust (windows-latest)",
+          "conclusion": "success"
+        },
+        {
+          "id": 114658476226,
+          "name": "rust (macos-latest)",
+          "conclusion": "success"
+        }
+      ]
+    },
+    "vault_roundtrip": {
+      "id": 38202417307,
+      "head_sha": "b14b10c7dd4678f03a4ecf1a10b571d3321693fb",
+      "conclusion": "failure",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38202417307",
+      "jobs": [
+        {
+          "id": 114658475985,
+          "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04",
+          "conclusion": "success"
+        },
+        {
+          "id": 114658476104,
+          "name": "Obsidian 1.14.4 vault round-trip on macos-latest",
+          "conclusion": "failure"
+        },
+        {
+          "id": 114658476107,
+          "name": "Obsidian 1.14.4 vault round-trip on windows-latest",
+          "conclusion": "failure"
+        }
+      ]
+    }
+  },
+  "artifacts": [
+    {
+      "workflow": "desktop_build",
+      "id": 11725917351,
+      "runner_os": "Linux",
+      "name": "openobsidian-Linux-preview-b14b10c7dd4678f03a4ecf1a10b571d3321693fb",
+      "size_in_bytes": 125946850,
+      "archive_sha256": "ebe833403c8930c99dcadb13ec48f451179f258b41bf9832e42903f81ce3a866"
+    },
+    {
+      "workflow": "desktop_build",
+      "id": 11725512773,
+      "runner_os": "macOS",
+      "name": "openobsidian-macOS-preview-b14b10c7dd4678f03a4ecf1a10b571d3321693fb",
+      "size_in_bytes": 397395784,
+      "archive_sha256": "ddab0de43d28462e6266561a8c3696fade35652ce2c83aa8f46ff70448631774"
+    },
+    {
+      "workflow": "desktop_build",
+      "id": 11725378120,
+      "runner_os": "Windows",
+      "name": "openobsidian-Windows-preview-b14b10c7dd4678f03a4ecf1a10b571d3321693fb",
+      "size_in_bytes": 163006126,
+      "archive_sha256": "93ceda520edf669a90c6aa1b99480d2532458486ce107f215e50cc2c2a701349"
+    },
+    {
+      "workflow": "plugin_renderer",
+      "id": 11726162845,
+      "runner_os": "macOS",
+      "name": "plugin-renderer-lifecycle-macOS-b14b10c7dd4678f03a4ecf1a10b571d3321693fb",
+      "size_in_bytes": 3238,
+      "archive_sha256": "14860f52e157423be50300ea63b046d2d98c11aeaf61520a123f99653986bf47"
+    },
+    {
+      "workflow": "plugin_renderer",
+      "id": 11726068274,
+      "runner_os": "Windows",
+      "name": "plugin-renderer-lifecycle-Windows-b14b10c7dd4678f03a4ecf1a10b571d3321693fb",
+      "size_in_bytes": 3242,
+      "archive_sha256": "502e13de70185e7b34c532cabb6451d01c0393ad1fa2780f518f2f42cede482b"
+    },
+    {
+      "workflow": "plugin_renderer",
+      "id": 11725747513,
+      "runner_os": "Linux",
+      "name": "plugin-renderer-lifecycle-Linux-b14b10c7dd4678f03a4ecf1a10b571d3321693fb",
+      "size_in_bytes": 3221,
+      "archive_sha256": "347ba223561d1679f55fe80cf500cb3a98f51676079c82fde6eefc8b6e63fe5d"
+    },
+    {
+      "workflow": "loaded_plugins",
+      "id": 11726290041,
+      "runner_os": "macOS",
+      "name": "loaded-plugin-workflows-macOS-b14b10c7dd4678f03a4ecf1a10b571d3321693fb",
+      "size_in_bytes": 171484,
+      "archive_sha256": "2786550febad83349e2ad6f5f58227b73abeabcdf09321141d8d8e7dcad7c622"
+    },
+    {
+      "workflow": "loaded_plugins",
+      "id": 11725948630,
+      "runner_os": "Windows",
+      "name": "loaded-plugin-workflows-Windows-b14b10c7dd4678f03a4ecf1a10b571d3321693fb",
+      "size_in_bytes": 171471,
+      "archive_sha256": "d7e3a7f464a8f70e59fdfb2e023dc2571ab1f248aae90c193810f6a2ca92c1e7"
+    },
+    {
+      "workflow": "loaded_plugins",
+      "id": 11725248037,
+      "runner_os": "Linux",
+      "name": "loaded-plugin-workflows-Linux-b14b10c7dd4678f03a4ecf1a10b571d3321693fb",
+      "size_in_bytes": 171466,
+      "archive_sha256": "1e17ad74911c6dd6eb7750592357c6e14fb6284fed1f631181a62485fe941deb"
+    },
+    {
+      "workflow": "vault_roundtrip",
+      "id": 11726655106,
+      "runner_os": "Linux",
+      "name": "obsidian-vault-roundtrip-Linux-b14b10c7dd4678f03a4ecf1a10b571d3321693fb",
+      "size_in_bytes": 14855447,
+      "archive_sha256": "4ed4f9287ee005de160663c0be2620c09d1888546c761ec08e13476e0f10ea24",
+      "report": "passed"
+    },
+    {
+      "workflow": "vault_roundtrip",
+      "id": 11726350966,
+      "runner_os": "macOS",
+      "name": "obsidian-vault-roundtrip-macOS-b14b10c7dd4678f03a4ecf1a10b571d3321693fb",
+      "size_in_bytes": 18367898,
+      "archive_sha256": "cc69569df03c3ee02420f0c1e61d0568613cc9ed4e0a2feb4a46f9143cf77c8a",
+      "report": "failed: exact clipboard value was entered, but OCR read the visibly correct .md suffix as 'mq'; no note was created"
+    },
+    {
+      "workflow": "vault_roundtrip",
+      "id": 11726216678,
+      "runner_os": "Windows",
+      "name": "obsidian-vault-roundtrip-Windows-b14b10c7dd4678f03a4ecf1a10b571d3321693fb",
+      "size_in_bytes": 9791987,
+      "archive_sha256": "37958f34585fbc837a7c48dc48eb1a3980c58d5b220146e6ac4a5551588b84e4",
+      "report": "failed: SendKeys lost characters at offset 24 while replacing the unsaved draft; exact prefix check blocked Save and the Canvas bytes stayed unchanged"
+    }
+  ],
+  "findings": [
+    "Exact-SHA inventory passed. Desktop build, plugin renderer, and loaded-plugin workflows passed on all three OSes; Rust CI passed workspace tests, format, Clippy, layering and native preview builds on Ubuntu, macOS, and Windows, plus the Rust 1.95 MSRV job.",
+    "Quality failed its Knip audit on Ubuntu, macOS, and Windows because pbcopy, used by the round-trip audit script, was missing from knip.json ignoreBinaries. The parallel Fallow health audit passed on all three platforms.",
+    "Pinned Obsidian 1.14.4 round-trip passed on Linux. Its report confirms the native Canvas text edit and exact Canvas-to-Markdown note creation flow, with source/note checks and reopen behavior passing.",
+    "On macOS, Canvas text editing and explicit Save passed. The later note-creation flow set the expected Notes/Canvas text card.md destination and clipboard readback was exact; the screenshot visibly shows the correct field value, but Tesseract returned 'Notes/Canvas text card mq', so the OCR gate failed before Preview and no note was created.",
+    "On Windows, Canvas field path and card ID readbacks passed, and loading the text draft made no vault changes. SendKeys failed exact readback on the 42-character draft at chunk offset 24 (expected prefix length 32, observed value length 28). The audit stopped before Save; the Canvas source stayed unchanged.",
+    "The next focused fixes add pbcopy to the Knip binary allow-list, verify Windows keyboard input one character at a time before Save, and accept the observed one-character Tesseract misread at the .md suffix only when exact clipboard readback matches. All executable validation remains GitHub Actions only."
+  ],
+  "local_validation": "No local tests, builds, formatters, linters, validators, or application launches were run. GitHub Actions artifacts were downloaded and inspected as remote CI evidence only."
+}
