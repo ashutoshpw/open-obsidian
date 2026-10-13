@@ -17,7 +17,7 @@ errors = []
 legacy_by_id = {row["id"]: row for row in legacy}
 ids = [row["id"] for row in requirements]
 if len(ids) != len(set(ids)) or not set(legacy_by_id).issubset(ids):
-    errors.append("Migration requirements must cover each legacy ID exactly once and add unique Rust requirements")
+    errors.append("Migration requirements must cover each legacy ID exactly once and add unique Rust requirements or decomposed child rows")
 
 valid_phases = {f"R{index}" for index in range(8)}
 valid_owners = {
@@ -26,8 +26,17 @@ valid_owners = {
     "apps/openobsidian-cli", "xtask", "release-handoff",
 }
 valid_dispositions = {"retained", "superseded", "release_external"}
-if len(requirements) != len(legacy_by_id) + 16:
-    errors.append("Migration inventory must include all legacy requirements and 16 goal-specific requirements")
+expected_new = {f"MIG-{index:03d}" for index in range(1, 17)}
+expected_decomposed = {f"C07.{index}" for index in range(2, 10)}
+new_rows = [row for row in requirements if row["id"] not in legacy_by_id]
+goal_rows = [row for row in new_rows if row["id"].startswith("MIG-")]
+decomposed_rows = [row for row in new_rows if row["id"].startswith("C07.")]
+if {row["id"] for row in goal_rows} != expected_new:
+    errors.append("Goal-specific acceptance rows must cover MIG-001 through MIG-016")
+if {row["id"] for row in decomposed_rows} != expected_decomposed:
+    errors.append("C07 decomposition must include child requirements C07.2 through C07.9")
+if {row["id"] for row in new_rows} != expected_new | expected_decomposed:
+    errors.append("Migration requirements contain an unrecognized new requirement ID")
 if state.get("milestones", {}).get("R0.1", {}).get("status") != "complete":
     errors.append("R0.1 must have passed GitHub CI before R0.2")
 
@@ -54,15 +63,15 @@ for row in requirements:
     if row.get("status") == "passing" and not row.get("evidence_paths"):
         errors.append(f"{row['id']}: Rust pass lacks migration evidence")
 
-new_rows = [row for row in requirements if row["id"] not in legacy_by_id]
-expected_new = {f"MIG-{index:03d}" for index in range(1, 17)}
-if {row["id"] for row in new_rows} != expected_new:
-    errors.append("Goal-specific acceptance rows must cover MIG-001 through MIG-016")
-for row in new_rows:
+for row in goal_rows:
     if row.get("source", {}).get("path") != ".agents/tasks/2026-10-07/goal.md":
         errors.append(f"{row['id']}: migration requirement must cite this goal")
     if row["id"] == "MIG-015" and (row.get("migration_phase"), row.get("rust_owner")) != ("R1", "crates/plugins"):
         errors.append("MIG-015 must gate broad UI work with an R1 plugin feasibility spike")
+for row in decomposed_rows:
+    parent = legacy_by_id.get(row.get("parent_id"))
+    if parent is None or row.get("source", {}).get("path") != parent.get("source", {}).get("path") or row.get("source", {}).get("heading") != parent.get("source", {}).get("heading"):
+        errors.append(f"{row['id']}: decomposed requirement must retain its legacy parent's source")
 
 directories = ("src", "tests", "fixtures", "config", "scripts", ".github/workflows")
 actual = {
