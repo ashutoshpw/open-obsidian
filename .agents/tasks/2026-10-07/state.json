@@ -2,16 +2,17 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-13T22:48:11Z",
+  "updated_at": "2026-10-13T23:12:20Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "636b8fbe935b4225ef724d1fa56df3a7d92c4d49",
-  "current_milestone": "R2.8.103 C07.2 canonical native-YAML capture repair (preparing batch)",
-  "next_action": "Complete the R2.8.103 capture-fixture repair package locally: generate the .base source in Obsidian-canonical YAML (unquoted simple name and property: team), keep strict source-hash assertions, update C07.2 evidence/blockers, and exclude the unrelated provisional Rust evaluator/fixture edits. Then commit and push one accumulated batch to origin/main and wait for all seven exact-SHA workflows to finish before another push.",
-  "push_status": "R2.8.102 was pushed once to origin/main at 636b8fbe935b4225ef724d1fa56df3a7d92c4d49. All seven required workflows are terminal: six passed and Obsidian round-trip failed on all three platforms due normalization of noncanonical Ascending.base YAML. The outcome and artifact digests are recorded in evidence/r2.8.102-attempt-1-636b8fb.json. origin/main remains at this SHA; R2.8.103 is being prepared locally.",
+  "last_reconciled_head": "de462533be90985ba1dbb368e70231ffc1edd815",
+  "current_milestone": "R2.8.104 C07.2 omitted-direction reference capture repair (local; not pushed)",
+  "next_action": "R2.8.104 implementation and acceptance notes are prepared locally after static source review. Verify origin/main still equals starting SHA de462533be90985ba1dbb368e70231ffc1edd815, stage only the R2.8.104 capture/evidence/progress files, and submit one accumulated milestone push; exclude crates/doc/src/bases.rs and fixtures/c07-bases.json. Then hold the exact pushed SHA until every required workflow and job is terminal and reconciled.",
+  "push_status": "R2.8.103 was pushed once to origin/main at de462533be90985ba1dbb368e70231ffc1edd815. All seven required workflows and all 20 jobs are terminal: 17 passed and the three Obsidian 1.14.4 round-trip jobs failed at the omitted-direction groupBy parse error. No follow-up batch has been pushed. Keep origin/main at de46253 while R2.8.104 is prepared locally; push only after its named milestone is complete.",
   "blockers": [
-    "R2.8.102 attempt 1 is terminal but not accepted on 636b8fbe935b4225ef724d1fa56df3a7d92c4d49. Six required workflows passed; all three Obsidian round-trip jobs failed because Obsidian rewrote the synthetic Ascending.base from quoted name/property note.team to canonical unquoted name/property team. The multi-table capture itself recorded identical ASC and DESC group/row orders across the three platforms, but omitted/invalid and reopen observations are incomplete. R2.8.103 must seed canonical YAML and pass fresh exact-SHA round-trip capture before C07.2 parity can be closed. Keep local Rust evaluator/fixture edits separate until observations are finalized."
+    "R2.8.102 attempt 1 is terminal but not accepted on 636b8fbe935b4225ef724d1fa56df3a7d92c4d49. Six required workflows passed; all three Obsidian round-trip jobs failed because Obsidian rewrote the synthetic Ascending.base from quoted name/property note.team to canonical unquoted name/property team. R2.8.103 corrected that source normalization and captured matching ASC/DESC behavior, but its own terminal blocker is the omitted-direction parse error described below. Keep local Rust evaluator/fixture edits separate until reference capture is finalized.",
+    "R2.8.103 attempt 1 is terminal but not accepted on exact SHA de462533be90985ba1dbb368e70231ffc1edd815. All seven required workflows and 20 jobs finished: 17 jobs passed; Linux, macOS, and Windows Obsidian round-trip jobs failed after selecting Omitted Direction.base and displaying the same groupBy parse error with no rendered groups/rows. Explicit ASC/DESC captures matched across the platforms and source hashes remained unchanged. The probe did not reach SIDEWAYS or reopen. R2.8.104 is the local capture-repair milestone; keep the remote SHA fixed until that milestone and evidence package are ready."
   ],
   "phases": {
     "R0": {
@@ -50,7 +51,7 @@
         "plugin-renderer"
       ],
       "implementation_sha": "779a33325be6e1cb5ebee30d7a69afa60a4da571",
-      "next_action": "R2.8.101 attempt 2 on e85c40329a9b0597822901bc026414556db3285d is terminal but not accepted: all Rust CI jobs passed and all three Obsidian round-trip jobs failed in the shared DOM row-capture logic. Complete R2.8.102's capture repair, then use its fresh CI evidence before resuming C07 parity work. Keep the local Bases evaluator/fixture work out of the capture-repair push."
+      "next_action": "Finish the probe control flow, requirement/evidence updates, and acceptance notes locally. Keep the provisional Rust Bases parser/evaluator and fixture changes out of this batch. Push one accumulated batch only after its acceptance package is ready, then hold that exact SHA until all seven required workflows and jobs are terminal and reconciled."
     },
     "R3": {
       "status": "pending",
@@ -79,6 +80,7 @@
     }
   },
   "completed_actions": [
+    "R2.8.103 attempt 1 was reconciled as terminal but not accepted on exact SHA de462533be90985ba1dbb368e70231ffc1edd815. Seventeen of 20 jobs passed; the three pinned Obsidian round-trip jobs all captured matching ASC/DESC group orders and unchanged source hashes, then failed on the selected omitted-direction .base with the same visible groupBy parse error. All artifact IDs, sizes, digests, expirations, and job outcomes are recorded in evidence/r2.8.103-attempt-1-de46253.json. The goal now explicitly says not to push after every minor change and to batch work at a named milestone boundary. No local executable validation was run.",
     "R2.8.100 repair attempt 3 passed all seven required GitHub Actions workflows and all 20 jobs on exact SHA 779a33325be6e1cb5ebee30d7a69afa60a4da571. C08 and the R2.8.100 milestone are accepted; exact run/job IDs and 16 artifact IDs, sizes, SHA-256 digests, and expirations are in evidence/r2.8.100-attempt-3-779a333.json. The Obsidian round-trip artifact does not contain C07 probe data because C07 was not in that SHA. No local executable validation was run.",
     "The R2.8.101 capture probe now identifies its milestone and capture-only scope in the report. Unsupported-direction read failures fall back to the last known state; screenshot errors are recorded; and even an initial renderer-read failure is saved with the available state instead of escaping before report persistence. Heading/row candidates are filtered to visible elements. Read-only subagent review found no remaining capture acceptance gap. These are source edits only and await GitHub Actions; no local executable validation was run.",
     "Read-only C07.2 probe reviews led to stronger local reference coverage: extract per-group row order using visible DOM heading/row geometry; verify fixture row membership; sample supported views until settled; capture failed selection/render state and screenshots; retain each completed view in the report; and recheck source hashes on probe failure. Clarified that observed per-group order must be reconciled from pinned Obsidian into fixtures before Rust parity is accepted. Direction and omitted-order fixture cases are explicitly marked provisional. These edits are outside origin/main and are tracked under the separate R2.8.101 reference-capture milestone; no local executable validation was run.",
@@ -354,7 +356,8 @@
     "R2.8.95 attempt 4 ran on exact source SHA b14b10c7dd4678f03a4ecf1a10b571d3321693fb and is not accepted. Inventory, desktop build, plugin renderer, loaded-plugin workflows, and Rust CI passed (including Rust 1.95 and all three OSes). Quality failed on all three OSes because Knip reported unlisted pbcopy. The Obsidian 1.14.4 round-trip passed on Linux; macOS exact clipboard readback and screenshot showed the expected Markdown destination but OCR read the .md suffix as \u201cmq\u201d, blocking preview before note creation; Windows exact readback stopped at 28 characters of the expected 32-character prefix while editing an unsaved draft, before Canvas Save. Exact run/job IDs and 12 artifact IDs, sizes and digests are recorded in evidence/r2.8.95-attempt-4-b14b10c.json. Focused attempt 5 fixes are prepared; no local tests, builds, formatters, linters, validators or application launches were run.",
     "R2.8.98 attempt 3 on exact SHA 8bbcaaffbf4247786e87b3065549fe67881a6e1c completed and is not accepted. Six required workflows passed; Rust CI failed on MSRV 1.95, Ubuntu, Windows, and macOS because the selector fixture placed a JSON formula at the root rather than inside the selected view (114 passed, 1 failed per job), and Ubuntu also reported four rustfmt-only layout differences. The focused attempt 4 source correction is prepared. Exact jobs and all 12 artifact IDs/sizes/digests are in evidence/r2.8.98-attempt-3-8bbcaaf.json. No local validation was run.",
     "R2.8.98 attempt 4 on exact SHA 1d096a859c9d95cb0d6c047cd3cb25c858b35310 completed and is not accepted. Inventory, quality, desktop build, loaded plugins, plugin renderer, and Linux/Windows/macOS Obsidian round-trip passed; Rust CI passed MSRV 1.95 and workspace tests but failed Clippy on large_enum_variant and let_and_return on Ubuntu/macOS/Windows. Focused correction boxes BaseFileEvaluation in the asynchronous message and returns the view-label match directly. All exact jobs and 12 artifact IDs/sizes/digests are in evidence/r2.8.98-attempt-4-1d096a8.json. No local validation was run.",
-    "R2.8.102 attempt 1 reconciled at exact SHA 636b8fbe935b4225ef724d1fa56df3a7d92c4d49: six required workflows passed, while all three Obsidian round-trip jobs failed after Obsidian normalized noncanonical Ascending.base YAML. ASC/DESC multi-table observations matched across platforms; omitted/invalid and reopen capture remain incomplete. Full job/artifact evidence is evidence/r2.8.102-attempt-1-636b8fb.json."
+    "R2.8.102 attempt 1 reconciled at exact SHA 636b8fbe935b4225ef724d1fa56df3a7d92c4d49: six required workflows passed, while all three Obsidian round-trip jobs failed after Obsidian normalized noncanonical Ascending.base YAML. ASC/DESC multi-table observations matched across platforms; omitted/invalid and reopen capture remain incomplete. Full job/artifact evidence is evidence/r2.8.102-attempt-1-636b8fb.json.",
+    "A read-only audit of the parked C07.2 Rust candidate found a likely null-bucket mismatch: its ASC comparator places missing values before populated groups, while the provisional R2.8.102 capture placed None last for both ASC and DESC. Current direction fixtures omit missing-value rows and do not cover all captured paths. Defer changes until R2.8.103 completes all direction/reopen capture; no executable validation was run."
   ],
   "ci_results": [
     {
@@ -34237,8 +34240,50 @@
         "OpenObsidian Rust CI",
         "Obsidian vault round-trip acceptance"
       ],
+      "attempts": [
+        {
+          "attempt": 1,
+          "source_sha": "de462533be90985ba1dbb368e70231ffc1edd815",
+          "outcome": "not_accepted",
+          "evidence": "evidence/r2.8.103-attempt-1-de46253.json",
+          "workflow_runs": {
+            "quality": 38480428475,
+            "inventory": 38480428584,
+            "loaded_plugins": 38480428472,
+            "desktop_build": 38480428526,
+            "rust_ci": 38480428606,
+            "vault_roundtrip": 38480428571,
+            "plugin_renderer": 38480428613
+          },
+          "finding": "All seven required workflows and all 20 jobs reached terminal state on exact SHA de462533be90985ba1dbb368e70231ffc1edd815. Inventory, quality, loaded plugins, desktop build, plugin renderer, and all four Rust CI jobs passed (17 jobs total). All three Obsidian 1.14.4 round-trip jobs failed after successfully selecting Omitted Direction.base: the pinned app displayed \"groupBy\" must be a object and no groups/rows. The ASC order was Alpha, Bravo, Zulu, None and DESC was Zulu, Bravo, Alpha, None on all three platforms; each first-open report shows source hashes unchanged. Omitted parse rejection stopped the probe before SIDEWAYS and reopen. Exact job IDs, artifact IDs, sizes, digests, and expirations are in evidence/r2.8.103-attempt-1-de46253.json. No local executable validation was run."
+        }
+      ],
+      "next_action": "R2.8.103 is terminal but not accepted. R2.8.104 will adjust the reference probe to record the exact pinned omitted-direction parse rejection as a settled outcome, continue to SIDEWAYS, and compare first-open/reopen observations while retaining strict source hashes on all three OSes. The provisional Rust Bases parser/evaluator and fixture edits remain outside this capture repair."
+    },
+    "R2.8.104": {
+      "status": "in_progress",
+      "starting_sha": "de462533be90985ba1dbb368e70231ffc1edd815",
+      "scope": "Clarify goal.md so minor work accumulates locally and origin/main receives one push at a named milestone boundary; repair the C07.2 pinned-reference capture after R2.8.103 established that Obsidian 1.14.4 parse-rejects the tested native-YAML groupBy mapping when direction is omitted. Persist that exact-file parse error as a settled observation, continue to unsupported-direction capture, compare first-open and reopen results across Linux, macOS, and Windows, and preserve strict .base/note hashes. Keep provisional Rust Bases evaluator and fixture parity edits outside this reference-capture batch.",
+      "acceptance": [
+        "Retain the canonical native YAML seeds and strict source hashes; no .base or note source changes during first open, tab changes, reopen, or shutdown.",
+        "For ASC and DESC, capture all ten seeded paths, every group including None with all four .base rows, and per-group row order from all visible Bases table roots on first open and reopen across Linux, macOS, and Windows.",
+        "For the missing-direction native-YAML mapping, require the exact target .base to be selected and active as a Bases view; require settled state on first open and reopen; capture the `.bases-error` parse rejection, body, DOM diagnostics, screenshot, and empty group/row result; and require that error observation to be stable across reopen. Do not infer a default order.",
+        "After the omitted parse rejection, continue to SIDEWAYS and preserve the pinned app\u2019s actual selected path, view type, settled body/notices, group/row observation, and screenshot on first open and reopen; do not assume fallback behavior.",
+        "Compare explicit ASC/DESC group and row order across reopen; compare the omitted parse-error state in its separate error-stability result; and compare unsupported-direction observations without asserting a fallback. Save every completed observation before opening the next case and retain source hashes at each boundary.",
+        "All seven required GitHub Actions workflows pass on the exact pushed SHA and artifacts contain the three-platform reference reports. Executable validation runs only in GitHub Actions; do not push minor progress while building this milestone.",
+        "goal.md explicitly says not to push after every minor change and to make one accumulated origin/main push after the named milestone implementation and CI-ready acceptance package are complete; keep the pushed SHA fixed until all required CI workflows finish."
+      ],
+      "required_workflows": [
+        "Rust migration inventory",
+        "OpenObsidian quality",
+        "OpenObsidian desktop build",
+        "OpenObsidian plugin renderer matrix",
+        "OpenObsidian loaded plugin workflows",
+        "OpenObsidian Rust CI",
+        "Obsidian vault round-trip acceptance"
+      ],
       "attempts": [],
-      "next_action": "Complete the local source/evidence package, then make one accumulated push for R2.8.103. Hold origin/main at its submitted SHA until every required workflow is terminal and reconciled."
+      "next_action": "Finish the probe control flow, requirement/evidence updates, and acceptance notes locally. Keep the provisional Rust Bases parser/evaluator and fixture changes out of this batch. Push one accumulated batch only after its acceptance package is ready, then hold that exact SHA until all seven required workflows and jobs are terminal and reconciled."
     }
   },
   "ci_preparation": {

@@ -5798,3 +5798,70 @@ omitted, and unsupported direction through first open and reopen on all three
 platforms. The provisional Rust evaluator and fixture changes stay separate
 until the complete reference result is available. `origin/main` remains at
 `636b8fb`; no local executable validation was run.
+
+## 2026-10-13 — R2.8.103 submitted to GitHub Actions
+
+Pushed the single completed canonical-fixture capture batch to `origin/main` at
+exact SHA `de462533be90985ba1dbb368e70231ffc1edd815` (commit `de46253`). All seven required workflows were queued:
+quality `38480428475`, inventory `38480428584`, loaded plugins `38480428472`,
+desktop build `38480428526`, Rust CI `38480428606`, Obsidian round-trip
+`38480428571`, and plugin renderer `38480428613`. The initial exact-SHA snapshot
+is in [`evidence/r2.8.103-attempt-1-de46253.json`](evidence/r2.8.103-attempt-1-de46253.json).
+Keep `origin/main` at this SHA until every required workflow/job is terminal and
+reconciled. The provisional Rust Bases evaluator and fixture edits remain local.
+No local executable validation was run.
+
+## Read-only C07.2 candidate review during R2.8.103 CI wait
+
+The parked `crates/doc/src/bases.rs` candidate orders the missing-value group
+before populated groups for ASC. The provisional R2.8.102 reference capture put
+`None` last for both ASC and DESC. Its current direction fixtures omit the
+missing-value rows and do not cover all ten observed paths or the two-row Alpha
+and Bravo groups. Omitted-direction default, invalid-direction fallback, numeric
+ordering, reopen stability, and source preservation remain unverified. Reconcile
+these in the later parity milestone after R2.8.103 produces complete reference
+results; no implementation change or executable validation was made during the
+CI wait.
+
+
+## 2026-10-13 — R2.8.103 attempt 1 reconciled; R2.8.104 prepared
+
+All seven required workflows and all 20 jobs reached terminal state on exact SHA
+`de462533be90985ba1dbb368e70231ffc1edd815`. Inventory, quality, loaded plugins,
+desktop build, plugin renderer, and all four Rust CI jobs passed (17 jobs).
+Obsidian vault round-trip `38480428571` failed on Windows job `115581379170`,
+macOS job `115581379491`, and Ubuntu job `115581379508`. Each platform
+selected `Omitted Direction.base` successfully and showed the same `.bases-error`
+message, `"groupBy" must be a object in view "C07 group direction omitted"`,
+with no groups or rows. ASC was `Alpha, Bravo, Zulu, None`; DESC was
+`Zulu, Bravo, Alpha, None`, with matching row membership/order across all three
+first-open reports. Source hashes were unchanged. The failed omitted case stopped
+the probe before SIDEWAYS or reopen capture, so R2.8.103 is not accepted. All
+20 job conclusions and the 16 exact artifact IDs, sizes, archive digests, and
+expirations are in
+[`evidence/r2.8.103-attempt-1-de46253.json`](evidence/r2.8.103-attempt-1-de46253.json).
+
+Prepared R2.8.104 as a focused C07.2 reference-capture repair: treat the tested
+missing-direction native-YAML mapping as the pinned app's visible parse-error
+outcome after exact-file selection, retain settled DOM/screenshot/hash evidence,
+continue to SIDEWAYS, and compare all observations after reopen on Linux, macOS,
+and Windows. Keep the parked Rust Bases evaluator/fixture changes separate until
+the full reference result is available. The goal wording now explicitly says not
+to push after every minor change; accumulate related changes into one named
+milestone batch, push once when its acceptance package is ready, and wait for all
+exact-SHA CI workflows before another push. `origin/main` remains at `de46253`;
+no local executable validation was run.
+
+## R2.8.104 capture repair package prepared
+
+Static review tightened the omitted-direction probe: it now fails if the
+expected `.bases-error` state does not settle, checks settled observations on
+first open and reopen, and reports omitted parse-error stability separately
+from explicit ASC/DESC group and row-order stability. The report metadata now
+describes the pinned `groupBy` parse rejection and does not claim an omitted
+group or row order. R2.8.104 acceptance notes require this separate error
+comparison. The migration goal specifies one accumulated push at a named
+milestone boundary and a fixed remote SHA while CI runs, including the expected
+multi-hour wait. The package is ready for one push after confirming the remote
+still matches its starting SHA; parked Rust Bases evaluator/fixture edits remain
+excluded. No local executable validation was run.

@@ -123,11 +123,11 @@ const report: Record<string, unknown> = {
   },
   bases_group_direction_reference: {
     status: "pending",
-    milestone: "R2.8.101-C07.2-pinned-reference-capture",
+    milestone: "R2.8.104-C07.2-omitted-direction-reference-capture-repair",
     capture_scope: "Record pinned Obsidian behavior only; Rust fixture reconciliation and parity acceptance are a separate milestone.",
     application: "Pinned Obsidian Desktop 1.14.4",
     explicit_direction_expectation: "Record rendered ASC/DESC group and row order without judging it against a Rust or preset expectation; reconcile the captured result in the follow-up parity milestone.",
-    omitted_direction_expectation: "Record the pinned app's omitted-direction group and row order and compare it across reopen; do not assume a default order.",
+    omitted_direction_expectation: "The pinned app rejects the tested native-YAML groupBy mapping when direction is omitted with `groupBy` must be a object; capture the settled exact-file error state on first open and reopen, record no group or row order, and do not infer a default.",
     fixture_paths_to_observe: basesDirectionFixturePaths,
     omitted_direction: omittedBasesDirection,
     invalid_direction: invalidBasesDirection,
@@ -139,7 +139,7 @@ const report: Record<string, unknown> = {
     "The run proves read-only startup, source preview and close, external note creation, in-place edit, and rename followed by explicit UI refresh and preview, native image-embed resolution and external attachment removal followed by refresh/re-resolution, plus explicit Canvas text-card note preview/review/confirmation before first-open and reopened-vault visibility, native folder-picker selection and cancellation, and Obsidian reopen on the recorded runner platform only; other operating systems require their own passing artifact.",
     "The deliberate external note creation, in-place note edit, attachment removal, and note rename each establish a new baseline; all subsequent no-op operations must preserve the latest applicable baseline exactly.",
     "The Canvas check uses a dedicated reference-compatible fixture and fresh Obsidian profile, edits one native text card with no write before explicit save, verifies the saved JSON differs only at that selected card's text while preserving sibling nodes and edges, creates one Markdown note afterward with the edited text-card bytes, exposes the edited text and referenced block content, and checks the edited Canvas and note after first-open and reopened-vault sessions. The codec's rich unknown-field fixture remains covered by Rust tests and is not opened by Obsidian. This does not certify every Canvas workflow or cross-platform behavior beyond the recorded runner.",
-    "The C07 reference probe opens synthetic Bases files with explicit ASC and DESC, omitted direction, and an unsupported direction. It captures every rendered group and file row from the Bases table on first open and reopen, including the null-value group containing the .base files, without judging the observed ordering against preset expectations. It records screenshots and exact source hashes; interpretation and Rust fixture reconciliation belong to the follow-up parity milestone.",
+    "The C07 reference probe opens synthetic Bases files with explicit ASC and DESC, omitted direction, and an unsupported direction. For ASC and DESC it captures every rendered group and file row from all Bases table roots on first open and reopen, including the null-value group containing the .base files, without judging observed ordering against preset expectations. For the tested omitted-direction native-YAML mapping, it captures the settled exact-file parse rejection (`groupBy` must be a object) and records no group or row order; it does not infer a default. The unsupported direction remains a capture-only observation. The probe records screenshots and exact source hashes; interpretation and Rust fixture reconciliation belong to the follow-up parity milestone.",
     "This run does not certify all product C01 flows or general plugin/theme compatibility.",
   ],
 };
@@ -7475,6 +7475,23 @@ function hasCompleteBasesGroupCapture(state: BasesDirectionGroupCapture): boolea
     && hasCompleteBasesFixturePathSet(state);
 }
 
+function hasExpectedOmittedGroupDirectionParseError(
+  state: BasesDirectionViewObservation | BasesDirectionVisibleState,
+  basePath: string,
+  viewName: string,
+): boolean {
+  const expectedMessage = `"groupBy" must be a object in view "${viewName}"`;
+  return state.active_file_path === basePath
+    && state.active_view_type === "bases"
+    && state.body.includes("Unable to parse your base file:")
+    && state.body.includes(expectedMessage)
+    && state.group_order_from_rendered_rows.length === 0
+    && Object.keys(state.row_order_by_group_from_dom).length === 0
+    && state.rendered_file_paths.length === 0
+    && state.bases_dom_candidates.some((candidate) => candidate.class_name.includes("bases-error")
+      && candidate.text.includes(expectedMessage));
+}
+
 type BasesDirectionVisibleState = Omit<
   BasesDirectionViewObservation,
   "previous_active_file_path" | "previous_active_view_type" | "previous_body" | "previous_notices" | "state_transition_observed" | "state_settled" | "state_samples" | "screenshot"
@@ -7519,6 +7536,7 @@ async function verifyBasesDirectionVisible(
   const label = direction === omittedBasesDirection ? "omitted" : direction;
   const viewName = `C07 group direction ${label}`;
   const unsupportedDirection = direction === invalidBasesDirection;
+  const omittedDirection = direction === omittedBasesDirection;
   const fixturePaths = JSON.stringify(basesDirectionFixturePaths);
   const readVisible = async () => await connection.evaluateJson<BasesDirectionVisibleState>(`(() => {
     const fixturePaths = ${fixturePaths};
@@ -7943,7 +7961,7 @@ async function verifyBasesDirectionVisible(
     await persistProbeFailure(lastState, error);
     throw error;
   }
-  if (unsupportedDirection) {
+  if (unsupportedDirection || omittedDirection) {
     try {
       visible = beforeSelection;
       let stableFingerprint = JSON.stringify(visible);
@@ -7963,12 +7981,17 @@ async function verifyBasesDirectionVisible(
         }
         visible = next;
         const targetSelected = next.active_file_path === basePath;
+        const expectedOmittedParseError = omittedDirection
+          && hasExpectedOmittedGroupDirectionParseError(next, basePath, viewName);
         const visibleStateChanged = next.active_file_path !== beforeSelection.active_file_path
           || next.active_view_type !== beforeSelection.active_view_type
           || next.title !== beforeSelection.title
           || next.body !== beforeSelection.body
           || !isDeepStrictEqual(next.notices, beforeSelection.notices);
-        if (stableSamples >= 3 && (targetSelected || visibleStateChanged || Date.now() >= noTransitionDeadline)) {
+        const isReady = omittedDirection
+          ? expectedOmittedParseError
+          : targetSelected || visibleStateChanged || Date.now() >= noTransitionDeadline;
+        if (stableSamples >= 3 && isReady) {
           break;
         }
       }
@@ -7978,6 +8001,12 @@ async function verifyBasesDirectionVisible(
         || visible.body !== beforeSelection.body
         || !isDeepStrictEqual(visible.notices, beforeSelection.notices);
       stateSettled = stableSamples >= 3;
+      if (omittedDirection && !stateSettled) {
+        throw new Error(`${stage}: omitted-direction parse error did not settle; samples=${JSON.stringify(stateSamples).slice(0, 8_000)}`);
+      }
+      if (omittedDirection && !hasExpectedOmittedGroupDirectionParseError(visible, basePath, viewName)) {
+        throw new Error(`${stage}: Obsidian did not show the pinned omitted-direction groupBy parse error for the selected ${basePath}; state=${JSON.stringify(visible).slice(0, 8_000)}`);
+      }
       // SIDEWAYS is a capture-only probe: preserve partial or empty fallback
       // observations without imposing the supported directions' full fixture set.
       if (visible.unmapped_group_heading_count > 0
@@ -8050,7 +8079,7 @@ async function verifyBasesDirectionVisible(
   if (!unsupportedDirection && (visible.active_file_path !== basePath || visible.active_view_type !== "bases")) {
     throw new Error(`${stage}: ${basePath} did not open as a Bases view: ${JSON.stringify({path: visible.active_file_path, type: visible.active_view_type})}`);
   }
-  if (!unsupportedDirection && (visible.active_view_type !== "bases" || !visible.body.includes(viewName))) {
+  if (!unsupportedDirection && !omittedDirection && (visible.active_view_type !== "bases" || !visible.body.includes(viewName))) {
     throw new Error(`${stage}: Obsidian did not render the ${direction} Bases view: ${JSON.stringify({path: visible.active_file_path, type: visible.active_view_type, body: visible.body.slice(0, 3_000)})}`);
   }
   const screenshot = `obsidian-bases-${direction.toLowerCase()}-${stage}.png`;
@@ -8172,7 +8201,7 @@ async function runBasesDirectionReferenceProbe(): Promise<void> {
     basesReport.second_shutdown_source_hashes = secondCloseHashes;
     basesReport.source_hashes_unchanged_across_both_sessions = isDeepStrictEqual(sourceHashes, secondCloseHashes);
     const allDirections = ["ASC", "DESC", omittedBasesDirection, invalidBasesDirection] as const;
-    const supportedDirections = ["ASC", "DESC", omittedBasesDirection] as const;
+    const supportedDirections = ["ASC", "DESC"] as const;
     basesReport.group_order_by_direction_on_first_open = Object.fromEntries(
       allDirections.map((direction) => [direction, firstViews[direction].group_order_from_rendered_rows]),
     );
@@ -8186,12 +8215,12 @@ async function runBasesDirectionReferenceProbe(): Promise<void> {
       allDirections.map((direction) => [direction, reopenedViews[direction].row_order_by_group_from_dom]),
     );
     basesReport.group_order_stable_across_reopen = isDeepStrictEqual(
-      basesReport.group_order_by_direction_on_first_open,
-      basesReport.group_order_by_direction_after_reopen,
+      Object.fromEntries(supportedDirections.map((direction) => [direction, firstViews[direction].group_order_from_rendered_rows])),
+      Object.fromEntries(supportedDirections.map((direction) => [direction, reopenedViews[direction].group_order_from_rendered_rows])),
     );
     basesReport.row_order_stable_across_reopen = isDeepStrictEqual(
-      basesReport.row_order_by_group_on_first_open,
-      basesReport.row_order_by_group_after_reopen,
+      Object.fromEntries(supportedDirections.map((direction) => [direction, firstViews[direction].row_order_by_group_from_dom])),
+      Object.fromEntries(supportedDirections.map((direction) => [direction, reopenedViews[direction].row_order_by_group_from_dom])),
     );
     const fixturePathSetCaptured = (view: BasesDirectionViewObservation): boolean => {
       return hasCompleteBasesFixturePathSet(view);
@@ -8235,6 +8264,48 @@ async function runBasesDirectionReferenceProbe(): Promise<void> {
     );
     basesReport.omitted_direction_observation_on_first_open = firstViews[omittedBasesDirection];
     basesReport.omitted_direction_observation_after_reopen = reopenedViews[omittedBasesDirection];
+    basesReport.omitted_direction_parse_error_on_first_open = hasExpectedOmittedGroupDirectionParseError(
+      firstViews[omittedBasesDirection],
+      "Omitted Direction.base",
+      "C07 group direction omitted",
+    );
+    basesReport.omitted_direction_parse_error_after_reopen = hasExpectedOmittedGroupDirectionParseError(
+      reopenedViews[omittedBasesDirection],
+      "Omitted Direction.base",
+      "C07 group direction omitted",
+    );
+    const comparableOmittedParseError = (view: BasesDirectionViewObservation) => ({
+      requested_file_path: view.requested_file_path,
+      selection_succeeded: view.selection_succeeded,
+      active_file_path: view.active_file_path,
+      active_view_type: view.active_view_type,
+      state_settled: view.state_settled,
+      expected_parse_error: hasExpectedOmittedGroupDirectionParseError(
+        view,
+        "Omitted Direction.base",
+        "C07 group direction omitted",
+      ),
+      body: view.body,
+      group_order: view.group_order_from_rendered_rows,
+      row_order_by_group: view.row_order_by_group_from_dom,
+      rendered_file_paths: view.rendered_file_paths,
+      table_root_class: view.table_root_class,
+      visible_group_heading_count: view.visible_group_heading_count,
+      visible_group_row_candidate_count: view.visible_group_row_candidate_count,
+      unmapped_group_heading_count: view.unmapped_group_heading_count,
+      unmapped_group_row_candidate_count: view.unmapped_group_row_candidate_count,
+      unmapped_data_row_candidate_count: view.unmapped_data_row_candidate_count,
+      visible_data_row_candidate_count: view.visible_data_row_candidate_count,
+      visible_bases_row_candidate_count: view.visible_bases_row_candidate_count,
+      error_dom_candidates: view.bases_dom_candidates
+        .filter((candidate) => candidate.class_name.includes("bases-error"))
+        .map(({tag, class_name, role, text}) => ({tag, class_name, role, text})),
+      notices: view.notices,
+    });
+    basesReport.omitted_direction_parse_error_stable_across_reopen = isDeepStrictEqual(
+      comparableOmittedParseError(firstViews[omittedBasesDirection]),
+      comparableOmittedParseError(reopenedViews[omittedBasesDirection]),
+    );
     basesReport.invalid_direction_observation_on_first_open = firstViews[invalidBasesDirection];
     basesReport.invalid_direction_observation_after_reopen = reopenedViews[invalidBasesDirection];
     if (!basesReport.source_hashes_unchanged_across_both_sessions
@@ -8245,10 +8316,15 @@ async function runBasesDirectionReferenceProbe(): Promise<void> {
       || !Object.values(basesReport.complete_group_capture_on_first_open as Record<string, boolean>).every(Boolean)
       || !Object.values(basesReport.complete_group_capture_after_reopen as Record<string, boolean>).every(Boolean)
       || !basesReport.complete_observations_stable_across_reopen
+      || !basesReport.omitted_direction_parse_error_on_first_open
+      || !basesReport.omitted_direction_parse_error_after_reopen
+      || !basesReport.omitted_direction_parse_error_stable_across_reopen
       || firstViews[omittedBasesDirection].active_file_path !== "Omitted Direction.base"
       || firstViews[omittedBasesDirection].active_view_type !== "bases"
+      || !firstViews[omittedBasesDirection].state_settled
       || reopenedViews[omittedBasesDirection].active_file_path !== "Omitted Direction.base"
       || reopenedViews[omittedBasesDirection].active_view_type !== "bases"
+      || !reopenedViews[omittedBasesDirection].state_settled
       || firstViews[invalidBasesDirection].requested_file_path !== "Invalid Direction.base"
       || reopenedViews[invalidBasesDirection].requested_file_path !== "Invalid Direction.base"
       || firstViews[invalidBasesDirection].active_file_path !== "Invalid Direction.base"
