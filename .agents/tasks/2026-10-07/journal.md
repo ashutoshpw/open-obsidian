@@ -5222,3 +5222,338 @@ listed in the source inventory. C08 remains pending until exact-SHA GitHub
 Actions passes. No local tests, builds, formatters, linters, validators, or
 application launches were run. Commit and push the slice, then wait for all
 seven required workflows before another push.
+
+
+## 2026-10-12 — R2.8.100 attempt 1 CI underway
+
+The C08 fixture-preservation commit is pushed to `origin/main` on exact source
+SHA `0ac90e2dcbda516271c041853236215d6f08a605`. Inventory run 38232144530,
+quality 38232144652, desktop build 38232144509, plugin renderer 38232144708,
+loaded-plugin workflows 38232144613, and Obsidian vault round-trip 38232144803
+passed. Rust CI run 38232144781 is still active: MSRV job 114753944300 and
+macOS job 114753944503 passed; Ubuntu job 114753944524 failed `cargo fmt
+--all -- --check`; Windows job 114753944687 remains in workspace tests. The
+run is not accepted, and no follow-up push will supersede this exact-SHA
+validation before every required workflow is terminal.
+
+The state file now reflects the pushed SHA and live run. C07.2 group direction
+implementation, fixture, inventory/requirements updates, and the pinned
+Obsidian first-open/reopen probe remain uncommitted and separate from the C08
+formatting correction. A delegated probe review accidentally ran
+`git diff --check`; it produced no output. No local tests, builds, formatters,
+linters, application launches, or other executable validation were run.
+
+
+## 2026-10-12 — C07 documented gap crosswalk expanded
+
+The current official Bases syntax documents `groupOrder` as both a visibility
+filter and an explicit group ordering, and says `null` in that list includes
+rows with no grouped-property value. The C07 implementation inventory had not
+tracked this documented behavior. Added mandatory pending requirement C07.3
+for JSON/native YAML parsing, typed ordered values, null-group inclusion,
+precedence over groupBy direction, source preservation, and pinned Obsidian
+first-open/reopen verification.
+
+C07.2 explicitly excludes locale sorting and JavaScript number behavior above
+2^53. Added mandatory pending C07.4 to characterize and match the pinned
+Obsidian 1.14.4 behavior for locale-sensitive text ordering and large-number
+conversion/comparison/identity on the three CI operating systems. C07 parent
+acceptance now names these obligations; no documented gap is treated as
+complete. The requirements file now has 215 rows. This scope update is local
+and will be included only in a later exact-SHA milestone after the current
+R2.8.100 CI gate and C08 correction are reconciled.
+
+
+## 2026-10-12 — C07 full-syntax coverage audit
+
+A source-to-implementation crosswalk against the official Bases syntax and Views
+documentation found that the current Rust projection only collects Markdown
+notes, exposes three file fields, evaluates a narrow comparison/formula subset,
+and renders results through generic rows. Added pending C07.5–C07.9 for the
+all-file universe and file properties, expression/filter/formula semantics,
+display names and summaries, distinct core layouts, and context-sensitive
+`this.file`. Extended C07.3 to preserve typed group identity and explicitly
+listed empty groups. These rows remain pending until implementation and pinned
+Obsidian reference behavior are demonstrated in exact-SHA GitHub CI.
+
+This scope work is local while R2.8.100 attempt 1 remains active. No local tests,
+builds, formatters, linters, validators, or applications were run.
+
+
+## 2026-10-12 — R2.8.100 CI failure diagnosis
+
+A delegated read-only inspection of the completed Ubuntu Rust job logs isolated
+`cargo fmt --all -- --check` to three formatting differences in
+`crates/testkit/src/lib.rs`. The working-tree correction already expands the
+assertion, wraps the map closure, and splits the fixture-file iterator expression
+exactly as the CI formatter requested. Ubuntu workspace tests passed in parallel
+with formatting; downstream Clippy, layer, build, and probe jobs were skipped
+after the parallel group reported the formatter failure. The workflow’s native
+`parallel:` group executed successfully as configured. Windows workspace tests
+remain active, so the run is still pending and no follow-up push is made.
+
+
+A read-only review of the queued C07.2 diff found that an unsupported explicit
+`groupBy.direction` currently becomes the same internal state as an omitted
+direction. Extended C07.2 acceptance to require characterization against pinned
+Obsidian and a visible issue rather than silently falling back to first-seen
+ordering. This remains a local acceptance update pending the current R2.8.100
+run and does not alter its SHA.
+
+
+## 2026-10-12 — C07.2 malformed direction diagnostics
+
+The C07.2 source review found that an invalid explicit group direction was
+indistinguishable from an omitted direction and silently used first-seen order.
+The JSON and native YAML parsers now retain a visible `InvalidSource` issue for
+invalid direction values; the C07 fixture and inventory entry cover both input
+formats, preserve source bytes, and assert the fallback order without hiding the
+issue. These C07 changes remain uncommitted while R2.8.100 attempt 1 is active.
+No local tests, builds, formatters, linters, validators, or application launches
+were run.
+
+
+The same review found malformed `groupBy` values and objects without a string
+property were also silently ignored. The JSON/native YAML parsers now report
+those shapes as visible source issues, and the C07 fixture covers missing
+properties and unsupported value shapes while asserting rows and source remain
+intact. The C07.2 acceptance and inventory purpose now include these cases.
+
+
+## 2026-10-12 — C07.2 invalid-direction reference characterization
+
+A read-only review found the fixture's first-seen behavior for invalid explicit
+directions was not yet backed by the pinned Obsidian reference. Extended the
+round-trip probe with an unsupported `SIDEWAYS` direction, recording its visible
+view state, group order, text, and screenshots on first open and reopen. The
+probe continues to assert documented ASC/DESC behavior and source preservation;
+it does not assume how Obsidian handles the invalid value. This evidence remains
+pending until the C07 slice is pushed after R2.8.100's exact-SHA CI gate.
+
+The probe also records group order when `groupBy.direction` is omitted because
+the current first-seen expectation still needs a pinned-reference observation.
+The Rust fallback will be reconciled with both captured behaviors before C07.2
+is accepted.
+
+Reconciled C07.7–C07.9 to R3 because their acceptance requires native UI
+rendering, layouts, and presentation context. C07.2–C07.6 remain R2 document
+and evaluation work. No local tests, builds, formatters, linters, validators, or
+application launches were run.
+
+
+## 2026-10-12 — Parallel C07 review and probe hardening
+
+Delegated independent read-only reviews of the C07.2 pinned-app probe, the
+C07.3 groupOrder implementation path, and the active R2.8.100 GitHub Actions
+run. The probe review found the invalid-direction capture could accept an
+unrelated UI change, fail to record a silent no-op, and sample before the view
+settled. The probe now records distinct visible states until stable, waits a
+bounded period for a no-transition result, retains those observations through
+reopen, and requires the exact invalid-direction file to become active before
+the slice can pass. It records a failed selection as evidence and lets the
+reopen observation run before the final acceptance failure.
+
+The C07.3 review found acceptance gaps for malformed values, groupOrder without
+groupBy, typed array/object values, and the pinned runtime version. Expanded its
+criteria to characterize these cases against Obsidian 1.14.4, require visible
+issues for unsupported configurations, and cover typed equality, empty groups,
+and source preservation. Added the checksum-pinned Obsidian release manifest to
+its structured reference versions. The tracker now has 220 requirement rows.
+
+At 11:26 UTC, Rust CI run 38232144781 on SHA
+`0ac90e2dcbda516271c041853236215d6f08a605` remained in progress; Windows
+workspace tests had been active for about 1 hour 37 minutes with no visible
+logs. No push, cancel, or rerun was made. These C07 changes remain local until
+the current run is terminal and the isolated C08 correction is accepted. No
+local tests, builds, formatters, linters, validators, or application launches
+were run.
+
+
+## 2026-10-12 — Comparator and all-file metadata audit
+
+Parallel read-only reviews of C07.4 and C07.5 found that current numeric
+comparison preserves exact Rust integers above 2^53 while the legacy runtime
+uses JavaScript numbers, and that current string/path sorting is not locale
+collation. Expanded C07.4 to characterize numeric conversion, identity, sorting,
+relational/equality filters and `contains` first, reconcile existing fixture
+expectations, then cover case/diacritic/numeric-text collation and path
+tie-breaks under an explicit locale policy. C07.3 numeric group identity is
+cross-linked to this decision, and the checksum-pinned Obsidian release
+manifest is listed as a structured reference.
+
+The C07.5 audit found `VaultRoot::snapshot()` enumerates regular files but
+hashes all contents before evaluator limits apply; current session enumeration
+is Markdown-only, and no reusable timestamps or batched link index exist.
+Expanded C07.5 to require a bounded non-symlink inventory before reads/hashes,
+explicit handling of unavailable timestamps and incomplete collections, one
+indexed Markdown pass for tags/links/backlinks/embeds, attachment metadata
+without note properties, and pinned `.obsidian` inclusion/property formats.
+Added the checksum-pinned Obsidian release manifest to its references.
+
+At 11:31 UTC, Rust CI run 38232144781 remained active on Windows workspace
+tests at about 1 hour 42 minutes. Only the macOS plugin-runtime artifact was
+available at that time; all run evidence remains pending terminal completion.
+No push, cancellation, rerun, local executable validation, test, build,
+formatter, linter, or validator was run.
+
+
+## 2026-10-12 — Group identity and expression audit
+
+A follow-up C07.3 review proposed keeping `groupOrder` as three distinct parse
+states (absent, listed including an empty list, and invalid) and separating
+typed identity from the rendered group label. It identified additional pinned
+reference questions for duplicate declarations, missing versus explicit-null
+labels, array/object equality, and `groupOrder` without `groupBy`. Expanded the
+C07.3 criteria and short acceptance summary to cover those cases, match visible
+malformed-value fallback, and defer numeric identity to C07.4.
+
+The C07.6 audit found formulas are computed after filtering, JSON root filters
+are ignored, unsupported filters can be dropped when combined, and formula
+dependencies/operators/functions are mostly unsupported. Expanded C07.6 to
+require bounded JSON/native expression parsing, no silent filter removal,
+deterministic formula dependencies and cycle issues, formula evaluation before
+filter/sort/group, and context-free functions; `this` presentation behavior is
+assigned to C07.9. C07.4 comparison and C07.5 file metadata are recorded as
+dependencies. The R2 C07.2–C07.6 rows now list the checksum-pinned Obsidian
+release manifest in structured references.
+
+At 11:35 UTC, run 38232144781 remained in progress on Windows workspace tests
+at about 1 hour 46 minutes, with no logs or new artifacts. No push, cancel,
+rerun, or local executable validation was performed.
+
+## 2026-10-12 — Parallel C07 and C08 review
+
+Parallel read-only reviews confirmed that the pinned Obsidian 1.14.4 documentation
+supports formula grouping in Kanban. C07.3 and C07.6 now share a reference
+fixture with a formula dependency, a formula-derived group property, and
+groupOrder values, checked on first open and reopen. C07.5 now names the
+bounded inventory and source/metadata caps, incomplete-result behavior, the
+crates/vault inventory API co-owner, and exact file.file and file.properties
+forms. C07.6 now requires capturing the pinned app's rendered row membership
+for unsupported filters while surfacing a visible Rust compatibility issue.
+
+A read-only review of C08 at exact SHA 0ac90e2 found no high-confidence defect.
+It noted the test reads the Markdown source directly while full-tree snapshots
+check that attachment paths and bytes remain unchanged through scan, link/embed
+resolution, and reopen.
+
+At 11:46 UTC, Rust CI run 38232144781 remained in progress on Windows workspace
+tests, with no step updates since 09:48 UTC. The Ubuntu formatter check failed;
+Ubuntu workspace tests passed. Six other required workflows passed, and the
+only available Rust artifact remains the macOS Wry evidence. No push, cancel,
+rerun, or local executable validation was performed.
+
+At 11:48 UTC, the invalid-direction probe was clarified to keep no-transition as a diagnostic
+rather than an accepted compatibility result until the exact target .base
+file is active. If selection fails, the reference run is recorded as a
+probe failure, so it cannot be confused with Obsidian's fallback behavior.
+
+## 2026-10-12 — R3 Bases UI lookahead and C07.2 fallback audit
+
+The official Bases syntax and view pages were reviewed against C07.7–C07.9.
+C07.7 now names displayName's table-header-only use, the typed built-in Table
+summary set, per-view summary selection, grouped summary placement, and the
+values expression context shared with C07.6. C07.8 now pins one setting per
+layout and checks documented Table edits and Kanban moves/new-note actions,
+including the pinned restrictions for formula and non-folder file-property
+groups. C07.9 now requires distinct context paths, this.file in both a formula
+and a filter/function, live sidebar context updates, and the absent-context
+case. The pinned Obsidian 1.14.4 reference is listed for each child.
+
+A read-only C07.2 source review found the invalid-direction fixture expected
+first-seen group order without pinned app evidence. The fixture now marks that
+fallback as pending and retains current Rust order only as an implementation
+observation; the expected issue and source-preservation assertions remain.
+Positive ASC/DESC/omitted order assertions still live in Rust source rather than
+as shared fixture cases and should be normalized before that milestone is
+accepted.
+
+At 11:56 UTC, Rust CI run 38232144781 remained active on the Windows workspace
+test step; GitHub returned BlobNotFound for the job log. No push, cancel, rerun,
+local test, build, formatter, linter, validator, or application launch occurred.
+
+At 11:58 UTC, committed only the CI-requested testkit formatting correction as
+d6d4661fdcf139ab1459ff97f94675d9befa26ff, based on 0ac90e2. origin/main remains
+on the exact SHA under CI; the formatting commit awaits terminal results before
+push. No local hooks, tests, builds, formatters, linters, validators, or
+application launches were run.
+
+
+## 2026-10-12 — Parallel C07.2 evidence and next-slice audits
+
+Delegated separate read-only audits of the C07.2 reference probe and next R2
+milestones. The probe audit found that ASC, DESC, and omitted-direction
+observations return on the first matching UI state instead of proving settled
+output; group order is inferred from first text occurrences rather than
+asserted headings; one note per group cannot establish within-group row order;
+and positive fixture expectations lack pinned-report provenance. The parser
+source review found no high-confidence C07.2 defect. Apply these evidence
+corrections after the active C08 gate clears, before accepting C07.2.
+
+The next-slice review recommends serializing C07.2 and C07.4a because both own
+the Bases parser/fixture, then adding C07.5a as a separate bounded inventory
+API in crates/vault before engine integration. A third read-only audit found
+the current snapshot hashes every file body and the Markdown scan is unbounded;
+the additive inventory should use capability-relative no-follow traversal,
+return only stat metadata with explicit completeness, preserve the existing
+content-addressed snapshot contract, and never imply an atomic/content
+snapshot. All audits performed no local executable validation and made no
+changes to the pending C08 run.
+
+At 12:01 UTC, Rust CI run 38232144781 remained in progress on Windows workspace
+tests with no updated step data since 09:48 UTC. The isolated formatter fix
+remains local and unpushed until the run reaches a terminal state. No push,
+cancel, rerun, test, build, formatter, linter, validator, or app launch occurred.
+
+At 12:04 UTC, the same Windows workspace-test step remained active after 2h16m,
+with only the macOS Wry artifact available. A read-only source audit found no
+unbounded Rust test polling or blocking channel receive; UI wait helpers have
+5–15 second deadlines and the test fixtures are modest. One narrow candidate is
+the Windows ACL test's `whoami.exe`/`icacls.exe` subprocesses, which use
+`Command::output()` without a timeout, though source alone does not explain the
+stall. The job log remains unavailable, so no cause is attributed. No CI action
+or local executable validation was performed.
+
+At 12:07:34 UTC, GitHub still reported run 38232144781 in progress on the same
+Windows `Run workspace tests` step; MSRV and macOS passed, Ubuntu formatting
+failed, and only the macOS Wry artifact existed. A fresh job-log fetch at
+12:08:07 UTC again returned `BlobNotFound`; the workflow log-URL endpoint also
+returned 404. The job remains live and unmodified. No push, cancellation,
+rerun, or local executable validation occurred.
+
+At 12:11:37 UTC, a fresh poll of run 38232144781 still showed Windows job
+114753944687 in progress on `Run workspace tests`; the other Rust jobs remained
+MSRV/macOS success and Ubuntu failure. The required run is still live, so the
+local formatting correction remains unpushed and C07.2 remains gated. No
+cancel, rerun, push, or local executable validation occurred.
+
+## 2026-10-13 — R2.8.100 attempt 1 reconciliation and diagnostic repair
+
+At 20:31 UTC, exact-run GitHub Actions API reads confirmed all seven required
+workflows on `0ac90e2dcbda516271c041853236215d6f08a605` were terminal. Inventory,
+quality, desktop build, plugin renderer, loaded plugins, and the pinned Obsidian
+1.14.4 round-trip passed (16 jobs total). Rust CI failed: MSRV and macOS passed,
+Ubuntu failed `Check formatting` after workspace tests passed, and Windows job
+114753944687 was cancelled after its workspace test step ran from 09:48:41 to
+15:47:49 UTC. The latest available Windows test output showed
+`tests::egui_previews_existing_vault_attachment_without_changing_its_tree`
+still running at 09:51:04 UTC; the blocking statement is unknown. Attempt 1 is
+not accepted. Exact run/job URLs and the 13 artifacts returned by the artifact
+API, including sizes, digests and expirations, are recorded in
+`evidence/r2.8.100-attempt-1-0ac90e2.json`. No artifact archives were
+downloaded and no local executable validation was run.
+
+The CI-requested rustfmt correction remains committed locally as
+`d6d4661fdcf139ab1459ff97f94675d9befa26ff`. Added test-local C08 progress
+markers and a Windows-only, 20-minute exact-test CI step with `--nocapture`;
+the Windows workspace suite skips only that separately executed test. This
+keeps coverage while exposing a synchronous frame if it blocks again. Updated
+the goal's push policy to batch focused local commits at meaningful milestone
+boundaries and wait for all required exact-SHA workflows before the next push.
+These changes have not yet been run in CI. No local tests, build, formatter,
+lint, validator or application launch was run. C07.2 work remains separate and
+must stay out of the C08 repair batch.
+
+The focused R2.8.100 repair batch is committed locally. A fresh read of
+`refs/heads/main` still returned `0ac90e2dcbda516271c041853236215d6f08a605`;
+the repair batch remains unpushed pending the single milestone CI push.

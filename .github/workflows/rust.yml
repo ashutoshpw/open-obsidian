@@ -47,12 +47,22 @@ jobs:
           - name: Cache Cargo outputs
             uses: Swatinem/rust-cache@v2
 
+      # Keep the known Windows attachment-preview stall observable and bounded.
+      - name: Run Windows attachment-preview test with live diagnostics
+        if: runner.os == 'Windows'
+        timeout-minutes: 20
+        run: cargo test -p openobsidian-ui-egui --locked tests::egui_previews_existing_vault_attachment_without_changing_its_tree -- --exact --nocapture
+
       # Formatting does not share Cargo's build directory with tests, so run it concurrently.
       - parallel:
           - name: Check formatting
             if: runner.os == 'Linux'
             run: cargo fmt --all -- --check
+          - name: Run Windows workspace tests
+            if: runner.os == 'Windows'
+            run: cargo test --workspace --locked -- --skip egui_previews_existing_vault_attachment_without_changing_its_tree
           - name: Run workspace tests
+            if: runner.os != 'Windows'
             run: cargo test --workspace --locked
 
       - name: Run Clippy

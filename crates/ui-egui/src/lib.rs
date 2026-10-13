@@ -14368,6 +14368,7 @@ mod tests {
 
     #[test]
     fn egui_previews_existing_vault_attachment_without_changing_its_tree() {
+        eprintln!("[C08 attachment preview] begin fixture setup");
         let fixture: serde_json::Value = serde_json::from_str(EXISTING_VAULT_FIXTURE)
             .expect("existing-vault fixture must be valid JSON");
         let temporary = UiTempDir::new();
@@ -14386,7 +14387,9 @@ mod tests {
         std::fs::write(vault_path.join("Attachments/photo.png"), source_image).unwrap();
         let before_vault = existing_vault_tree_snapshot(&vault_path);
         let before_app_data = existing_vault_tree_snapshot(&app_data_path.0);
+        eprintln!("[C08 attachment preview] opening vault session");
         let session = VaultSession::open(&vault_path, &app_data_path.0).unwrap();
+        eprintln!("[C08 attachment preview] vault session opened");
         assert_eq!(existing_vault_tree_snapshot(&vault_path), before_vault);
         assert_eq!(
             existing_vault_tree_snapshot(&app_data_path.0),
@@ -14397,12 +14400,34 @@ mod tests {
             link_source_path: Some(Path::new("Notes/Image Preview.md").to_path_buf()),
             ..OpenObsidianApp::default()
         };
+        eprintln!("[C08 attachment preview] creating egui harness");
         let mut harness = Harness::new_ui_state(|ui, app| app.show_ui(ui), app);
+        eprintln!("[C08 attachment preview] egui harness created");
 
+        eprintln!("[C08 attachment preview] locating resolve action");
         harness.get_by_label("Resolve link status").click();
+        eprintln!("[C08 attachment preview] resolve action clicked");
+        eprintln!("[C08 attachment preview] entering initial UI frame");
         harness.step();
+        eprintln!("[C08 attachment preview] initial UI frame returned");
         assert!(harness.state().link_receiver.is_some());
-        wait_for_links(&mut harness);
+        let link_deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
+        let mut link_wait_frames = 0usize;
+        loop {
+            link_wait_frames += 1;
+            eprintln!("[C08 attachment preview] link wait frame {link_wait_frames} entering");
+            harness.step();
+            if harness.state().link_receiver.is_none() {
+                eprintln!("[C08 attachment preview] links resolved after {link_wait_frames} frames");
+                break;
+            }
+            assert!(
+                std::time::Instant::now() < link_deadline,
+                "link resolver worker did not finish within five seconds"
+            );
+            std::thread::sleep(std::time::Duration::from_millis(2));
+        }
+        eprintln!("[C08 attachment preview] checking attachment report");
         assert!(harness.state().link_error.is_none());
         assert!(harness.state().note_embed_error.is_none());
         let report = harness
@@ -14418,7 +14443,9 @@ mod tests {
                     && image.height > 0
                     && image.rgba_bytes.len() == (image.width * image.height * 4) as usize
         ));
+        eprintln!("[C08 attachment preview] querying accessible image label");
         harness.get_by_label("Accessible red dot");
+        eprintln!("[C08 attachment preview] accessible image label found");
         assert_eq!(harness.state().inline_image_textures.len(), 1);
         assert_eq!(harness.state().link_resolutions.len(), 1);
         assert_eq!(
@@ -14431,7 +14458,9 @@ mod tests {
             before_app_data
         );
 
+        eprintln!("[C08 attachment preview] dropping egui harness");
         drop(harness);
+        eprintln!("[C08 attachment preview] egui harness dropped");
         assert_eq!(existing_vault_tree_snapshot(&vault_path), before_vault);
         assert_eq!(
             existing_vault_tree_snapshot(&app_data_path.0),

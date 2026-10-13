@@ -2,15 +2,17 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-12T09:41:53Z",
+  "updated_at": "2026-10-13T20:36:17Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "b0ea75d06f3e2565b8c5dad706708561ec5190b4",
+  "last_reconciled_head": "d6d4661fdcf139ab1459ff97f94675d9befa26ff",
   "current_milestone": "R2.8.100",
-  "next_action": "C06.1 and C07.1 are reconciled as passing from accepted exact-SHA evidence. C06 and C07 remain pending with their broader Canvas and Bases compatibility bounds recorded. The fixture-first C08 attachment preservation slice is prepared locally; commit and push R2.8.100 to origin/main, then reconcile all seven exact-SHA GitHub Actions workflows before another push.",
-  "push_status": "origin/main remains at b0ea75d06f3e2565b8c5dad706708561ec5190b4, where R2.8.99 passed all seven required workflows and 20 jobs. R2.8.100 C08 fixture/test and inventory updates are prepared locally and have not been pushed; no local executable validation was run.",
-  "blockers": [],
+  "next_action": "Push the committed R2.8.100 repair batch once to origin/main after confirming it remains at 0ac90e2. Wait for all seven required workflows on the new exact SHA to finish, record every job and artifact, and address any failures in another completed repair milestone before advancing C07.2. Keep the unfinished C07.2 implementation out of this repair batch.",
+  "push_status": "origin/main remains at 0ac90e2dcbda516271c041853236215d6f08a605. Rust CI run 38232144781 and the six companion workflows are terminal on 0ac90e2. The run failed: Ubuntu formatter job 114753944524 failed; Windows job 114753944687 was cancelled after the attachment-preview test stalled nearly six hours. Formatter correction d6d4661 and the Windows diagnostic repair batch are committed locally but not pushed. No local executable validation has been run.",
+  "blockers": [
+    "R2.8.100 attempt 1 failed acceptance on exact SHA 0ac90e2dcbda516271c041853236215d6f08a605: Ubuntu failed formatting and Windows job 114753944687 was cancelled after tests::egui_previews_existing_vault_attachment_without_changing_its_tree stalled. Root cause is not established. The repair batch is prepared locally; do not advance C07.2 until all seven workflows for the repair SHA are terminal."
+  ],
   "phases": {
     "R0": {
       "status": "complete",
@@ -47,8 +49,8 @@
         "quality",
         "plugin-renderer"
       ],
-      "implementation_sha": "b0ea75d06f3e2565b8c5dad706708561ec5190b4",
-      "next_action": "C06.1 and C07.1 are passing from accepted evidence; C06 remains open for complete Canvas node coverage and C07 remains open for documented sorting/grouping/numeric bounds. Push the fixture-first C08 attachment preservation slice and wait for exact-SHA GitHub Actions."
+      "implementation_sha": "0ac90e2dcbda516271c041853236215d6f08a605",
+      "next_action": "Reconcile failed R2.8.100 attempt 1, complete a local diagnostic repair batch, push once, and obtain all seven exact-SHA CI results before C07.2."
     },
     "R3": {
       "status": "pending",
@@ -77,6 +79,12 @@
     }
   },
   "completed_actions": [
+    "Reconciled R2.8.100 attempt 1 on exact SHA 0ac90e2dcbda516271c041853236215d6f08a605 after all seven required workflows reached terminal state. Rust CI failed Ubuntu formatting and Windows was cancelled after the attachment-preview test stalled; the other 16 jobs passed. All 13 artifact IDs, sizes, archive digests, and expirations returned by the exact-run artifact API are in evidence/r2.8.100-attempt-1-0ac90e2.json. The run is not accepted. No local executable validation was run.",
+    "Committed only the CI-directed formatting correction in crates/testkit/src/lib.rs as d6d4661fdcf139ab1459ff97f94675d9befa26ff on local main. origin/main remains at the active run SHA 0ac90e2dcbda516271c041853236215d6f08a605; no push or local validation occurred.",
+    "Read-only R3 audit expanded C07.7–C07.9 for typed Table summaries/displayName semantics, per-layout settings and documented Kanban actions/restrictions, and live this.file context including sidebar file switches. Added pinned Obsidian 1.14.4 references. C07.2 source review found the invalid-direction fixture assumed an unverified first-seen fallback; marked reference_status pending and moved that order to a provisional implementation_observation so it is not treated as compatibility evidence.",
+    "Clarified C07.2 probe acceptance: a no-transition result counts as invalid-direction fallback evidence only after the exact target .base is active; failed selection is recorded as a probe failure.",
+    "Parallel read-only audits confirmed formula-derived Kanban grouping is supported by the pinned Obsidian 1.14.4 release docs, surfaced the exact C07.5 inventory/source/metadata caps and omission semantics, and pinned unsupported-filter row behavior as a reference question. C07.5 now names crates/vault inventory co-ownership and file.file/file.properties types; C07.3/C07.6 share a formula dependency/groupOrder fixture. The pushed C08 slice at 0ac90e2 had no high-confidence source-review defect. No local executable validation was run.",
+    "Delegated parallel read-only reviews of the C07.2 Obsidian probe, C07.3 groupOrder design, C07.4 comparator semantics, C07.5 vault metadata APIs, C07.6 expression semantics, and active R2.8.100 CI. Tightened the uncommitted C07.2 invalid-direction probe to record settled state samples, require actual target selection for acceptance, and retain no-transition observations through reopen. Expanded C07.3–C07.6 acceptance for typed group identity/labels and malformed fallbacks, JavaScript number/locale policy, bounded all-file inventories, honest timestamp availability, indexed Markdown metadata, deterministic formula dependencies, and unsupported-filter diagnostics; added the checksum-pinned Obsidian release reference to R2 C07.2–C07.6. These edits remain local behind R2.8.100 attempt 1; no local executable validation was run.",
     "R2.8.99 attempt 3 accepted on exact source SHA b0ea75d06f3e2565b8c5dad706708561ec5190b4 after all seven required GitHub Actions workflows and all 20 jobs passed. Rust CI passed on Rust 1.95 and Ubuntu/Windows/macOS; Obsidian 1.14.4 vault round-trip passed on Linux/Windows/macOS. All 16 artifact IDs, sizes, SHA-256 digests, and expirations are recorded in evidence/r2.8.99-attempt-3-b0ea75d.json. No local project validation was run.",
     "C06.1 and C07.1 were reconciled as passing against accepted exact-SHA evidence: C06.1 uses R2.8.95 attempt 6 SHA adc1ddce142f41dd250c37722ed8b48b9194bd5c; C07.1 uses R2.8.99 attempt 3 SHA b0ea75d06f3e2565b8c5dad706708561ec5190b4. R2.8.98 attempt 5 was excluded because its evidence says the C07.1 UI work was outside that SHA. C06 stays pending because full file/web/link/group/edge editing and rich-fixture reference-app reopen coverage remain incomplete. C07 stays pending because locale sort, groupBy.direction, and JavaScript numeric behavior above 2^53 remain bounded. No local validation was run.",
     "R2.8.99 attempt 2 completed, not accepted, on exact SHA 18c13710a5973ef6628585c391a4d033ca9fb8fe. Inventory, quality, desktop build, plugin renderer, and loaded-plugin workflows passed. Rust CI failed on four jobs because of the embedded Bases panel test; Linux round-trip failed an OCR spelling check while macOS and Windows passed. Exact job results and all 12 artifact IDs, sizes, SHA-256 digests, and expirations are recorded in evidence/r2.8.99-attempt-2-18c1371.json. No local executable validation was run.",
@@ -34040,11 +34048,28 @@
         "OpenObsidian Rust CI",
         "Obsidian vault round-trip acceptance"
       ],
-      "attempts": [],
-      "implementation_sha": null,
+      "attempts": [
+        {
+          "attempt": 1,
+          "source_sha": "0ac90e2dcbda516271c041853236215d6f08a605",
+          "outcome": "not_accepted",
+          "evidence": "evidence/r2.8.100-attempt-1-0ac90e2.json",
+          "workflow_runs": {
+            "inventory": 38232144530,
+            "quality": 38232144652,
+            "desktop_build": 38232144509,
+            "plugin_renderer": 38232144708,
+            "loaded_plugins": 38232144613,
+            "rust_ci": 38232144781,
+            "vault_roundtrip": 38232144803
+          },
+          "finding": "All seven exact-SHA workflows reached terminal state. Six companion workflows passed all 16 jobs; Rust CI passed MSRV and macOS, failed Ubuntu formatting, and Windows was cancelled after the attachment-preview test stalled. Attempt 1 is not accepted. The formatter correction and Windows diagnostic repair batch are committed locally; no local validation was run."
+        }
+      ],
+      "implementation_sha": "0ac90e2dcbda516271c041853236215d6f08a605",
       "evidence": null,
-      "push_status": "Prepared locally from accepted starting SHA b0ea75d06f3e2565b8c5dad706708561ec5190b4; not yet committed or pushed. No local tests, builds, formatters, linters, validators, or application launches were run.",
-      "next_action": "Commit and push the C08 fixture-preservation slice to origin/main; capture exact-SHA run/job/artifact metadata and wait for every required workflow to become terminal before another push."
+      "push_status": "Attempt 1 is terminal on origin/main at 0ac90e2dcbda516271c041853236215d6f08a605 and is not accepted. Exact-SHA evidence is in evidence/r2.8.100-attempt-1-0ac90e2.json. The formatter correction and Windows diagnostic repair batch are committed locally and unpushed; no local executable validation was run.",
+      "next_action": "Push the committed R2.8.100 repair batch once after confirming origin/main is unchanged. Await all seven workflows on the repair SHA before advancing C07.2."
     }
   },
   "ci_preparation": {
@@ -34108,5 +34133,5 @@
       "evidence": "evidence/parallel-quality-checks-8c84978.json"
     }
   },
-  "current_requirement_count": 212
+  "current_requirement_count": 220
 }
