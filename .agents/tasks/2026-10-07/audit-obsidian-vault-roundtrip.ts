@@ -54,17 +54,18 @@ const canvasTargetPath = "Notes/Target.md";
 const canvasTargetMarkdown = "# Heading\n\nTarget for the C06 Canvas fixture subpath. ^block-id\n";
 const canvasTargetText = "Target for the C06 Canvas fixture subpath.";
 const canvasTargetMarkdownBytes = Buffer.from(canvasTargetMarkdown, "utf8");
-const basesDirectionValues = ["Zulu", "Alpha", "Bravo"];
-const basesExplicitDirections = ["ASC", "DESC"] as const;
-const basesDirectionExpected: Record<(typeof basesExplicitDirections)[number], string[]> = {
-  ASC: ["Alpha", "Bravo", "Zulu"],
-  DESC: ["Zulu", "Bravo", "Alpha"],
-};
-const basesDirectionRowsByGroup: Record<string, string[]> = {
-  Alpha: ["02-alpha-first", "05-alpha-second"],
-  Bravo: ["03-bravo-first", "06-bravo-second"],
-  Zulu: ["01-zulu-first", "04-zulu-second"],
-};
+const basesDirectionFixturePaths = [
+  "Ascending.base",
+  "Descending.base",
+  "Invalid Direction.base",
+  "Omitted Direction.base",
+  "Notes/01-zulu-first.md",
+  "Notes/02-alpha-first.md",
+  "Notes/03-bravo-first.md",
+  "Notes/04-zulu-second.md",
+  "Notes/05-alpha-second.md",
+  "Notes/06-bravo-second.md",
+];
 const omittedBasesDirection = "OMITTED";
 const invalidBasesDirection = "SIDEWAYS";
 const obsidianAsset = requiredEnv("OBSIDIAN_RELEASE_ASSET");
@@ -125,8 +126,9 @@ const report: Record<string, unknown> = {
     milestone: "R2.8.101-C07.2-pinned-reference-capture",
     capture_scope: "Record pinned Obsidian behavior only; Rust fixture reconciliation and parity acceptance are a separate milestone.",
     application: "Pinned Obsidian Desktop 1.14.4",
-    expected_explicit_group_order: basesDirectionExpected,
-    omitted_direction_expectation: "Record the pinned app's default order and compare it across reopen; do not assume first-seen order.",
+    explicit_direction_expectation: "Record rendered ASC/DESC group and row order without judging it against a Rust or preset expectation; reconcile the captured result in the follow-up parity milestone.",
+    omitted_direction_expectation: "Record the pinned app's omitted-direction group and row order and compare it across reopen; do not assume a default order.",
+    fixture_paths_to_observe: basesDirectionFixturePaths,
     omitted_direction: omittedBasesDirection,
     invalid_direction: invalidBasesDirection,
   },
@@ -137,7 +139,7 @@ const report: Record<string, unknown> = {
     "The run proves read-only startup, source preview and close, external note creation, in-place edit, and rename followed by explicit UI refresh and preview, native image-embed resolution and external attachment removal followed by refresh/re-resolution, plus explicit Canvas text-card note preview/review/confirmation before first-open and reopened-vault visibility, native folder-picker selection and cancellation, and Obsidian reopen on the recorded runner platform only; other operating systems require their own passing artifact.",
     "The deliberate external note creation, in-place note edit, attachment removal, and note rename each establish a new baseline; all subsequent no-op operations must preserve the latest applicable baseline exactly.",
     "The Canvas check uses a dedicated reference-compatible fixture and fresh Obsidian profile, edits one native text card with no write before explicit save, verifies the saved JSON differs only at that selected card's text while preserving sibling nodes and edges, creates one Markdown note afterward with the edited text-card bytes, exposes the edited text and referenced block content, and checks the edited Canvas and note after first-open and reopened-vault sessions. The codec's rich unknown-field fixture remains covered by Rust tests and is not opened by Obsidian. This does not certify every Canvas workflow or cross-platform behavior beyond the recorded runner.",
-    "The C07 reference probe opens synthetic Bases files with explicit ASC and DESC, omitted direction, and an unsupported direction. It asserts documented ASC/DESC group order, records omitted and unsupported direction behavior without presuming their outcomes, captures screenshots on first open and reopen, and verifies the Bases and note sources remain byte-identical. It pins behavior of the recorded Obsidian 1.14.4 build and does not itself certify Rust Bases parity.",
+    "The C07 reference probe opens synthetic Bases files with explicit ASC and DESC, omitted direction, and an unsupported direction. It captures every rendered group and file row from the Bases table on first open and reopen, including the null-value group containing the .base files, without judging the observed ordering against preset expectations. It records screenshots and exact source hashes; interpretation and Rust fixture reconciliation belong to the follow-up parity milestone.",
     "This run does not certify all product C01 flows or general plugin/theme compatibility.",
   ],
 };
@@ -1647,7 +1649,7 @@ async function createBasesDirectionFixture(): Promise<Record<string, {bytes: num
     {path: "Notes/05-alpha-second.md", group: "Alpha"},
     {path: "Notes/06-bravo-second.md", group: "Bravo"},
   ];
-  basesReport.rows_by_group_from_fixture = basesDirectionRowsByGroup;
+  basesReport.fixture_paths_to_observe = basesDirectionFixturePaths;
   basesReport.reference_app_asset_sha256 = obsidianSha256;
   for (const [path, bytes] of Object.entries(files)) {
     await writeFile(join(reportDirectory, `bases-direction-${basename(path).replaceAll(".", "-")}.seed`), bytes);
@@ -7403,10 +7405,33 @@ type BasesDirectionViewObservation = {
   active_view_type: string | null;
   title: string;
   body: string;
-  group_order_from_body_text: string[];
-  group_order_from_headings: string[];
+  group_order_from_rendered_rows: string[];
   row_order_by_group_from_dom: Record<string, string[]>;
-  group_heading_candidates: string[];
+  rendered_file_paths: string[];
+  unscoped_fixture_link_paths: string[];
+  group_row_candidates: string[];
+  table_root_class: string | null;
+  visible_group_heading_count: number;
+  visible_group_row_candidate_count: number;
+  unmapped_group_heading_count: number;
+  unmapped_group_row_candidate_count: number;
+  unmapped_data_row_candidate_count: number;
+  visible_data_row_candidate_count: number;
+  visible_bases_row_candidate_count: number;
+  table_row_diagnostics: Array<{
+    kind: string;
+    group_label: string | null;
+    file_path: string | null;
+    raw_path: string | null;
+    has_file_link: boolean;
+    source_scope: string;
+    in_table: boolean;
+    text: string;
+    cell_texts: string[];
+    class_name: string;
+    top: number;
+  }>;
+  bases_dom_candidates: Array<{tag: string; class_name: string; role: string | null; text: string; top: number}>;
   notices: string[];
   previous_active_file_path: string | null;
   previous_active_view_type: string | null;
@@ -7417,6 +7442,38 @@ type BasesDirectionViewObservation = {
   state_samples: BasesDirectionStateSample[];
   screenshot: string;
 };
+
+type BasesDirectionGroupCapture = Pick<
+  BasesDirectionViewObservation,
+  | "group_order_from_rendered_rows"
+  | "row_order_by_group_from_dom"
+  | "unmapped_group_heading_count"
+  | "unmapped_group_row_candidate_count"
+  | "unmapped_data_row_candidate_count"
+>;
+
+function hasCompleteBasesFixturePathSet(
+  state: Pick<BasesDirectionViewObservation, "row_order_by_group_from_dom">,
+): boolean {
+  const observed = Object.values(state.row_order_by_group_from_dom).flat();
+  const expected = new Set(basesDirectionFixturePaths);
+  const observedSet = new Set(observed);
+  return observed.length === expected.size
+    && observedSet.size === expected.size
+    && [...expected].every((path) => observedSet.has(path));
+}
+
+function hasCompleteBasesGroupCapture(state: BasesDirectionGroupCapture): boolean {
+  return state.group_order_from_rendered_rows.length > 0
+    && state.group_order_from_rendered_rows.every((group) => {
+      const normalized = group.trim().toLowerCase();
+      return normalized !== "" && normalized !== "(unparsed group)" && normalized !== "team";
+    })
+    && state.unmapped_group_heading_count === 0
+    && state.unmapped_group_row_candidate_count === 0
+    && state.unmapped_data_row_candidate_count === 0
+    && hasCompleteBasesFixturePathSet(state);
+}
 
 type BasesDirectionVisibleState = Omit<
   BasesDirectionViewObservation,
@@ -7429,10 +7486,21 @@ type BasesDirectionStateSample = Pick<
   | "active_view_type"
   | "title"
   | "body"
-  | "group_order_from_body_text"
-  | "group_order_from_headings"
+  | "group_order_from_rendered_rows"
   | "row_order_by_group_from_dom"
-  | "group_heading_candidates"
+  | "rendered_file_paths"
+  | "unscoped_fixture_link_paths"
+  | "group_row_candidates"
+  | "table_root_class"
+  | "visible_group_heading_count"
+  | "visible_group_row_candidate_count"
+  | "unmapped_group_heading_count"
+  | "unmapped_group_row_candidate_count"
+  | "unmapped_data_row_candidate_count"
+  | "visible_data_row_candidate_count"
+  | "visible_bases_row_candidate_count"
+  | "table_row_diagnostics"
+  | "bases_dom_candidates"
   | "notices"
 >;
 
@@ -7450,60 +7518,277 @@ async function verifyBasesDirectionVisible(
         : "Invalid Direction.base";
   const label = direction === omittedBasesDirection ? "omitted" : direction;
   const viewName = `C07 group direction ${label}`;
-  const expectedOrder = direction === "ASC" || direction === "DESC"
-    ? basesDirectionExpected[direction]
-    : null;
   const unsupportedDirection = direction === invalidBasesDirection;
-  const labels = JSON.stringify(basesDirectionValues);
-  const rowsByGroup = JSON.stringify(basesDirectionRowsByGroup);
+  const fixturePaths = JSON.stringify(basesDirectionFixturePaths);
   const readVisible = async () => await connection.evaluateJson<BasesDirectionVisibleState>(`(() => {
-    const labels = ${labels};
-    const rowsByGroup = ${rowsByGroup};
+    const fixturePaths = ${fixturePaths};
     const view = window.app?.workspace?.activeLeaf?.view;
     const root = document.querySelector('.workspace-leaf.mod-active') ?? document.body;
     const body = root?.innerText ?? '';
+    const table = root?.querySelector('.bases-table, [role="table"], table') ?? null;
+    const tableContainer = table ?? root;
     const isVisibleElement = (element) => {
       const style = window.getComputedStyle(element);
       const bounds = element.getBoundingClientRect();
       return style.display !== 'none' && style.visibility !== 'hidden' && bounds.width > 0 && bounds.height > 0;
     };
-    const groupOrder = labels
-      .map((label) => ({label, index: body.indexOf(label)}))
-      .filter((entry) => entry.index >= 0)
-      .sort((left, right) => left.index - right.index)
-      .map((entry) => entry.label);
-    const headingSelector = '[role="heading"], h1, h2, h3, h4, h5, h6, [class*="group-heading"], [class*="group-header"], [class*="groupHeading"], [class*="groupHeader"]';
-    const headingElements = [...root.querySelectorAll(headingSelector)]
-      .filter(isVisibleElement)
-      .map((element) => ({element, text: (element.innerText || element.textContent || '').trim()}));
-    const headingCandidates = headingElements
-      .flatMap(({text}) => labels.filter((label) => text === label || text.startsWith(label + '\\n') || text.startsWith(label + ' ')));
-    const groupHeadingPositions = labels.map((group) => {
-      const heading = headingElements
-        .filter(({text}) => text === group || text.startsWith(group + '\\n') || text.startsWith(group + ' '))
-        .sort((left, right) => left.text.length - right.text.length)[0];
-      return heading ? {group, top: heading.element.getBoundingClientRect().top} : null;
-    }).filter((entry) => entry !== null).sort((left, right) => left.top - right.top);
-    const rowElements = [...root.querySelectorAll('*')]
-      .filter(isVisibleElement)
-      .map((element) => ({element, text: (element.innerText || element.textContent || '').trim()}));
-    const rowOrderByGroup = Object.fromEntries(Object.entries(rowsByGroup).map(([group, names]) => {
-      const headingIndex = groupHeadingPositions.findIndex((entry) => entry.group === group);
-      const heading = headingIndex < 0 ? undefined : groupHeadingPositions[headingIndex];
-      const nextHeading = headingIndex < 0 ? undefined : groupHeadingPositions[headingIndex + 1];
-      const rows = names.map((name) => {
-        const row = rowElements
-          .filter(({text}) => text.includes(name))
-          .sort((left, right) => left.text.length - right.text.length)[0];
-        return row ? {name, top: row.element.getBoundingClientRect().top} : null;
-      }).filter((entry) => entry !== null
-        && heading !== undefined
-        && entry.top >= heading.top
-        && (nextHeading === undefined || entry.top < nextHeading.top))
-        .sort((left, right) => left.top - right.top)
-        .map((entry) => entry.name);
-      return [group, rows];
+    const normalizeText = (text) => text.replace(/\\s+/g, ' ').trim();
+    const textOf = (element) => normalizeText(element?.innerText || element?.textContent || '');
+    const rowSelector = '.bases-tr, .bases-row, .bases-table-row, tr, [role="row"], li, [role="listitem"]';
+    const linkSelector = 'a[data-href], [data-href], a[data-path], [data-path], a.internal-link, .internal-link';
+    const classTokensFor = (element) => [...(element.classList || [])].map((name) => name.toLowerCase());
+    const hasKnownBasesRowClass = (element) => classTokensFor(element)
+      .some((name) => ['bases-tr', 'bases-row', 'bases-table-row'].includes(name));
+    const hasBasesGroupHeadingClass = (element) => classTokensFor(element)
+      .some((name) => ['bases-group-heading', 'bases-group-header'].includes(name));
+    const hasBasesGroupRowClass = (element) => classTokensFor(element).includes('bases-group-row');
+    const hasKnownBasesGroupClass = (element) => hasBasesGroupHeadingClass(element) || hasBasesGroupRowClass(element);
+    const hasKnownBasesHeaderClass = (element) => classTokensFor(element).some((name) => name.startsWith('bases-')
+      && !name.startsWith('bases-group-')
+      && (name.includes('header') || name.includes('thead') || name === 'bases-th' || name.includes('column-header')));
+    const pathByDisplayName = new Map(fixturePaths.flatMap((path) => {
+      const filename = path.split('/').at(-1) || path;
+      const withoutExtension = filename.replace(/\\.(?:md|base)$/i, '');
+      return [[filename.toLowerCase(), path], [withoutExtension.toLowerCase(), path]];
     }));
+    const normalizePath = (path) => path.trim()
+      .split(String.fromCharCode(92)).join('/')
+      .split('/')
+      .filter((part) => part && part !== '.')
+      .join('/');
+    const fixturePathFor = (rawPath, linkText) => {
+      for (const candidate of [rawPath, linkText]) {
+        if (!candidate) continue;
+        const normalized = normalizePath(candidate);
+        const exactPath = fixturePaths.find((path) => path.toLowerCase() === normalized.toLowerCase());
+        if (exactPath) return exactPath;
+        const basename = normalized.split('/').at(-1) || '';
+        const lowerBasename = basename.toLowerCase();
+        const withoutExtension = lowerBasename.endsWith('.md')
+          ? lowerBasename.slice(0, -3)
+          : lowerBasename.endsWith('.base')
+            ? lowerBasename.slice(0, -5)
+            : lowerBasename;
+        const alias = pathByDisplayName.get(lowerBasename) || pathByDisplayName.get(withoutExtension);
+        if (alias) return alias;
+      }
+      return null;
+    };
+    const visibleLinksFor = (element) => [...new Set([
+      ...(element.matches?.(linkSelector) ? [element] : []),
+      ...element.querySelectorAll(linkSelector),
+    ])].filter(isVisibleElement);
+    const linkPathFor = (link) => fixturePathFor(
+      link.getAttribute('data-href') || link.getAttribute('data-path') || null,
+      textOf(link),
+    );
+    const isExcludedRegion = (element) => Boolean(element.closest('.view-header, header, .bases-toolbar, [role="toolbar"], [role="alert"], .notice, .modal-container'));
+    const visibleRootRows = root
+      ? [...root.querySelectorAll(rowSelector)].filter((row) => isVisibleElement(row) && !isExcludedRegion(row))
+      : [];
+    const rawRows = tableContainer === root
+      ? visibleRootRows
+      : tableContainer
+        ? [...tableContainer.querySelectorAll(rowSelector)].filter((row) => isVisibleElement(row) && !isExcludedRegion(row))
+        : [];
+    const hasNestedRowCandidate = (row) => visibleRootRows.some((candidate) => candidate !== row && row.contains(candidate));
+    const rowOwnerFor = (element) => {
+      const owner = element.closest(rowSelector);
+      return owner && root.contains(owner) ? owner : null;
+    };
+    const visibleGroupClassElements = root
+      ? [...root.querySelectorAll('[class]')].filter((element) => isVisibleElement(element)
+        && !isExcludedRegion(element)
+        && hasKnownBasesGroupClass(element))
+      : [];
+    const visibleGroupMarkers = visibleGroupClassElements.filter((element) => {
+      const nestedGroupMarker = visibleGroupClassElements.some((candidate) => candidate !== element
+        && element.contains(candidate));
+      if (hasBasesGroupHeadingClass(element)) return !nestedGroupMarker;
+      return hasBasesGroupRowClass(element) && !nestedGroupMarker;
+    });
+    const visibleDataCellsFor = (row) => [...row.querySelectorAll('.bases-td, td, [role="cell"], [role="gridcell"]')]
+      .filter((cell) => cell.closest(rowSelector) === row
+        && isVisibleElement(cell)
+        && cell.tagName.toLowerCase() !== 'th'
+        && cell.getAttribute('role') !== 'columnheader');
+    const cellTextsFor = (row) => {
+      const semanticCells = [...row.querySelectorAll('.bases-td, td, [role="cell"], [role="gridcell"]')]
+        .filter((cell) => cell.closest(rowSelector) === row && isVisibleElement(cell));
+      const cells = semanticCells.length > 0
+        ? semanticCells
+        : [...row.children].filter(isVisibleElement);
+      return cells.map(textOf).filter(Boolean);
+    };
+    const hasTeamGroupLabel = (row) => {
+      const cellTexts = cellTextsFor(row);
+      if (cellTexts.some((text) => /\\bteam\\s+\\S+/i.test(text))) return true;
+      return cellTexts.some((text, index) => text.toLowerCase() === 'team' && Boolean(cellTexts[index + 1]));
+    };
+    const isHeaderOnlyRow = (row) => {
+      if (row.closest('thead') || row.getAttribute('role') === 'columnheader' || hasKnownBasesHeaderClass(row)) return true;
+      const cells = [...row.querySelectorAll('th, td, [role="columnheader"], [role="cell"], [role="gridcell"]')]
+        .filter((cell) => cell.closest(rowSelector) === row && isVisibleElement(cell));
+      return cells.length > 0 && cells.every((cell) => cell.tagName.toLowerCase() === 'th'
+        || cell.getAttribute('role') === 'columnheader');
+    };
+    const groupRowCandidateElements = new Set(visibleGroupMarkers.map((marker) => rowOwnerFor(marker) || marker));
+    for (const row of visibleRootRows) {
+      const hasFileLink = visibleLinksFor(row).length > 0;
+      const hasFilePathText = cellTextsFor(row).some((text) => fixturePathFor(null, text));
+      const looksLikeGroupRow = !hasFileLink && !hasFilePathText && hasTeamGroupLabel(row);
+      const isStructuralHeader = row.closest('thead')
+        || row.getAttribute('role') === 'columnheader'
+        || hasKnownBasesHeaderClass(row);
+      if (!groupRowCandidateElements.has(row)
+        && !hasNestedRowCandidate(row)
+        && !isStructuralHeader
+        && looksLikeGroupRow) {
+        groupRowCandidateElements.add(row);
+      }
+    }
+    const dataRowCandidateElements = new Set(rawRows.filter((row) => {
+      if (isHeaderOnlyRow(row) || groupRowCandidateElements.has(row)) return false;
+      if (hasNestedRowCandidate(row)) return false;
+      const hasFixtureLink = visibleLinksFor(row).some((link) => linkPathFor(link));
+      const hasVisibleDataCell = visibleDataCellsFor(row).length > 0;
+      return hasKnownBasesRowClass(row)
+        || (table !== null && hasVisibleDataCell)
+        || hasFixtureLink;
+    }));
+    const visibleFixtureLinks = root
+      ? [...root.querySelectorAll(linkSelector)].filter((link) => isVisibleElement(link)
+        && !isExcludedRegion(link)
+        && linkPathFor(link))
+      : [];
+    const unscopedFixtureLinkPaths = visibleFixtureLinks.filter((link) => {
+      if ([...dataRowCandidateElements, ...groupRowCandidateElements].some((row) => row === link || row.contains(link))) return false;
+      const owner = rowOwnerFor(link);
+      const inTable = Boolean(table?.contains(link));
+      const hasExplicitRowOwner = Boolean(owner && (hasKnownBasesRowClass(owner)
+        || owner.matches('tr, [role="row"], li, [role="listitem"]')));
+      return !inTable && !hasExplicitRowOwner;
+    }).map(linkPathFor).filter(Boolean);
+    for (const link of visibleFixtureLinks) {
+      if ([...dataRowCandidateElements, ...groupRowCandidateElements].some((row) => row === link || row.contains(link))) continue;
+      const owner = rowOwnerFor(link);
+      if (owner && isHeaderOnlyRow(owner)) continue;
+      const inTable = Boolean(table?.contains(link));
+      const hasExplicitRowOwner = Boolean(owner && (hasKnownBasesRowClass(owner)
+        || owner.matches('tr, [role="row"], li, [role="listitem"]')));
+      const inExcludedRegion = isExcludedRegion(link);
+      if (inExcludedRegion || (!inTable && !hasExplicitRowOwner)) continue;
+      dataRowCandidateElements.add(owner || link);
+    }
+    const tableRows = [...new Set([...groupRowCandidateElements, ...dataRowCandidateElements])];
+    const groupLabelFor = (row, cellTexts, heading) => {
+      const candidates = [textOf(heading), ...cellTexts, textOf(row)]
+        .filter(Boolean);
+      for (const candidate of candidates) {
+        const parts = candidate.split(/\\s+/).filter(Boolean);
+        const keyIndex = parts.findIndex((part) => part.toLowerCase() === 'team');
+        if (keyIndex >= 0 && parts[keyIndex + 1]) return parts.slice(keyIndex + 1).join(' ');
+      }
+      for (let index = 0; index < cellTexts.length - 1; index += 1) {
+        if (cellTexts[index].toLowerCase() === 'team') return cellTexts[index + 1];
+      }
+      return textOf(heading) || null;
+    };
+    const rowRecords = tableRows.map((element, index) => {
+      const bounds = element.getBoundingClientRect();
+      const cellTexts = cellTextsFor(element);
+      const heading = hasKnownBasesGroupClass(element)
+        ? element
+        : [...element.querySelectorAll('[class]')].find(hasKnownBasesGroupClass) || null;
+      const groupLabel = groupLabelFor(element, cellTexts, heading);
+      const isGroup = groupRowCandidateElements.has(element);
+      const links = visibleLinksFor(element);
+      const resolvedPaths = [...new Set(links.map(linkPathFor).filter(Boolean))];
+      const textPath = cellTexts.map((text) => fixturePathFor(null, text)).find(Boolean) || null;
+      const filePath = isGroup
+        ? null
+        : resolvedPaths.length === 1
+          ? resolvedPaths[0]
+          : (hasKnownBasesRowClass(element) || table !== null) && resolvedPaths.length === 0
+            ? textPath
+            : null;
+      const link = links[0] || (element.matches?.(linkSelector) ? element : null);
+      const rawPath = link?.getAttribute('data-href')
+        || link?.getAttribute('data-path')
+        || null;
+      const inTable = Boolean(table?.contains(element));
+      return {
+        element,
+        index,
+        kind: isGroup ? 'group' : dataRowCandidateElements.has(element) && filePath ? 'file' : 'other',
+        group_label: isGroup ? groupLabel : null,
+        file_path: isGroup || !dataRowCandidateElements.has(element) ? null : filePath,
+        raw_path: rawPath,
+        has_file_link: links.length > 0,
+        source_scope: inTable
+          ? 'table'
+          : (hasKnownBasesRowClass(element) || element.matches('tr, [role="row"], li, [role="listitem"]') ? 'explicit-row' : 'table-link'),
+        in_table: inTable,
+        text: textOf(element),
+        cell_texts: cellTexts,
+        class_name: element.getAttribute('class') || '',
+        top: bounds.top,
+      };
+    }).sort((left, right) => left.top - right.top || left.index - right.index);
+    const isParsedGroupLabel = (label) => Boolean(label && label.trim()
+      && label.toLowerCase() !== 'team'
+      && label !== '(unparsed group)');
+    const mappedGroupHeadingRows = new Set();
+    const unmappedGroupHeadingCount = visibleGroupMarkers.filter((headingElement) => {
+      const matches = rowRecords.filter((row) => (row.element === headingElement || row.element.contains(headingElement))
+        && row.kind === 'group'
+        && isParsedGroupLabel(row.group_label));
+      if (matches.length !== 1 || mappedGroupHeadingRows.has(matches[0]?.element)) return true;
+      mappedGroupHeadingRows.add(matches[0].element);
+      return false;
+    }).length;
+    const unmappedGroupRowCandidateCount = [...groupRowCandidateElements].filter((candidate) => {
+      const matches = rowRecords.filter((row) => row.element === candidate
+        && row.kind === 'group'
+        && isParsedGroupLabel(row.group_label));
+      return matches.length !== 1;
+    }).length;
+    const unmappedDataRowCandidateCount = [...dataRowCandidateElements].filter((candidate) => {
+      const matches = rowRecords.filter((row) => row.element === candidate
+        && row.kind === 'file'
+        && Boolean(row.file_path));
+      return matches.length !== 1;
+    }).length;
+    const groupOrder = [];
+    const rowOrderByGroup = {};
+    const renderedFilePaths = [];
+    let activeGroup = null;
+    for (const row of rowRecords) {
+      if (row.kind === 'group') {
+        activeGroup = row.group_label || '(unparsed group)';
+        groupOrder.push(activeGroup);
+        rowOrderByGroup[activeGroup] = rowOrderByGroup[activeGroup] || [];
+      } else if (row.kind === 'file' && row.file_path) {
+        renderedFilePaths.push(row.file_path);
+        if (activeGroup && (table === null || row.in_table)) {
+          rowOrderByGroup[activeGroup].push(row.file_path);
+        } else if (!row.in_table) {
+          activeGroup = null;
+        }
+      }
+    }
+    const visibleBasesDomElements = [...(root?.querySelectorAll('[class*="bases"], [role="table"], [role="row"], table, tr') || [])]
+      .filter(isVisibleElement);
+    const visibleBasesRowCandidateCount = groupRowCandidateElements.size + dataRowCandidateElements.size;
+    const basesDomCandidates = visibleBasesDomElements
+      .slice(0, 80)
+      .map((element) => ({
+        tag: element.tagName.toLowerCase(),
+        class_name: element.getAttribute('class') || '',
+        role: element.getAttribute('role') || null,
+        text: textOf(element).slice(0, 160),
+        top: element.getBoundingClientRect().top,
+      }));
     const notices = [...new Set([...document.querySelectorAll('.notice, .modal-container, [role="alert"]')]
       .map((element) => (element.innerText || element.textContent || '').trim())
       .filter(Boolean))];
@@ -7514,10 +7799,23 @@ async function verifyBasesDirectionVisible(
       active_view_type: view?.getViewType?.() ?? null,
       title: document.title,
       body,
-      group_order_from_body_text: [...new Set(groupOrder)],
-      group_order_from_headings: [...new Set(headingCandidates)],
+      group_order_from_rendered_rows: groupOrder,
       row_order_by_group_from_dom: rowOrderByGroup,
-      group_heading_candidates: headingCandidates,
+      rendered_file_paths: renderedFilePaths,
+      unscoped_fixture_link_paths: unscopedFixtureLinkPaths,
+      group_row_candidates: groupOrder,
+      table_root_class: table?.getAttribute('class') || null,
+      visible_group_heading_count: visibleGroupMarkers.length,
+      visible_group_row_candidate_count: groupRowCandidateElements.size,
+      unmapped_group_heading_count: unmappedGroupHeadingCount,
+      unmapped_group_row_candidate_count: unmappedGroupRowCandidateCount,
+      unmapped_data_row_candidate_count: unmappedDataRowCandidateCount,
+      visible_data_row_candidate_count: dataRowCandidateElements.size,
+      visible_bases_row_candidate_count: visibleBasesRowCandidateCount,
+      table_row_diagnostics: rowRecords.map(({kind, group_label, file_path, raw_path, has_file_link, source_scope, in_table, text, cell_texts, class_name, top}) => ({
+        kind, group_label, file_path, raw_path, has_file_link, source_scope, in_table, text, cell_texts, class_name, top,
+      })),
+      bases_dom_candidates: basesDomCandidates,
       notices,
     };
   })()`);
@@ -7529,10 +7827,21 @@ async function verifyBasesDirectionVisible(
     active_view_type: null,
     title: "",
     body: "",
-    group_order_from_body_text: [],
-    group_order_from_headings: [],
+    group_order_from_rendered_rows: [],
     row_order_by_group_from_dom: {},
-    group_heading_candidates: [],
+    rendered_file_paths: [],
+    unscoped_fixture_link_paths: [],
+    group_row_candidates: [],
+    table_root_class: null,
+    visible_group_heading_count: 0,
+    visible_group_row_candidate_count: 0,
+    unmapped_group_heading_count: 0,
+    unmapped_group_row_candidate_count: 0,
+    visible_bases_row_candidate_count: 0,
+    unmapped_data_row_candidate_count: 0,
+    visible_data_row_candidate_count: 0,
+    table_row_diagnostics: [],
+    bases_dom_candidates: [],
     notices: [],
   };
   let visible: BasesDirectionVisibleState = beforeSelection;
@@ -7545,10 +7854,21 @@ async function verifyBasesDirectionVisible(
       active_view_type: state.active_view_type,
       title: state.title,
       body: state.body.slice(0, 6_000),
-      group_order_from_body_text: state.group_order_from_body_text,
-      group_order_from_headings: state.group_order_from_headings,
+      group_order_from_rendered_rows: state.group_order_from_rendered_rows,
       row_order_by_group_from_dom: state.row_order_by_group_from_dom,
-      group_heading_candidates: state.group_heading_candidates,
+      rendered_file_paths: state.rendered_file_paths,
+      unscoped_fixture_link_paths: state.unscoped_fixture_link_paths,
+      group_row_candidates: state.group_row_candidates,
+      table_root_class: state.table_root_class,
+      visible_group_heading_count: state.visible_group_heading_count,
+      visible_group_row_candidate_count: state.visible_group_row_candidate_count,
+      unmapped_group_heading_count: state.unmapped_group_heading_count,
+      unmapped_group_row_candidate_count: state.unmapped_group_row_candidate_count,
+      visible_bases_row_candidate_count: state.visible_bases_row_candidate_count,
+      unmapped_data_row_candidate_count: state.unmapped_data_row_candidate_count,
+      visible_data_row_candidate_count: state.visible_data_row_candidate_count,
+      table_row_diagnostics: state.table_row_diagnostics,
+      bases_dom_candidates: state.bases_dom_candidates,
       notices: state.notices,
     };
     if (stateSamples.length === 0 || !isDeepStrictEqual(stateSamples[stateSamples.length - 1], sample)) {
@@ -7653,6 +7973,13 @@ async function verifyBasesDirectionVisible(
         || visible.body !== beforeSelection.body
         || !isDeepStrictEqual(visible.notices, beforeSelection.notices);
       stateSettled = stableSamples >= 3;
+      // SIDEWAYS is a capture-only probe: preserve partial or empty fallback
+      // observations without imposing the supported directions' full fixture set.
+      if (visible.unmapped_group_heading_count > 0
+        || visible.unmapped_group_row_candidate_count > 0
+        || visible.unmapped_data_row_candidate_count > 0) {
+        throw new Error(`${stage}: invalid-direction view exposed group or file rows that did not map one-to-one to rendered records; state=${JSON.stringify(visible).slice(0, 8_000)}`);
+      }
     } catch (error) {
       const afterSelection = await readVisible().catch(() => visible);
       recordStateSample(afterSelection);
@@ -7670,8 +7997,7 @@ async function verifyBasesDirectionVisible(
         viewReady = visible.active_file_path === basePath
           && visible.active_view_type === "bases"
           && visible.body.includes(viewName)
-          && basesDirectionValues.every((group) => visible.group_order_from_headings.includes(group))
-          && Object.values(basesDirectionRowsByGroup).flat().every((name) => visible.body.includes(name));
+          && hasCompleteBasesGroupCapture(visible);
         if (viewReady) break;
         await delay(500);
       }
@@ -7703,11 +8029,11 @@ async function verifyBasesDirectionVisible(
       if (!stateSettled) {
         throw new Error(`${stage}: ${direction} Bases view did not settle; samples=${JSON.stringify(stateSamples).slice(0, 8_000)}`);
       }
+      if (!hasCompleteBasesGroupCapture(visible)) {
+        throw new Error(`${stage}: settled ${direction} Bases view lost complete group or fixture-path capture; state=${JSON.stringify(visible).slice(0, 8_000)}`);
+      }
       if (visible.active_file_path !== basePath || visible.active_view_type !== "bases") {
         throw new Error(`${stage}: ${basePath} did not open as a Bases view: ${JSON.stringify({path: visible.active_file_path, type: visible.active_view_type})}`);
-      }
-      if (expectedOrder && (!visible.body.includes(viewName) || !isDeepStrictEqual(visible.group_order_from_headings, expectedOrder))) {
-        throw new Error(`${stage}: documented ${direction} group heading order differed: expected ${JSON.stringify(expectedOrder)}, got ${JSON.stringify(visible.group_order_from_headings)}; body=${JSON.stringify(visible.body.slice(0, 3_000))}`);
       }
     } catch (error) {
       const lastState = await readVisible().catch(() => visible);
@@ -7719,11 +8045,8 @@ async function verifyBasesDirectionVisible(
   if (!unsupportedDirection && (visible.active_file_path !== basePath || visible.active_view_type !== "bases")) {
     throw new Error(`${stage}: ${basePath} did not open as a Bases view: ${JSON.stringify({path: visible.active_file_path, type: visible.active_view_type})}`);
   }
-  if (expectedOrder && (visible.active_view_type !== "bases" || !visible.body.includes(viewName))) {
+  if (!unsupportedDirection && (visible.active_view_type !== "bases" || !visible.body.includes(viewName))) {
     throw new Error(`${stage}: Obsidian did not render the ${direction} Bases view: ${JSON.stringify({path: visible.active_file_path, type: visible.active_view_type, body: visible.body.slice(0, 3_000)})}`);
-  }
-  if (expectedOrder && !isDeepStrictEqual(visible.group_order_from_headings, expectedOrder)) {
-    throw new Error(`${stage}: documented ${direction} group heading order differed: expected ${JSON.stringify(expectedOrder)}, got ${JSON.stringify(visible.group_order_from_headings)}; body=${JSON.stringify(visible.body.slice(0, 3_000))}`);
   }
   const screenshot = `obsidian-bases-${direction.toLowerCase()}-${stage}.png`;
   await captureObsidianScreenshot(connection, screenshot);
@@ -7843,59 +8166,80 @@ async function runBasesDirectionReferenceProbe(): Promise<void> {
     snapshots.bases_direction_reopen_changes = reopenChanges;
     basesReport.second_shutdown_source_hashes = secondCloseHashes;
     basesReport.source_hashes_unchanged_across_both_sessions = isDeepStrictEqual(sourceHashes, secondCloseHashes);
-    basesReport.documented_orders_observed_on_first_open = isDeepStrictEqual(
-      Object.fromEntries(basesExplicitDirections.map((direction) => [direction, firstViews[direction].group_order_from_headings])),
-      Object.fromEntries(basesExplicitDirections.map((direction) => [direction, basesDirectionExpected[direction]])),
+    const allDirections = ["ASC", "DESC", omittedBasesDirection, invalidBasesDirection] as const;
+    const supportedDirections = ["ASC", "DESC", omittedBasesDirection] as const;
+    basesReport.group_order_by_direction_on_first_open = Object.fromEntries(
+      allDirections.map((direction) => [direction, firstViews[direction].group_order_from_rendered_rows]),
     );
-    basesReport.documented_orders_observed_after_reopen = isDeepStrictEqual(
-      Object.fromEntries(basesExplicitDirections.map((direction) => [direction, reopenedViews[direction].group_order_from_headings])),
-      Object.fromEntries(basesExplicitDirections.map((direction) => [direction, basesDirectionExpected[direction]])),
-    );
-    basesReport.omitted_direction_group_order_on_first_open = firstViews[omittedBasesDirection].group_order_from_headings;
-    basesReport.omitted_direction_group_order_after_reopen = reopenedViews[omittedBasesDirection].group_order_from_headings;
-    basesReport.omitted_direction_order_stable_across_reopen = isDeepStrictEqual(
-      firstViews[omittedBasesDirection].group_order_from_headings,
-      reopenedViews[omittedBasesDirection].group_order_from_headings,
-    );
-    basesReport.invalid_direction_group_order_on_first_open = firstViews[invalidBasesDirection].group_order_from_headings;
-    basesReport.invalid_direction_group_order_after_reopen = reopenedViews[invalidBasesDirection].group_order_from_headings;
-    basesReport.invalid_direction_order_stable_across_reopen = isDeepStrictEqual(
-      firstViews[invalidBasesDirection].group_order_from_headings,
-      reopenedViews[invalidBasesDirection].group_order_from_headings,
+    basesReport.group_order_by_direction_after_reopen = Object.fromEntries(
+      allDirections.map((direction) => [direction, reopenedViews[direction].group_order_from_rendered_rows]),
     );
     basesReport.row_order_by_group_on_first_open = Object.fromEntries(
-      ["ASC", "DESC", omittedBasesDirection, invalidBasesDirection].map((direction) => [direction, firstViews[direction].row_order_by_group_from_dom]),
+      allDirections.map((direction) => [direction, firstViews[direction].row_order_by_group_from_dom]),
     );
     basesReport.row_order_by_group_after_reopen = Object.fromEntries(
-      ["ASC", "DESC", omittedBasesDirection, invalidBasesDirection].map((direction) => [direction, reopenedViews[direction].row_order_by_group_from_dom]),
+      allDirections.map((direction) => [direction, reopenedViews[direction].row_order_by_group_from_dom]),
+    );
+    basesReport.group_order_stable_across_reopen = isDeepStrictEqual(
+      basesReport.group_order_by_direction_on_first_open,
+      basesReport.group_order_by_direction_after_reopen,
     );
     basesReport.row_order_stable_across_reopen = isDeepStrictEqual(
       basesReport.row_order_by_group_on_first_open,
       basesReport.row_order_by_group_after_reopen,
     );
-    const rowMembershipMatchesFixture = (view: BasesDirectionViewObservation) => Object.entries(basesDirectionRowsByGroup)
-      .every(([group, names]) => isDeepStrictEqual(
-        [...(view.row_order_by_group_from_dom[group] ?? [])].sort(),
-        [...names].sort(),
-      ));
-    basesReport.row_membership_matches_fixture_on_first_open = Object.fromEntries(
-      ["ASC", "DESC", omittedBasesDirection].map((direction) => [direction, rowMembershipMatchesFixture(firstViews[direction])]),
+    const fixturePathSetCaptured = (view: BasesDirectionViewObservation): boolean => {
+      return hasCompleteBasesFixturePathSet(view);
+    };
+    const groupCaptureComplete = (view: BasesDirectionViewObservation): boolean => hasCompleteBasesGroupCapture(view);
+    basesReport.fixture_path_set_captured_on_first_open = Object.fromEntries(
+      supportedDirections.map((direction) => [direction, fixturePathSetCaptured(firstViews[direction])]),
     );
-    basesReport.row_membership_matches_fixture_after_reopen = Object.fromEntries(
-      ["ASC", "DESC", omittedBasesDirection].map((direction) => [direction, rowMembershipMatchesFixture(reopenedViews[direction])]),
+    basesReport.fixture_path_set_captured_after_reopen = Object.fromEntries(
+      supportedDirections.map((direction) => [direction, fixturePathSetCaptured(reopenedViews[direction])]),
+    );
+    basesReport.complete_group_capture_on_first_open = Object.fromEntries(
+      supportedDirections.map((direction) => [direction, groupCaptureComplete(firstViews[direction])]),
+    );
+    basesReport.complete_group_capture_after_reopen = Object.fromEntries(
+      supportedDirections.map((direction) => [direction, groupCaptureComplete(reopenedViews[direction])]),
+    );
+    const comparableObservation = (view: BasesDirectionViewObservation) => ({
+      requested_file_path: view.requested_file_path,
+      selection_succeeded: view.selection_succeeded,
+      active_file_path: view.active_file_path,
+      active_view_type: view.active_view_type,
+      state_settled: view.state_settled,
+      body: view.body,
+      group_order: view.group_order_from_rendered_rows,
+      row_order_by_group: view.row_order_by_group_from_dom,
+      rendered_file_paths: view.rendered_file_paths,
+      unscoped_fixture_link_paths: view.unscoped_fixture_link_paths,
+      visible_group_heading_count: view.visible_group_heading_count,
+      visible_group_row_candidate_count: view.visible_group_row_candidate_count,
+      unmapped_group_heading_count: view.unmapped_group_heading_count,
+      unmapped_group_row_candidate_count: view.unmapped_group_row_candidate_count,
+      unmapped_data_row_candidate_count: view.unmapped_data_row_candidate_count,
+      visible_data_row_candidate_count: view.visible_data_row_candidate_count,
+      visible_bases_row_candidate_count: view.visible_bases_row_candidate_count,
+      notices: view.notices,
+    });
+    basesReport.complete_observations_stable_across_reopen = isDeepStrictEqual(
+      Object.fromEntries(allDirections.map((direction) => [direction, comparableObservation(firstViews[direction])])),
+      Object.fromEntries(allDirections.map((direction) => [direction, comparableObservation(reopenedViews[direction])])),
     );
     basesReport.omitted_direction_observation_on_first_open = firstViews[omittedBasesDirection];
     basesReport.omitted_direction_observation_after_reopen = reopenedViews[omittedBasesDirection];
     basesReport.invalid_direction_observation_on_first_open = firstViews[invalidBasesDirection];
     basesReport.invalid_direction_observation_after_reopen = reopenedViews[invalidBasesDirection];
     if (!basesReport.source_hashes_unchanged_across_both_sessions
-      || !basesReport.documented_orders_observed_on_first_open
-      || !basesReport.documented_orders_observed_after_reopen
-      || !basesReport.omitted_direction_order_stable_across_reopen
-      || !basesReport.invalid_direction_order_stable_across_reopen
+      || !basesReport.group_order_stable_across_reopen
       || !basesReport.row_order_stable_across_reopen
-      || !Object.values(basesReport.row_membership_matches_fixture_on_first_open as Record<string, boolean>).every(Boolean)
-      || !Object.values(basesReport.row_membership_matches_fixture_after_reopen as Record<string, boolean>).every(Boolean)
+      || !Object.values(basesReport.fixture_path_set_captured_on_first_open as Record<string, boolean>).every(Boolean)
+      || !Object.values(basesReport.fixture_path_set_captured_after_reopen as Record<string, boolean>).every(Boolean)
+      || !Object.values(basesReport.complete_group_capture_on_first_open as Record<string, boolean>).every(Boolean)
+      || !Object.values(basesReport.complete_group_capture_after_reopen as Record<string, boolean>).every(Boolean)
+      || !basesReport.complete_observations_stable_across_reopen
       || firstViews[omittedBasesDirection].active_file_path !== "Omitted Direction.base"
       || firstViews[omittedBasesDirection].active_view_type !== "bases"
       || reopenedViews[omittedBasesDirection].active_file_path !== "Omitted Direction.base"

@@ -5666,3 +5666,60 @@ required exact-SHA workflow finishes and is reconciled. CI submission alone
 does not mark the milestone accepted. R2.8.101 is ready for its single CI
 submission; the Rust evaluator and fixture parity edits remain outside this
 batch. No local executable validation was run.
+
+## 2026-10-13 — R2.8.101 attempt 1 reconciled; capture repair in progress
+
+R2.8.101 attempt 1 was pushed as exact SHA
+`33eb15f4d01ac4d4456143260689f127068697e8`. All seven required workflows
+reached terminal state: quality, desktop build, plugin renderer, loaded plugins,
+and Rust CI passed (16 jobs total); inventory failed; and all three
+Linux/macOS/Windows Obsidian round-trip jobs failed. The Rust workflow passed
+all four jobs. The run returned 16 artifacts. Exact workflow/job IDs, artifact
+IDs/digests/expiry, and the failure observations are stored in
+`evidence/r2.8.101-attempt-1-33eb15f.json`. Attempt 1 is not accepted.
+
+The inventory failure had two causes: the validator did not allow the newly
+split C07.2-C07.9 rows, and `inventory.json` described the local, unpushed
+revision of `fixtures/c07-bases.json` instead of the fixture at the tested SHA.
+The validator and baseline hash corrections are committed locally in
+`02049fc` and `05c42a6`; they have not been pushed.
+
+The round-trip failure occurred during first-open ASC capture on all three
+platforms. Exact-file selection and the Bases view succeeded, but the probe
+found no heading candidates or group rows. The Windows screenshot/report show
+Alpha, Bravo, and Zulu note groups plus a visible None group with the four
+`.base` files. The probe repair now scopes extraction to rendered Bases table
+rows, records group and file-path order dynamically, includes DOM diagnostics
+for future CI failures, and requires only complete fixture-path capture and
+stable observations across reopen. It no longer judges the pinned app against
+preset ASC/DESC order or hard-coded group membership; interpretation and Rust
+fixture reconciliation remain a separate milestone. Keep
+`crates/doc/src/bases.rs` and `fixtures/c07-bases.json` out of this repair batch.
+No local executable validation was run.
+
+## 2026-10-13 — R2.8.101 repair batch ready for one CI submission
+
+Clarified the CI cadence in `goal.md`: related minor work accumulates inside a
+named implementation milestone, its complete CI-ready package is pushed once,
+and the milestone is accepted only after required workflows pass on that exact
+SHA. The remote tip stays unchanged while the potentially hours-long workflow
+batch is pending; no minor-change or next-milestone push is allowed during
+that wait.
+
+The C07 probe now extracts visible, recognized table/row/list-item records
+using exact row classes, records ordered groups and file paths without preset
+membership/order claims, and requires all ten fixture paths only for ASC, DESC,
+and omitted views. SIDEWAYS is capture-only and accepts partial or empty output
+when each typed candidate maps. Exact-fixture links outside a recognized row
+are retained separately as unscoped diagnostics and never inherit a group by
+vertical position. First-open/reopen comparisons include those diagnostics;
+selection, render, and capture failures retain their state samples and
+screenshot evidence.
+
+Read-only subagent review found no remaining serious probe issue after the
+selector/scoping corrections. The two inventory fixes are in local commits
+`02049fc` and `05c42a6`; attempt-1 evidence is ready to include. Keep
+`crates/doc/src/bases.rs` and `fixtures/c07-bases.json` out of this reference
+repair. The accumulated batch is ready for its single push; its exact
+implementation SHA and new CI evidence will be recorded after submission. No
+local executable validation was run.
