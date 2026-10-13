@@ -70,8 +70,8 @@ for row in goal_rows:
         errors.append("MIG-015 must gate broad UI work with an R1 plugin feasibility spike")
 for row in decomposed_rows:
     parent = legacy_by_id.get(row.get("parent_id"))
-    if parent is None or row.get("source", {}).get("path") != parent.get("source", {}).get("path") or row.get("source", {}).get("heading") != parent.get("source", {}).get("heading"):
-        errors.append(f"{row['id']}: decomposed requirement must retain its legacy parent's source")
+    if row.get("parent_id") != "C07" or parent is None or row.get("source", {}).get("path") != parent.get("source", {}).get("path") or row.get("source", {}).get("heading") != parent.get("source", {}).get("heading"):
+        errors.append(f"{row['id']}: decomposed requirement must retain C07 parentage and legacy source")
 
 directories = ("src", "tests", "fixtures", "config", "scripts", ".github/workflows")
 actual = {
