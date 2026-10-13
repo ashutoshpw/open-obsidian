@@ -5762,3 +5762,39 @@ are complete, followed by a stable-SHA wait for every required workflow; local
 failure analysis remains allowed during that wait. The C07 evaluator and fixture
 changes remain outside this batch. No local executable validation was run; this
 repair is validated only by exact-SHA GitHub Actions after its single batch push.
+
+## 2026-10-13 — R2.8.102 submitted to GitHub Actions
+
+After attempt 2 was fully reconciled, pushed the completed multi-table capture
+repair and goal cadence update in one batch to `origin/main` at exact SHA
+`636b8fbe935b4225ef724d1fa56df3a7d92c4d49`. All seven required workflows were
+queued for that SHA: inventory `38478734160`, quality `38478734201`, desktop
+build `38478734162`, plugin renderer `38478734152`, loaded plugins `38478734255`,
+Rust CI `38478734190`, and Obsidian round-trip `38478734218`. The initial exact
+run snapshot is in
+[`evidence/r2.8.102-attempt-1-636b8fb.json`](evidence/r2.8.102-attempt-1-636b8fb.json).
+Keep `origin/main` at this SHA until all seven workflows and their jobs are
+terminal and reconciled. The provisional C07 evaluator/fixture changes remain
+local. No local executable validation was run.
+
+## 2026-10-13 — R2.8.102 attempt 1 reconciled; R2.8.103 prepared
+
+All seven required workflows are terminal for exact SHA
+`636b8fbe935b4225ef724d1fa56df3a7d92c4d49`: inventory `38478734160`, quality
+`38478734201`, desktop build `38478734162`, plugin renderer `38478734152`,
+loaded plugins `38478734255`, and Rust CI `38478734190` passed. Obsidian
+round-trip `38478734218` failed on Linux, macOS, and Windows. Each platform
+reached the C07 ASC and DESC views and captured the same groups and member rows,
+confirming multi-table discovery. The source-preservation assertion then found
+that Obsidian rewrote `Ascending.base` from `name: "C07 group direction ASC"`
+and `property: note.team` to `name: C07 group direction ASC` and
+`property: team`. The seed was noncanonical; keep strict hashes and author the
+canonical YAML before opening Obsidian. The reports and exact artifact digests
+are recorded in [`evidence/r2.8.102-attempt-1-636b8fb.json`](evidence/r2.8.102-attempt-1-636b8fb.json).
+
+Prepared R2.8.103 as one C07.2 capture-fixture repair batch: seed Obsidian's
+canonical native YAML, retain source-preservation checks, and capture ASC, DESC,
+omitted, and unsupported direction through first open and reopen on all three
+platforms. The provisional Rust evaluator and fixture changes stay separate
+until the complete reference result is available. `origin/main` remains at
+`636b8fb`; no local executable validation was run.

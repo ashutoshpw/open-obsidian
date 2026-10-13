@@ -1599,7 +1599,7 @@ function basesDirectionDefinition(direction: string): Buffer {
   const directionLine = direction === omittedBasesDirection ? "" : `      direction: ${direction}\n`;
   const viewName = `C07 group direction ${label}`;
   return Buffer.from(
-    `views:\n  - type: table\n    name: "${viewName}"\n    groupBy:\n      property: note.team\n${directionLine}`,
+    `views:\n  - type: table\n    name: ${viewName}\n    groupBy:\n      property: team\n${directionLine}`,
     "utf8",
   );
 }

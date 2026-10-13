@@ -2,16 +2,16 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-13T22:33:44Z",
+  "updated_at": "2026-10-13T22:48:11Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "e85c40329a9b0597822901bc026414556db3285d",
-  "current_milestone": "R2.8.102 C07.2 multi-table DOM capture repair (implementation ready for CI)",
-  "next_action": "Confirm origin/main is still e85c40329a9b0597822901bc026414556db3285d, then submit one accumulated R2.8.102 repair batch. Keep crates/doc/src/bases.rs and fixtures/c07-bases.json outside it. Hold the pushed SHA until every required workflow is terminal and its evidence reconciled; do not push intermediate fixes or the next milestone while CI is pending.",
-  "push_status": "Attempt 2 on e85c40329a9b0597822901bc026414556db3285d is terminal but not accepted: six of seven workflows passed, including all Rust CI jobs; Obsidian round-trip failed on Linux, macOS, and Windows at the same C07 group-row capture check. Exact workflow/job/artifact details and the shared failure cause are recorded in evidence/r2.8.101-attempt-2-e85c403.json. The R2.8.102 implementation and CI-ready evidence package are prepared locally; no new push has been made. No local executable validation was run.",
+  "last_reconciled_head": "636b8fbe935b4225ef724d1fa56df3a7d92c4d49",
+  "current_milestone": "R2.8.103 C07.2 canonical native-YAML capture repair (preparing batch)",
+  "next_action": "Complete the R2.8.103 capture-fixture repair package locally: generate the .base source in Obsidian-canonical YAML (unquoted simple name and property: team), keep strict source-hash assertions, update C07.2 evidence/blockers, and exclude the unrelated provisional Rust evaluator/fixture edits. Then commit and push one accumulated batch to origin/main and wait for all seven exact-SHA workflows to finish before another push.",
+  "push_status": "R2.8.102 was pushed once to origin/main at 636b8fbe935b4225ef724d1fa56df3a7d92c4d49. All seven required workflows are terminal: six passed and Obsidian round-trip failed on all three platforms due normalization of noncanonical Ascending.base YAML. The outcome and artifact digests are recorded in evidence/r2.8.102-attempt-1-636b8fb.json. origin/main remains at this SHA; R2.8.103 is being prepared locally.",
   "blockers": [
-    "R2.8.101 attempt 2 failed the Obsidian round-trip row capture on all three platforms; the local R2.8.102 repair must pass fresh exact-SHA CI before C07.2 can be accepted."
+    "R2.8.102 attempt 1 is terminal but not accepted on 636b8fbe935b4225ef724d1fa56df3a7d92c4d49. Six required workflows passed; all three Obsidian round-trip jobs failed because Obsidian rewrote the synthetic Ascending.base from quoted name/property note.team to canonical unquoted name/property team. The multi-table capture itself recorded identical ASC and DESC group/row orders across the three platforms, but omitted/invalid and reopen observations are incomplete. R2.8.103 must seed canonical YAML and pass fresh exact-SHA round-trip capture before C07.2 parity can be closed. Keep local Rust evaluator/fixture edits separate until observations are finalized."
   ],
   "phases": {
     "R0": {
@@ -353,7 +353,8 @@
     "R2.8.95 attempt 3 completed on exact SHA a0053ac932b5aa55c18df7e30ccfdf5d45604583 and is not accepted. Quality, desktop build, plugin renderer, and loaded-plugin workflows passed. Inventory failed on five changed Electron file hashes; Rust CI passed Rust 1.95 and failed test-only cmp_owned comparisons on Ubuntu/macOS/Windows; the three-platform Obsidian round-trip failed on UI automation. macOS clicked the wrapped New Markdown path field about 15 pixels high after a vault-refresh status shifted the form, overwriting the Canvas path and leaving Preview disabled. Exact workflow/job IDs, 12 artifact IDs, sizes, and digests are in evidence/r2.8.95-attempt-3-a0053ac.json. No local tests, builds, formatters, linters, validators, or app launches were run.",
     "R2.8.95 attempt 4 ran on exact source SHA b14b10c7dd4678f03a4ecf1a10b571d3321693fb and is not accepted. Inventory, desktop build, plugin renderer, loaded-plugin workflows, and Rust CI passed (including Rust 1.95 and all three OSes). Quality failed on all three OSes because Knip reported unlisted pbcopy. The Obsidian 1.14.4 round-trip passed on Linux; macOS exact clipboard readback and screenshot showed the expected Markdown destination but OCR read the .md suffix as \u201cmq\u201d, blocking preview before note creation; Windows exact readback stopped at 28 characters of the expected 32-character prefix while editing an unsaved draft, before Canvas Save. Exact run/job IDs and 12 artifact IDs, sizes and digests are recorded in evidence/r2.8.95-attempt-4-b14b10c.json. Focused attempt 5 fixes are prepared; no local tests, builds, formatters, linters, validators or application launches were run.",
     "R2.8.98 attempt 3 on exact SHA 8bbcaaffbf4247786e87b3065549fe67881a6e1c completed and is not accepted. Six required workflows passed; Rust CI failed on MSRV 1.95, Ubuntu, Windows, and macOS because the selector fixture placed a JSON formula at the root rather than inside the selected view (114 passed, 1 failed per job), and Ubuntu also reported four rustfmt-only layout differences. The focused attempt 4 source correction is prepared. Exact jobs and all 12 artifact IDs/sizes/digests are in evidence/r2.8.98-attempt-3-8bbcaaf.json. No local validation was run.",
-    "R2.8.98 attempt 4 on exact SHA 1d096a859c9d95cb0d6c047cd3cb25c858b35310 completed and is not accepted. Inventory, quality, desktop build, loaded plugins, plugin renderer, and Linux/Windows/macOS Obsidian round-trip passed; Rust CI passed MSRV 1.95 and workspace tests but failed Clippy on large_enum_variant and let_and_return on Ubuntu/macOS/Windows. Focused correction boxes BaseFileEvaluation in the asynchronous message and returns the view-label match directly. All exact jobs and 12 artifact IDs/sizes/digests are in evidence/r2.8.98-attempt-4-1d096a8.json. No local validation was run."
+    "R2.8.98 attempt 4 on exact SHA 1d096a859c9d95cb0d6c047cd3cb25c858b35310 completed and is not accepted. Inventory, quality, desktop build, loaded plugins, plugin renderer, and Linux/Windows/macOS Obsidian round-trip passed; Rust CI passed MSRV 1.95 and workspace tests but failed Clippy on large_enum_variant and let_and_return on Ubuntu/macOS/Windows. Focused correction boxes BaseFileEvaluation in the asynchronous message and returns the view-label match directly. All exact jobs and 12 artifact IDs/sizes/digests are in evidence/r2.8.98-attempt-4-1d096a8.json. No local validation was run.",
+    "R2.8.102 attempt 1 reconciled at exact SHA 636b8fbe935b4225ef724d1fa56df3a7d92c4d49: six required workflows passed, while all three Obsidian round-trip jobs failed after Obsidian normalized noncanonical Ascending.base YAML. ASC/DESC multi-table observations matched across platforms; omitted/invalid and reopen capture remain incomplete. Full job/artifact evidence is evidence/r2.8.102-attempt-1-636b8fb.json."
   ],
   "ci_results": [
     {
@@ -34165,7 +34166,7 @@
           "finding": "All seven required workflows reached terminal state on exact SHA e85c40329a9b0597822901bc026414556db3285d. Inventory, quality, desktop build, plugin renderer, loaded-plugin workflows, and all four Rust CI jobs passed. The Obsidian 1.14.4 round-trip failed on Linux (job 115568710229), macOS (115568709798), and Windows (115568710139) at first-open ASC Bases row capture. Each group uses a separate `.bases-table`; the probe treated only the first table as in-scope, so later group rows were omitted. Seventeen of 20 jobs passed; the attempt is not accepted. All 16 artifact IDs, sizes, digests, and expirations are recorded in the attempt-2 evidence file."
         }
       ],
-      "next_action": "Attempt 2 is terminal but not accepted on exact SHA e85c40329a9b0597822901bc026414556db3285d. Its CI evidence is reconciled. Complete R2.8.102 as one capture-repair milestone; keep crates/doc/src/bases.rs and fixtures/c07-bases.json out of its batch, then make one push only when the repair and acceptance package are complete."
+      "next_action": "Attempt 2 was terminal but not accepted on e85c40329a9b0597822901bc026414556db3285d. R2.8.102 multi-table capture passed Rust CI but its three-platform Obsidian capture exposed noncanonical fixture YAML normalization. R2.8.103 is preparing the canonical-fixture correction and complete capture; keep C07.2 pending until that evidence passes."
     },
     "R2.8.102": {
       "status": "in_progress",
@@ -34187,8 +34188,57 @@
         "OpenObsidian Rust CI",
         "Obsidian vault round-trip acceptance"
       ],
+      "attempts": [
+        {
+          "attempt": 1,
+          "source_sha": "636b8fbe935b4225ef724d1fa56df3a7d92c4d49",
+          "outcome": "not_accepted",
+          "evidence": "evidence/r2.8.102-attempt-1-636b8fb.json",
+          "workflow_runs": {
+            "inventory": 38478734160,
+            "quality": 38478734201,
+            "desktop_build": 38478734162,
+            "plugin_renderer": 38478734152,
+            "loaded_plugins": 38478734255,
+            "rust_ci": 38478734190,
+            "vault_roundtrip": 38478734218
+          },
+          "finding": "All seven required workflows reached terminal state on exact SHA 636b8fbe935b4225ef724d1fa56df3a7d92c4d49. Inventory, quality, desktop build, plugin renderer, loaded-plugin workflows, and Rust CI passed. Obsidian round-trip failed on Linux, macOS, and Windows at first-open-desc because Obsidian normalized noncanonical Ascending.base YAML (name quotes removed; property note.team rewritten to team). ASC/DESC multi-table observations were captured identically, but omitted/invalid and reopen observations are incomplete. Full job and artifact metadata are recorded in evidence/r2.8.102-attempt-1-636b8fb.json.",
+          "workflows": {
+            "inventory": 38478734160,
+            "quality": 38478734201,
+            "desktop_build": 38478734162,
+            "plugin_renderer": 38478734152,
+            "loaded_plugins": 38478734255,
+            "rust_ci": 38478734190,
+            "vault_roundtrip": 38478734218
+          }
+        }
+      ],
+      "next_action": "Prepare and complete named R2.8.103 C07.2 canonical native-YAML capture repair. Keep strict source hashes; emit the normalized source before opening Obsidian, then obtain complete first-open/reopen observations on Linux, macOS, and Windows. Keep the provisional Rust Bases evaluator and fixture changes out of this repair batch."
+    },
+    "R2.8.103": {
+      "status": "in_progress",
+      "starting_sha": "636b8fbe935b4225ef724d1fa56df3a7d92c4d49",
+      "scope": "Repair the C07.2 reference fixture so Obsidian receives canonical native YAML before first open; preserve strict .base/note source hashes and complete the pinned Obsidian ASC, DESC, omitted, and unsupported-direction first-open/reopen capture across Linux, macOS, and Windows. Keep provisional Rust Bases evaluator/fixture parity changes separate until capture observations are complete.",
+      "acceptance": [
+        "Generate each C07 .base with an unquoted simple view name and groupBy property: team, matching the canonical YAML serialization observed in R2.8.102 artifacts.",
+        "Keep source-hash assertions strict; no .base or note source may be modified by pinned Obsidian on first open, view changes, reopen, or shutdown.",
+        "Capture settled ASC, DESC, omitted, and unsupported-direction view state only when the exact target .base is active; collect every rendered group and row from all Bases table roots, including row membership and per-group order.",
+        "Compare first-open and reopen observations for all four direction cases on Linux, macOS, and Windows; upload complete reports, screenshots, snapshots, and logs as workflow artifacts.",
+        "All seven required GitHub Actions workflows pass on the exact pushed SHA; no local executable validation is run."
+      ],
+      "required_workflows": [
+        "Rust migration inventory",
+        "OpenObsidian quality",
+        "OpenObsidian desktop build",
+        "OpenObsidian plugin renderer matrix",
+        "OpenObsidian loaded plugin workflows",
+        "OpenObsidian Rust CI",
+        "Obsidian vault round-trip acceptance"
+      ],
       "attempts": [],
-      "next_action": "The multi-table membership fix, goal policy clarification, requirement blocker, attempt-2 evidence, and progress notes are complete as one CI-ready package. Confirm origin/main is still the attempt-2 SHA, then make one accumulated R2.8.102 push and wait for every required workflow to finish before changing origin/main again."
+      "next_action": "Complete the local source/evidence package, then make one accumulated push for R2.8.103. Hold origin/main at its submitted SHA until every required workflow is terminal and reconciled."
     }
   },
   "ci_preparation": {
