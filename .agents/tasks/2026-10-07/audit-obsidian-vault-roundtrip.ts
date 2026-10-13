@@ -123,11 +123,12 @@ const report: Record<string, unknown> = {
   },
   bases_group_direction_reference: {
     status: "pending",
-    milestone: "R2.8.104-C07.2-omitted-direction-reference-capture-repair",
+    milestone: "R2.8.105-C07.2-unsupported-view-reopen-source-preservation-repair",
     capture_scope: "Record pinned Obsidian behavior only; Rust fixture reconciliation and parity acceptance are a separate milestone.",
     application: "Pinned Obsidian Desktop 1.14.4",
     explicit_direction_expectation: "Record rendered ASC/DESC group and row order without judging it against a Rust or preset expectation; reconcile the captured result in the follow-up parity milestone.",
     omitted_direction_expectation: "The pinned app rejects the tested native-YAML groupBy mapping when direction is omitted with `groupBy` must be a object; capture the settled exact-file error state on first open and reopen, record no group or row order, and do not infer a default.",
+    workspace_restore_expectation: "After each session captures all four direction cases, make the supported ASC view active before shutdown. Confirm Obsidian restores ASC on the next startup, then explicitly select and capture all four cases; keep strict source hashes around every transition.",
     fixture_paths_to_observe: basesDirectionFixturePaths,
     omitted_direction: omittedBasesDirection,
     invalid_direction: invalidBasesDirection,
@@ -139,7 +140,7 @@ const report: Record<string, unknown> = {
     "The run proves read-only startup, source preview and close, external note creation, in-place edit, and rename followed by explicit UI refresh and preview, native image-embed resolution and external attachment removal followed by refresh/re-resolution, plus explicit Canvas text-card note preview/review/confirmation before first-open and reopened-vault visibility, native folder-picker selection and cancellation, and Obsidian reopen on the recorded runner platform only; other operating systems require their own passing artifact.",
     "The deliberate external note creation, in-place note edit, attachment removal, and note rename each establish a new baseline; all subsequent no-op operations must preserve the latest applicable baseline exactly.",
     "The Canvas check uses a dedicated reference-compatible fixture and fresh Obsidian profile, edits one native text card with no write before explicit save, verifies the saved JSON differs only at that selected card's text while preserving sibling nodes and edges, creates one Markdown note afterward with the edited text-card bytes, exposes the edited text and referenced block content, and checks the edited Canvas and note after first-open and reopened-vault sessions. The codec's rich unknown-field fixture remains covered by Rust tests and is not opened by Obsidian. This does not certify every Canvas workflow or cross-platform behavior beyond the recorded runner.",
-    "The C07 reference probe opens synthetic Bases files with explicit ASC and DESC, omitted direction, and an unsupported direction. For ASC and DESC it captures every rendered group and file row from all Bases table roots on first open and reopen, including the null-value group containing the .base files, without judging observed ordering against preset expectations. For the tested omitted-direction native-YAML mapping, it captures the settled exact-file parse rejection (`groupBy` must be a object) and records no group or row order; it does not infer a default. The unsupported direction remains a capture-only observation. The probe records screenshots and exact source hashes; interpretation and Rust fixture reconciliation belong to the follow-up parity milestone.",
+    "The C07 reference probe opens synthetic Bases files with explicit ASC and DESC, omitted direction, and an unsupported direction. For ASC and DESC it captures every rendered group and file row from all Bases table roots on first open and reopen, including the null-value group containing the .base files, without judging observed ordering against preset expectations. For the tested omitted-direction native-YAML mapping, it captures the settled exact-file parse rejection (`groupBy` must be a object) and records no group or row order; it does not infer a default. The unsupported direction remains a capture-only observation. Before each shutdown, the probe explicitly restores ASC as the active view so the unsupported view is selected intentionally after reopening rather than restored automatically; it records this precondition, screenshots, and exact source hashes. Interpretation and Rust fixture reconciliation belong to the follow-up parity milestone.",
     "This run does not certify all product C01 flows or general plugin/theme compatibility.",
   ],
 };
@@ -8108,6 +8109,21 @@ async function runBasesDirectionReferenceProbe(): Promise<void> {
   let secondProcess: ChildProcess | undefined;
   let secondConnection: DevToolsConnection | undefined;
   let sourceHashes: Record<string, {bytes: number; sha256: string}> | undefined;
+  const readActiveBasesWorkspaceView = async (connection: DevToolsConnection) => await connection.evaluateJson<{
+    active_file_path: string | null;
+    active_view_type: string | null;
+    title: string;
+    body: string;
+  }>(`(() => {
+    const view = window.app?.workspace?.activeLeaf?.view;
+    const root = document.querySelector('.workspace-leaf.mod-active') ?? document.body;
+    return {
+      active_file_path: view?.file?.path ?? null,
+      active_view_type: view?.getViewType?.() ?? null,
+      title: document.title,
+      body: (root?.innerText ?? '').slice(0, 6_000),
+    };
+  })()`);
   try {
     sourceHashes = await createBasesDirectionFixture();
     const seedSnapshot = await snapshotTree(basesVaultRoot);
@@ -8147,6 +8163,16 @@ async function runBasesDirectionReferenceProbe(): Promise<void> {
       await assertBasesDirectionSourceHashes(sourceHashes, `first-open-${direction.toLowerCase()}`);
     }
     firstSession.source_hashes_after_views = await assertBasesDirectionSourceHashes(sourceHashes, "first-open-before-shutdown");
+    firstSession.workspace_reset_before_shutdown = await verifyBasesDirectionVisible(
+      firstConnection,
+      "ASC",
+      "first-open-shutdown-restore",
+    );
+    firstSession.source_hashes_after_workspace_reset = await assertBasesDirectionSourceHashes(
+      sourceHashes,
+      "first-open-after-shutdown-restore",
+    );
+    await saveReport();
     await delay(2_000);
     await stopProcess(firstProcess, firstConnection);
     firstProcess = undefined;
@@ -8175,6 +8201,31 @@ async function runBasesDirectionReferenceProbe(): Promise<void> {
     };
     basesReport.second_session = secondSession;
     await chooseRestrictedMode(secondConnection, secondSession, basesVaultName, "Synthetic C07 group-direction fixture.");
+    secondSession.workspace_view_immediately_after_startup = await readActiveBasesWorkspaceView(secondConnection);
+    const workspaceStartupScreenshot = "obsidian-bases-direction-workspace-startup-state.png";
+    secondSession.workspace_startup_screenshot = workspaceStartupScreenshot;
+    await captureObsidianScreenshot(secondConnection, workspaceStartupScreenshot);
+    await saveReport();
+    secondSession.source_hashes_immediately_after_startup = await assertBasesDirectionSourceHashes(
+      sourceHashes,
+      "reopen-workspace-immediately-after-startup",
+    );
+    await saveReport();
+    const restoredWorkspaceView = await waitFor(
+      "R2.8.105: Obsidian to restore the supported ASC view before reopened capture",
+      async () => await readActiveBasesWorkspaceView(secondConnection),
+      (state) => state.active_file_path === "Ascending.base" && state.active_view_type === "bases",
+      45_000,
+    );
+    secondSession.workspace_restored_view_at_startup = restoredWorkspaceView;
+    const supportedRestoreScreenshot = "obsidian-bases-direction-supported-view-restored.png";
+    secondSession.workspace_restore_screenshot = supportedRestoreScreenshot;
+    await captureObsidianScreenshot(secondConnection, supportedRestoreScreenshot);
+    secondSession.source_hashes_after_workspace_restore = await assertBasesDirectionSourceHashes(
+      sourceHashes,
+      "reopen-workspace-restore",
+    );
+    await saveReport();
 
     const reopenedViews: Record<string, BasesDirectionViewObservation> = {};
     secondSession.views = reopenedViews;
@@ -8184,6 +8235,16 @@ async function runBasesDirectionReferenceProbe(): Promise<void> {
       await assertBasesDirectionSourceHashes(sourceHashes, `reopen-${direction.toLowerCase()}`);
     }
     secondSession.source_hashes_after_views = await assertBasesDirectionSourceHashes(sourceHashes, "reopen-before-shutdown");
+    secondSession.workspace_reset_before_shutdown = await verifyBasesDirectionVisible(
+      secondConnection,
+      "ASC",
+      "reopen-shutdown-restore",
+    );
+    secondSession.source_hashes_after_workspace_reset = await assertBasesDirectionSourceHashes(
+      sourceHashes,
+      "reopen-after-shutdown-restore",
+    );
+    await saveReport();
     await delay(2_000);
     await stopProcess(secondProcess, secondConnection);
     secondProcess = undefined;

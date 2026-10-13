@@ -3306,10 +3306,11 @@
         ".agents/tasks/2026-10-07/evidence/r2.8.101-attempt-1-33eb15f.json",
         ".agents/tasks/2026-10-07/evidence/r2.8.101-attempt-2-e85c403.json",
         ".agents/tasks/2026-10-07/evidence/r2.8.102-attempt-1-636b8fb.json",
-        ".agents/tasks/2026-10-07/evidence/r2.8.103-attempt-1-de46253.json"
+        ".agents/tasks/2026-10-07/evidence/r2.8.103-attempt-1-de46253.json",
+        ".agents/tasks/2026-10-07/evidence/r2.8.104-attempt-1-11931b9.json"
       ],
       "tested_source_tree": null,
-      "blocker": "C07.2 remains pending. R2.8.101 attempts 1 and 2 failed in the DOM capture; R2.8.102 fixed multi-table discovery but Obsidian normalized noncanonical Ascending.base YAML; R2.8.103 seeded canonical YAML and preserved all source hashes. On exact SHA de462533be90985ba1dbb368e70231ffc1edd815, 17 of 20 jobs passed: inventory, quality, desktop build, loaded-plugin, plugin-renderer, and all four Rust CI jobs passed; the three pinned Obsidian round-trip jobs all reached the exact Omitted Direction.base and then showed \"groupBy\" must be a object with zero groups/rows. ASC and DESC groups and row memberships matched across platforms. The probe stopped before SIDEWAYS and reopen capture. R2.8.104 must record this omitted-mapping parse rejection, continue through invalid-direction and reopen capture on all three platforms, and preserve strict source hashes. Then reconcile the explicit ordering and schema result into Rust fixtures/evaluation in a separate parity milestone.",
+      "blocker": "C07.2 remains pending. R2.8.101 attempts 1 and 2 failed in the DOM capture; R2.8.102 corrected multi-table discovery and R2.8.103 seeded canonical YAML. R2.8.104 attempt 1 on exact SHA 11931b9a9003857caf00542e74a45f7fb6947f65 reached terminal state with 17 of 20 jobs passing. All three Obsidian 1.14.4 round-trip jobs captured a settled omitted-direction groupBy parse rejection and matching ASC/DESC first-open group/row order, then failed at reopen-asc because startup restored the last active SIDEWAYS view and rewrote Invalid Direction.base from 122 to 62 bytes by dropping groupBy. Reopen DESC, omitted, and SIDEWAYS observations are incomplete. R2.8.105 must leave ASC active before shutdown, re-open from that supported state, explicitly capture all four cases after reopening, and retain strict source hashes before/after every transition and shutdown. Then reconcile explicit ordering and schema behavior into Rust fixtures/evaluation in a separate parity milestone.",
       "gate_class": "implementation",
       "decision_id": "D03",
       "legacy_status": "implemented",
@@ -3323,7 +3324,7 @@
       "migration_phase": "R2",
       "rust_owner": "crates/doc",
       "mapping_status": "reviewed",
-      "runtime_override": "Pinned Obsidian 1.14.4 defines the observed explicit groupBy ASC/DESC order. On all three CI OSes it rejects the tested native-YAML mapping with property: team and no direction using a visible groupBy parse error; this result does not establish behavior for scalar YAML or JSON forms.",
+      "runtime_override": "Pinned Obsidian 1.14.4 defines the observed explicit groupBy ASC/DESC order. On all three CI OSes it rejects the tested native-YAML mapping with property: team and no direction using a visible groupBy parse error; this result does not establish behavior for scalar YAML or JSON forms. R2.8.104 also observed that restoring the unsupported SIDEWAYS view on startup rewrites Invalid Direction.base by removing groupBy; reproduce/capture this workspace-restoration condition while keeping source-preservation acceptance strict.",
       "migration_disposition": "retained",
       "migration_acceptance": "Implement and fixture-test JSON/native YAML explicit group direction and visible invalid-source reporting. Match the captured explicit ASC/DESC group and member-row order. For the native-YAML groupBy object with direction omitted, surface the pinned app's parse rejection instead of inventing a default order. Complete first-open/reopen capture of the selected omitted and unsupported-direction files, retain exact source bytes, and keep scalar groupBy syntax, C07.3 groupOrder, and C07.4 comparator semantics separately characterized under the pending C07 parent."
     },

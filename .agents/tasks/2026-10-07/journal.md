@@ -3138,7 +3138,6 @@ The next exact-SHA correction line-anchors the negative OCR check and gives the
 deferred reconciliation time to finish before the final resolution screenshot.
 No local executable validation was run.
 
-
 ### R2.8.74 / C01.2-42 accepted on `7952658`
 
 All seven required GitHub Actions workflows passed for exact implementation SHA
@@ -5865,3 +5864,71 @@ milestone boundary and a fixed remote SHA while CI runs, including the expected
 multi-hour wait. The package is ready for one push after confirming the remote
 still matches its starting SHA; parked Rust Bases evaluator/fixture edits remain
 excluded. No local executable validation was run.
+
+## 2026-10-13 — R2.8.104 submitted to GitHub Actions
+
+Pushed the single accumulated R2.8.104 milestone commit
+`11931b9a9003857caf00542e74a45f7fb6947f65` to `origin/main`, after confirming
+the remote tip still matched starting SHA `de462533be90985ba1dbb368e70231ffc1edd815`.
+Parked `crates/doc/src/bases.rs` and `fixtures/c07-bases.json` were excluded.
+All seven required workflow runs were created for the exact pushed SHA:
+quality `38482878996`, inventory `38482879167`, loaded plugins `38482878953`,
+desktop build `38482879089`, Rust CI `38482879033`, Obsidian round-trip
+`38482879118`, and plugin renderer `38482878948`. Inventory passed in the first
+poll; the other six workflows were in progress. Evidence is tracked in
+[`evidence/r2.8.104-attempt-1-11931b9.json`](evidence/r2.8.104-attempt-1-11931b9.json).
+Keep `origin/main` fixed until every required job is terminal. No local
+executable validation was run.
+
+## R2.8.104 Windows round-trip failure observed; CI still running
+
+The Windows job `115589435795` in round-trip run `38482879118` failed the
+strict source-hash check at `reopen-asc`: `Invalid Direction.base` changed from
+122 bytes / SHA-256 `fb9d112de60508c86bdde1c2ebf989143a379ff6ce59cc89e958865cfe43afe0`
+to 62 bytes / SHA-256 `6db35053b1d4aa0aca718364f906cd8820193c635ba002958f953d1aa03548cc`. The uploaded
+report shows `SIDEWAYS` was the final active view before shutdown and was
+restored at startup; the changed source contains only the view type and name,
+with `groupBy` removed. This points to startup restoration of the unsupported
+view as the mutation trigger. Confirm on the other platforms and after all jobs
+are terminal before defining a focused repair. At this update, the remaining
+Rust Windows/MSRV jobs and the macOS/Ubuntu round-trip jobs were still running.
+The Windows artifact ID, SHA-256, size, and expiry are in
+[`evidence/r2.8.104-attempt-1-11931b9.json`](evidence/r2.8.104-attempt-1-11931b9.json).
+No repair has been pushed; `origin/main` remains at the submitted SHA.
+
+## 2026-10-13 — R2.8.104 attempt 1 reconciled; R2.8.105 prepared
+
+All seven required workflows and all 20 jobs reached terminal state on exact
+SHA `11931b9a9003857caf00542e74a45f7fb6947f65`: inventory, quality, loaded
+plugins, desktop build, plugin renderer, and all four Rust CI jobs passed (17
+jobs). Obsidian round-trip failed on Linux job `115589435736`, macOS job
+`115589435357`, and Windows job `115589435795`. Each platform captured the
+settled omitted-direction parse rejection and matching ASC/DESC first-open
+observations. Each then failed at `reopen-asc`: restoring the final active
+SIDEWAYS view rewrote `Invalid Direction.base` from 122 bytes / SHA-256
+`fb9d112de60508c86bdde1c2ebf989143a379ff6ce59cc89e958865cfe43afe0` to 62
+bytes / SHA-256
+`6db35053b1d4aa0aca718364f906cd8820193c635ba002958f953d1aa03548cc`, dropping
+`groupBy`. DESC, omitted, and SIDEWAYS reopen observations were not reached.
+All exact run/job IDs and 16 artifact IDs, sizes, digests, and expirations are
+in [`evidence/r2.8.104-attempt-1-11931b9.json`](evidence/r2.8.104-attempt-1-11931b9.json).
+R2.8.104 is not accepted.
+
+Prepared R2.8.105 as one focused reopen-capture repair: after collecting the
+first-open cases, leave ASC active before shutdown; reopen from that supported
+view, explicitly capture all four cases again, and verify strict source hashes
+around each transition and shutdown. This preserves the unsupported-view
+observation while preventing it from being implicitly restored before the
+reopen probe. A rewrite while switching away from SIDEWAYS will still fail the
+strict hash assertion and remain visible in the report. The remote remains at
+`11931b9`; make no push until the R2.8.105 implementation and acceptance
+package are complete, then submit one batch and wait for its full exact-SHA CI.
+No local executable validation was run.
+
+R2.8.105's local capture change now records the immediate post-startup active
+view and screenshot, checks hashes before proceeding, requires ASC to be the
+restored active Bases view, and explicitly recaptures it after every direction
+set before shutdown. It also restores ASC before the second shutdown and checks
+hashes after both reset transitions. The accepted ASC/DESC, omitted-error, and
+SIDEWAYS observations remain separate from these workspace-reset observations.
+No local executable validation was run.
