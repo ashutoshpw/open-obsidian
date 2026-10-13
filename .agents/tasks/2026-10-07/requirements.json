@@ -3180,7 +3180,7 @@
       "checkpoint": "P3.1",
       "owner": "vault-filesystem",
       "mandatory": true,
-      "acceptance_criteria": "Bases fixtures evaluate supported definitions and preserve source definitions and unknown fields.",
+      "acceptance_criteria": "Bases fixtures evaluate the documented supported filters, formulas, properties, summaries, row sorting, groupBy directions, groupOrder visibility/order, default all-file universe, file metadata, contextual this references, and core view types/layouts while preserving source bytes and unknown fields. Unsupported expressions and unavailable plugin view types produce visible compatibility issues rather than fabricated values. The parent remains pending until every mandatory C07 child requirement and exact-SHA CI gate passes.",
       "fixture_ids": [
         "fixture:c07-bases",
         "fixture:c07-embedded-base-evaluation"
@@ -3216,7 +3216,7 @@
       "mapping_status": "reviewed",
       "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
       "migration_disposition": "retained",
-      "migration_acceptance": "Port C07 behavior to crates/doc, preserving existing formats and observable workflow; verify its linked fixtures through GitHub CI."
+      "migration_acceptance": "Complete every mandatory C07 child against the documented Bases behavior and pinned Obsidian reference, preserving existing formats and observable workflows. Include file-wide rows and metadata, expression/filter/formula semantics, summaries and display names, core layouts, group ordering, and context-sensitive this references; expose unsupported compatibility cases. Keep C07 open until all child evidence and exact-SHA GitHub CI gates pass."
     },
     {
       "id": "C07.1",
@@ -3270,6 +3270,430 @@
       "migration_acceptance": "Port C07 behavior to crates/doc, preserving existing formats and observable workflow; verify its linked fixtures through GitHub CI."
     },
     {
+      "id": "C07.2",
+      "parent_id": "C07",
+      "source": {
+        "path": ".agents/tasks/2026-09-09/01-init/references/vault-compatibility/index.md",
+        "heading": "C07 Bases",
+        "clause": ".base files plus embedded definitions; filters, formulas, properties, sorting, grouping and supported view types. Implement versioned grammar and evaluator."
+      },
+      "checkpoint": "P3.1",
+      "owner": "vault-filesystem",
+      "mandatory": true,
+      "acceptance_criteria": "Parse explicit groupBy ASC and DESC directions from JSON and native YAML while preserving source bytes and unknown fields; order groups according to the supported value comparator and preserve row order within groups. Determine the omitted-direction default from pinned Obsidian 1.14.4 and use that observed behavior as the Rust fixture expectation instead of assuming first-seen order. The pinned-app reference probe uses native YAML because Obsidian requires .base files to be valid YAML; JSON direction parsing is covered by Rust fixtures. Verify omitted, ASC, and DESC group headings against pinned Obsidian 1.14.4 on first open and reopen, requiring the visible state to settle. Use multiple notes per group to record row membership and row order from the DOM, compare the order across reopen, then reconcile the observed ordered rows into fixture expectations and require Rust evaluation to match; stable but misordered rows are not parity. Do not infer group or row order from first-occurrence text positions in the full view body. Malformed groupBy shapes and unsupported explicit directions must produce visible compatibility issues. Record and match the unsupported-direction fallback against the pinned app rather than assuming it behaves like omission. Treat a no-transition observation as fallback evidence only after the exact target .base file is active; failed selection is a probe failure, not a compatibility result. Preserve the .base and note sources. groupOrder visibility/order is tracked by C07.3; locale collation and JavaScript numeric behavior above 2^53 are tracked by C07.4.",
+      "fixture_ids": [
+        "fixture:c07-bases"
+      ],
+      "reference_versions": [
+        {
+          "kind": "vault-spec",
+          "version": "v0.3",
+          "sha256": "ba0aeafa795b36ce0d0756d847386aeb068f5811187f5b267ba1fc2e90a79b8c"
+        },
+        {
+          "kind": "obsidian-release-pin",
+          "version": "1.14.4",
+          "sha256": "72f85989c30d8d161cf4d3ca24113097038e4253ff9f1d7fa0603b793577345f"
+        }
+      ],
+      "applicable_platforms": [
+        "macOS",
+        "Windows",
+        "Linux"
+      ],
+      "status": "pending",
+      "evidence_paths": [],
+      "tested_source_tree": null,
+      "blocker": "C07.2 remains pending until a dedicated GitHub Actions milestone records pinned Obsidian 1.14.4 observations for omitted direction, invalid-direction fallback, settled view state, row membership, and per-group row order on first open and reopen. Reconcile the captured report into fixture expectations and Rust behavior in a subsequent milestone, then require passing exact-SHA CI before acceptance. The passing R2.8.100 SHA did not contain the C07 probe.",
+      "gate_class": "implementation",
+      "decision_id": "D03",
+      "legacy_status": "implemented",
+      "legacy_evidence_paths": [
+        ".agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p3.1-model-contracts.json",
+        ".agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p3.1-interactive-models.json",
+        ".agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p3.1-native-bases-yaml.json",
+        ".agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p3.1-embedded-bases.json"
+      ],
+      "legacy_checkpoint": "P3.1",
+      "migration_phase": "R2",
+      "rust_owner": "crates/doc",
+      "mapping_status": "reviewed",
+      "runtime_override": "The pinned Obsidian 1.14.4 reference application defines explicit groupBy ASC and DESC ordering for this bounded slice.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Implement JSON/native YAML explicit group direction and visibly report malformed groupBy configurations. Verify omitted, ASC, and DESC group order, row membership/order, and source preservation against the pinned reference on first open and reopen; reconcile the observed ordered rows into Rust fixture expectations. Match the characterized invalid-direction fallback only after successful exact-file selection, and keep C07.3 groupOrder and C07.4 comparator semantics open under the pending C07 parent."
+    },
+    {
+      "id": "C07.3",
+      "parent_id": "C07",
+      "source": {
+        "path": ".agents/tasks/2026-09-09/01-init/references/vault-compatibility/index.md",
+        "heading": "C07 Bases",
+        "clause": "Official Bases syntax documents groupOrder as controlling group visibility and order, and null as including rows with no grouped-property value (https://obsidian.md/help/bases/syntax, reviewed 2026-10-12). The Views documentation also permits explicitly adding an empty group: https://obsidian.md/help/bases/views (reviewed 2026-10-12). The official Kanban docs state that grouping by a formula is supported in Obsidian 1.14+: https://obsidian.md/help/bases/views/kanban (reviewed 2026-10-12)."
+      },
+      "checkpoint": "P3.1",
+      "owner": "vault-filesystem",
+      "mandatory": true,
+      "acceptance_criteria": "Parse groupOrder from JSON and native YAML as an ordered list of typed group values, including null and an empty list. When present, emit only listed groups in declared order, retain distinct supported typed values rather than merging their string renderings, preserve explicitly listed empty groups, and include rows with a missing grouped value only when null is listed; preserve row order within groups and source bytes/unknown fields. When absent, retain all groups and use C07.2 groupBy.direction or first-seen ordering. Characterize groupOrder without groupBy; duplicate declarations; missing versus explicit-null labels; and string, number, boolean, array, object, and null identity/labels against pinned Obsidian. Malformed shapes and unsupported entries must surface visible issues and match the reference fallback rather than silently becoming absent. Keep numeric group identity coordinated with C07.4 JavaScript-number semantics. Include a shared Kanban fixture where one formula depends on another, groupBy uses the derived formula, and groupOrder lists its output values; compare group headings and row membership against pinned Obsidian 1.14.4 on first open and reopen. Verify typed equality, duplicate behavior, empty-group behavior, visibility, and groupOrder precedence against pinned Obsidian 1.14.4 on first open and reopen without changing .base or note sources; cover fixtures on Linux, macOS, and Windows in GitHub CI.",
+      "fixture_ids": [
+        "fixture:c07-bases"
+      ],
+      "reference_versions": [
+        {
+          "kind": "vault-spec",
+          "version": "v0.3",
+          "sha256": "ba0aeafa795b36ce0d0756d847386aeb068f5811187f5b267ba1fc2e90a79b8c"
+        },
+        {
+          "kind": "obsidian-release-pin",
+          "version": "1.14.4",
+          "sha256": "72f85989c30d8d161cf4d3ca24113097038e4253ff9f1d7fa0603b793577345f"
+        }
+      ],
+      "applicable_platforms": [
+        "macOS",
+        "Windows",
+        "Linux"
+      ],
+      "status": "pending",
+      "evidence_paths": [],
+      "tested_source_tree": null,
+      "blocker": null,
+      "gate_class": "implementation",
+      "decision_id": "D03",
+      "legacy_status": "implemented",
+      "legacy_evidence_paths": [
+        ".agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p3.1-model-contracts.json",
+        ".agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p3.1-interactive-models.json",
+        ".agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p3.1-native-bases-yaml.json",
+        ".agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p3.1-embedded-bases.json"
+      ],
+      "legacy_checkpoint": "P3.1",
+      "migration_phase": "R2",
+      "rust_owner": "crates/doc",
+      "mapping_status": "reviewed",
+      "runtime_override": "Pinned Obsidian 1.14.4 defines runtime behavior; its cross-platform release assets are fixed by .agents/tasks/2026-10-07/obsidian-reference-pin.json. Official Bases syntax documents ordered group visibility and null-group inclusion at https://obsidian.md/help/bases/syntax.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Match pinned Obsidian groupOrder visibility, ordering, null inclusion, typed equality, duplicate declarations, labels, and empty groups. Characterize groupOrder without groupBy and malformed/unsupported fallback; surface unsupported cases visibly. Verify the shared formula-derived Kanban grouping and groupOrder fixture on first open and reopen. Coordinate numeric identity with C07.4, preserve source bytes, and use groupBy.direction only when groupOrder is absent."
+    },
+    {
+      "id": "C07.4",
+      "parent_id": "C07",
+      "source": {
+        "path": ".agents/tasks/2026-09-09/01-init/references/vault-compatibility/index.md",
+        "heading": "C07 Bases",
+        "clause": "Preserve observable legacy comparison semantics for locale-sensitive text sorting and JavaScript numbers above the 2^53 safe-integer range; these gaps are explicitly excluded only from C07.2."
+      },
+      "checkpoint": "P3.1",
+      "owner": "vault-filesystem",
+      "mandatory": true,
+      "acceptance_criteria": "First characterize and implement pinned Obsidian 1.14.4 JavaScript number conversion, identity, sorting, relational/equality filters, and contains behavior around and above 2^53; reconcile existing exact-integer fixture expectations with the reference. Then characterize locale collation for case/diacritic pairs, numeric text, and row-path tie-breaks. Record a deliberate locale policy (one pinned locale or each runner's default) and platform settings, and compare reference and Rust outcomes on Linux, macOS, and Windows through GitHub CI. Coordinate numeric group identity with C07.3; neither requirement may lock in Rust's exact integer equality without reference evidence. Do not claim the C07 parent complete while either behavior remains unverified.",
+      "fixture_ids": [
+        "fixture:c07-bases"
+      ],
+      "reference_versions": [
+        {
+          "kind": "vault-spec",
+          "version": "v0.3",
+          "sha256": "ba0aeafa795b36ce0d0756d847386aeb068f5811187f5b267ba1fc2e90a79b8c"
+        },
+        {
+          "kind": "obsidian-release-pin",
+          "version": "1.14.4",
+          "sha256": "72f85989c30d8d161cf4d3ca24113097038e4253ff9f1d7fa0603b793577345f"
+        }
+      ],
+      "applicable_platforms": [
+        "macOS",
+        "Windows",
+        "Linux"
+      ],
+      "status": "pending",
+      "evidence_paths": [],
+      "tested_source_tree": null,
+      "blocker": null,
+      "gate_class": "implementation",
+      "decision_id": "D03",
+      "legacy_status": "implemented",
+      "legacy_evidence_paths": [
+        ".agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p3.1-model-contracts.json",
+        ".agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p3.1-interactive-models.json",
+        ".agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p3.1-native-bases-yaml.json",
+        ".agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p3.1-embedded-bases.json"
+      ],
+      "legacy_checkpoint": "P3.1",
+      "migration_phase": "R2",
+      "rust_owner": "crates/doc",
+      "mapping_status": "reviewed",
+      "runtime_override": "Compatibility is defined by checksum-pinned Obsidian 1.14.4 assets in .agents/tasks/2026-10-07/obsidian-reference-pin.json and the recorded locale/OS policy; C07.2 intentionally covers a smaller comparator slice only.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Match pinned JavaScript number and locale comparison behavior across all three CI operating systems, with explicit locale policy and fixture expectations reconciled against reference evidence. Keep unsupported or unverified cases visible and C07 pending."
+    },
+    {
+      "id": "C07.5",
+      "parent_id": "C07",
+      "source": {
+        "path": ".agents/tasks/2026-09-09/01-init/references/vault-compatibility/index.md",
+        "heading": "C07 Bases",
+        "clause": "A base includes every file in the vault by default; file properties are available for all file types, while note properties are frontmatter on Markdown files. The syntax distinguishes file.file (File, available in supported functions) from file.properties (Object containing file properties). https://obsidian.md/help/bases/syntax (reviewed 2026-10-12)."
+      },
+      "checkpoint": "P3.1",
+      "owner": "vault-filesystem",
+      "mandatory": true,
+      "acceptance_criteria": "Evaluate every safely supported regular vault file, including non-Markdown attachments, using one bounded, no-symlink inventory; characterize whether .obsidian files are included. Use a dedicated 10,000 regular-file row cap and inspect at most 100,000 filesystem entries, including directories and symlink entries without descending symlinks. Cap each selected .base source at 4 MiB, each Markdown source at 512 KiB, aggregate Markdown source at 16 MiB per evaluation, extracted tags/link/embed references at 100,000 items, and derived metadata at 16 MiB. These are implementation resource-safety defaults, not claims about Obsidian. Expose an evaluation-level complete flag and explicit unavailable values. Apply limits before full content reads or hashing; do not hash attachment bodies or the entire vault. Omit rows beyond the row cap with a summary issue and set complete=false; report an omitted count only when it was actually counted. If a Markdown source is oversized or omitted by the aggregate budget, retain filesystem metadata but mark source-derived properties unavailable with a path-specific issue. Never report a truncated list as empty or complete. An incomplete source index makes potentially affected backlinks unavailable and emits an evaluation issue. Any reached cap sets complete=false; at metadata caps, affected lists are unavailable with a path-specific or evaluation-level issue while filesystem statistics remain available. Provide the pinned Bases file properties with exact types and forms for file.path (String), file.name (String), file.folder (String), file.ext (String), file.size (Number), file.ctime/file.mtime (Date), file.tags/file.links/file.backlinks/file.embeds (List), file.file (File object available in supported functions), and file.properties (Object). Represent platform-unavailable timestamps explicitly and never synthesize them. Markdown note properties remain limited to frontmatter; file.tags includes content and frontmatter, and file.links includes internal links from frontmatter. Derive links, backlinks, and embeds from one indexed source pass against the same inventory. Characterize pinned app refresh behavior when the vault changes, including documented backlinks staleness. Attachments receive file metadata but no fabricated note properties. Pin hidden-file inclusion, extension/name/folder rules, timestamp types, and tag/link semantics against Obsidian 1.14.4. Verify mixed Markdown, image, PDF, audio/video, and opaque files on Linux, macOS, and Windows through GitHub CI; evaluation must not write vault data.",
+      "fixture_ids": [
+        "fixture:c07-bases"
+      ],
+      "reference_versions": [
+        {
+          "kind": "vault-spec",
+          "version": "v0.3",
+          "sha256": "ba0aeafa795b36ce0d0756d847386aeb068f5811187f5b267ba1fc2e90a79b8c"
+        },
+        {
+          "kind": "obsidian-release-pin",
+          "version": "1.14.4",
+          "sha256": "72f85989c30d8d161cf4d3ca24113097038e4253ff9f1d7fa0603b793577345f"
+        }
+      ],
+      "applicable_platforms": [
+        "macOS",
+        "Windows",
+        "Linux"
+      ],
+      "status": "pending",
+      "evidence_paths": [],
+      "tested_source_tree": null,
+      "blocker": null,
+      "gate_class": "implementation",
+      "decision_id": "D03",
+      "legacy_status": "implemented",
+      "legacy_evidence_paths": [
+        ".agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p3.1-model-contracts.json",
+        ".agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p3.1-interactive-models.json",
+        ".agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p3.1-native-bases-yaml.json",
+        ".agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p3.1-embedded-bases.json"
+      ],
+      "legacy_checkpoint": "P3.1",
+      "migration_phase": "R2",
+      "rust_owner": "crates/engine",
+      "mapping_status": "reviewed",
+      "runtime_override": "Pinned Obsidian 1.14.4 assets are checksum-recorded in .agents/tasks/2026-10-07/obsidian-reference-pin.json; executable validation is GitHub Actions CI only.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Add a bounded no-follow regular-file inventory/stat API in crates/vault; crates/engine owns Bases row collection, indexed Markdown source analysis, omission/completeness reporting, and evaluation. Enforce the stated inventory, row, source, and metadata caps before full reads or hashing; retain filesystem metadata when Markdown-derived values are omitted, and mark incomplete values honestly without mutating vault data. Match the pinned all-file universe and exact file-property forms, including file.file and file.properties."
+    },
+    {
+      "id": "C07.6",
+      "parent_id": "C07",
+      "source": {
+        "path": ".agents/tasks/2026-09-09/01-init/references/vault-compatibility/index.md",
+        "heading": "C07 Bases",
+        "clause": "Bases syntax defines recursive filters, core expression operators, typed values, property access, formulas and formula dependencies; filters and formulas share a core function language, with plugins able to add functions. https://obsidian.md/help/bases/syntax (reviewed 2026-10-12)."
+      },
+      "checkpoint": "P3.1",
+      "owner": "vault-filesystem",
+      "mandatory": true,
+      "acceptance_criteria": "Implement a bounded shared expression grammar for JSON and native YAML, including root/global and per-view filters combined by AND. Unsupported or malformed filter nodes must produce visible issues and must never be silently ignored or turn the view into an unfiltered result. Record the rendered row membership and any issue shown by Obsidian 1.14.4 for unsupported filter expressions. Require Rust to surface a visible compatibility issue and match the pinned row outcome; do not assume whether the view fails, excludes rows, or uses another fallback. Resolve formula dependencies deterministically, report cycles, and compute formula values before filtering, sorting, and grouping, including the shared C07.3 formula-derived Kanban groupBy/groupOrder fixture; compare results against the pinned UI on first open and reopen. Match recursive filters, comparisons, boolean/arithmetic operators, nested/bracket access, dates/durations, and a bounded set of context-free built-ins; unknown syntax and plugin functions must be visibly unsupported, never null or fabricated. Defer `this` presentation context to C07.9. Coordinate comparisons with C07.4 and file-property access with C07.5. Preserve source bytes and verify dependency chains, cycles, unsupported-filter behavior, and representative supported expressions against pinned Obsidian 1.14.4 through GitHub CI on all three OSes.",
+      "fixture_ids": [
+        "fixture:c07-bases"
+      ],
+      "reference_versions": [
+        {
+          "kind": "vault-spec",
+          "version": "v0.3",
+          "sha256": "ba0aeafa795b36ce0d0756d847386aeb068f5811187f5b267ba1fc2e90a79b8c"
+        },
+        {
+          "kind": "obsidian-release-pin",
+          "version": "1.14.4",
+          "sha256": "72f85989c30d8d161cf4d3ca24113097038e4253ff9f1d7fa0603b793577345f"
+        }
+      ],
+      "applicable_platforms": [
+        "macOS",
+        "Windows",
+        "Linux"
+      ],
+      "status": "pending",
+      "evidence_paths": [],
+      "tested_source_tree": null,
+      "blocker": null,
+      "gate_class": "implementation",
+      "decision_id": "D03",
+      "legacy_status": "implemented",
+      "legacy_evidence_paths": [
+        ".agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p3.1-model-contracts.json",
+        ".agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p3.1-interactive-models.json",
+        ".agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p3.1-native-bases-yaml.json",
+        ".agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p3.1-embedded-bases.json"
+      ],
+      "legacy_checkpoint": "P3.1",
+      "migration_phase": "R2",
+      "rust_owner": "crates/doc",
+      "mapping_status": "reviewed",
+      "runtime_override": "Pinned Obsidian 1.14.4 defines the compatibility reference; executable validation is GitHub Actions CI only.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Match the pinned bounded expression grammar, apply global and view filters without dropping unsupported conditions, and match the pinned rendered rows for unsupported filters while reporting visible issues. Evaluate formula dependencies before filtering, sorting, and the shared C07.3 formula-derived groupBy/groupOrder fixture; report cycles and unsupported syntax visibly. Defer presentation-dependent `this` behavior to C07.9 while preserving source."
+    },
+    {
+      "id": "C07.7",
+      "parent_id": "C07",
+      "source": {
+        "path": ".agents/tasks/2026-09-09/01-init/references/vault-compatibility/index.md",
+        "heading": "C07 Bases",
+        "clause": "Bases syntax says displayName is used in Table headers but not in filters/formulas, and custom summaries use values; the Table docs specify per-view summaries and grouped placement. https://obsidian.md/help/bases/syntax and https://obsidian.md/help/bases/views/table (reviewed 2026-10-12)."
+      },
+      "checkpoint": "P3.1",
+      "owner": "vault-filesystem",
+      "mandatory": true,
+      "acceptance_criteria": "Parse and preserve properties.*.displayName; render it in Table column headers while keeping property names unchanged for filters and formulas. Support the documented default Table summaries and per-view property-to-summary selection: Empty/Filled/Unique for any value type; Average/Max/Median/Min/Range/Stddev/Sum for numbers; Earliest/Latest/Range for dates; Checked/Unchecked for booleans. Support custom summary formulas with values bound to the current visible Table result set and, for grouped tables, the current group's values; use C07.6 expression evaluation with an explicit summary context. Compare per-view selection, summary values and placement (bottom of the table and at the top of each group) against Obsidian 1.14.4, including empty, unique, text/numeric/date/boolean cases. Keep Bases summaries scoped to Table unless the pinned app demonstrates otherwise. Preserve unknown configuration/source bytes and verify displayed results through GitHub CI on Linux, macOS, and Windows.",
+      "fixture_ids": [
+        "fixture:c07-bases"
+      ],
+      "reference_versions": [
+        {
+          "kind": "vault-spec",
+          "version": "v0.3",
+          "sha256": "ba0aeafa795b36ce0d0756d847386aeb068f5811187f5b267ba1fc2e90a79b8c"
+        },
+        {
+          "kind": "obsidian-release-pin",
+          "version": "1.14.4",
+          "sha256": "72f85989c30d8d161cf4d3ca24113097038e4253ff9f1d7fa0603b793577345f"
+        }
+      ],
+      "applicable_platforms": [
+        "macOS",
+        "Windows",
+        "Linux"
+      ],
+      "status": "pending",
+      "evidence_paths": [],
+      "tested_source_tree": null,
+      "blocker": null,
+      "gate_class": "implementation",
+      "decision_id": "D03",
+      "legacy_status": "implemented",
+      "legacy_evidence_paths": [
+        ".agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p3.1-model-contracts.json",
+        ".agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p3.1-interactive-models.json",
+        ".agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p3.1-native-bases-yaml.json",
+        ".agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p3.1-embedded-bases.json"
+      ],
+      "legacy_checkpoint": "P3.1",
+      "migration_phase": "R3",
+      "rust_owner": "crates/ui-egui",
+      "mapping_status": "reviewed",
+      "runtime_override": "Pinned Obsidian 1.14.4 defines the compatibility reference; executable validation is GitHub Actions CI only.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Use the C07.6 expression evaluator with values bound to the Table result set or current group. Match documented Table summary calculations and placement, and render displayName in headers without changing lookup names; preserve source and unknown fields with exact-SHA GitHub CI evidence."
+    },
+    {
+      "id": "C07.8",
+      "parent_id": "C07",
+      "source": {
+        "path": ".agents/tasks/2026-09-09/01-init/references/vault-compatibility/index.md",
+        "heading": "C07 Bases",
+        "clause": "The official Views, Table, Cards, List, and Kanban docs define core layouts, their settings, and documented interactions; Map requires the Maps plugin and other view types may come from plugins. https://obsidian.md/help/bases/views, https://obsidian.md/help/bases/views/table, https://obsidian.md/help/bases/views/cards, https://obsidian.md/help/bases/views/list, and https://obsidian.md/help/bases/views/kanban (reviewed 2026-10-12)."
+      },
+      "checkpoint": "P3.1",
+      "owner": "vault-filesystem",
+      "mandatory": true,
+      "acceptance_criteria": "Render the pinned Obsidian core Bases layouts with distinct observable structures: Table, List, Cards, and Kanban. Pin a representative setting for each: Table columns, row height, and summaries; Cards size, image property, fit, and aspect ratio; List markers, property indentation, and separators; Kanban grouping, group order, column width, and card properties/image settings. Verify selected layout, structural/accessibility output, and a screenshot per layout against Obsidian 1.14.4 on Linux, macOS, and Windows through GitHub CI. Exercise documented interactions: edit a Table property; move a Markdown card between note-property groups and verify the grouped property changes; create a note from a group and verify its group value; and, when grouping by file.folder, verify moving a card moves the file to that folder. When grouping by a formula or a file property other than file.folder, show card/column moves and note creation as unavailable as in the reference. Route writes through revision-checked crates/engine and crates/vault operations, preserve unrelated source and .base bytes, and verify reopen. Map views require the Maps plugin; other plugin-added view types must be rendered only when supported by the established plugin runtime, otherwise show a visible unsupported-view issue.",
+      "fixture_ids": [
+        "fixture:c07-bases"
+      ],
+      "reference_versions": [
+        {
+          "kind": "vault-spec",
+          "version": "v0.3",
+          "sha256": "ba0aeafa795b36ce0d0756d847386aeb068f5811187f5b267ba1fc2e90a79b8c"
+        },
+        {
+          "kind": "obsidian-release-pin",
+          "version": "1.14.4",
+          "sha256": "72f85989c30d8d161cf4d3ca24113097038e4253ff9f1d7fa0603b793577345f"
+        }
+      ],
+      "applicable_platforms": [
+        "macOS",
+        "Windows",
+        "Linux"
+      ],
+      "status": "pending",
+      "evidence_paths": [],
+      "tested_source_tree": null,
+      "blocker": null,
+      "gate_class": "implementation",
+      "decision_id": "D03",
+      "legacy_status": "implemented",
+      "legacy_evidence_paths": [
+        ".agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p3.1-model-contracts.json",
+        ".agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p3.1-interactive-models.json",
+        ".agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p3.1-native-bases-yaml.json",
+        ".agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p3.1-embedded-bases.json"
+      ],
+      "legacy_checkpoint": "P3.1",
+      "migration_phase": "R3",
+      "rust_owner": "crates/ui-egui",
+      "mapping_status": "reviewed",
+      "runtime_override": "Pinned Obsidian 1.14.4 defines the compatibility reference; executable validation is GitHub Actions CI only.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Implement and expose the pinned layout settings and documented interactions through revision-checked engine/vault operations, with byte-preserving writes and reopen evidence; display unsupported plugin layouts visibly."
+    },
+    {
+      "id": "C07.9",
+      "parent_id": "C07",
+      "source": {
+        "path": ".agents/tasks/2026-09-09/01-init/references/vault-compatibility/index.md",
+        "heading": "C07 Bases",
+        "clause": "The Bases syntax defines this as the base file in the main area, the embedding file in Markdown/Canvas, and the active file in the main content area for sidebar Bases; file.hasLink(this.file) is documented. https://obsidian.md/help/bases/syntax (reviewed 2026-10-12)."
+      },
+      "checkpoint": "P3.1",
+      "owner": "vault-filesystem",
+      "mandatory": true,
+      "acceptance_criteria": "Carry an explicit Bases evaluation context for this.file. Match the pinned reference when a base is opened in the main area, embedded in a Markdown note or Canvas, and shown in a sidebar. Use distinct paths and assert the context through both a formula such as contextPath = this.file.path and a filter/function such as file.hasLink(this.file). While a sidebar base remains open, switch the active main-pane file and verify the context updates without reopening the base. Characterize the no-active-file case and report absent context without fabricating values. Verify Markdown and Canvas embeds, each presentation mode, and source-byte stability against Obsidian 1.14.4; record exact-SHA GitHub CI evidence for Linux, macOS, and Windows.",
+      "fixture_ids": [
+        "fixture:c07-bases"
+      ],
+      "reference_versions": [
+        {
+          "kind": "vault-spec",
+          "version": "v0.3",
+          "sha256": "ba0aeafa795b36ce0d0756d847386aeb068f5811187f5b267ba1fc2e90a79b8c"
+        },
+        {
+          "kind": "obsidian-release-pin",
+          "version": "1.14.4",
+          "sha256": "72f85989c30d8d161cf4d3ca24113097038e4253ff9f1d7fa0603b793577345f"
+        }
+      ],
+      "applicable_platforms": [
+        "macOS",
+        "Windows",
+        "Linux"
+      ],
+      "status": "pending",
+      "evidence_paths": [],
+      "tested_source_tree": null,
+      "blocker": null,
+      "gate_class": "implementation",
+      "decision_id": "D03",
+      "legacy_status": "implemented",
+      "legacy_evidence_paths": [
+        ".agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p3.1-model-contracts.json",
+        ".agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p3.1-interactive-models.json",
+        ".agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p3.1-native-bases-yaml.json",
+        ".agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p3.1-embedded-bases.json"
+      ],
+      "legacy_checkpoint": "P3.1",
+      "migration_phase": "R3",
+      "rust_owner": "crates/ui-egui",
+      "mapping_status": "reviewed",
+      "runtime_override": "Pinned Obsidian 1.14.4 defines the compatibility reference; executable validation is GitHub Actions CI only.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Pass the active presentation context from crates/ui-egui through the evaluator; update an open sidebar base as the active file changes, preserve absent context honestly, and match the pinned main, Markdown-embedded, and Canvas-embedded behaviors."
+    },
+    {
       "id": "C08",
       "parent_id": null,
       "source": {
@@ -3296,13 +3720,13 @@
         "Windows",
         "Linux"
       ],
-      "status": "pending",
+      "status": "passing",
       "evidence_paths": [
         ".agents/tasks/2026-10-07/evidence/r2.8.100-attempt-1-0ac90e2.json",
-        ".agents/tasks/2026-10-07/evidence/r2.8.100-attempt-2-f41b46f.json"
+        ".agents/tasks/2026-10-07/evidence/r2.8.100-attempt-2-f41b46f.json",
+        ".agents/tasks/2026-10-07/evidence/r2.8.100-attempt-3-779a333.json"
       ],
-      "tested_source_tree": "f41b46f5f668e306b475fc305c475f09d76cd79d",
-      "blocker": "R2.8.100 attempt 2 is not accepted: Ubuntu Rust CI failed its formatting check at crates/ui-egui/src/lib.rs:14418; the other six required workflows passed, as did MSRV, macOS and Windows Rust jobs. The exact formatter correction is local; batch it with attempt-2 evidence into one repair milestone and require fresh exact-SHA CI.",
+      "tested_source_tree": "779a33325be6e1cb5ebee30d7a69afa60a4da571",
       "gate_class": "implementation",
       "decision_id": "D03",
       "legacy_status": "implemented",
@@ -10577,7 +11001,7 @@
       "runtime_override": "Documentation upkeep is a continuing migration requirement; this row captures the final audited completion gate."
     }
   ],
-  "reviewed_at": "2026-10-11T15:19:47+00:00",
+  "reviewed_at": "2026-10-12T11:56:48+00:00",
   "mapping_review": {
     "status": "complete",
     "reviewed_requirement_count": 212,

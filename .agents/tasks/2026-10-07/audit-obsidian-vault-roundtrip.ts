@@ -2,7 +2,7 @@ import {createHash} from "node:crypto";
 import {execFileSync} from "node:child_process";
 import {lstat, mkdir, readFile, readdir, readlink, realpath, rename, unlink, writeFile} from "node:fs/promises";
 import {createWriteStream} from "node:fs";
-import {basename, join, relative, resolve, sep} from "node:path";
+import {basename, dirname, join, relative, resolve, sep} from "node:path";
 import {spawn, type ChildProcess} from "node:child_process";
 import {isDeepStrictEqual} from "node:util";
 
@@ -33,6 +33,8 @@ const workDirectory = resolve(requiredEnv("OBSIDIAN_ROUNDTRIP_WORK_DIRECTORY"));
 const vaultRoot = join(workDirectory, "C01.2 Roundtrip Fixture");
 const canvasVaultName = "C06 Canvas Reference Fixture";
 const canvasVaultRoot = join(workDirectory, canvasVaultName);
+const basesVaultName = "C07 Bases Direction Reference Fixture";
+const basesVaultRoot = join(workDirectory, basesVaultName);
 const obsidianBinary = resolve(requiredEnv("OBSIDIAN_BINARY"));
 const openObsidianBinary = resolve(requiredEnv("OPENOBSIDIAN_BINARY"));
 const obsidianVersion = requiredEnv("OBSIDIAN_RELEASE_VERSION");
@@ -52,6 +54,19 @@ const canvasTargetPath = "Notes/Target.md";
 const canvasTargetMarkdown = "# Heading\n\nTarget for the C06 Canvas fixture subpath. ^block-id\n";
 const canvasTargetText = "Target for the C06 Canvas fixture subpath.";
 const canvasTargetMarkdownBytes = Buffer.from(canvasTargetMarkdown, "utf8");
+const basesDirectionValues = ["Zulu", "Alpha", "Bravo"];
+const basesExplicitDirections = ["ASC", "DESC"] as const;
+const basesDirectionExpected: Record<(typeof basesExplicitDirections)[number], string[]> = {
+  ASC: ["Alpha", "Bravo", "Zulu"],
+  DESC: ["Zulu", "Bravo", "Alpha"],
+};
+const basesDirectionRowsByGroup: Record<string, string[]> = {
+  Alpha: ["02-alpha-first", "05-alpha-second"],
+  Bravo: ["03-bravo-first", "06-bravo-second"],
+  Zulu: ["01-zulu-first", "04-zulu-second"],
+};
+const omittedBasesDirection = "OMITTED";
+const invalidBasesDirection = "SIDEWAYS";
 const obsidianAsset = requiredEnv("OBSIDIAN_RELEASE_ASSET");
 const obsidianSourcePlatform = requiredEnv("OBSIDIAN_SOURCE_PLATFORM");
 const seedMarkdownPath = "Nested Ω/space note.md";
@@ -105,6 +120,16 @@ const report: Record<string, unknown> = {
     text_edit: {status: "pending"},
     note_creation: {status: "pending"},
   },
+  bases_group_direction_reference: {
+    status: "pending",
+    milestone: "R2.8.101-C07.2-pinned-reference-capture",
+    capture_scope: "Record pinned Obsidian behavior only; Rust fixture reconciliation and parity acceptance are a separate milestone.",
+    application: "Pinned Obsidian Desktop 1.14.4",
+    expected_explicit_group_order: basesDirectionExpected,
+    omitted_direction_expectation: "Record the pinned app's default order and compare it across reopen; do not assume first-seen order.",
+    omitted_direction: omittedBasesDirection,
+    invalid_direction: invalidBasesDirection,
+  },
   vault_snapshots: {},
   openobsidian_app_data: {},
   workspace_state_allowlist: workspaceStateAllowlist,
@@ -112,6 +137,7 @@ const report: Record<string, unknown> = {
     "The run proves read-only startup, source preview and close, external note creation, in-place edit, and rename followed by explicit UI refresh and preview, native image-embed resolution and external attachment removal followed by refresh/re-resolution, plus explicit Canvas text-card note preview/review/confirmation before first-open and reopened-vault visibility, native folder-picker selection and cancellation, and Obsidian reopen on the recorded runner platform only; other operating systems require their own passing artifact.",
     "The deliberate external note creation, in-place note edit, attachment removal, and note rename each establish a new baseline; all subsequent no-op operations must preserve the latest applicable baseline exactly.",
     "The Canvas check uses a dedicated reference-compatible fixture and fresh Obsidian profile, edits one native text card with no write before explicit save, verifies the saved JSON differs only at that selected card's text while preserving sibling nodes and edges, creates one Markdown note afterward with the edited text-card bytes, exposes the edited text and referenced block content, and checks the edited Canvas and note after first-open and reopened-vault sessions. The codec's rich unknown-field fixture remains covered by Rust tests and is not opened by Obsidian. This does not certify every Canvas workflow or cross-platform behavior beyond the recorded runner.",
+    "The C07 reference probe opens synthetic Bases files with explicit ASC and DESC, omitted direction, and an unsupported direction. It asserts documented ASC/DESC group order, records omitted and unsupported direction behavior without presuming their outcomes, captures screenshots on first open and reopen, and verifies the Bases and note sources remain byte-identical. It pins behavior of the recorded Obsidian 1.14.4 build and does not itself certify Rust Bases parity.",
     "This run does not certify all product C01 flows or general plugin/theme compatibility.",
   ],
 };
@@ -1564,6 +1590,89 @@ async function createCanvasReferenceFixture(): Promise<{bytes: number; sha256: s
   }]));
   canvasReport.source_before_first_open = {bytes: canvasBytes.length, sha256: canvasHash};
   return {bytes: canvasBytes.length, sha256: canvasHash};
+}
+
+function basesDirectionDefinition(direction: string): Buffer {
+  const label = direction === omittedBasesDirection ? "omitted" : direction;
+  const directionLine = direction === omittedBasesDirection ? "" : `      direction: ${direction}\n`;
+  const viewName = `C07 group direction ${label}`;
+  return Buffer.from(
+    `views:\n  - type: table\n    name: "${viewName}"\n    groupBy:\n      property: note.team\n${directionLine}`,
+    "utf8",
+  );
+}
+
+async function createBasesDirectionFixture(): Promise<Record<string, {bytes: number; sha256: string}>> {
+  await mkdir(join(basesVaultRoot, "Notes"), {recursive: true});
+  await mkdir(join(basesVaultRoot, ".obsidian"), {recursive: true});
+  await mkdir(join(basesVaultRoot, ".obsidian", "plugins"), {recursive: true});
+  await mkdir(join(basesVaultRoot, ".obsidian", "themes"), {recursive: true});
+  const files: Record<string, Buffer> = {
+    "Ascending.base": basesDirectionDefinition("ASC"),
+    "Descending.base": basesDirectionDefinition("DESC"),
+    "Omitted Direction.base": basesDirectionDefinition(omittedBasesDirection),
+    "Invalid Direction.base": basesDirectionDefinition(invalidBasesDirection),
+    "Notes/01-zulu-first.md": Buffer.from("---\nteam: Zulu\n---\n\nSynthetic C07 first Zulu row.\n", "utf8"),
+    "Notes/02-alpha-first.md": Buffer.from("---\nteam: Alpha\n---\n\nSynthetic C07 first Alpha row.\n", "utf8"),
+    "Notes/03-bravo-first.md": Buffer.from("---\nteam: Bravo\n---\n\nSynthetic C07 first Bravo row.\n", "utf8"),
+    "Notes/04-zulu-second.md": Buffer.from("---\nteam: Zulu\n---\n\nSynthetic C07 second Zulu row.\n", "utf8"),
+    "Notes/05-alpha-second.md": Buffer.from("---\nteam: Alpha\n---\n\nSynthetic C07 second Alpha row.\n", "utf8"),
+    "Notes/06-bravo-second.md": Buffer.from("---\nteam: Bravo\n---\n\nSynthetic C07 second Bravo row.\n", "utf8"),
+    ".obsidian/app.json": await readFile(join(vaultRoot, ".obsidian", "app.json")),
+    ".obsidian/appearance.json": await readFile(join(vaultRoot, ".obsidian", "appearance.json")),
+    ".obsidian/community-plugins.json": await readFile(join(vaultRoot, ".obsidian", "community-plugins.json")),
+    ".obsidian/core-plugins.json": await readFile(join(vaultRoot, ".obsidian", "core-plugins.json")),
+  };
+  for (const [path, bytes] of Object.entries(files)) {
+    const destination = join(basesVaultRoot, path);
+    await mkdir(dirname(destination), {recursive: true});
+    await writeFile(destination, bytes);
+  }
+
+  const sourceHashes = Object.fromEntries(Object.entries(files)
+    .filter(([path]) => path.endsWith(".base") || path.endsWith(".md"))
+    .map(([path, bytes]) => [path, {
+      bytes: bytes.length,
+      sha256: createHash("sha256").update(bytes).digest("hex"),
+    }]));
+  const basesReport = report.bases_group_direction_reference as Record<string, unknown>;
+  basesReport.vault_name = basesVaultName;
+  basesReport.vault_path = "$RUNNER_TEMP/openobsidian-c01-roundtrip/C07 Bases Direction Reference Fixture";
+  basesReport.source_hashes_before_open = sourceHashes;
+  basesReport.note_order_by_path = [
+    {path: "Notes/01-zulu-first.md", group: "Zulu"},
+    {path: "Notes/02-alpha-first.md", group: "Alpha"},
+    {path: "Notes/03-bravo-first.md", group: "Bravo"},
+    {path: "Notes/04-zulu-second.md", group: "Zulu"},
+    {path: "Notes/05-alpha-second.md", group: "Alpha"},
+    {path: "Notes/06-bravo-second.md", group: "Bravo"},
+  ];
+  basesReport.rows_by_group_from_fixture = basesDirectionRowsByGroup;
+  basesReport.reference_app_asset_sha256 = obsidianSha256;
+  for (const [path, bytes] of Object.entries(files)) {
+    await writeFile(join(reportDirectory, `bases-direction-${basename(path).replaceAll(".", "-")}.seed`), bytes);
+  }
+  return sourceHashes;
+}
+
+async function assertBasesDirectionSourceHashes(
+  expected: Record<string, {bytes: number; sha256: string}>,
+  stage: string,
+): Promise<Record<string, {bytes: number; sha256: string}>> {
+  const observed: Record<string, {bytes: number; sha256: string}> = {};
+  for (const [path, baseline] of Object.entries(expected)) {
+    const bytes = await readFile(join(basesVaultRoot, path));
+    const actual = {
+      bytes: bytes.length,
+      sha256: createHash("sha256").update(bytes).digest("hex"),
+    };
+    observed[path] = actual;
+    if (actual.bytes !== baseline.bytes || actual.sha256 !== baseline.sha256) {
+      await writeFile(join(reportDirectory, `bases-direction-source-changed-${stage.replaceAll(/[^a-z0-9-]/gi, "-")}-${basename(path)}`), bytes);
+      throw new Error(`Obsidian changed C07 source ${path} ${stage}: expected ${baseline.bytes} bytes / ${baseline.sha256}, got ${actual.bytes} bytes / ${actual.sha256}`);
+    }
+  }
+  return observed;
 }
 
 async function createFixture(): Promise<void> {
@@ -7287,6 +7396,540 @@ async function runCanvasReferenceProbe(): Promise<void> {
   }
 }
 
+type BasesDirectionViewObservation = {
+  requested_file_path: string;
+  selection_succeeded: boolean;
+  active_file_path: string | null;
+  active_view_type: string | null;
+  title: string;
+  body: string;
+  group_order_from_body_text: string[];
+  group_order_from_headings: string[];
+  row_order_by_group_from_dom: Record<string, string[]>;
+  group_heading_candidates: string[];
+  notices: string[];
+  previous_active_file_path: string | null;
+  previous_active_view_type: string | null;
+  previous_body: string;
+  previous_notices: string[];
+  state_transition_observed: boolean;
+  state_settled: boolean;
+  state_samples: BasesDirectionStateSample[];
+  screenshot: string;
+};
+
+type BasesDirectionVisibleState = Omit<
+  BasesDirectionViewObservation,
+  "previous_active_file_path" | "previous_active_view_type" | "previous_body" | "previous_notices" | "state_transition_observed" | "state_settled" | "state_samples" | "screenshot"
+>;
+
+type BasesDirectionStateSample = Pick<
+  BasesDirectionVisibleState,
+  | "active_file_path"
+  | "active_view_type"
+  | "title"
+  | "body"
+  | "group_order_from_body_text"
+  | "group_order_from_headings"
+  | "row_order_by_group_from_dom"
+  | "group_heading_candidates"
+  | "notices"
+>;
+
+async function verifyBasesDirectionVisible(
+  connection: DevToolsConnection,
+  direction: "ASC" | "DESC" | "OMITTED" | "SIDEWAYS",
+  stage: string,
+): Promise<BasesDirectionViewObservation> {
+  const basePath = direction === "ASC"
+    ? "Ascending.base"
+    : direction === "DESC"
+      ? "Descending.base"
+      : direction === omittedBasesDirection
+        ? "Omitted Direction.base"
+        : "Invalid Direction.base";
+  const label = direction === omittedBasesDirection ? "omitted" : direction;
+  const viewName = `C07 group direction ${label}`;
+  const expectedOrder = direction === "ASC" || direction === "DESC"
+    ? basesDirectionExpected[direction]
+    : null;
+  const unsupportedDirection = direction === invalidBasesDirection;
+  const labels = JSON.stringify(basesDirectionValues);
+  const rowsByGroup = JSON.stringify(basesDirectionRowsByGroup);
+  const readVisible = async () => await connection.evaluateJson<BasesDirectionVisibleState>(`(() => {
+    const labels = ${labels};
+    const rowsByGroup = ${rowsByGroup};
+    const view = window.app?.workspace?.activeLeaf?.view;
+    const root = document.querySelector('.workspace-leaf.mod-active') ?? document.body;
+    const body = root?.innerText ?? '';
+    const isVisibleElement = (element) => {
+      const style = window.getComputedStyle(element);
+      const bounds = element.getBoundingClientRect();
+      return style.display !== 'none' && style.visibility !== 'hidden' && bounds.width > 0 && bounds.height > 0;
+    };
+    const groupOrder = labels
+      .map((label) => ({label, index: body.indexOf(label)}))
+      .filter((entry) => entry.index >= 0)
+      .sort((left, right) => left.index - right.index)
+      .map((entry) => entry.label);
+    const headingSelector = '[role="heading"], h1, h2, h3, h4, h5, h6, [class*="group-heading"], [class*="group-header"], [class*="groupHeading"], [class*="groupHeader"]';
+    const headingElements = [...root.querySelectorAll(headingSelector)]
+      .filter(isVisibleElement)
+      .map((element) => ({element, text: (element.innerText || element.textContent || '').trim()}));
+    const headingCandidates = headingElements
+      .flatMap(({text}) => labels.filter((label) => text === label || text.startsWith(label + '\\n') || text.startsWith(label + ' ')));
+    const groupHeadingPositions = labels.map((group) => {
+      const heading = headingElements
+        .filter(({text}) => text === group || text.startsWith(group + '\\n') || text.startsWith(group + ' '))
+        .sort((left, right) => left.text.length - right.text.length)[0];
+      return heading ? {group, top: heading.element.getBoundingClientRect().top} : null;
+    }).filter((entry) => entry !== null).sort((left, right) => left.top - right.top);
+    const rowElements = [...root.querySelectorAll('*')]
+      .filter(isVisibleElement)
+      .map((element) => ({element, text: (element.innerText || element.textContent || '').trim()}));
+    const rowOrderByGroup = Object.fromEntries(Object.entries(rowsByGroup).map(([group, names]) => {
+      const headingIndex = groupHeadingPositions.findIndex((entry) => entry.group === group);
+      const heading = headingIndex < 0 ? undefined : groupHeadingPositions[headingIndex];
+      const nextHeading = headingIndex < 0 ? undefined : groupHeadingPositions[headingIndex + 1];
+      const rows = names.map((name) => {
+        const row = rowElements
+          .filter(({text}) => text.includes(name))
+          .sort((left, right) => left.text.length - right.text.length)[0];
+        return row ? {name, top: row.element.getBoundingClientRect().top} : null;
+      }).filter((entry) => entry !== null
+        && heading !== undefined
+        && entry.top >= heading.top
+        && (nextHeading === undefined || entry.top < nextHeading.top))
+        .sort((left, right) => left.top - right.top)
+        .map((entry) => entry.name);
+      return [group, rows];
+    }));
+    const notices = [...new Set([...document.querySelectorAll('.notice, .modal-container, [role="alert"]')]
+      .map((element) => (element.innerText || element.textContent || '').trim())
+      .filter(Boolean))];
+    return {
+      requested_file_path: ${JSON.stringify(basePath)},
+      selection_succeeded: view?.file?.path === ${JSON.stringify(basePath)},
+      active_file_path: view?.file?.path ?? null,
+      active_view_type: view?.getViewType?.() ?? null,
+      title: document.title,
+      body,
+      group_order_from_body_text: [...new Set(groupOrder)],
+      group_order_from_headings: [...new Set(headingCandidates)],
+      row_order_by_group_from_dom: rowOrderByGroup,
+      group_heading_candidates: headingCandidates,
+      notices,
+    };
+  })()`);
+
+  let beforeSelection: BasesDirectionVisibleState = {
+    requested_file_path: basePath,
+    selection_succeeded: false,
+    active_file_path: null,
+    active_view_type: null,
+    title: "",
+    body: "",
+    group_order_from_body_text: [],
+    group_order_from_headings: [],
+    row_order_by_group_from_dom: {},
+    group_heading_candidates: [],
+    notices: [],
+  };
+  let visible: BasesDirectionVisibleState = beforeSelection;
+  let stateTransitionObserved = false;
+  let stateSettled = false;
+  const stateSamples: BasesDirectionStateSample[] = [];
+  const recordStateSample = (state: BasesDirectionVisibleState) => {
+    const sample: BasesDirectionStateSample = {
+      active_file_path: state.active_file_path,
+      active_view_type: state.active_view_type,
+      title: state.title,
+      body: state.body.slice(0, 6_000),
+      group_order_from_body_text: state.group_order_from_body_text,
+      group_order_from_headings: state.group_order_from_headings,
+      row_order_by_group_from_dom: state.row_order_by_group_from_dom,
+      group_heading_candidates: state.group_heading_candidates,
+      notices: state.notices,
+    };
+    if (stateSamples.length === 0 || !isDeepStrictEqual(stateSamples[stateSamples.length - 1], sample)) {
+      stateSamples.push(sample);
+    }
+  };
+  const persistProbeFailure = async (state: BasesDirectionVisibleState, error: unknown): Promise<void> => {
+    const screenshot = `obsidian-bases-${direction.toLowerCase()}-${stage}-failure.png`;
+    let screenshotError: string | undefined;
+    try {
+      await captureObsidianScreenshot(connection, screenshot);
+    } catch (captureError) {
+      screenshotError = captureError instanceof Error ? captureError.message : String(captureError);
+    }
+    const failureObservation: BasesDirectionViewObservation & {probe_error: string; screenshot_error?: string} = {
+      ...state,
+      body: state.body.slice(0, 6_000),
+      previous_active_file_path: beforeSelection.active_file_path,
+      previous_active_view_type: beforeSelection.active_view_type,
+      previous_body: beforeSelection.body.slice(0, 6_000),
+      previous_notices: beforeSelection.notices,
+      state_transition_observed: state.active_file_path !== beforeSelection.active_file_path
+        || state.active_view_type !== beforeSelection.active_view_type
+        || state.title !== beforeSelection.title
+        || state.body !== beforeSelection.body
+        || !isDeepStrictEqual(state.notices, beforeSelection.notices),
+      state_settled: stateSettled,
+      state_samples: stateSamples,
+      screenshot,
+      probe_error: error instanceof Error ? error.message : String(error),
+      ...(screenshotError ? {screenshot_error: screenshotError} : {}),
+    };
+    const basesReport = report.bases_group_direction_reference as Record<string, unknown>;
+    const observationKey = unsupportedDirection
+      ? stage === "first-open"
+        ? "invalid_direction_observation_on_first_open"
+        : "invalid_direction_observation_after_reopen"
+      : `${stage.replaceAll(/[^a-z0-9]+/gi, "_")}_${direction.toLowerCase()}_failure_observation`;
+    basesReport[observationKey] = failureObservation;
+    if (unsupportedDirection) {
+      basesReport.invalid_direction_probe_error = error instanceof Error ? error.message : String(error);
+    }
+    await saveReport();
+  };
+  try {
+    beforeSelection = await readVisible();
+    visible = beforeSelection;
+    const visiblePaths = await waitFor(
+      `${stage}: Obsidian to list ${basePath}`,
+      async () => await connection.evaluateJson<string[]>(`[...document.querySelectorAll('[data-path]')].map((element) => element.getAttribute('data-path') || '')`),
+      (paths) => paths.includes(basePath),
+      45_000,
+    );
+    if (!visiblePaths.includes(basePath)) throw new Error(`${stage}: Obsidian did not list ${basePath}`);
+    beforeSelection = await readVisible();
+    visible = beforeSelection;
+    const clicked = await connection.evaluateJson<boolean>(`(() => {
+      const target = [...document.querySelectorAll('[data-path]')]
+        .find((element) => element.getAttribute('data-path') === ${JSON.stringify(basePath)});
+      target?.click();
+      return Boolean(target);
+    })()`);
+    if (!clicked) throw new Error(`${stage}: Obsidian did not expose ${basePath} for selection`);
+  } catch (error) {
+    const lastState = await readVisible().catch(() => visible);
+    recordStateSample(lastState);
+    await persistProbeFailure(lastState, error);
+    throw error;
+  }
+  if (unsupportedDirection) {
+    try {
+      visible = beforeSelection;
+      let stableFingerprint = JSON.stringify(visible);
+      let stableSamples = 0;
+      const settleDeadline = Date.now() + 45_000;
+      const noTransitionDeadline = Date.now() + 8_000;
+      while (Date.now() < settleDeadline) {
+        await delay(500);
+        const next = await readVisible();
+        recordStateSample(next);
+        const nextFingerprint = JSON.stringify(next);
+        if (nextFingerprint === stableFingerprint) {
+          stableSamples += 1;
+        } else {
+          stableFingerprint = nextFingerprint;
+          stableSamples = 0;
+        }
+        visible = next;
+        const targetSelected = next.active_file_path === basePath;
+        const visibleStateChanged = next.active_file_path !== beforeSelection.active_file_path
+          || next.active_view_type !== beforeSelection.active_view_type
+          || next.title !== beforeSelection.title
+          || next.body !== beforeSelection.body
+          || !isDeepStrictEqual(next.notices, beforeSelection.notices);
+        if (stableSamples >= 3 && (targetSelected || visibleStateChanged || Date.now() >= noTransitionDeadline)) {
+          break;
+        }
+      }
+      stateTransitionObserved = visible.active_file_path !== beforeSelection.active_file_path
+        || visible.active_view_type !== beforeSelection.active_view_type
+        || visible.title !== beforeSelection.title
+        || visible.body !== beforeSelection.body
+        || !isDeepStrictEqual(visible.notices, beforeSelection.notices);
+      stateSettled = stableSamples >= 3;
+    } catch (error) {
+      const afterSelection = await readVisible().catch(() => visible);
+      recordStateSample(afterSelection);
+      await persistProbeFailure(afterSelection, error);
+      throw error;
+    }
+  } else {
+    visible = beforeSelection;
+    try {
+      let viewReady = false;
+      const viewDeadline = Date.now() + 45_000;
+      while (Date.now() < viewDeadline) {
+        visible = await readVisible();
+        recordStateSample(visible);
+        viewReady = visible.active_file_path === basePath
+          && visible.active_view_type === "bases"
+          && visible.body.includes(viewName)
+          && basesDirectionValues.every((group) => visible.group_order_from_headings.includes(group))
+          && Object.values(basesDirectionRowsByGroup).flat().every((name) => visible.body.includes(name));
+        if (viewReady) break;
+        await delay(500);
+      }
+      if (!viewReady) {
+        throw new Error(`${stage}: Obsidian did not expose the ${direction} Bases view; last state=${JSON.stringify(visible).slice(0, 8_000)}`);
+      }
+      let stableFingerprint = JSON.stringify(visible);
+      let stableSamples = 0;
+      const settleDeadline = Date.now() + 45_000;
+      while (Date.now() < settleDeadline && stableSamples < 3) {
+        await delay(500);
+        const next = await readVisible();
+        recordStateSample(next);
+        const nextFingerprint = JSON.stringify(next);
+        if (nextFingerprint === stableFingerprint) {
+          stableSamples += 1;
+        } else {
+          stableFingerprint = nextFingerprint;
+          stableSamples = 0;
+        }
+        visible = next;
+      }
+      stateTransitionObserved = visible.active_file_path !== beforeSelection.active_file_path
+        || visible.active_view_type !== beforeSelection.active_view_type
+        || visible.title !== beforeSelection.title
+        || visible.body !== beforeSelection.body
+        || !isDeepStrictEqual(visible.notices, beforeSelection.notices);
+      stateSettled = stableSamples >= 3;
+      if (!stateSettled) {
+        throw new Error(`${stage}: ${direction} Bases view did not settle; samples=${JSON.stringify(stateSamples).slice(0, 8_000)}`);
+      }
+      if (visible.active_file_path !== basePath || visible.active_view_type !== "bases") {
+        throw new Error(`${stage}: ${basePath} did not open as a Bases view: ${JSON.stringify({path: visible.active_file_path, type: visible.active_view_type})}`);
+      }
+      if (expectedOrder && (!visible.body.includes(viewName) || !isDeepStrictEqual(visible.group_order_from_headings, expectedOrder))) {
+        throw new Error(`${stage}: documented ${direction} group heading order differed: expected ${JSON.stringify(expectedOrder)}, got ${JSON.stringify(visible.group_order_from_headings)}; body=${JSON.stringify(visible.body.slice(0, 3_000))}`);
+      }
+    } catch (error) {
+      const lastState = await readVisible().catch(() => visible);
+      recordStateSample(lastState);
+      await persistProbeFailure(lastState, error);
+      throw error;
+    }
+  }
+  if (!unsupportedDirection && (visible.active_file_path !== basePath || visible.active_view_type !== "bases")) {
+    throw new Error(`${stage}: ${basePath} did not open as a Bases view: ${JSON.stringify({path: visible.active_file_path, type: visible.active_view_type})}`);
+  }
+  if (expectedOrder && (visible.active_view_type !== "bases" || !visible.body.includes(viewName))) {
+    throw new Error(`${stage}: Obsidian did not render the ${direction} Bases view: ${JSON.stringify({path: visible.active_file_path, type: visible.active_view_type, body: visible.body.slice(0, 3_000)})}`);
+  }
+  if (expectedOrder && !isDeepStrictEqual(visible.group_order_from_headings, expectedOrder)) {
+    throw new Error(`${stage}: documented ${direction} group heading order differed: expected ${JSON.stringify(expectedOrder)}, got ${JSON.stringify(visible.group_order_from_headings)}; body=${JSON.stringify(visible.body.slice(0, 3_000))}`);
+  }
+  const screenshot = `obsidian-bases-${direction.toLowerCase()}-${stage}.png`;
+  await captureObsidianScreenshot(connection, screenshot);
+  return {
+    ...visible,
+    body: visible.body.slice(0, 6_000),
+    previous_active_file_path: beforeSelection.active_file_path,
+    previous_active_view_type: beforeSelection.active_view_type,
+    previous_body: beforeSelection.body.slice(0, 6_000),
+    previous_notices: beforeSelection.notices,
+    state_transition_observed: stateTransitionObserved,
+    state_settled: stateSettled,
+    state_samples: stateSamples,
+    screenshot,
+  };
+}
+
+async function runBasesDirectionReferenceProbe(): Promise<void> {
+  const profileDirectory = join(workDirectory, "bases-direction-obsidian-profile");
+  const basesReport = report.bases_group_direction_reference as Record<string, unknown>;
+  const snapshots = report.vault_snapshots as Record<string, unknown>;
+  basesReport.status = "running";
+  let firstProcess: ChildProcess | undefined;
+  let firstConnection: DevToolsConnection | undefined;
+  let secondProcess: ChildProcess | undefined;
+  let secondConnection: DevToolsConnection | undefined;
+  let sourceHashes: Record<string, {bytes: number; sha256: string}> | undefined;
+  try {
+    sourceHashes = await createBasesDirectionFixture();
+    const seedSnapshot = await snapshotTree(basesVaultRoot);
+    snapshots.bases_direction_seed = seedSnapshot;
+    basesReport.first_open_source_hashes = await assertBasesDirectionSourceHashes(sourceHashes, "before-first-open");
+    await saveReport();
+
+    firstProcess = await createObsidianProfile(profileDirectory, 9226, "obsidian-bases-direction-first-open.log");
+    const first = await connectObsidian(9226);
+    firstConnection = first.connection;
+    const firstSession: Record<string, unknown> = {
+      devtools_browser: first.browserVersion,
+      first_target: {title: first.target.title ?? "", url: first.target.url ?? ""},
+      source_hashes_before_open: sourceHashes,
+    };
+    basesReport.first_session = firstSession;
+    const firstRunBody = await waitForRenderer(
+      firstConnection,
+      "document.body?.innerText ?? ''",
+      (body) => body.includes("Open folder as vault"),
+      "Obsidian's first-run C07 Bases reference vault screen",
+    );
+    firstSession.first_run_text = firstRunBody.slice(0, 2_000);
+    await captureObsidianScreenshot(firstConnection, "obsidian-bases-direction-first-run.png");
+    firstConnection = await chooseVaultDirectory(firstConnection, 9226, {
+      targetRoot: basesVaultRoot,
+      reporter: basesReport,
+      screenshotPrefix: "obsidian-bases-direction",
+    });
+    await chooseRestrictedMode(firstConnection, firstSession, basesVaultName, "Synthetic C07 group-direction fixture.");
+
+    const firstViews: Record<string, BasesDirectionViewObservation> = {};
+    firstSession.views = firstViews;
+    for (const direction of ["ASC", "DESC", omittedBasesDirection, invalidBasesDirection] as const) {
+      firstViews[direction] = await verifyBasesDirectionVisible(firstConnection, direction, `first-open`);
+      await saveReport();
+      await assertBasesDirectionSourceHashes(sourceHashes, `first-open-${direction.toLowerCase()}`);
+    }
+    firstSession.source_hashes_after_views = await assertBasesDirectionSourceHashes(sourceHashes, "first-open-before-shutdown");
+    await delay(2_000);
+    await stopProcess(firstProcess, firstConnection);
+    firstProcess = undefined;
+    firstConnection = undefined;
+
+    const afterFirstClose = await snapshotTree(basesVaultRoot);
+    snapshots.bases_direction_after_first_close = afterFirstClose;
+    const firstCloseHashes = await assertBasesDirectionSourceHashes(sourceHashes, "first-shutdown");
+    const firstCloseChanges = changedPaths(seedSnapshot, afterFirstClose);
+    const firstCloseUnexpectedChanges = firstCloseChanges.filter((change) => !workspaceStateAllowlist.includes(change.path));
+    if (firstCloseUnexpectedChanges.length > 0) {
+      throw new Error(`C07 Bases first open changed unapproved vault content: ${JSON.stringify(firstCloseUnexpectedChanges).slice(0, 6_000)}`);
+    }
+    snapshots.bases_direction_first_open_changes = firstCloseChanges;
+    basesReport.first_shutdown_source_hashes = firstCloseHashes;
+    firstSession.vault_changes_during_obsidian_session = firstCloseChanges;
+    await saveReport();
+
+    secondProcess = await createObsidianProfile(profileDirectory, 9227, "obsidian-bases-direction-reopen.log");
+    const second = await connectObsidian(9227);
+    secondConnection = second.connection;
+    const secondSession: Record<string, unknown> = {
+      devtools_browser: second.browserVersion,
+      first_target: {title: second.target.title ?? "", url: second.target.url ?? ""},
+      source_hashes_before_reopen: firstCloseHashes,
+    };
+    basesReport.second_session = secondSession;
+    await chooseRestrictedMode(secondConnection, secondSession, basesVaultName, "Synthetic C07 group-direction fixture.");
+
+    const reopenedViews: Record<string, BasesDirectionViewObservation> = {};
+    secondSession.views = reopenedViews;
+    for (const direction of ["ASC", "DESC", omittedBasesDirection, invalidBasesDirection] as const) {
+      reopenedViews[direction] = await verifyBasesDirectionVisible(secondConnection, direction, `reopen`);
+      await saveReport();
+      await assertBasesDirectionSourceHashes(sourceHashes, `reopen-${direction.toLowerCase()}`);
+    }
+    secondSession.source_hashes_after_views = await assertBasesDirectionSourceHashes(sourceHashes, "reopen-before-shutdown");
+    await delay(2_000);
+    await stopProcess(secondProcess, secondConnection);
+    secondProcess = undefined;
+    secondConnection = undefined;
+
+    const afterSecondClose = await snapshotTree(basesVaultRoot);
+    snapshots.bases_direction_after_reopen = afterSecondClose;
+    const secondCloseHashes = await assertBasesDirectionSourceHashes(sourceHashes, "reopen-shutdown");
+    const reopenChanges = changedPaths(afterFirstClose, afterSecondClose);
+    const reopenUnexpectedChanges = reopenChanges.filter((change) => !workspaceStateAllowlist.includes(change.path));
+    if (reopenUnexpectedChanges.length > 0) {
+      throw new Error(`C07 Bases reopen changed unapproved vault content: ${JSON.stringify(reopenUnexpectedChanges).slice(0, 6_000)}`);
+    }
+    snapshots.bases_direction_reopen_changes = reopenChanges;
+    basesReport.second_shutdown_source_hashes = secondCloseHashes;
+    basesReport.source_hashes_unchanged_across_both_sessions = isDeepStrictEqual(sourceHashes, secondCloseHashes);
+    basesReport.documented_orders_observed_on_first_open = isDeepStrictEqual(
+      Object.fromEntries(basesExplicitDirections.map((direction) => [direction, firstViews[direction].group_order_from_headings])),
+      Object.fromEntries(basesExplicitDirections.map((direction) => [direction, basesDirectionExpected[direction]])),
+    );
+    basesReport.documented_orders_observed_after_reopen = isDeepStrictEqual(
+      Object.fromEntries(basesExplicitDirections.map((direction) => [direction, reopenedViews[direction].group_order_from_headings])),
+      Object.fromEntries(basesExplicitDirections.map((direction) => [direction, basesDirectionExpected[direction]])),
+    );
+    basesReport.omitted_direction_group_order_on_first_open = firstViews[omittedBasesDirection].group_order_from_headings;
+    basesReport.omitted_direction_group_order_after_reopen = reopenedViews[omittedBasesDirection].group_order_from_headings;
+    basesReport.omitted_direction_order_stable_across_reopen = isDeepStrictEqual(
+      firstViews[omittedBasesDirection].group_order_from_headings,
+      reopenedViews[omittedBasesDirection].group_order_from_headings,
+    );
+    basesReport.invalid_direction_group_order_on_first_open = firstViews[invalidBasesDirection].group_order_from_headings;
+    basesReport.invalid_direction_group_order_after_reopen = reopenedViews[invalidBasesDirection].group_order_from_headings;
+    basesReport.invalid_direction_order_stable_across_reopen = isDeepStrictEqual(
+      firstViews[invalidBasesDirection].group_order_from_headings,
+      reopenedViews[invalidBasesDirection].group_order_from_headings,
+    );
+    basesReport.row_order_by_group_on_first_open = Object.fromEntries(
+      ["ASC", "DESC", omittedBasesDirection, invalidBasesDirection].map((direction) => [direction, firstViews[direction].row_order_by_group_from_dom]),
+    );
+    basesReport.row_order_by_group_after_reopen = Object.fromEntries(
+      ["ASC", "DESC", omittedBasesDirection, invalidBasesDirection].map((direction) => [direction, reopenedViews[direction].row_order_by_group_from_dom]),
+    );
+    basesReport.row_order_stable_across_reopen = isDeepStrictEqual(
+      basesReport.row_order_by_group_on_first_open,
+      basesReport.row_order_by_group_after_reopen,
+    );
+    const rowMembershipMatchesFixture = (view: BasesDirectionViewObservation) => Object.entries(basesDirectionRowsByGroup)
+      .every(([group, names]) => isDeepStrictEqual(
+        [...(view.row_order_by_group_from_dom[group] ?? [])].sort(),
+        [...names].sort(),
+      ));
+    basesReport.row_membership_matches_fixture_on_first_open = Object.fromEntries(
+      ["ASC", "DESC", omittedBasesDirection].map((direction) => [direction, rowMembershipMatchesFixture(firstViews[direction])]),
+    );
+    basesReport.row_membership_matches_fixture_after_reopen = Object.fromEntries(
+      ["ASC", "DESC", omittedBasesDirection].map((direction) => [direction, rowMembershipMatchesFixture(reopenedViews[direction])]),
+    );
+    basesReport.omitted_direction_observation_on_first_open = firstViews[omittedBasesDirection];
+    basesReport.omitted_direction_observation_after_reopen = reopenedViews[omittedBasesDirection];
+    basesReport.invalid_direction_observation_on_first_open = firstViews[invalidBasesDirection];
+    basesReport.invalid_direction_observation_after_reopen = reopenedViews[invalidBasesDirection];
+    if (!basesReport.source_hashes_unchanged_across_both_sessions
+      || !basesReport.documented_orders_observed_on_first_open
+      || !basesReport.documented_orders_observed_after_reopen
+      || !basesReport.omitted_direction_order_stable_across_reopen
+      || !basesReport.invalid_direction_order_stable_across_reopen
+      || !basesReport.row_order_stable_across_reopen
+      || !Object.values(basesReport.row_membership_matches_fixture_on_first_open as Record<string, boolean>).every(Boolean)
+      || !Object.values(basesReport.row_membership_matches_fixture_after_reopen as Record<string, boolean>).every(Boolean)
+      || firstViews[omittedBasesDirection].active_file_path !== "Omitted Direction.base"
+      || firstViews[omittedBasesDirection].active_view_type !== "bases"
+      || reopenedViews[omittedBasesDirection].active_file_path !== "Omitted Direction.base"
+      || reopenedViews[omittedBasesDirection].active_view_type !== "bases"
+      || firstViews[invalidBasesDirection].requested_file_path !== "Invalid Direction.base"
+      || reopenedViews[invalidBasesDirection].requested_file_path !== "Invalid Direction.base"
+      || firstViews[invalidBasesDirection].active_file_path !== "Invalid Direction.base"
+      || reopenedViews[invalidBasesDirection].active_file_path !== "Invalid Direction.base"
+      || !firstViews[invalidBasesDirection].selection_succeeded
+      || !reopenedViews[invalidBasesDirection].selection_succeeded
+      || !firstViews[invalidBasesDirection].state_settled
+      || !reopenedViews[invalidBasesDirection].state_settled) {
+      throw new Error("C07 Bases group direction or source-preservation assertions failed after reopen");
+    }
+    basesReport.status = "passed";
+    await saveReport();
+  } catch (error) {
+    basesReport.status = "failed";
+    basesReport.error = error instanceof Error ? error.message : String(error);
+    if (sourceHashes) {
+      try {
+        basesReport.source_hashes_after_failure = await assertBasesDirectionSourceHashes(sourceHashes, "failure");
+      } catch (sourceError) {
+        basesReport.source_preservation_failure = sourceError instanceof Error ? sourceError.message : String(sourceError);
+      }
+    }
+    await saveReport();
+    throw error;
+  } finally {
+    await stopProcess(firstProcess, firstConnection).catch(() => undefined);
+    await stopProcess(secondProcess, secondConnection).catch(() => undefined);
+  }
+}
+
 async function run(): Promise<void> {
   await mkdir(reportDirectory, {recursive: true});
   await mkdir(workDirectory, {recursive: true});
@@ -7348,6 +7991,7 @@ async function run(): Promise<void> {
     await writeFile(join(reportDirectory, "vault-reopen-workspace-changes.json"), `${JSON.stringify(allowedChanges, null, 2)}\n`);
 
     await runCanvasReferenceProbe();
+    await runBasesDirectionReferenceProbe();
 
     report.status = "passed";
     report.completed_at = new Date().toISOString();

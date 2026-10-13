@@ -5587,3 +5587,82 @@ downloaded; its report has no C07 section because C07 was not included on this
 SHA. Attempt 2 is not accepted. The exact formatter correction and evidence
 are being batched as one repair milestone; no local executable validation or
 follow-up push occurred.
+
+The formatter correction and exact attempt-2 evidence were committed as
+`779a33325be6e1cb5ebee30d7a69afa60a4da571` and pushed after confirming
+`origin/main` still pointed to `f41b46f5f668e306b475fc305c475f09d76cd79d`.
+All seven required workflows triggered for the pushed SHA: inventory
+`38466235467`, quality `38466235649`, desktop build `38466235714`, plugin
+renderer `38466235534`, loaded plugins `38466235636`, Rust CI `38466235354`,
+and Obsidian round-trip `38466235429`. C07 remains local and unpushed. No local
+executable validation was run.
+
+At 21:03 UTC, exact-SHA polling showed the five companion workflows passed.
+Rust CI had passed MSRV 1.95, Ubuntu, and macOS; its Windows job was still
+running. The Obsidian 1.14.4 round-trip had passed Windows while macOS and
+Ubuntu remained in progress. Artifact IDs, sizes, digests, and expiry metadata
+are available from the Actions API; no terminal attempt-3 evidence file has
+been written yet, and no next milestone push is allowed while jobs remain live.
+
+Read-only review of the local C07.2 probe found that body-wide row-title
+searches could misattribute rows and that failed later views lost prior
+observations. The probe now uses heading and row DOM geometry, checks row
+membership for ASC/DESC/omitted views, samples positive views until settled,
+captures selection/render failures with screenshots and state, persists each
+completed view, and records the actual view type for invalid-direction
+fallbacks after exact-file selection. Per-group row order remains provisional
+until the pinned-app observation is copied into fixture expectations. These
+C07 changes are not part of `779a333`; no local executable validation was run.
+
+At 21:04 UTC, Rust CI completed successfully on all four jobs, including
+Windows. The Obsidian round-trip passed on Windows and macOS; Ubuntu job
+115533622344 remained in progress. Six of seven required workflows are
+complete and successful, so the next milestone remains gated on that last
+exact-SHA job. The C07.2 probe changes remain local and are absent from this
+CI SHA.
+
+## 2026-10-13 — R2.8.100 attempt 3 accepted; C07 contract/capture milestone defined
+
+The prior 21:04 UTC status is superseded: Obsidian round-trip job
+115533622344 completed successfully at 21:06 UTC. All seven required workflows
+and all 20 jobs passed for exact SHA
+`779a33325be6e1cb5ebee30d7a69afa60a4da571`. The run produced 16 artifacts;
+their IDs, byte sizes, archive SHA-256 digests, and expirations are recorded in
+`evidence/r2.8.100-attempt-3-779a333.json`. R2.8.100 is accepted and C08 now
+passes. The round-trip reports contain no C07 probe section because the local
+C07 changes were not in this SHA. No local tests, builds, formatters, linters,
+validators, or application launches were run.
+
+Defined R2.8.101 to clarify the goal's milestone-batched CI policy, split C07
+into independently verifiable C07.2-C07.9 requirements, and capture the C07.2
+pinned reference behavior. Its CI report must record settled
+omitted/ASC/DESC/unsupported-direction views, exact target selection, per-group
+ordered rows and membership across reopen, and unchanged source hashes on all
+three operating systems. The captured behavior will be reconciled into fixtures
+and Rust semantics in a separate milestone. The goal now states that minor
+edits accumulate locally and `origin/main` receives one push per completed
+milestone; while a long CI batch is running, the remote tip stays unchanged
+until all exact-SHA workflows finish. No R2.8.101 push has been made; finish
+read-only review of the probe candidate before its single batched push.
+
+Follow-up read-only probe review hardened one error path: the unsupported
+direction capture now records its last known state and state samples even when
+a retry read or screenshot fails, including the error details. An initial
+renderer-read failure is also caught and persisted. The report labels the
+R2.8.101 capture scope separately from later Rust parity; visible heading and
+row candidates are filtered before order extraction. These source changes
+remain pending GitHub Actions. Keep `crates/doc/src/bases.rs` and
+`fixtures/c07-bases.json` out of the reference-capture push so that the probe
+and engine/fixture reconciliation remain separate milestones. No local
+executable validation was run.
+
+Final read-only review confirmed the R2.8.101 probe records visible per-group
+row membership/order, settled first-open and reopen observations, source hashes,
+and failures without discarding prior captures. The goal's push rule now
+distinguishes a completed implementation batch ready for CI from an accepted
+milestone: push one accumulated batch after the named deliverable and CI-ready
+acceptance package are complete, then hold `origin/main` steady until every
+required exact-SHA workflow finishes and is reconciled. CI submission alone
+does not mark the milestone accepted. R2.8.101 is ready for its single CI
+submission; the Rust evaluator and fixture parity edits remain outside this
+batch. No local executable validation was run.
