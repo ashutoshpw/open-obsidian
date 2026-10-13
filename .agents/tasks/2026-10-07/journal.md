@@ -5723,3 +5723,42 @@ selector/scoping corrections. The two inventory fixes are in local commits
 repair. The accumulated batch is ready for its single push; its exact
 implementation SHA and new CI evidence will be recorded after submission. No
 local executable validation was run.
+
+## 2026-10-13 — R2.8.101 attempt 2 partial CI
+
+GitHub confirms `origin/main` remains at exact SHA
+`e85c40329a9b0597822901bc026414556db3285d`. Five required workflows have
+passed: inventory, quality, desktop build, plugin renderer, and loaded plugins.
+Rust CI macOS and Ubuntu jobs also passed; its MSRV 1.95 and Windows jobs remain
+in progress. All three Obsidian 1.14.4 round-trip jobs remain in progress. The
+latest snapshot records 15 of 20 successful jobs, five pending jobs, and the
+available artifact IDs, sizes, SHA-256 digests, and expirations in
+`evidence/r2.8.101-attempt-2-e85c403.json`. No failures are recorded so far.
+Keep the remote tip unchanged and reconcile final jobs and C07.2 captures only
+after both remaining workflows become terminal. No local executable validation
+was run.
+
+## 2026-10-13 — R2.8.101 attempt 2 reconciled; R2.8.102 repair in progress
+
+All seven required workflows reached terminal state on exact SHA
+`e85c40329a9b0597822901bc026414556db3285d`. Inventory, quality, desktop build,
+plugin renderer, loaded-plugin workflows, and all four Rust CI jobs passed.
+Obsidian vault round-trip run
+[38476604440](https://github.com/ashutoshpw/open-obsidian/actions/runs/38476604440)
+failed on Linux job `115568710229`, macOS job `115568709798`, and Windows job
+`115568710139`. Each report selected `Ascending.base`, exposed the Bases view,
+and listed all ten results, but captured rows only under Alpha. The DOM uses a
+separate `.bases-table` for each group; the probe treated only the first table
+as in-scope and omitted Bravo, Zulu, and None rows from the per-group mapping.
+The attempt is not accepted. All 16 artifact IDs, sizes, digests, and expiration
+times, plus the exact job conclusions, are recorded in
+[`evidence/r2.8.101-attempt-2-e85c403.json`](evidence/r2.8.101-attempt-2-e85c403.json).
+
+Defined R2.8.102 as one focused repair milestone. The local probe now enumerates
+each visible table root, scans rows across those roots, and uses the nearest
+table for row/link membership. The goal's push policy now says one accumulated
+push after a named milestone's implementation and CI-ready acceptance package
+are complete, followed by a stable-SHA wait for every required workflow; local
+failure analysis remains allowed during that wait. The C07 evaluator and fixture
+changes remain outside this batch. No local executable validation was run; this
+repair is validated only by exact-SHA GitHub Actions after its single batch push.

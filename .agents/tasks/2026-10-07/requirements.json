@@ -3302,9 +3302,12 @@
         "Linux"
       ],
       "status": "pending",
-      "evidence_paths": [],
+      "evidence_paths": [
+        ".agents/tasks/2026-10-07/evidence/r2.8.101-attempt-1-33eb15f.json",
+        ".agents/tasks/2026-10-07/evidence/r2.8.101-attempt-2-e85c403.json"
+      ],
       "tested_source_tree": null,
-      "blocker": "C07.2 remains pending until a dedicated GitHub Actions milestone records pinned Obsidian 1.14.4 observations for omitted direction, invalid-direction fallback, settled view state, row membership, and per-group row order on first open and reopen. Reconcile the captured report into fixture expectations and Rust behavior in a subsequent milestone, then require passing exact-SHA CI before acceptance. The passing R2.8.100 SHA did not contain the C07 probe.",
+      "blocker": "C07.2 remains pending. Attempts 1 and 2 both failed their three-platform row-capture checks; attempt 2 confirmed that Obsidian renders each group in a separate `.bases-table`, while the probe scoped membership to the first table. R2.8.102 repairs multi-table discovery and must pass fresh exact-SHA GitHub Actions before reference observations can be accepted. Then reconcile the observed omitted-direction, invalid-direction fallback, settled view state, row membership, and per-group row order into fixture expectations and Rust behavior in a separate parity milestone. The passing R2.8.100 SHA did not contain the C07 probe.",
       "gate_class": "implementation",
       "decision_id": "D03",
       "legacy_status": "implemented",

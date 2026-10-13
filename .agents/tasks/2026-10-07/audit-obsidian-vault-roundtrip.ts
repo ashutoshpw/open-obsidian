@@ -7525,8 +7525,14 @@ async function verifyBasesDirectionVisible(
     const view = window.app?.workspace?.activeLeaf?.view;
     const root = document.querySelector('.workspace-leaf.mod-active') ?? document.body;
     const body = root?.innerText ?? '';
-    const table = root?.querySelector('.bases-table, [role="table"], table') ?? null;
-    const tableContainer = table ?? root;
+    const tableSelector = '.bases-table, [role="table"], table';
+    const tableRoots = root ? [...root.querySelectorAll(tableSelector)] : [];
+    const table = tableRoots[0] ?? null;
+    const tableForElement = (element) => {
+      const owner = element.closest(tableSelector);
+      return owner && root.contains(owner) ? owner : null;
+    };
+    const isInBasesTable = (element) => Boolean(tableForElement(element));
     const isVisibleElement = (element) => {
       const style = window.getComputedStyle(element);
       const bounds = element.getBoundingClientRect();
@@ -7586,11 +7592,10 @@ async function verifyBasesDirectionVisible(
     const visibleRootRows = root
       ? [...root.querySelectorAll(rowSelector)].filter((row) => isVisibleElement(row) && !isExcludedRegion(row))
       : [];
-    const rawRows = tableContainer === root
+    const rawRows = tableRoots.length === 0
       ? visibleRootRows
-      : tableContainer
-        ? [...tableContainer.querySelectorAll(rowSelector)].filter((row) => isVisibleElement(row) && !isExcludedRegion(row))
-        : [];
+      : [...new Set(tableRoots.flatMap((tableRoot) => [...tableRoot.querySelectorAll(rowSelector)]))]
+        .filter((row) => isVisibleElement(row) && !isExcludedRegion(row));
     const hasNestedRowCandidate = (row) => visibleRootRows.some((candidate) => candidate !== row && row.contains(candidate));
     const rowOwnerFor = (element) => {
       const owner = element.closest(rowSelector);
@@ -7653,7 +7658,7 @@ async function verifyBasesDirectionVisible(
       const hasFixtureLink = visibleLinksFor(row).some((link) => linkPathFor(link));
       const hasVisibleDataCell = visibleDataCellsFor(row).length > 0;
       return hasKnownBasesRowClass(row)
-        || (table !== null && hasVisibleDataCell)
+        || (isInBasesTable(row) && hasVisibleDataCell)
         || hasFixtureLink;
     }));
     const visibleFixtureLinks = root
@@ -7664,7 +7669,7 @@ async function verifyBasesDirectionVisible(
     const unscopedFixtureLinkPaths = visibleFixtureLinks.filter((link) => {
       if ([...dataRowCandidateElements, ...groupRowCandidateElements].some((row) => row === link || row.contains(link))) return false;
       const owner = rowOwnerFor(link);
-      const inTable = Boolean(table?.contains(link));
+      const inTable = isInBasesTable(link);
       const hasExplicitRowOwner = Boolean(owner && (hasKnownBasesRowClass(owner)
         || owner.matches('tr, [role="row"], li, [role="listitem"]')));
       return !inTable && !hasExplicitRowOwner;
@@ -7673,7 +7678,7 @@ async function verifyBasesDirectionVisible(
       if ([...dataRowCandidateElements, ...groupRowCandidateElements].some((row) => row === link || row.contains(link))) continue;
       const owner = rowOwnerFor(link);
       if (owner && isHeaderOnlyRow(owner)) continue;
-      const inTable = Boolean(table?.contains(link));
+      const inTable = isInBasesTable(link);
       const hasExplicitRowOwner = Boolean(owner && (hasKnownBasesRowClass(owner)
         || owner.matches('tr, [role="row"], li, [role="listitem"]')));
       const inExcludedRegion = isExcludedRegion(link);
@@ -7709,14 +7714,14 @@ async function verifyBasesDirectionVisible(
         ? null
         : resolvedPaths.length === 1
           ? resolvedPaths[0]
-          : (hasKnownBasesRowClass(element) || table !== null) && resolvedPaths.length === 0
+          : (hasKnownBasesRowClass(element) || isInBasesTable(element)) && resolvedPaths.length === 0
             ? textPath
             : null;
       const link = links[0] || (element.matches?.(linkSelector) ? element : null);
       const rawPath = link?.getAttribute('data-href')
         || link?.getAttribute('data-path')
         || null;
-      const inTable = Boolean(table?.contains(element));
+      const inTable = isInBasesTable(element);
       return {
         element,
         index,
