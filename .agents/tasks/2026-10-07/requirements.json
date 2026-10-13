@@ -3298,10 +3298,11 @@
       ],
       "status": "pending",
       "evidence_paths": [
-        ".agents/tasks/2026-10-07/evidence/r2.8.100-attempt-1-0ac90e2.json"
+        ".agents/tasks/2026-10-07/evidence/r2.8.100-attempt-1-0ac90e2.json",
+        ".agents/tasks/2026-10-07/evidence/r2.8.100-attempt-2-f41b46f.json"
       ],
-      "tested_source_tree": "0ac90e2dcbda516271c041853236215d6f08a605",
-      "blocker": "R2.8.100 attempt 1 is not accepted: Rust CI failed Ubuntu formatting and Windows job 114753944687 was cancelled after the attachment-preview test stalled. The repair attempt must pass all required exact-SHA GitHub workflows.",
+      "tested_source_tree": "f41b46f5f668e306b475fc305c475f09d76cd79d",
+      "blocker": "R2.8.100 attempt 2 is not accepted: Ubuntu Rust CI failed its formatting check at crates/ui-egui/src/lib.rs:14418; the other six required workflows passed, as did MSRV, macOS and Windows Rust jobs. The exact formatter correction is local; batch it with attempt-2 evidence into one repair milestone and require fresh exact-SHA CI.",
       "gate_class": "implementation",
       "decision_id": "D03",
       "legacy_status": "implemented",

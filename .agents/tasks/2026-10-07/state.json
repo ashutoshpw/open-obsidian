@@ -2,16 +2,16 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-13T20:36:17Z",
+  "updated_at": "2026-10-13T20:51:31Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "d6d4661fdcf139ab1459ff97f94675d9befa26ff",
+  "last_reconciled_head": "f41b46f5f668e306b475fc305c475f09d76cd79d",
   "current_milestone": "R2.8.100",
-  "next_action": "Push the committed R2.8.100 repair batch once to origin/main after confirming it remains at 0ac90e2. Wait for all seven required workflows on the new exact SHA to finish, record every job and artifact, and address any failures in another completed repair milestone before advancing C07.2. Keep the unfinished C07.2 implementation out of this repair batch.",
-  "push_status": "origin/main remains at 0ac90e2dcbda516271c041853236215d6f08a605. Rust CI run 38232144781 and the six companion workflows are terminal on 0ac90e2. The run failed: Ubuntu formatter job 114753944524 failed; Windows job 114753944687 was cancelled after the attachment-preview test stalled nearly six hours. Formatter correction d6d4661 and the Windows diagnostic repair batch are committed locally but not pushed. No local executable validation has been run.",
+  "next_action": "R2.8.100 repair attempt 2 is terminal and not accepted on exact SHA f41b46f5f668e306b475fc305c475f09d76cd79d. Commit the Ubuntu-requested formatter correction with exact attempt-2 evidence as one repair batch, confirm origin/main remains at f41b46f, then push once and wait for all seven required workflows on that SHA before C07.2.",
+  "push_status": "origin/main is f41b46f5f668e306b475fc305c475f09d76cd79d. All seven R2.8.100 attempt-2 workflows are terminal: six companion workflows passed all 16 jobs; Rust CI passed MSRV 1.95 and macOS/Windows, and Ubuntu workspace tests passed but formatting failed at the CI-reported line wrap in crates/ui-egui/src/lib.rs:14418. All three Obsidian round-trip jobs passed. The exact formatter correction is local; no local executable validation has been run.",
   "blockers": [
-    "R2.8.100 attempt 1 failed acceptance on exact SHA 0ac90e2dcbda516271c041853236215d6f08a605: Ubuntu failed formatting and Windows job 114753944687 was cancelled after tests::egui_previews_existing_vault_attachment_without_changing_its_tree stalled. Root cause is not established. The repair batch is prepared locally; do not advance C07.2 until all seven workflows for the repair SHA are terminal."
+    "R2.8.100 repair attempt 2 is terminal and not accepted on exact SHA f41b46f5f668e306b475fc305c475f09d76cd79d. Ubuntu Rust CI failed formatting at crates/ui-egui/src/lib.rs:14418; the other six workflows and all other Rust jobs passed. The formatter correction and attempt-2 evidence are being batched into one repair milestone."
   ],
   "phases": {
     "R0": {
@@ -49,8 +49,8 @@
         "quality",
         "plugin-renderer"
       ],
-      "implementation_sha": "0ac90e2dcbda516271c041853236215d6f08a605",
-      "next_action": "Reconcile failed R2.8.100 attempt 1, complete a local diagnostic repair batch, push once, and obtain all seven exact-SHA CI results before C07.2."
+      "implementation_sha": "f41b46f5f668e306b475fc305c475f09d76cd79d",
+      "next_action": "Batch the exact Ubuntu formatter correction with attempt-2 evidence, push once as a repair milestone after confirming origin/main remains f41b46f, and require all seven workflows to pass on the repair SHA before advancing C07.2."
     },
     "R3": {
       "status": "pending",
@@ -79,6 +79,8 @@
     }
   },
   "completed_actions": [
+    "Reconciled R2.8.100 repair attempt 2 on exact SHA f41b46f5f668e306b475fc305c475f09d76cd79d after all seven required workflows reached terminal state. Six companion workflows passed all 16 jobs; Rust CI passed MSRV 1.95, macOS and Windows, while Ubuntu workspace tests passed but formatting failed at the CI-requested line wrap in crates/ui-egui/src/lib.rs:14418. The pinned Obsidian round-trip passed on Windows/macOS/Linux. Exact run/job IDs and all 14 artifact IDs, sizes, archive SHA-256 digests, and expirations are in evidence/r2.8.100-attempt-2-f41b46f.json. The attempt is not accepted; its formatter fix is local. No local executable validation was run.",
+    "Pushed the completed R2.8.100 repair batch to origin/main as f41b46f5f668e306b475fc305c475f09d76cd79d after confirming the remote remained on 0ac90e2. The repair batch includes the CI-requested formatter correction, bounded Windows attachment-preview diagnostics, the goal's milestone push policy, and attempt 1 evidence; unfinished C07 implementation stayed local. Seven exact-SHA workflows were queued or in progress at capture. No local executable validation was run.",
     "Reconciled R2.8.100 attempt 1 on exact SHA 0ac90e2dcbda516271c041853236215d6f08a605 after all seven required workflows reached terminal state. Rust CI failed Ubuntu formatting and Windows was cancelled after the attachment-preview test stalled; the other 16 jobs passed. All 13 artifact IDs, sizes, archive digests, and expirations returned by the exact-run artifact API are in evidence/r2.8.100-attempt-1-0ac90e2.json. The run is not accepted. No local executable validation was run.",
     "Committed only the CI-directed formatting correction in crates/testkit/src/lib.rs as d6d4661fdcf139ab1459ff97f94675d9befa26ff on local main. origin/main remains at the active run SHA 0ac90e2dcbda516271c041853236215d6f08a605; no push or local validation occurred.",
     "Read-only R3 audit expanded C07.7–C07.9 for typed Table summaries/displayName semantics, per-layout settings and documented Kanban actions/restrictions, and live this.file context including sidebar file switches. Added pinned Obsidian 1.14.4 references. C07.2 source review found the invalid-direction fixture assumed an unverified first-seen fallback; marked reference_status pending and moved that order to a provisional implementation_observation so it is not treated as compatibility evidence.",
@@ -34064,12 +34066,28 @@
             "vault_roundtrip": 38232144803
           },
           "finding": "All seven exact-SHA workflows reached terminal state. Six companion workflows passed all 16 jobs; Rust CI passed MSRV and macOS, failed Ubuntu formatting, and Windows was cancelled after the attachment-preview test stalled. Attempt 1 is not accepted. The formatter correction and Windows diagnostic repair batch are committed locally; no local validation was run."
+        },
+        {
+          "attempt": 2,
+          "source_sha": "f41b46f5f668e306b475fc305c475f09d76cd79d",
+          "outcome": "not_accepted",
+          "evidence": "evidence/r2.8.100-attempt-2-f41b46f.json",
+          "workflow_runs": {
+            "inventory": 38464205163,
+            "quality": 38464205305,
+            "desktop_build": 38464205129,
+            "plugin_renderer": 38464205164,
+            "loaded_plugins": 38464205265,
+            "rust_ci": 38464205191,
+            "vault_roundtrip": 38464205155
+          },
+          "finding": "All seven required workflows reached terminal state on exact SHA f41b46f5f668e306b475fc305c475f09d76cd79d. Six companion workflows passed all 16 jobs; Rust CI passed MSRV 1.95 and macOS/Windows, while Ubuntu workspace tests passed but formatting failed at crates/ui-egui/src/lib.rs:14418. The pinned Obsidian round-trip passed on Windows, macOS, and Ubuntu. Exact job and artifact metadata are in evidence/r2.8.100-attempt-2-f41b46f.json. This attempt is not accepted; the exact formatter correction is local."
         }
       ],
-      "implementation_sha": "0ac90e2dcbda516271c041853236215d6f08a605",
+      "implementation_sha": "f41b46f5f668e306b475fc305c475f09d76cd79d",
       "evidence": null,
-      "push_status": "Attempt 1 is terminal on origin/main at 0ac90e2dcbda516271c041853236215d6f08a605 and is not accepted. Exact-SHA evidence is in evidence/r2.8.100-attempt-1-0ac90e2.json. The formatter correction and Windows diagnostic repair batch are committed locally and unpushed; no local executable validation was run.",
-      "next_action": "Push the committed R2.8.100 repair batch once after confirming origin/main is unchanged. Await all seven workflows on the repair SHA before advancing C07.2."
+      "push_status": "Attempt 1 is terminal and not accepted on 0ac90e2dcbda516271c041853236215d6f08a605; evidence is in evidence/r2.8.100-attempt-1-0ac90e2.json. Repair attempt 2 is terminal and not accepted on f41b46f5f668e306b475fc305c475f09d76cd79d; exact evidence is in evidence/r2.8.100-attempt-2-f41b46f.json.",
+      "next_action": "Commit the Ubuntu-requested formatter correction with attempt-2 evidence as one completed repair batch. Push it once after confirming origin/main still matches f41b46f, then wait for every required workflow on the repair SHA before advancing C07.2."
     }
   },
   "ci_preparation": {

@@ -14418,7 +14418,9 @@ mod tests {
             eprintln!("[C08 attachment preview] link wait frame {link_wait_frames} entering");
             harness.step();
             if harness.state().link_receiver.is_none() {
-                eprintln!("[C08 attachment preview] links resolved after {link_wait_frames} frames");
+                eprintln!(
+                    "[C08 attachment preview] links resolved after {link_wait_frames} frames"
+                );
                 break;
             }
             assert!(

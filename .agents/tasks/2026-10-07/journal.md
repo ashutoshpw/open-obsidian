@@ -5557,3 +5557,33 @@ must stay out of the C08 repair batch.
 The focused R2.8.100 repair batch is committed locally. A fresh read of
 `refs/heads/main` still returned `0ac90e2dcbda516271c041853236215d6f08a605`;
 the repair batch remains unpushed pending the single milestone CI push.
+
+After the repair push, the remote advanced to `f41b46f5f668e306b475fc305c475f09d76cd79d`.
+At 20:41 UTC, inventory, quality, desktop build, plugin renderer, and loaded
+plugins had passed. Rust CI remained active: macOS passed, MSRV workspace tests
+were running, Ubuntu workspace tests passed but `cargo fmt --all -- --check`
+reported one line-wrap correction in `crates/ui-egui/src/lib.rs`, and the
+Windows attachment-preview diagnostic step was running. All three Obsidian
+round-trip jobs were active. Applied the exact formatter layout locally; no
+local executable validation or follow-up push occurred.
+
+At 20:46 UTC, the Windows attachment-preview test had passed and the Windows
+workspace suite was running; the MSRV workspace tests were also active. The
+Windows Obsidian round-trip completed successfully, while macOS and Ubuntu
+round-trip jobs remained active. The five companion workflows stayed green;
+Ubuntu's Rust formatting failure remained terminal. No follow-up push or local
+executable validation occurred.
+
+R2.8.100 repair attempt 2 reached terminal state at 20:48 UTC on exact SHA
+`f41b46f5f668e306b475fc305c475f09d76cd79d`. Six companion workflows passed
+all 16 jobs; Rust CI passed the MSRV, macOS, and Windows jobs, while Ubuntu
+workspace tests passed and `cargo fmt --all -- --check` requested a line wrap
+at `crates/ui-egui/src/lib.rs:14418`. The focused Windows attachment-preview
+test passed. The pinned Obsidian round-trip passed on Windows, macOS, and
+Ubuntu. All 14 returned artifact IDs, sizes, archive SHA-256 digests, and
+expirations are recorded in
+`evidence/r2.8.100-attempt-2-f41b46f.json`. The Windows round-trip artifact was
+downloaded; its report has no C07 section because C07 was not included on this
+SHA. Attempt 2 is not accepted. The exact formatter correction and evidence
+are being batched as one repair milestone; no local executable validation or
+follow-up push occurred.
