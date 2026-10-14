@@ -5874,10 +5874,10 @@ async function readGroupOrderVisibleState(
           });
         }
         observedElements.set(entry.element, entry.key);
-        // Non-empty table-section observations are reconciled through shared member paths.
-        // Exact scan-local heading/root object IDs may bridge a pathless sample at the same
-        // supported location; they are never durable section identity. Kanban continues to use
-        // its separate column identity.
+        // Grouped table sections are reconciled through shared canonical member paths.
+        // Scan-local DOM object IDs are diagnostic only: a renderer may recycle an object, so
+        // object continuity and a matching location cannot establish semantic group identity.
+        // Kanban continues to use its separate column identity.
         if (layout === 'kanban') observeFreshNodeIdentity(entry.element, 'heading:' + entry.key, 'group-heading');
         const verticalScrollAncestors = [];
         const horizontalScrollAncestors = [];
@@ -6381,9 +6381,9 @@ async function readGroupOrderVisibleState(
         }
         paintedFreshLinks.sort((left, right) => compareDomOrder(left.element, right.element));
         // Identify group sections within this DOM snapshot only. Cross-snapshot matches require
-        // shared member paths, except a pathless empty section may retain the same heading/root
-        // objects at the same supported content-space location during this page evaluation.
-        // Location and object IDs are evaluation-scoped evidence, never durable identity.
+        // shared member paths; pathless sections remain per-snapshot observations and never
+        // establish identity through heading/root object reuse. Location and object IDs are
+        // evaluation-scoped diagnostics, never durable identity.
         const tableMarkers = markerObservations.filter((marker) => selectedResultRoot.contains(marker.element));
         const sectionRootFor = (element) => element.closest('.bases-table') || selectedResultRoot;
         const sectionRoots = [...new Set([
@@ -6686,7 +6686,7 @@ async function readGroupOrderVisibleState(
               if (!samePosition) continue;
               // A shared canonical member path, matching heading, complete structural routes,
               // and matching content-space location corroborate continuity after DOM replacement.
-              // Pathless sample observations are handled separately using same-evaluation IDs.
+              // Pathless sample observations never create reconciliation edges.
               if (sharedPaths.length === 0) continue;
               pairEdges.push({
                 left_key: leftKey,
@@ -6756,10 +6756,9 @@ async function readGroupOrderVisibleState(
       }
 
       // A snapshot can observe no painted member paths for a section even when the section has
-      // members elsewhere in the sweep; zero paths is not proof that the group is empty. Bridge
-      // such pathless observations only when the exact heading and section-root objects persist
-      // in this page evaluation and their supported routes and content-space coordinates agree.
-      // Reused nodes at a different logical position are caught by the anchor/position gate.
+      // members elsewhere in the sweep; zero paths is not proof that the group is empty. Keep
+      // matching pathless observations as diagnostics, but do not union them: even the same DOM
+      // objects at the same supported location can be recycled for a different equal-label group.
       for (let leftIndex = 0; leftIndex < sampleIds.length; leftIndex += 1) {
         for (let rightIndex = leftIndex + 1; rightIndex < sampleIds.length; rightIndex += 1) {
           for (const leftKey of sectionsBySample.get(sampleIds[leftIndex])) {
@@ -6767,46 +6766,36 @@ async function readGroupOrderVisibleState(
             for (const rightKey of sectionsBySample.get(sampleIds[rightIndex])) {
               const right = freshSweepTableSections.get(rightKey);
               if ((left.member_paths.size > 0 && right.member_paths.size > 0)
-                || left.heading_text !== right.heading_text
-                || !sameTableSectionLogicalPosition(left, right)
-                || !left.logical_position?.scan_local_heading_object_id
-                || left.logical_position.scan_local_heading_object_id !== right.logical_position?.scan_local_heading_object_id
-                || !left.logical_position?.scan_local_section_root_object_id
-                || left.logical_position.scan_local_section_root_object_id !== right.logical_position?.scan_local_section_root_object_id) continue;
-              const mergedRoots = sectionRoot(leftKey) !== sectionRoot(rightKey);
-              joinSections(leftKey, rightKey);
-              if (!mergedRoots) continue;
-              if (freshSweepTableSectionAcceptedReconciliationEvidence.length >= 256) {
-                freshSweepTableSectionAcceptedReconciliationEvidenceTruncated = true;
-                continue;
+                || left.heading_text !== right.heading_text) continue;
+              const sameAnchor = sameTableSectionAnchor(left, right);
+              const samePosition = sameTableSectionLogicalPosition(left, right);
+              const distinctSupportedSlots = sameAnchor && !samePosition;
+              if (!distinctSupportedSlots) freshSweepTableSectionReconciliationAmbiguous = true;
+              if (freshSweepTableSectionReconciliationEvidence.length < 160) {
+                freshSweepTableSectionReconciliationEvidence.push({
+                  reason: distinctSupportedSlots
+                    ? 'same-label-pathless-observations-kept-distinct-at-supported-slots'
+                    : 'same-label-pathless-observations-lack-stable-semantic-identity',
+                  left_key: leftKey,
+                  right_key: rightKey,
+                  left_sample: left.sample,
+                  right_sample: right.sample,
+                  heading_text: left.heading_text,
+                  left_observed_member_path_count: left.member_paths.size,
+                  right_observed_member_path_count: right.member_paths.size,
+                  same_scan_local_heading_object: Boolean(left.logical_position?.scan_local_heading_object_id)
+                    && left.logical_position.scan_local_heading_object_id === right.logical_position?.scan_local_heading_object_id,
+                  same_scan_local_section_root_object: Boolean(left.logical_position?.scan_local_section_root_object_id)
+                    && left.logical_position.scan_local_section_root_object_id === right.logical_position?.scan_local_section_root_object_id,
+                  same_complete_supported_anchor_routes: sameAnchor,
+                  same_supported_logical_position: samePosition,
+                  distinct_supported_logical_slots: distinctSupportedSlots,
+                  reconciliation_ambiguous: !distinctSupportedSlots,
+                  left_logical_position: left.logical_position,
+                  right_logical_position: right.logical_position,
+                  identity_evidence: 'scan-local DOM object reuse and matching location are diagnostic only',
+                });
               }
-              freshSweepTableSectionAcceptedReconciliationEvidence.push({
-                left_local_key: leftKey,
-                right_local_key: rightKey,
-                left_sample: left.sample,
-                right_sample: right.sample,
-                heading_text: left.heading_text,
-                shared_canonical_member_paths: [],
-                left_observed_member_path_count: left.member_paths.size,
-                right_observed_member_path_count: right.member_paths.size,
-                pathless_endpoints: {
-                  left: left.member_paths.size === 0,
-                  right: right.member_paths.size === 0,
-                },
-                identity_evidence: 'same-page-evaluation-objects-plus-matching-logical-location-for-pathless-sample',
-                left_logical_location: {
-                  top: left.logical_position?.top ?? null,
-                  left: left.logical_position?.left ?? null,
-                  scan_local_heading_object_id: left.logical_position?.scan_local_heading_object_id ?? null,
-                  scan_local_section_root_object_id: left.logical_position?.scan_local_section_root_object_id ?? null,
-                },
-                right_logical_location: {
-                  top: right.logical_position?.top ?? null,
-                  left: right.logical_position?.left ?? null,
-                  scan_local_heading_object_id: right.logical_position?.scan_local_heading_object_id ?? null,
-                  scan_local_section_root_object_id: right.logical_position?.scan_local_section_root_object_id ?? null,
-                },
-              });
             }
           }
         }
@@ -7439,7 +7428,7 @@ async function readGroupOrderVisibleState(
         + JSON.stringify(freshSweepUnpaintedTableSectionKeys.slice(0, 24)) + '.');
     }
     if (freshSweepTableSectionReconciliationAmbiguous) {
-      ambiguityReasons.push('Repeated or virtualized table sections could not be reconciled to unique logical positions with required DOM continuity evidence: '
+      ambiguityReasons.push('Repeated or virtualized table sections require shared member paths or another stable semantic identity; pathless DOM continuity is diagnostic only: '
         + JSON.stringify(freshSweepTableSectionReconciliationEvidence.slice(0, 12)) + '.');
     }
     if (freshSweepOrderingAmbiguous) {
