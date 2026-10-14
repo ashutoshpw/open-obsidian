@@ -5856,6 +5856,21 @@ type CanvasInputFieldLayout = {
   fieldTextBoundsOcr: OcrWordBounds | null;
   fieldCenter: {x: number; y: number};
   fieldPositionSource: "visible-field-text-ocr" | "label-offset-fallback";
+  fieldTextOcrSource: "full-screenshot-ocr" | "focused-raw-crop" | "label-offset-fallback";
+  fieldSearchCrop: {
+    rawCropPath: string;
+    ocrCropPath: string;
+    cropBounds: {left: number; top: number; width: number; height: number};
+    rawCropDimensions: {width: number; height: number};
+    ocrCropDimensions: {width: number; height: number};
+    rawToOcrScale: {x: number; y: number};
+    attempts: Array<{
+      pageSegmentationMode: string;
+      text: string;
+      candidates: OcrWordBounds[];
+      matchingCandidates: OcrWordBounds[];
+    }>;
+  } | null;
   cropBounds: {left: number; top: number; width: number; height: number};
   coordinateSpace: "window" | "desktop";
 };
@@ -5889,6 +5904,94 @@ const canvasInputHintValues: Readonly<Record<string, string>> = {
   "Canvas text draft": canvasMarker,
 };
 
+function canvasInputExpectedRegion(
+  label: OcrWordBounds,
+  controlName: string,
+  scaleX: number,
+  scaleY: number,
+): {left: number; right: number; top: number; bottom: number} {
+  const expectedCenterX = label.left / scaleX + canvasInputLabelXOffset(controlName);
+  const labelCenterY = label.top + label.height / 2;
+  const expectedCenterY = labelCenterY + (controlName === "New Markdown path" ? 22 * scaleY : 0);
+  return {
+    left: (expectedCenterX - canvasInputCropWidth(controlName) / 2) * scaleX,
+    right: (expectedCenterX + canvasInputCropWidth(controlName) / 2) * scaleX,
+    top: expectedCenterY - 16 * scaleY,
+    bottom: expectedCenterY + 16 * scaleY,
+  };
+}
+
+async function findCanvasInputTextInFocusedRawCrop(
+  imagePath: string,
+  label: OcrWordBounds,
+  controlName: string,
+  targetFieldText: string,
+  scaleX: number,
+  scaleY: number,
+  imageDimensions: {width: number; height: number},
+): Promise<{
+  candidate: OcrWordBounds | null;
+  search: NonNullable<CanvasInputFieldLayout["fieldSearchCrop"]>;
+}> {
+  const expectedRegion = canvasInputExpectedRegion(label, controlName, scaleX, scaleY);
+  const left = Math.max(0, Math.floor(expectedRegion.left / scaleX));
+  const top = Math.max(0, Math.floor(expectedRegion.top / scaleY));
+  const right = Math.min(imageDimensions.width, Math.ceil(expectedRegion.right / scaleX));
+  const bottom = Math.min(imageDimensions.height, Math.ceil(expectedRegion.bottom / scaleY));
+  const cropBounds = {left, top, width: right - left, height: bottom - top};
+  if (cropBounds.width <= 0 || cropBounds.height <= 0) {
+    throw new Error(`The focused ${controlName} OCR crop is outside the screenshot: crop=${JSON.stringify(cropBounds)}; image=${imageDimensions.width}x${imageDimensions.height}`);
+  }
+
+  const fileSafeName = controlName.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+  const rawCropPath = join(reportDirectory, `openobsidian-canvas-field-search-${fileSafeName}-${Date.now()}-raw.png`);
+  const ocrCropPath = join(reportDirectory, `openobsidian-canvas-field-search-${fileSafeName}-${Date.now()}-ocr.png`);
+  const imageMagick = process.platform === "linux" ? "convert" : "magick";
+  execFileSync(imageMagick, [imagePath, "-crop", `${cropBounds.width}x${cropBounds.height}+${left}+${top}`, "+repage", rawCropPath], {stdio: "ignore"});
+  execFileSync(imageMagick, [rawCropPath, "-colorspace", "Gray", "-resize", "400%", "-contrast-stretch", "1%x3%", ocrCropPath], {stdio: "ignore"});
+
+  const rawCropDimensions = await pngDimensions(rawCropPath);
+  const ocrCropDimensions = await pngDimensions(ocrCropPath);
+  const cropScaleX = ocrCropDimensions.width / rawCropDimensions.width;
+  const cropScaleY = ocrCropDimensions.height / rawCropDimensions.height;
+  if (!(cropScaleX > 0 && cropScaleY > 0 && Number.isFinite(cropScaleX) && Number.isFinite(cropScaleY))) {
+    throw new Error(`Could not map the focused ${controlName} OCR crop to its original screenshot rectangle`);
+  }
+
+  const attempts: NonNullable<CanvasInputFieldLayout["fieldSearchCrop"]>["attempts"] = [];
+  const search: NonNullable<CanvasInputFieldLayout["fieldSearchCrop"]> = {
+    rawCropPath: relative(reportDirectory, rawCropPath),
+    ocrCropPath: relative(reportDirectory, ocrCropPath),
+    cropBounds,
+    rawCropDimensions,
+    ocrCropDimensions,
+    rawToOcrScale: {x: cropScaleX, y: cropScaleY},
+    attempts,
+  };
+  for (const pageSegmentationMode of ["7", "6"]) {
+    const tsv = runTesseractTsv(ocrCropPath, pageSegmentationMode);
+    const candidates = findOcrJoinedPhraseBoundsCandidates(tsv, targetFieldText, 0, 1);
+    const mappedCandidates = candidates.map((candidate): OcrWordBounds => ({
+      text: candidate.text,
+      left: (left + candidate.left / cropScaleX) * scaleX,
+      top: (top + candidate.top / cropScaleY) * scaleY,
+      width: candidate.width / cropScaleX * scaleX,
+      height: candidate.height / cropScaleY * scaleY,
+    }));
+    const matchingCandidates = mappedCandidates.filter((candidate) =>
+      canvasInputCandidateMatchesLabel(candidate, label, controlName, scaleX, scaleY)
+    );
+    const text = tsv.split(/\r?\n/).slice(1)
+      .filter((line) => line.split("\t")[0] === "5")
+      .map((line) => (line.split("\t")[11] ?? "").trim())
+      .filter(Boolean)
+      .join(" ");
+    attempts.push({pageSegmentationMode, text, candidates: mappedCandidates, matchingCandidates});
+    if (matchingCandidates.length === 1) return {candidate: matchingCandidates[0]!, search};
+  }
+  return {candidate: null, search};
+}
+
 function canvasInputCandidateMatchesLabel(
   candidate: OcrWordBounds,
   label: OcrWordBounds,
@@ -5896,15 +5999,8 @@ function canvasInputCandidateMatchesLabel(
   scaleX: number,
   scaleY: number,
 ): boolean {
-  const expectedCenterX = (label.left / scaleX) + canvasInputLabelXOffset(controlName);
   const labelCenterY = label.top + label.height / 2;
-  const expectedCenterY = labelCenterY + (controlName === "New Markdown path" ? 22 * scaleY : 0);
-  const expectedRegion = {
-    left: (expectedCenterX - canvasInputCropWidth(controlName) / 2) * scaleX,
-    right: (expectedCenterX + canvasInputCropWidth(controlName) / 2) * scaleX,
-    top: expectedCenterY - 16 * scaleY,
-    bottom: expectedCenterY + 16 * scaleY,
-  };
+  const expectedRegion = canvasInputExpectedRegion(label, controlName, scaleX, scaleY);
   const candidateRight = candidate.left + candidate.width;
   const candidateCenterX = candidate.left + candidate.width / 2;
   const candidateCenterY = candidate.top + candidate.height / 2;
@@ -5962,7 +6058,10 @@ async function locateCanvasTextInput(
     ? undefined
     : expectedInputValue ?? canvasInputHintValues[controlName];
   let labelBoundsOcr: OcrWordBounds | null = null;
+  let fieldSearchLabelBoundsOcr: OcrWordBounds | null = null;
   let fieldTextBoundsOcr: OcrWordBounds | null = null;
+  let fieldTextOcrSource: CanvasInputFieldLayout["fieldTextOcrSource"] = "label-offset-fallback";
+  let fieldSearchCrop: CanvasInputFieldLayout["fieldSearchCrop"] = null;
   let fieldSearchFailure = "";
   for (const tsv of tsvCandidates) {
     // The instruction above the form repeats these labels. Bound the search below its
@@ -5980,6 +6079,7 @@ async function locateCanvasTextInput(
     }
     if (!candidateLabelBounds) continue;
     const locatedCandidateLabelBounds = candidateLabelBounds;
+    fieldSearchLabelBoundsOcr ??= locatedCandidateLabelBounds;
 
     const fieldTextCandidates = coordinateSpace === "desktop" && targetFieldText
       ? findOcrJoinedPhraseBoundsCandidates(tsv, targetFieldText, candidateFormRowMinimumTop, 1)
@@ -5991,7 +6091,27 @@ async function locateCanvasTextInput(
     }
     labelBoundsOcr = locatedCandidateLabelBounds;
     fieldTextBoundsOcr = fieldTextCandidates[0] ?? null;
+    if (fieldTextBoundsOcr) fieldTextOcrSource = "full-screenshot-ocr";
     break;
+  }
+  if (coordinateSpace === "desktop" && targetFieldText && !fieldTextBoundsOcr && fieldSearchLabelBoundsOcr) {
+    const focusedSearch = await findCanvasInputTextInFocusedRawCrop(
+      imagePath,
+      fieldSearchLabelBoundsOcr,
+      controlName,
+      targetFieldText,
+      scaleX,
+      scaleY,
+      imageDimensions,
+    );
+    fieldSearchCrop = focusedSearch.search;
+    if (focusedSearch.candidate) {
+      labelBoundsOcr = fieldSearchLabelBoundsOcr;
+      fieldTextBoundsOcr = focusedSearch.candidate;
+      fieldTextOcrSource = "focused-raw-crop";
+    } else {
+      fieldSearchFailure = `Could not uniquely locate the ${controlName} field text in its label-relative OCR region: full_screenshot=${fieldSearchFailure || "no unique match"}; focused_crop=${JSON.stringify(fieldSearchCrop)}`;
+    }
   }
   if (!labelBoundsOcr) {
     if (fieldSearchFailure) throw new Error(fieldSearchFailure);
@@ -6040,6 +6160,8 @@ async function locateCanvasTextInput(
     fieldTextBoundsOcr,
     fieldCenter: {x: centerX, y: centerY},
     fieldPositionSource: fieldTextBoundsOcr ? "visible-field-text-ocr" : "label-offset-fallback",
+    fieldTextOcrSource: fieldTextBoundsOcr ? fieldTextOcrSource : "label-offset-fallback",
+    fieldSearchCrop,
     cropBounds,
     coordinateSpace,
   };
@@ -6398,6 +6520,8 @@ async function replaceMacOSOpenObsidianTextInputWithKeyboard(
     readback_length: clipboardReadback.length,
     initial_field_value_length: initialFieldValueLength,
     position_source: layout.fieldPositionSource,
+    field_text_ocr_source: layout.fieldTextOcrSource,
+    field_search_crop: layout.fieldSearchCrop,
     label_bounds_ocr: layout.labelBoundsOcr,
     field_text_bounds_ocr: layout.fieldTextBoundsOcr,
     field_center_image: layout.fieldCenter,
@@ -6408,6 +6532,8 @@ async function replaceMacOSOpenObsidianTextInputWithKeyboard(
     readback_screenshot: relative(reportDirectory, verification.pngPath),
     readback_crop: visualReadback ? relative(reportDirectory, visualReadback.cropPath) : null,
     readback_crop_bounds: visualReadback?.layout.cropBounds ?? null,
+    readback_field_text_ocr_source: visualReadback?.layout.fieldTextOcrSource ?? null,
+    readback_field_search_crop: visualReadback?.layout.fieldSearchCrop ?? null,
     readback_label_bounds_ocr: visualReadback?.layout.labelBoundsOcr ?? null,
     readback_field_text_bounds_ocr: visualReadback?.layout.fieldTextBoundsOcr ?? null,
     readback_screenshot_dimensions: visualReadback?.layout.imageDimensions ?? null,

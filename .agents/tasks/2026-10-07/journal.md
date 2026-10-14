@@ -3285,6 +3285,7 @@ screenshot hashes, and both attempts are in
 tracker accept C01.2-44 only; parent C01/C01.2 remain pending. No local
 executable validation was run.
 
+
 ### Parallel roadmap audit
 
 Three read-only agents compared remaining R2 gaps and phase assignments. The
@@ -6380,3 +6381,67 @@ The push-cadence wording and R2.8.109 evidence are included with this milestone.
 The complete source/evidence/state package remains local for one accumulated
 milestone push. No local tests, builds, formatters, or executable validation
 were run.
+
+## R2.8.110 pushed; exact-SHA CI pending
+
+Pushed the single accumulated R2.8.110 commit
+`d186ac031b89977e1d3fc067d20c45add8c43343` to `origin/main` after confirming
+`origin` points to this repository and the previous remote tip was
+`813cd81a226d2611162cc44193c939bc002eba88`. All seven required workflows were
+found on the exact pushed SHA: inventory `38497909351`, quality `38497909324`,
+desktop build `38497909330`, plugin renderer `38497909334`, loaded plugin
+workflows `38497909364`, Rust CI `38497909357`, and Obsidian vault round-trip
+`38497909338`. The initial job snapshot at 2026-10-14T01:51:36Z had 3/20 jobs
+passed, 16 running, one queued, and no failures. Exact run URLs, job states,
+and the snapshot are in `evidence/r2.8.110-attempt-1-d186ac0.json`. Keep
+`origin/main` at this SHA until every required job is terminal. No local
+executable validation was run.
+
+The latest exact-SHA snapshot at 2026-10-14T01:53:07Z has five successful
+workflows and 13/20 jobs passed. The four Rust CI jobs and three platform
+round-trip jobs remain in progress; no failures or queued jobs are reported.
+The run IDs and updated snapshot are retained in the same evidence file.
+
+At 2026-10-14T01:55:34Z, Rust CI Ubuntu and macOS had passed, bringing the
+batch to 15/20 successful jobs. Rust 1.95, Windows Rust, and the three
+round-trip platforms remained active with no failures or queued jobs.
+
+## R2.8.110 terminal; R2.8.111 focused-crop repair underway
+
+All seven required workflows and 20 jobs are terminal on exact SHA
+`d186ac031b89977e1d3fc067d20c45add8c43343`: 19 passed and one failed. Rust
+CI passed 4/4, all five companion workflows passed, and Windows/Ubuntu
+round-trips passed. The macOS round-trip failed at C06 Canvas edit-path
+targeting before C07. Its AX lookup found zero fields, then full-desktop OCR
+reported zero visible field candidates. The raw macOS screenshot shows
+`Boards/Idea.canvas` inside the expected same-row field; the derived OCR image
+washed the gray placeholder into the white input after `-level 0%,15%`
+preprocessing. This is a fail-closed OCR preprocessing miss, not evidence of
+wrong label-relative geometry. No same-SHA retry is needed for this source
+failure.
+
+The seven run IDs and all 20 job IDs/conclusions are captured in
+`evidence/r2.8.110-attempt-1-d186ac0.json`. Round-trip artifact IDs are
+11863883564 (macOS), 11864649824 (Windows), and 11865430252 (Linux); report
+hashes, the macOS screenshot/OCR image hashes, failure details, and artifact
+sizes are recorded there. The R2.8.110 milestone remains unaccepted.
+
+Defined R2.8.111 as one focused repair milestone after the R2.8.110 batch
+became terminal. Full-screen OCR remains responsible for locating instructions
+and labels. When it fails to identify one field value, the fallback crops the
+configured label-relative field region from the original screenshot,
+preprocesses the crop separately, maps candidates through measured crop and
+source image dimensions, and applies the same unique-match geometry rule. Both
+raw and processed crop paths, bounds, dimensions/scales, OCR modes/text,
+candidate lists, mapped bounds, and the field center are retained in the CI
+report. Missing or ambiguous candidates still fail closed; exact clipboard
+and fresh visible-field OCR verification remain required.
+
+Two independent static reviews found no fail-open, coordinate-mapping, or
+uniqueness issue. The code review requested removal of an unused local
+executable variable; that cleanup is included. No local tests, builds,
+formatters, typechecks, or runtime validation were run. The goal's milestone
+policy remains in effect: do not trigger CI for intermediate edits. Finish the
+source and evidence package locally, then push one accumulated R2.8.111
+milestone to `origin/main`; hold that exact SHA until every required job is
+terminal.
