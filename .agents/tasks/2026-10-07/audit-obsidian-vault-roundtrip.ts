@@ -254,6 +254,26 @@ type GroupOrderFreshSweepOffset = {
   unmapped_row_samples: number;
   ordered_paths: string[];
   ordered_headings: string[];
+  structural_heading_observations: Array<{
+    key: string;
+    base_identity: string;
+    occurrence: number;
+    occurrence_count: number;
+    tag: string;
+    class_name: string;
+    label: string;
+    painted: boolean;
+    table_section_root_tag: string | null;
+    table_section_root_class_name: string;
+    logical_position: Record<string, unknown> | null;
+  }>;
+  outside_selected_root_group_markers: Array<{
+    tag: string;
+    class_name: string;
+    text: string;
+    shared_ancestor_tag: string | null;
+    shared_ancestor_class_name: string;
+  }>;
   result_group_assignments: Array<{
     path: string;
     group_key: string | null;
@@ -313,13 +333,25 @@ type GroupOrderVisibleState = {
     fresh_sweep_unmapped_candidates: GroupOrderUnmappedPathCandidate[];
     fresh_sweep_unowned_result_samples: number;
     fresh_sweep_unowned_result_observations: Array<Record<string, unknown>>;
+    fresh_sweep_unresolved_group_owner_paths: string[];
+    fresh_sweep_resolved_table_sections: Array<Record<string, unknown>>;
+    fresh_sweep_table_section_observations: Array<Record<string, unknown>>;
+    fresh_sweep_table_section_accepted_reconciliation_evidence: Array<Record<string, unknown>>;
+    fresh_sweep_table_section_accepted_reconciliation_evidence_truncated: boolean;
+    fresh_sweep_table_section_reconciliation_evidence: Array<Record<string, unknown>>;
+    fresh_sweep_table_section_snapshot_orders: Array<Record<string, unknown>>;
+    fresh_sweep_table_section_reconciliation_ambiguous: boolean;
+    fresh_sweep_dom_object_id_scope: "one-visible-state-page-evaluation" | "not-captured";
+    fresh_sweep_unpainted_table_section_keys: string[];
     fresh_sweep_duplicate_path_samples: number;
     fresh_sweep_ordering_ambiguous: boolean;
     fresh_sweep_group_ownership_ambiguous: boolean;
     fresh_sweep_painted_kanban_column_ordinals: number[];
     fresh_sweep_scroll_offsets: GroupOrderFreshSweepOffset[];
     node_identity_change_count: number;
+    blocking_node_identity_change_count: number;
     node_identity_change_examples: Array<{kind: string; before: string; after: string; class_name: string}>;
+    blocking_node_identity_change_examples: Array<{kind: string; before: string; after: string; class_name: string}>;
   };
   pre_sweep_unmapped_visible_row_candidates: GroupOrderUnmappedRowCandidate[];
   pre_sweep_row_reconciliation: {
@@ -5428,27 +5460,32 @@ async function readGroupOrderVisibleState(
           ...pathScrollEvidenceByElement.get(element),
         };
       });
-    const classTokens = (element) => [...(element.classList || [])].map((token) => token.toLowerCase());
     const hasGroupMarker = (element) => {
       if (layout === 'kanban') {
         return element.matches('.bases-group-heading')
           && Boolean(element.closest('.bases-kanban-column-header'))
           && Boolean(element.closest('.bases-kanban-column'));
       }
-      const classes = classTokens(element);
-      return classes.some((token) => token === 'bases-group-row'
-          || token === 'bases-group-heading'
-          || token === 'bases-group-header'
-          || token.includes('group-heading')
-          || token.includes('group-header')
-          || token.includes('kanban-column')
-          || token.includes('column-heading')
-          || token.includes('lane-header'))
-        || element.hasAttribute('data-group')
-        || element.getAttribute('role') === 'group';
+      return element.matches('.bases-group-heading');
+    };
+    const isStructurallyRenderableMarker = (element) => {
+      let effectiveOpacity = 1;
+      for (let ancestor = element; ancestor; ancestor = ancestor.parentElement) {
+        const style = window.getComputedStyle(ancestor);
+        const opacity = Number(style.opacity);
+        if (style.display === 'none'
+          || style.visibility === 'hidden'
+          || style.visibility === 'collapse'
+          || style.contentVisibility === 'hidden'
+          || !Number.isFinite(opacity)) return false;
+        effectiveOpacity *= opacity;
+        if (effectiveOpacity <= 0.05) return false;
+      }
+      return true;
     };
     const rawMarkerElements = kanbanRoot
-      ? [...kanbanRoot.querySelectorAll('[class], [data-group], [role="group"]')].filter((element) => hasGroupMarker(element))
+      ? [...kanbanRoot.querySelectorAll('[class], [data-group], [role="group"]')]
+        .filter((element) => hasGroupMarker(element) && isStructurallyRenderableMarker(element))
       : [];
     const markerElements = [];
     for (const element of rawMarkerElements) {
@@ -5682,12 +5719,34 @@ async function readGroupOrderVisibleState(
     const freshSweepHeadingMultiplicityByBase = new Map();
     const freshSweepHeadingElementsByBase = new Map();
     const freshSweepHeadingLogicalPositionByElement = new WeakMap();
+    // These IDs are scoped to this one page evaluation. They prove only that the exact DOM
+    // objects persisted across samples in this sweep; they are not stable IDs across scans.
+    const freshSweepScanLocalDomObjectIds = new WeakMap();
+    let freshSweepNextScanLocalDomObjectId = 0;
+    const scanLocalDomObjectId = (element) => {
+      if (!element) return null;
+      let objectId = freshSweepScanLocalDomObjectIds.get(element);
+      if (objectId === undefined) {
+        objectId = ++freshSweepNextScanLocalDomObjectId;
+        freshSweepScanLocalDomObjectIds.set(element, objectId);
+      }
+      return objectId;
+    };
     const freshSweepHeadingCollisionBases = new Set();
     const freshSweepHeadingIdentityCollisionEvidence = [];
+    const freshSweepTableSections = new Map();
+    const freshSweepTableSectionOrders = new Map();
+    const freshSweepTableSectionSnapshotOrders = new Map();
+    const freshSweepTableSectionAcceptedReconciliationEvidence = [];
+    let freshSweepTableSectionAcceptedReconciliationEvidenceTruncated = false;
+    const freshSweepTableSectionReconciliationEvidence = [];
+    const freshSweepPathTableSectionKeys = new Map();
+    let freshSweepTableSectionReconciliationAmbiguous = false;
+    let freshSweepUnresolvedGroupOwnerPaths = [];
+    let freshSweepUnpaintedTableSectionKeys = [];
     const freshSweepUnmappedCandidates = [];
     const freshSweepUnmappedRows = [];
     const freshSweepPaintedKanbanColumnOrdinals = new Set();
-    const lastTableGroupByScrollContainer = new WeakMap();
     let freshSweepPositions = 0;
     let freshSweepPathSamples = 0;
     let freshSweepHeadingSamples = 0;
@@ -5729,10 +5788,40 @@ async function readGroupOrderVisibleState(
     const scopedHeadingIdentityElements = (elements) => {
       const scoped = layout === 'kanban'
         ? elements
-        : elements.filter((element) => sharesSelectedResultScope(element));
+        : elements.filter((element) => selectedResultRoot?.contains(element));
       return layout === 'kanban'
         ? scoped
         : scoped.filter((element) => !scoped.some((nested) => nested !== element && element.contains(nested)));
+    };
+    const structuralDomElementRoute = (element, boundary = null) => {
+      if (!element) return {route_complete: true, segments: [], tag_name: 'document'};
+      const segments = [];
+      let current = element;
+      while (current && current.nodeType === Node.ELEMENT_NODE && segments.length < 24) {
+        const classNames = [...current.classList].sort();
+        const structuralAttributes = [...current.attributes]
+          .filter((attribute) => attribute.name === 'id'
+            || attribute.name === 'role'
+            || attribute.name.startsWith('data-'))
+          .map((attribute) => [attribute.name, attribute.value])
+          .sort((left, right) => left[0].localeCompare(right[0]) || left[1].localeCompare(right[1]));
+        const sameTagSiblings = current.parentElement
+          ? [...current.parentElement.children].filter((sibling) => sibling.tagName === current.tagName)
+          : [];
+        segments.push({
+          tag_name: current.tagName.toLowerCase(),
+          class_names: classNames,
+          structural_attributes: structuralAttributes,
+          same_tag_sibling_ordinal: sameTagSiblings.indexOf(current),
+        });
+        if (current === boundary) break;
+        current = current.parentElement;
+      }
+      return {
+        route_complete: current === null || current === boundary,
+        segments: segments.reverse(),
+        tag_name: element.tagName.toLowerCase(),
+      };
     };
     const recordHeadingIdentityEntries = (entries, sample) => {
       const counts = new Map();
@@ -5785,27 +5874,83 @@ async function readGroupOrderVisibleState(
           });
         }
         observedElements.set(entry.element, entry.key);
-        observeFreshNodeIdentity(entry.element, 'heading:' + entry.key, 'group-heading');
-        let verticalAnchor = null;
+        // Non-empty table-section observations are reconciled through shared member paths.
+        // Exact scan-local heading/root object IDs may bridge a pathless sample at the same
+        // supported location; they are never durable section identity. Kanban continues to use
+        // its separate column identity.
+        if (layout === 'kanban') observeFreshNodeIdentity(entry.element, 'heading:' + entry.key, 'group-heading');
+        const verticalScrollAncestors = [];
+        const horizontalScrollAncestors = [];
+        const coordinateModelIssues = [];
+        const inspectCoordinateStyle = (element, style) => {
+          if (style.position === 'sticky' || style.position === 'fixed') {
+            coordinateModelIssues.push({
+              kind: 'sticky-or-fixed-position',
+              tag_name: element.tagName.toLowerCase(),
+              class_name: element.getAttribute('class') || '',
+              position: style.position,
+            });
+          }
+          if (style.zoom && style.zoom !== 'normal' && style.zoom !== '1') {
+            coordinateModelIssues.push({
+              kind: 'zoomed-coordinate-ancestor',
+              tag_name: element.tagName.toLowerCase(),
+              class_name: element.getAttribute('class') || '',
+              zoom: style.zoom,
+            });
+          }
+          const transformedProperties = ['transform', 'perspective', 'translate', 'rotate', 'scale']
+            .filter((property) => style[property] && style[property] !== 'none');
+          if (transformedProperties.length > 0) {
+            coordinateModelIssues.push({
+              kind: 'transformed-coordinate-ancestor',
+              tag_name: element.tagName.toLowerCase(),
+              class_name: element.getAttribute('class') || '',
+              properties: transformedProperties,
+            });
+          }
+        };
+        inspectCoordinateStyle(entry.element, window.getComputedStyle(entry.element));
         for (let ancestor = entry.element.parentElement; ancestor; ancestor = ancestor.parentElement) {
           const style = window.getComputedStyle(ancestor);
+          inspectCoordinateStyle(ancestor, style);
+          if (ancestor === document.documentElement || ancestor === document.body) continue;
           if (ancestor.scrollHeight > ancestor.clientHeight + 1
-            && /(auto|scroll|overlay|hidden)/.test(style.overflowY)) {
-            verticalAnchor = ancestor;
-            break;
-          }
+            && /(auto|scroll|overlay|hidden)/.test(style.overflowY)) verticalScrollAncestors.push(ancestor);
+          if (ancestor.scrollWidth > ancestor.clientWidth + 1
+            && /(auto|scroll|overlay|hidden)/.test(style.overflowX)) horizontalScrollAncestors.push(ancestor);
         }
         const bounds = entry.element.getBoundingClientRect();
+        const sectionRoot = entry.element.closest('.bases-table') || selectedResultRoot;
+        const windowScrollTop = window.scrollY;
+        const windowScrollLeft = window.scrollX;
+        const verticalScrollOffsets = verticalScrollAncestors.map((ancestor) => ancestor.scrollTop);
+        const horizontalScrollOffsets = horizontalScrollAncestors.map((ancestor) => ancestor.scrollLeft);
         const logicalPosition = {
-          anchor_class_name: verticalAnchor?.getAttribute('class') || verticalAnchor?.tagName.toLowerCase() || 'document',
-          top: Math.round(verticalAnchor
-            ? bounds.top - verticalAnchor.getBoundingClientRect().top + verticalAnchor.scrollTop
-            : bounds.top + window.scrollY),
+          window_scroll_top: Math.round(windowScrollTop),
+          vertical_scroll_ancestor_routes: verticalScrollAncestors.map((ancestor) => structuralDomElementRoute(ancestor)),
+          vertical_scroll_ancestor_offsets: verticalScrollOffsets.map((offset) => Math.round(offset)),
+          top: Math.round(bounds.top + windowScrollTop + verticalScrollOffsets.reduce((sum, offset) => sum + offset, 0)),
+          window_scroll_left: Math.round(windowScrollLeft),
+          horizontal_scroll_ancestor_routes: horizontalScrollAncestors.map((ancestor) => structuralDomElementRoute(ancestor)),
+          horizontal_scroll_ancestor_offsets: horizontalScrollOffsets.map((offset) => Math.round(offset)),
+          left: Math.round(bounds.left + windowScrollLeft + horizontalScrollOffsets.reduce((sum, offset) => sum + offset, 0)),
+          coordinate_model_supported: coordinateModelIssues.length === 0,
+          coordinate_model_issues: coordinateModelIssues.slice(0, 16),
+          section_root_route: structuralDomElementRoute(sectionRoot),
+          scan_local_heading_object_id: scanLocalDomObjectId(entry.element),
+          scan_local_section_root_object_id: scanLocalDomObjectId(sectionRoot),
         };
         const priorLogicalPosition = freshSweepHeadingLogicalPositionByElement.get(entry.element);
         if (priorLogicalPosition
-          && (priorLogicalPosition.anchor_class_name !== logicalPosition.anchor_class_name
-            || Math.abs(priorLogicalPosition.top - logicalPosition.top) > 4)) {
+          && (JSON.stringify(priorLogicalPosition.vertical_scroll_ancestor_routes) !== JSON.stringify(logicalPosition.vertical_scroll_ancestor_routes)
+            || JSON.stringify(priorLogicalPosition.horizontal_scroll_ancestor_routes) !== JSON.stringify(logicalPosition.horizontal_scroll_ancestor_routes)
+            || priorLogicalPosition.coordinate_model_supported !== logicalPosition.coordinate_model_supported
+            || JSON.stringify(priorLogicalPosition.coordinate_model_issues) !== JSON.stringify(logicalPosition.coordinate_model_issues)
+            || JSON.stringify(priorLogicalPosition.section_root_route) !== JSON.stringify(logicalPosition.section_root_route)
+            || priorLogicalPosition.scan_local_section_root_object_id !== logicalPosition.scan_local_section_root_object_id
+            || Math.abs(priorLogicalPosition.top - logicalPosition.top) > 4
+            || Math.abs(priorLogicalPosition.left - logicalPosition.left) > 4)) {
           // A virtualized renderer can recycle the same DOM node for an equal-looking heading;
           // a changed logical row position reveals that the label alone cannot prove continuity.
           freshSweepHeadingIdentityAmbiguous = true;
@@ -5837,6 +5982,36 @@ async function readGroupOrderVisibleState(
       if (position & Node.DOCUMENT_POSITION_FOLLOWING) return -1;
       if (position & Node.DOCUMENT_POSITION_PRECEDING) return 1;
       return 0;
+    };
+    const sameTableSectionAnchor = (left, right) => {
+      const leftPosition = left?.logical_position;
+      const rightPosition = right?.logical_position;
+      const completeRouteList = (routes) => Array.isArray(routes)
+        && routes.every((route) => route?.route_complete === true);
+      return Boolean(leftPosition && rightPosition
+        && Number.isFinite(leftPosition.top) && Number.isFinite(leftPosition.left)
+        && Number.isFinite(rightPosition.top) && Number.isFinite(rightPosition.left)
+        && leftPosition.coordinate_model_supported === true
+        && rightPosition.coordinate_model_supported === true
+        && completeRouteList(leftPosition.vertical_scroll_ancestor_routes)
+        && completeRouteList(leftPosition.horizontal_scroll_ancestor_routes)
+        && leftPosition.section_root_route?.route_complete === true
+        && completeRouteList(rightPosition.vertical_scroll_ancestor_routes)
+        && completeRouteList(rightPosition.horizontal_scroll_ancestor_routes)
+        && rightPosition.section_root_route?.route_complete === true
+        && JSON.stringify(leftPosition.vertical_scroll_ancestor_routes) === JSON.stringify(rightPosition.vertical_scroll_ancestor_routes)
+        && JSON.stringify(leftPosition.horizontal_scroll_ancestor_routes) === JSON.stringify(rightPosition.horizontal_scroll_ancestor_routes)
+        && JSON.stringify(leftPosition.section_root_route) === JSON.stringify(rightPosition.section_root_route));
+    };
+    const sameTableSectionLogicalPosition = (left, right) => {
+      const leftPosition = left?.logical_position;
+      const rightPosition = right?.logical_position;
+      return Boolean(leftPosition && rightPosition
+        && Number.isFinite(leftPosition.top) && Number.isFinite(leftPosition.left)
+        && Number.isFinite(rightPosition.top) && Number.isFinite(rightPosition.left)
+        && sameTableSectionAnchor(left, right)
+        && Math.abs(leftPosition.top - rightPosition.top) <= 4
+        && Math.abs(leftPosition.left - rightPosition.left) <= 4);
     };
     const addOrderEdges = (edgeMap, values) => {
       const ordered = [...new Set(values)];
@@ -5877,8 +6052,19 @@ async function readGroupOrderVisibleState(
       if (!groupKey) {
         if (groupByProperty || layout === 'kanban') {
           freshSweepUnownedResultSamples += 1;
-          if (layout === 'kanban' && unownedEvidence) freshSweepUnownedResultObservations.push(unownedEvidence);
+          if (unownedEvidence) freshSweepUnownedResultObservations.push(unownedEvidence);
         }
+        return;
+      }
+      if (layout === 'table' && groupByProperty) {
+        const section = freshSweepTableSections.get(groupKey);
+        if (!section) {
+          freshSweepTableSectionReconciliationAmbiguous = true;
+          return;
+        }
+        section.member_paths.add(path);
+        if (!freshSweepPathTableSectionKeys.has(path)) freshSweepPathTableSectionKeys.set(path, new Set());
+        freshSweepPathTableSectionKeys.get(path).add(groupKey);
         return;
       }
       if (!freshSweepPathGroupKeys.has(path)) freshSweepPathGroupKeys.set(path, new Set());
@@ -5901,7 +6087,7 @@ async function readGroupOrderVisibleState(
       freshSweepNodeIdentities.set(link.element, identityNow);
     }
     const initialHeadingIdentityEntries = headingIdentityEntries(
-      scopedHeadingIdentityElements(markerElements),
+      scopedHeadingIdentityElements(layout === 'table' ? rawMarkerElements : markerElements),
     );
     recordHeadingIdentityEntries(initialHeadingIdentityEntries, {source: 'initial-dom'});
     const scanFreshSweepPosition = async (scrollContainer, containerClass, axis, requestedOffset) => {
@@ -5920,6 +6106,8 @@ async function readGroupOrderVisibleState(
         unmapped_row_samples: 0,
         ordered_paths: [],
         ordered_headings: [],
+        structural_heading_observations: [],
+        outside_selected_root_group_markers: [],
         result_group_assignments: [],
         mapped_row_path_candidates: [],
         unmapped_rows: [],
@@ -5948,10 +6136,25 @@ async function readGroupOrderVisibleState(
         freshSweepPaths.add(path);
       };
       const freshRawMarkers = observationRoot
-        ? [...observationRoot.querySelectorAll('[class], [data-group], [role="group"]')].filter(hasGroupMarker)
+        ? [...observationRoot.querySelectorAll('[class], [data-group], [role="group"]')]
+          .filter((element) => hasGroupMarker(element) && isStructurallyRenderableMarker(element))
         : [];
-      const freshMarkers = scopedHeadingIdentityElements(freshRawMarkers.filter((element) =>
-        visible(element) && hitTestPaintedText(element)));
+      offsetEvidence.outside_selected_root_group_markers = freshRawMarkers
+        .filter((element) => sharesSelectedResultScope(element) && !selectedResultRoot?.contains(element))
+        .map((element) => {
+          const shared = nearestCommonAncestor(element, selectedResultRoot);
+          return {
+            tag: element.tagName.toLowerCase(),
+            class_name: element.getAttribute('class') || '',
+            text: textOf(element).slice(0, 240),
+            shared_ancestor_tag: shared?.tagName?.toLowerCase() || null,
+            shared_ancestor_class_name: shared?.getAttribute('class') || '',
+          };
+        });
+      // Table ownership needs offscreen structural boundaries; painted visibility is recorded separately below.
+      const freshMarkers = scopedHeadingIdentityElements(layout === 'table'
+        ? freshRawMarkers
+        : freshRawMarkers.filter((element) => visible(element) && hitTestPaintedText(element)));
       const freshMarkerIdentityEntries = headingIdentityEntries(freshMarkers);
       recordHeadingIdentityEntries(freshMarkerIdentityEntries, {
         source: 'fresh-sweep',
@@ -5995,8 +6198,22 @@ async function readGroupOrderVisibleState(
           column,
           column_ordinal: columnOrdinal,
           painted,
+          logical_position: freshSweepHeadingLogicalPositionByElement.get(element) ?? null,
         };
       });
+      offsetEvidence.structural_heading_observations = markerObservations.map((marker) => ({
+        key: marker.key,
+        base_identity: marker.base_identity,
+        occurrence: marker.occurrence,
+        occurrence_count: marker.occurrence_count,
+        tag: marker.element.tagName.toLowerCase(),
+        class_name: marker.element.getAttribute('class') || '',
+        label: normalize(marker.element.getAttribute('data-group') || marker.element.getAttribute('aria-label') || textOf(marker.element)),
+        painted: marker.painted,
+        table_section_root_tag: (marker.element.closest('.bases-table') || selectedResultRoot)?.tagName?.toLowerCase() || null,
+        table_section_root_class_name: (marker.element.closest('.bases-table') || selectedResultRoot)?.getAttribute('class') || '',
+        logical_position: freshSweepHeadingLogicalPositionByElement.get(marker.element) ?? null,
+      }));
       const paintedHeadingEvents = markerObservations
         .filter((marker) => marker.painted)
         .sort((left, right) => layout === 'kanban'
@@ -6064,12 +6281,21 @@ async function readGroupOrderVisibleState(
           group_key: null,
           column_ordinal: columnOrdinal,
           local_dom_ordinal: localOrdinal,
-          visible_painted_heading_candidate_count: paintedColumnHeadings.length,
-          visible_painted_heading_keys: paintedColumnHeadings.map((marker) => marker.key),
           visibility_sample_sequence: freshSweepPositions,
-          card_bounds: {top: bounds.top, left: bounds.left, width: bounds.width, height: bounds.height},
           scroll_positions: scrollPositions,
-          title_hit_diagnostics: entry.title_hit_diagnostics ?? null,
+          ...(layout === 'kanban' ? {
+            visible_painted_heading_candidate_count: paintedColumnHeadings.length,
+            visible_painted_heading_keys: paintedColumnHeadings.map((marker) => marker.key),
+            card_bounds: {top: bounds.top, left: bounds.left, width: bounds.width, height: bounds.height},
+            title_hit_diagnostics: entry.title_hit_diagnostics ?? null,
+          } : {
+            table_section_root_tag: entry.element.closest('.bases-table')?.tagName.toLowerCase() || selectedResultRoot?.tagName.toLowerCase() || null,
+            table_section_root_class_name: entry.element.closest('.bases-table')?.getAttribute('class') || selectedResultRoot?.getAttribute('class') || '',
+            structurally_rendered_heading_labels: markerObservations
+              .filter((marker) => selectedResultRoot?.contains(marker.element))
+              .map((marker) => normalize(marker.element.getAttribute('data-group') || marker.element.getAttribute('aria-label') || textOf(marker.element))),
+            result_bounds: {top: bounds.top, left: bounds.left, width: bounds.width, height: bounds.height},
+          }),
         });
         resultEntries.push({...entry, column_ordinal: columnOrdinal, column, local_dom_ordinal: localOrdinal});
       };
@@ -6154,30 +6380,73 @@ async function readGroupOrderVisibleState(
           paintedFreshLinks.push(entry);
         }
         paintedFreshLinks.sort((left, right) => compareDomOrder(left.element, right.element));
-        let activeTableGroup = lastTableGroupByScrollContainer.get(scrollContainer) ?? null;
-        if (axis === 'vertical' && requestedOffset === 0) activeTableGroup = null;
-        const tableMarkers = markerObservations.filter((marker) => sharesSelectedResultScope(marker.element));
-        const events = [
-          ...tableMarkers.map((marker) => ({kind: 'heading', element: marker.element, key: marker.key})),
-          ...paintedFreshLinks.map((entry, index) => ({kind: 'path', element: entry.element, entry, index})),
-        ].sort((left, right) => compareDomOrder(left.element, right.element));
+        // Identify group sections within this DOM snapshot only. Cross-snapshot matches require
+        // shared member paths, except a pathless empty section may retain the same heading/root
+        // objects at the same supported content-space location during this page evaluation.
+        // Location and object IDs are evaluation-scoped evidence, never durable identity.
+        const tableMarkers = markerObservations.filter((marker) => selectedResultRoot.contains(marker.element));
+        const sectionRootFor = (element) => element.closest('.bases-table') || selectedResultRoot;
+        const sectionRoots = [...new Set([
+          ...tableMarkers.map((marker) => sectionRootFor(marker.element)),
+          ...paintedFreshLinks.map((entry) => sectionRootFor(entry.element)),
+        ])].sort(compareDomOrder);
+        const localSectionOrder = [];
         let localOrdinal = 0;
-        for (const event of events) {
-          if (event.kind === 'heading') {
-            activeTableGroup = event.key;
-            continue;
+        for (const [sectionRootOrdinal, sectionRoot] of sectionRoots.entries()) {
+          const sectionMarkers = tableMarkers
+            .filter((marker) => sectionRootFor(marker.element) === sectionRoot)
+            .sort((left, right) => compareDomOrder(left.element, right.element));
+          const sectionLinks = paintedFreshLinks
+            .filter((entry) => sectionRootFor(entry.element) === sectionRoot);
+          const events = [
+            ...sectionMarkers.map((marker) => ({kind: 'heading', element: marker.element, marker})),
+            ...sectionLinks.map((entry, index) => ({kind: 'path', element: entry.element, entry, index})),
+          ].sort((left, right) => compareDomOrder(left.element, right.element));
+          let activeTableSection = null;
+          let localGroupOrdinal = 0;
+          for (const event of events) {
+            if (event.kind === 'heading') {
+              if (!groupByProperty) continue;
+              const localKey = `sample:${freshSweepPositions}|section:${sectionRootOrdinal}|group:${localGroupOrdinal}`;
+              const bounds = event.element.getBoundingClientRect();
+              const marker = event.marker;
+              freshSweepTableSections.set(localKey, {
+                key: localKey,
+                sample: freshSweepPositions,
+                local_order: localSectionOrder.length,
+                base_identity: marker.base_identity,
+                heading_text: normalize(marker.element.getAttribute('data-group') || marker.element.getAttribute('aria-label') || textOf(marker.element)),
+                heading_class_name: marker.element.getAttribute('class') || '',
+                heading_bounds: {top: bounds.top, left: bounds.left},
+                heading_visibility_sample: {
+                  visibility_sample_sequence: freshSweepPositions,
+                  visibility_sample_bounds: {top: bounds.top, left: bounds.left, width: bounds.width, height: bounds.height},
+                  scroll_positions: readScrollPositions(marker.element),
+                },
+                section_root_tag: sectionRoot.tagName.toLowerCase(),
+                section_root_class_name: sectionRoot.getAttribute('class') || '',
+                logical_position: marker.logical_position,
+                painted_observation_count: marker.painted ? 1 : 0,
+                painted_sample_sequences: marker.painted ? [freshSweepPositions] : [],
+                member_paths: new Set(),
+              });
+              localSectionOrder.push(localKey);
+              activeTableSection = localKey;
+              localGroupOrdinal += 1;
+              continue;
+            }
+            const rowOwner = event.entry.element.closest('.bases-tr, .bases-row, .bases-table-row, tr, [role="row"]');
+            recordResult({
+              element: event.entry.element,
+              path: event.entry.path,
+              text: textOf(event.entry.element),
+              class_name: event.entry.element.getAttribute('class') || '',
+              row_class_name: rowOwner?.getAttribute('class') || '',
+            }, groupByProperty ? activeTableSection : null, null, null, localOrdinal);
+            localOrdinal += 1;
           }
-          const rowOwner = event.entry.element.closest('.bases-tr, .bases-row, .bases-table-row, tr, [role="row"]');
-          recordResult({
-            element: event.entry.element,
-            path: event.entry.path,
-            text: textOf(event.entry.element),
-            class_name: event.entry.element.getAttribute('class') || '',
-            row_class_name: rowOwner?.getAttribute('class') || '',
-          }, groupByProperty ? activeTableGroup : null, null, null, localOrdinal);
-          localOrdinal += 1;
         }
-        lastTableGroupByScrollContainer.set(scrollContainer, activeTableGroup);
+        if (groupByProperty) freshSweepTableSectionOrders.set(freshSweepPositions, localSectionOrder);
         const freshRows = [...selectedResultRoot.querySelectorAll('.bases-tr, .bases-row, .bases-table-row, tr, [role="row"]')]
           .filter((row) => visible(row) && hitTestPaintedText(row) && Boolean(textOf(row)));
         const freshRowHasCandidate = (row) => retainedFreshLinks.some((entry) =>
@@ -6310,6 +6579,404 @@ async function readGroupOrderVisibleState(
         }
       }
     }
+    const freshSweepResolvedTableSections = new Map();
+    let freshSweepOrderedTableSectionKeys = [];
+    if (layout === 'table' && groupByProperty) {
+      const localSectionKeys = [...freshSweepTableSections.keys()];
+      const sectionParent = new Map(localSectionKeys.map((key) => [key, key]));
+      const sectionRoot = (key) => {
+        let root = key;
+        while (sectionParent.get(root) !== root) root = sectionParent.get(root);
+        let current = key;
+        while (sectionParent.get(current) !== current) {
+          const next = sectionParent.get(current);
+          sectionParent.set(current, root);
+          current = next;
+        }
+        return root;
+      };
+      const joinSections = (left, right) => {
+        const leftRoot = sectionRoot(left);
+        const rightRoot = sectionRoot(right);
+        if (leftRoot !== rightRoot) sectionParent.set(rightRoot, leftRoot);
+      };
+      const sectionsBySample = new Map();
+      const pathSectionsBySample = new Map();
+      for (const [key, section] of freshSweepTableSections) {
+        if (!sectionsBySample.has(section.sample)) sectionsBySample.set(section.sample, []);
+        sectionsBySample.get(section.sample).push(key);
+        for (const path of section.member_paths) {
+          const samplePathKey = `${section.sample}\u0000${path}`;
+          if (!pathSectionsBySample.has(samplePathKey)) pathSectionsBySample.set(samplePathKey, new Set());
+          pathSectionsBySample.get(samplePathKey).add(key);
+        }
+      }
+      for (const [sample, keys] of sectionsBySample) {
+        for (let leftIndex = 0; leftIndex < keys.length; leftIndex += 1) {
+          for (let rightIndex = leftIndex + 1; rightIndex < keys.length; rightIndex += 1) {
+            const leftKey = keys[leftIndex];
+            const rightKey = keys[rightIndex];
+            const left = freshSweepTableSections.get(leftKey);
+            const right = freshSweepTableSections.get(rightKey);
+            if (!sameTableSectionLogicalPosition(left, right)) continue;
+            freshSweepTableSectionReconciliationAmbiguous = true;
+            if (freshSweepTableSectionReconciliationEvidence.length < 160) {
+              freshSweepTableSectionReconciliationEvidence.push({
+                reason: 'distinct-local-sections-share-one-stable-logical-position',
+                sample,
+                left_key: leftKey,
+                right_key: rightKey,
+                left_heading_text: left.heading_text,
+                right_heading_text: right.heading_text,
+                logical_position: left.logical_position,
+              });
+            }
+          }
+        }
+      }
+      if ([...pathSectionsBySample.values()].some((keys) => keys.size > 1)) {
+        freshSweepTableSectionReconciliationAmbiguous = true;
+      }
+      const sampleIds = [...sectionsBySample.keys()].sort((left, right) => left - right);
+      for (let leftIndex = 0; leftIndex < sampleIds.length; leftIndex += 1) {
+        for (let rightIndex = leftIndex + 1; rightIndex < sampleIds.length; rightIndex += 1) {
+          const leftSections = sectionsBySample.get(sampleIds[leftIndex]);
+          const rightSections = sectionsBySample.get(sampleIds[rightIndex]);
+          const pairEdges = [];
+          let labelConflict = false;
+          let positionConflict = false;
+          for (const leftKey of leftSections) {
+            const left = freshSweepTableSections.get(leftKey);
+            for (const rightKey of rightSections) {
+              const right = freshSweepTableSections.get(rightKey);
+              const sharedPaths = [...left.member_paths].filter((path) => right.member_paths.has(path));
+              const samePosition = sameTableSectionLogicalPosition(left, right);
+              if (left.heading_text !== right.heading_text && (sharedPaths.length > 0 || samePosition)) {
+                labelConflict = true;
+                if (freshSweepTableSectionReconciliationEvidence.length < 160) {
+                  freshSweepTableSectionReconciliationEvidence.push({
+                    reason: 'shared-path-or-logical-position-has-different-heading-text',
+                    left_key: leftKey,
+                    right_key: rightKey,
+                    left_heading_text: left.heading_text,
+                    right_heading_text: right.heading_text,
+                    shared_paths: sharedPaths,
+                    left_logical_position: left.logical_position,
+                    right_logical_position: right.logical_position,
+                  });
+                }
+                continue;
+              }
+              if (left.heading_text !== right.heading_text) continue;
+              if (sharedPaths.length > 0 && !samePosition) {
+                positionConflict = true;
+                if (freshSweepTableSectionReconciliationEvidence.length < 160) {
+                  freshSweepTableSectionReconciliationEvidence.push({
+                    reason: 'shared-path-sections-have-different-logical-positions',
+                    left_key: leftKey,
+                    right_key: rightKey,
+                    heading_text: left.heading_text,
+                    shared_paths: sharedPaths,
+                    left_logical_position: left.logical_position,
+                    right_logical_position: right.logical_position,
+                  });
+                }
+                continue;
+              }
+              if (!samePosition) continue;
+              // A shared canonical member path, matching heading, complete structural routes,
+              // and matching content-space location corroborate continuity after DOM replacement.
+              // Pathless sample observations are handled separately using same-evaluation IDs.
+              if (sharedPaths.length === 0) continue;
+              pairEdges.push({
+                left_key: leftKey,
+                right_key: rightKey,
+                shared_paths: sharedPaths,
+                identity_evidence: 'shared-canonical-member-path-plus-matching-heading-and-logical-location',
+                left_logical_position: left.logical_position,
+                right_logical_position: right.logical_position,
+              });
+            }
+          }
+          if (labelConflict || positionConflict) {
+            freshSweepTableSectionReconciliationAmbiguous = true;
+            continue;
+          }
+          const leftDegrees = new Map();
+          const rightDegrees = new Map();
+          for (const edge of pairEdges) {
+            leftDegrees.set(edge.left_key, (leftDegrees.get(edge.left_key) || 0) + 1);
+            rightDegrees.set(edge.right_key, (rightDegrees.get(edge.right_key) || 0) + 1);
+          }
+          if ([...leftDegrees.values(), ...rightDegrees.values()].some((degree) => degree > 1)) {
+            freshSweepTableSectionReconciliationAmbiguous = true;
+            if (freshSweepTableSectionReconciliationEvidence.length < 160) {
+              freshSweepTableSectionReconciliationEvidence.push({
+                reason: 'logical-position-reconciliation-is-not-one-to-one',
+                left_sample: sampleIds[leftIndex],
+                right_sample: sampleIds[rightIndex],
+                candidate_edges: pairEdges,
+              });
+            }
+            continue;
+          }
+          for (const edge of pairEdges) {
+            const mergedRoots = sectionRoot(edge.left_key) !== sectionRoot(edge.right_key);
+            joinSections(edge.left_key, edge.right_key);
+            if (!mergedRoots) continue;
+            if (freshSweepTableSectionAcceptedReconciliationEvidence.length >= 256) {
+              freshSweepTableSectionAcceptedReconciliationEvidenceTruncated = true;
+              continue;
+            }
+            freshSweepTableSectionAcceptedReconciliationEvidence.push({
+              left_local_key: edge.left_key,
+              right_local_key: edge.right_key,
+              left_sample: freshSweepTableSections.get(edge.left_key).sample,
+              right_sample: freshSweepTableSections.get(edge.right_key).sample,
+              heading_text: freshSweepTableSections.get(edge.left_key).heading_text,
+              shared_canonical_member_paths: edge.shared_paths,
+              left_observed_member_path_count: freshSweepTableSections.get(edge.left_key).member_paths.size,
+              right_observed_member_path_count: freshSweepTableSections.get(edge.right_key).member_paths.size,
+              identity_evidence: edge.identity_evidence,
+              left_logical_location: {
+                top: edge.left_logical_position?.top ?? null,
+                left: edge.left_logical_position?.left ?? null,
+                scan_local_heading_object_id: edge.left_logical_position?.scan_local_heading_object_id ?? null,
+                scan_local_section_root_object_id: edge.left_logical_position?.scan_local_section_root_object_id ?? null,
+              },
+              right_logical_location: {
+                top: edge.right_logical_position?.top ?? null,
+                left: edge.right_logical_position?.left ?? null,
+                scan_local_heading_object_id: edge.right_logical_position?.scan_local_heading_object_id ?? null,
+                scan_local_section_root_object_id: edge.right_logical_position?.scan_local_section_root_object_id ?? null,
+              },
+            });
+          }
+        }
+      }
+
+      // A snapshot can observe no painted member paths for a section even when the section has
+      // members elsewhere in the sweep; zero paths is not proof that the group is empty. Bridge
+      // such pathless observations only when the exact heading and section-root objects persist
+      // in this page evaluation and their supported routes and content-space coordinates agree.
+      // Reused nodes at a different logical position are caught by the anchor/position gate.
+      for (let leftIndex = 0; leftIndex < sampleIds.length; leftIndex += 1) {
+        for (let rightIndex = leftIndex + 1; rightIndex < sampleIds.length; rightIndex += 1) {
+          for (const leftKey of sectionsBySample.get(sampleIds[leftIndex])) {
+            const left = freshSweepTableSections.get(leftKey);
+            for (const rightKey of sectionsBySample.get(sampleIds[rightIndex])) {
+              const right = freshSweepTableSections.get(rightKey);
+              if ((left.member_paths.size > 0 && right.member_paths.size > 0)
+                || left.heading_text !== right.heading_text
+                || !sameTableSectionLogicalPosition(left, right)
+                || !left.logical_position?.scan_local_heading_object_id
+                || left.logical_position.scan_local_heading_object_id !== right.logical_position?.scan_local_heading_object_id
+                || !left.logical_position?.scan_local_section_root_object_id
+                || left.logical_position.scan_local_section_root_object_id !== right.logical_position?.scan_local_section_root_object_id) continue;
+              const mergedRoots = sectionRoot(leftKey) !== sectionRoot(rightKey);
+              joinSections(leftKey, rightKey);
+              if (!mergedRoots) continue;
+              if (freshSweepTableSectionAcceptedReconciliationEvidence.length >= 256) {
+                freshSweepTableSectionAcceptedReconciliationEvidenceTruncated = true;
+                continue;
+              }
+              freshSweepTableSectionAcceptedReconciliationEvidence.push({
+                left_local_key: leftKey,
+                right_local_key: rightKey,
+                left_sample: left.sample,
+                right_sample: right.sample,
+                heading_text: left.heading_text,
+                shared_canonical_member_paths: [],
+                left_observed_member_path_count: left.member_paths.size,
+                right_observed_member_path_count: right.member_paths.size,
+                pathless_endpoints: {
+                  left: left.member_paths.size === 0,
+                  right: right.member_paths.size === 0,
+                },
+                identity_evidence: 'same-page-evaluation-objects-plus-matching-logical-location-for-pathless-sample',
+                left_logical_location: {
+                  top: left.logical_position?.top ?? null,
+                  left: left.logical_position?.left ?? null,
+                  scan_local_heading_object_id: left.logical_position?.scan_local_heading_object_id ?? null,
+                  scan_local_section_root_object_id: left.logical_position?.scan_local_section_root_object_id ?? null,
+                },
+                right_logical_location: {
+                  top: right.logical_position?.top ?? null,
+                  left: right.logical_position?.left ?? null,
+                  scan_local_heading_object_id: right.logical_position?.scan_local_heading_object_id ?? null,
+                  scan_local_section_root_object_id: right.logical_position?.scan_local_section_root_object_id ?? null,
+                },
+              });
+            }
+          }
+        }
+      }
+
+      const rootRecords = new Map();
+      for (const [key, section] of freshSweepTableSections) {
+        const root = sectionRoot(key);
+        if (!rootRecords.has(root)) {
+          rootRecords.set(root, {
+            root,
+            heading_text: section.heading_text,
+            heading_class_name: section.heading_class_name,
+            logical_position: section.logical_position,
+            heading_bounds: section.heading_bounds,
+            heading_visibility_sample: section.heading_visibility_sample,
+            section_root_tag: section.section_root_tag,
+            section_root_class_name: section.section_root_class_name,
+            painted_observation_count: 0,
+            painted_sample_sequences: new Set(),
+            local_keys: [],
+            samples: new Set(),
+            member_paths: new Set(),
+            first_sample: section.sample,
+            first_order: section.local_order,
+          });
+        }
+        const record = rootRecords.get(root);
+        if (record.heading_text !== section.heading_text) {
+          freshSweepTableSectionReconciliationAmbiguous = true;
+        }
+        if (!sameTableSectionLogicalPosition(record, section)) {
+          freshSweepTableSectionReconciliationAmbiguous = true;
+          if (freshSweepTableSectionReconciliationEvidence.length < 160) {
+            freshSweepTableSectionReconciliationEvidence.push({
+              reason: 'reconciled-local-sections-disagree-on-logical-position',
+              root,
+              left_logical_position: record.logical_position,
+              right_logical_position: section.logical_position,
+              local_section_key: key,
+            });
+          }
+        }
+        record.local_keys.push(key);
+        record.samples.add(section.sample);
+        record.painted_observation_count += section.painted_observation_count;
+        for (const sample of section.painted_sample_sequences) record.painted_sample_sequences.add(sample);
+        for (const path of section.member_paths) record.member_paths.add(path);
+        if (section.sample < record.first_sample
+          || (section.sample === record.first_sample && section.local_order < record.first_order)) {
+          record.first_sample = section.sample;
+          record.first_order = section.local_order;
+          record.heading_class_name = section.heading_class_name;
+          record.heading_bounds = section.heading_bounds;
+          record.heading_visibility_sample = section.heading_visibility_sample;
+          record.section_root_tag = section.section_root_tag;
+          record.section_root_class_name = section.section_root_class_name;
+        }
+      }
+      const rootEntries = [...rootRecords.values()];
+      for (const record of rootEntries) {
+        const localSectionsPerSample = new Map();
+        for (const localKey of record.local_keys) {
+          const sample = freshSweepTableSections.get(localKey).sample;
+          localSectionsPerSample.set(sample, (localSectionsPerSample.get(sample) || 0) + 1);
+        }
+        if ([...localSectionsPerSample.values()].some((count) => count > 1)) {
+          // A final identity must never collapse two separate sections from one DOM snapshot.
+          freshSweepTableSectionReconciliationAmbiguous = true;
+        }
+      }
+      for (let leftIndex = 0; leftIndex < rootEntries.length; leftIndex += 1) {
+        for (let rightIndex = leftIndex + 1; rightIndex < rootEntries.length; rightIndex += 1) {
+          const left = rootEntries[leftIndex];
+          const right = rootEntries[rightIndex];
+          if (left.heading_text !== right.heading_text) continue;
+          if (![...left.samples].some((sample) => right.samples.has(sample))) {
+            // Path-backed graph edges may connect non-adjacent samples transitively. If they did
+            // not, a different content-space slot under the same complete supported routes is
+            // sufficient to retain a distinct visible section; a same-slot or incomparable
+            // equal-label component remains ambiguous.
+            const sameAnchor = sameTableSectionAnchor(left, right);
+            const distinctLogicalSlots = sameAnchor
+              && (Math.abs(left.logical_position.top - right.logical_position.top) > 4
+                || Math.abs(left.logical_position.left - right.logical_position.left) > 4);
+            if (distinctLogicalSlots) {
+              if (freshSweepTableSectionReconciliationEvidence.length < 160) {
+                freshSweepTableSectionReconciliationEvidence.push({
+                  reason: 'equal-label-disjoint-sample-sections-have-distinct-supported-logical-slots',
+                  left_key: left.root,
+                  right_key: right.root,
+                  heading_text: left.heading_text,
+                  left_logical_position: left.logical_position,
+                  right_logical_position: right.logical_position,
+                  left_samples: [...left.samples],
+                  right_samples: [...right.samples],
+                });
+              }
+              continue;
+            }
+            freshSweepTableSectionReconciliationAmbiguous = true;
+            if (freshSweepTableSectionReconciliationEvidence.length < 160) {
+              freshSweepTableSectionReconciliationEvidence.push({
+                reason: 'equal-label-disjoint-sample-sections-have-no-supported-distinct-slot-or-continuity',
+                left_key: left.root,
+                right_key: right.root,
+                heading_text: left.heading_text,
+                same_complete_supported_anchor_routes: sameAnchor,
+                left_logical_position: left.logical_position,
+                right_logical_position: right.logical_position,
+                left_samples: [...left.samples],
+                right_samples: [...right.samples],
+              });
+            }
+          }
+        }
+      }
+      rootEntries.sort((left, right) => left.first_sample - right.first_sample || left.first_order - right.first_order);
+      const globalKeyByRoot = new Map();
+      rootEntries.forEach((record, index) => {
+        const key = `table-section:${index}`;
+        globalKeyByRoot.set(record.root, key);
+        freshSweepResolvedTableSections.set(key, {...record, key, member_paths: []});
+      });
+      for (const [path, localKeys] of freshSweepPathTableSectionKeys) {
+        const globalKeys = [...new Set([...localKeys].map((key) => globalKeyByRoot.get(sectionRoot(key))).filter(Boolean))];
+        if (globalKeys.length > 0) freshSweepPathGroupKeys.set(path, new Set(globalKeys));
+        if (globalKeys.length > 1) freshSweepGroupOwnershipAmbiguous = true;
+      }
+      freshSweepUnresolvedGroupOwnerPaths = [...freshSweepPaths]
+        .filter((path) => (freshSweepPathGroupKeys.get(path)?.size ?? 0) !== 1)
+        .sort();
+
+      const tableSectionOrderEdges = new Map();
+      for (const localKeys of freshSweepTableSectionOrders.values()) {
+        const globalKeys = [...new Set(localKeys
+          .map((key) => globalKeyByRoot.get(sectionRoot(key)))
+          .filter(Boolean))];
+        addOrderEdges(tableSectionOrderEdges, globalKeys);
+      }
+      const sectionsByStableAnchor = new Map();
+      for (const [key, section] of freshSweepResolvedTableSections) {
+        if (!sameTableSectionAnchor(section, section)) continue;
+        const position = section.logical_position;
+        const anchorKey = JSON.stringify([
+          position.vertical_scroll_ancestor_routes,
+          position.horizontal_scroll_ancestor_routes,
+          position.section_root_route,
+        ]);
+        if (!sectionsByStableAnchor.has(anchorKey)) sectionsByStableAnchor.set(anchorKey, []);
+        sectionsByStableAnchor.get(anchorKey).push({key, top: position.top, left: position.left});
+      }
+      for (const sections of sectionsByStableAnchor.values()) {
+        sections.sort((left, right) => left.top - right.top || left.left - right.left || left.key.localeCompare(right.key));
+        addOrderEdges(tableSectionOrderEdges, sections.map((section) => section.key));
+      }
+      const orderedSections = topologicalOrder([...freshSweepResolvedTableSections.keys()], tableSectionOrderEdges);
+      freshSweepOrderedTableSectionKeys = orderedSections.ordered;
+      if (orderedSections.ambiguous) freshSweepOrderingAmbiguous = true;
+      freshSweepUnpaintedTableSectionKeys = [...freshSweepResolvedTableSections.entries()]
+        .filter(([, section]) => section.painted_observation_count === 0)
+        .map(([key]) => key);
+      for (const [sample, localKeys] of freshSweepTableSectionOrders) {
+        freshSweepTableSectionSnapshotOrders.set(sample, localKeys.map((localKey) => ({
+          local_key: localKey,
+          global_key: globalKeyByRoot.get(sectionRoot(localKey)) ?? null,
+        })));
+      }
+      if (freshSweepTableSectionReconciliationAmbiguous) freshSweepGroupOwnershipAmbiguous = true;
+    }
     const freshSweepUniquePaths = [...freshSweepPaths].sort();
     const freshSweepUniqueHeadings = [...freshSweepHeadingKeys].sort();
     let freshSweepOrderedPaths = [];
@@ -6339,7 +7006,7 @@ async function readGroupOrderVisibleState(
     } else {
       const ordered = topologicalOrder(freshSweepUniqueHeadings, freshSweepHeadingOrderEdges);
       freshSweepOrderedHeadings = ordered.ordered;
-      if (ordered.ambiguous) freshSweepOrderingAmbiguous = true;
+      if (ordered.ambiguous && !(layout === 'table' && groupByProperty)) freshSweepOrderingAmbiguous = true;
     }
     pathLinks = freshSweepOrderedPaths.map((path, index) => {
       const result = freshSweepResultRecords.get(path);
@@ -6352,44 +7019,63 @@ async function readGroupOrderVisibleState(
         group_keys: groupKeys,
       };
     });
-    const reconciledUnownedKanbanObservations = freshSweepUnownedResultObservations.map((observation) => {
+    const reconciledUnownedResultObservations = freshSweepUnownedResultObservations.map((observation) => {
       const groupKeys = [...(freshSweepPathGroupKeys.get(observation.path) ?? [])];
-      const groupOwners = groupKeys.map((key) => ({
-        key,
-        column_ordinal: freshSweepHeadingRecords.get(key)?.column_ordinal ?? null,
-      }));
+      const groupOwners = groupKeys.map((key) => layout === 'kanban'
+        ? {key, column_ordinal: freshSweepHeadingRecords.get(key)?.column_ordinal ?? null}
+        : {key, heading_text: freshSweepResolvedTableSections.get(key)?.heading_text ?? null});
       return {
         ...observation,
         reconciled_group_keys: groupKeys,
         reconciled_group_owners: groupOwners,
-        reconciled_to_one_stable_owner: groupKeys.length === 1
-          && groupOwners[0].column_ordinal === observation.column_ordinal,
+        reconciled_to_one_stable_owner: layout === 'kanban'
+          ? groupKeys.length === 1 && groupOwners[0].column_ordinal === observation.column_ordinal
+          : groupKeys.length === 1,
       };
     });
-    groupRecords = freshSweepOrderedHeadings.map((key, index) => {
-      const heading = freshSweepHeadingRecords.get(key);
-      const marker = {
-        element: heading.element,
-        column: heading.column,
-        label: heading.label,
-        index,
-      };
-      return {
-        index,
-        key,
-        base_identity: heading.base_identity,
-        heading_text: heading.label,
-        heading_class_name: heading.class_name,
-        heading_bounds: {top: heading.top, left: heading.left},
-        heading_visibility_sample: {
-          visibility_sample_sequence: heading.visibility_sample_sequence,
-          visibility_sample_bounds: heading.visibility_sample_bounds,
-          scroll_positions: heading.scroll_positions,
-        },
-        member_paths: [],
-        marker,
-      };
-    });
+    if (layout === 'table' && groupByProperty) {
+      groupRecords = freshSweepOrderedTableSectionKeys.map((key, index) => {
+        const section = freshSweepResolvedTableSections.get(key);
+        return {
+          index,
+          key,
+          base_identity: section.key,
+          heading_text: section.heading_text,
+          heading_class_name: section.heading_class_name,
+          heading_bounds: section.heading_bounds,
+          heading_visibility_sample: section.heading_visibility_sample,
+          section_root_tag: section.section_root_tag,
+          section_root_class_name: section.section_root_class_name,
+          member_paths: [],
+          marker: {element: null, column: null, label: section.heading_text, index},
+        };
+      });
+    } else {
+      groupRecords = freshSweepOrderedHeadings.map((key, index) => {
+        const heading = freshSweepHeadingRecords.get(key);
+        const marker = {
+          element: heading.element,
+          column: heading.column,
+          label: heading.label,
+          index,
+        };
+        return {
+          index,
+          key,
+          base_identity: heading.base_identity,
+          heading_text: heading.label,
+          heading_class_name: heading.class_name,
+          heading_bounds: {top: heading.top, left: heading.left},
+          heading_visibility_sample: {
+            visibility_sample_sequence: heading.visibility_sample_sequence,
+            visibility_sample_bounds: heading.visibility_sample_bounds,
+            scroll_positions: heading.scroll_positions,
+          },
+          member_paths: [],
+          marker,
+        };
+      });
+    }
     const ungroupedVisibleFilePaths = [];
     const unassignedVisibleFilePaths = [];
     for (const link of pathLinks) {
@@ -6406,6 +7092,8 @@ async function readGroupOrderVisibleState(
       }
     }
     const allUnmappedVisiblePathCandidates = [...unmappedVisiblePathCandidates, ...freshSweepUnmappedCandidates];
+    const blockingNodeIdentityChanges = nodeIdentityChanges.filter((change) =>
+      !(layout === 'table' && groupByProperty && change.kind === 'group-heading'));
     const freshSweepEvidenceEligibleForPreSweepRows = layout === 'table'
       && freshSweepPositions > 0
       && freshSweepCoverageComplete
@@ -6414,11 +7102,13 @@ async function readGroupOrderVisibleState(
       && freshSweepUnmappedPathSamples === 0
       && freshSweepUnmappedRowSamples === 0
       && freshSweepDuplicatePathSamples === 0
-      && freshSweepUnownedResultSamples === 0
+      && (!(layout === 'table' && groupByProperty) || freshSweepUnresolvedGroupOwnerPaths.length === 0)
+      && (!(layout === 'table' && groupByProperty) || freshSweepUnpaintedTableSectionKeys.length === 0)
+      && (layout !== 'table' || !groupByProperty || reconciledUnownedResultObservations.every((observation) => observation.reconciled_to_one_stable_owner))
       && !freshSweepOrderingAmbiguous
       && !freshSweepGroupOwnershipAmbiguous
-      && !freshSweepHeadingIdentityAmbiguous
-      && nodeIdentityChanges.length === 0
+      && (layout === 'table' && groupByProperty || !freshSweepHeadingIdentityAmbiguous)
+      && blockingNodeIdentityChanges.length === 0
       && allUnmappedVisiblePathCandidates.length === 0
       && unassignedVisibleFilePaths.length === 0;
     const preSweepRowReconciliation = preSweepUnmappedVisibleRowCandidates.map((candidate) => {
@@ -6527,7 +7217,7 @@ async function readGroupOrderVisibleState(
     if (allUnmappedVisiblePathCandidates.length > 0) ambiguityReasons.push('One or more visible file-link candidates could not be mapped to a unique fixture path.');
     if (unresolvedPreSweepRowCandidates.length > 0) ambiguityReasons.push('One or more preliminary visible data rows could not be reconciled with a complete, unique fresh-sweep result and stable group ownership.');
     if (unassignedVisibleFilePaths.length > 0) ambiguityReasons.push('One or more visible fixture file links could not be assigned to a group or an ungrouped view.');
-    const unreconciledUnownedKanbanObservations = reconciledUnownedKanbanObservations
+    const unreconciledUnownedKanbanObservations = reconciledUnownedResultObservations
       .filter((observation) => observation.reconciled_to_one_stable_owner !== true);
     if (layout === 'kanban' && unreconciledUnownedKanbanObservations.length > 0) {
       ambiguityReasons.push('One or more Kanban cards with a partially clipped or missing heading observation could not be reconciled to exactly one stable painted heading owner: '
@@ -6740,16 +7430,28 @@ async function readGroupOrderVisibleState(
     if (freshSweepUnmappedRowSamples > 0) {
       ambiguityReasons.push('The fresh DOM sweep found one or more painted result rows without a mapped path candidate.');
     }
+    if (layout === 'table' && groupByProperty && freshSweepUnresolvedGroupOwnerPaths.length > 0) {
+      ambiguityReasons.push('The exhaustive fresh sweep did not reconcile every grouped table result to exactly one owner section: '
+        + JSON.stringify(freshSweepUnresolvedGroupOwnerPaths.slice(0, 24)) + '.');
+    }
+    if (layout === 'table' && groupByProperty && freshSweepUnpaintedTableSectionKeys.length > 0) {
+      ambiguityReasons.push('One or more structural table sections never had a painted heading observation: '
+        + JSON.stringify(freshSweepUnpaintedTableSectionKeys.slice(0, 24)) + '.');
+    }
+    if (freshSweepTableSectionReconciliationAmbiguous) {
+      ambiguityReasons.push('Repeated or virtualized table sections could not be reconciled to unique logical positions with required DOM continuity evidence: '
+        + JSON.stringify(freshSweepTableSectionReconciliationEvidence.slice(0, 12)) + '.');
+    }
     if (freshSweepOrderingAmbiguous) {
       ambiguityReasons.push('Fresh DOM sweep positions did not establish one stable DOM or column order for every result and group.');
     }
     if (freshSweepGroupOwnershipAmbiguous) {
       ambiguityReasons.push('Fresh DOM sweep observations assigned one or more results to conflicting groups.');
     }
-    if (freshSweepHeadingIdentityAmbiguous) {
+    if (freshSweepHeadingIdentityAmbiguous && !(layout === 'table' && groupByProperty)) {
       ambiguityReasons.push('Repeated or recycled group headings shared an identity that could not be tracked uniquely across fresh DOM samples.');
     }
-    if (nodeIdentityChanges.length > 0) {
+    if (blockingNodeIdentityChanges.length > 0) {
       ambiguityReasons.push('One or more result or group nodes changed identity after scrolling.');
     }
     if ((layout === 'table' || layout === 'kanban') && !explicitErrorSurface && resultCount === null) {
@@ -6833,14 +7535,59 @@ async function readGroupOrderVisibleState(
         fresh_sweep_unmapped_rows: freshSweepUnmappedRows.slice(0, 80),
         fresh_sweep_unmapped_candidates: freshSweepUnmappedCandidates.slice(0, 80),
         fresh_sweep_unowned_result_samples: freshSweepUnownedResultSamples,
-        fresh_sweep_unowned_result_observations: reconciledUnownedKanbanObservations.slice(0, 160),
+        fresh_sweep_unowned_result_observations: reconciledUnownedResultObservations.slice(0, 160),
+        fresh_sweep_unresolved_group_owner_paths: freshSweepUnresolvedGroupOwnerPaths,
+        fresh_sweep_resolved_table_sections: freshSweepOrderedTableSectionKeys.map((key, index) => {
+          const section = freshSweepResolvedTableSections.get(key);
+          return {
+            key,
+            index,
+            heading_text: section.heading_text,
+            heading_class_name: section.heading_class_name,
+            logical_position: section.logical_position,
+            section_root_tag: section.section_root_tag,
+            section_root_class_name: section.section_root_class_name,
+            sample_count: section.samples.size,
+            member_paths: [...section.member_paths].sort(),
+            local_section_count: section.local_keys.length,
+            local_section_keys: section.local_keys,
+            samples: [...section.samples].sort((left, right) => left - right),
+            painted_observation_count: section.painted_observation_count,
+            painted_sample_sequences: [...section.painted_sample_sequences].sort((left, right) => left - right),
+          };
+        }),
+        fresh_sweep_table_section_observations: [...freshSweepTableSections.values()].map((section) => ({
+          local_key: section.key,
+          sample: section.sample,
+          local_order: section.local_order,
+          heading_text: section.heading_text,
+          heading_class_name: section.heading_class_name,
+          section_root_tag: section.section_root_tag,
+          section_root_class_name: section.section_root_class_name,
+          logical_position: section.logical_position,
+          member_paths: [...section.member_paths].sort(),
+          painted: section.painted_observation_count > 0,
+        })),
+        fresh_sweep_table_section_accepted_reconciliation_evidence: freshSweepTableSectionAcceptedReconciliationEvidence,
+        fresh_sweep_table_section_accepted_reconciliation_evidence_truncated: freshSweepTableSectionAcceptedReconciliationEvidenceTruncated,
+        fresh_sweep_table_section_reconciliation_evidence: freshSweepTableSectionReconciliationEvidence,
+        fresh_sweep_table_section_snapshot_orders: [...freshSweepTableSectionSnapshotOrders.entries()].map(([sample, mappings]) => ({
+          sample,
+          ordered_global_section_keys: mappings.map((mapping) => mapping.global_key),
+          local_to_global_sections: mappings,
+        })),
+        fresh_sweep_table_section_reconciliation_ambiguous: freshSweepTableSectionReconciliationAmbiguous,
+        fresh_sweep_dom_object_id_scope: 'one-visible-state-page-evaluation',
+        fresh_sweep_unpainted_table_section_keys: freshSweepUnpaintedTableSectionKeys,
         fresh_sweep_duplicate_path_samples: freshSweepDuplicatePathSamples,
         fresh_sweep_ordering_ambiguous: freshSweepOrderingAmbiguous,
         fresh_sweep_group_ownership_ambiguous: freshSweepGroupOwnershipAmbiguous,
         fresh_sweep_painted_kanban_column_ordinals: [...freshSweepPaintedKanbanColumnOrdinals].sort((left, right) => left - right),
         fresh_sweep_scroll_offsets: freshSweepOffsets,
         node_identity_change_count: nodeIdentityChanges.length,
+        blocking_node_identity_change_count: blockingNodeIdentityChanges.length,
         node_identity_change_examples: nodeIdentityChanges.slice(0, 30),
+        blocking_node_identity_change_examples: blockingNodeIdentityChanges.slice(0, 30),
       },
       pre_sweep_unmapped_visible_row_candidates: preSweepUnmappedVisibleRowCandidates,
       pre_sweep_row_reconciliation: {
@@ -6945,13 +7692,25 @@ function emptyGroupOrderVisibleState(scenario: GroupOrderScenario): GroupOrderVi
       fresh_sweep_unmapped_candidates: [],
       fresh_sweep_unowned_result_samples: 0,
       fresh_sweep_unowned_result_observations: [],
+      fresh_sweep_unresolved_group_owner_paths: [],
+      fresh_sweep_resolved_table_sections: [],
+      fresh_sweep_table_section_observations: [],
+      fresh_sweep_table_section_accepted_reconciliation_evidence: [],
+      fresh_sweep_table_section_accepted_reconciliation_evidence_truncated: false,
+      fresh_sweep_table_section_reconciliation_evidence: [],
+      fresh_sweep_table_section_snapshot_orders: [],
+      fresh_sweep_table_section_reconciliation_ambiguous: false,
+      fresh_sweep_dom_object_id_scope: "not-captured",
+      fresh_sweep_unpainted_table_section_keys: [],
       fresh_sweep_duplicate_path_samples: 0,
       fresh_sweep_ordering_ambiguous: false,
       fresh_sweep_group_ownership_ambiguous: false,
       fresh_sweep_painted_kanban_column_ordinals: [],
       fresh_sweep_scroll_offsets: [],
       node_identity_change_count: 0,
+      blocking_node_identity_change_count: 0,
       node_identity_change_examples: [],
+      blocking_node_identity_change_examples: [],
     },
     groups: [],
     ungrouped_visible_file_paths: [],

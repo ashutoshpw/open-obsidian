@@ -7043,3 +7043,90 @@ The strongest source-based explanation is the single `\d` escape in the submitte
 The macOS report also records the pinned Obsidian app rewriting `Invalid Direction.base` in both sessions, from 122 bytes (SHA-256 `fb9d112de60508c86bdde1c2ebf989143a379ff6ce59cc89e958865cfe43afe0`) to 62 bytes (SHA-256 `6db35053b1d4aa0aca718364f906cd8820193c635ba002958f953d1aa03548cc`). This is recorded as a reference-app mutation; the round-trip workflow's acceptance error is the C07.3 count failure. C07.3 source preservation and source-observation recording pass.
 
 The goal and MIG-002 now explicitly define one `origin/main` push per complete, coherent, reviewed milestone. Minor fixes and focused commits stay local until they belong to that milestone; the remote remains pinned while its potentially multi-hour exact-SHA CI batch runs; “achieved” means every required job passes and evidence is reconciled. R2.8.126 is the grouped C07.3 ownership/count repair milestone, ready for one submission after its complete package is reviewed. No local executable validation ran.
+
+
+## R2.8.126 — submitted once; exact-SHA CI pending (2026-10-14T12:14:58Z)
+
+Pushed the complete reviewed R2.8.126 C07.3 ownership/count evidence repair once to `origin/main` at exact SHA `7d0eab11637bc9163694a0697ab2e8b93f98dc17`, a fast-forward from terminal R2.8.125 SHA `f2295fb0861564115b51c679b083579277e5465e`. The same package tightens `goal.md` and MIG-002: small changes stay local, one push submits one complete named milestone, and the remote remains fixed until its full exact-SHA batch is terminal. All seven required workflows were created. Initial snapshot: one workflow in progress and six queued; one of 20 jobs passed, 18 are in progress, one is queued, and none failed. Run/job IDs are in [`evidence/r2.8.126-attempt-1-7d0eab1.json`](evidence/r2.8.126-attempt-1-7d0eab1.json). Keep `origin/main` pinned at this SHA until every required job is terminal. No local executable validation ran.
+
+
+## R2.8.126 — exact-SHA CI update (2026-10-14T12:17:51Z)
+
+Five of seven workflows and 13/20 jobs passed on `7d0eab11637bc9163694a0697ab2e8b93f98dc17`. Rust CI jobs and the Windows/macOS/Linux Obsidian round-trip jobs remain active; no job has failed or remains queued. Run/job statuses are refreshed in [`evidence/r2.8.126-attempt-1-7d0eab1.json`](evidence/r2.8.126-attempt-1-7d0eab1.json). Keep `origin/main` pinned at this SHA until the remaining seven jobs are terminal. No local executable validation ran.
+
+
+## R2.8.126 — Windows round-trip prerequisite failure observed (2026-10-14T12:19:43Z)
+
+Five of seven workflows and 15/20 jobs pass on `7d0eab11637bc9163694a0697ab2e8b93f98dc17`. The Windows round-trip job `115846608675` failed during `Install Windows screenshot OCR dependency`; pinned Obsidian setup and the acceptance scenario were skipped. The parent round-trip workflow remains active with Linux/macOS jobs, and Rust MSRV/Windows jobs are also active. GitHub has not exposed the completed run logs/artifact yet, so the cause is unresolved. The failure is recorded in [`evidence/r2.8.126-attempt-1-7d0eab1.json`](evidence/r2.8.126-attempt-1-7d0eab1.json). Keep `origin/main` pinned; after the full batch is terminal, inspect the log and rerun only this job on the same SHA if it is a transient infrastructure failure. No local executable validation ran.
+
+
+## R2.8.126 — Windows prerequisite review (2026-10-14T12:24:36Z)
+
+A read-only review found no obvious deterministic source defect in the unchanged Windows OCR setup. It retries Chocolatey Tesseract installation three times, then installs ImageMagick and verifies both executable paths. Prior CI evidence records transient Chocolatey feed HTTP 504 failures and later successful retries, so a feed issue is plausible; the current step can also fail during ImageMagick setup. The exact cause remains unresolved pending the terminal current-run log. Findings are recorded in [`evidence/r2.8.126-attempt-1-7d0eab1.json`](evidence/r2.8.126-attempt-1-7d0eab1.json). No local executable validation ran.
+
+
+## R2.8.126 — Rust MSRV progress (2026-10-14T12:25:55Z)
+
+Rust MSRV job `115846608650` passed on `7d0eab11637bc9163694a0697ab2e8b93f98dc17`. Five workflows and 16/20 jobs pass; Rust Windows and the Linux/macOS round-trip jobs remain active. The Windows round-trip dependency-setup failure remains the only failure, and its root cause awaits terminal log access. Status is updated in [`evidence/r2.8.126-attempt-1-7d0eab1.json`](evidence/r2.8.126-attempt-1-7d0eab1.json). Keep `origin/main` pinned. No local executable validation ran.
+
+
+## R2.8.126 — Rust CI passed (2026-10-14T12:27:14Z)
+
+All four Rust CI jobs passed on `7d0eab11637bc9163694a0697ab2e8b93f98dc17`, including MSRV 1.95. Six of seven workflows and 17/20 jobs pass. Linux/macOS round-trip jobs remain active; Windows round-trip failed during OCR dependency setup before the scenario. See [`evidence/r2.8.126-attempt-1-7d0eab1.json`](evidence/r2.8.126-attempt-1-7d0eab1.json). Keep `origin/main` pinned until the final workflow is terminal and its logs/artifacts are reconciled. No local executable validation ran.
+
+
+## R2.8.126 — macOS round-trip failure before C07.3 (2026-10-14T12:29:23Z)
+
+Six of seven workflows and 17/20 jobs pass on `7d0eab11637bc9163694a0697ab2e8b93f98dc17`. macOS job `115846608646` failed in C06 Canvas text-card ID entry before group-order capture: expected `text-1`, no AX match or clipboard readback was available, and the screenshot shows the field still displaying the `text-card-id` placeholder. Thus macOS did not exercise C07.3 in this attempt. Artifact `11893124275` (13,075,245 bytes, digest `sha256:ebd07608ff9bc79b0185503c8221dc0375371a81936e282286c3884251c378fb`) has report SHA-256 `b46b34f60b3b2c5bad1d4753efe5495e291202392288e7c73bbab47a98f935d7`; failure screenshot SHA-256 `8da963a7476bd5c6b797dfeb19c72e903db939082b39f6788de32abefe6cc14c`. Windows setup failure is still awaiting terminal workflow logs; the Linux round-trip job remains active. See [`evidence/r2.8.126-attempt-1-7d0eab1.json`](evidence/r2.8.126-attempt-1-7d0eab1.json). Keep origin/main pinned. No local executable validation ran.
+
+
+## R2.8.126 — attempt 1 terminal; Linux ownership evidence and same-SHA retry (2026-10-14T12:41:28Z)
+
+The original seven-workflow/20-job batch is terminal on `7d0eab11637bc9163694a0697ab2e8b93f98dc17`: six workflows and 17 jobs passed; the round-trip job failed on Linux, macOS and Windows. Linux report artifact `11894810129` (19,640,466 bytes, digest `sha256:78878602308c99a0732b3ac8dd88e418efd6217a44bfd6f05650b9914d0cd767`) has report SHA-256 `05695c0dab2a960f6c5bec4af4a5ea68c9ba6ce39d9316a51ec12f13827fa261`. Its formula-dependent Kanban first-open/reopen checks pass and source-observation recording is complete. The YAML typed-values table scenario fails in both sessions: all 27 paths are captured with complete sweep coverage, but `Notes/05-bravo-unlisted.md` and `Notes/13-typed-false-string.md` receive conflicting `rendered:typed` and `rendered:typed None` group keys.
+
+Two independent read-only reviews traced this to the R2.8.126 table marker change. Offscreen headings were removed from the table ownership event stream, while the scan carries the previous viewport's final heading into the next scroll position. The app-restored viewport begins at `scrollTop=229`; the affected rows have no painted preceding heading there, map to `rendered:typed` at `scrollTop=0`, then incorrectly inherit `rendered:typed None` at `scrollTop=229`. Keep structural table headings available for ownership reconstruction and capture painted/visible heading evidence separately. Preserve fail-closed checks for incomplete coverage, unmapped paths, unstable identities and genuinely conflicting ownership; retain the stricter painted-heading gate for Kanban. Reviews and source references are in the run evidence JSON.
+
+The failed Windows Chocolatey/Tesseract prerequisite was retried only for that job on the same SHA. At 12:41 UTC, rerun attempt 2 job `115854756136` had passed OCR dependency installation and was running the vault round-trip step. The macOS C06 Canvas text-card ID failure occurred before C07.3 and did not touch the changed code; it passed on the prior R2.8.125 macOS run. After the focused Windows rerun becomes terminal, consider one focused same-SHA macOS rerun to distinguish a transient input delivery issue before defining the repair package. Keep `origin/main` at `7d0eab1`; do not submit another SHA until all same-SHA jobs/retries are terminal and the repair milestone is complete and reviewed. No local executable validation ran.
+
+
+## R2.8.126 — Windows same-SHA attempt 2 terminal; macOS diagnostic retry active (2026-10-14T12:55:19Z)
+
+Windows round-trip job `115854756136` completed failed on the submitted SHA `7d0eab11637bc9163694a0697ab2e8b93f98dc17`. The focused retry passed the OCR dependency setup, so the original Chocolatey/Tesseract HTTP 504 did not recur. It then reached C07.3 and failed grouped extraction in five first-open/reopen scenario IDs: YAML missing/null, YAML and JSON typed-value collisions, and malformed scalar/mapping order. Formula-dependent Kanban acceptance passed and source-observation recording completed. Artifact `11896041083` is 20,650,943 bytes (`sha256:f3bea08e5c80d09f7c92eefb22bac649c0e37235657b87869de5780f52ee065b`); report SHA-256 is `1c6acd9a77acc3b2382a7a28cf9da85d857239a17491a024b27f67c476adf598`. Full attempt evidence is in [`evidence/r2.8.126-attempt-1-7d0eab1.json`](evidence/r2.8.126-attempt-1-7d0eab1.json).
+
+The local C07.3 repair now keeps structurally renderable offscreen table headings in each ownership event stream, excludes CSS-hidden/near-transparent headings, resets ownership at the start of every snapshot, and fails closed if any grouped-table result lacks a group boundary in its own snapshot. Painted-heading evidence remains distinct, and Kanban retains its painted-heading gate. Two independent read-only reviews found this preserves offscreen boundaries and closes stale-owner/unowned-snapshot paths; exact-SHA CI is still required.
+
+A focused same-SHA retry of the failed macOS job is active as attempt 3 (`115863595344`) to determine whether the earlier C06 Canvas text-card input failure repeats. No source SHA or push was created. `origin/main` remains pinned at `7d0eab11637bc9163694a0697ab2e8b93f98dc17`. The local `goal.md` cadence now explicitly keeps minor changes and commits local, submits one completed named milestone once, and waits for every required multi-hour CI job before the next push. No local executable validation ran.
+
+
+## R2.8.126 — retry remains active; report type follow-up (2026-10-14T13:10:08Z)
+
+Read-only GitHub status still shows macOS job `115863595344` in its vault round-trip step on the unchanged submitted SHA `7d0eab11637bc9163694a0697ab2e8b93f98dc17`; setup, OCR dependency installation, native preview build and the parallel setup group passed. The remote tip is unchanged. Added the `structural_heading_observations` field to `GroupOrderFreshSweepOffset` so the runtime evidence shape is declared; this is a local source edit within the pending C07.3 repair package. Static review is pending. Do not submit another SHA before the focused retry is terminal and the full repair milestone is complete and reviewed. No local executable validation ran.
+
+## R2.8.126 — selected table-root scope tightened (2026-10-14T13:13:23Z)
+
+The Windows attempt-2 report artifact identifies `.bases-table-container` as the selected result root and shows the rendered group headings inside it. A static reviewer identified a conditional risk that `sharesSelectedResultScope` could admit a renderable sibling marker outside that root. Table heading identity now requires selected-root containment; shared-scope markers outside the selected root are emitted into `outside_selected_root_group_markers` for diagnosis and are excluded from ownership. The exact CI behavior on Linux and macOS remains unverified. Evidence is recorded in the `review_notes` of [`evidence/r2.8.126-attempt-1-7d0eab1.json`](evidence/r2.8.126-attempt-1-7d0eab1.json). Static re-review is pending; no local executable validation ran.
+
+The pinned Windows report has 64 table group observations, all using `.bases-group-heading mod-collapsible`; it shows no `.bases-group-row` or `.bases-group-header` markers. The table marker classifier is now limited to the observed `.bases-group-heading` class, while Kanban retains its existing exact `.bases-group-heading` selection. Structural heading evidence includes tag, class, and normalized label so unpainted candidates can be audited from CI artifacts. Static review found the type/assignment consistent and the selected-root containment fail-closed; exact-SHA CI is still pending. No local executable validation ran.
+
+
+## R2 migration coverage audit while C07.3 CI remains pending (2026-10-14T13:15:16Z)
+
+A read-only Rust/source and requirements audit found 47 R2 rows: 21 passing and 26 pending. Byte-preserving document models, scoped vault operations, SHA-256 revisions, journaling/recovery, rename transactions, history, and watcher reconciliation are present, but open requirements still include C01, C06, C07, C09, C14, GATE-001/003, SYNC-006, and RISK-005. Rust CI success alone does not close these product/round-trip gates. The planned C07.4 reference milestone currently covers JS number semantics but omits its required locale/case/diacritic/numeric-text/path-tie-break cases; add those before beginning it, after C07.3 is accepted. Do not port the current exact-large-integer comparator into a claimed parity result before the pinned app capture. A later RISK-005 review should also inspect ambient read/hash opens after path checks; the source review identifies a question, not a confirmed exploit. These findings do not change the active C07.3 repair or the pending exact-SHA CI batch.
+
+
+## R2.8.126 — macOS same-SHA attempt 3 terminal; C07.3 remains blocked (2026-10-14T13:26:03Z)
+
+The focused macOS retry `115863595344` completed failed on the unchanged SHA `7d0eab11637bc9163694a0697ab2e8b93f98dc17`. It passed OCR setup, reached C07.3, and failed first-open/reopen capture for YAML missing-vs-null, YAML/JSON typed-value collisions, malformed YAML scalar order, and malformed JSON mapping order. Source-observation recording and source preservation passed. Artifact `11898212322` is 29,391,990 bytes (`sha256:3165566535c6560fa9e2810fd6b1c378c0123fbb0aae21ccf0f5ecdbe51b644d`); report SHA-256 is `8a7540b06f7f6555b85afe2c8eca7472e00f9b3bd911017012c9c55d2ff9c4f5`. Exact run/job and artifact details are in [`evidence/r2.8.126-attempt-1-7d0eab1.json`](evidence/r2.8.126-attempt-1-7d0eab1.json).
+
+All required workflows and same-SHA retries for this batch are now terminal. R2.8.126 is not accepted: all three round-trip platform jobs failed C07.3, while Rust CI and the other companion workflows passed. The artifact was produced from submitted SHA `7d0eab1`; it does not validate the subsequent unpushed local source edits. Keep `origin/main` at that SHA, complete and review one grouped C07.3 repair milestone locally, and submit only once when that milestone is ready. No local executable validation ran.
+
+
+## R2.8.127 — snapshot reconciliation review complete; milestone unpushed (2026-10-14T14:27:43Z)
+
+Completed the grouped C07.3 snapshot-local ownership repair in source and progress notes. Logical heading positions now compose window scroll with every qualifying vertical and horizontal scroll ancestor offset and record structural routes. The coordinate model is marked unsupported for sticky/fixed positioning, transforms, and CSS zoom. Table sections are built independently within each selected-root snapshot, with painted-heading evidence retained separately from structural ownership boundaries.
+
+Cross-snapshot section matching now uses one-to-one edges backed by shared canonical member paths, matching heading text, complete structural routes, and matching composed location. Those edges form transitive components across non-adjacent samples, so the absence of a direct shared path between two distant samples no longer overrides continuity already established through intermediate snapshots. A sample with no visible paths may bridge only when the same scan-local heading and section-root objects persist at the same supported location; its report records both endpoint path counts and identifies the pathless endpoint. Equal-label disconnected sections at different content-space positions are kept separate only under the same complete supported route; same-slot or incomparable observations remain ambiguous.
+
+Independent static reviews confirmed the accepted-edge schema and empty `not-captured` fallback, identified and helped close the all-pairs false-ambiguity and nested-scroll/sticky/transform/zoom gaps, and found no direct false-pass path in the checked-in C07.3 fixtures. A conditional residual remains if a renderer recycles the exact heading/root objects into a different same-label section at the exact same supported content-space slot during one sweep; the reviewers found no fixture sequence demonstrating that condition. Exact-SHA CI remains authoritative. No local tests, builds, type checks, formatting, lint, or runtime validation were run.
+
+The `goal.md` milestone policy states that minor edits and focused commits stay local, one push submits one complete named milestone, and the remote stays fixed until every required job for that SHA is terminal. The package is recorded in one focused local commit on `main` and is ready for one milestone submission. The managed-cloud readiness connector is unavailable in this session and `/etc/codex/network-policy.json` is missing. The environment instructions do not treat missing policy as ready, so no network push was attempted; `origin/main` remains pinned at `7d0eab11637bc9163694a0697ab2e8b93f98dc17`. Unrelated C09 source edits remain outside this milestone.

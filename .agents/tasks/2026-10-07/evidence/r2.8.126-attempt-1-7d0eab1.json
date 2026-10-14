@@ -1,0 +1,425 @@
+{
+  "milestone": "R2.8.126",
+  "attempt": 1,
+  "source_sha": "7d0eab11637bc9163694a0697ab2e8b93f98dc17",
+  "status": "Attempt 1 terminal failure (17/20 jobs passed); Windows same-SHA attempt 2 failed C07.3; macOS same-SHA attempt 3 failed C07.3; all jobs and retries terminal.",
+  "captured_at": "2026-10-14T13:26:03Z",
+  "push": {
+    "pushed_once": true,
+    "parent_sha": "f2295fb0861564115b51c679b083579277e5465e",
+    "remote_tip_at_submission": "7d0eab11637bc9163694a0697ab2e8b93f98dc17",
+    "submitted_at": "2026-10-14T12:14:58Z"
+  },
+  "validation_policy": "GitHub Actions only; no local executable validation was run.",
+  "summary": {
+    "expected_workflows": 7,
+    "completed_successful_workflows": 6,
+    "failed_workflows": 1,
+    "in_progress_workflows": 0,
+    "queued_workflows": 0,
+    "expected_jobs": 20,
+    "passed_jobs": 17,
+    "failed_jobs": 3,
+    "in_progress_jobs": 0,
+    "queued_jobs": 0,
+    "remote_tip": "7d0eab11637bc9163694a0697ab2e8b93f98dc17",
+    "same_sha_attempt_2": "terminal failure; Windows C07.3",
+    "same_sha_attempt_3": "terminal failure; macOS C07.3",
+    "all_same_sha_retries_terminal": true
+  },
+  "workflows": [
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 38562443422,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38562443422",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "id": 115846611527,
+          "name": "windows-latest",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 115846611773,
+          "name": "macos-latest",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 115846611851,
+          "name": "ubuntu-latest",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "head_sha": "7d0eab11637bc9163694a0697ab2e8b93f98dc17"
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 38562442765,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38562442765",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "id": 115846607421,
+          "name": "ubuntu-latest",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 115846607839,
+          "name": "windows-latest",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 115846607987,
+          "name": "macos-latest",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "head_sha": "7d0eab11637bc9163694a0697ab2e8b93f98dc17"
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 38562442854,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38562442854",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "id": 115846609638,
+          "name": "windows-latest",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 115846609714,
+          "name": "ubuntu-latest",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 115846609745,
+          "name": "macos-latest",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "head_sha": "7d0eab11637bc9163694a0697ab2e8b93f98dc17"
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 38562442813,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38562442813",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "id": 115846608172,
+          "name": "windows-latest",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 115846608426,
+          "name": "ubuntu-latest",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 115846608495,
+          "name": "macos-latest",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "head_sha": "7d0eab11637bc9163694a0697ab2e8b93f98dc17"
+    },
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 38562442810,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38562442810",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "id": 115846608650,
+          "name": "minimum supported Rust (1.95)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 115846608956,
+          "name": "rust (macos-latest)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 115846609070,
+          "name": "rust (windows-latest)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 115846609140,
+          "name": "rust (ubuntu-latest)",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "head_sha": "7d0eab11637bc9163694a0697ab2e8b93f98dc17"
+    },
+    {
+      "name": "Obsidian vault round-trip acceptance",
+      "run_id": 38562442869,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38562442869",
+      "status": "completed",
+      "conclusion": "failure",
+      "jobs": [
+        {
+          "id": 115846608453,
+          "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04",
+          "status": "completed",
+          "conclusion": "failure"
+        },
+        {
+          "id": 115846608646,
+          "name": "Obsidian 1.14.4 vault round-trip on macos-latest",
+          "status": "completed",
+          "conclusion": "failure"
+        },
+        {
+          "id": 115846608675,
+          "name": "Obsidian 1.14.4 vault round-trip on windows-latest",
+          "status": "completed",
+          "conclusion": "failure"
+        }
+      ],
+      "head_sha": "7d0eab11637bc9163694a0697ab2e8b93f98dc17",
+      "artifacts": [
+        {
+          "id": 11893124275,
+          "name": "obsidian-vault-roundtrip-macOS-7d0eab11637bc9163694a0697ab2e8b93f98dc17",
+          "size_in_bytes": 13075245,
+          "digest": "sha256:ebd07608ff9bc79b0185503c8221dc0375371a81936e282286c3884251c378fb",
+          "created_at": "2026-10-14T12:28:19Z",
+          "expires_at": "2026-11-13T12:28:17Z",
+          "report_sha256": "b46b34f60b3b2c5bad1d4753efe5495e291202392288e7c73bbab47a98f935d7",
+          "failure_screenshot_sha256": "8da963a7476bd5c6b797dfeb19c72e903db939082b39f6788de32abefe6cc14c",
+          "failure": "C06 Canvas text-card ID input/readback failed before C07.3; expected text-1, field still showed placeholder text-card-id, and the group-order report remained pending."
+        },
+        {
+          "id": 11894810129,
+          "name": "obsidian-vault-roundtrip-Linux-7d0eab11637bc9163694a0697ab2e8b93f98dc17",
+          "size_in_bytes": 19640466,
+          "digest": "sha256:78878602308c99a0732b3ac8dd88e418efd6217a44bfd6f05650b9914d0cd767",
+          "created_at": "2026-10-14T12:33:04Z",
+          "expires_at": "2026-11-13T12:32:58Z",
+          "report_sha256": "05695c0dab2a960f6c5bec4af4a5ea68c9ba6ce39d9316a51ec12f13827fa261",
+          "failure": "C07.3 failed in yaml-typed-values-and-rendered-label-collisions at first-open and reopen: Notes/05-bravo-unlisted.md and Notes/13-typed-false-string.md receive conflicting rendered:typed and rendered:typed None owner keys. The formula-dependent Kanban scenario passes; source-observation recording is complete."
+        }
+      ]
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 38562443197,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38562443197",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "id": 115846610170,
+          "name": "inventory",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "head_sha": "7d0eab11637bc9163694a0697ab2e8b93f98dc17"
+    }
+  ],
+  "review_notes": [
+    {
+      "reviewer_scope": "local source-only review of R2.8.126 C07.3 changes",
+      "finding": "Independent reviewers found no concrete false-pass or false-failure path for the reported four-column Kanban case. Review covered the escaped numeric regex, same-column painted ownership reconciliation, separate heading/count scrolling, connected header/count identity checks, retained successful/failed evidence, and the 128-heading fail-closed bound. This does not establish CI acceptance."
+    },
+    {
+      "reviewer_scope": "R2.8.125 exact-SHA report review",
+      "finding": "All three terminal round-trip platforms failed only formula-dependent Kanban count validation at first-open/reopen. The source-template regex explanation is a strong inference because prior reports did not retain the evaluated expression. macOS also captured a separate pinned Obsidian rewrite of Invalid Direction.base in C07.2.",
+      "evidence_path": "evidence/r2.8.125-attempt-1-f2295fb.json"
+    },
+    {
+      "observed_at": "2026-10-14T12:19:43Z",
+      "scope": "Windows round-trip job early prerequisite failure",
+      "finding": "Job 115846608675 failed in Install Windows screenshot OCR dependency; the pinned Obsidian installation and round-trip acceptance steps were skipped. Parent round-trip workflow is still active, so its logs/artifact have not yet appeared. Cause is unclassified pending terminal log review."
+    },
+    {
+      "observed_at": "2026-10-14T12:24:36Z",
+      "reviewer_scope": "read-only Windows OCR prerequisite workflow review",
+      "finding": "Read-only workflow review found no obvious deterministic defect in the unchanged Windows OCR dependency step. The workflow retries Chocolatey Tesseract three times and verifies Tesseract/ImageMagick paths. Prior CI attempts recorded Chocolatey community-feed HTTP 504 failures, making a transient feed problem plausible; this exact run can also fail later in ImageMagick setup. The current log is required to classify it.",
+      "prior_evidence": [
+        "evidence/r2.8.27-ci-attempt4-c11c390.json",
+        "evidence/r2.8.27-ci-attempt5-9f8daa3.json",
+        "evidence/r2.6.83-ci.json"
+      ],
+      "classification": "unresolved until terminal current-run log is available"
+    },
+    {
+      "observed_at": "2026-10-14T12:29:23Z",
+      "reviewer_scope": "macOS round-trip report and screenshot review",
+      "finding": "The macOS job failed in C06 Canvas text-card ID entry before C07.3. The screenshot shows the field placeholder `text-card-id`, not expected value `text-1`; the report records no AX match and clipboard length 0. C07.3 group-order capture remained pending on this platform.",
+      "report_sha256": "b46b34f60b3b2c5bad1d4753efe5495e291202392288e7c73bbab47a98f935d7",
+      "failure_screenshot_sha256": "8da963a7476bd5c6b797dfeb19c72e903db939082b39f6788de32abefe6cc14c"
+    },
+    {
+      "observed_at": "2026-10-14T12:41:28Z",
+      "reviewer_scope": "Linux C07.3 table ownership source/artifact audit",
+      "finding": "Independent read-only reviews agree that R2.8.126 filtered offscreen group headings from the table ownership event stream. The restored app viewport begins at scrollTop 229; those two paths lack a visible preceding heading in that initial scan. At scrollTop 0 the table maps them to rendered:typed; at scrollTop 229, the prior viewport tail owner rendered:typed None is carried into the overlap. Keep structural table boundaries for ownership and track painted/visible heading evidence separately. Preserve fail-closed checks for incomplete sweeps, unowned paths and conflicting confident owners; keep Kanban ownership tied to painted headings.",
+      "report_sha256": "05695c0dab2a960f6c5bec4af4a5ea68c9ba6ce39d9316a51ec12f13827fa261",
+      "reviewers": [
+        "a590_roundtrip",
+        "a590_attempt3_roundtrip_audit"
+      ],
+      "source_lines": [
+        5876,
+        5886,
+        5950,
+        6157,
+        6180,
+        6259,
+        6417,
+        6419,
+        6431
+      ],
+      "classification": "repeatable table sweep ownership regression; source repair needed"
+    },
+    {
+      "observed_at": "2026-10-14T12:55:19Z",
+      "scope": "read-only review of local grouped-table structural ownership repair",
+      "finding": "The repair includes offscreen but structurally renderable table headings in each scan, excludes hidden/collapsed/content-visibility-hidden and effectively near-transparent markers, starts each ownership scan without a carried owner, and rejects grouped-table observations that lack an owner within their own snapshot. Painted heading evidence remains separate, and Kanban still uses painted headings. Two independent reviewers found the changed flow preserves offscreen boundaries and closes stale-owner/unowned-snapshot pass paths. Exact-SHA CI remains authoritative.",
+      "local_executable_validation": false
+    },
+    {
+      "observed_at": "2026-10-14T13:13:23Z",
+      "scope": "selected-result-root scope review of local C07.3 repair",
+      "finding": "The Windows attempt-2 CI artifact report identifies the selected table root as a `bases-table-container` containing the visible group heading and grouped `bases-table` children. To avoid admitting a renderable sibling heading through a shared ancestor, table heading identity now requires containment by the selected result root. Structurally renderable markers that share the selected scope but lie outside that root are recorded separately for diagnosis and do not participate in table ownership. This closes the static-review false-owner concern conservatively; Linux/macOS runtime structure and exact-SHA behavior remain unverified pending CI.",
+      "artifact_id": 11896041083,
+      "artifact_digest": "sha256:f3bea08e5c80d09f7c92eefb22bac649c0e37235657b87869de5780f52ee065b",
+      "report_sha256": "1c6acd9a77acc3b2382a7a28cf9da85d857239a17491a024b27f67c476adf598",
+      "local_executable_validation": false,
+      "review_status": "static re-review requested"
+    },
+    {
+      "observed_at": "2026-10-14T13:14:53Z",
+      "scope": "table marker candidate and observation evidence review",
+      "finding": "The same CI report contains 64 first-open/reopen group observations, all with class `bases-group-heading mod-collapsible` inside the selected `bases-table-container`; it reports no `.bases-group-row` or `.bases-group-header` examples. The table marker classifier is therefore narrowed to the observed `.bases-group-heading` class; generic `role=group`, arbitrary `data-group`, substring class matches, and unobserved alternative classes cannot become table boundaries. Each in-root structural heading observation now records tag, class, and normalized label in addition to identity and painted state. Static review supports the evidence fields and selector; exact-SHA CI remains required.",
+      "artifact_id": 11896041083,
+      "report_sha256": "1c6acd9a77acc3b2382a7a28cf9da85d857239a17491a024b27f67c476adf598",
+      "local_executable_validation": false,
+      "review_status": "static review complete; CI pending"
+    }
+  ],
+  "observed_failures": [
+    {
+      "job_id": 115846608675,
+      "platform": "Windows",
+      "step": "Install Windows screenshot OCR dependency",
+      "step_conclusion": "failure",
+      "completed_at": "2026-10-14T12:18:11Z",
+      "finding": "The round-trip job stopped during prerequisite setup; Obsidian installation and vault round-trip acceptance were skipped. Run logs and artifact details are not yet available while the parent workflow remains active. Root cause is unresolved; inspect the terminal workflow log before classifying this as infrastructure or source-related."
+    },
+    {
+      "job_id": 115846608646,
+      "platform": "macOS",
+      "step": "Author, open, snapshot, and reopen the same vault",
+      "completed_at": "2026-10-14T12:28:16Z",
+      "finding": "The run failed in the earlier C06 Canvas edit check before C07.3 group-order capture. Neither AX matching nor the OCR-positioned fallback confirmed the expected text-card ID `text-1`; clipboard evidence was unavailable (length 0), and the saved screenshot shows the field still displaying its `text-card-id` placeholder. The C07.3 group-order report remains pending, so this platform did not exercise the repaired Kanban count gate.",
+      "artifact_id": 11893124275,
+      "artifact_digest": "sha256:ebd07608ff9bc79b0185503c8221dc0375371a81936e282286c3884251c378fb",
+      "artifact_size_bytes": 13075245,
+      "report_sha256": "b46b34f60b3b2c5bad1d4753efe5495e291202392288e7c73bbab47a98f935d7",
+      "failure_screenshot_sha256": "8da963a7476bd5c6b797dfeb19c72e903db939082b39f6788de32abefe6cc14c",
+      "artifact_expires_at": "2026-11-13T12:28:17Z"
+    },
+    {
+      "job_id": 115846608453,
+      "platform": "Linux",
+      "step": "Author, open, snapshot, and reopen the same vault",
+      "completed_at": "2026-10-14T12:32:58Z",
+      "finding": "C07.3 failed at first-open and reopen for yaml-typed-values-and-rendered-label-collisions. The exhaustive sweep mapped all 27 paths with complete coverage, zero unmapped path/row samples, and stable ordering/heading identity. Notes/05-bravo-unlisted.md and Notes/13-typed-false-string.md were initially unowned at the app-restored scroll offset and then received conflicting group keys at scrollTop 0 and 229. The repaired formula-dependent Kanban count scenario passes. Source-observation recording is complete.",
+      "artifact_id": 11894810129,
+      "artifact_digest": "sha256:78878602308c99a0732b3ac8dd88e418efd6217a44bfd6f05650b9914d0cd767",
+      "artifact_size_bytes": 19640466,
+      "report_sha256": "05695c0dab2a960f6c5bec4af4a5ea68c9ba6ce39d9316a51ec12f13827fa261",
+      "artifact_expires_at": "2026-11-13T12:32:58Z"
+    },
+    {
+      "job_id": 115854756136,
+      "platform": "Windows",
+      "attempt": 2,
+      "step": "Author, open, snapshot, and reopen the same vault",
+      "completed_at": "2026-10-14T12:48:41Z",
+      "finding": "The focused same-SHA retry passed Windows OCR setup but failed C07.3 acceptance. It reported 5 failing first-open/reopen scenario IDs across YAML missing/null, YAML and JSON typed-value collisions, and malformed scalar/mapping order; the formula-dependent Kanban case passed. The report records complete source-observation capture and no Rust parity claim. The reference app's source rewrite is retained as an observation, separate from the group-order extraction failures.",
+      "artifact_id": 11896041083,
+      "artifact_digest": "sha256:f3bea08e5c80d09f7c92eefb22bac649c0e37235657b87869de5780f52ee065b",
+      "artifact_size_bytes": 20650943,
+      "report_sha256": "1c6acd9a77acc3b2382a7a28cf9da85d857239a17491a024b27f67c476adf598",
+      "artifact_expires_at": "2026-11-13T12:48:42Z"
+    },
+    {
+      "job_id": 115863595344,
+      "platform": "macOS",
+      "attempt": 3,
+      "step": "Author, open, snapshot, and reopen the same vault",
+      "completed_at": "2026-10-14T13:26:03Z",
+      "finding": "The focused same-SHA retry reached C07.3 and failed groupOrder first-open/reopen acceptance for yaml-missing-vs-null-and-label-collision, yaml-typed-values-and-rendered-label-collisions, json-typed-values-and-rendered-label-collisions, yaml-malformed-scalar-order, and json-malformed-mapping-order. The report records complete source-observation capture and source preservation. This exact-SHA report is from the submitted code and does not test later local source edits.",
+      "artifact_id": 11898212322,
+      "artifact_digest": "sha256:3165566535c6560fa9e2810fd6b1c378c0123fbb0aae21ccf0f5ecdbe51b644d",
+      "artifact_size_bytes": 29391990,
+      "report_sha256": "8a7540b06f7f6555b85afe2c8eca7472e00f9b3bd911017012c9c55d2ff9c4f5",
+      "artifact_expires_at": "2026-11-13T13:25:57Z"
+    }
+  ],
+  "same_sha_reruns": [
+    {
+      "attempt": 2,
+      "run_id": 38562442869,
+      "head_sha": "7d0eab11637bc9163694a0697ab2e8b93f98dc17",
+      "rerun_scope": "Windows round-trip job only",
+      "prior_job_id": 115846608675,
+      "rerun_job_id": 115854756136,
+      "status": "completed / failure",
+      "observed_at": "2026-10-14T12:48:48Z",
+      "windows_ocr_dependency_step": "passed",
+      "current_step": "Author, open, snapshot, and reopen the same vault (failed)",
+      "note": "The Chocolatey/Tesseract HTTP 504 did not recur. The retry reached C07.3 but failed group ownership acceptance; the formula-dependent Kanban scenario passed. No new source SHA was submitted.",
+      "artifact_id": 11896041083,
+      "artifact_digest": "sha256:f3bea08e5c80d09f7c92eefb22bac649c0e37235657b87869de5780f52ee065b",
+      "artifact_size_bytes": 20650943,
+      "report_sha256": "1c6acd9a77acc3b2382a7a28cf9da85d857239a17491a024b27f67c476adf598"
+    },
+    {
+      "attempt": 3,
+      "run_id": 38562442869,
+      "head_sha": "7d0eab11637bc9163694a0697ab2e8b93f98dc17",
+      "rerun_scope": "macOS round-trip job only",
+      "prior_job_id": 115854801376,
+      "rerun_job_id": 115863595344,
+      "status": "completed / failure",
+      "observed_at": "2026-10-14T13:26:03Z",
+      "current_step": "Author, open, snapshot, and reopen the same vault (failed)",
+      "note": "The retry passed macOS screenshot OCR setup and reached C07.3. The groupOrder capture failed first-open/reopen for YAML missing-vs-null, YAML and JSON typed-value collisions, YAML malformed scalar order, and JSON malformed mapping order. Source-observation recording and source preservation passed. No new source SHA was submitted.",
+      "completed_at": "2026-10-14T13:26:03Z",
+      "artifact_id": 11898212322,
+      "artifact_name": "obsidian-vault-roundtrip-macOS-7d0eab11637bc9163694a0697ab2e8b93f98dc17",
+      "artifact_size_bytes": 29391990,
+      "artifact_digest": "sha256:3165566535c6560fa9e2810fd6b1c378c0123fbb0aae21ccf0f5ecdbe51b644d",
+      "report_sha256": "8a7540b06f7f6555b85afe2c8eca7472e00f9b3bd911017012c9c55d2ff9c4f5",
+      "artifact_expires_at": "2026-11-13T13:25:57Z"
+    }
+  ]
+}
