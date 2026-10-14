@@ -6451,6 +6451,10 @@ async function replaceMacOSOpenObsidianTextInputWithKeyboard(
       keystroke "a" using {command down}
       delay 0.1
       keystroke "c" using {command down}
+      -- Cmd+C leaves the selection highlighted; collapse it for screenshot OCR.
+      delay 0.1
+      key code 124
+      delay 0.1
     end tell
   end run`;
   execFileSync("pbcopy", [], {input: value, stdio: ["pipe", "ignore", "ignore"]});
@@ -6506,9 +6510,10 @@ async function replaceMacOSOpenObsidianTextInputWithKeyboard(
   }
   return JSON.stringify({
     name: controlName,
-    action: "focused the OCR-positioned field, Cmd+A and clipboard paste, then copied the selected field for readback",
+    action: "focused the OCR-positioned field, Cmd+A and clipboard paste, copied the selected field, then sent Right Arrow to collapse the selection before screenshot readback",
     exact_readback: true,
     clipboard_exact: clipboardReadback === value,
+    readback_selection_collapse_key_sent: true,
     readback_source: clipboardReadback === value
       ? "macOS clipboard after selecting and copying the focused field"
       : "exact OCR line from a fresh field-text-anchored capture after clipboard readback was empty",

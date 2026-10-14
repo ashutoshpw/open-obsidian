@@ -6445,3 +6445,107 @@ policy remains in effect: do not trigger CI for intermediate edits. Finish the
 source and evidence package locally, then push one accumulated R2.8.111
 milestone to `origin/main`; hold that exact SHA until every required job is
 terminal.
+
+## R2.8.111 pushed; exact-SHA CI pending
+
+After R2.8.110 became terminal, confirmed `origin/main` still matched
+`d186ac031b89977e1d3fc067d20c45add8c43343` and pushed the single complete
+R2.8.111 milestone commit `b917c2e615223917ea205beb9a4537fc398ee3b6` to
+`origin/main`. The commit contains the focused-crop OCR repair, static review
+notes, R2.8.110 terminal job/artifact reconciliation, and the R2.8.111 scope
+and acceptance criteria. No local executable validation was run.
+
+All seven required workflows were identified on the exact pushed SHA:
+inventory `38499461125`, quality `38499461058`, desktop build `38499461059`,
+plugin renderer `38499461126`, loaded plugin workflows `38499461131`, Rust CI
+`38499461122`, and Obsidian vault round-trip `38499461080`. Initial snapshot:
+2/20 jobs passed, 17 in progress, one queued, zero failures. Exact job IDs,
+URLs, and state are in `evidence/r2.8.111-attempt-1-b917c2e.json`. Hold
+`origin/main` at this SHA until every job is terminal; do not push or trigger
+another batch while it runs.
+
+At 2026-10-14T02:10:18Z, 13/20 R2.8.111 jobs passed. Inventory, quality,
+desktop build, plugin renderer, and loaded-plugin workflows are all
+successful. The four Rust CI jobs and three round-trip platform jobs remain
+in progress; there are no queued jobs or failures. The exact-SHA snapshot is
+in `evidence/r2.8.111-attempt-1-b917c2e.json`. Continue holding `origin/main`
+at `b917c2e615223917ea205beb9a4537fc398ee3b6` until all required jobs are
+terminal.
+
+At 2026-10-14T02:13:11Z, 15/20 R2.8.111 jobs passed. Rust CI macOS and
+Ubuntu passed, in addition to inventory and all five companion workflows.
+Windows Rust, MSRV Rust 1.95, and the three round-trip platform jobs remain
+active; none are queued and no failures are reported. The macOS round-trip is
+running the focused-crop repair. The exact-SHA snapshot is retained in
+`evidence/r2.8.111-attempt-1-b917c2e.json`; keep `origin/main` fixed at
+`b917c2e615223917ea205beb9a4537fc398ee3b6` until all jobs are terminal.
+
+At 2026-10-14T02:18:25Z, 16/20 R2.8.111 jobs passed. Rust CI is green on
+macOS, Ubuntu, and minimum Rust 1.95; all five companion workflows are also
+green. Windows Rust is building its native preview, and Windows/macOS/Ubuntu
+round-trip UI jobs are still running. No failures or queued jobs are reported.
+See the updated exact-SHA evidence snapshot and keep `origin/main` at
+`b917c2e615223917ea205beb9a4537fc398ee3b6` until every job is terminal.
+
+
+## R2.8.111 terminal; R2.8.112 readback repair defined
+
+All seven required workflows and 20 jobs are terminal on exact SHA
+`b917c2e615223917ea205beb9a4537fc398ee3b6`: 19 passed and one failed. Rust
+CI passed all four jobs; inventory, quality, desktop build, plugin renderer,
+and loaded-plugin workflows passed all 13 companion jobs. Windows and Ubuntu
+Obsidian round-trip passed. The macOS round-trip failed at C06 Canvas edit-path
+readback before C07. Full run/job outcomes and artifact metadata are in
+`evidence/r2.8.111-attempt-1-b917c2e.json`.
+
+The macOS artifact report is SHA-256
+`324064f557578cf8cd7eea9304e6835fe2a4c4680ab22dafe31145492ab5bc15`. The
+label-relative field crop was 251x32 and the processed crop was 1004x128 at
+4x. The fresh screenshot shows `C06 Reference.canvas` selected in the intended
+field, while OCR returned empty text in PSM 7 and `i"!` in PSM 6. The report
+did not preserve the clipboard value, and the fail-closed visual check aborted
+before C07. This is an OCR false negative; the artifact shows the expected
+field alignment and value. Raw/processed crop hashes are
+`9f7e6179aa3c03b950bc48a75ce2c5c48cb4167d2bd9c7ff4feec15a7d8a36d6` and
+`cca8701c74f1575b89aa44b7440b042c13021d4d3612a8d69016409d8f30fcaf`; the
+readback screenshot hash is
+`8b3d59d986c55076c1181c140f69a1e502a4d1ff734eddac97a8f510bb6c5e82`.
+Windows artifact 11865053789 (13,906,095 bytes; API digest
+`sha256:d0f3b40b9fc4434f98e6150d78df34e65ceb8eb8eb59bbd46acb4f6165c5a1`)
+report hash is `721f71a9fb20b6961f05fc9c32a3d4fd13f614ace8d588aa40ac334f6165c5a1`.
+Linux artifact 11865084065 (15,198,519 bytes; API digest
+`sha256:51ec825cd112c2e27c3cec7b92c83fe34f30af2291e2109cf3f0ec182cfb7fc0`)
+report hash is `410fdbaffe86f0c552e7cc728cf7bb238f4324e157e4774201ba50437fca4d2f`.
+macOS artifact 11865980376 (11,873,323 bytes; API digest
+`sha256:e3cfa4a6188a32d16bc0924a5860c8dba1156f9a4e80959980e936dfd66db962`).
+
+Independent read-only reviews recommend sending Right Arrow after Cmd+C and
+before the readback capture so the exact copied clipboard value is retained
+while the field text is no longer selected. Keep exact clipboard readback and
+unique, label-relative visible OCR as independent required checks; do not
+relax geometry or candidate uniqueness. R2.8.112 is defined for this repair,
+with the clarified goal.md rule: minor edits and commits remain batched
+locally, and exactly one accumulated `origin/main` push occurs after each
+named implementation milestone package is ready. Hold `origin/main` at
+`b917c2e615223917ea205beb9a4537fc398ee3b6` until that package is ready. No
+local tests, builds, formatters, typechecks or runtime validation were run.
+
+
+## R2.8.112 implementation slice ready for milestone packaging
+
+Applied the focused macOS readback correction in
+`audit-obsidian-vault-roundtrip.ts`: after Cmd+A/Cmd+C copies the focused field,
+the automation waits briefly and sends Right Arrow before screenshot capture,
+so selected text is no longer highlighted for OCR while the copied clipboard
+value remains available. The success report records that the selection-collapse
+key was sent. Existing unique label-relative OCR, exact clipboard readback, and
+the narrowly conditional empty-clipboard exact-line fallback remain unchanged;
+no field geometry or candidate-matching rule was relaxed.
+
+Two independent read-only reviews approved the repair and confirmed the strict
+visual/clipboard gates and the clarified `goal.md` one-push-per-milestone rule.
+The raw `goal.md`, source, R2.8.111 terminal evidence, state, and journal changes
+are all local for one accumulated R2.8.112 milestone package. No local tests,
+builds, formatters, typechecks, or runtime validation were run. Push only after
+this complete package is assembled; then hold its exact SHA until all required
+GitHub Actions jobs are terminal.
