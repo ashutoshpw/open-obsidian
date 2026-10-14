@@ -3368,10 +3368,11 @@
       "status": "pending",
       "evidence_paths": [
         ".agents/tasks/2026-10-07/evidence/r2.8.115-attempt-1-30d0ad5.json",
-        ".agents/tasks/2026-10-07/evidence/r2.8.116-attempt-1-f1dc540.json"
+        ".agents/tasks/2026-10-07/evidence/r2.8.116-attempt-1-f1dc540.json",
+        ".agents/tasks/2026-10-07/evidence/r2.8.117-attempt-1-fd1d449.json"
       ],
       "tested_source_tree": null,
-      "blocker": "R2.8.116 attempt 1 (exact SHA f1dc5405fc720801d198f747499c1284dde1a034) is terminal and not accepted: all 20 jobs completed, 17 passed and three round-trip jobs failed. Linux/macOS reports show a generated renderer ReferenceError and 28 incomplete first-open/reopen scenario captures per OS; the Kanban scenario also has 14 unmapped row/card candidates per stage. Both platforms completed the 140-entry source-checkpoint matrix. Windows failed before C07.3 because the selected note-selector popup remained open during external-note preview close. See evidence/r2.8.116-attempt-1-f1dc540.json. Keep C07.3 pending until a later exact-SHA three-platform capture records the required first-open/reopen observations and source checkpoints; do not claim Rust parity from this attempt.",
+      "blocker": "R2.8.117 attempt 1 is terminal and not accepted on exact SHA fd1d449e9523b4272fe8f8de84413a976bf4c22a: all seven workflows and 20 jobs completed, with six workflows and 17 jobs passing and the three Obsidian round-trip jobs failing. Linux rejected all 14 first-open/reopen scenarios because the visible file name header was treated as an unmapped row; its 140-entry source-checkpoint matrix completed. macOS had the same header issue, unmapped formula-dependent Kanban cards/counts, and a typed-values renderer/reopen trust-screen timeout; only 135 of 140 source checkpoints were recorded. Windows stopped before C07.3 with a PowerShell ParserError. See .agents/tasks/2026-10-07/evidence/r2.8.117-attempt-1-fd1d449.json. Keep C07.3 pending until a later exact-SHA three-platform capture meets the count-to-unique-visible-path and exact empty-observation criteria; do not claim Rust parity or a full-fixture membership oracle from reference UI results.",
       "gate_class": "implementation",
       "decision_id": "D03",
       "legacy_status": "implemented",
@@ -3387,7 +3388,7 @@
       "mapping_status": "reviewed",
       "runtime_override": "Pinned Obsidian 1.14.4 defines runtime behavior; its cross-platform release assets are fixed by .agents/tasks/2026-10-07/obsidian-reference-pin.json. Official Bases syntax documents ordered group visibility and null-group inclusion at https://obsidian.md/help/bases/syntax.",
       "migration_disposition": "retained",
-      "migration_acceptance": "Match pinned Obsidian groupOrder visibility, ordering, null inclusion, typed equality, duplicate declarations, labels, and empty groups. Characterize groupOrder without groupBy and malformed/unsupported fallback; surface unsupported cases visibly. Verify the shared formula-derived Kanban grouping and groupOrder fixture on first open and reopen. Coordinate numeric identity with C07.4, preserve source bytes, and use groupBy.direction only when groupOrder is absent. The reference capture requires a complete 140-entry scenario/stage source-checkpoint matrix, rejects absolute-like and traversal path candidates, and fails a loaded Bases view with zero mapped fixture paths unless it records an explicit error/alert surface or error-specific notice/body text; informational YAML/JSON notices alone do not qualify. It records rendered membership as observed behavior and does not claim a separate oracle for notes omitted entirely from the UI. For any intentionally accepted empty-error reference outcome, require that the scenario declare expected_error_outcome=visible-error and an expected_error_text of at least 20 characters naming a groupBy/groupOrder failure with word-bounded failure wording; the captured phrase must appear in painted active-view error text or in a visible notice tied to the selected .base/scenario."
+      "migration_acceptance": "Match pinned Obsidian groupOrder visibility, ordering, null inclusion, typed equality, duplicate declarations, labels, and empty groups. Characterize groupOrder without groupBy and malformed/unsupported fallback; surface unsupported cases visibly. Verify the shared formula-derived Kanban grouping and groupOrder fixture on first open and reopen. Coordinate numeric identity with C07.4, preserve source bytes, and use groupBy.direction only when groupOrder is absent. Treat C07.3 UI membership as observed pinned-app behavior; do not infer that every seed fixture note must appear because groupOrder can omit notes, and do not claim a full-fixture expected-member oracle or Rust parity from reference capture. For every loaded table or Kanban result, identify exactly one painted result count structurally associated with the selected active result container, re-query rows/cards after scrolling, and map every displayed result (including any visible .base results) to one unique fixture path. The count of unique mapped visible paths must equal the displayed count; duplicate, unmapped, ambiguous, or count-mismatched results fail closed. A zero-result outcome is accepted only as a pinned-app observation for exactly json-empty-group-order-list, yaml-empty-group-order-list, or yaml-binary-tag-value-candidate, with source guards proving the exact empty JSON/YAML groupOrder list or exact YAML !!binary SGVsbG8= candidate, the exact requested .base active in a loaded Bases table, one painted table shell, one painted and shell-associated 0-results count, and no groups, paths, unmapped rows, errors, or error-specific notices. The binary-tag candidate does not establish unsupported-entry semantics. Preserve the complete 140-entry scenario/stage source-checkpoint matrix and report pinned-app rewrites as reference behavior; Rust parsing and encoding must independently preserve exact .base and note bytes. Verify the reference capture on Linux, macOS, and Windows through exact-SHA GitHub CI."
     },
     {
       "id": "C07.4",
@@ -10282,12 +10283,12 @@
       "source": {
         "path": ".agents/tasks/2026-10-07/goal.md",
         "heading": "Mandatory execution workflow: GitHub CI only",
-        "clause": "Use small phase commits, push to origin/main when CI evidence is needed and after each milestone, and record exact-SHA results."
+        "clause": "Define named, reviewable milestones; keep related minor changes local and make one origin/main push only after each milestone implementation and CI-ready acceptance package are complete. Mark it achieved only after all required jobs pass for that exact SHA, and hold the remote tip steady while its CI batch is running."
       },
       "checkpoint": "R0",
       "owner": "xtask",
       "mandatory": true,
-      "acceptance_criteria": "The branch history and state evidence link each milestone commit and completed required CI.",
+      "acceptance_criteria": "Related minor changes accumulate locally; each named milestone has one reviewed CI submission after implementation completion, with exact-SHA run and artifact evidence. Do not submit another milestone while any required workflow for the current SHA is pending. Accept a milestone only after every required workflow/job passes and results are reconciled for its exact SHA.",
       "fixture_ids": [
         "fixture:mig-002"
       ],
@@ -10321,7 +10322,7 @@
       "rust_owner": "xtask",
       "mapping_status": "reviewed",
       "migration_disposition": "retained",
-      "migration_acceptance": "The branch history and state evidence link each milestone commit and completed required CI.",
+      "migration_acceptance": "Each named milestone has one reviewed origin/main submission after implementation completion; exact-SHA CI evidence is reconciled, no minor-change pushes are used for incremental feedback, and the next batch waits until the current required workflows are terminal. Mark the milestone achieved only after all required jobs pass.",
       "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence."
     },
     {
@@ -11025,7 +11026,7 @@
     "post_r0_2_additions": [
       "MIG-016: maintain current, accurate documentation throughout migration and audit it at cutover."
     ],
-    "goal_sha256": "b21090ed02e77dc0bc25f228b394403328adfc9fed81d0bf74b25d23eafff31b",
+    "goal_sha256": "91a6fe3d8a1d83843449b516cfff24effa223b648917542918d9f1a425f4cf9e",
     "policy": "Every inherited requirement was reviewed by ID and assigned a Rust owner, migration phase, acceptance criterion and retained/superseded/external disposition. Historical status/evidence remain preserved separately. Rust acceptance remains pending unless current exact-SHA migration evidence is attached; external items remain external_pending."
   }
 }

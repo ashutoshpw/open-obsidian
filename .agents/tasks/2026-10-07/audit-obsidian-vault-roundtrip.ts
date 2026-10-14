@@ -1,5 +1,5 @@
 import {createHash} from "node:crypto";
-import {execFileSync} from "node:child_process";
+import {execFileSync, spawnSync} from "node:child_process";
 import {lstat, mkdir, readFile, readdir, readlink, realpath, rename, rm, unlink, writeFile} from "node:fs/promises";
 import {createWriteStream} from "node:fs";
 import {basename, dirname, isAbsolute, join, relative, resolve, sep} from "node:path";
@@ -158,7 +158,90 @@ type GroupOrderGroupObservation = {
   heading_text: string;
   heading_class_name: string;
   heading_bounds: {top: number; left: number};
+  heading_visibility_sample: GroupOrderScrollEvidence;
   member_paths: string[];
+};
+
+type GroupOrderScrollPosition = {
+  class_name: string;
+  scroll_top: number;
+  scroll_left: number;
+  scroll_height: number;
+  client_height: number;
+  scroll_width: number;
+  client_width: number;
+};
+
+type GroupOrderScrollEvidence = {
+  visibility_sample_sequence: number;
+  visibility_sample_bounds: {top: number; left: number; width: number; height: number};
+  scroll_positions: GroupOrderScrollPosition[];
+};
+
+type GroupOrderResultCountEvidence = {
+  text: string;
+  tag: string;
+  class_name: string;
+  bounds: {top: number; left: number; width: number; height: number};
+  scope: "selected-table-shell" | "active-kanban-container";
+  selected_result_root: {tag: string; class_name: string; bounds: {top: number; left: number; width: number; height: number}};
+  nearest_table_shell: {tag: string; class_name: string} | null;
+  shared_container: {tag: string; class_name: string} | null;
+};
+
+type GroupOrderViewportPreparation = {
+  left_sidebar_collapsed: boolean;
+  requested_width: number;
+  requested_height: number;
+  actual_width: number;
+  actual_height: number;
+  actual_outer_width: number;
+  actual_outer_height: number;
+};
+
+type GroupOrderUnmappedPathCandidate = {
+  candidate: string;
+  text: string;
+  class_name: string;
+  source_scope: string;
+  top: number;
+  left: number;
+  visibility_sample_sequence: number;
+  visibility_sample_bounds: GroupOrderScrollEvidence["visibility_sample_bounds"];
+  scroll_positions: GroupOrderScrollPosition[];
+};
+
+type GroupOrderUnmappedRowCandidate = {
+  text: string;
+  class_name: string;
+  tag: string;
+  top: number;
+  left: number;
+  visibility_sample_sequence: number;
+  visibility_sample_bounds: GroupOrderScrollEvidence["visibility_sample_bounds"];
+  scroll_positions: GroupOrderScrollPosition[];
+};
+
+type GroupOrderFreshSweepOffset = {
+  container_class: string;
+  axis: "current" | "vertical" | "horizontal";
+  requested_offset: number | null;
+  scroll_positions: GroupOrderScrollPosition[];
+  path_samples: number;
+  unique_path_count: number;
+  unique_paths: string[];
+  heading_samples: number;
+  unmapped_path_samples: number;
+  unmapped_row_samples: number;
+  ordered_paths: string[];
+  ordered_headings: string[];
+  result_group_assignments: Array<{
+    path: string;
+    group_key: string | null;
+    column_ordinal: number | null;
+    local_dom_ordinal: number;
+  }>;
+  unmapped_rows: GroupOrderUnmappedRowCandidate[];
 };
 
 type GroupOrderVisibleState = {
@@ -168,6 +251,51 @@ type GroupOrderVisibleState = {
   active_view_type: string | null;
   title: string;
   body: string;
+  result_count: number | null;
+  result_count_texts: string[];
+  result_count_evidence: GroupOrderResultCountEvidence[];
+  zero_result_outcome_classification: "empty-group-order-list" | "yaml-binary-candidate-observation" | null;
+  viewport: {width: number; height: number; available_width: number; available_height: number};
+  visibility_sampling: {
+    scroll_actions: number;
+    path_candidates: number;
+    painted_path_candidates: number;
+    group_markers: number;
+    painted_group_markers: number;
+    data_rows: number;
+    painted_data_rows: number;
+    fresh_sweep_positions: number;
+    fresh_sweep_coverage_complete: boolean;
+    fresh_sweep_path_samples: number;
+    fresh_sweep_unique_paths: string[];
+    fresh_sweep_ordered_paths: string[];
+    fresh_sweep_result_membership: Array<{
+      path: string;
+      result_order_ordinal: number;
+      group_keys: string[];
+      column_ordinal: number | null;
+      observation_count: number;
+    }>;
+    fresh_sweep_result_count_matches: boolean | null;
+    fresh_sweep_heading_samples: number;
+    fresh_sweep_unique_headings: string[];
+    fresh_sweep_ordered_headings: string[];
+    fresh_sweep_heading_identity_ambiguous: boolean;
+    fresh_sweep_heading_collision_base_count: number;
+    fresh_sweep_heading_identity_collisions: Array<Record<string, unknown>>;
+    fresh_sweep_unmapped_path_samples: number;
+    fresh_sweep_unmapped_row_samples: number;
+    fresh_sweep_unmapped_rows: GroupOrderUnmappedRowCandidate[];
+    fresh_sweep_unmapped_candidates: GroupOrderUnmappedPathCandidate[];
+    fresh_sweep_unowned_result_samples: number;
+    fresh_sweep_duplicate_path_samples: number;
+    fresh_sweep_ordering_ambiguous: boolean;
+    fresh_sweep_group_ownership_ambiguous: boolean;
+    fresh_sweep_painted_kanban_column_ordinals: number[];
+    fresh_sweep_scroll_offsets: GroupOrderFreshSweepOffset[];
+    node_identity_change_count: number;
+    node_identity_change_examples: Array<{kind: string; before: string; after: string; class_name: string}>;
+  };
   groups: GroupOrderGroupObservation[];
   ungrouped_visible_file_paths: string[];
   unassigned_visible_file_paths: string[];
@@ -178,22 +306,17 @@ type GroupOrderVisibleState = {
     source_scope: string;
     top: number;
     left: number;
+    visibility_sample_sequence: number;
+    visibility_sample_bounds: GroupOrderScrollEvidence["visibility_sample_bounds"];
+    scroll_positions: GroupOrderScrollPosition[];
+    result_order_ordinal: number;
+    group_heading: string | null;
+    group_keys: string[];
+    column_ordinal: number | null;
+    fresh_sweep_observation_count: number;
   }>;
-  unmapped_visible_path_candidates: Array<{
-    candidate: string;
-    text: string;
-    class_name: string;
-    source_scope: string;
-    top: number;
-    left: number;
-  }>;
-  unmapped_visible_row_candidates: Array<{
-    text: string;
-    class_name: string;
-    tag: string;
-    top: number;
-    left: number;
-  }>;
+  unmapped_visible_path_candidates: GroupOrderUnmappedPathCandidate[];
+  unmapped_visible_row_candidates: GroupOrderUnmappedRowCandidate[];
   visible_group_marker_count: number;
   unmapped_group_marker_count: number;
   occluded_kanban_dom_candidates: Array<{
@@ -217,11 +340,19 @@ type GroupOrderScenarioObservation = GroupOrderVisibleState & {
   ordered_group_headings: string[];
   error_surface_classification: "loaded-bases-view" | "loaded-bases-view-with-visible-error" | "non-bases-view-with-visible-error" | "non-bases-view-without-visible-error";
   state_settled: boolean;
+  viewport_preparation: GroupOrderViewportPreparation | null;
   state_samples: Array<{
     active_file_path: string | null;
     active_view_type: string | null;
     selection_succeeded: boolean;
     body: string;
+    result_count: number | null;
+    result_count_texts: string[];
+    result_count_evidence: GroupOrderResultCountEvidence[];
+    zero_result_outcome_classification: GroupOrderVisibleState["zero_result_outcome_classification"];
+    viewport: {width: number; height: number; available_width: number; available_height: number};
+    visibility_sampling: GroupOrderVisibleState["visibility_sampling"];
+    viewport_preparation: GroupOrderViewportPreparation | null;
     groups: GroupOrderGroupObservation[];
     ungrouped_visible_file_paths: string[];
     unassigned_visible_file_paths: string[];
@@ -252,6 +383,8 @@ const basesVaultRoot = join(workDirectory, basesVaultName);
 const groupOrderVaultName = "C07 Group Order Reference Fixture";
 const groupOrderVaultRoot = join(workDirectory, groupOrderVaultName);
 const groupOrderScenarioFixturePath = join(process.cwd(), "fixtures", "c07-group-order-reference.json");
+// Intentional fixture changes must update this reviewed digest and the exact scenario ID inventory below.
+const groupOrderScenarioFixtureSha256 = "1ecc2863c78a115fa48d4d2c4eef1bba90c13a494404ab2a10c862da97c518de";
 const obsidianBinary = resolve(requiredEnv("OBSIDIAN_BINARY"));
 const openObsidianBinary = resolve(requiredEnv("OPENOBSIDIAN_BINARY"));
 const obsidianVersion = requiredEnv("OBSIDIAN_RELEASE_VERSION");
@@ -313,7 +446,7 @@ const report: Record<string, unknown> = {
     milestone: "R2.8.106-C07.2-reference-rewrite-and-reopen-capture",
     report_path: "bases_group_direction_reference",
   }, {
-    milestone: "R2.8.115-C07.3-group-order-reference-characterization",
+    milestone: "R2.8.118-C07.3-visible-result-identity-and-empty-result-repair",
     report_path: "bases_group_order_reference",
   }],
   status: "pending",
@@ -365,13 +498,14 @@ const report: Record<string, unknown> = {
   },
   bases_group_order_reference: {
     status: "pending",
-    milestone: "R2.8.115-C07.3-group-order-reference-characterization",
+    milestone: "R2.8.118-C07.3-visible-result-identity-and-empty-result-repair",
+    source_sha: sourceSha,
     capture_scope: "Record actual pinned Obsidian 1.14.4 groupOrder behavior for JSON-compatible and native-YAML .base inputs, typed values, malformed configurations, JSON non-finite-number and YAML binary-tag candidates, and formula-derived Kanban grouping. Capture is reference characterization only and does not establish Rust parity.",
     application: "Pinned Obsidian Desktop 1.14.4",
     fixture_id: "fixture:c07-group-order-reference",
     fixture_source_path: "fixtures/c07-group-order-reference.json",
     strict_source_preservation_expectation: "Record the original and every observed post-open/reopen .base and note byte count, SHA-256, and exact raw bytes. Reference-app rewrites are observations and must not abort the capture; reseed from the recorded source after first-open shutdown so the reopen capture starts from the same input, and report that harness write. This is separate from the strict Rust parser/encoder requirement to preserve source bytes exactly.",
-    observation_expectation: "Capture the exact selected .base, active view type, visible error/notices and whether the state is a loaded Bases view or a non-Bases error view, ordered group headings as an array with a stable ordinal, every rendered member path/order, all state samples and screenshots. A loaded view with zero mapped fixture paths is incomplete unless an explicit visible error is captured, including for empty groupOrder lists. Record actual fallback behavior without assigning an undocumented meaning to malformed input. Fail closed when a rendered group or row cannot be mapped unambiguously.",
+    observation_expectation: "Capture the exact selected .base, active view type, visible errors/notices and whether the state is a loaded Bases view or a non-Bases error view; record ordered group headings with stable ordinals, each heading's painted-text and scroll-position sample, every rendered result path/order (including .base results), and all state samples/screenshots. After settled scrolling, freshly query painted rows/cards and headings at every bounded scroll position so virtualized or recycled nodes are re-identified; record scroll offsets, DOM/column order constraints, identity changes, unique path-to-group assignments, and unmapped candidates. Require complete sweep coverage, stable unambiguous order and ownership, and unique mapped paths equal to the structurally scoped visible result count. Accept zero results only for json-empty-group-order-list, yaml-empty-group-order-list, and yaml-binary-tag-value-candidate when the exact Bases view is active, one visible table shell and a painted 0-results count are present, and no group, path, unmapped row, error or error notice appears. The binary-tag case remains an outcome observation and does not prove unsupported behavior. Record actual fallback behavior without assigning an undocumented meaning to malformed input. Fail closed when a rendered group or result cannot be mapped unambiguously.",
     unsupported_entry_scope: "Probe valid-input JSON non-finite-number and YAML binary-tag candidates without assuming either is unsupported. If neither produces visible app-level rejection after the Bases view loads, record app-level unsupported groupOrder entry behavior as unresolved and keep Rust C07.3 parity blocked.",
     rust_parity_claimed: false,
     scenarios: [],
@@ -541,6 +675,17 @@ function delay(milliseconds: number): Promise<void> {
 async function saveReport(): Promise<void> {
   await mkdir(reportDirectory, {recursive: true});
   await writeFile(join(reportDirectory, "obsidian-vault-roundtrip-report.json"), `${JSON.stringify(report, null, 2)}\n`);
+}
+
+async function saveReportAfterStageFailure(stage: string, evidence: Record<string, unknown>, originalError: unknown): Promise<void> {
+  try {
+    await saveReport();
+  } catch (saveError) {
+    const originalMessage = originalError instanceof Error ? originalError.message : String(originalError);
+    const saveMessage = saveError instanceof Error ? saveError.message : String(saveError);
+    evidence[`${stage}_evidence_save_error`] = saveMessage;
+    console.error(`Could not persist report after ${stage} failed (${originalMessage}): ${saveMessage}`);
+  }
 }
 
 async function waitFor<T>(label: string, read: () => Promise<T>, predicate: (value: T) => boolean, timeoutMs = 120_000): Promise<T> {
@@ -929,18 +1074,72 @@ async function clickMacOSNativePickerOpenButton(child: ChildProcess): Promise<st
   const boundsScript = `on run argv
     tell application "System Events"
       set targetProcess to first process whose unix id is (item 1 of argv as integer)
-      set pickerWindow to first window of targetProcess whose name is "Open"
-      set pickerPosition to position of pickerWindow
-      set pickerSize to size of pickerWindow
-      return (item 1 of pickerPosition as integer) & "," & (item 2 of pickerPosition as integer) & "," & (item 1 of pickerSize as integer) & "," & (item 2 of pickerSize as integer)
+      set matchingSheets to {}
+      repeat with candidateWindow in windows of targetProcess
+        try
+          repeat with candidateSheet in sheets of candidateWindow
+            try
+              if (name of candidateSheet as text) is "Open" then set end of matchingSheets to candidateSheet
+            end try
+          end repeat
+        end try
+      end repeat
+      if (count of matchingSheets) > 1 then error "Found multiple native Open sheets"
+      if (count of matchingSheets) is 1 then
+        set pickerElement to item 1 of matchingSheets
+      else
+        set matchingWindows to {}
+        repeat with candidateWindow in windows of targetProcess
+          try
+            if (name of candidateWindow as text) is "Open" then set end of matchingWindows to candidateWindow
+          end try
+        end repeat
+        if (count of matchingWindows) is not 1 then error "Expected one native Open window or sheet; found " & (count of matchingWindows)
+        set pickerElement to item 1 of matchingWindows
+      end if
+      set matchingButtons to {}
+      repeat with candidateElement in (entire contents of pickerElement)
+        try
+          if (role of candidateElement as text) is "AXButton" and (name of candidateElement as text) is "Open" then
+            set end of matchingButtons to candidateElement
+          end if
+        end try
+      end repeat
+      if (count of matchingButtons) is not 1 then error "Expected one native Open button in the picker; found " & (count of matchingButtons)
+      set openButton to item 1 of matchingButtons
+      if (enabled of openButton) is not true then error "The native Open button is disabled"
+      set buttonPosition to position of openButton
+      set buttonSize to size of openButton
+      return (item 1 of buttonPosition as integer) & "," & (item 2 of buttonPosition as integer) & "," & (item 1 of buttonSize as integer) & "," & (item 2 of buttonSize as integer)
     end tell
   end run`;
-  const bounds = execFileSync("osascript", ["-e", boundsScript, String(child.pid ?? -1)], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]}).trim();
+  let bounds: string;
+  try {
+    bounds = execFileSync("osascript", ["-e", boundsScript, String(child.pid ?? -1)], {encoding: "utf8", stdio: ["ignore", "pipe", "pipe"]}).trim();
+  } catch (error) {
+    const failure = error as NodeJS.ErrnoException & {stderr?: Buffer | string; stdout?: Buffer | string};
+    const output = [failure.stdout, failure.stderr].filter(Boolean).map(String).join("\n").trim();
+    let windows = "unavailable";
+    try {
+      windows = macOSApplicationWindowDescriptions(child);
+    } catch (windowError) {
+      windows = `window description failed: ${windowError instanceof Error ? windowError.message : String(windowError)}`;
+    }
+    throw new Error(`Could not locate one enabled native macOS Open button by accessibility bounds: ${output || failure.message}; windows=${windows}`);
+  }
   const coordinates = bounds.match(/-?\d+/g)?.map(Number) ?? [];
-  if (coordinates.length < 4) throw new Error(`Could not read the native macOS Open panel bounds: ${bounds}; windows=${macOSApplicationWindowDescriptions(child)}`);
-  const [windowX, windowY, windowWidth, windowHeight] = coordinates;
-  const clickX = windowX + windowWidth - 57;
-  const clickY = windowY + windowHeight - 32;
+  if (coordinates.length !== 4 || coordinates[2] <= 0 || coordinates[3] <= 0) {
+    let windows = "unavailable";
+    try {
+      windows = macOSApplicationWindowDescriptions(child);
+    } catch (windowError) {
+      windows = `window description failed: ${windowError instanceof Error ? windowError.message : String(windowError)}`;
+    }
+    throw new Error(`Could not read valid native macOS Open button bounds: ${bounds}; windows=${windows}`);
+  }
+  const [buttonX, buttonY, buttonWidth, buttonHeight] = coordinates;
+  const clickX = buttonX + buttonWidth / 2;
+  const clickY = buttonY + buttonHeight / 2;
   const swiftPath = join(workDirectory, "openobsidian-picker-click.swift");
   await writeFile(swiftPath, `import AppKit
 import CoreGraphics
@@ -961,7 +1160,7 @@ for type in [CGEventType.mouseMoved, .leftMouseDown, .leftMouseUp] {
 }
 `);
   execFileSync("swift", [swiftPath, String(clickX), String(clickY)], {stdio: "ignore"});
-  return `Clicked the native macOS Open button at (${clickX}, ${clickY}) using panel bounds ${bounds}.`;
+  return `Clicked the unique enabled native macOS Open button at (${clickX}, ${clickY}) using its accessibility bounds ${bounds}.`;
 }
 
 function activeWindowTitle(): string {
@@ -1024,12 +1223,17 @@ function macOSNativePickerVisibleInAccessibility(descriptions: string): boolean 
   return windows.length > 1;
 }
 
+function macOSNativeOpenPanelVisibleInAccessibility(descriptions: string): boolean {
+  return /(?:AXSheet|AXWindow|standard window|dialog):\s*Open(?:,|$)/i.test(descriptions);
+}
+
 type WindowsTopLevelWindow = {
   name: string;
   class_name: string;
   process_id: number;
   native_window_handle: number;
   is_offscreen: boolean;
+  read_error?: string;
 };
 
 function windowsTopLevelWindowInventory(): WindowsTopLevelWindow[] {
@@ -1059,14 +1263,48 @@ function windowsTopLevelWindowInventory(): WindowsTopLevelWindow[] {
             is_offscreen = $isOffscreen
           }
         }
-      } catch {}
+      } catch {
+        $windows += [PSCustomObject]@{
+          name = ""
+          class_name = "UIA_READ_ERROR"
+          process_id = 0
+          native_window_handle = 0
+          is_offscreen = $true
+          read_error = $_.Exception.Message
+        }
+      }
     }
     ConvertTo-Json -InputObject @($windows) -Depth 3 -Compress
   `;
   const output = execFileSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", script], {encoding: "utf8", stdio: ["ignore", "pipe", "pipe"]}).trim();
-  if (!output || output === "null") return [];
-  const value = JSON.parse(output) as WindowsTopLevelWindow | WindowsTopLevelWindow[];
-  return Array.isArray(value) ? value : [value];
+  if (!output || output === "null") throw new Error("Windows top-level UIA inventory returned no JSON window list");
+  let value: unknown;
+  try {
+    value = JSON.parse(output) as unknown;
+  } catch (error) {
+    const parseError = new Error(`Could not parse Windows top-level UIA inventory: ${error instanceof Error ? error.message : String(error)}`) as Error & {stdout: string};
+    parseError.stdout = output;
+    throw parseError;
+  }
+  if (!Array.isArray(value)) throw new Error(`Windows top-level UIA inventory must be a JSON array; received ${typeof value}`);
+  return value.map((entry, index) => {
+    if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
+      throw new Error(`Windows top-level UIA inventory entry ${index} is not an object`);
+    }
+    const candidate = entry as Record<string, unknown>;
+    const processId = candidate.process_id;
+    const nativeWindowHandle = candidate.native_window_handle;
+    if (typeof candidate.name !== "string"
+      || typeof candidate.class_name !== "string"
+      || typeof processId !== "number" || !Number.isInteger(processId) || processId < 0
+      || typeof nativeWindowHandle !== "number" || !Number.isSafeInteger(nativeWindowHandle) || nativeWindowHandle < 0
+      || typeof candidate.is_offscreen !== "boolean"
+      || (candidate.read_error !== undefined
+        && (typeof candidate.read_error !== "string" || candidate.read_error.length === 0))) {
+      throw new Error(`Windows top-level UIA inventory entry ${index} has invalid fields: ${JSON.stringify(candidate)}`);
+    }
+    return candidate as unknown as WindowsTopLevelWindow;
+  });
 }
 
 function windowsOpenVaultControlInventory(processId: number): unknown {
@@ -1777,17 +2015,39 @@ async function finishVaultDirectorySelection(
   const targetRoot = options.targetRoot ?? vaultRoot;
   const reporter = options.reporter ?? report.obsidian_authoring as Record<string, unknown>;
   const targetVaultName = basename(targetRoot);
-  const vaultTarget = await waitForPageTarget(
-    port,
-    (candidate) => typeof candidate.url === "string" && candidate.url.startsWith("app://obsidian.md/") && !candidate.url.includes("/starter.html"),
-    "Obsidian vault renderer after folder selection",
-  );
-  const pageTargets = await readPageTargets(port);
-  reporter.folder_picker = {
+  const priorPickerRecord = reporter.folder_picker && typeof reporter.folder_picker === "object"
+    ? reporter.folder_picker as Record<string, unknown>
+    : {};
+  const folderPickerRecord: Record<string, unknown> = {
+    ...priorPickerRecord,
     ...pickerEvidence,
-    page_targets_after_folder_selection: pageTargets.map(({id, title, url, type}) => ({id, title, url, type})),
-    vault_renderer_target: {id: vaultTarget.id ?? null, title: vaultTarget.title ?? "", url: vaultTarget.url ?? ""},
+    page_targets_after_folder_selection: [],
+    vault_renderer_target: null,
+    renderer_wait_status: "pending",
   };
+  reporter.folder_picker = folderPickerRecord;
+  let vaultTarget: CdpTarget;
+  try {
+    vaultTarget = await waitForPageTarget(
+      port,
+      (candidate) => typeof candidate.url === "string" && candidate.url.startsWith("app://obsidian.md/") && !candidate.url.includes("/starter.html"),
+      "Obsidian vault renderer after folder selection",
+    );
+  } catch (error) {
+    folderPickerRecord.renderer_wait_status = "failed";
+    folderPickerRecord.renderer_wait_error = error instanceof Error ? error.message : String(error);
+    try {
+      folderPickerRecord.page_targets_after_folder_selection = (await readPageTargets(port))
+        .map(({id, title, url, type}) => ({id, title, url, type}));
+    } catch (targetError) {
+      folderPickerRecord.page_target_read_error = targetError instanceof Error ? targetError.message : String(targetError);
+    }
+    throw error;
+  }
+  const pageTargets = await readPageTargets(port);
+  folderPickerRecord.page_targets_after_folder_selection = pageTargets.map(({id, title, url, type}) => ({id, title, url, type}));
+  folderPickerRecord.vault_renderer_target = {id: vaultTarget.id ?? null, title: vaultTarget.title ?? "", url: vaultTarget.url ?? ""};
+  folderPickerRecord.renderer_wait_status = "target-found";
   connection.close();
   connection = await connectTarget(vaultTarget);
 
@@ -1795,6 +2055,35 @@ async function finishVaultDirectorySelection(
   const body = await waitForRenderer(connection, "document.body?.innerText ?? ''", isVaultLoaded, `Obsidian to open the selected ${targetVaultName} folder`, 45_000);
   reporter.selected_vault_text = body.slice(0, 2_000);
   reporter.selected_vault_in_ui = true;
+  const selectedVaultPath = await connection.evaluateJson<string | null>(`(() => {
+    const path = window.app?.vault?.adapter?.basePath;
+    return typeof path === 'string' && path.length > 0 ? path : null;
+  })()`, "read selected vault's adapter base path");
+  const expectedCanonicalVaultPath = await realpath(targetRoot);
+  let observedCanonicalVaultPath: string | null = null;
+  let observedVaultPathError: string | undefined;
+  if (selectedVaultPath) {
+    try {
+      observedCanonicalVaultPath = await realpath(selectedVaultPath);
+    } catch (error) {
+      observedVaultPathError = error instanceof Error ? error.message : String(error);
+    }
+  }
+  const comparableVaultPath = (path: string) => process.platform === "win32" ? path.toLowerCase() : path;
+  const exactVaultPathMatch = observedCanonicalVaultPath !== null
+    && comparableVaultPath(expectedCanonicalVaultPath) === comparableVaultPath(observedCanonicalVaultPath);
+  reporter.selected_vault_path = {
+    requested_path: targetRoot,
+    expected_canonical_path: expectedCanonicalVaultPath,
+    adapter_base_path: selectedVaultPath,
+    observed_canonical_path: observedCanonicalVaultPath,
+    canonicalization_error: observedVaultPathError ?? null,
+    exact_match: exactVaultPathMatch,
+  };
+  if (!exactVaultPathMatch) {
+    await saveReport();
+    throw new Error(`Obsidian opened a vault path that did not exactly match the selected fixture: expected=${expectedCanonicalVaultPath}; adapter=${selectedVaultPath ?? "unavailable"}; observed=${observedCanonicalVaultPath ?? "unavailable"}`);
+  }
   return connection;
 }
 
@@ -1852,128 +2141,578 @@ async function chooseVaultDirectoryLinux(connection: DevToolsConnection, port: n
   }, options);
 }
 
-async function chooseVaultDirectoryMacOS(connection: DevToolsConnection, port: number, options: VaultDirectoryOptions = {}): Promise<DevToolsConnection> {
+async function chooseVaultDirectoryMacOS(connection: DevToolsConnection, port: number, child: ChildProcess, options: VaultDirectoryOptions = {}): Promise<DevToolsConnection> {
   const targetRoot = options.targetRoot ?? vaultRoot;
   const reporter = options.reporter ?? report.obsidian_authoring as Record<string, unknown>;
   const screenshotPrefix = options.screenshotPrefix ?? "";
-  await clickFirstRunOpenButton(connection, reporter);
-  await delay(1_000);
-  const pickerScreenshots = [await captureDesktopScreenshot(vaultPickerScreenshotName(screenshotPrefix, "obsidian-folder-picker-initial.png"))];
+  const pickerScreenshots: string[] = [];
+  const folderPickerRecord: Record<string, unknown> = {
+    interaction: "macOS Open panel: bring Obsidian forward, enter the fixture path through Go to Folder (Command-Shift-G), then click the native Open button",
+    picker_screenshots: [],
+    picker_open_status: "not-started",
+    initial_picker_screenshot_status: "not-started",
+    path_entry_status: "not-started",
+    picker_visibility_wait_status: "pending",
+    open_button_click_status: "not-started",
+    picker_closed: false,
+  };
+  reporter.folder_picker = folderPickerRecord;
+  await saveReport();
+  try {
+    await clickFirstRunOpenButton(connection, reporter);
+    folderPickerRecord.picker_open_status = "clicked-first-run-open";
+    await delay(1_000);
+  } catch (error) {
+    folderPickerRecord.picker_open_status = "failed";
+    folderPickerRecord.picker_open_error = error instanceof Error ? error.message : String(error);
+    try {
+      folderPickerRecord.picker_windows_after_open_failure = macOSApplicationWindowDescriptions(child);
+    } catch (windowError) {
+      folderPickerRecord.picker_open_window_read_error = windowError instanceof Error ? windowError.message : String(windowError);
+    }
+    await saveReportAfterStageFailure("picker_open", folderPickerRecord, error);
+    throw error;
+  }
+  await saveReport();
+  try {
+    pickerScreenshots.push(await captureDesktopScreenshot(vaultPickerScreenshotName(screenshotPrefix, "obsidian-folder-picker-initial.png")));
+    folderPickerRecord.initial_picker_screenshot_status = "captured";
+    folderPickerRecord.picker_screenshots = pickerScreenshots.map((path) => relative(reportDirectory, path));
+  } catch (error) {
+    folderPickerRecord.initial_picker_screenshot_status = "failed";
+    folderPickerRecord.initial_picker_screenshot_error = error instanceof Error ? error.message : String(error);
+    await saveReportAfterStageFailure("initial_picker_screenshot", folderPickerRecord, error);
+    throw error;
+  }
+  await saveReport();
   const script = `on run argv
     tell application "System Events"
+      set targetProcess to first process whose unix id is (item 1 of argv as integer)
+      set frontmost of targetProcess to true
       keystroke "g" using {command down, shift down}
       delay 0.5
-      keystroke (item 1 of argv)
+      keystroke (item 2 of argv)
       delay 0.5
       key code 36
       delay 1
       key code 36
-    end tell
+  end tell
   end run`;
-  execFileSync("osascript", ["-e", script, targetRoot], {stdio: "ignore"});
-  await delay(1_000);
-  pickerScreenshots.push(await captureDesktopScreenshot(vaultPickerScreenshotName(screenshotPrefix, "obsidian-folder-picker-after-path.png")));
+  let pickerVisible = false;
+  const pickerInventoryReadErrorsBeforePathEntry: string[] = [];
+  try {
+    const pickerWindowsBeforePath = await waitFor(
+      "exact macOS native Open panel to become accessibility-visible before path entry",
+      async () => {
+        try {
+          return macOSApplicationWindowDescriptions(child);
+        } catch (error) {
+          pickerInventoryReadErrorsBeforePathEntry.push(error instanceof Error ? error.message : String(error));
+          return "";
+        }
+      },
+      (descriptions) => descriptions.trim().length > 0
+        && !/accessibility error:/i.test(descriptions)
+        && macOSNativeOpenPanelVisibleInAccessibility(descriptions),
+      15_000,
+    );
+    pickerVisible = true;
+    folderPickerRecord.picker_visibility_wait_status = "confirmed";
+    folderPickerRecord.picker_windows_before_path_entry = pickerWindowsBeforePath;
+    folderPickerRecord.picker_window_read_errors_before_path_entry = pickerInventoryReadErrorsBeforePathEntry;
+    folderPickerRecord.path_entry_status = "pending";
+    const pathEntryStdout = execFileSync("osascript", ["-e", script, String(child.pid ?? -1), targetRoot], {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "pipe"],
+    }).trim();
+    folderPickerRecord.path_entry_script_stdout = pathEntryStdout;
+    folderPickerRecord.path_entry_status = "completed";
+    await delay(1_000);
+    pickerScreenshots.push(await captureDesktopScreenshot(vaultPickerScreenshotName(screenshotPrefix, "obsidian-folder-picker-after-path.png")));
+    folderPickerRecord.path_entry_screenshot_status = "captured";
+    folderPickerRecord.picker_screenshots = pickerScreenshots.map((path) => relative(reportDirectory, path));
+  } catch (error) {
+    const errorText = error instanceof Error ? error.message : String(error);
+    const failure = error as NodeJS.ErrnoException & {stderr?: Buffer | string; stdout?: Buffer | string};
+    folderPickerRecord.picker_window_read_errors_before_path_entry = pickerInventoryReadErrorsBeforePathEntry;
+    if (pickerVisible) {
+      if (folderPickerRecord.path_entry_status === "completed") {
+        folderPickerRecord.path_entry_screenshot_status = "failed";
+        folderPickerRecord.path_entry_screenshot_error = errorText;
+      } else {
+        folderPickerRecord.path_entry_status = "failed";
+        folderPickerRecord.path_entry_error = errorText;
+        folderPickerRecord.path_entry_script_stdout = String(failure.stdout ?? "").trim();
+        folderPickerRecord.path_entry_script_stderr = String(failure.stderr ?? "").trim();
+      }
+    } else {
+      folderPickerRecord.picker_visibility_wait_status = "failed";
+      folderPickerRecord.picker_visibility_wait_error = errorText;
+    }
+    try {
+      folderPickerRecord.picker_windows_after_path_entry_failure = macOSApplicationWindowDescriptions(child);
+    } catch (windowError) {
+      folderPickerRecord.path_entry_window_read_error = windowError instanceof Error ? windowError.message : String(windowError);
+    }
+    await saveReportAfterStageFailure("path_entry", folderPickerRecord, error);
+    throw error;
+  }
+  await saveReport();
+  let openButtonClick: string;
+  try {
+    openButtonClick = await clickMacOSNativePickerOpenButton(child);
+  } catch (error) {
+    folderPickerRecord.open_button_click_status = "failed";
+    folderPickerRecord.open_button_click_error = error instanceof Error ? error.message : String(error);
+    try {
+      folderPickerRecord.picker_windows_after_open_attempt = macOSApplicationWindowDescriptions(child);
+    } catch (windowError) {
+      folderPickerRecord.picker_window_read_error = windowError instanceof Error ? windowError.message : String(windowError);
+    }
+    await saveReportAfterStageFailure("open_button_click", folderPickerRecord, error);
+    throw error;
+  }
+  folderPickerRecord.open_button_click = openButtonClick;
+  folderPickerRecord.open_button_click_status = "clicked";
+  await saveReport();
+  await delay(500);
+  try {
+    pickerScreenshots.push(await captureDesktopScreenshot(vaultPickerScreenshotName(screenshotPrefix, "obsidian-folder-picker-after-open-click.png")));
+    folderPickerRecord.picker_screenshots = pickerScreenshots.map((path) => relative(reportDirectory, path));
+    folderPickerRecord.after_open_screenshot_status = "captured";
+  } catch (error) {
+    folderPickerRecord.after_open_screenshot_status = "failed";
+    folderPickerRecord.after_open_screenshot_error = error instanceof Error ? error.message : String(error);
+    await saveReportAfterStageFailure("after_open_screenshot", folderPickerRecord, error);
+    throw error;
+  }
+  await saveReport();
+  let pickerWindowsAfterClick: string;
+  const pickerInventoryReadErrorsAfterClick: string[] = [];
+  try {
+    pickerWindowsAfterClick = await waitFor(
+      "macOS native folder picker to close after clicking Open",
+      async () => {
+        try {
+          return macOSApplicationWindowDescriptions(child);
+        } catch (error) {
+          pickerInventoryReadErrorsAfterClick.push(error instanceof Error ? error.message : String(error));
+          return "";
+        }
+      },
+      (descriptions) => descriptions.trim().length > 0
+        && !/accessibility error:/i.test(descriptions)
+        && !macOSNativeOpenPanelVisibleInAccessibility(descriptions),
+      15_000,
+    );
+    folderPickerRecord.picker_window_read_errors_after_click = pickerInventoryReadErrorsAfterClick;
+  } catch (error) {
+    folderPickerRecord.open_button_click_status = "clicked-picker-close-timeout";
+    folderPickerRecord.picker_close_error = error instanceof Error ? error.message : String(error);
+    folderPickerRecord.picker_window_read_errors_after_click = pickerInventoryReadErrorsAfterClick;
+    try {
+      folderPickerRecord.picker_windows_after_open_click = macOSApplicationWindowDescriptions(child);
+    } catch (windowError) {
+      folderPickerRecord.picker_close_window_read_error = windowError instanceof Error ? windowError.message : String(windowError);
+    }
+    await saveReportAfterStageFailure("picker_close", folderPickerRecord, error);
+    throw error;
+  }
+  folderPickerRecord.picker_windows_after_open_click = pickerWindowsAfterClick;
+  folderPickerRecord.picker_closed = true;
+  folderPickerRecord.open_button_click_status = "confirmed-picker-closed";
+  reporter.folder_picker_closed = true;
+  await saveReport();
   return await finishVaultDirectorySelection(connection, port, {
-    interaction: "macOS Open panel: Go to Folder (Command-Shift-G), enter the fixture path, and confirm folder selection",
+    ...folderPickerRecord,
     picker_screenshots: pickerScreenshots.map((path) => relative(reportDirectory, path)),
   }, options);
 }
 
-async function chooseVaultDirectoryWindows(connection: DevToolsConnection, port: number, options: VaultDirectoryOptions = {}): Promise<DevToolsConnection> {
+async function chooseVaultDirectoryWindows(
+  connection: DevToolsConnection,
+  port: number,
+  child: ChildProcess,
+  options: VaultDirectoryOptions = {},
+): Promise<DevToolsConnection> {
   const targetRoot = options.targetRoot ?? vaultRoot;
   const reporter = options.reporter ?? report.obsidian_authoring as Record<string, unknown>;
   const screenshotPrefix = options.screenshotPrefix ?? "";
-  await clickFirstRunOpenButton(connection, reporter);
-  await delay(1_000);
-  const pickerScreenshots = [await captureDesktopScreenshot(vaultPickerScreenshotName(screenshotPrefix, "obsidian-folder-picker-initial.png"))];
-  const script = `
-    $ErrorActionPreference = "Stop"
-    $shell = New-Object -ComObject WScript.Shell
-    Start-Sleep -Milliseconds 500
-    $shell.SendKeys("^l")
-    Start-Sleep -Milliseconds 300
-    $shell.SendKeys($env:OBSIDIAN_PICKER_VAULT_PATH)
-    Start-Sleep -Milliseconds 300
-    $shell.SendKeys("{ENTER}")
-  `;
-  execFileSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", script], {
-    env: {...process.env, OBSIDIAN_PICKER_VAULT_PATH: targetRoot},
-    stdio: "ignore",
-  });
-  await delay(750);
-  pickerScreenshots.push(await captureDesktopScreenshot(vaultPickerScreenshotName(screenshotPrefix, "obsidian-folder-picker-after-path.png")));
-  const selectionScript = `
+  const processId = child.pid;
+  const pickerScreenshots: string[] = [];
+  const folderPickerRecord: Record<string, unknown> = {
+    interaction: "Windows native folder picker: require the exact Obsidian-owned dialog, enter the fixture path after foreground confirmation, and invoke its exact Select Folder button",
+    requested_path: targetRoot,
+    application_process_id: processId ?? null,
+    picker_screenshots: [],
+    first_run_open_status: "not-started",
+    picker_inventory_status: "not-started",
+    picker_visibility_status: "not-started",
+    path_entry_status: "not-started",
+    select_folder_status: "not-started",
+    picker_close_status: "not-started",
+    picker_closed: false,
+  };
+  reporter.folder_picker = folderPickerRecord;
+  await saveReport();
+
+  const recordProcessErrorOutput = (stage: string, error: unknown): void => {
+    if (!error || typeof error !== "object") return;
+    const processError = error as {stdout?: string | Buffer; stderr?: string | Buffer};
+    if (processError.stdout !== undefined) folderPickerRecord[`${stage}_stdout`] = String(processError.stdout).trim();
+    if (processError.stderr !== undefined) folderPickerRecord[`${stage}_stderr`] = String(processError.stderr).trim();
+  };
+  const saveFailure = async (stage: string, error: unknown): Promise<never> => {
+    const message = error instanceof Error ? error.message : String(error);
+    recordProcessErrorOutput(stage, error);
+    folderPickerRecord[`${stage}_status`] = "failed";
+    folderPickerRecord[`${stage}_error`] = message;
+    await saveReportAfterStageFailure(stage, folderPickerRecord, error);
+    throw error;
+  };
+  const capturePickerScreenshot = async (stage: string, filename: string): Promise<void> => {
+    folderPickerRecord[`${stage}_status`] = "pending";
+    await saveReport();
+    let path: string;
+    try {
+      path = await captureDesktopScreenshot(vaultPickerScreenshotName(screenshotPrefix, filename));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      folderPickerRecord[`${stage}_status`] = "failed";
+      folderPickerRecord[`${stage}_error`] = message;
+      await saveReportAfterStageFailure(stage, folderPickerRecord, error);
+      throw error;
+    }
+    pickerScreenshots.push(path);
+    folderPickerRecord[`${stage}_status`] = "captured";
+    folderPickerRecord.picker_screenshots = pickerScreenshots.map((screenshotPath) => relative(reportDirectory, screenshotPath));
+    await saveReport();
+  };
+  const captureDiagnosticScreenshot = async (stage: string, originalError: unknown): Promise<void> => {
+    try {
+      const filename = vaultPickerScreenshotName(screenshotPrefix, `obsidian-folder-picker-${stage}-failure.png`);
+      const path = await captureDesktopScreenshot(filename);
+      pickerScreenshots.push(path);
+      folderPickerRecord[`${stage}_failure_screenshot_status`] = "captured";
+      folderPickerRecord.picker_screenshots = pickerScreenshots.map((screenshotPath) => relative(reportDirectory, screenshotPath));
+    } catch (error) {
+      folderPickerRecord[`${stage}_failure_screenshot_status`] = "failed";
+      folderPickerRecord[`${stage}_failure_screenshot_error`] = error instanceof Error ? error.message : String(error);
+    }
+    await saveReportAfterStageFailure(stage, folderPickerRecord, originalError);
+  };
+  const runPickerPowerShell = async (stage: string, script: string): Promise<string> => {
+    folderPickerRecord[`${stage}_status`] = "pending";
+    await saveReport();
+    const spawnPickerPowerShell = () => spawnSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-STA", "-Command", script], {
+      encoding: "utf8",
+      env: {
+        ...process.env,
+        OPENOBSIDIAN_WINDOW_PROCESS_ID: String(processId),
+        OPENOBSIDIAN_PICKER_WINDOW_HANDLE: String(folderPickerRecord.picker_window_handle),
+        OBSIDIAN_PICKER_VAULT_PATH: targetRoot,
+      },
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+    let result: ReturnType<typeof spawnPickerPowerShell>;
+    try {
+      result = spawnPickerPowerShell();
+    } catch (error) {
+      recordProcessErrorOutput(stage, error);
+      folderPickerRecord[`${stage}_status`] = "failed";
+      folderPickerRecord[`${stage}_error`] = error instanceof Error ? error.message : String(error);
+      await saveReportAfterStageFailure(stage, folderPickerRecord, error);
+      await captureDiagnosticScreenshot(stage, error);
+      throw error;
+    }
+    const stdout = String(result.stdout ?? "").trim();
+    const stderr = String(result.stderr ?? "").trim();
+    folderPickerRecord[`${stage}_stdout`] = stdout;
+    folderPickerRecord[`${stage}_stderr`] = stderr;
+    folderPickerRecord[`${stage}_exit_status`] = result.status;
+    folderPickerRecord[`${stage}_signal`] = result.signal;
+    if (result.error || result.status !== 0) {
+      const detail = [stderr, stdout, result.error?.message].filter(Boolean).join("\n") || `PowerShell exited with status ${result.status}`;
+      const error = result.error ?? new Error(`Windows ${stage} failed: ${detail}`);
+      folderPickerRecord[`${stage}_status`] = "failed";
+      folderPickerRecord[`${stage}_error`] = error.message;
+      await saveReportAfterStageFailure(stage, folderPickerRecord, error);
+      await captureDiagnosticScreenshot(stage, error);
+      throw error;
+    }
+    folderPickerRecord[`${stage}_status`] = "completed";
+    await saveReport();
+    return stdout;
+  };
+
+  if (!Number.isInteger(processId) || !processId || processId <= 0) {
+    await saveFailure("first_run_open", new Error("OpenObsidian did not expose its process id for Windows folder selection"));
+  }
+  let windowsBefore: WindowsTopLevelWindow[];
+  let applicationWindowHandle: number | null = null;
+  try {
+    windowsBefore = windowsTopLevelWindowInventory();
+    folderPickerRecord.windows_before_open_click = windowsBefore;
+    const readErrors = windowsBefore.filter((window) => window.read_error).map((window) => window.read_error);
+    if (readErrors.length > 0) {
+      throw new Error(`Windows top-level UIA baseline inventory had read errors: ${readErrors.join(" | ")}`);
+    }
+    const visibleApplicationWindows = windowsBefore.filter((window) => window.process_id === processId
+      && window.native_window_handle > 0
+      && !window.is_offscreen);
+    if (visibleApplicationWindows.length !== 1) {
+      throw new Error(`Windows top-level UIA baseline expected exactly one visible OpenObsidian window for process ${processId}; found ${visibleApplicationWindows.length}`);
+    }
+    applicationWindowHandle = visibleApplicationWindows[0].native_window_handle;
+  } catch (error) {
+    recordProcessErrorOutput("picker_inventory", error);
+    folderPickerRecord.picker_inventory_status = "failed";
+    folderPickerRecord.picker_inventory_error = error instanceof Error ? error.message : String(error);
+    await saveReportAfterStageFailure("picker_inventory", folderPickerRecord, error);
+    await captureDiagnosticScreenshot("picker_inventory", error);
+    await saveFailure("picker_inventory", error);
+  }
+  folderPickerRecord.windows_before_open_click = windowsBefore;
+  folderPickerRecord.picker_inventory_status = "captured-before-open";
+  await saveReport();
+
+  folderPickerRecord.first_run_open_status = "pending";
+  await saveReport();
+  try {
+    await clickFirstRunOpenButton(connection, reporter);
+  } catch (error) {
+    folderPickerRecord.first_run_open_status = "failed";
+    folderPickerRecord.first_run_open_error = error instanceof Error ? error.message : String(error);
+    await saveReportAfterStageFailure("first_run_open", folderPickerRecord, error);
+    try {
+      folderPickerRecord.windows_after_open_failure = windowsTopLevelWindowInventory();
+    } catch (inventoryError) {
+      recordProcessErrorOutput("open_failure_inventory", inventoryError);
+      folderPickerRecord.open_failure_inventory_error = inventoryError instanceof Error ? inventoryError.message : String(inventoryError);
+    }
+    await captureDiagnosticScreenshot("first_run_open", error);
+    await saveFailure("first_run_open", error);
+  }
+  folderPickerRecord.first_run_open_status = "clicked";
+  await saveReport();
+
+  folderPickerRecord.picker_visibility_status = "pending";
+  await saveReport();
+  let pickerWindow: WindowsTopLevelWindow;
+  try {
+    const inventory = await waitFor(
+      "new OpenObsidian-owned Windows folder picker",
+      async () => windowsTopLevelWindowInventory(),
+      (windows) => windows.some((window) => window.process_id === processId
+        && window.name === "Open folder as vault"
+        && !window.is_offscreen
+        && !window.read_error
+        && !windowsBefore.some((previous) => previous.native_window_handle === window.native_window_handle)),
+      20_000,
+    );
+    if (inventory.some((window) => window.read_error)) {
+      throw new Error(`Windows folder picker inventory contained UIA read errors: ${inventory.filter((window) => window.read_error).map((window) => window.read_error).join(" | ")}`);
+    }
+    const candidates = inventory.filter((window) => window.process_id === processId
+      && window.name === "Open folder as vault"
+      && !window.is_offscreen
+      && !windowsBefore.some((previous) => previous.native_window_handle === window.native_window_handle));
+    if (candidates.length !== 1 || candidates[0].native_window_handle <= 0) {
+      throw new Error(`Expected exactly one new visible OpenObsidian folder picker; candidates=${JSON.stringify(candidates)}; inventory=${JSON.stringify(inventory)}`);
+    }
+    pickerWindow = candidates[0];
+  } catch (error) {
+    recordProcessErrorOutput("picker_visibility", error);
+    folderPickerRecord.picker_visibility_status = "failed";
+    folderPickerRecord.picker_visibility_error = error instanceof Error ? error.message : String(error);
+    await saveReportAfterStageFailure("picker_visibility", folderPickerRecord, error);
+    try {
+      folderPickerRecord.windows_after_visibility_failure = windowsTopLevelWindowInventory();
+    } catch (inventoryError) {
+      recordProcessErrorOutput("visibility_failure_inventory", inventoryError);
+      folderPickerRecord.visibility_failure_inventory_error = inventoryError instanceof Error ? inventoryError.message : String(inventoryError);
+    }
+    await captureDiagnosticScreenshot("picker_visibility", error);
+    await saveFailure("picker_visibility", error);
+  }
+  folderPickerRecord.picker_window = pickerWindow;
+  folderPickerRecord.picker_window_handle = pickerWindow.native_window_handle;
+  folderPickerRecord.picker_visibility_status = "confirmed-exact-process-window";
+  await saveReport();
+
+  await capturePickerScreenshot("initial_picker_screenshot", "obsidian-folder-picker-initial.png");
+  const pathEntryScript = `
     $ErrorActionPreference = "Stop"
     Add-Type -AssemblyName UIAutomationClient
     Add-Type -AssemblyName UIAutomationTypes
-    $root = [System.Windows.Automation.AutomationElement]::RootElement
-    $pickerCondition = [System.Windows.Automation.PropertyCondition]::new(
-      [System.Windows.Automation.AutomationElement]::NameProperty,
-      "Open folder as vault"
-    )
-    $picker = $root.FindFirst([System.Windows.Automation.TreeScope]::Children, $pickerCondition)
-    if ($null -eq $picker) {
-      $topLevel = $root.FindAll([System.Windows.Automation.TreeScope]::Children, [System.Windows.Automation.Condition]::TrueCondition)
-      $names = @($topLevel | ForEach-Object { $_.Current.Name }) -join " | "
-      throw "Could not find the Obsidian folder picker window; top-level windows=$names"
+    Add-Type -AssemblyName System.Windows.Forms
+    Add-Type @'
+    using System;
+    using System.Runtime.InteropServices;
+    public static class OpenObsidianPickerNative {
+      [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr handle);
+      [DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow();
+    }
+'@
+    $expectedProcessId = [int]$env:OPENOBSIDIAN_WINDOW_PROCESS_ID
+    $pickerHandle = [IntPtr]::new([long]$env:OPENOBSIDIAN_PICKER_WINDOW_HANDLE)
+    $picker = [System.Windows.Automation.AutomationElement]::FromHandle($pickerHandle)
+    if ($null -eq $picker) { throw "Could not resolve the recorded Windows folder picker handle" }
+    $pickerCurrent = $picker.Current
+    if ($pickerCurrent.ProcessId -ne $expectedProcessId -or $pickerCurrent.Name -ne "Open folder as vault") {
+      throw "Recorded folder picker identity changed: process=$($pickerCurrent.ProcessId), name=$($pickerCurrent.Name)"
+    }
+    [OpenObsidianPickerNative]::SetForegroundWindow($pickerHandle) | Out-Null
+    Start-Sleep -Milliseconds 250
+    $foregroundHandle = [OpenObsidianPickerNative]::GetForegroundWindow()
+    if ($foregroundHandle.ToInt64() -ne $pickerHandle.ToInt64()) {
+      throw "Could not confirm the exact Obsidian folder picker is foreground; expected=$($pickerHandle.ToInt64()), actual=$($foregroundHandle.ToInt64())"
+    }
+    $shell = New-Object -ComObject WScript.Shell
+    $shell.SendKeys("^l")
+    Start-Sleep -Milliseconds 250
+    if ([OpenObsidianPickerNative]::GetForegroundWindow().ToInt64() -ne $pickerHandle.ToInt64()) {
+      throw "Obsidian folder picker lost foreground before path paste"
+    }
+    [System.Windows.Forms.Clipboard]::SetText($env:OBSIDIAN_PICKER_VAULT_PATH)
+    $shell.SendKeys("^v")
+    Start-Sleep -Milliseconds 250
+    if ([OpenObsidianPickerNative]::GetForegroundWindow().ToInt64() -ne $pickerHandle.ToInt64()) {
+      throw "Obsidian folder picker lost foreground before path confirmation"
+    }
+    $shell.SendKeys("{ENTER}")
+    Write-Output "Path entered through the foreground-confirmed Obsidian folder picker; process=$expectedProcessId; handle=$($pickerHandle.ToInt64())"
+  `;
+  await runPickerPowerShell("path_entry", pathEntryScript);
+  await delay(750);
+  await capturePickerScreenshot("path_entry_screenshot", "obsidian-folder-picker-after-path.png");
+
+  const selectFolderScript = `
+    $ErrorActionPreference = "Stop"
+    Add-Type -AssemblyName UIAutomationClient
+    Add-Type -AssemblyName UIAutomationTypes
+    Add-Type @'
+    using System;
+    using System.Runtime.InteropServices;
+    public static class OpenObsidianPickerNative {
+      [DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow();
+    }
+'@
+    $expectedProcessId = [int]$env:OPENOBSIDIAN_WINDOW_PROCESS_ID
+    $pickerHandle = [IntPtr]::new([long]$env:OPENOBSIDIAN_PICKER_WINDOW_HANDLE)
+    $picker = [System.Windows.Automation.AutomationElement]::FromHandle($pickerHandle)
+    if ($null -eq $picker) { throw "Could not resolve the recorded Windows folder picker handle" }
+    $pickerCurrent = $picker.Current
+    if ($pickerCurrent.ProcessId -ne $expectedProcessId -or $pickerCurrent.Name -ne "Open folder as vault") {
+      throw "Recorded folder picker identity changed: process=$($pickerCurrent.ProcessId), name=$($pickerCurrent.Name)"
+    }
+    if ([OpenObsidianPickerNative]::GetForegroundWindow().ToInt64() -ne $pickerHandle.ToInt64()) {
+      throw "The exact Obsidian folder picker is not foreground before Select Folder activation"
     }
     $buttonCondition = [System.Windows.Automation.PropertyCondition]::new(
       [System.Windows.Automation.AutomationElement]::ControlTypeProperty,
       [System.Windows.Automation.ControlType]::Button
     )
     $buttons = $picker.FindAll([System.Windows.Automation.TreeScope]::Descendants, $buttonCondition)
-    $selectFolderNameCondition = [System.Windows.Automation.PropertyCondition]::new(
-      [System.Windows.Automation.AutomationElement]::NameProperty,
-      "Select Folder"
-    )
-    $selectFolderCondition = [System.Windows.Automation.AndCondition]::new($buttonCondition, $selectFolderNameCondition)
-    $selectFolder = $picker.FindFirst([System.Windows.Automation.TreeScope]::Descendants, $selectFolderCondition)
-    if ($null -eq $selectFolder) {
-      $selectFolder = $root.FindFirst([System.Windows.Automation.TreeScope]::Descendants, $selectFolderCondition)
-    }
-    if ($null -eq $selectFolder) {
-      $labels = @($buttons | ForEach-Object { $_.Current.Name }) -join " | "
-      $shell = New-Object -ComObject WScript.Shell
-      $activated = $shell.AppActivate($picker.Current.Name)
-      Start-Sleep -Milliseconds 250
-      $shell.SendKeys("{ENTER}")
-      Write-Output "Select Folder was absent from the picker and desktop UIA trees; AppActivate=$activated for $($picker.Current.Name), then pressed Enter. Picker buttons=$labels"
-    } else {
+    $matchingButtons = @()
+    $buttonReadErrors = @()
+    $buttonLabels = @()
+    foreach ($button in $buttons) {
       try {
-        $selectFolder.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
-        Write-Output "Invoked native button: $($selectFolder.Current.Name)"
-      } catch {
-        $selectFolder.SetFocus()
-        $shell = New-Object -ComObject WScript.Shell
-        $shell.SendKeys("{ENTER}")
-        Write-Output "Focused and pressed Enter on $($selectFolder.Current.Name); InvokePattern failed: $($_.Exception.Message)"
+        $current = $button.Current
+        $buttonLabels += [string]$current.Name
+        if ($current.ProcessId -eq $expectedProcessId -and $current.Name -eq "Select Folder") {
+          $matchingButtons += $button
+        }
+      } catch { $buttonReadErrors += $_.Exception.Message }
+    }
+    if ($buttonReadErrors.Count -gt 0) {
+      throw "Could not read every button under the exact Obsidian folder picker; errors=$($buttonReadErrors -join ' | ')"
+    }
+    if ($matchingButtons.Count -ne 1) {
+      $labels = @($buttonLabels) -join " | "
+      throw "Expected one Select Folder button inside the exact Obsidian picker; found $($matchingButtons.Count); picker buttons=$labels"
+    }
+    $selectFolder = $matchingButtons[0]
+    if (-not $selectFolder.Current.IsEnabled -or $selectFolder.Current.IsOffscreen) {
+      throw "The exact Select Folder UIA button is disabled or offscreen"
+    }
+    $buttonBounds = $selectFolder.Current.BoundingRectangle
+    if ($buttonBounds.Width -le 0 -or $buttonBounds.Height -le 0) {
+      throw "The exact Select Folder UIA button has invalid bounds"
+    }
+    $pickerCurrent = $picker.Current
+    $buttonCurrent = $selectFolder.Current
+    if ($pickerCurrent.ProcessId -ne $expectedProcessId -or $pickerCurrent.Name -ne "Open folder as vault"
+        -or $buttonCurrent.ProcessId -ne $expectedProcessId -or $buttonCurrent.Name -ne "Select Folder"
+        -or -not $buttonCurrent.IsEnabled -or $buttonCurrent.IsOffscreen) {
+      throw "The exact Obsidian picker or Select Folder UIA target changed before activation"
+    }
+    if ([OpenObsidianPickerNative]::GetForegroundWindow().ToInt64() -ne $pickerHandle.ToInt64()) {
+      throw "The exact Obsidian folder picker lost foreground before Select Folder activation"
+    }
+    try {
+      $selectFolder.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
+      Write-Output "Invoked exact Select Folder UIA button; process=$expectedProcessId; handle=$($pickerHandle.ToInt64()); bounds=$($buttonBounds.Left),$($buttonBounds.Top),$($buttonBounds.Width),$($buttonBounds.Height)"
+    } catch {
+      $invokeError = $_.Exception.Message
+      $selectFolder.SetFocus()
+      Start-Sleep -Milliseconds 150
+      if (-not $selectFolder.Current.HasKeyboardFocus) { throw "Could not confirm keyboard focus on exact Select Folder button after InvokePattern failure: $invokeError" }
+      if ([OpenObsidianPickerNative]::GetForegroundWindow().ToInt64() -ne $pickerHandle.ToInt64()) {
+        throw "Obsidian folder picker lost foreground before focused Select Folder confirmation"
       }
+      $shell = New-Object -ComObject WScript.Shell
+      $shell.SendKeys("{ENTER}")
+      Write-Output "Focused exact Select Folder UIA button and pressed Enter; process=$expectedProcessId; handle=$($pickerHandle.ToInt64()); InvokePattern error=$invokeError"
     }
   `;
-  let selectionResult: string;
+  const selectionResult = await runPickerPowerShell("select_folder", selectFolderScript);
+  folderPickerRecord.picker_close_status = "pending";
+  await saveReport();
   try {
-    selectionResult = execFileSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", selectionScript], {
-      encoding: "utf8",
-      stdio: ["ignore", "pipe", "pipe"],
-    }).trim();
+    const windowsAfterPickerClose = await waitFor(
+      "the recorded Obsidian folder picker to close",
+      async () => windowsTopLevelWindowInventory(),
+      (windows) => !windows.some((window) => window.process_id === processId
+        && window.native_window_handle === pickerWindow.native_window_handle)
+        && windows.some((window) => window.process_id === processId
+          && window.native_window_handle === applicationWindowHandle
+          && !window.is_offscreen)
+        && !windows.some((window) => window.read_error),
+      15_000,
+    );
+    folderPickerRecord.windows_after_picker_close = windowsAfterPickerClose;
   } catch (error) {
-    const failure = error as NodeJS.ErrnoException & {stderr?: Buffer | string; stdout?: Buffer | string};
-    const output = [failure.stdout, failure.stderr].filter(Boolean).map(String).join("\n").trim();
-    throw new Error(`Windows native folder selection failed: ${output || failure.message}`);
+    recordProcessErrorOutput("picker_close", error);
+    folderPickerRecord.picker_close_status = "failed";
+    folderPickerRecord.picker_close_error = error instanceof Error ? error.message : String(error);
+    await saveReportAfterStageFailure("picker_close", folderPickerRecord, error);
+    try {
+      folderPickerRecord.windows_after_close_failure = windowsTopLevelWindowInventory();
+    } catch (inventoryError) {
+      recordProcessErrorOutput("close_failure_inventory", inventoryError);
+      folderPickerRecord.close_failure_inventory_error = inventoryError instanceof Error ? inventoryError.message : String(inventoryError);
+    }
+    await captureDiagnosticScreenshot("picker_close", error);
+    await saveFailure("picker_close", error);
   }
-  await delay(1_000);
-  pickerScreenshots.push(await captureDesktopScreenshot(vaultPickerScreenshotName(screenshotPrefix, "obsidian-folder-picker-after-select.png")));
+  folderPickerRecord.picker_close_status = "confirmed-closed";
+  folderPickerRecord.picker_closed = true;
+  reporter.folder_picker_closed = true;
+  await saveReport();
+  await capturePickerScreenshot("after_select_screenshot", "obsidian-folder-picker-after-select.png");
   return await finishVaultDirectorySelection(connection, port, {
-    interaction: "Windows folder picker: navigate to the fixture path and invoke Select Folder through UI Automation, with focused Enter fallback",
+    ...folderPickerRecord,
     selection_result: selectionResult,
     picker_screenshots: pickerScreenshots.map((path) => relative(reportDirectory, path)),
   }, options);
 }
 
-async function chooseVaultDirectory(connection: DevToolsConnection, port: number, options: VaultDirectoryOptions = {}): Promise<DevToolsConnection> {
+async function chooseVaultDirectory(connection: DevToolsConnection, port: number, child: ChildProcess, options: VaultDirectoryOptions = {}): Promise<DevToolsConnection> {
   if (process.platform === "linux") return await chooseVaultDirectoryLinux(connection, port, options);
-  if (process.platform === "darwin") return await chooseVaultDirectoryMacOS(connection, port, options);
-  if (process.platform === "win32") return await chooseVaultDirectoryWindows(connection, port, options);
+  if (process.platform === "darwin") return await chooseVaultDirectoryMacOS(connection, port, child, options);
+  if (process.platform === "win32") return await chooseVaultDirectoryWindows(connection, port, child, options);
   throw new Error(`Unsupported Obsidian folder picker platform ${process.platform}`);
 }
 
@@ -2165,15 +2904,48 @@ async function createGroupOrderReferenceFixture(): Promise<{
   sourceHashes: Record<string, GroupOrderSourceHash>;
   scenarioFixtures: Record<string, GroupOrderScenarioFixture>;
 }> {
-  await rm(groupOrderVaultRoot, {recursive: true, force: true});
-  await mkdir(groupOrderVaultRoot, {recursive: true});
   const fixtureBytes = await readFile(groupOrderScenarioFixturePath);
-  const fixture = JSON.parse(fixtureBytes.toString("utf8")) as GroupOrderFixture;
+  const fixtureSha256 = createHash("sha256").update(fixtureBytes).digest("hex");
+  if (fixtureSha256 !== groupOrderScenarioFixtureSha256) {
+    throw new Error(`C07.3 fixture source changed from the reviewed scenario/source inventory: expected=${groupOrderScenarioFixtureSha256}; observed=${fixtureSha256}`);
+  }
+  const fixtureValue = JSON.parse(fixtureBytes.toString("utf8")) as unknown;
+  if (!fixtureValue || typeof fixtureValue !== "object" || Array.isArray(fixtureValue)) {
+    throw new Error("C07.3 groupOrder fixture must be a JSON object");
+  }
+  const fixture = fixtureValue as GroupOrderFixture;
   if (fixture.schema_version !== 1 || fixture.id !== "fixture:c07-group-order-reference") {
     throw new Error(`Unexpected C07.3 groupOrder fixture identity: ${fixture.id}`);
   }
-  if (!Array.isArray(fixture.notes) || fixture.notes.length === 0 || !Array.isArray(fixture.scenarios) || fixture.scenarios.length === 0) {
+  if (typeof fixture.description !== "string" || !Array.isArray(fixture.notes) || fixture.notes.length === 0
+    || !Array.isArray(fixture.scenarios) || fixture.scenarios.length === 0) {
     throw new Error("C07.3 groupOrder fixture must contain synthetic notes and scenarios");
+  }
+  for (const note of fixture.notes) {
+    if (!note || typeof note !== "object" || typeof note.path !== "string" || typeof note.source !== "string") {
+      throw new Error("C07.3 groupOrder notes must have string path and source fields");
+    }
+  }
+  for (const scenario of fixture.scenarios) {
+    if (!scenario || typeof scenario !== "object" || typeof scenario.id !== "string"
+      || typeof scenario.base_path !== "string" || !Array.isArray(scenario.coverage)
+      || !scenario.coverage.every((item) => typeof item === "string")) {
+      throw new Error("C07.3 groupOrder scenarios must have string IDs, base paths, and coverage entries");
+    }
+    if (scenario.source_format !== "json" && scenario.source_format !== "native-yaml") {
+      throw new Error(`C07.3 ${scenario.id} has unsupported source_format ${String(scenario.source_format)}`);
+    }
+    if (scenario.layout !== "table" && scenario.layout !== "kanban") {
+      throw new Error(`C07.3 ${scenario.id} has unsupported layout ${String(scenario.layout)}`);
+    }
+    if (scenario.group_by_property !== undefined && (typeof scenario.group_by_property !== "string" || scenario.group_by_property.length === 0)) {
+      throw new Error(`C07.3 ${scenario.id} group_by_property must be a non-empty string when present`);
+    }
+    if ((scenario.source_format === "native-yaml" && typeof scenario.source !== "string")
+      || (scenario.source_format === "json" && typeof scenario.source !== "string"
+        && (!scenario.source || typeof scenario.source !== "object" || Array.isArray(scenario.source)))) {
+      throw new Error(`C07.3 ${scenario.id} source does not match its ${scenario.source_format} format`);
+    }
   }
   if (fixture.scenarios.length !== 14) {
     throw new Error(`C07.3 groupOrder fixture must contain exactly 14 scenarios; found ${fixture.scenarios.length}`);
@@ -2181,6 +2953,26 @@ async function createGroupOrderReferenceFixture(): Promise<{
   const scenarioIds = fixture.scenarios.map((scenario) => scenario.id);
   if (scenarioIds.some((id) => typeof id !== "string" || !/^[a-z0-9][a-z0-9-]*$/.test(id)) || new Set(scenarioIds).size !== scenarioIds.length) {
     throw new Error("C07.3 groupOrder scenario IDs must be path-safe, non-empty, and unique");
+  }
+  const expectedScenarioIds = [
+    "yaml-desc-precedence-listed-unlisted-empty-and-duplicate",
+    "json-asc-precedence-listed-and-unlisted",
+    "yaml-empty-group-order-list",
+    "json-empty-group-order-list",
+    "json-non-finite-number-entry-candidate",
+    "yaml-binary-tag-value-candidate",
+    "yaml-missing-vs-null-and-label-collision",
+    "yaml-group-order-without-group-by",
+    "yaml-typed-values-and-rendered-label-collisions",
+    "json-typed-values-and-rendered-label-collisions",
+    "yaml-malformed-scalar-order",
+    "json-malformed-mapping-order",
+    "yaml-unsupported-tag-entry",
+    "yaml-formula-dependent-kanban",
+  ];
+  if (scenarioIds.length !== expectedScenarioIds.length
+    || scenarioIds.some((id, index) => id !== expectedScenarioIds[index])) {
+    throw new Error(`C07.3 scenario inventory or order changed: expected=${expectedScenarioIds.join(",")}; observed=${scenarioIds.join(",")}`);
   }
   const requiredCoverage = [
     "direction-precedence", "listed-unlisted", "empty-group", "duplicate-declaration", "empty-order-list",
@@ -2192,6 +2984,16 @@ async function createGroupOrderReferenceFixture(): Promise<{
   const coverage = new Set(fixture.scenarios.flatMap((scenario) => scenario.coverage));
   const missingCoverage = requiredCoverage.filter((name) => !coverage.has(name));
   if (missingCoverage.length > 0) throw new Error(`C07.3 groupOrder fixture omits required scenarios: ${missingCoverage.join(", ")}`);
+  const zeroResultAllowlist = new Set([
+    "json-empty-group-order-list",
+    "yaml-empty-group-order-list",
+    "yaml-binary-tag-value-candidate",
+  ]);
+  const observedZeroResultAllowlist = scenarioIds.filter((id) => zeroResultAllowlist.has(id));
+  if (observedZeroResultAllowlist.length !== zeroResultAllowlist.size
+    || [...zeroResultAllowlist].some((id) => !observedZeroResultAllowlist.includes(id))) {
+    throw new Error("C07.3 zero-result observation allowlist must contain exactly the two empty-order scenarios and the YAML binary-tag candidate");
+  }
 
   const sourceFiles: Record<string, Buffer> = {};
   for (const note of fixture.notes) {
@@ -2218,10 +3020,8 @@ async function createGroupOrderReferenceFixture(): Promise<{
     }
     resolveContainedPath(groupOrderVaultRoot, scenario.base_path);
     if (sourceFiles[scenario.base_path]) throw new Error(`Duplicate C07.3 groupOrder fixture path: ${scenario.base_path}`);
-    if (scenario.source_format === "native-yaml" && typeof scenario.source !== "string") {
-      throw new Error(`C07.3 ${scenario.id} source does not match its ${scenario.source_format} format`);
-    }
     let parsedJsonSource: Record<string, unknown> | undefined;
+    let parsedJsonView: Record<string, unknown> | undefined;
     if (scenario.source_format === "json") {
       if (typeof scenario.source === "string") {
         try {
@@ -2235,27 +3035,89 @@ async function createGroupOrderReferenceFixture(): Promise<{
       if (!parsedJsonSource || typeof parsedJsonSource !== "object" || Array.isArray(parsedJsonSource)) {
         throw new Error(`C07.3 ${scenario.id} JSON source must be a .base object`);
       }
+      const jsonViews = parsedJsonSource.views;
+      if (!Array.isArray(jsonViews) || jsonViews.length !== 1
+        || !jsonViews[0] || typeof jsonViews[0] !== "object" || Array.isArray(jsonViews[0])) {
+        throw new Error(`C07.3 ${scenario.id} JSON source must contain exactly one view object`);
+      }
+      parsedJsonView = jsonViews[0] as Record<string, unknown>;
+      if (parsedJsonView.type !== scenario.layout) {
+        throw new Error(`C07.3 ${scenario.id} declares layout=${scenario.layout} but its JSON view type is ${String(parsedJsonView.type)}`);
+      }
+    }
+    const yamlScenarioLines = scenario.source_format === "native-yaml" && typeof scenario.source === "string"
+      ? scenario.source.split(/\r?\n/)
+      : [];
+    const yamlViewHeaderIndexes = yamlScenarioLines.flatMap((line, index) => /^views:\s*(?:#.*)?$/.test(line) ? [index] : []);
+    const yamlViewHeaderIndex = yamlViewHeaderIndexes.length === 1 ? yamlViewHeaderIndexes[0] : -1;
+    const yamlViewBlockEndIndex = yamlViewHeaderIndex < 0
+      ? -1
+      : yamlScenarioLines.findIndex((line, index) => index > yamlViewHeaderIndex
+        && Boolean(line.trim()) && !/^\s*#/.test(line) && !/^\s/.test(line));
+    const yamlViewLines = yamlViewHeaderIndex < 0
+      ? []
+      : yamlScenarioLines.slice(yamlViewHeaderIndex + 1, yamlViewBlockEndIndex < 0 ? undefined : yamlViewBlockEndIndex);
+    const yamlViewEntries = yamlViewLines.filter((line) => /^  -\s+/.test(line));
+    const yamlViewTypes = yamlViewLines.filter((line) => /^  -\s+type:\s*(?:table|kanban)\s*(?:#.*)?$/.test(line));
+    const expectedYamlViewTypeLine = `  - type: ${scenario.layout}`;
+    const yamlHasOneView = yamlViewHeaderIndexes.length === 1 && yamlViewEntries.length === 1
+      && yamlViewTypes.length === 1 && yamlViewTypes[0] === expectedYamlViewTypeLine;
+    const yamlGroupOrderKeys = yamlViewLines.filter((line) => /^ {4}groupOrder\s*:/.test(line));
+    const yamlGroupOrderIndex = yamlGroupOrderKeys.length === 1 ? yamlViewLines.indexOf(yamlGroupOrderKeys[0]) : -1;
+    const yamlGroupOrderNextLine = yamlGroupOrderIndex >= 0 ? yamlViewLines[yamlGroupOrderIndex + 1] ?? "" : "";
+    const yamlGroupByKeys = yamlViewLines.filter((line) => /^ {4}groupBy:\s*(?:#.*)?$/.test(line));
+    const yamlGroupByIndex = yamlGroupByKeys.length === 1 ? yamlViewLines.indexOf(yamlGroupByKeys[0]) : -1;
+    if (scenario.source_format === "native-yaml" && !yamlHasOneView) {
+      throw new Error(`C07.3 ${scenario.id} YAML source must contain exactly one view with type=${scenario.layout}`);
+    }
+    const yamlHasOneTableView = yamlHasOneView && scenario.layout === "table";
+    if (scenario.id === "json-empty-group-order-list") {
+      const view = (parsedJsonSource?.views as Array<Record<string, unknown>> | undefined)?.[0];
+      if (scenario.source_format !== "json" || scenario.layout !== "table" || !scenario.group_by_property
+        || (parsedJsonSource?.views as Array<Record<string, unknown>> | undefined)?.length !== 1
+        || view?.type !== "table" || !Array.isArray(view?.groupOrder) || view.groupOrder.length !== 0) {
+        throw new Error("C07.3 json-empty-group-order-list must remain a table with groupBy and an explicit empty JSON groupOrder array");
+      }
+    } else if (scenario.id === "yaml-empty-group-order-list") {
+      if (scenario.source_format !== "native-yaml" || scenario.layout !== "table" || !scenario.group_by_property
+        || !yamlHasOneTableView || yamlGroupOrderKeys.length !== 1
+        || !/^ {4}groupOrder:\s*\[\s*\]\s*(?:#.*)?$/.test(yamlGroupOrderKeys[0])
+        || !yamlViewLines.some((line) => /^ {4}groupBy:\s*(?:#.*)?$/.test(line))
+        || !yamlViewLines.some((line) => /^ {6}property:\s*team\s*(?:#.*)?$/.test(line))) {
+        throw new Error("C07.3 yaml-empty-group-order-list must remain a table with groupBy and an explicit empty YAML groupOrder list");
+      }
+    } else if (scenario.id === "yaml-binary-tag-value-candidate") {
+      if (scenario.source_format !== "native-yaml" || scenario.layout !== "table" || !scenario.group_by_property
+        || !yamlHasOneTableView || yamlGroupOrderKeys.length !== 1
+        || !/^ {4}groupOrder:\s*(?:#.*)?$/.test(yamlGroupOrderKeys[0])
+        || !/^ {6}-\s+!!binary\s+SGVsbG8=\s*(?:#.*)?$/.test(yamlGroupOrderNextLine)
+        || !yamlViewLines.some((line) => /^ {4}groupBy:\s*(?:#.*)?$/.test(line))
+        || !yamlViewLines.some((line) => /^ {6}property:\s*team\s*(?:#.*)?$/.test(line))) {
+        throw new Error("C07.3 yaml-binary-tag-value-candidate must remain a table with groupBy and the !!binary SGVsbG8= entry");
+      }
     }
     if (scenario.group_by_property) {
       if (scenario.source_format === "json") {
-        const source = parsedJsonSource!;
-        const view = (source.views as Array<Record<string, unknown>> | undefined)?.[0];
-        const groupBy = view?.groupBy as Record<string, unknown> | undefined;
+        const groupBy = parsedJsonView?.groupBy as Record<string, unknown> | undefined;
         if (!groupBy || groupBy.property !== scenario.group_by_property
           || (groupBy.direction !== "ASC" && groupBy.direction !== "DESC")) {
           throw new Error(`C07.3 ${scenario.id} must use the captured explicit groupBy mapping and direction`);
         }
       } else {
-        const yamlSource = scenario.source as string;
         const escapedProperty = scenario.group_by_property.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-        const groupByMapping = new RegExp(`groupBy:\\s*\\n\\s+property:\\s*${escapedProperty}\\s*\\n\\s+direction:\\s*(?:ASC|DESC)(?:\\s|$)`);
-        if (!groupByMapping.test(yamlSource)) {
+        const propertyLine = yamlGroupByIndex >= 0 ? yamlViewLines[yamlGroupByIndex + 1] ?? "" : "";
+        const directionLine = yamlGroupByIndex >= 0 ? yamlViewLines[yamlGroupByIndex + 2] ?? "" : "";
+        const expectedPropertyLine = new RegExp(`^ {6}property:\\s*${escapedProperty}\\s*(?:#.*)?$`);
+        const validGroupByMapping = yamlHasOneView && yamlGroupByKeys.length === 1
+          && expectedPropertyLine.test(propertyLine)
+          && /^ {6}direction:\s*(?:ASC|DESC)\s*(?:#.*)?$/.test(directionLine);
+        if (!validGroupByMapping) {
           throw new Error(`C07.3 ${scenario.id} must use the captured explicit groupBy mapping and direction`);
         }
       }
     } else if (scenario.source_format === "native-yaml"
-      ? /(?:^|\n)\s*groupBy\s*:/m.test(scenario.source as string)
-      : Boolean((parsedJsonSource?.views as Array<Record<string, unknown>> | undefined)?.[0]?.groupBy !== undefined)) {
+      ? yamlGroupByKeys.length !== 0
+      : Boolean(parsedJsonView?.groupBy !== undefined)) {
       throw new Error(`C07.3 ${scenario.id} is the no-groupBy scenario and must omit groupBy`);
     }
     const source = scenario.source_format === "json"
@@ -2270,6 +3132,8 @@ async function createGroupOrderReferenceFixture(): Promise<{
     ".obsidian/community-plugins.json": await readFile(join(vaultRoot, ".obsidian", "community-plugins.json")),
     ".obsidian/core-plugins.json": await readFile(join(vaultRoot, ".obsidian", "core-plugins.json")),
   };
+  await rm(groupOrderVaultRoot, {recursive: true, force: true});
+  await mkdir(groupOrderVaultRoot, {recursive: true});
   const sourceHashes = Object.fromEntries(Object.entries(sourceFiles).map(([path, bytes]) => [path, {
     bytes: bytes.length,
     sha256: createHash("sha256").update(bytes).digest("hex"),
@@ -2336,8 +3200,8 @@ async function createGroupOrderReferenceFixture(): Promise<{
     "The JSON 1e999 and YAML !!binary cases are syntax-valid boundary/tag value candidates. Their outcomes are observations; neither is asserted to be unsupported before the pinned app is captured.",
     "The YAML custom-tag case records parser/tag rejection for the supplied source. It is a separate syntax probe and is not counted as an app-level unsupported groupOrder entry.",
     "Unless a candidate visibly demonstrates app-level rejection after the Bases view loads, unsupported app-level groupOrder entry behavior remains unprobed and Rust C07.3 parity remains blocked on that characterization.",
-    "Visible membership is recorded as pinned-app behavior; the probe requires at least one mapped fixture path from a loaded view but does not claim an independent expected-member oracle for notes omitted entirely from the UI.",
-    "Painted-text visibility uses discrete 3x3 hit/caret samples; narrow occluders can fall between samples, text/background contrast is not measured, and legitimate rows or cards outside the CI viewport can fail exact membership coverage.",
+    "Visible membership is recorded as pinned-app behavior rather than inferred from the seed note set: a grouped table can omit notes outside its declared groupOrder, and a valid empty order can render a loaded table with zero results. Every non-empty result count must map one-to-one to unique fixture paths, including any rendered .base files. Zero results are accepted only for the two explicit empty-order scenarios and the YAML binary-tag candidate, with the exact Bases target active, one painted table shell, a painted 0-results count, and no groups, paths, unmapped rows, errors or error notices; the binary candidate remains an observation and does not establish rejection.",
+    "The capture collapses the left sidebar and requests the available desktop viewport before observation. It scrolls each rendered group heading, path, and row candidate into view and records a painted hit/caret sample, bounds, and scroll positions; the scenario screenshot shows the final viewport only. Painted-text visibility uses discrete 3x3 samples, so narrow occluders can fall between sample points, and text/background contrast is not measured.",
     "Windows note-path radio scans cover all UI Automation descendants for the process rather than a verified selector-popup subtree, so an unrelated visible path radio can cause a fail-closed false failure. IsOffscreen status is UIA evidence and does not prove that the selector button is unobscured at the pixel level.",
   ];
   await writeFile(join(reportDirectory, "c07-group-order-fixture.json"), fixtureBytes);
@@ -2611,7 +3475,7 @@ async function readGroupOrderVisibleState(
   scenario: GroupOrderScenario,
   fixturePaths: string[],
 ): Promise<GroupOrderVisibleState> {
-  const visibleState = await connection.evaluateJson<GroupOrderVisibleState>(`(() => {
+  const visibleState = await connection.evaluateJson<GroupOrderVisibleState>(`(async () => {
     const fixturePaths = ${JSON.stringify(fixturePaths)};
     const requestedPath = ${JSON.stringify(scenario.base_path)};
     const layout = ${JSON.stringify(scenario.layout)};
@@ -2622,6 +3486,12 @@ async function readGroupOrderVisibleState(
     const root = document.querySelector('.workspace-leaf.mod-active') ?? document.body;
     const view = window.app?.workspace?.activeLeaf?.view;
     const body = root?.innerText ?? '';
+    const viewport = {
+      width: window.innerWidth,
+      height: window.innerHeight,
+      available_width: window.screen?.availWidth ?? window.innerWidth,
+      available_height: window.screen?.availHeight ?? window.innerHeight,
+    };
     const normalize = (value) => (value || '').replace(/\\s+/g, ' ').trim();
     const visible = (element) => {
       const style = window.getComputedStyle(element);
@@ -2637,6 +3507,14 @@ async function readGroupOrderVisibleState(
     const kanbanRoot = layout === 'kanban'
       ? (kanbanContainers.length === 1 ? kanbanContainers[0] : null)
       : root;
+    const observationRoot = layout === 'kanban' ? kanbanRoot : root;
+    const stableDomOrdinalByElement = new WeakMap();
+    if (observationRoot) {
+      [...observationRoot.querySelectorAll('*')].forEach((element, index) => stableDomOrdinalByElement.set(element, index));
+    }
+    const tableRoots = observationRoot ? [...observationRoot.querySelectorAll('.bases-table, [role="table"], table')] : [];
+    const tableShells = observationRoot ? [...observationRoot.querySelectorAll('.bases-table, .bases-table-header, [role="table"], table')] : [];
+    const occludedKanbanDomCandidates = [];
     const hitTestPainted = (element, minimumCoverage = 0.5) => {
       if (!visible(element)) return false;
       let effectiveOpacity = 1;
@@ -2715,8 +3593,8 @@ async function readGroupOrderVisibleState(
       const fillColor = style.getPropertyValue('-webkit-text-fill-color');
       return alphaOf(style.color) > 0.05 && (!fillColor || fillColor === 'currentcolor' || alphaOf(fillColor) > 0.05);
     };
-    const hitTestPaintedText = (element) => {
-      if (!hitTestPainted(element) || !textOf(element)) return false;
+    const hitTestPaintedText = (element, hitContainer = element) => {
+      if (!visible(element) || !hitTestPainted(hitContainer) || !textOf(element)) return false;
       const textRange = document.createRange();
       textRange.selectNodeContents(element);
       const rects = [...textRange.getClientRects()];
@@ -2743,7 +3621,7 @@ async function readGroupOrderVisibleState(
       let paintedTextSamples = 0;
       for (const {x, y} of samples) {
         const hit = document.elementFromPoint(x, y);
-        if (!hit || (hit !== element && !element.contains(hit))) continue;
+        if (!hit || (hit !== hitContainer && !hitContainer.contains(hit))) continue;
         const rangeAtPoint = document.caretRangeFromPoint?.(x, y);
         const caretAtPoint = document.caretPositionFromPoint?.(x, y);
         const node = rangeAtPoint?.startContainer ?? caretAtPoint?.offsetNode ?? null;
@@ -2751,17 +3629,163 @@ async function readGroupOrderVisibleState(
       }
       return paintedTextSamples >= Math.max(1, Math.ceil(samples.length * 0.6));
     };
-    const paintedKanbanColumns = layout === 'kanban' && kanbanRoot
-      ? [...kanbanRoot.querySelectorAll('.bases-kanban-column')].filter((column) => {
-        const header = column.querySelector('.bases-kanban-column-header');
-        const cards = [...column.querySelectorAll('.bases-kanban-card')];
-        return Boolean((header && hitTestPainted(header, 0.2))
-          || cards.some((card) => hitTestPainted(card))
-          || hitTestPainted(column, 0.2));
-      })
+    let scrollActions = 0;
+    const scrollEvidenceByElement = new WeakMap();
+    const waitForPaintFrames = () => new Promise((resolve) => {
+      window.requestAnimationFrame(() => window.requestAnimationFrame(() => resolve()));
+    });
+    const readScrollPositions = (element) => {
+      const positions = [];
+      for (let ancestor = element; ancestor; ancestor = ancestor.parentElement) {
+        if (ancestor.scrollHeight > ancestor.clientHeight + 1 || ancestor.scrollWidth > ancestor.clientWidth + 1) {
+          positions.push({
+            class_name: ancestor.getAttribute('class') || ancestor.tagName.toLowerCase(),
+            scroll_top: Math.round(ancestor.scrollTop),
+            scroll_left: Math.round(ancestor.scrollLeft),
+            scroll_height: ancestor.scrollHeight,
+            client_height: ancestor.clientHeight,
+            scroll_width: ancestor.scrollWidth,
+            client_width: ancestor.clientWidth,
+          });
+        }
+      }
+      const page = document.scrollingElement;
+      if (page && !positions.some((position) => position.class_name === 'document')) {
+        positions.push({
+          class_name: 'document',
+          scroll_top: Math.round(window.scrollY),
+          scroll_left: Math.round(window.scrollX),
+          scroll_height: page.scrollHeight,
+          client_height: page.clientHeight,
+          scroll_width: page.scrollWidth,
+          client_width: page.clientWidth,
+        });
+      }
+      return positions;
+    };
+    const scrollIntoView = async (element) => {
+      if (!element || typeof element.scrollIntoView !== 'function') return false;
+      element.scrollIntoView({behavior: 'instant', block: 'center', inline: 'nearest'});
+      await waitForPaintFrames();
+      const bounds = element.getBoundingClientRect();
+      scrollActions += 1;
+      scrollEvidenceByElement.set(element, {
+        visibility_sample_sequence: scrollActions,
+        visibility_sample_bounds: {
+          top: bounds.top,
+          left: bounds.left,
+          width: bounds.width,
+          height: bounds.height,
+        },
+        scroll_positions: readScrollPositions(element),
+      });
+      return true;
+    };
+    const samplePaintedText = async (element, hitContainer = element) =>
+      await scrollIntoView(element) && hitTestPaintedText(element, hitContainer);
+    const samplePaintedElement = async (element, minimumCoverage = 0.5) =>
+      await scrollIntoView(element) && hitTestPainted(element, minimumCoverage);
+    const exactResultCountElements = root
+      ? [...root.querySelectorAll('*')].filter((element) => /^\\d+\\s+results?$/i.test(textOf(element)))
       : [];
-    const observationRoot = layout === 'kanban' ? kanbanRoot : root;
-    const occludedKanbanDomCandidates = [];
+    const leafResultCountElements = exactResultCountElements.filter((element) =>
+      !exactResultCountElements.some((candidate) => candidate !== element && element.contains(candidate)));
+    const nearestCommonAncestor = (left, right) => {
+      const ancestors = new Set();
+      for (let current = left; current; current = current.parentElement) ancestors.add(current);
+      for (let current = right; current; current = current.parentElement) {
+        if (ancestors.has(current)) return current;
+      }
+      return null;
+    };
+    const visiblePreferredTableRoots = tableRoots.filter((element) =>
+      element.matches('.bases-table') && visible(element) && hitTestPainted(element, 0.2));
+    const visibleFallbackTableRoots = tableRoots.filter((element) => visible(element) && hitTestPainted(element, 0.2));
+    const visibleRootCandidates = visiblePreferredTableRoots.length > 0 ? visiblePreferredTableRoots : visibleFallbackTableRoots;
+    const topLevelVisibleRootCandidates = visibleRootCandidates.filter((element) =>
+      !visibleRootCandidates.some((candidate) => candidate !== element && candidate.contains(element)));
+    const visibleTableShells = topLevelVisibleRootCandidates.length > 0
+      ? topLevelVisibleRootCandidates
+      : tableShells.filter((element) => element.matches('.bases-table-header')
+        && visible(element) && hitTestPainted(element, 0.2));
+    const visibleKanbanRoots = layout === 'kanban' && kanbanRoot
+      && kanbanContainers.length === 1 && visible(kanbanRoot) && hitTestPainted(kanbanRoot, 0.2)
+      ? [kanbanRoot]
+      : [];
+    const visibleResultRoots = layout === 'table' ? visibleTableShells : visibleKanbanRoots;
+    const selectedResultRoot = visibleResultRoots.length === 1 ? visibleResultRoots[0] : null;
+    const sharesSelectedResultScope = (element) => {
+      if (!selectedResultRoot) return false;
+      if (selectedResultRoot.contains(element)) return true;
+      const shared = nearestCommonAncestor(element, selectedResultRoot);
+      return Boolean(shared
+        && shared !== root && shared !== document.body
+        && shared.contains(selectedResultRoot) && shared.contains(element)
+        && visibleResultRoots.filter((candidate) => shared.contains(candidate)).length === 1);
+    };
+    const resultCountEvidence = leafResultCountElements.flatMap((element) => {
+      const text = textOf(element);
+      const bounds = element.getBoundingClientRect();
+      if (!selectedResultRoot || !visible(element) || !hitTestPaintedText(element)) return [];
+      const sharedContainer = nearestCommonAncestor(element, selectedResultRoot);
+      const selectedRootIsContained = selectedResultRoot.contains(element);
+      const meaningfulSharedContainer = Boolean(sharedContainer
+        && sharedContainer !== root && sharedContainer !== document.body
+        && sharedContainer.contains(selectedResultRoot) && sharedContainer.contains(element)
+        && visibleResultRoots.filter((candidate) => sharedContainer.contains(candidate)).length === 1);
+      if (!selectedRootIsContained && !meaningfulSharedContainer) return [];
+      const selectedRootEvidence = {
+        tag: selectedResultRoot.tagName.toLowerCase(),
+        class_name: selectedResultRoot.getAttribute('class') || '',
+        bounds: (() => {
+          const selectedBounds = selectedResultRoot.getBoundingClientRect();
+          return {top: selectedBounds.top, left: selectedBounds.left, width: selectedBounds.width, height: selectedBounds.height};
+        })(),
+      };
+      return [{
+        text,
+        tag: element.tagName.toLowerCase(),
+        class_name: element.getAttribute('class') || '',
+        bounds: {top: bounds.top, left: bounds.left, width: bounds.width, height: bounds.height},
+        scope: layout === 'table' ? 'selected-table-shell' : 'active-kanban-container',
+        selected_result_root: selectedRootEvidence,
+        nearest_table_shell: layout === 'table'
+          ? {tag: selectedRootEvidence.tag, class_name: selectedRootEvidence.class_name}
+          : null,
+        shared_container: sharedContainer ? {
+          tag: sharedContainer.tagName.toLowerCase(),
+          class_name: sharedContainer.getAttribute('class') || '',
+        } : null,
+      }];
+    });
+    const resultCountTexts = resultCountEvidence.map((entry) => entry.text).sort();
+    const resultCountMatch = resultCountEvidence.length === 1 ? resultCountEvidence[0].text.match(/^(\\d+)\\s+results?$/i) : null;
+    const resultCount = resultCountMatch ? Number(resultCountMatch[1]) : null;
+    let zeroResultOutcomeClassification = null;
+    if (resultCount === 0) {
+      if (scenarioId === 'json-empty-group-order-list' || scenarioId === 'yaml-empty-group-order-list') {
+        zeroResultOutcomeClassification = 'empty-group-order-list';
+      } else if (scenarioId === 'yaml-binary-tag-value-candidate') {
+        zeroResultOutcomeClassification = 'yaml-binary-candidate-observation';
+      }
+    }
+    const rawKanbanColumns = layout === 'kanban' && kanbanRoot
+      ? [...kanbanRoot.querySelectorAll('.bases-kanban-column')]
+      : [];
+    const paintedKanbanColumns = [];
+    for (const column of rawKanbanColumns) {
+      const header = column.querySelector('.bases-kanban-column-header');
+      const cards = [...column.querySelectorAll('.bases-kanban-card')];
+      const paintedHeader = Boolean(header && await samplePaintedText(header));
+      let paintedCard = false;
+      for (const card of cards) {
+        if (await samplePaintedElement(card)) {
+          paintedCard = true;
+          break;
+        }
+      }
+      if (paintedHeader || paintedCard || await samplePaintedElement(column, 0.2)) paintedKanbanColumns.push(column);
+    }
     const addPathAlias = (aliases, alias, path) => {
       const key = alias.toLowerCase();
       if (!aliases.has(key)) aliases.set(key, path);
@@ -2794,29 +3818,62 @@ async function readGroupOrderVisibleState(
       if (pathByName.has(basename)) return pathByName.get(basename);
       return pathByName.get(stem) ?? null;
     };
+    const pathCandidateFor = (element) =>
+      element.getAttribute('data-href') || element.getAttribute('data-path') || textOf(element);
+    const pathIdentity = (candidate, path = pathFor(candidate)) =>
+      path ? 'path:' + path : 'unmapped:' + normalize(candidate).toLowerCase();
+    const kanbanCardIdentity = (candidate, card, path = pathFor(candidate)) =>
+      pathIdentity(candidate, path) + '|column:' + rawKanbanColumns.indexOf(card.closest('.bases-kanban-column'));
+    const nodeIdentityChanges = [];
+    const recordIdentityChange = (kind, before, after, element) => {
+      nodeIdentityChanges.push({
+        kind,
+        before,
+        after,
+        class_name: element?.getAttribute('class') || '',
+      });
+    };
     const linkSelector = 'a[data-href], [data-href], a[data-path], [data-path], a.internal-link, .internal-link';
     const rawLinks = observationRoot
-      ? [...observationRoot.querySelectorAll(linkSelector)].filter((link) => textOf(link)
-        ? hitTestPaintedText(link)
-        : hitTestPainted(link))
+      ? [...observationRoot.querySelectorAll(linkSelector)]
       : [];
     const rawCandidates = rawLinks.map((element) => {
-      const candidate = element.getAttribute('data-href') || element.getAttribute('data-path') || textOf(element);
+      const candidate = pathCandidateFor(element);
       return {element, candidate, path: pathFor(candidate)};
     });
     const candidateKey = (entry) => entry.path ?? entry.candidate.trim().toLowerCase();
     const retainedCandidates = rawCandidates.filter((entry) => !rawCandidates.some((nested) => nested !== entry
       && entry.element.contains(nested.element)
       && candidateKey(nested) === candidateKey(entry)));
+    const paintedPathCandidateElements = new WeakSet();
+    const pathScrollEvidenceByElement = new WeakMap();
+    for (const entry of retainedCandidates) {
+      const {element} = entry;
+      const painted = textOf(element)
+        ? await samplePaintedText(element)
+        : await samplePaintedElement(element);
+      const candidateAfterScroll = pathCandidateFor(element);
+      const identityBefore = pathIdentity(entry.candidate, entry.path);
+      const identityAfter = pathIdentity(candidateAfterScroll);
+      if (identityBefore !== identityAfter) {
+        recordIdentityChange('path', identityBefore, identityAfter, element);
+        continue;
+      }
+      if (painted) {
+        paintedPathCandidateElements.add(element);
+        pathScrollEvidenceByElement.set(element, scrollEvidenceByElement.get(element));
+      }
+    }
     const linkScope = (element) => {
       const owner = element.closest('.bases-tr, .bases-row, .bases-table-row, .bases-card, .bases-kanban-card, tr, [role="row"], li, [role="listitem"]');
       const tableRoot = element.closest('.bases-table, [role="table"], table');
       return tableRoot ? 'table' : layout === 'kanban' ? 'kanban' : owner ? 'explicit-row' : 'unscoped';
     };
     const linkedPathLinks = retainedCandidates
-      .filter((entry) => entry.path)
+      .filter((entry) => entry.path && paintedPathCandidateElements.has(entry.element))
       .map(({element, path}, index) => {
         const bounds = element.getBoundingClientRect();
+        const visibilitySample = pathScrollEvidenceByElement.get(element);
         const owner = element.closest('.bases-tr, .bases-row, .bases-table-row, .bases-card, .bases-kanban-card, tr, [role="row"], li, [role="listitem"]');
         const tableRoot = element.closest('.bases-table, [role="table"], table');
         const ownerClass = owner?.getAttribute('class') || '';
@@ -2827,13 +3884,14 @@ async function readGroupOrderVisibleState(
           class_name: element.getAttribute('class') || '',
           source_scope: tableRoot ? 'table' : layout === 'kanban' ? 'kanban' : owner ? 'explicit-row' : 'unscoped',
           row_class_name: ownerClass,
-          top: bounds.top,
-          left: bounds.left,
+          top: visibilitySample?.visibility_sample_bounds.top ?? bounds.top,
+          left: visibilitySample?.visibility_sample_bounds.left ?? bounds.left,
+          ...visibilitySample,
           index,
         };
       });
     const unmappedVisiblePathCandidates = retainedCandidates
-      .filter((entry) => !entry.path)
+      .filter((entry) => !entry.path && paintedPathCandidateElements.has(entry.element))
       .map(({element, candidate}) => {
         const bounds = element.getBoundingClientRect();
         return {
@@ -2841,8 +3899,9 @@ async function readGroupOrderVisibleState(
           text: textOf(element),
           class_name: element.getAttribute('class') || '',
           source_scope: linkScope(element),
-          top: bounds.top,
-          left: bounds.left,
+          top: pathScrollEvidenceByElement.get(element)?.visibility_sample_bounds.top ?? bounds.top,
+          left: pathScrollEvidenceByElement.get(element)?.visibility_sample_bounds.left ?? bounds.left,
+          ...pathScrollEvidenceByElement.get(element),
         };
       });
     const classTokens = (element) => [...(element.classList || [])].map((token) => token.toLowerCase());
@@ -2867,19 +3926,27 @@ async function readGroupOrderVisibleState(
     const rawMarkerElements = kanbanRoot
       ? [...kanbanRoot.querySelectorAll('[class], [data-group], [role="group"]')].filter((element) => hasGroupMarker(element))
       : [];
-    const markerElements = rawMarkerElements.filter((element) => {
-      if (hitTestPaintedText(element)) return true;
+    const markerElements = [];
+    for (const element of rawMarkerElements) {
+      const identityBefore = normalize(element.getAttribute('data-group') || element.getAttribute('aria-label') || textOf(element));
+      const painted = await samplePaintedText(element);
+      const identityAfter = normalize(element.getAttribute('data-group') || element.getAttribute('aria-label') || textOf(element));
+      if (identityBefore !== identityAfter) recordIdentityChange('group-heading', identityBefore, identityAfter, element);
+      if (painted && identityBefore === identityAfter) {
+        markerElements.push(element);
+        continue;
+      }
       if (layout === 'kanban') {
         const bounds = element.getBoundingClientRect();
         occludedKanbanDomCandidates.push({kind: 'group-heading', text: textOf(element), class_name: element.getAttribute('class') || '', top: bounds.top, left: bounds.left});
       }
-      return false;
-    });
+    }
     const leafMarkers = layout === 'kanban'
       ? markerElements
       : markerElements.filter((element) => !markerElements.some((nested) => nested !== element && element.contains(nested)));
     const headingMarkers = leafMarkers.map((element, index) => {
       const bounds = element.getBoundingClientRect();
+      const visibilitySample = scrollEvidenceByElement.get(element);
       const label = normalize(element.getAttribute('data-group') || element.getAttribute('aria-label') || textOf(element));
       const rowOwner = element.closest('.bases-tr, .bases-row, .bases-table-row, tr, [role="row"], li, [role="listitem"]');
       return {
@@ -2888,31 +3955,72 @@ async function readGroupOrderVisibleState(
         index,
         label,
         class_name: element.getAttribute('class') || '',
-        top: bounds.top,
-        left: bounds.left,
+        top: visibilitySample?.visibility_sample_bounds.top ?? bounds.top,
+        left: visibilitySample?.visibility_sample_bounds.left ?? bounds.left,
+        visibility_sample_sequence: visibilitySample?.visibility_sample_sequence ?? 0,
+        visibility_sample_bounds: visibilitySample?.visibility_sample_bounds ?? {
+          top: bounds.top,
+          left: bounds.left,
+          width: bounds.width,
+          height: bounds.height,
+        },
+        scroll_positions: visibilitySample?.scroll_positions ?? [],
         row_owner: rowOwner,
       };
-    }).sort((left, right) => layout === 'kanban'
-      ? left.left - right.left || left.top - right.top || left.index - right.index
-      : left.top - right.top || left.left - right.left || left.index - right.index);
+    }).sort((left, right) => {
+      if (layout === 'kanban') {
+        const leftColumnIndex = rawKanbanColumns.indexOf(left.element.closest('.bases-kanban-column'));
+        const rightColumnIndex = rawKanbanColumns.indexOf(right.element.closest('.bases-kanban-column'));
+        if (leftColumnIndex !== rightColumnIndex) return leftColumnIndex - rightColumnIndex;
+      }
+      const leftOrdinal = stableDomOrdinalByElement.get(left.element);
+      const rightOrdinal = stableDomOrdinalByElement.get(right.element);
+      if (leftOrdinal !== undefined && rightOrdinal !== undefined && leftOrdinal !== rightOrdinal) {
+        return leftOrdinal - rightOrdinal;
+      }
+      const position = left.element.compareDocumentPosition(right.element);
+      if (position & Node.DOCUMENT_POSITION_FOLLOWING) return -1;
+      if (position & Node.DOCUMENT_POSITION_PRECEDING) return 1;
+      return left.index - right.index;
+    });
     const kanbanCardPathLinks = [];
     if (layout === 'kanban' && kanbanRoot) {
       const cards = [...kanbanRoot.querySelectorAll('.bases-kanban-card')]
         .filter((card) => paintedKanbanColumns.includes(card.closest('.bases-kanban-column')));
       for (const card of cards) {
+        const initialTitleCandidates = [...card.querySelectorAll('.bases-kanban-card-property.mod-title')];
+        const initialTitle = initialTitleCandidates.length === 1 ? textOf(initialTitleCandidates[0]) : '';
+        const identityBefore = kanbanCardIdentity(initialTitle, card);
+        await scrollIntoView(card);
+        const titleCandidatesAfterScroll = [...card.querySelectorAll('.bases-kanban-card-property.mod-title')];
+        const titleAfterScroll = titleCandidatesAfterScroll.length === 1 ? textOf(titleCandidatesAfterScroll[0]) : '';
+        const identityAfterScroll = kanbanCardIdentity(titleAfterScroll, card);
+        if (identityBefore !== identityAfterScroll) {
+          recordIdentityChange('kanban-card', identityBefore, identityAfterScroll, card);
+          continue;
+        }
         const bounds = card.getBoundingClientRect();
+        const visibilitySample = scrollEvidenceByElement.get(card);
         if (!hitTestPainted(card)) {
           occludedKanbanDomCandidates.push({kind: 'card', text: textOf(card), class_name: card.getAttribute('class') || '', top: bounds.top, left: bounds.left});
           continue;
         }
         const titleCandidates = [...card.querySelectorAll('.bases-kanban-card-property.mod-title')].filter(visible);
-        const titleNodes = titleCandidates.filter(hitTestPaintedText);
+        const titleNodes = [];
+        for (const titleNode of titleCandidates) {
+          if (await samplePaintedText(titleNode, card)) titleNodes.push(titleNode);
+        }
         if (titleCandidates.length !== 1 || titleNodes.length !== 1) {
           occludedKanbanDomCandidates.push({kind: 'card', text: textOf(card), class_name: card.getAttribute('class') || '', top: bounds.top, left: bounds.left});
           continue;
         }
         const title = textOf(titleNodes[0]);
         const path = pathFor(title);
+        const identityAfter = kanbanCardIdentity(title, card, path);
+        if (identityBefore !== identityAfter) {
+          recordIdentityChange('kanban-card', identityBefore, identityAfter, card);
+          continue;
+        }
         if (!path) continue;
         const column = card.closest('.bases-kanban-column');
         kanbanCardPathLinks.push({
@@ -2923,30 +4031,38 @@ async function readGroupOrderVisibleState(
           class_name: card.getAttribute('class') || '',
           source_scope: 'kanban',
           row_class_name: card.getAttribute('class') || '',
-          top: bounds.top,
-          left: bounds.left,
+          top: visibilitySample?.visibility_sample_bounds.top ?? bounds.top,
+          left: visibilitySample?.visibility_sample_bounds.left ?? bounds.left,
+          ...visibilitySample,
           index: linkedPathLinks.length + kanbanCardPathLinks.length,
         });
       }
     }
-    const pathLinks = layout === 'kanban' ? kanbanCardPathLinks : linkedPathLinks;
-    const tableRoots = observationRoot ? [...observationRoot.querySelectorAll('.bases-table, [role="table"], table')] : [];
-    const groupRecords = headingMarkers.map((marker, index) => ({
+    let pathLinks = layout === 'kanban' ? kanbanCardPathLinks : linkedPathLinks;
+    let groupRecords = headingMarkers.map((marker, index) => ({
       index,
       heading_text: marker.label,
       heading_class_name: marker.class_name,
       heading_bounds: {top: marker.top, left: marker.left},
+      heading_visibility_sample: {
+        visibility_sample_sequence: marker.visibility_sample_sequence,
+        visibility_sample_bounds: marker.visibility_sample_bounds,
+        scroll_positions: marker.scroll_positions,
+      },
       member_paths: [],
       marker,
     }));
-    const visibleRowElements = observationRoot
+    const rowCandidates = observationRoot
       ? [...observationRoot.querySelectorAll('.bases-tr, .bases-row, .bases-table-row, .bases-card, .bases-kanban-card, tr, [role="row"]')]
-        .filter((row) => hitTestPaintedText(row))
       : [];
+    const visibleRowElements = [];
+    for (const row of rowCandidates) {
+      if (await samplePaintedText(row)) visibleRowElements.push(row);
+    }
     const unmappedVisibleRowCandidates = visibleRowElements
       .filter((row) => {
         const isHeader = row.matches('thead tr, .bases-table-header, [role="columnheader"]')
-          || Boolean(row.querySelector('th, [role="columnheader"]'));
+          || Boolean(row.querySelector('.bases-table-header, th, [role="columnheader"]'));
         const isGroupHeading = hasGroupMarker(row) || markerElements.some((marker) => row.contains(marker));
         const hasPathCandidate = retainedCandidates.some((candidate) => row.contains(candidate.element))
           || pathLinks.some((candidate) => row.contains(candidate.element));
@@ -2954,61 +4070,676 @@ async function readGroupOrderVisibleState(
       })
       .map((row) => {
         const bounds = row.getBoundingClientRect();
+        const visibilitySample = scrollEvidenceByElement.get(row);
         return {
           text: textOf(row).slice(0, 500),
           class_name: row.getAttribute('class') || '',
           tag: row.tagName.toLowerCase(),
-          top: bounds.top,
-          left: bounds.left,
+          top: visibilitySample?.visibility_sample_bounds.top ?? bounds.top,
+          left: visibilitySample?.visibility_sample_bounds.left ?? bounds.left,
+          visibility_sample_sequence: visibilitySample?.visibility_sample_sequence ?? 0,
+          visibility_sample_bounds: visibilitySample?.visibility_sample_bounds ?? {
+            top: bounds.top,
+            left: bounds.left,
+            width: bounds.width,
+            height: bounds.height,
+          },
+          scroll_positions: visibilitySample?.scroll_positions ?? [],
         };
       });
-    const ungroupedVisibleFilePaths = [];
-    const unassignedVisibleFilePaths = [];
-    if (tableRoots.length > 0 || (layout === 'table' && groupRecords.length > 0)) {
-      const events = [
-        ...groupRecords.map((group) => ({kind: 'group', top: group.heading_bounds.top, left: group.heading_bounds.left, index: group.index, group})),
-        ...pathLinks.map((link) => ({kind: 'file', top: link.top, left: link.left, index: link.index, link})),
-      ].sort((left, right) => left.top - right.top || left.left - right.left || left.index - right.index);
-      let activeGroup = null;
-      for (const event of events) {
-        if (event.kind === 'group') {
-          activeGroup = event.group;
-        } else {
-          const link = event.link;
-          if (activeGroup && (link.source_scope === 'table' || tableRoots.some((tableRoot) => tableRoot.contains(link.element)))) {
-            activeGroup.member_paths.push(link.path);
-          } else if (link.source_scope === 'table') {
-            ungroupedVisibleFilePaths.push(link.path);
-          } else {
-            unassignedVisibleFilePaths.push(link.path);
+    const freshSweepOffsets = [];
+    const freshSweepPaths = new Set();
+    const freshSweepHeadingKeys = new Set();
+    const freshSweepNodeIdentities = new WeakMap();
+    const freshSweepResultRecords = new Map();
+    const freshSweepHeadingRecords = new Map();
+    const freshSweepPathGroupKeys = new Map();
+    const freshSweepPathOrderEdges = new Map();
+    const freshSweepHeadingOrderEdges = new Map();
+    const freshSweepHeadingMultiplicityByBase = new Map();
+    const freshSweepHeadingElementsByBase = new Map();
+    const freshSweepHeadingLogicalPositionByElement = new WeakMap();
+    const freshSweepHeadingCollisionBases = new Set();
+    const freshSweepHeadingIdentityCollisionEvidence = [];
+    const freshSweepUnmappedCandidates = [];
+    const freshSweepUnmappedRows = [];
+    const freshSweepPaintedKanbanColumnOrdinals = new Set();
+    const lastTableGroupByScrollContainer = new WeakMap();
+    let freshSweepPositions = 0;
+    let freshSweepPathSamples = 0;
+    let freshSweepHeadingSamples = 0;
+    let freshSweepUnmappedPathSamples = 0;
+    let freshSweepUnmappedRowSamples = 0;
+    let freshSweepDuplicatePathSamples = 0;
+    let freshSweepUnownedResultSamples = 0;
+    let freshSweepCoverageComplete = true;
+    let freshSweepOrderingAmbiguous = false;
+    let freshSweepGroupOwnershipAmbiguous = false;
+    let freshSweepHeadingIdentityAmbiguous = false;
+    const maximumFreshSweepPositions = 128;
+    const headingBaseIdentity = (element) => {
+      const dataGroup = normalize(element.getAttribute('data-group'));
+      const ariaLabel = normalize(element.getAttribute('aria-label'));
+      const label = normalize(textOf(element));
+      const identity = dataGroup ? 'data-group:' + dataGroup : ariaLabel ? 'aria-label:' + ariaLabel : 'rendered:' + label;
+      if (layout !== 'kanban') return identity;
+      const column = element.closest('.bases-kanban-column');
+      return rawKanbanColumns.indexOf(column) + ':' + identity;
+    };
+    const headingIdentity = (baseIdentity, occurrence, occurrenceCount) =>
+      occurrenceCount > 1 ? baseIdentity + '|occurrence:' + occurrence : baseIdentity;
+    const headingIdentityEntries = (elements) => {
+      const occurrenceCounts = new Map();
+      const entries = elements.map((element) => {
+        const baseIdentity = headingBaseIdentity(element);
+        const occurrence = occurrenceCounts.get(baseIdentity) ?? 0;
+        occurrenceCounts.set(baseIdentity, occurrence + 1);
+        return {element, base_identity: baseIdentity, occurrence};
+      });
+      return entries.map((entry) => ({
+        ...entry,
+        occurrence_count: occurrenceCounts.get(entry.base_identity) ?? 1,
+        key: headingIdentity(entry.base_identity, entry.occurrence, occurrenceCounts.get(entry.base_identity) ?? 1),
+      }));
+    };
+    const scopedHeadingIdentityElements = (elements) => {
+      const scoped = layout === 'kanban'
+        ? elements
+        : elements.filter((element) => sharesSelectedResultScope(element));
+      return layout === 'kanban'
+        ? scoped
+        : scoped.filter((element) => !scoped.some((nested) => nested !== element && element.contains(nested)));
+    };
+    const recordHeadingIdentityEntries = (entries, sample) => {
+      const counts = new Map();
+      const priorElementsByBase = new Map([...freshSweepHeadingElementsByBase]
+        .map(([baseIdentity, elements]) => [baseIdentity, new Set(elements.keys())]));
+      for (const entry of entries) counts.set(entry.base_identity, entry.occurrence_count);
+      for (const [baseIdentity, count] of counts) {
+        const priorCount = freshSweepHeadingMultiplicityByBase.get(baseIdentity);
+        if (priorCount !== undefined && priorCount !== count) {
+          freshSweepHeadingIdentityAmbiguous = true;
+          freshSweepHeadingIdentityCollisionEvidence.push({
+            base_identity: baseIdentity,
+            prior_occurrence_count: priorCount,
+            occurrence_count: count,
+            reason: 'heading-identity-occurrence-count-changed-between-samples',
+            sample,
+          });
+        }
+        if (priorCount === undefined) freshSweepHeadingMultiplicityByBase.set(baseIdentity, count);
+        if (count > 1) {
+          freshSweepHeadingCollisionBases.add(baseIdentity);
+          if (!freshSweepHeadingIdentityCollisionEvidence.some((item) => item.base_identity === baseIdentity
+            && item.occurrence_count === count && Array.isArray(item.occurrence_keys))) {
+            freshSweepHeadingIdentityCollisionEvidence.push({
+              base_identity: baseIdentity,
+              occurrence_count: count,
+              occurrence_keys: entries.filter((entry) => entry.base_identity === baseIdentity).map((entry) => entry.key),
+              sample,
+            });
           }
         }
       }
-    } else if (layout === 'kanban' && groupRecords.length > 0) {
-      for (const link of pathLinks) {
-        const owners = groupRecords.filter((group) => group.marker.column === link.column);
-        if (owners.length !== 1) {
+      for (const entry of entries) {
+        if (!freshSweepHeadingElementsByBase.has(entry.base_identity)) {
+          freshSweepHeadingElementsByBase.set(entry.base_identity, new Map());
+        }
+        const observedElements = freshSweepHeadingElementsByBase.get(entry.base_identity);
+        const priorElements = priorElementsByBase.get(entry.base_identity);
+        if (priorElements?.size && !priorElements.has(entry.element)) {
+          // A previously observed identity appearing on a new node may be a recycled heading
+          // for another equal-looking value. Occurrence ordinals separate simultaneous labels,
+          // but cannot prove continuity across disjoint DOM snapshots.
+          freshSweepHeadingIdentityAmbiguous = true;
+          freshSweepHeadingIdentityCollisionEvidence.push({
+            base_identity: entry.base_identity,
+            occurrence_key: entry.key,
+            occurrence_count: entry.occurrence_count,
+            reason: 'previously-seen-heading-identity-reappeared-on-a-new-node',
+            sample,
+          });
+        }
+        observedElements.set(entry.element, entry.key);
+        observeFreshNodeIdentity(entry.element, 'heading:' + entry.key, 'group-heading');
+        let verticalAnchor = null;
+        for (let ancestor = entry.element.parentElement; ancestor; ancestor = ancestor.parentElement) {
+          const style = window.getComputedStyle(ancestor);
+          if (ancestor.scrollHeight > ancestor.clientHeight + 1
+            && /(auto|scroll|overlay|hidden)/.test(style.overflowY)) {
+            verticalAnchor = ancestor;
+            break;
+          }
+        }
+        const bounds = entry.element.getBoundingClientRect();
+        const logicalPosition = {
+          anchor_class_name: verticalAnchor?.getAttribute('class') || verticalAnchor?.tagName.toLowerCase() || 'document',
+          top: Math.round(verticalAnchor
+            ? bounds.top - verticalAnchor.getBoundingClientRect().top + verticalAnchor.scrollTop
+            : bounds.top + window.scrollY),
+        };
+        const priorLogicalPosition = freshSweepHeadingLogicalPositionByElement.get(entry.element);
+        if (priorLogicalPosition
+          && (priorLogicalPosition.anchor_class_name !== logicalPosition.anchor_class_name
+            || Math.abs(priorLogicalPosition.top - logicalPosition.top) > 4)) {
+          // A virtualized renderer can recycle the same DOM node for an equal-looking heading;
+          // a changed logical row position reveals that the label alone cannot prove continuity.
+          freshSweepHeadingIdentityAmbiguous = true;
+          freshSweepHeadingIdentityCollisionEvidence.push({
+            base_identity: entry.base_identity,
+            occurrence_key: entry.key,
+            occurrence_count: entry.occurrence_count,
+            reason: 'heading-node-logical-position-changed-between-samples',
+            prior_logical_position: priorLogicalPosition,
+            logical_position: logicalPosition,
+            sample,
+          });
+        }
+        freshSweepHeadingLogicalPositionByElement.set(entry.element, logicalPosition);
+      }
+    };
+    const observeFreshNodeIdentity = (element, identity, kind) => {
+      const previousIdentity = freshSweepNodeIdentities.get(element);
+      if (previousIdentity !== undefined && previousIdentity !== identity) {
+        recordIdentityChange(kind, previousIdentity, identity, element);
+        freshSweepNodeIdentities.set(element, identity);
+      } else if (previousIdentity === undefined) {
+        freshSweepNodeIdentities.set(element, identity);
+      }
+    };
+    const compareDomOrder = (left, right) => {
+      if (left === right) return 0;
+      const position = left.compareDocumentPosition(right);
+      if (position & Node.DOCUMENT_POSITION_FOLLOWING) return -1;
+      if (position & Node.DOCUMENT_POSITION_PRECEDING) return 1;
+      return 0;
+    };
+    const addOrderEdges = (edgeMap, values) => {
+      const ordered = [...new Set(values)];
+      for (const value of ordered) if (!edgeMap.has(value)) edgeMap.set(value, new Set());
+      for (let index = 0; index + 1 < ordered.length; index += 1) {
+        if (ordered[index] !== ordered[index + 1]) edgeMap.get(ordered[index]).add(ordered[index + 1]);
+      }
+    };
+    const topologicalOrder = (values, edgeMap) => {
+      const nodes = [...new Set(values)];
+      const incoming = new Map(nodes.map((node) => [node, 0]));
+      for (const node of nodes) {
+        for (const next of edgeMap.get(node) ?? []) {
+          if (incoming.has(next)) incoming.set(next, incoming.get(next) + 1);
+        }
+      }
+      const remaining = new Set(nodes);
+      const ordered = [];
+      let ambiguous = false;
+      while (remaining.size > 0) {
+        const ready = [...remaining].filter((node) => incoming.get(node) === 0).sort();
+        if (ready.length === 0) {
+          ambiguous = true;
+          ordered.push(...[...remaining].sort());
+          break;
+        }
+        if (ready.length !== 1) ambiguous = true;
+        const next = ready[0];
+        remaining.delete(next);
+        ordered.push(next);
+        for (const after of edgeMap.get(next) ?? []) {
+          if (incoming.has(after)) incoming.set(after, incoming.get(after) - 1);
+        }
+      }
+      return {ordered, ambiguous};
+    };
+    const addPathGroupObservation = (path, groupKey) => {
+      if (!groupKey) {
+        if (groupByProperty || layout === 'kanban') freshSweepUnownedResultSamples += 1;
+        return;
+      }
+      if (!freshSweepPathGroupKeys.has(path)) freshSweepPathGroupKeys.set(path, new Set());
+      freshSweepPathGroupKeys.get(path).add(groupKey);
+      if (freshSweepPathGroupKeys.get(path).size > 1) freshSweepGroupOwnershipAmbiguous = true;
+    };
+    for (const entry of retainedCandidates) {
+      const identityBefore = pathIdentity(entry.candidate, entry.path);
+      const candidateNow = pathCandidateFor(entry.element);
+      const identityNow = pathIdentity(candidateNow);
+      if (identityBefore !== identityNow) recordIdentityChange('path', identityBefore, identityNow, entry.element);
+      freshSweepNodeIdentities.set(entry.element, identityNow);
+    }
+    for (const link of kanbanCardPathLinks) {
+      const titleNow = textOf(link.element.querySelector('.bases-kanban-card-property.mod-title'));
+      const pathNow = pathFor(titleNow);
+      const identityNow = kanbanCardIdentity(titleNow, link.element, pathNow);
+      const identityBefore = 'path:' + link.path + '|column:' + rawKanbanColumns.indexOf(link.column);
+      if (identityNow !== identityBefore) recordIdentityChange('kanban-card', identityBefore, identityNow, link.element);
+      freshSweepNodeIdentities.set(link.element, identityNow);
+    }
+    const initialHeadingIdentityEntries = headingIdentityEntries(
+      scopedHeadingIdentityElements(rawMarkerElements),
+    );
+    recordHeadingIdentityEntries(initialHeadingIdentityEntries, {source: 'initial-dom'});
+    const scanFreshSweepPosition = async (scrollContainer, containerClass, axis, requestedOffset) => {
+      await waitForPaintFrames();
+      freshSweepPositions += 1;
+      const offsetEvidence = {
+        container_class: containerClass,
+        axis,
+        requested_offset: requestedOffset,
+        scroll_positions: readScrollPositions(scrollContainer),
+        path_samples: 0,
+        unique_path_count: 0,
+        unique_paths: [],
+        heading_samples: 0,
+        unmapped_path_samples: 0,
+        unmapped_row_samples: 0,
+        ordered_paths: [],
+        ordered_headings: [],
+        result_group_assignments: [],
+        unmapped_rows: [],
+      };
+      freshSweepOffsets.push(offsetEvidence);
+      const unmappedCandidateEvidence = (element, candidate, sourceScope) => {
+        const bounds = element.getBoundingClientRect();
+        return {
+          candidate: String(candidate || ''),
+          text: textOf(element),
+          class_name: element.getAttribute('class') || '',
+          source_scope: sourceScope,
+          top: bounds.top,
+          left: bounds.left,
+          visibility_sample_sequence: freshSweepPositions,
+          visibility_sample_bounds: {top: bounds.top, left: bounds.left, width: bounds.width, height: bounds.height},
+          scroll_positions: readScrollPositions(element),
+        };
+      };
+      const pathsAtPosition = new Set();
+      const addFreshPath = (path) => {
+        if (pathsAtPosition.has(path)) freshSweepDuplicatePathSamples += 1;
+        pathsAtPosition.add(path);
+        freshSweepPaths.add(path);
+      };
+      const freshRawMarkers = observationRoot
+        ? [...observationRoot.querySelectorAll('[class], [data-group], [role="group"]')].filter(hasGroupMarker)
+        : [];
+      const freshMarkers = scopedHeadingIdentityElements(freshRawMarkers);
+      const freshMarkerIdentityEntries = headingIdentityEntries(freshMarkers);
+      recordHeadingIdentityEntries(freshMarkerIdentityEntries, {
+        source: 'fresh-sweep',
+        position: freshSweepPositions,
+        scroll_positions: offsetEvidence.scroll_positions,
+      });
+      const markerObservations = freshMarkerIdentityEntries.map((identityEntry) => {
+        const {element, key} = identityEntry;
+        const column = layout === 'kanban' ? element.closest('.bases-kanban-column') : null;
+        const columnOrdinal = layout === 'kanban' ? rawKanbanColumns.indexOf(column) : null;
+        const painted = visible(element) && hitTestPaintedText(element);
+        if (painted) {
+          freshSweepHeadingKeys.add(key);
+          freshSweepHeadingSamples += 1;
+          offsetEvidence.heading_samples += 1;
+          if (layout === 'kanban') freshSweepPaintedKanbanColumnOrdinals.add(columnOrdinal);
+          const bounds = element.getBoundingClientRect();
+          if (!freshSweepHeadingRecords.has(key)) {
+            freshSweepHeadingRecords.set(key, {
+              key,
+              element,
+              label: normalize(element.getAttribute('data-group') || element.getAttribute('aria-label') || textOf(element)),
+              class_name: element.getAttribute('class') || '',
+              column,
+              column_ordinal: columnOrdinal,
+              top: bounds.top,
+              left: bounds.left,
+              visibility_sample_sequence: freshSweepPositions,
+              visibility_sample_bounds: {top: bounds.top, left: bounds.left, width: bounds.width, height: bounds.height},
+              scroll_positions: readScrollPositions(element),
+            });
+          }
+        }
+        return {
+          element,
+          key,
+          base_identity: identityEntry.base_identity,
+          occurrence: identityEntry.occurrence,
+          occurrence_count: identityEntry.occurrence_count,
+          column,
+          column_ordinal: columnOrdinal,
+          painted,
+        };
+      });
+      const paintedHeadingEvents = markerObservations
+        .filter((marker) => marker.painted)
+        .sort((left, right) => layout === 'kanban'
+          ? left.column_ordinal - right.column_ordinal || compareDomOrder(left.element, right.element)
+          : compareDomOrder(left.element, right.element));
+      offsetEvidence.ordered_headings = [...new Set(paintedHeadingEvents.map((marker) => marker.key))];
+      if (layout === 'table') {
+        const structurallyOrderedHeadings = markerObservations
+          .filter((marker) => sharesSelectedResultScope(marker.element)
+            && window.getComputedStyle(marker.element).display !== 'none'
+            && window.getComputedStyle(marker.element).visibility !== 'hidden'
+            && freshSweepHeadingKeys.has(marker.key))
+          .sort((left, right) => compareDomOrder(left.element, right.element))
+          .map((marker) => marker.key);
+        addOrderEdges(freshSweepHeadingOrderEdges, structurallyOrderedHeadings);
+      }
+      const resultEntries = [];
+      const recordResult = (entry, groupKey, columnOrdinal, column, localOrdinal) => {
+        const bounds = entry.element.getBoundingClientRect();
+        const scrollPositions = readScrollPositions(entry.element);
+        freshSweepPathSamples += 1;
+        offsetEvidence.path_samples += 1;
+        addFreshPath(entry.path);
+        const observation = {
+          path: entry.path,
+          group_key: groupKey,
+          column_ordinal: columnOrdinal,
+          local_dom_ordinal: localOrdinal,
+        };
+        if (!freshSweepResultRecords.has(entry.path)) {
+          freshSweepResultRecords.set(entry.path, {
+            element: entry.element,
+            column,
+            column_ordinal: columnOrdinal,
+            path: entry.path,
+            text: entry.text,
+            class_name: entry.class_name,
+            source_scope: layout === 'kanban' ? 'kanban' : 'table',
+            row_class_name: entry.row_class_name || '',
+            top: bounds.top,
+            left: bounds.left,
+            visibility_sample_sequence: freshSweepPositions,
+            visibility_sample_bounds: {top: bounds.top, left: bounds.left, width: bounds.width, height: bounds.height},
+            scroll_positions: scrollPositions,
+            observations: [],
+          });
+        } else {
+          const prior = freshSweepResultRecords.get(entry.path);
+          if (layout === 'kanban' && prior.column_ordinal !== columnOrdinal) {
+            recordIdentityChange('kanban-card', 'path:' + entry.path + '|column:' + prior.column_ordinal,
+              'path:' + entry.path + '|column:' + columnOrdinal, entry.element);
+          }
+        }
+        freshSweepResultRecords.get(entry.path).observations.push(observation);
+        offsetEvidence.result_group_assignments.push(observation);
+        addPathGroupObservation(entry.path, groupKey);
+        resultEntries.push({...entry, column_ordinal: columnOrdinal, column, local_dom_ordinal: localOrdinal});
+      };
+      if (layout === 'kanban' && kanbanRoot) {
+        const freshCards = [...kanbanRoot.querySelectorAll('.bases-kanban-card')];
+        const cardOrdinalByElement = new Map();
+        const cardsByColumn = new Map();
+        for (const card of freshCards) {
+          const column = card.closest('.bases-kanban-column');
+          if (!cardsByColumn.has(column)) cardsByColumn.set(column, []);
+          cardsByColumn.get(column).push(card);
+        }
+        for (const cards of cardsByColumn.values()) cards.forEach((card, index) => cardOrdinalByElement.set(card, index));
+        for (const card of freshCards) {
+          if (!visible(card) || !hitTestPainted(card)) continue;
+          const titles = [...card.querySelectorAll('.bases-kanban-card-property.mod-title')].filter(visible);
+          if (titles.length !== 1 || !hitTestPaintedText(titles[0], card)) {
+            freshSweepPathSamples += 1;
+            offsetEvidence.path_samples += 1;
+            freshSweepUnmappedPathSamples += 1;
+            offsetEvidence.unmapped_path_samples += 1;
+            freshSweepUnmappedCandidates.push(unmappedCandidateEvidence(card, textOf(card), 'kanban'));
+            continue;
+          }
+          const title = textOf(titles[0]);
+          const path = pathFor(title);
+          observeFreshNodeIdentity(card, kanbanCardIdentity(title, card, path), 'kanban-card');
+          if (!path) {
+            freshSweepPathSamples += 1;
+            offsetEvidence.path_samples += 1;
+            freshSweepUnmappedPathSamples += 1;
+            offsetEvidence.unmapped_path_samples += 1;
+            freshSweepUnmappedCandidates.push(unmappedCandidateEvidence(card, title, 'kanban'));
+            continue;
+          }
+          const column = card.closest('.bases-kanban-column');
+          const columnOrdinal = rawKanbanColumns.indexOf(column);
+          const columnHeadings = markerObservations.filter((marker) => marker.column === column);
+          const groupKey = columnHeadings.length === 1 ? columnHeadings[0].key : null;
+          if (columnOrdinal >= 0) freshSweepPaintedKanbanColumnOrdinals.add(columnOrdinal);
+          recordResult({
+            element: card,
+            path,
+            text: title,
+            class_name: card.getAttribute('class') || '',
+            row_class_name: card.getAttribute('class') || '',
+          }, groupKey, columnOrdinal, column, cardOrdinalByElement.get(card) ?? -1);
+        }
+      } else if (selectedResultRoot) {
+        const freshLinks = [...selectedResultRoot.querySelectorAll(linkSelector)].map((element) => {
+          const candidate = pathCandidateFor(element);
+          return {element, candidate, path: pathFor(candidate)};
+        });
+        const freshCandidateKey = (entry) => entry.path ?? entry.candidate.trim().toLowerCase();
+        const retainedFreshLinks = freshLinks.filter((entry) => !freshLinks.some((nested) => nested !== entry
+          && entry.element.contains(nested.element)
+          && freshCandidateKey(nested) === freshCandidateKey(entry)));
+        const paintedFreshLinks = [];
+        for (const entry of retainedFreshLinks) {
+          if (!visible(entry.element)) continue;
+          const painted = textOf(entry.element)
+            ? hitTestPaintedText(entry.element)
+            : hitTestPainted(entry.element);
+          if (!painted) continue;
+          const identity = pathIdentity(entry.candidate, entry.path);
+          observeFreshNodeIdentity(entry.element, identity, 'path');
+          if (!entry.path) {
+            freshSweepPathSamples += 1;
+            offsetEvidence.path_samples += 1;
+            freshSweepUnmappedPathSamples += 1;
+            offsetEvidence.unmapped_path_samples += 1;
+            freshSweepUnmappedCandidates.push(unmappedCandidateEvidence(entry.element, entry.candidate, 'table'));
+            continue;
+          }
+          paintedFreshLinks.push(entry);
+        }
+        paintedFreshLinks.sort((left, right) => compareDomOrder(left.element, right.element));
+        let activeTableGroup = lastTableGroupByScrollContainer.get(scrollContainer) ?? null;
+        if (axis === 'vertical' && requestedOffset === 0) activeTableGroup = null;
+        const tableMarkers = markerObservations.filter((marker) => sharesSelectedResultScope(marker.element));
+        const events = [
+          ...tableMarkers.map((marker) => ({kind: 'heading', element: marker.element, key: marker.key})),
+          ...paintedFreshLinks.map((entry, index) => ({kind: 'path', element: entry.element, entry, index})),
+        ].sort((left, right) => compareDomOrder(left.element, right.element));
+        let localOrdinal = 0;
+        for (const event of events) {
+          if (event.kind === 'heading') {
+            activeTableGroup = event.key;
+            continue;
+          }
+          const rowOwner = event.entry.element.closest('.bases-tr, .bases-row, .bases-table-row, tr, [role="row"]');
+          recordResult({
+            element: event.entry.element,
+            path: event.entry.path,
+            text: textOf(event.entry.element),
+            class_name: event.entry.element.getAttribute('class') || '',
+            row_class_name: rowOwner?.getAttribute('class') || '',
+          }, groupByProperty ? activeTableGroup : null, null, null, localOrdinal);
+          localOrdinal += 1;
+        }
+        lastTableGroupByScrollContainer.set(scrollContainer, activeTableGroup);
+        const freshRows = [...selectedResultRoot.querySelectorAll('.bases-tr, .bases-row, .bases-table-row, tr, [role="row"]')];
+        for (const row of freshRows) {
+          if (!visible(row) || !hitTestPaintedText(row) || !textOf(row)) continue;
+          const isHeader = row.matches('thead tr, .bases-table-header, [role="columnheader"]')
+            || Boolean(row.querySelector('.bases-table-header, th, [role="columnheader"]'));
+          const isGroupHeading = hasGroupMarker(row) || tableMarkers.some((marker) => row.contains(marker.element));
+          const hasCandidate = retainedFreshLinks.some((entry) => row.contains(entry.element));
+          if (!isHeader && !isGroupHeading && !hasCandidate) {
+            freshSweepUnmappedRowSamples += 1;
+            offsetEvidence.unmapped_row_samples += 1;
+            const bounds = row.getBoundingClientRect();
+            const unmappedRow = {
+              text: textOf(row).slice(0, 500),
+              class_name: row.getAttribute('class') || '',
+              tag: row.tagName.toLowerCase(),
+              top: bounds.top,
+              left: bounds.left,
+              visibility_sample_sequence: freshSweepPositions,
+              visibility_sample_bounds: {top: bounds.top, left: bounds.left, width: bounds.width, height: bounds.height},
+              scroll_positions: readScrollPositions(row),
+            };
+            freshSweepUnmappedRows.push(unmappedRow);
+            offsetEvidence.unmapped_rows.push(unmappedRow);
+          }
+        }
+      }
+      resultEntries.sort((left, right) => layout === 'kanban'
+        ? left.column_ordinal - right.column_ordinal || left.local_dom_ordinal - right.local_dom_ordinal
+        : compareDomOrder(left.element, right.element));
+      offsetEvidence.ordered_paths = [...new Set(resultEntries.map((entry) => entry.path))];
+      if (layout === 'kanban') {
+        const pathsByColumn = new Map();
+        for (const entry of resultEntries) {
+          if (!pathsByColumn.has(entry.column_ordinal)) pathsByColumn.set(entry.column_ordinal, []);
+          pathsByColumn.get(entry.column_ordinal).push(entry.path);
+        }
+        for (const paths of pathsByColumn.values()) addOrderEdges(freshSweepPathOrderEdges, paths);
+      } else {
+        addOrderEdges(freshSweepPathOrderEdges, offsetEvidence.ordered_paths);
+      }
+      offsetEvidence.unique_path_count = pathsAtPosition.size;
+      offsetEvidence.unique_paths = [...pathsAtPosition].sort();
+    };
+    if (observationRoot) {
+      await scanFreshSweepPosition(observationRoot, 'current-viewport', 'current', null);
+      const sweptScrollContainers = new WeakSet();
+      freshSweepTraversal: while (true) {
+        const potentialScrollContainers = [observationRoot, ...observationRoot.querySelectorAll('*')]
+          .filter((element) => {
+            if (sweptScrollContainers.has(element)) return false;
+            const style = window.getComputedStyle(element);
+            const verticalScrollable = element.scrollHeight > element.clientHeight + 1
+              && /(auto|scroll|overlay|hidden)/.test(style.overflowY);
+            const horizontalScrollable = element.scrollWidth > element.clientWidth + 1
+              && /(auto|scroll|overlay|hidden)/.test(style.overflowX);
+            return verticalScrollable || horizontalScrollable;
+          });
+        if (potentialScrollContainers.length === 0) break;
+        for (const container of potentialScrollContainers) {
+          sweptScrollContainers.add(container);
+          await scrollIntoView(container);
+          const containerClass = container.getAttribute('class') || container.tagName.toLowerCase();
+          const axes = [];
+          if (container.scrollHeight > container.clientHeight + 1) axes.push({
+            axis: 'vertical',
+            property: 'scrollTop',
+            viewport: container.clientHeight,
+            sizeProperty: 'scrollHeight',
+          });
+          if (container.scrollWidth > container.clientWidth + 1) axes.push({
+            axis: 'horizontal',
+            property: 'scrollLeft',
+            viewport: container.clientWidth,
+            sizeProperty: 'scrollWidth',
+          });
+          for (const {axis, property, viewport: axisViewport, sizeProperty} of axes) {
+            let sweptMaximum = -1;
+            while (true) {
+              const maximum = Math.max(0, container[sizeProperty] - axisViewport);
+              if (maximum <= sweptMaximum) break;
+              const step = Math.max(1, Math.floor(Math.max(1, axisViewport) * 0.75));
+              const offsets = [0];
+              for (let offset = step; offset < maximum; offset += step) offsets.push(offset);
+              offsets.push(maximum);
+              for (const offset of [...new Set(offsets)]) {
+                if (freshSweepPositions >= maximumFreshSweepPositions) {
+                  freshSweepCoverageComplete = false;
+                  break freshSweepTraversal;
+                }
+                container[property] = offset;
+                await scanFreshSweepPosition(container, containerClass, axis, offset);
+              }
+              sweptMaximum = maximum;
+            }
+          }
+        }
+      }
+    }
+    const freshSweepUniquePaths = [...freshSweepPaths].sort();
+    const freshSweepUniqueHeadings = [...freshSweepHeadingKeys].sort();
+    let freshSweepOrderedPaths = [];
+    if (layout === 'kanban') {
+      const columnOrdinals = [...new Set([...freshSweepResultRecords.values()].map((entry) => entry.column_ordinal))].sort((left, right) => left - right);
+      for (const columnOrdinal of columnOrdinals) {
+        const columnPaths = [...freshSweepResultRecords.values()]
+          .filter((entry) => entry.column_ordinal === columnOrdinal)
+          .map((entry) => entry.path);
+        const ordered = topologicalOrder(columnPaths, freshSweepPathOrderEdges);
+        freshSweepOrderedPaths.push(...ordered.ordered);
+        if (ordered.ambiguous) freshSweepOrderingAmbiguous = true;
+      }
+      if ([...freshSweepResultRecords.values()].some((entry) => entry.column_ordinal < 0)) freshSweepOrderingAmbiguous = true;
+    } else {
+      const ordered = topologicalOrder(freshSweepUniquePaths, freshSweepPathOrderEdges);
+      freshSweepOrderedPaths = ordered.ordered;
+      if (ordered.ambiguous) freshSweepOrderingAmbiguous = true;
+    }
+    let freshSweepOrderedHeadings = [];
+    if (layout === 'kanban') {
+      freshSweepOrderedHeadings = [...freshSweepHeadingRecords.keys()].sort((leftKey, rightKey) => {
+        const left = freshSweepHeadingRecords.get(leftKey);
+        const right = freshSweepHeadingRecords.get(rightKey);
+        return left.column_ordinal - right.column_ordinal || leftKey.localeCompare(rightKey);
+      });
+    } else {
+      const ordered = topologicalOrder(freshSweepUniqueHeadings, freshSweepHeadingOrderEdges);
+      freshSweepOrderedHeadings = ordered.ordered;
+      if (ordered.ambiguous) freshSweepOrderingAmbiguous = true;
+    }
+    pathLinks = freshSweepOrderedPaths.map((path, index) => {
+      const result = freshSweepResultRecords.get(path);
+      const groupKeys = [...(freshSweepPathGroupKeys.get(path) ?? [])];
+      return {
+        ...result,
+        index,
+        result_order_ordinal: index,
+        group_key: groupKeys.length === 1 ? groupKeys[0] : null,
+        group_keys: groupKeys,
+      };
+    });
+    groupRecords = freshSweepOrderedHeadings.map((key, index) => {
+      const heading = freshSweepHeadingRecords.get(key);
+      const marker = {
+        element: heading.element,
+        column: heading.column,
+        label: heading.label,
+        index,
+      };
+      return {
+        index,
+        key,
+        heading_text: heading.label,
+        heading_class_name: heading.class_name,
+        heading_bounds: {top: heading.top, left: heading.left},
+        heading_visibility_sample: {
+          visibility_sample_sequence: heading.visibility_sample_sequence,
+          visibility_sample_bounds: heading.visibility_sample_bounds,
+          scroll_positions: heading.scroll_positions,
+        },
+        member_paths: [],
+        marker,
+      };
+    });
+    const ungroupedVisibleFilePaths = [];
+    const unassignedVisibleFilePaths = [];
+    for (const link of pathLinks) {
+      if (layout === 'kanban' || groupByProperty) {
+        const ownerKeys = link.group_keys;
+        const owners = groupRecords.filter((group) => ownerKeys.includes(group.key));
+        if (ownerKeys.length !== 1 || owners.length !== 1) {
           unassignedVisibleFilePaths.push(link.path);
           continue;
         }
         owners[0].member_paths.push(link.path);
-      }
-    } else {
-      for (const link of pathLinks) {
-        if (groupRecords.length === 0 && link.source_scope !== 'unscoped') {
-          ungroupedVisibleFilePaths.push(link.path);
-        } else {
-          unassignedVisibleFilePaths.push(link.path);
-        }
+      } else {
+        ungroupedVisibleFilePaths.push(link.path);
       }
     }
-    for (const group of groupRecords) {
-      group.member_paths.sort((leftPath, rightPath) => {
-        const left = pathLinks.find((link) => link.path === leftPath);
-        const right = pathLinks.find((link) => link.path === rightPath);
-        return (left?.top ?? 0) - (right?.top ?? 0) || (left?.left ?? 0) - (right?.left ?? 0) || (left?.index ?? 0) - (right?.index ?? 0);
-      });
-    }
+    const allUnmappedVisiblePathCandidates = [...unmappedVisiblePathCandidates, ...freshSweepUnmappedCandidates];
     const errorSpecificPattern = /invalid|unsupported|must be|could not|failed|failure|malformed|error|exception|rejected|unable to/i;
     const activeErrorElements = [...(root?.querySelectorAll('[role="alert"], .bases-error, [class*="error"]') ?? [])]
       .filter((element) => hitTestPaintedText(element));
@@ -3038,12 +4769,38 @@ async function readGroupOrderVisibleState(
     const emptyErrorOutcome = scenarioExpectsVisibleError
       && explicitErrorSurface
       && groupRecords.length === 0
-      && pathLinks.length === 0
-      && unmappedVisiblePathCandidates.length === 0
+      && freshSweepUniquePaths.length === 0
+      && allUnmappedVisiblePathCandidates.length === 0
+      && freshSweepUnmappedRowSamples === 0
       && unmappedVisibleRowCandidates.length === 0
       && occludedKanbanDomCandidates.length === 0
       && (layout === 'kanban' ? kanbanContainers.length === 0 : tableRoots.length === 0);
+    const emptyTableOutcome = layout === 'table'
+      && !scenarioExpectsVisibleError
+      && zeroResultOutcomeClassification !== null
+      && view?.getViewType?.() === 'bases'
+      && view?.file?.path === requestedPath
+      && visibleTableShells.length === 1
+      && resultCount === 0
+      && freshSweepPositions > 0
+      && freshSweepCoverageComplete
+      && freshSweepUniquePaths.length === 0
+      && freshSweepUnmappedPathSamples === 0
+      && freshSweepUnmappedRowSamples === 0
+      && groupRecords.length === 0
+      && ungroupedVisibleFilePaths.length === 0
+      && unassignedVisibleFilePaths.length === 0
+      && allUnmappedVisiblePathCandidates.length === 0
+      && unmappedVisibleRowCandidates.length === 0
+      && visibleErrorTexts.length === 0
+      && !notices.some((text) => errorSpecificPattern.test(text));
     const ambiguityReasons = [];
+    if ((layout === 'table' || layout === 'kanban') && !selectedResultRoot && !explicitErrorSurface) {
+      ambiguityReasons.push('Expected exactly one visible result root for the loaded Bases view, found ' + visibleResultRoots.length + '.');
+    }
+    if (resultCount === null && selectedResultRoot && !explicitErrorSurface) {
+      ambiguityReasons.push('No visible result count was structurally scoped to the selected result root and its meaningful shared container.');
+    }
     if (layout === 'kanban' && kanbanContainers.length > 1) {
       ambiguityReasons.push('Expected at most one Kanban container under the active view, found ' + kanbanContainers.length + '.');
     }
@@ -3051,31 +4808,27 @@ async function readGroupOrderVisibleState(
       ambiguityReasons.push('Expected exactly one loaded Kanban container, found ' + kanbanContainers.length + '.');
     }
     if (groupRecords.some((group) => !group.heading_text)) ambiguityReasons.push('A visible group marker has no extractable heading text.');
-    if (unmappedVisiblePathCandidates.length > 0) ambiguityReasons.push('One or more visible file-link candidates could not be mapped to a unique fixture path.');
+    if (allUnmappedVisiblePathCandidates.length > 0) ambiguityReasons.push('One or more visible file-link candidates could not be mapped to a unique fixture path.');
     if (unmappedVisibleRowCandidates.length > 0) ambiguityReasons.push('One or more visible data rows or cards have no uniquely mapped fixture file.');
     if (unassignedVisibleFilePaths.length > 0) ambiguityReasons.push('One or more visible fixture file links could not be assigned to a group or an ungrouped view.');
-    if (layout === 'kanban' && pathLinks.length > 0 && groupRecords.length === 0 && !emptyErrorOutcome) {
+    if (layout === 'kanban' && freshSweepUniquePaths.length > 0 && groupRecords.length === 0 && !emptyErrorOutcome) {
       ambiguityReasons.push('The Kanban view rendered fixture files without detectable group headings.');
     }
     if (layout === 'kanban' && !emptyErrorOutcome) {
-      for (const column of paintedKanbanColumns) {
+      for (const columnOrdinal of freshSweepPaintedKanbanColumnOrdinals) {
+        const column = rawKanbanColumns[columnOrdinal];
         const headings = groupRecords.filter((group) => group.marker.column === column);
         if (headings.length !== 1) {
           ambiguityReasons.push('A painted Kanban column must have exactly one visible group heading; found ' + headings.length + '.');
         }
       }
       for (const group of groupRecords) {
-        if (!paintedKanbanColumns.includes(group.marker.column)) {
+        if (!freshSweepPaintedKanbanColumnOrdinals.has(rawKanbanColumns.indexOf(group.marker.column))) {
           ambiguityReasons.push('Visible Kanban heading ' + JSON.stringify(group.heading_text) + ' has no uniquely painted column.');
         }
       }
-      const expectedNotePaths = fixturePaths.filter((path) => /\.md$/i.test(path)).sort();
-      const observedCardPaths = pathLinks.map((link) => link.path).sort();
-      if (JSON.stringify(expectedNotePaths) !== JSON.stringify(observedCardPaths)) {
-        ambiguityReasons.push('Visible Kanban cards did not map one-to-one to every fixture Markdown path.');
-      }
       for (const group of groupRecords) {
-        const column = group.marker.element.closest('.bases-kanban-column');
+        const column = group.marker.column;
         const countElement = column?.querySelector('.bases-kanban-column-count');
         const countText = textOf(countElement);
         const declaredCount = /^\d+$/.test(countText) ? Number(countText) : null;
@@ -3084,21 +4837,49 @@ async function readGroupOrderVisibleState(
         }
       }
     }
-    if (layout === 'table' && groupByProperty && pathLinks.length > 0
+    if (layout === 'table' && groupByProperty && freshSweepUniquePaths.length > 0
       && groupRecords.length === 0 && !emptyErrorOutcome) {
       ambiguityReasons.push('A grouped table rendered fixture files without detectable group headings.');
     }
     if (scenarioExpectsVisibleError && !explicitErrorSurface) {
       ambiguityReasons.push('The scenario expected a visible error surface, but none was observed.');
     }
-    if (!emptyErrorOutcome) {
-      const expectedRenderedPaths = fixturePaths.filter((path) => /\\.md$/i.test(path)).sort();
-      const observedRenderedPaths = pathLinks.map((link) => link.path).sort();
-      if (JSON.stringify(expectedRenderedPaths) !== JSON.stringify(observedRenderedPaths)) {
-        ambiguityReasons.push('The renderer did not show every fixture Markdown row exactly once.');
-      }
+    if (freshSweepPositions === 0 && !explicitErrorSurface) {
+      ambiguityReasons.push('No fresh result DOM sweep positions were sampled.');
     }
-    if (pathLinks.length === 0 && unmappedVisiblePathCandidates.length === 0 && !emptyErrorOutcome) {
+    if (!freshSweepCoverageComplete) {
+      ambiguityReasons.push('The fresh DOM sweep exceeded its bounded scroll-position budget before coverage completed.');
+    }
+    if (resultCount !== null && freshSweepUniquePaths.length !== resultCount) {
+      ambiguityReasons.push('Freshly swept unique fixture paths did not match the reported Bases result count.');
+    }
+    if (freshSweepUnmappedPathSamples > 0) {
+      ambiguityReasons.push('The fresh DOM sweep found one or more painted result candidates that did not map to a unique fixture path.');
+    }
+    if (freshSweepDuplicatePathSamples > 0) {
+      ambiguityReasons.push('The fresh DOM sweep found duplicate fixture paths at one or more scroll positions.');
+    }
+    if (freshSweepUnmappedRowSamples > 0) {
+      ambiguityReasons.push('The fresh DOM sweep found one or more painted result rows without a mapped path candidate.');
+    }
+    if (freshSweepOrderingAmbiguous) {
+      ambiguityReasons.push('Fresh DOM sweep positions did not establish one stable DOM or column order for every result and group.');
+    }
+    if (freshSweepGroupOwnershipAmbiguous) {
+      ambiguityReasons.push('Fresh DOM sweep observations assigned one or more results to conflicting groups.');
+    }
+    if (freshSweepHeadingIdentityAmbiguous) {
+      ambiguityReasons.push('Repeated or recycled group headings shared an identity that could not be tracked uniquely across fresh DOM samples.');
+    }
+    if (nodeIdentityChanges.length > 0) {
+      ambiguityReasons.push('One or more result or group nodes changed identity after scrolling.');
+    }
+    if ((layout === 'table' || layout === 'kanban') && !explicitErrorSurface && resultCount === null) {
+      ambiguityReasons.push(resultCountTexts.length > 1
+        ? 'The loaded Bases view exposed multiple distinct visible result counts.'
+        : 'The loaded Bases view did not expose one visible result count scoped to its result area.');
+    }
+    if (freshSweepUniquePaths.length === 0 && allUnmappedVisiblePathCandidates.length === 0 && !emptyErrorOutcome && !emptyTableOutcome) {
       ambiguityReasons.push(layout === 'kanban'
         ? 'A C07.3 Kanban scenario rendered no uniquely mapped fixture cards and showed no explicit visible error.'
         : 'A C07.3 scenario rendered no mapped fixture file links and showed no explicit visible error.');
@@ -3119,6 +4900,14 @@ async function readGroupOrderVisibleState(
       source_scope: link.source_scope,
       top: link.top,
       left: link.left,
+      visibility_sample_sequence: link.visibility_sample_sequence,
+      visibility_sample_bounds: link.visibility_sample_bounds,
+      scroll_positions: link.scroll_positions,
+      result_order_ordinal: link.result_order_ordinal,
+      group_heading: groupRecords.find((group) => group.key === link.group_key)?.heading_text ?? null,
+      group_keys: link.group_keys,
+      column_ordinal: link.column_ordinal,
+      fresh_sweep_observation_count: link.observations.length,
     }));
     return {
       requested_file_path: requestedPath,
@@ -3127,13 +4916,65 @@ async function readGroupOrderVisibleState(
       active_view_type: view?.getViewType?.() ?? null,
       title: document.title,
       body: body.slice(0, 10_000),
-      groups: groupRecords.map(({index, heading_text, heading_class_name, heading_bounds, member_paths}) => ({index, heading_text, heading_class_name, heading_bounds, member_paths})),
+      result_count: resultCount,
+      result_count_texts: resultCountTexts,
+      result_count_evidence: resultCountEvidence,
+      zero_result_outcome_classification: zeroResultOutcomeClassification,
+      viewport,
+      visibility_sampling: {
+        scroll_actions: scrollActions,
+        path_candidates: retainedCandidates.length,
+        painted_path_candidates: retainedCandidates.filter((entry) => paintedPathCandidateElements.has(entry.element)).length,
+        group_markers: rawMarkerElements.length,
+        painted_group_markers: markerElements.length,
+        data_rows: rowCandidates.length,
+        painted_data_rows: visibleRowElements.length,
+        fresh_sweep_positions: freshSweepPositions,
+        fresh_sweep_coverage_complete: freshSweepCoverageComplete,
+        fresh_sweep_path_samples: freshSweepPathSamples,
+        fresh_sweep_unique_paths: freshSweepUniquePaths,
+        fresh_sweep_ordered_paths: freshSweepOrderedPaths,
+        fresh_sweep_result_membership: pathLinks.map((link) => ({
+          path: link.path,
+          result_order_ordinal: link.result_order_ordinal,
+          group_keys: link.group_keys,
+          column_ordinal: link.column_ordinal,
+          observation_count: link.observations.length,
+        })),
+        fresh_sweep_result_count_matches: resultCount === null ? null : freshSweepUniquePaths.length === resultCount,
+        fresh_sweep_heading_samples: freshSweepHeadingSamples,
+        fresh_sweep_unique_headings: freshSweepUniqueHeadings,
+        fresh_sweep_ordered_headings: freshSweepOrderedHeadings,
+        fresh_sweep_heading_identity_ambiguous: freshSweepHeadingIdentityAmbiguous,
+        fresh_sweep_heading_collision_base_count: freshSweepHeadingCollisionBases.size,
+        fresh_sweep_heading_identity_collisions: freshSweepHeadingIdentityCollisionEvidence,
+        fresh_sweep_unmapped_path_samples: freshSweepUnmappedPathSamples,
+        fresh_sweep_unmapped_row_samples: freshSweepUnmappedRowSamples,
+        fresh_sweep_unmapped_rows: freshSweepUnmappedRows.slice(0, 80),
+        fresh_sweep_unmapped_candidates: freshSweepUnmappedCandidates.slice(0, 80),
+        fresh_sweep_unowned_result_samples: freshSweepUnownedResultSamples,
+        fresh_sweep_duplicate_path_samples: freshSweepDuplicatePathSamples,
+        fresh_sweep_ordering_ambiguous: freshSweepOrderingAmbiguous,
+        fresh_sweep_group_ownership_ambiguous: freshSweepGroupOwnershipAmbiguous,
+        fresh_sweep_painted_kanban_column_ordinals: [...freshSweepPaintedKanbanColumnOrdinals].sort((left, right) => left - right),
+        fresh_sweep_scroll_offsets: freshSweepOffsets,
+        node_identity_change_count: nodeIdentityChanges.length,
+        node_identity_change_examples: nodeIdentityChanges.slice(0, 30),
+      },
+      groups: groupRecords.map(({index, heading_text, heading_class_name, heading_bounds, heading_visibility_sample, member_paths}) => ({
+        index,
+        heading_text,
+        heading_class_name,
+        heading_bounds,
+        heading_visibility_sample,
+        member_paths,
+      })),
       ungrouped_visible_file_paths: ungroupedVisibleFilePaths,
       unassigned_visible_file_paths: unassignedVisibleFilePaths,
       visible_fixture_path_links: visibleFixturePathLinks,
-      unmapped_visible_path_candidates: unmappedVisiblePathCandidates,
-      unmapped_visible_row_candidates: unmappedVisibleRowCandidates,
-      visible_group_marker_count: leafMarkers.length,
+      unmapped_visible_path_candidates: allUnmappedVisiblePathCandidates,
+      unmapped_visible_row_candidates: [...unmappedVisibleRowCandidates, ...freshSweepUnmappedRows],
+      visible_group_marker_count: freshSweepHeadingKeys.size,
       unmapped_group_marker_count: groupRecords.filter((group) => !group.heading_text).length,
       occluded_kanban_dom_candidates: occludedKanbanDomCandidates,
       visible_error_texts: visibleErrorTexts,
@@ -3180,6 +5021,45 @@ function emptyGroupOrderVisibleState(scenario: GroupOrderScenario): GroupOrderVi
     active_view_type: null,
     title: "",
     body: "",
+    result_count: null,
+    result_count_texts: [],
+    result_count_evidence: [],
+    zero_result_outcome_classification: null,
+    viewport: {width: 0, height: 0, available_width: 0, available_height: 0},
+    visibility_sampling: {
+      scroll_actions: 0,
+      path_candidates: 0,
+      painted_path_candidates: 0,
+      group_markers: 0,
+      painted_group_markers: 0,
+      data_rows: 0,
+      painted_data_rows: 0,
+      fresh_sweep_positions: 0,
+      fresh_sweep_coverage_complete: false,
+      fresh_sweep_path_samples: 0,
+      fresh_sweep_unique_paths: [],
+      fresh_sweep_ordered_paths: [],
+      fresh_sweep_result_membership: [],
+      fresh_sweep_result_count_matches: null,
+      fresh_sweep_heading_samples: 0,
+      fresh_sweep_unique_headings: [],
+      fresh_sweep_ordered_headings: [],
+      fresh_sweep_heading_identity_ambiguous: false,
+      fresh_sweep_heading_collision_base_count: 0,
+      fresh_sweep_heading_identity_collisions: [],
+      fresh_sweep_unmapped_path_samples: 0,
+      fresh_sweep_unmapped_row_samples: 0,
+      fresh_sweep_unmapped_rows: [],
+      fresh_sweep_unmapped_candidates: [],
+      fresh_sweep_unowned_result_samples: 0,
+      fresh_sweep_duplicate_path_samples: 0,
+      fresh_sweep_ordering_ambiguous: false,
+      fresh_sweep_group_ownership_ambiguous: false,
+      fresh_sweep_painted_kanban_column_ordinals: [],
+      fresh_sweep_scroll_offsets: [],
+      node_identity_change_count: 0,
+      node_identity_change_examples: [],
+    },
     groups: [],
     ungrouped_visible_file_paths: [],
     unassigned_visible_file_paths: [],
@@ -3216,6 +5096,7 @@ async function captureGroupOrderScenario(
   let screenshotError: string | undefined;
   let probeError: string | undefined;
   let probePhase: string | undefined;
+  let viewportPreparation: GroupOrderViewportPreparation | null = null;
   let retryProbeError: string | undefined;
   let minimalRendererState: GroupOrderMinimalRendererState | undefined;
   let minimalRendererStateError: string | undefined;
@@ -3225,6 +5106,13 @@ async function captureGroupOrderScenario(
       active_view_type: state.active_view_type,
       selection_succeeded: state.selection_succeeded,
       body: state.body.slice(0, 10_000),
+      result_count: state.result_count,
+      result_count_texts: state.result_count_texts,
+      result_count_evidence: state.result_count_evidence,
+      zero_result_outcome_classification: state.zero_result_outcome_classification,
+      viewport: state.viewport,
+      visibility_sampling: state.visibility_sampling,
+      viewport_preparation: viewportPreparation,
       groups: state.groups,
       ungrouped_visible_file_paths: state.ungrouped_visible_file_paths,
       unassigned_visible_file_paths: state.unassigned_visible_file_paths,
@@ -3313,6 +5201,48 @@ async function captureGroupOrderScenario(
     })()`, "C07.3 select target .base");
     if (!clicked) throw new Error(`${stage}: Obsidian did not expose ${scenario.base_path} for selection`);
 
+    probePhase = "prepare-full-results-viewport";
+    viewportPreparation = await connection.evaluateJson<GroupOrderViewportPreparation>(`(() => {
+      const leftSplit = window.app?.workspace?.leftSplit;
+      if (!leftSplit || typeof leftSplit.collapse !== 'function') {
+        return {
+          left_sidebar_collapsed: false,
+          requested_width: 0,
+          requested_height: 0,
+          actual_width: window.innerWidth,
+          actual_height: window.innerHeight,
+          actual_outer_width: window.outerWidth,
+          actual_outer_height: window.outerHeight,
+        };
+      }
+      if (!leftSplit.collapsed) leftSplit.collapse();
+      const requestedWidth = Number(window.screen?.availWidth ?? window.innerWidth);
+      const requestedHeight = Number(window.screen?.availHeight ?? window.innerHeight);
+      if (requestedWidth > window.outerWidth || requestedHeight > window.outerHeight) {
+        window.resizeTo(requestedWidth, requestedHeight);
+      }
+      return {
+        left_sidebar_collapsed: Boolean(leftSplit.collapsed),
+        requested_width: requestedWidth,
+        requested_height: requestedHeight,
+        actual_width: window.innerWidth,
+        actual_height: window.innerHeight,
+        actual_outer_width: window.outerWidth,
+        actual_outer_height: window.outerHeight,
+      };
+    })()`, "C07.3 prepare Bases observation viewport");
+    if (!viewportPreparation.left_sidebar_collapsed) {
+      throw new Error(`${stage}: could not collapse Obsidian's left sidebar before the complete-results capture; requested viewport=${viewportPreparation.requested_width}x${viewportPreparation.requested_height}`);
+    }
+    await delay(500);
+    const actualViewport = await connection.evaluateJson<Pick<GroupOrderViewportPreparation, "actual_width" | "actual_height" | "actual_outer_width" | "actual_outer_height">>(`({
+      actual_width: window.innerWidth,
+      actual_height: window.innerHeight,
+      actual_outer_width: window.outerWidth,
+      actual_outer_height: window.outerHeight,
+    })`, "C07.3 record prepared viewport dimensions");
+    viewportPreparation = {...viewportPreparation, ...actualViewport};
+
     let stableFingerprint = "";
     let stableSamples = 0;
     const settleDeadline = Date.now() + 45_000;
@@ -3386,6 +5316,7 @@ async function captureGroupOrderScenario(
     body: visible.body.slice(0, 10_000),
     stage,
     state_settled: stateSettled,
+    viewport_preparation: viewportPreparation,
     state_samples: stateSamples,
     screenshot,
     ...(screenshotError ? {screenshot_error: screenshotError} : {}),
@@ -3846,7 +5777,7 @@ async function authorFixtureThroughObsidian(child: ChildProcess): Promise<{conne
   const firstRunBody = await waitForRenderer(connection, "document.body?.innerText ?? ''", (body) => body.includes("Open folder as vault"), "Obsidian's first-run vault screen");
   authoring.first_run_text = firstRunBody.slice(0, 2_000);
   await captureObsidianScreenshot(connection, "obsidian-first-run.png");
-  connection = await chooseVaultDirectory(connection, 9222);
+  connection = await chooseVaultDirectory(connection, 9222, child);
   await chooseRestrictedMode(connection);
   await captureObsidianScreenshot(connection, "obsidian-vault-restricted-mode.png");
 
@@ -9472,7 +11403,7 @@ async function runCanvasReferenceProbe(): Promise<void> {
     );
     firstSession.first_run_text = firstRunBody.slice(0, 2_000);
     await captureObsidianScreenshot(firstConnection, "obsidian-canvas-first-run.png");
-    firstConnection = await chooseVaultDirectory(firstConnection, 9224, {
+    firstConnection = await chooseVaultDirectory(firstConnection, 9224, firstProcess!, {
       targetRoot: canvasVaultRoot,
       reporter: canvasReport,
       screenshotPrefix: "obsidian-canvas",
@@ -10445,7 +12376,7 @@ async function runBasesDirectionReferenceProbe(): Promise<void> {
     );
     firstSession.first_run_text = firstRunBody.slice(0, 2_000);
     await captureObsidianScreenshot(firstConnection, "obsidian-bases-direction-first-run.png");
-    firstConnection = await chooseVaultDirectory(firstConnection, 9226, {
+    firstConnection = await chooseVaultDirectory(firstConnection, 9226, firstProcess!, {
       targetRoot: basesVaultRoot,
       reporter: basesReport,
       screenshotPrefix: "obsidian-bases-direction",
@@ -10902,7 +12833,7 @@ async function runBasesGroupOrderReferenceProbe(): Promise<void> {
           scenario.id,
           scenarioFixture.vault_root,
         );
-        firstConnection = await chooseVaultDirectory(firstConnection, 9228, {
+        firstConnection = await chooseVaultDirectory(firstConnection, 9228, firstProcess!, {
           targetRoot: scenarioFixture.vault_root,
           reporter: firstScenarioRun,
           screenshotPrefix: `obsidian-group-order-${scenario.id}`,
@@ -11024,6 +12955,8 @@ async function runBasesGroupOrderReferenceProbe(): Promise<void> {
       state_settled: view.state_settled,
       title: view.title,
       body: view.body,
+      result_count: view.result_count,
+      viewport: view.viewport,
       ordered_group_headings: view.ordered_group_headings,
       groups: view.groups.map((group) => ({heading_text: group.heading_text, member_paths: group.member_paths})),
       ungrouped_visible_file_paths: view.ungrouped_visible_file_paths,

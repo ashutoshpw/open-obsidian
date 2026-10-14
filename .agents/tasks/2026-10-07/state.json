@@ -2,17 +2,17 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-14T05:57:18Z",
+  "updated_at": "2026-10-14T06:52:34Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "f1dc5405fc720801d198f747499c1284dde1a034",
-  "current_milestone": "R2.8.117 C07.3 cross-platform capture repair (in progress)",
-  "next_action": "Push the complete R2.8.117 package once to origin/main. Then record its exact resulting SHA and all seven required workflow runs, and hold main at that SHA until all 20 jobs are terminal.",
-  "push_status": "R2.8.116 attempt 1 is terminal and not accepted on f1dc5405fc720801d198f747499c1284dde1a034. Remote main remains at that SHA. The complete R2.8.117 repair package is assembled as one coherent milestone CI submission; record its exact resulting SHA and run evidence after the single push. No local executable validation has run.",
+  "last_reconciled_head": "fd1d449e9523b4272fe8f8de84413a976bf4c22a",
+  "current_milestone": "R2.8.118 C07.3 visible-result identity and empty-result repair (in progress)",
+  "next_action": "Complete R2.8.118 implementation and static review locally, assemble the evidence package, then push once to origin/main. Hold that exact SHA through all seven workflows and 20 jobs before accepting or beginning another milestone.",
+  "push_status": "R2.8.117 attempt 1 is terminal and not accepted on fd1d449e9523b4272fe8f8de84413a976bf4c22a (6/7 workflows passed; 17/20 jobs passed; all three round-trip platform jobs failed). origin/main remains at that submitted SHA. R2.8.118 is in progress locally; the Windows parser-safe repair commit and subsequent capture-source changes have not been pushed. The next push will occur once for the complete reviewed R2.8.118 milestone.",
   "blockers": [
-    "C07.3 pinned Obsidian reference behavior remains uncaptured and Rust parity is not established.",
-    "R2.8.116 failed on Linux/macOS because the generated renderer expression referenced undefined scenario and the Kanban capture left 14 row/card candidates unmapped; its Windows job timed out before C07.3 while the note selector remained open."
+    "C07.3 pinned Obsidian reference behavior remains incomplete and Rust parity is not established. R2.8.117 on exact SHA fd1d449e9523b4272fe8f8de84413a976bf4c22a is terminal/not accepted: Linux misclassified the visible file name header, macOS had the same header issue plus incomplete viewport/formula-Kanban mapping and folder-selection renderer/trust-screen timeouts, and Windows stopped before C07.3 on a PowerShell ParserError. See evidence/r2.8.117-attempt-1-fd1d449.json.",
+    "The uploaded R2.8.117 reports still identify the C07.3 fixture section as R2.8.115; R2.8.118 must emit accurate milestone and exact-SHA metadata."
   ],
   "phases": {
     "R0": {
@@ -51,7 +51,7 @@
         "plugin-renderer"
       ],
       "implementation_sha": "15ee500b04be9acef86a1b5fbf3d1e0ccb5bf7b7",
-      "next_action": "R2.8.116 on f1dc5405fc720801d198f747499c1284dde1a034 is terminal and not accepted: six workflows passed; Obsidian round-trip failed all three OS jobs (17/20 jobs passed). Exact-SHA evidence is in evidence/r2.8.116-attempt-1-f1dc540.json. R2.8.117 is the active local repair; its single push awaits final static review and a coherent CI-ready acceptance package."
+      "next_action": "Complete R2.8.118 implementation and static review locally, assemble the evidence package, then push once to origin/main. Hold that exact SHA through all seven workflows and 20 jobs before accepting or beginning another milestone."
     },
     "R3": {
       "status": "pending",
@@ -36565,8 +36565,9 @@
       "implementation_sha": "f1dc5405fc720801d198f747499c1284dde1a034"
     },
     "R2.8.117": {
-      "status": "in_progress",
+      "status": "not_accepted",
       "starting_sha": "f1dc5405fc720801d198f747499c1284dde1a034",
+      "implementation_sha": "fd1d449e9523b4272fe8f8de84413a976bf4c22a",
       "scope": "Repair the C07.3 cross-platform pinned-reference capture failures from R2.8.116 as one coherent milestone. Correct the generated renderer expression, uniquely map painted Kanban headings/cards and their fixture note paths without letting unrelated global errors bypass capture gates, and confirm Windows note-selector closure with fail-closed UI Automation reads, exactly one on-screen selector button, and repeated empty path-radio scans. An empty visible-error outcome requires per-scenario expected_error_outcome=visible-error and a 20+ character expected_error_text naming a groupBy/groupOrder failure with word-bounded failure wording; every other scenario must render the complete fixture note set. Preserve all source-checkpoint and byte-artifact evidence; do not claim Rust C07.3 parity.",
       "acceptance": [
         "All 14 scenarios produce settled, exact-file first-open and reopen observations on Linux, macOS, and Windows, including ordered headings, mapped row paths/order, scoped error/notices, and screenshots.",
@@ -36595,8 +36596,292 @@
         "package_review": "passed: phase/milestone, requirement, journal, acceptance, and exact-SHA evidence responsibilities are aligned; C07.3 remains pending until exact-SHA CI acceptance",
         "known_limitations": "UIA radio scans are process-wide and may fail closed on unrelated visible radios; transient read errors on unrelated descendants also fail closed; IsOffscreen is UIA evidence rather than pixel-level proof; painted-text checks use discrete sampling and do not measure contrast; no local executable validation was run."
       },
+      "attempts": [
+        {
+          "attempt": 1,
+          "source_sha": "fd1d449e9523b4272fe8f8de84413a976bf4c22a",
+          "outcome": "failed",
+          "workflow_runs": {
+            "Rust migration inventory": 38519463974,
+            "OpenObsidian quality": 38519463962,
+            "OpenObsidian desktop build": 38519463838,
+            "OpenObsidian plugin renderer matrix": 38519464078,
+            "OpenObsidian loaded plugin workflows": 38519463956,
+            "OpenObsidian Rust CI": 38519463950,
+            "Obsidian vault round-trip acceptance": 38519464076
+          },
+          "workflow_urls": {
+            "Rust migration inventory": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38519463974",
+            "OpenObsidian quality": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38519463962",
+            "OpenObsidian desktop build": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38519463838",
+            "OpenObsidian plugin renderer matrix": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38519464078",
+            "OpenObsidian loaded plugin workflows": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38519463956",
+            "OpenObsidian Rust CI": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38519463950",
+            "Obsidian vault round-trip acceptance": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38519464076"
+          },
+          "job_ids": {
+            "inventory": 115705601345,
+            "quality": {
+              "macos-latest": 115705601578,
+              "ubuntu-latest": 115705601522,
+              "windows-latest": 115705601209
+            },
+            "desktop_build": {
+              "macos-latest": 115705601060,
+              "ubuntu-latest": 115705601054,
+              "windows-latest": 115705600868
+            },
+            "plugin_renderer": {
+              "macos-latest": 115705601520,
+              "ubuntu-latest": 115705601665,
+              "windows-latest": 115705601789
+            },
+            "loaded_plugin_workflows": {
+              "macos-latest": 115705601647,
+              "ubuntu-latest": 115705601351,
+              "windows-latest": 115705601659
+            },
+            "rust_ci": {
+              "macos-latest": 115705601643,
+              "ubuntu-latest": 115705601614,
+              "windows-latest": 115705601562,
+              "minimum_supported_rust_1_95": 115705601336
+            },
+            "obsidian_vault_roundtrip": {
+              "macos-latest": 115705601907,
+              "ubuntu-24.04": 115705601782,
+              "windows-latest": 115705601884
+            }
+          },
+          "initial_status_snapshot": {
+            "observed_at": "2026-10-14T05:58:03Z",
+            "workflows_total": 7,
+            "workflows_success": 1,
+            "workflows_failure": 0,
+            "workflows_queued": 1,
+            "workflows_in_progress": 5,
+            "jobs_total": 20,
+            "jobs_success": 1,
+            "jobs_failure": 0,
+            "jobs_queued": 1,
+            "jobs_in_progress": 18
+          },
+          "status_snapshot": {
+            "observed_at": "2026-10-14T06:14:14Z",
+            "workflows_total": 7,
+            "workflows_success": 6,
+            "workflows_failure": 0,
+            "workflows_queued": 0,
+            "workflows_in_progress": 1,
+            "jobs_total": 20,
+            "jobs_success": 17,
+            "jobs_failure": 2,
+            "jobs_queued": 0,
+            "jobs_in_progress": 1,
+            "partial_failure": {
+              "jobs": [
+                115705601884,
+                115705601782
+              ],
+              "reason": "Windows report: PowerShell ParserError in two multiline selector-dismissal if conditions. Ubuntu report: all 14 scenarios had correctly mapped groups/fixture files but were rejected because the visible `file name` table header wrapper was added to unmapped_visible_row_candidates. The macOS round-trip job and workflow remain in progress."
+            }
+          },
+          "artifacts": [
+            {
+              "id": 11873421594,
+              "name": "obsidian-vault-roundtrip-Windows-fd1d449e9523b4272fe8f8de84413a976bf4c22a",
+              "size_in_bytes": 3383840,
+              "digest": "sha256:ac540398704accec90b78736a9cc08d5243914e27c94f5e32cc98cb96c64a870",
+              "expires_at": "2026-11-13T06:01:39Z",
+              "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38519464076/artifacts/11873421594",
+              "report_sha256": "6fb72ef486bc189b333b4e1e78fd8e4ae39a4589987974bed61f6f328bee1bc5",
+              "platform": "Windows"
+            },
+            {
+              "id": 11874126220,
+              "name": "obsidian-vault-roundtrip-Linux-fd1d449e9523b4272fe8f8de84413a976bf4c22a",
+              "size_in_bytes": 20029669,
+              "digest": "sha256:71cec4add07ea04922d2d51c74c9594c7e9bcde8a43d1ca4c509a905df6ab1b2",
+              "expires_at": "2026-11-13T06:12:28Z",
+              "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38519464076/artifacts/11874126220",
+              "report_sha256": "24fb3bf9c234cd53ad32045554a2796fd36f159d63aa52e720db21f29ed7eba7",
+              "platform": "Linux"
+            },
+            {
+              "id": 11873808633,
+              "name": "obsidian-vault-roundtrip-macOS-fd1d449e9523b4272fe8f8de84413a976bf4c22a",
+              "size_in_bytes": 26295111,
+              "digest": "sha256:b35e8ec735c4615dc558742cd5cffed4ee64632d0a41cb8fe83003e6decf17d8",
+              "report_sha256": "348abead5db81f012e748ecfc49683c186202a427ac69f5130f8ea82c0d4c7f0",
+              "expires_at": "2026-11-13T06:21:12Z",
+              "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38519464076/artifacts/11873808633"
+            }
+          ],
+          "prepared_local_repair": "At the 2026-10-14T06:14:14Z intermediate snapshot, the parser-safe Windows helper correction was committed locally as 750b5a16f8f5354e36736fd3b5d194fba40fead7 and remained unpushed. The Linux table-header selector correction was also prepared locally and was not part of the submitted SHA. The original instruction to wait for all 7 workflows and 20 jobs is now satisfied by the terminal result recorded in terminal_status_snapshot. Keep these local repairs and subsequent R2.8.118 changes unpushed until the complete R2.8.118 package is ready.",
+          "evidence": "evidence/r2.8.117-attempt-1-fd1d449.json",
+          "terminal_status_snapshot": {
+            "observed_at": "2026-10-14T06:21:25Z",
+            "workflows_total": 7,
+            "workflows_success": 6,
+            "workflows_failure": 1,
+            "workflows_queued": 0,
+            "workflows_in_progress": 0,
+            "jobs_total": 20,
+            "jobs_success": 17,
+            "jobs_failure": 3,
+            "jobs_queued": 0,
+            "jobs_in_progress": 0
+          },
+          "workflow_conclusions": {
+            "Rust migration inventory": {
+              "run_id": 38519463974,
+              "conclusion": "success",
+              "job_ids": [
+                115705601345
+              ]
+            },
+            "OpenObsidian quality": {
+              "run_id": 38519463962,
+              "conclusion": "success",
+              "job_ids": [
+                115705601209,
+                115705601522,
+                115705601578
+              ]
+            },
+            "OpenObsidian desktop build": {
+              "run_id": 38519463838,
+              "conclusion": "success",
+              "job_ids": [
+                115705600868,
+                115705601054,
+                115705601060
+              ]
+            },
+            "OpenObsidian plugin renderer matrix": {
+              "run_id": 38519464078,
+              "conclusion": "success",
+              "job_ids": [
+                115705601520,
+                115705601665,
+                115705601789
+              ]
+            },
+            "OpenObsidian loaded plugin workflows": {
+              "run_id": 38519463956,
+              "conclusion": "success",
+              "job_ids": [
+                115705601351,
+                115705601647,
+                115705601659
+              ]
+            },
+            "OpenObsidian Rust CI": {
+              "run_id": 38519463950,
+              "conclusion": "success",
+              "job_ids": [
+                115705601336,
+                115705601562,
+                115705601614,
+                115705601643
+              ]
+            },
+            "Obsidian vault round-trip acceptance": {
+              "run_id": 38519464076,
+              "conclusion": "failure",
+              "job_ids": [
+                115705601782,
+                115705601884,
+                115705601907
+              ]
+            }
+          },
+          "roundtrip_artifacts": [
+            {
+              "platform": "Linux",
+              "artifact_id": 11874126220,
+              "name": "obsidian-vault-roundtrip-Linux-fd1d449e9523b4272fe8f8de84413a976bf4c22a",
+              "size_in_bytes": 20029669,
+              "archive_digest": "sha256:71cec4add07ea04922d2d51c74c9594c7e9bcde8a43d1ca4c509a905df6ab1b2",
+              "report_sha256": "24fb3bf9c234cd53ad32045554a2796fd36f159d63aa52e720db21f29ed7eba7",
+              "expires_at": "2026-11-13T06:12:28Z",
+              "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38519464076/artifacts/11874126220"
+            },
+            {
+              "platform": "macOS",
+              "artifact_id": 11873808633,
+              "name": "obsidian-vault-roundtrip-macOS-fd1d449e9523b4272fe8f8de84413a976bf4c22a",
+              "size_in_bytes": 26295111,
+              "archive_digest": "sha256:b35e8ec735c4615dc558742cd5cffed4ee64632d0a41cb8fe83003e6decf17d8",
+              "report_sha256": "348abead5db81f012e748ecfc49683c186202a427ac69f5130f8ea82c0d4c7f0",
+              "expires_at": "2026-11-13T06:21:12Z",
+              "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38519464076/artifacts/11873808633"
+            },
+            {
+              "platform": "Windows",
+              "artifact_id": 11873421594,
+              "name": "obsidian-vault-roundtrip-Windows-fd1d449e9523b4272fe8f8de84413a976bf4c22a",
+              "size_in_bytes": 3383840,
+              "archive_digest": "sha256:ac540398704accec90b78736a9cc08d5243914e27c94f5e32cc98cb96c64a870",
+              "report_sha256": "6fb72ef486bc189b333b4e1e78fd8e4ae39a4589987974bed61f6f328bee1bc5",
+              "expires_at": "2026-11-13T06:01:39Z",
+              "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38519464076/artifacts/11873421594"
+            }
+          ],
+          "terminal_reconciliation": {
+            "evidence": "evidence/r2.8.117-attempt-1-fd1d449.json",
+            "reconciled_at": "2026-10-14T06:52:34Z",
+            "conclusion": "17 of 20 jobs passed; all three round-trip platform jobs failed",
+            "notes": [
+              "The 2026-10-14T06:14:14Z status_snapshot is retained as an intermediate snapshot; terminal_status_snapshot records the final GitHub result.",
+              "The captured C07.3 fixture section still labels itself R2.8.115 in the three uploaded reports; R2.8.118 acceptance requires current milestone and source SHA metadata."
+            ]
+          }
+        }
+      ],
+      "next_action": "R2.8.117 is terminal and not accepted. Keep C07.3 pending. Start R2.8.118 locally to repair result-count scoping and visible path identity across scroll/requery, enforce the exact source-guarded zero-result observation allowlist, correct Windows selector PowerShell syntax, and record macOS folder-picker closure plus canonical selected-vault path evidence. Keep origin/main at fd1d449e9523b4272fe8f8de84413a976bf4c22a and push once only after the complete R2.8.118 acceptance package is reviewed.",
+      "push_status": "Attempt 1 is terminal and not accepted on exact SHA fd1d449e9523b4272fe8f8de84413a976bf4c22a. Six of seven workflows passed; all 20 jobs are terminal, with 17 passed and three failed in Obsidian round-trip acceptance. Linux rejected all 14 scenarios because the visible file name header was treated as an unmapped row; macOS had the same header issue, unmapped formula-Kanban cards/counts, and a typed-values renderer/trust-screen timeout; Windows stopped before C07.3 on a PowerShell ParserError. Exact run/job IDs, all three artifact archive digests and report hashes, checkpoint counts, and failure details are recorded in evidence/r2.8.117-attempt-1-fd1d449.json."
+    },
+    "R2.8.118": {
+      "status": "in_progress",
+      "starting_sha": "fd1d449e9523b4272fe8f8de84413a976bf4c22a",
+      "starting_local_commit": "750b5a16f8f5354e36736fd3b5d194fba40fead7",
+      "implementation_sha": null,
+      "scope": "Repair the terminal R2.8.117 C07.3 capture failures as one coherent milestone. Scope result-count evidence to the active rendered result container; enumerate and uniquely map every displayed result through scroll-and-requery with stable path identity, including virtualized rows/cards and any visible .base results. Accept zero results only for the exact source-guarded empty-order and YAML binary candidate scenarios as pinned-app observations. Correct the Windows PowerShell selector helper and complete macOS native picker closure and exact selected-vault path evidence after the observed viewport/renderer timeout following folder selection. Keep Rust C07.3 parity and a full-fixture membership oracle out of scope.",
+      "deliverable": "A cross-platform C07.3 reference capture and report with exact count-to-unique-visible-path reconciliation, strict empty-result observations, stable scroll/requery identity, macOS picker closure and canonical vault-path evidence, all source checkpoints and exact source artifacts, and explicit limits on what the pinned-app capture establishes.",
+      "acceptance": [
+        "All 14 C07.3 scenarios produce settled exact-file first-open and reopen observations on Linux, macOS, and Windows. Record the selected .base, active view/layout, visible groups and errors/notices, rendered result count, unique path identities, ordered memberships, viewport preparation and scroll samples, screenshots, and all 140 source-checkpoint entries per platform.",
+        "For each loaded table or Kanban result view, capture exactly one painted result-count label structurally associated with the active result root. A count found only by geometric proximity or outside the selected active view does not qualify.",
+        "Enumerate all displayed results, including visible .base results when Bases counts them. After each scroll, re-query current DOM candidates and prove the sampled row/card still maps to the same unique fixture path and active result container; do not use stale element references as identity across virtualization or rerendering. Aggregate unique mapped visible paths across the complete displayed result set and require that count to equal the exact displayed result count. Duplicate, unmapped, ambiguous, or count-mismatched results fail closed.",
+        "Do not require every seed fixture note to appear in the rendered view. Treat path membership as observed pinned-app behavior because groupOrder can omit notes; do not claim an independent full-fixture expected-member oracle.",
+        "Accept a zero-result state only for json-empty-group-order-list, yaml-empty-group-order-list, and yaml-binary-tag-value-candidate, and only when scenario-source guards confirm the exact empty JSON/YAML groupOrder list or exact YAML !!binary SGVsbG8= candidate. Require the exact requested .base selected in a loaded Bases table, exactly one painted visible table shell, exactly one painted 0-results count associated with that shell, and no groups, paths, unmapped row/path candidates, errors, or error-specific notices. All other zero-result outcomes fail. Record the binary-tag result as an observation only; it does not establish unsupported-entry semantics.",
+        "For macOS vault selection, record screenshots and accessibility evidence for the native Open action and panel disappearance, then record requested and canonical selected vault paths and require Obsidian's adapter base path to resolve to the same canonical path before renderer checks. A folder-selection or renderer timeout fails with the last observed picker/window state attached.",
+        "On Windows, require the selector helper to parse and complete its fail-closed UI Automation checks before preview interaction; include exact selection, unique non-offscreen selector button, successful descendant reads, and three stable scans with no visible path radios. For folder-picker closure evidence, require exactly one visible positive-handle OpenObsidian top-level window before opening the picker, record its handle, then capture and report the after-close inventory proving that same handle remains visible after the exact picker handle disappears with no inventory read errors.",
+        "Preserve and report reference-app source bytes, hashes, rewrites, and any missing checkpoints without relabeling those observations as Rust source-preservation evidence. Update generated report metadata to identify R2.8.118 and the exact source SHA; stale embedded milestone labels fail package acceptance.",
+        "All seven required workflows and all 20 jobs pass for the exact pushed SHA; retain run/job URLs, platform artifact IDs/digests, report hashes, checkpoint counts, and limitations.",
+        "Use GitHub Actions for executable validation only. Do not run local tests, builds, formatters, lint, runtime probes, or application launches."
+      ],
+      "required_workflows": [
+        "Rust migration inventory",
+        "OpenObsidian quality",
+        "OpenObsidian desktop build",
+        "OpenObsidian plugin renderer matrix",
+        "OpenObsidian loaded plugin workflows",
+        "OpenObsidian Rust CI",
+        "Obsidian vault round-trip acceptance"
+      ],
+      "platforms": [
+        "Ubuntu 24.04",
+        "macOS",
+        "Windows"
+      ],
+      "expected_evidence_path_template": "evidence/r2.8.118-attempt-{attempt}-{short-sha}.json",
+      "static_reviews": {
+        "package_review": "passed: independent reviews approved fresh scroll/requery path identity, exact count-to-unique-path reconciliation, the source-guarded zero-result allowlist, YAML views-block scoping, Windows inventory and exact-HWND picker closure, after-close inventory evidence, and cadence/acceptance alignment; no local executable validation ran",
+        "known_limitations": "Visible membership remains pinned-app observation, not a full-fixture oracle. The result-count label is identified by exact N result(s) text plus visual/structural association with the active result container, not a count-specific selector. Discrete painted-text samples do not measure contrast or rule out every narrow occluder. UI Automation process-wide path-radio scans may fail closed on unrelated visible radios. No local executable validation is permitted."
+      },
       "attempts": [],
-      "next_action": "After the single R2.8.117 milestone push, record its exact SHA and all seven required workflow runs, then hold origin/main at that SHA until all 20 jobs are terminal."
+      "next_action": "Commit the statically reviewed R2.8.118 package, verify origin/main still equals fd1d449e9523b4272fe8f8de84413a976bf4c22a, then push this milestone once. Record the resulting exact SHA and all seven workflow runs, and hold origin/main there through all 20 terminal job results before accepting or beginning another milestone."
     }
   },
   "ci_preparation": {

@@ -1,0 +1,300 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.8.117",
+  "attempt": 1,
+  "outcome": "failed",
+  "source_sha": "fd1d449e9523b4272fe8f8de84413a976bf4c22a",
+  "starting_sha": "f1dc5405fc720801d198f747499c1284dde1a034",
+  "repository": "ashutoshpw/open-obsidian",
+  "reconciled_at": "2026-10-14T06:52:34Z",
+  "terminal_observed_at": "2026-10-14T06:21:25Z",
+  "workflow_summary": {
+    "workflows_total": 7,
+    "workflows_success": 6,
+    "workflows_failure": 1,
+    "workflows_queued": 0,
+    "workflows_in_progress": 0,
+    "jobs_total": 20,
+    "jobs_success": 17,
+    "jobs_failure": 3,
+    "jobs_queued": 0,
+    "jobs_in_progress": 0,
+    "terminal_workflow": "Obsidian vault round-trip acceptance"
+  },
+  "workflow_runs": {
+    "Rust migration inventory": {
+      "run_id": 38519463974,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38519463974",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "fd1d449e9523b4272fe8f8de84413a976bf4c22a",
+      "jobs": [
+        {
+          "id": 115705601345,
+          "name": "inventory",
+          "conclusion": "success"
+        }
+      ]
+    },
+    "OpenObsidian quality": {
+      "run_id": 38519463962,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38519463962",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "fd1d449e9523b4272fe8f8de84413a976bf4c22a",
+      "jobs": [
+        {
+          "id": 115705601209,
+          "name": "windows-latest",
+          "conclusion": "success"
+        },
+        {
+          "id": 115705601522,
+          "name": "ubuntu-latest",
+          "conclusion": "success"
+        },
+        {
+          "id": 115705601578,
+          "name": "macos-latest",
+          "conclusion": "success"
+        }
+      ]
+    },
+    "OpenObsidian desktop build": {
+      "run_id": 38519463838,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38519463838",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "fd1d449e9523b4272fe8f8de84413a976bf4c22a",
+      "jobs": [
+        {
+          "id": 115705600868,
+          "name": "windows-latest",
+          "conclusion": "success"
+        },
+        {
+          "id": 115705601054,
+          "name": "ubuntu-latest",
+          "conclusion": "success"
+        },
+        {
+          "id": 115705601060,
+          "name": "macos-latest",
+          "conclusion": "success"
+        }
+      ]
+    },
+    "OpenObsidian plugin renderer matrix": {
+      "run_id": 38519464078,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38519464078",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "fd1d449e9523b4272fe8f8de84413a976bf4c22a",
+      "jobs": [
+        {
+          "id": 115705601520,
+          "name": "macos-latest",
+          "conclusion": "success"
+        },
+        {
+          "id": 115705601665,
+          "name": "ubuntu-latest",
+          "conclusion": "success"
+        },
+        {
+          "id": 115705601789,
+          "name": "windows-latest",
+          "conclusion": "success"
+        }
+      ]
+    },
+    "OpenObsidian loaded plugin workflows": {
+      "run_id": 38519463956,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38519463956",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "fd1d449e9523b4272fe8f8de84413a976bf4c22a",
+      "jobs": [
+        {
+          "id": 115705601351,
+          "name": "ubuntu-latest",
+          "conclusion": "success"
+        },
+        {
+          "id": 115705601647,
+          "name": "macos-latest",
+          "conclusion": "success"
+        },
+        {
+          "id": 115705601659,
+          "name": "windows-latest",
+          "conclusion": "success"
+        }
+      ]
+    },
+    "OpenObsidian Rust CI": {
+      "run_id": 38519463950,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38519463950",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "fd1d449e9523b4272fe8f8de84413a976bf4c22a",
+      "jobs": [
+        {
+          "id": 115705601336,
+          "name": "minimum supported Rust (1.95)",
+          "conclusion": "success"
+        },
+        {
+          "id": 115705601562,
+          "name": "rust (windows-latest)",
+          "conclusion": "success"
+        },
+        {
+          "id": 115705601614,
+          "name": "rust (ubuntu-latest)",
+          "conclusion": "success"
+        },
+        {
+          "id": 115705601643,
+          "name": "rust (macos-latest)",
+          "conclusion": "success"
+        }
+      ]
+    },
+    "Obsidian vault round-trip acceptance": {
+      "run_id": 38519464076,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38519464076",
+      "status": "completed",
+      "conclusion": "failure",
+      "head_sha": "fd1d449e9523b4272fe8f8de84413a976bf4c22a",
+      "jobs": [
+        {
+          "id": 115705601782,
+          "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04",
+          "conclusion": "failure",
+          "completed_at": "2026-10-14T06:12:37Z"
+        },
+        {
+          "id": 115705601884,
+          "name": "Obsidian 1.14.4 vault round-trip on windows-latest",
+          "conclusion": "failure",
+          "completed_at": "2026-10-14T06:01:44Z"
+        },
+        {
+          "id": 115705601907,
+          "name": "Obsidian 1.14.4 vault round-trip on macos-latest",
+          "conclusion": "failure",
+          "completed_at": "2026-10-14T06:21:25Z"
+        }
+      ]
+    }
+  },
+  "platform_observations": {
+    "Linux": {
+      "job_id": 115705601782,
+      "conclusion": "failure",
+      "report_status": "failed",
+      "scenario_count": 14,
+      "scenario_acceptance_passed": 0,
+      "source_checkpoints_expected": 140,
+      "source_checkpoints_recorded": 140,
+      "failure": "All 14 scenarios were rejected at first-open/reopen because the visible file name header (class bases-tr) was counted as an unmapped data row. The formula-dependent Kanban capture also failed its mapped-result acceptance.",
+      "c07_3_rust_parity_claimed": false
+    },
+    "macOS": {
+      "job_id": 115705601907,
+      "conclusion": "failure",
+      "report_status": "failed",
+      "scenario_count": 14,
+      "scenario_acceptance_passed": 0,
+      "source_checkpoints_expected": 140,
+      "source_checkpoints_recorded": 135,
+      "missing_checkpoints": [
+        {
+          "scenario_id": "yaml-typed-values-and-rendered-label-collisions",
+          "stage": "first-open-after-vault-selection"
+        },
+        {
+          "scenario_id": "yaml-typed-values-and-rendered-label-collisions",
+          "stage": "first-open-after-capture"
+        },
+        {
+          "scenario_id": "yaml-typed-values-and-rendered-label-collisions",
+          "stage": "reopen-after-startup"
+        },
+        {
+          "scenario_id": "yaml-typed-values-and-rendered-label-collisions",
+          "stage": "reopen-after-vault-restore"
+        },
+        {
+          "scenario_id": "yaml-typed-values-and-rendered-label-collisions",
+          "stage": "reopen-after-capture"
+        }
+      ],
+      "failure": "The file name header remained an unmapped row; the formula-dependent Kanban cards remained unmapped and the visible column counts did not match the extracted groups. The YAML typed-values scenario timed out waiting for the renderer after folder selection on first open and for the vault trust decision on reopen.",
+      "folder_picker_evidence": {
+        "selected_path": "/Users/runner/work/_temp/openobsidian-c01-roundtrip/C01.2 Roundtrip Fixture",
+        "screenshots_recorded": true,
+        "folder_picker_closed_field": null,
+        "exact_adapter_vault_path_match_recorded": null
+      },
+      "c07_3_rust_parity_claimed": false
+    },
+    "Windows": {
+      "job_id": 115705601884,
+      "conclusion": "failure",
+      "report_status": "failed_before_c07_3",
+      "source_checkpoints_expected": 140,
+      "source_checkpoints_recorded": 0,
+      "failure": "PowerShell ParserError in dismissWindowsNoteSelectorMenu: multiline if conditions at lines 79 and 130 were parsed as missing closing parentheses/unexpected tokens; C07.3 capture did not start.",
+      "c07_3_rust_parity_claimed": false
+    }
+  },
+  "artifacts": [
+    {
+      "platform": "Linux",
+      "artifact_id": 11874126220,
+      "name": "obsidian-vault-roundtrip-Linux-fd1d449e9523b4272fe8f8de84413a976bf4c22a",
+      "size_in_bytes": 20029669,
+      "archive_digest": "sha256:71cec4add07ea04922d2d51c74c9594c7e9bcde8a43d1ca4c509a905df6ab1b2",
+      "report_sha256": "24fb3bf9c234cd53ad32045554a2796fd36f159d63aa52e720db21f29ed7eba7",
+      "expires_at": "2026-11-13T06:12:28Z",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38519464076/artifacts/11874126220"
+    },
+    {
+      "platform": "macOS",
+      "artifact_id": 11873808633,
+      "name": "obsidian-vault-roundtrip-macOS-fd1d449e9523b4272fe8f8de84413a976bf4c22a",
+      "size_in_bytes": 26295111,
+      "archive_digest": "sha256:b35e8ec735c4615dc558742cd5cffed4ee64632d0a41cb8fe83003e6decf17d8",
+      "report_sha256": "348abead5db81f012e748ecfc49683c186202a427ac69f5130f8ea82c0d4c7f0",
+      "expires_at": "2026-11-13T06:21:12Z",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38519464076/artifacts/11873808633"
+    },
+    {
+      "platform": "Windows",
+      "artifact_id": 11873421594,
+      "name": "obsidian-vault-roundtrip-Windows-fd1d449e9523b4272fe8f8de84413a976bf4c22a",
+      "size_in_bytes": 3383840,
+      "archive_digest": "sha256:ac540398704accec90b78736a9cc08d5243914e27c94f5e32cc98cb96c64a870",
+      "report_sha256": "6fb72ef486bc189b333b4e1e78fd8e4ae39a4589987974bed61f6f328bee1bc5",
+      "expires_at": "2026-11-13T06:01:39Z",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38519464076/artifacts/11873421594"
+    }
+  ],
+  "report_metadata": {
+    "linux_report_status": "failed",
+    "macos_report_status": "failed",
+    "windows_report_status": "failed before C07.3",
+    "embedded_c07_3_fixture_milestone": "R2.8.115-C07.3-group-order-reference-characterization",
+    "embedded_milestone_label_is_stale": true
+  },
+  "interpretation": {
+    "accepted": false,
+    "c07_3_status": "pending",
+    "rust_group_order_parity_claimed": false,
+    "full_fixture_membership_oracle_claimed": false,
+    "source_checkpoint_result_is_reference_capture_evidence_only": true,
+    "local_executable_validation_run": false
+  }
+}
