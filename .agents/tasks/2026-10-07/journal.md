@@ -6032,3 +6032,99 @@ The checkpoint scan also collects missing/unreadable source paths instead of
 aborting mid-scan. It continues far enough to record the known mutation, then
 fails the workflow with all unrelated source mismatches included. The failure
 path preserves the same behavior.
+
+## 2026-10-14 — R2.8.106 submitted to GitHub Actions
+
+Pushed the single accumulated milestone commit `95d2bab0acb88b672de5bab84cac0085989c6b96`
+to `origin/main` after confirming its starting tip was
+`45ae26c71d274097bf5ca9827e61cf6e9f0c3413`. The parked Rust Bases parser and
+fixture edits were excluded. All seven required workflows were found for the
+exact SHA. In the first job snapshot, inventory and the Ubuntu plugin-renderer
+job passed; the other 18 of 20 jobs were queued or running. The initial
+commit-filtered status lookup briefly returned no runs, then the branch view
+found all seven, so no manual workflow trigger was needed. Run and job IDs are
+recorded in `evidence/r2.8.106-attempt-1-95d2bab.json`. Keep `origin/main` fixed
+until every required job is terminal and reconciled. No local executable
+validation was run.
+
+## R2.8.106 CI status — first four workflows passed
+
+On exact SHA `95d2bab0acb88b672de5bab84cac0085989c6b96`, inventory, quality,
+desktop build, and plugin renderer completed successfully. Two loaded-plugin
+platform jobs passed while macOS continued. Rust CI's four jobs and the three
+Obsidian round-trip jobs remained in progress. The observed snapshot is 12
+passed and 8 running across the 20 jobs. Evidence and job links are updated in
+`evidence/r2.8.106-attempt-1-95d2bab.json`; keep the remote SHA fixed.
+
+## R2.8.106 CI status — loaded-plugin matrix passed
+
+On exact SHA `95d2bab0acb88b672de5bab84cac0085989c6b96`, all three loaded-plugin
+platform jobs have now passed. Inventory, quality, desktop build, and plugin
+renderer remain passed. The four Rust CI jobs and three Obsidian round-trip jobs
+are still in progress: 13 of 20 jobs passed and 7 are running. The evidence
+file is updated; `origin/main` remains fixed.
+
+## R2.8.106 CI status — Rust Ubuntu and macOS passed
+
+The Rust CI jobs on Ubuntu and macOS have passed on exact SHA
+`95d2bab0acb88b672de5bab84cac0085989c6b96`. The minimum-supported-Rust and
+Windows jobs remain active, alongside all three Obsidian round-trip jobs. Five
+workflows are complete; the current count is 15 passing and 5 running jobs out
+of 20. Updated run/job evidence is in the R2.8.106 attempt file. The remote tip
+remains unchanged.
+
+## R2.8.106 CI status — Windows round-trip passed
+
+The Windows Obsidian 1.14.4 round-trip job passed on exact SHA
+`95d2bab0acb88b672de5bab84cac0085989c6b96`. Ubuntu and macOS round-trip remain
+active, as do the Rust MSRV and Windows jobs. Six workflows are complete and
+passing; 16 of 20 jobs passed and 4 are running. The remote SHA remains fixed.
+
+## Milestone push cadence clarified
+
+Clarified the goal's push boundary: keep minor edits and milestone work local,
+then push one accumulated, CI-ready batch to `origin/main` at a named milestone
+boundary. Keep that SHA fixed until its required CI batch is terminal and
+reconciled; the several-hour wait is expected. This documentation update is
+local and does not change the active R2.8.106 run at `95d2bab0acb88b672de5bab84cac0085989c6b96`.
+
+## R2.8.106 attempt 1 — terminal, not accepted
+
+All seven workflows are terminal on exact SHA
+`95d2bab0acb88b672de5bab84cac0085989c6b96`: six workflow conclusions passed;
+19 of 20 jobs passed. Rust CI passed on MSRV 1.95 and Ubuntu, macOS, and
+Windows. Obsidian round-trip passed on Linux and Windows; macOS failed before
+C07.2 in the preceding Canvas New Markdown path field check. The screenshot and
+label-anchored OCR crop show `Notes/Canvas text card.md`, but `pbpaste` returned
+an empty string, so the harness stopped before preview/confirmation and before
+the Bases capture. This is a harness readback false negative, not a C07.2
+behavior result. The exact job log and all artifact names, IDs, digests, and
+links are recorded in `evidence/r2.8.106-attempt-1-95d2bab.json`.
+
+Linux and Windows artifacts contain complete first-open/reopen C07.2 captures,
+including ASC/DESC group and row-order stability, the omitted-direction error,
+SIDEWAYS observations, and the exact pinned-app `Invalid Direction.base`
+rewrite/reseed. That rewrite is reference-app behavior, not Rust preservation
+evidence. macOS did not reach C07.2. C07.2 remains pending.
+
+Started R2.8.107 as a focused repair: wait for the Canvas refresh to settle and
+allow a literal exact OCR line from the fresh labeled path crop only when
+`pbpaste` is empty; retain failure for a nonempty mismatch or missing visual
+confirmation. Add an explicit included-milestone field to the aggregate report.
+Keep the remote SHA fixed until this repair package is complete; exclude the
+parked Rust Bases parser and fixture. No local executable validation was run.
+
+## R2.8.107 package ready for milestone push
+
+Static review confirms the fallback is limited to the New Markdown path, an
+empty clipboard, and a fresh label-anchored OCR line with case preserved and
+whitespace-only normalization. The post-entry watcher wait runs before the
+clipboard and screenshot readback. Aggregate reports identify the included
+C07.2 section while keeping the primary report context. The R2.8.106 attempt
+evidence and all required workflows are terminal and reconciled.
+
+Clarified the goal's push cadence: keep minor edits local, push one accumulated
+batch after a named milestone's implementation and CI-ready acceptance package
+are complete, then hold that exact SHA through the several-hour CI batch. The
+R2.8.107 package is ready for one push. Exclude the parked Rust Bases parser and
+fixture. No local executable validation was run.

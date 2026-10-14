@@ -92,6 +92,10 @@ const macOSWindowIds = new Map<number, string>();
 const report: Record<string, unknown> = {
   schema_version: 1,
   milestone: "R2.8.76-C01.2-reference-app-external-note-rename-refresh",
+  included_milestone_sections: [{
+    milestone: "R2.8.106-C07.2-reference-rewrite-and-reopen-capture",
+    report_path: "bases_group_direction_reference",
+  }],
   status: "pending",
   started_at: startedAt,
   source_sha: sourceSha,
@@ -5817,11 +5821,19 @@ function canvasInputOcrMatches(text: string, controlName: string, expectedValue:
     if (!expectsMarkdownExtension) return false;
     // On macOS the enlarged field crop can drop the dot and read the final d as q.
     // Keep the expected directory/name intact and accept only these observed suffix
-    // variants; the caller separately requires an exact clipboard readback.
+    // variants when clipboard readback verifies the exact value. Empty-clipboard
+    // fallback requires a literal normalized OCR line instead.
     const observedWithoutSpaceBeforeMisreadSuffix = observed.replace(/\s+mq$/i, "mq");
     return observed === expectedWithoutMarkdownDot
       || observedWithoutSpaceBeforeMisreadSuffix === expectedWithObservedFinalGlyphMisread;
   });
+}
+
+function canvasInputOcrHasExactLine(text: string, expectedValue: string): boolean {
+  const expected = expectedValue.replace(/\s+/g, " ").trim();
+  return text.split(/\r?\n/).some((line) =>
+    line.replace(/^[\[\](){}|]+/, "").replace(/\s+/g, " ").trim() === expected
+  );
 }
 
 type CanvasInputFieldLayout = {
@@ -5954,7 +5966,7 @@ async function readCanvasInputScreenshotValue(
   capture: Awaited<ReturnType<typeof captureOpenObsidianScreenshot>>,
   controlName: string,
   expectedValue: string,
-): Promise<{exact: boolean; text: string; cropPath: string; layout: CanvasInputFieldLayout}> {
+): Promise<{exact: boolean; exactLine: boolean; text: string; cropPath: string; layout: CanvasInputFieldLayout}> {
   const layout = await locateCanvasTextInput(capture, controlName);
   const cropPath = join(reportDirectory, `openobsidian-canvas-input-${controlName.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${Date.now()}-ocr.png`);
   const {left, top, width, height} = layout.cropBounds;
@@ -5974,7 +5986,8 @@ async function readCanvasInputScreenshotValue(
   ], {stdio: "ignore"});
   const text = runTesseractOcr(cropPath, ["7", "6"]);
   const exact = canvasInputOcrMatches(text, controlName, expectedValue);
-  return {exact, text, cropPath, layout};
+  const exactLine = canvasInputOcrHasExactLine(text, expectedValue);
+  return {exact, exactLine, text, cropPath, layout};
 }
 
 async function clickMacOSDesktopFraction(xFraction: number, yFraction: number): Promise<string> {
@@ -6226,6 +6239,7 @@ async function replaceMacOSOpenObsidianTextInputWithKeyboard(
   end run`;
   execFileSync("pbcopy", [], {input: "", stdio: ["pipe", "ignore", "ignore"]});
   execFileSync("osascript", ["-e", typeScript, String(child.pid ?? -1), value], {stdio: "ignore"});
+  await waitForOpenObsidianRefreshIdle(0, 0, false, logPath);
   let clipboardReadback = "";
   let clipboardReadbackError = "";
   try {
@@ -6250,7 +6264,13 @@ async function replaceMacOSOpenObsidianTextInputWithKeyboard(
   } catch (error) {
     visualReadbackError = error instanceof Error ? error.message : "unknown screenshot OCR error";
   }
-  if (clipboardReadback !== value) {
+  // This egui field can display the newly typed value even when macOS does not
+  // return its selection through pbpaste. Accept only a case-preserving OCR line
+  // (with whitespace normalization only) from the fresh labeled crop when empty.
+  const exactVisualPathFallback = controlName === "New Markdown path"
+    && clipboardReadback === ""
+    && visualReadback?.exactLine === true;
+  if (clipboardReadback !== value && !exactVisualPathFallback) {
     throw new Error(`macOS clipboard readback did not confirm the exact ${controlName} value: expected_length=${value.length}; actual_length=${clipboardReadback.length}; clipboard_error=${clipboardReadbackError || "none"}; crop_ocr=${JSON.stringify(visualReadback?.text ?? "")}; visual_readback_error=${visualReadbackError || "none"}; click=${click}; crop=${visualReadback ? relative(reportDirectory, visualReadback.cropPath) : "unavailable"}; screenshot=${relative(reportDirectory, verification.pngPath)}`);
   }
   if (controlName === "New Markdown path" && !visualReadback?.exact) {
@@ -6260,9 +6280,13 @@ async function replaceMacOSOpenObsidianTextInputWithKeyboard(
     name: controlName,
     action: "focused the OCR-positioned field, then Cmd+A and keyboard entry",
     exact_readback: true,
-    readback_source: "macOS clipboard after selecting and copying the focused field",
+    clipboard_exact: clipboardReadback === value,
+    readback_source: clipboardReadback === value
+      ? "macOS clipboard after selecting and copying the focused field"
+      : "exact OCR line from the fresh label-anchored field capture after clipboard readback was empty",
     readback_ocr: visualReadback?.text ?? "",
     visual_ocr_exact: visualReadback?.exact ?? false,
+    visual_ocr_exact_line: visualReadback?.exactLine ?? false,
     expected_length: value.length,
     readback_length: clipboardReadback.length,
     position_source: "current visible label bounds and form layout",
