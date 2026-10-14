@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
-  "status": "R2.8.126 is terminal and not accepted on 7d0eab1. R2.8.127 is implementation-complete, independently reviewed, and committed locally in two focused commits. Pathless DOM observations remain diagnostic-only; same-slot or incomparable pairs fail closed, while distinct supported slots remain separate. The milestone is unpushed and exact-SHA CI has not started.",
-  "updated_at": "2026-10-14T14:39:52Z",
+  "status": "R2.8.126 is terminal and failed on 7d0eab1. R2.8.127 C07.3 source implementation and independent read-only review are complete, including the empty-state fallback schema. The reviewed C07.3-only milestone package is implementation-complete / CI-pending and ready for one push; exact-SHA CI has not started. No local executable validation occurred.",
+  "updated_at": "2026-10-14T19:39:19Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "7d0eab11637bc9163694a0697ab2e8b93f98dc17",
-  "current_milestone": "R2.8.127 C07.3 virtualized duplicate-heading and grouped-table ownership repair (local; not pushed)",
-  "next_action": "Submit R2.8.127 to origin/main once, after supported cloud readiness checks are available and ready; keep unrelated C09 edits out. This session has no environment-status connector and /etc/codex/network-policy.json is missing, so network readiness is not established and no push was attempted. origin/main remains pinned at 7d0eab11637bc9163694a0697ab2e8b93f98dc17. Wait for every required exact-SHA CI workflow before another milestone push.",
-  "push_status": "R2.8.126 was pushed once to 7d0eab11637bc9163694a0697ab2e8b93f98dc17. Its seven-workflow/20-job batch is terminal with six workflows and 17 jobs passing; all three round-trip platform jobs failed C07.3. Windows attempt 2 and macOS attempt 3 same-SHA retries also failed C07.3. R2.8.127 is committed locally in two focused commits, unpushed, and no new CI run has started. Keep origin/main pinned while supported network readiness is unavailable.",
+  "last_reconciled_head": "8307b0d8add1cbfab1c444c448cb970a90bf004c",
+  "current_milestone": "R2.8.127 C07.3 grouped-table ownership repair is implementation-complete / CI-pending: source implementation, acceptance ledger, and independent read-only reviews are complete. Submit once to start the full exact-SHA CI batch; do not mark achieved until every required job passes.",
+  "next_action": "Commit and push the complete reviewed C07.3 milestone to origin/main once. Then reconcile every required workflow/job on that exact SHA and keep origin/main there until all are terminal, even if the batch takes several hours. Do not run local executable validation or push minor fixes.",
+  "push_status": "R2.8.126 was pushed once to 7d0eab11637bc9163694a0697ab2e8b93f98dc17; its seven-workflow/20-job batch is terminal and failed in the three round-trip platform jobs. R2.8.127 C07.3 is now a complete, reviewed local milestone package with no new commit, push, or exact-SHA CI run yet. Its next push is one milestone submission; keep the submitted SHA fixed until the full batch is terminal.",
   "blockers": [
     "C07.3 pinned Obsidian reference behavior remains incomplete and Rust parity is not established. R2.8.119 failed all three platform round-trip jobs on exact SHA 2a18016de043ea8ec82529feabb4912d439efa2; see evidence/r2.8.119-attempt-1-2a18016.json. Do not claim Rust C07.3 parity or a full-fixture membership oracle from reference UI results.",
     "R2.8.120 failed its terminal exact-SHA CI batch on 985af8aa18be53c285221b2ed21d4062e69b9f3d. Linux C07.3 table row diagnostics reject visible rows despite each uniquely matching an already captured fixture path; formula Kanban extraction records no card memberships although the screenshot shows the 5/4/4/0 cards. macOS display metrics failed before first-run picker interaction, and Windows stopped after picker closure when the host HWND changed. See evidence/r2.8.120-attempt-1-985af8a.json; keep C07.3 pending.",
@@ -39836,13 +39836,16 @@
   "planned_next_milestone": {
     "milestone": "R2.8.127",
     "name": "C07.3 snapshot-local table-section ownership repair",
-    "status": "implementation-complete / independently reviewed / committed locally in two focused commits; unpushed; exact-SHA CI not started",
+    "status": "implementation-complete / CI-pending; source implementation, acceptance ledger, and independent read-only reviews complete; ready for one milestone submission; exact-SHA CI not started",
     "deliverable": "Build each grouped-table snapshot from structural headings and path rows scoped to the selected result root; reset ownership for every snapshot; retain exact section order and ownership diagnostics. Connect path-backed section observations through one-to-one shared-canonical-path edges only when headings, complete structural anchor routes, and supported composed content-space coordinates agree; permit transitive continuity across non-adjacent samples. Pathless observations never create cross-snapshot identity edges from DOM object IDs; retain their path counts, IDs, routes, and positions as diagnostic evidence. For equal-label pathless observations, keep separate sections only when complete supported routes match and content-space slots differ by more than the position tolerance; same-slot or incomparable pairs fail closed. Reconcile each path to exactly one final owner and preserve null-owner observations for report diagnostics. Record structural routes and scan-local IDs as evaluation-scoped evidence, never durable cross-evaluation identity.",
     "acceptance": [
       "All 14 C07.3 scenarios capture exact ordered group headings and complete member paths on first open and reopen in Linux, macOS, and Windows reports.",
       "Every path with a direct group observation reconciles to exactly one section, and each accepted table section has at least one painted heading observation; unresolved, conflicting, duplicate-path, incomplete-coverage, and ambiguous-order cases fail closed with report diagnostics.",
       "Accepted edges require shared canonical member paths, matching heading, complete structural routes, and logical location; one-to-one edges may form transitive chains across non-adjacent samples. Pathless samples never join through page-evaluation heading or section-root object IDs. Same-label pathless observations remain distinct only when complete supported routes match and their composed content-space positions differ by more than the position tolerance; same-slot or incomparable pairs fail closed, even if DOM object IDs match.",
       "Logical positions record window offsets and every scrollable ancestor route/offset, so nested overflow wrappers cannot hide an outer scroll displacement. Sticky/fixed or transformed/zoomed coordinate chains are unsupported. DOM object ID scope is explicit and empty fallback states are marked not-captured.",
+      "Selected-root table ownership follows the complete ordered heading/row event stream, preserving source order across interleaved table sections and assigning each row to the correct preceding heading.",
+      "Accepted reconciliation-edge evidence is bounded; truncation fails closed and cannot produce a passing ownership result.",
+      "Empty-state fallbacks mark self-checks as not captured with passed=false and empty cases, and scenario acceptance rejects probe failures.",
       "Run only GitHub Actions CI: all seven required workflows and all 20 jobs pass for one exact SHA; reports and artifact IDs/digests are reconciled before acceptance."
     ],
     "required_workflows": [
@@ -39857,13 +39860,14 @@
     "evidence": "Exact-SHA three-OS C07.3 first-open/reopen reports, artifacts and hashes; per-snapshot section/member paths and local-to-global order; accepted one-to-one path graph edges, rejected pathless-identity diagnostics, disconnected same-label slot decisions, composed scroll routes/offsets and identity scope; source-preservation checkpoint records; all workflow/job URLs and conclusions.",
     "depends_on": "R2.8.126 is terminal and failed; this repair is the required next C07.3 milestone. Keep origin/main at its submitted SHA and push once after the complete repair package is implemented and reviewed and supported network readiness is established.",
     "static_reviews": {
-      "status": "complete; read-only source reviews only; no local executable validation",
+      "status": "complete; independent read-only source reviews only; no local executable validation",
       "findings": [
         "Path-backed one-to-one edges now reconcile sections transitively across non-adjacent sweep samples, avoiding a false ambiguity for a section already connected through intermediate observations.",
         "Pathless same-label observations never create reconciliation edges. Same-slot or incomparable pairs fail closed even when scan-local IDs match; distinct content-space slots remain separate only under matching complete supported routes.",
         "An independent follow-up review identified the conditional same-slot object-reuse merge in the initial R2.8.127 source; the correction removed pathless unions. Static re-review found no remaining pathless union route. Exact-SHA CI remains authoritative for cross-platform reference behavior.",
         "Equal-label disconnected sections remain distinct only when they occupy different composed content-space locations under the same complete supported routes; same-slot or incomparable components fail closed.",
-        "Nested scroll offsets are composed with window offsets; sticky/fixed positioning, transforms, and CSS zoom mark the coordinate model unsupported. Captured output and not-captured fallback schema fields were reviewed for consistency."
+        "Nested scroll offsets are composed with window offsets; sticky/fixed positioning, transforms, and CSS zoom mark the coordinate model unsupported. Captured output and not-captured fallback schema fields were reviewed for consistency.",
+        "The final follow-up found no remaining source-level C07.3 gap after emptyGroupOrderVisibleState received defaults for both same-snapshot ambiguity fields and the pair self-check. Selected-root event ordering, fail-closed evidence truncation, source-hash recheck, same-snapshot route guard, and cross-snapshot identity exception were reviewed."
       ],
       "local_executable_validation": false
     }

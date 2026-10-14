@@ -7136,3 +7136,12 @@ The `goal.md` milestone policy states that minor edits and focused commits stay 
 A read-only follow-up review found a conditional false-merge path in the initial R2.8.127 implementation: a virtualizer could reuse heading and table-root objects at the same content slot for a different equal-label group. Cross-snapshot union now requires a shared canonical member path; pathless observations only emit diagnostics and never create identity edges. Same-label pathless pairs remain separate only when their complete supported routes match and their content-space positions differ beyond tolerance. Same-slot or incomparable pairs fail closed even if scan-local DOM IDs match. Distinct supported slots remain separate so rendered-label collisions are not merged.
 
 An independent static re-review confirmed `joinSections` is reachable only from the shared-path edge loop, final ownership derives from those roots, and ambiguous extraction is rejected. The active milestone acceptance/evidence now reflects the pathless diagnostic-only rule. R2.8.127 remains unpushed with no exact-SHA CI run; C07.3 remains pending. No local tests, builds, type checks, formatting, lint, or runtime validation were run. Unrelated C09 Rust edits remain unstaged. The managed-cloud environment-status connector is unavailable and `/etc/codex/network-policy.json` is missing, so supported network readiness is not established and no push was attempted.
+
+
+## R2.8.127 C07.3 final ownership review — 2026-10-14T19:39:19Z
+
+Added empty-state defaults for the same-snapshot pathless-pair ambiguity list, its truncation flag, and the pair self-check. Independent read-only follow-up found no remaining source-level C07.3 gap after this correction. The acceptance ledger now records selected-root heading/row event ordering and fail-closed behavior when accepted-edge evidence is truncated.
+
+Clarified `goal.md` that GitHub CI is a milestone acceptance batch, not a per-change feedback loop. Minor changes remain local in the active milestone. A single push to `origin/main` starts CI after the named implementation, review, and evidence notes are ready; keep the submitted SHA fixed until every required workflow/job is terminal, even if the batch takes several hours.
+
+C07.3 is implementation-complete / CI-pending, not achieved. No local tests, builds, formatting, lint, runtime validation, commit, or push occurred.

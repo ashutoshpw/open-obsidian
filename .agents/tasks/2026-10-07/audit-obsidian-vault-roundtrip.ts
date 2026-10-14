@@ -136,6 +136,24 @@ type GroupOrderFixture = {
 
 type GroupOrderSourceHash = {bytes: number; sha256: string};
 
+type GroupOrderDeclaredPathlessIdentityPolicy = {
+  scenario_id: "yaml-desc-precedence-listed-unlisted-empty-and-duplicate";
+  source_path: "Bases/01 YAML precedence and visibility.base";
+  source_sha256: string;
+  source_bytes: number;
+  view_index: 0;
+  declaration_index: number;
+  declaration_value: "Explicitly empty";
+  declaration_syntax: "plain-string";
+};
+
+type GroupOrderDeclaredPathlessIdentityCapture = {
+  policy: GroupOrderDeclaredPathlessIdentityPolicy | null;
+  status: "verified" | "disabled";
+  reason: string | null;
+  observed_source_sha256: string | null;
+};
+
 type GroupOrderMinimalRendererState = {
   requested_file_path: string;
   active_file_path: string | null;
@@ -339,8 +357,20 @@ type GroupOrderVisibleState = {
     fresh_sweep_table_section_accepted_reconciliation_evidence: Array<Record<string, unknown>>;
     fresh_sweep_table_section_accepted_reconciliation_evidence_truncated: boolean;
     fresh_sweep_table_section_reconciliation_evidence: Array<Record<string, unknown>>;
+    fresh_sweep_same_snapshot_pathless_pair_ambiguities: Array<Record<string, unknown>>;
+    fresh_sweep_same_snapshot_pathless_pair_ambiguities_truncated: boolean;
     fresh_sweep_table_section_snapshot_orders: Array<Record<string, unknown>>;
     fresh_sweep_table_section_reconciliation_ambiguous: boolean;
+    fresh_sweep_declared_pathless_identity_policy: Record<string, unknown>;
+    fresh_sweep_declared_pathless_identity_edges: Array<Record<string, unknown>>;
+    fresh_sweep_declared_pathless_identity_self_check: {
+      passed: boolean;
+      cases: Array<{name: string; passed: boolean}>;
+    };
+    fresh_sweep_same_snapshot_section_pair_self_check: {
+      passed: boolean;
+      cases: Array<{name: string; passed: boolean}>;
+    };
     fresh_sweep_dom_object_id_scope: "one-visible-state-page-evaluation" | "not-captured";
     fresh_sweep_unpainted_table_section_keys: string[];
     fresh_sweep_duplicate_path_samples: number;
@@ -460,6 +490,133 @@ const obsidianVersion = requiredEnv("OBSIDIAN_RELEASE_VERSION");
 const obsidianSha256 = requiredEnv("OBSIDIAN_RELEASE_SHA256");
 const sourceSha = process.env.GITHUB_SHA ?? "unknown";
 const runId = process.env.GITHUB_RUN_ID ?? "unknown";
+
+function deriveGroupOrderDeclaredPathlessIdentityPolicy(
+  scenario: GroupOrderScenario,
+  sourceBytes: Buffer,
+  expectedSource: GroupOrderSourceHash,
+): GroupOrderDeclaredPathlessIdentityPolicy | null {
+  const sourcePath = "Bases/01 YAML precedence and visibility.base";
+  if (scenario.id !== "yaml-desc-precedence-listed-unlisted-empty-and-duplicate"
+      || scenario.base_path !== sourcePath
+      || scenario.source_format !== "native-yaml"
+      || scenario.layout !== "table"
+      || scenario.group_by_property !== "team"
+      || typeof scenario.source !== "string") return null;
+  const sourceText = sourceBytes.toString("utf8");
+  if (!Buffer.from(sourceText, "utf8").equals(sourceBytes)
+      || !Buffer.from(scenario.source, "utf8").equals(sourceBytes)
+      || sourceBytes.length !== expectedSource.bytes
+      || createHash("sha256").update(sourceBytes).digest("hex") !== expectedSource.sha256) return null;
+
+  const lines = sourceText.split(/\r?\n/);
+  const viewHeaders = lines.flatMap((line, index) => /^views:\s*(?:#.*)?$/.test(line) ? [index] : []);
+  if (viewHeaders.length !== 1) return null;
+  const viewStart = viewHeaders[0];
+  const viewEnd = lines.findIndex((line, index) => index > viewStart
+    && Boolean(line.trim()) && !/^\s*#/.test(line) && !/^\s/.test(line));
+  const viewLines = lines.slice(viewStart + 1, viewEnd < 0 ? undefined : viewEnd);
+  const viewEntries = viewLines.filter((line) => /^  -\s+/.test(line));
+  const viewTypes = viewLines.filter((line) => /^  -\s+type:\s*(?:table|kanban)\s*(?:#.*)?$/.test(line));
+  if (viewEntries.length !== 1 || viewTypes.length !== 1 || viewTypes[0] !== "  - type: table") return null;
+
+  const groupByIndexes = viewLines.flatMap((line, index) => /^ {4}groupBy:\s*(?:#.*)?$/.test(line) ? [index] : []);
+  if (groupByIndexes.length !== 1) return null;
+  const groupByIndex = groupByIndexes[0];
+  if (!/^ {6}property:\s*team\s*(?:#.*)?$/.test(viewLines[groupByIndex + 1] ?? "")
+      || !/^ {6}direction:\s*(?:ASC|DESC)\s*(?:#.*)?$/.test(viewLines[groupByIndex + 2] ?? "")) return null;
+
+  const groupOrderIndexes = viewLines.flatMap((line, index) => /^ {4}groupOrder\s*:/.test(line) ? [index] : []);
+  if (groupOrderIndexes.length !== 1 || viewLines[groupOrderIndexes[0]] !== "    groupOrder:") return null;
+  const declarations: Array<{index: number; value: string}> = [];
+  for (let index = groupOrderIndexes[0] + 1; index < viewLines.length; index += 1) {
+    const line = viewLines[index];
+    if (!line.trim() || /^ {6}#/.test(line)) continue;
+    const indentation = line.length - line.trimStart().length;
+    if (indentation < 6) break;
+    const plainString = /^ {6}- ([A-Za-z][A-Za-z0-9 _-]*)$/.exec(line);
+    if (!plainString) return null;
+    const value = plainString[1];
+    if (/^(?:null|true|false|yes|no|on|off)$/i.test(value)) return null;
+    declarations.push({index: declarations.length, value});
+  }
+  const matchingDeclarations = declarations.filter((entry) => entry.value === "Explicitly empty");
+  if (matchingDeclarations.length !== 1) return null;
+  return {
+    scenario_id: "yaml-desc-precedence-listed-unlisted-empty-and-duplicate",
+    source_path: sourcePath,
+    source_sha256: expectedSource.sha256,
+    source_bytes: expectedSource.bytes,
+    view_index: 0,
+    declaration_index: matchingDeclarations[0].index,
+    declaration_value: "Explicitly empty",
+    declaration_syntax: "plain-string",
+  };
+}
+
+async function resolveGroupOrderDeclaredPathlessIdentityCapture(
+  scenario: GroupOrderScenario,
+  fixture: GroupOrderScenarioFixture | undefined,
+): Promise<GroupOrderDeclaredPathlessIdentityCapture> {
+  if (scenario.id !== "yaml-desc-precedence-listed-unlisted-empty-and-duplicate") {
+    return {policy: null, status: "disabled", reason: "scenario-out-of-scope", observed_source_sha256: null};
+  }
+  if (!fixture) {
+    return {policy: null, status: "disabled", reason: "scenario-fixture-not-provided", observed_source_sha256: null};
+  }
+  const seedBytes = fixture.source_files[scenario.base_path];
+  const expectedSource = fixture.source_hashes[scenario.base_path];
+  const policy = seedBytes && expectedSource
+    ? deriveGroupOrderDeclaredPathlessIdentityPolicy(scenario, seedBytes, expectedSource)
+    : null;
+  if (!policy) {
+    return {policy: null, status: "disabled", reason: "source-declaration-is-not-uniquely-validated", observed_source_sha256: null};
+  }
+  try {
+    const observedBytes = await readFile(resolveContainedPath(fixture.vault_root, policy.source_path));
+    const observedSourceSha256 = createHash("sha256").update(observedBytes).digest("hex");
+    if (observedBytes.length !== policy.source_bytes || observedSourceSha256 !== policy.source_sha256) {
+      return {policy: null, status: "disabled", reason: "active-base-source-hash-mismatch-before-scan", observed_source_sha256: observedSourceSha256};
+    }
+    return {policy, status: "verified", reason: null, observed_source_sha256: observedSourceSha256};
+  } catch (error) {
+    return {
+      policy: null,
+      status: "disabled",
+      reason: `active-base-source-unavailable-before-scan: ${error instanceof Error ? error.message : String(error)}`,
+      observed_source_sha256: null,
+    };
+  }
+}
+
+function groupOrderDeclaredPathlessIdentitySourceSelfCheck(
+  scenario: GroupOrderScenario,
+  sourceBytes: Buffer,
+  expectedSource: GroupOrderSourceHash,
+): {passed: boolean; cases: Array<{name: string; passed: boolean}>} {
+  const sourceText = sourceBytes.toString("utf8");
+  const changedScenario = (text: string): GroupOrderScenario => ({...scenario, source: text});
+  const changedSource = (text: string): {bytes: Buffer; hash: GroupOrderSourceHash} => {
+    const bytes = Buffer.from(text, "utf8");
+    return {bytes, hash: {bytes: bytes.length, sha256: createHash("sha256").update(bytes).digest("hex")}};
+  };
+  const validPolicy = deriveGroupOrderDeclaredPathlessIdentityPolicy(scenario, sourceBytes, expectedSource);
+  const duplicateText = sourceText.replace("      - Explicitly empty\n", "      - Explicitly empty\n      - Explicitly empty\n");
+  const duplicate = changedSource(duplicateText);
+  const typedText = sourceText.replace("      - Explicitly empty\n", "      - !!binary SGVsbG8=\n");
+  const typed = changedSource(typedText);
+  const malformedText = sourceText.replace("    groupOrder:\n", "    groupOrder:\n    groupOrder:\n");
+  const malformed = changedSource(malformedText);
+  const wrongHash = {...expectedSource, sha256: "0".repeat(64)};
+  const cases = [
+    {name: "unique plain-string declaration accepts despite a different duplicate declaration elsewhere", passed: validPolicy?.declaration_index === 1},
+    {name: "duplicate target declaration is rejected", passed: deriveGroupOrderDeclaredPathlessIdentityPolicy(changedScenario(duplicateText), duplicate.bytes, duplicate.hash) === null},
+    {name: "typed target declaration is rejected", passed: deriveGroupOrderDeclaredPathlessIdentityPolicy(changedScenario(typedText), typed.bytes, typed.hash) === null},
+    {name: "malformed duplicate groupOrder key is rejected", passed: deriveGroupOrderDeclaredPathlessIdentityPolicy(changedScenario(malformedText), malformed.bytes, malformed.hash) === null},
+    {name: "source hash mismatch is rejected", passed: deriveGroupOrderDeclaredPathlessIdentityPolicy(scenario, sourceBytes, wrongHash) === null},
+  ];
+  return {passed: cases.every((entry) => entry.passed), cases};
+}
 const runAttempt = process.env.GITHUB_RUN_ATTEMPT ?? "unknown";
 const attachmentPath = "Assets/roundtrip image.png";
 const noteMarker = "Authored by pinned Obsidian through its editor on GitHub Actions.";
@@ -574,7 +731,7 @@ const report: Record<string, unknown> = {
     fixture_id: "fixture:c07-group-order-reference",
     fixture_source_path: "fixtures/c07-group-order-reference.json",
     strict_source_preservation_expectation: "Record the original and every observed post-open/reopen .base and note byte count, SHA-256, and exact raw bytes. Reference-app rewrites are observations and must not abort the capture; reseed from the recorded source after first-open shutdown so the reopen capture starts from the same input, and report that harness write. This is separate from the strict Rust parser/encoder requirement to preserve source bytes exactly.",
-    observation_expectation: "Capture the exact selected .base, active view type, visible errors/notices and whether the state is a loaded Bases view or a non-Bases error view; record ordered group headings with stable ordinals, each heading's painted-text and scroll-position sample, every rendered result path/order (including .base results), and all state samples/screenshots. After settled scrolling, freshly query painted rows/cards and headings at every bounded scroll position so virtualized or recycled nodes are re-identified; record scroll offsets, DOM/column order constraints, identity changes, unique path-to-group assignments, and unmapped candidates. Require complete sweep coverage, stable unambiguous order and ownership, and unique mapped paths equal to the structurally scoped visible result count. Accept zero results only for json-empty-group-order-list, yaml-empty-group-order-list, and yaml-binary-tag-value-candidate when the exact Bases view is active, one visible table shell and a painted 0-results count are present, and no group, path, unmapped row, error or error notice appears. The binary-tag case remains an outcome observation and does not prove unsupported behavior. Record actual fallback behavior without assigning an undocumented meaning to malformed input. Fail closed when a rendered group or result cannot be mapped unambiguously.",
+    observation_expectation: "Capture the exact selected .base, active view type, visible errors/notices and whether the state is a loaded Bases view or a non-Bases error view; record ordered group headings with stable ordinals, each heading's painted-text and scroll-position sample, every rendered result path/order (including .base results), and all state samples/screenshots. After settled scrolling, freshly query painted rows/cards and headings at every bounded scroll position so virtualized or recycled nodes are re-identified; record scroll offsets, DOM/column order constraints, identity changes, unique path-to-group assignments, and unmapped candidates. Require complete sweep coverage, stable unambiguous order and ownership, and unique mapped paths equal to the structurally scoped visible result count. Permit one source-backed pathless heading identity only for the exact unchanged YAML precedence .base source hash, its sole validated active table view, and the unique plain-string `Explicitly empty` groupOrder declaration when exactly one painted heading has complete identical structural routes and the same supported composed slot in each matched snapshot; never use DOM IDs, infer fixture membership, or label the group globally empty. Typed, duplicated, malformed, source-mismatched, multiply observed, unpainted, or structurally ambiguous headings remain fail-closed; every other cross-snapshot section edge still requires shared canonical member paths. Accept zero results only for json-empty-group-order-list, yaml-empty-group-order-list, and yaml-binary-tag-value-candidate when the exact Bases view is active, one visible table shell and a painted 0-results count are present, and no group, path, unmapped row, error or error notice appears. The binary-tag case remains an outcome observation and does not prove unsupported behavior. Record actual fallback behavior without assigning an undocumented meaning to malformed input. Fail closed when a rendered group or result cannot be mapped unambiguously.",
     unsupported_entry_scope: "Probe valid-input JSON non-finite-number and YAML binary-tag candidates without assuming either is unsupported. If neither produces visible app-level rejection after the Bases view loads, record app-level unsupported groupOrder entry behavior as unresolved and keep Rust C07.3 parity blocked.",
     rust_parity_claimed: false,
     scenarios: [],
@@ -4842,13 +4999,16 @@ async function readGroupOrderVisibleState(
   connection: DevToolsConnection,
   scenario: GroupOrderScenario,
   fixturePaths: string[],
+  scenarioFixture?: GroupOrderScenarioFixture,
 ): Promise<GroupOrderVisibleState> {
+  const declaredIdentityCapture = await resolveGroupOrderDeclaredPathlessIdentityCapture(scenario, scenarioFixture);
   const visibleState = await connection.evaluateJsonAwaited<GroupOrderVisibleState>(`(async () => {
     const fixturePaths = ${JSON.stringify(fixturePaths)};
     const requestedPath = ${JSON.stringify(scenario.base_path)};
     const layout = ${JSON.stringify(scenario.layout)};
     const groupByProperty = ${JSON.stringify(scenario.group_by_property ?? null)};
     const scenarioId = ${JSON.stringify(scenario.id)};
+    const declaredPathlessIdentityCapture = ${JSON.stringify(declaredIdentityCapture)};
     const scenarioExpectsVisibleError = ${JSON.stringify(scenario.expected_error_outcome === "visible-error")};
     const expectedErrorText = ${JSON.stringify(scenario.expected_error_text?.trim() ?? null)};
     const root = document.querySelector('.workspace-leaf.mod-active') ?? document.body;
@@ -5267,6 +5427,16 @@ async function readGroupOrderVisibleState(
       : [];
     const visibleResultRoots = layout === 'table' ? visibleTableShells : visibleKanbanRoots;
     const selectedResultRoot = visibleResultRoots.length === 1 ? visibleResultRoots[0] : null;
+    const declaredPathlessIdentityPolicy = declaredPathlessIdentityCapture.policy;
+    const declaredPathlessIdentityActive = Boolean(declaredPathlessIdentityPolicy
+      && scenarioId === declaredPathlessIdentityPolicy.scenario_id
+      && requestedPath === declaredPathlessIdentityPolicy.source_path
+      && view?.file?.path === requestedPath
+      && view?.getViewType?.() === 'bases'
+      && layout === 'table'
+      && groupByProperty === 'team'
+      && visibleResultRoots.length === 1
+      && selectedResultRoot);
     const sharesSelectedResultScope = (element) => {
       if (!selectedResultRoot) return false;
       if (selectedResultRoot.contains(element)) return true;
@@ -5740,6 +5910,11 @@ async function readGroupOrderVisibleState(
     const freshSweepTableSectionAcceptedReconciliationEvidence = [];
     let freshSweepTableSectionAcceptedReconciliationEvidenceTruncated = false;
     const freshSweepTableSectionReconciliationEvidence = [];
+    const freshSweepSameSnapshotPathlessPairAmbiguities = [];
+    let freshSweepSameSnapshotPathlessPairAmbiguitiesTruncated = false;
+    const freshSweepDeclaredPathlessIdentityEdges = [];
+    const freshSweepDeclaredPathlessIdentityAcceptedPairs = new Set();
+    const freshSweepDeclaredPathlessIdentityHeadingAmbiguities = [];
     const freshSweepPathTableSectionKeys = new Map();
     let freshSweepTableSectionReconciliationAmbiguous = false;
     let freshSweepUnresolvedGroupOwnerPaths = [];
@@ -5874,7 +6049,8 @@ async function readGroupOrderVisibleState(
           });
         }
         observedElements.set(entry.element, entry.key);
-        // Grouped table sections are reconciled through shared canonical member paths.
+        // Grouped table sections are reconciled through shared canonical member paths, except for
+        // the separately gated exact-source declaration policy for one unique plain string.
         // Scan-local DOM object IDs are diagnostic only: a renderer may recycle an object, so
         // object continuity and a matching location cannot establish semantic group identity.
         // Kanban continues to use its separate column identity.
@@ -6013,6 +6189,231 @@ async function readGroupOrderVisibleState(
         && Math.abs(leftPosition.top - rightPosition.top) <= 4
         && Math.abs(leftPosition.left - rightPosition.left) <= 4);
     };
+    const sameSnapshotTableSectionPairDecision = (left, right) => {
+      const pathlessPair = left.heading_text === right.heading_text
+        && (left.member_paths.size === 0 || right.member_paths.size === 0);
+      if (sameTableSectionLogicalPosition(left, right)) {
+        return {
+          ambiguous: true,
+          pathless_pair: pathlessPair,
+          reason: 'distinct-local-sections-share-one-stable-logical-position',
+        };
+      }
+      const hasPathlessSide = left.member_paths.size === 0 || right.member_paths.size === 0;
+      if (left.heading_text !== right.heading_text || !hasPathlessSide) {
+        return {ambiguous: false, pathless_pair: false, reason: null};
+      }
+      const sameAnchor = sameTableSectionAnchor(left, right);
+      return sameAnchor
+        ? {
+          ambiguous: false,
+          pathless_pair: true,
+          reason: 'same-label-pathless-sections-kept-distinct-at-supported-slots',
+        }
+        : {
+          ambiguous: true,
+          pathless_pair: true,
+          reason: 'same-label-pathless-sections-have-incomparable-or-unsupported-routes',
+        };
+    };
+    const sameSnapshotSectionPairSelfCheck = (() => {
+      const route = {
+        route_complete: true,
+        segments: [{tag_name: 'div', class_names: ['bases-table'], structural_attributes: [], same_tag_sibling_ordinal: 0}],
+        tag_name: 'div',
+      };
+      const position = {
+        vertical_scroll_ancestor_routes: [],
+        horizontal_scroll_ancestor_routes: [],
+        top: 42,
+        left: 13,
+        coordinate_model_supported: true,
+        section_root_route: route,
+      };
+      const section = (logicalPosition, memberPaths = []) => ({
+        sample: 3,
+        heading_text: 'Repeated group',
+        member_paths: new Set(memberPaths),
+        logical_position: logicalPosition,
+      });
+      const distantPosition = {...position, top: 80};
+      const incompleteRoutePosition = {
+        ...distantPosition,
+        section_root_route: {...route, route_complete: false},
+      };
+      const differentRoutePosition = {
+        ...distantPosition,
+        section_root_route: {...route, segments: [{...route.segments[0], same_tag_sibling_ordinal: 1}]},
+      };
+      const unsupportedPosition = {...distantPosition, coordinate_model_supported: false};
+      const cases = [
+        {
+          name: 'same-label pathless sections at distinct supported slots remain separate',
+          passed: !sameSnapshotTableSectionPairDecision(section(position), section(distantPosition)).ambiguous,
+        },
+        {
+          name: 'one pathless side at a distinct supported slot remains separate',
+          passed: !sameSnapshotTableSectionPairDecision(section(position), section(distantPosition, ['Notes/Observed.md'])).ambiguous,
+        },
+        {
+          name: 'same-slot pathless sections are ambiguous',
+          passed: sameSnapshotTableSectionPairDecision(section(position), section({...position})).ambiguous,
+        },
+        {
+          name: 'incomplete structural routes make pathless sections ambiguous',
+          passed: sameSnapshotTableSectionPairDecision(section(position), section(incompleteRoutePosition)).ambiguous,
+        },
+        {
+          name: 'different structural routes make pathless sections ambiguous',
+          passed: sameSnapshotTableSectionPairDecision(section(position), section(differentRoutePosition)).ambiguous,
+        },
+        {
+          name: 'unsupported composed coordinates make pathless sections ambiguous',
+          passed: sameSnapshotTableSectionPairDecision(section(position), section(unsupportedPosition)).ambiguous,
+        },
+        {
+          name: 'two member-backed sections do not use the pathless ambiguity rule',
+          passed: !sameSnapshotTableSectionPairDecision(
+            section(position, ['Notes/One.md']),
+            section(differentRoutePosition, ['Notes/Two.md']),
+          ).ambiguous,
+        },
+      ];
+      return {passed: cases.every((entry) => entry.passed), cases};
+    })();
+    const declaredPathlessIdentityPairDecision = (left, right, proof) => {
+      const reasons = [];
+      if (proof?.source_hash_verified_before_scan !== true
+          || !/^[a-f0-9]{64}$/.test(proof?.source_sha256 || '')
+          || proof?.source_sha256 !== proof?.observed_source_sha256) reasons.push('source-hash-not-verified');
+      if (proof?.source_path !== requestedPath
+          || proof?.active_file_path !== requestedPath
+          || proof?.active_view_type !== 'bases'
+          || proof?.layout !== 'table'
+          || proof?.scenario_id !== 'yaml-desc-precedence-listed-unlisted-empty-and-duplicate') {
+        reasons.push('active-source-or-layout-mismatch');
+      }
+      if (proof?.validated_view_count !== 1
+          || proof?.active_view_index !== 0
+          || proof?.visible_result_root_count !== 1
+          || proof?.active_table_view_validated !== true) reasons.push('active-table-view-not-unique-and-validated');
+      if (proof?.declaration_syntax !== 'plain-string'
+          || proof?.declaration_value !== 'Explicitly empty'
+          || !Number.isInteger(proof?.declaration_index)
+          || proof?.declaration_index < 0
+          || proof?.declaration_value_count !== 1
+          || proof?.source_declaration_validated !== true) reasons.push('declaration-not-one-unique-plain-string');
+      if (proof?.left_heading_match_count !== 1 || proof?.right_heading_match_count !== 1) {
+        reasons.push('heading-not-unique-in-each-snapshot');
+      }
+      if (!left || !right || left.sample === right.sample) reasons.push('snapshots-are-not-distinct');
+      if (left?.heading_text !== proof?.declaration_value || right?.heading_text !== proof?.declaration_value) {
+        reasons.push('heading-does-not-match-declaration');
+      }
+      if (!(left?.painted_observation_count > 0) || !(right?.painted_observation_count > 0)) {
+        reasons.push('heading-not-painted-in-each-snapshot');
+      }
+      if (!(left?.member_paths instanceof Set) || left.member_paths.size !== 0
+          || !(right?.member_paths instanceof Set) || right.member_paths.size !== 0) {
+        reasons.push('observed-member-path-set-is-not-empty');
+      }
+      if (!sameTableSectionLogicalPosition(left, right)) reasons.push('complete-supported-composed-logical-slot-does-not-match');
+      return {eligible: reasons.length === 0, reasons};
+    };
+    const declaredPathlessIdentitySelfCheck = (() => {
+      const route = {
+        route_complete: true,
+        segments: [{tag_name: 'div', class_names: ['bases-table'], structural_attributes: [], same_tag_sibling_ordinal: 0}],
+        tag_name: 'div',
+      };
+      const position = {
+        window_scroll_top: 0,
+        vertical_scroll_ancestor_routes: [],
+        vertical_scroll_ancestor_offsets: [],
+        top: 42,
+        window_scroll_left: 0,
+        horizontal_scroll_ancestor_routes: [],
+        horizontal_scroll_ancestor_offsets: [],
+        left: 13,
+        coordinate_model_supported: true,
+        coordinate_model_issues: [],
+        section_root_route: route,
+      };
+      const left = {
+        sample: 1,
+        heading_text: 'Explicitly empty',
+        painted_observation_count: 1,
+        member_paths: new Set(),
+        logical_position: {...position, scan_local_heading_object_id: 11, scan_local_section_root_object_id: 3},
+      };
+      const right = {
+        sample: 2,
+        heading_text: 'Explicitly empty',
+        painted_observation_count: 1,
+        member_paths: new Set(),
+        logical_position: {...position, scan_local_heading_object_id: 92, scan_local_section_root_object_id: 17},
+      };
+      const proof = {
+        source_hash_verified_before_scan: true,
+        source_sha256: 'a'.repeat(64),
+        observed_source_sha256: 'a'.repeat(64),
+        source_path: 'Bases/01 YAML precedence and visibility.base',
+        active_file_path: 'Bases/01 YAML precedence and visibility.base',
+        active_view_type: 'bases',
+        layout: 'table',
+        scenario_id: 'yaml-desc-precedence-listed-unlisted-empty-and-duplicate',
+        validated_view_count: 1,
+        active_view_index: 0,
+        visible_result_root_count: 1,
+        active_table_view_validated: true,
+        declaration_syntax: 'plain-string',
+        declaration_value: 'Explicitly empty',
+        declaration_index: 1,
+        declaration_value_count: 1,
+        source_declaration_validated: true,
+        left_heading_match_count: 1,
+        right_heading_match_count: 1,
+      };
+      const cases = [
+        {name: 'same declared identity joins across changed scan-local IDs', passed: declaredPathlessIdentityPairDecision(left, right, proof).eligible},
+        {name: 'source hash mismatch is rejected', passed: !declaredPathlessIdentityPairDecision(left, right, {...proof, observed_source_sha256: 'b'.repeat(64)}).eligible},
+        {name: 'duplicate declaration is rejected', passed: !declaredPathlessIdentityPairDecision(left, right, {...proof, declaration_value_count: 2}).eligible},
+        {name: 'typed declaration is rejected', passed: !declaredPathlessIdentityPairDecision(left, right, {...proof, declaration_syntax: 'typed-scalar'}).eligible},
+        {name: 'multiply observed heading is rejected', passed: !declaredPathlessIdentityPairDecision(left, right, {...proof, right_heading_match_count: 2}).eligible},
+        {name: 'unpainted left heading observation is rejected', passed: !declaredPathlessIdentityPairDecision({
+          ...left,
+          painted_observation_count: 0,
+        }, right, proof).eligible},
+        {name: 'unpainted right heading observation is rejected', passed: !declaredPathlessIdentityPairDecision(left, {
+          ...right,
+          painted_observation_count: 0,
+        }, proof).eligible},
+        {name: 'incomplete structural routes are rejected', passed: !declaredPathlessIdentityPairDecision(left, {
+          ...right,
+          logical_position: {...right.logical_position, section_root_route: {...route, route_complete: false}},
+        }, proof).eligible},
+        {name: 'incomplete scroll-ancestor routes are rejected', passed: !declaredPathlessIdentityPairDecision(left, {
+          ...right,
+          logical_position: {
+            ...right.logical_position,
+            vertical_scroll_ancestor_routes: [{...route, route_complete: false}],
+          },
+        }, proof).eligible},
+        {name: 'unsupported composed coordinates are rejected', passed: !declaredPathlessIdentityPairDecision(left, {
+          ...right,
+          logical_position: {...right.logical_position, coordinate_model_supported: false},
+        }, proof).eligible},
+        {name: 'different composed slots are rejected', passed: !declaredPathlessIdentityPairDecision(left, {
+          ...right,
+          logical_position: {...right.logical_position, top: 50},
+        }, proof).eligible},
+        {name: 'observed member paths are never inferred or merged as empty', passed: !declaredPathlessIdentityPairDecision(left, {
+          ...right,
+          member_paths: new Set(['Notes/Observed.md']),
+        }, proof).eligible},
+      ];
+      return {passed: cases.every((entry) => entry.passed), cases};
+    })();
     const addOrderEdges = (edgeMap, values) => {
       const ordered = [...new Set(values)];
       for (const value of ordered) if (!edgeMap.has(value)) edgeMap.set(value, new Set());
@@ -6381,70 +6782,62 @@ async function readGroupOrderVisibleState(
         }
         paintedFreshLinks.sort((left, right) => compareDomOrder(left.element, right.element));
         // Identify group sections within this DOM snapshot only. Cross-snapshot matches require
-        // shared member paths; pathless sections remain per-snapshot observations and never
-        // establish identity through heading/root object reuse. Location and object IDs are
-        // evaluation-scoped diagnostics, never durable identity.
+        // shared member paths except for the exact-source, unique-declaration, one-to-one painted
+        // heading guard below; pathless sections never use heading/root object reuse as identity.
+        // Location and object IDs are evaluation-scoped diagnostics, never durable identity.
         const tableMarkers = markerObservations.filter((marker) => selectedResultRoot.contains(marker.element));
-        const sectionRootFor = (element) => element.closest('.bases-table') || selectedResultRoot;
-        const sectionRoots = [...new Set([
-          ...tableMarkers.map((marker) => sectionRootFor(marker.element)),
-          ...paintedFreshLinks.map((entry) => sectionRootFor(entry.element)),
-        ])].sort(compareDomOrder);
+        // Bases may place a group heading as a sibling of its `.bases-table` child inside
+        // `.bases-table-container`. Keep one ordered ownership stream over the selected result
+        // root so the heading still owns the rows that follow it across that DOM boundary.
         const localSectionOrder = [];
         let localOrdinal = 0;
-        for (const [sectionRootOrdinal, sectionRoot] of sectionRoots.entries()) {
-          const sectionMarkers = tableMarkers
-            .filter((marker) => sectionRootFor(marker.element) === sectionRoot)
-            .sort((left, right) => compareDomOrder(left.element, right.element));
-          const sectionLinks = paintedFreshLinks
-            .filter((entry) => sectionRootFor(entry.element) === sectionRoot);
-          const events = [
-            ...sectionMarkers.map((marker) => ({kind: 'heading', element: marker.element, marker})),
-            ...sectionLinks.map((entry, index) => ({kind: 'path', element: entry.element, entry, index})),
-          ].sort((left, right) => compareDomOrder(left.element, right.element));
-          let activeTableSection = null;
-          let localGroupOrdinal = 0;
-          for (const event of events) {
-            if (event.kind === 'heading') {
-              if (!groupByProperty) continue;
-              const localKey = `sample:${freshSweepPositions}|section:${sectionRootOrdinal}|group:${localGroupOrdinal}`;
-              const bounds = event.element.getBoundingClientRect();
-              const marker = event.marker;
-              freshSweepTableSections.set(localKey, {
-                key: localKey,
-                sample: freshSweepPositions,
-                local_order: localSectionOrder.length,
-                base_identity: marker.base_identity,
-                heading_text: normalize(marker.element.getAttribute('data-group') || marker.element.getAttribute('aria-label') || textOf(marker.element)),
-                heading_class_name: marker.element.getAttribute('class') || '',
-                heading_bounds: {top: bounds.top, left: bounds.left},
-                heading_visibility_sample: {
-                  visibility_sample_sequence: freshSweepPositions,
-                  visibility_sample_bounds: {top: bounds.top, left: bounds.left, width: bounds.width, height: bounds.height},
-                  scroll_positions: readScrollPositions(marker.element),
-                },
-                section_root_tag: sectionRoot.tagName.toLowerCase(),
-                section_root_class_name: sectionRoot.getAttribute('class') || '',
-                logical_position: marker.logical_position,
-                painted_observation_count: marker.painted ? 1 : 0,
-                painted_sample_sequences: marker.painted ? [freshSweepPositions] : [],
-                member_paths: new Set(),
-              });
-              localSectionOrder.push(localKey);
-              activeTableSection = localKey;
-              localGroupOrdinal += 1;
-              continue;
-            }
-            const rowOwner = event.entry.element.closest('.bases-tr, .bases-row, .bases-table-row, tr, [role="row"]');
-            recordResult({
-              element: event.entry.element,
-              path: event.entry.path,
-              text: textOf(event.entry.element),
-              class_name: event.entry.element.getAttribute('class') || '',
-              row_class_name: rowOwner?.getAttribute('class') || '',
-            }, groupByProperty ? activeTableSection : null, null, null, localOrdinal);
-            localOrdinal += 1;
+        const events = [
+          ...tableMarkers.map((marker) => ({kind: 'heading', element: marker.element, marker})),
+          ...paintedFreshLinks.map((entry, index) => ({kind: 'path', element: entry.element, entry, index})),
+        ].sort((left, right) => compareDomOrder(left.element, right.element));
+        let activeTableSection = null;
+        let localGroupOrdinal = 0;
+        for (const event of events) {
+          if (event.kind === 'heading') {
+            if (!groupByProperty) continue;
+            const localKey = `sample:${freshSweepPositions}|group:${localGroupOrdinal}`;
+            const bounds = event.element.getBoundingClientRect();
+            const marker = event.marker;
+            freshSweepTableSections.set(localKey, {
+              key: localKey,
+              sample: freshSweepPositions,
+              local_order: localSectionOrder.length,
+              base_identity: marker.base_identity,
+              heading_text: normalize(marker.element.getAttribute('data-group') || marker.element.getAttribute('aria-label') || textOf(marker.element)),
+              heading_class_name: marker.element.getAttribute('class') || '',
+              heading_bounds: {top: bounds.top, left: bounds.left},
+              heading_visibility_sample: {
+                visibility_sample_sequence: freshSweepPositions,
+                visibility_sample_bounds: {top: bounds.top, left: bounds.left, width: bounds.width, height: bounds.height},
+                scroll_positions: readScrollPositions(marker.element),
+              },
+              section_root_tag: selectedResultRoot.tagName.toLowerCase(),
+              section_root_class_name: selectedResultRoot.getAttribute('class') || '',
+              logical_position: marker.logical_position,
+              painted_observation_count: marker.painted ? 1 : 0,
+              painted_sample_sequences: marker.painted ? [freshSweepPositions] : [],
+              member_paths: new Set(),
+            });
+            localSectionOrder.push(localKey);
+            activeTableSection = localKey;
+            localGroupOrdinal += 1;
+            continue;
           }
+          const rowOwner = event.entry.element.closest('.bases-tr, .bases-row, .bases-table-row, tr, [role="row"]');
+          recordResult({
+            element: event.entry.element,
+            row_element: rowOwner,
+            path: event.entry.path,
+            text: textOf(event.entry.element),
+            class_name: event.entry.element.getAttribute('class') || '',
+            row_class_name: rowOwner?.getAttribute('class') || '',
+          }, groupByProperty ? activeTableSection : null, null, null, localOrdinal);
+          localOrdinal += 1;
         }
         if (groupByProperty) freshSweepTableSectionOrders.set(freshSweepPositions, localSectionOrder);
         const freshRows = [...selectedResultRoot.querySelectorAll('.bases-tr, .bases-row, .bases-table-row, tr, [role="row"]')]
@@ -6581,6 +6974,22 @@ async function readGroupOrderVisibleState(
     }
     const freshSweepResolvedTableSections = new Map();
     let freshSweepOrderedTableSectionKeys = [];
+    let freshSweepDeclaredPathlessIdentityResolution = {
+      status: declaredPathlessIdentityCapture.policy
+        ? declaredPathlessIdentityActive ? 'pending' : 'disabled-active-view-not-validated'
+        : 'disabled',
+      disabled_reason: declaredPathlessIdentityCapture.reason,
+      source_path: declaredPathlessIdentityCapture.policy?.source_path ?? null,
+      source_sha256: declaredPathlessIdentityCapture.policy?.source_sha256 ?? null,
+      view_index: declaredPathlessIdentityCapture.policy?.view_index ?? null,
+      declaration_index: declaredPathlessIdentityCapture.policy?.declaration_index ?? null,
+      declaration_value: declaredPathlessIdentityCapture.policy?.declaration_value ?? null,
+      accepted_edge_count: 0,
+      resolved_component_count: 0,
+      observed_member_paths: [],
+      fixture_membership_inferred: false,
+      globally_empty_group_claimed: false,
+    };
     if (layout === 'table' && groupByProperty) {
       const localSectionKeys = [...freshSweepTableSections.keys()];
       const sectionParent = new Map(localSectionKeys.map((key) => [key, key]));
@@ -6618,17 +7027,43 @@ async function readGroupOrderVisibleState(
             const rightKey = keys[rightIndex];
             const left = freshSweepTableSections.get(leftKey);
             const right = freshSweepTableSections.get(rightKey);
-            if (!sameTableSectionLogicalPosition(left, right)) continue;
-            freshSweepTableSectionReconciliationAmbiguous = true;
+            const decision = sameSnapshotTableSectionPairDecision(left, right);
+            if (!decision.reason) continue;
+            if (decision.ambiguous) freshSweepTableSectionReconciliationAmbiguous = true;
+            if (decision.pathless_pair && decision.ambiguous) {
+              if (freshSweepSameSnapshotPathlessPairAmbiguities.length < 64) {
+                freshSweepSameSnapshotPathlessPairAmbiguities.push({
+                  reason: decision.reason,
+                  sample,
+                  left_key: leftKey,
+                  right_key: rightKey,
+                  heading_text: left.heading_text,
+                  left_member_paths: [...left.member_paths].slice(0, 24),
+                  right_member_paths: [...right.member_paths].slice(0, 24),
+                  same_complete_supported_anchor_routes: sameTableSectionAnchor(left, right),
+                  same_supported_composed_logical_slot: sameTableSectionLogicalPosition(left, right),
+                  left_logical_position: left.logical_position,
+                  right_logical_position: right.logical_position,
+                });
+              } else {
+                freshSweepSameSnapshotPathlessPairAmbiguitiesTruncated = true;
+              }
+            }
             if (freshSweepTableSectionReconciliationEvidence.length < 160) {
               freshSweepTableSectionReconciliationEvidence.push({
-                reason: 'distinct-local-sections-share-one-stable-logical-position',
+                reason: decision.reason,
                 sample,
                 left_key: leftKey,
                 right_key: rightKey,
                 left_heading_text: left.heading_text,
                 right_heading_text: right.heading_text,
-                logical_position: left.logical_position,
+                left_member_paths: [...left.member_paths].slice(0, 24),
+                right_member_paths: [...right.member_paths].slice(0, 24),
+                same_complete_supported_anchor_routes: sameTableSectionAnchor(left, right),
+                same_supported_composed_logical_slot: sameTableSectionLogicalPosition(left, right),
+                left_logical_position: left.logical_position,
+                right_logical_position: right.logical_position,
+                reconciliation_ambiguous: decision.ambiguous,
               });
             }
           }
@@ -6755,16 +7190,141 @@ async function readGroupOrderVisibleState(
         }
       }
 
+      if (declaredPathlessIdentityActive && declaredPathlessIdentityPolicy) {
+        const declaredHeadingBySample = new Map(sampleIds.map((sample) => [
+          sample,
+          sectionsBySample.get(sample).filter((key) =>
+            freshSweepTableSections.get(key).heading_text === declaredPathlessIdentityPolicy.declaration_value),
+        ]));
+        for (const [sample, headingKeys] of declaredHeadingBySample) {
+          if (headingKeys.length > 1) {
+            freshSweepTableSectionReconciliationAmbiguous = true;
+            freshSweepDeclaredPathlessIdentityHeadingAmbiguities.push({
+              reason: 'declared-heading-is-multiply-observed-in-one-snapshot',
+              sample,
+              heading_text: declaredPathlessIdentityPolicy.declaration_value,
+              matching_local_keys: headingKeys,
+            });
+          }
+        }
+        for (let leftIndex = 0; leftIndex < sampleIds.length; leftIndex += 1) {
+          for (let rightIndex = leftIndex + 1; rightIndex < sampleIds.length; rightIndex += 1) {
+            const leftSample = sampleIds[leftIndex];
+            const rightSample = sampleIds[rightIndex];
+            const leftMatches = declaredHeadingBySample.get(leftSample) ?? [];
+            const rightMatches = declaredHeadingBySample.get(rightSample) ?? [];
+            if (leftMatches.length !== 1 || rightMatches.length !== 1) continue;
+            const leftKey = leftMatches[0];
+            const rightKey = rightMatches[0];
+            const left = freshSweepTableSections.get(leftKey);
+            const right = freshSweepTableSections.get(rightKey);
+            if (left.member_paths.size !== 0 || right.member_paths.size !== 0) continue;
+            const decision = declaredPathlessIdentityPairDecision(left, right, {
+              source_hash_verified_before_scan: declaredIdentityCapture.status === 'verified',
+              source_sha256: declaredPathlessIdentityPolicy.source_sha256,
+              observed_source_sha256: declaredIdentityCapture.observed_source_sha256,
+              source_path: declaredPathlessIdentityPolicy.source_path,
+              active_file_path: view?.file?.path ?? null,
+              active_view_type: view?.getViewType?.() ?? null,
+              layout,
+              scenario_id: scenarioId,
+              validated_view_count: 1,
+              active_view_index: declaredPathlessIdentityPolicy.view_index,
+              visible_result_root_count: visibleResultRoots.length,
+              active_table_view_validated: declaredPathlessIdentityActive,
+              declaration_syntax: declaredPathlessIdentityPolicy.declaration_syntax,
+              declaration_value: declaredPathlessIdentityPolicy.declaration_value,
+              declaration_index: declaredPathlessIdentityPolicy.declaration_index,
+              declaration_value_count: 1,
+              source_declaration_validated: true,
+              left_heading_match_count: leftMatches.length,
+              right_heading_match_count: rightMatches.length,
+            });
+            if (!decision.eligible) {
+              freshSweepTableSectionReconciliationAmbiguous = true;
+              if (freshSweepTableSectionReconciliationEvidence.length < 160) {
+                freshSweepTableSectionReconciliationEvidence.push({
+                  reason: 'declared-pathless-heading-identity-proof-rejected',
+                  left_key: leftKey,
+                  right_key: rightKey,
+                  left_sample: leftSample,
+                  right_sample: rightSample,
+                  left_painted_observation_count: left.painted_observation_count,
+                  right_painted_observation_count: right.painted_observation_count,
+                  left_heading_painted: left.painted_observation_count > 0,
+                  right_heading_painted: right.painted_observation_count > 0,
+                  rejection_reasons: decision.reasons,
+                });
+              }
+              continue;
+            }
+            joinSections(leftKey, rightKey);
+            freshSweepDeclaredPathlessIdentityAcceptedPairs.add([leftKey, rightKey].sort().join('\u0000'));
+            freshSweepDeclaredPathlessIdentityEdges.push({
+              left_local_key: leftKey,
+              right_local_key: rightKey,
+              left_sample: leftSample,
+              right_sample: rightSample,
+              identity_key: JSON.stringify([
+                declaredPathlessIdentityPolicy.source_path,
+                declaredPathlessIdentityPolicy.source_sha256,
+                declaredPathlessIdentityPolicy.view_index,
+                declaredPathlessIdentityPolicy.declaration_index,
+                declaredPathlessIdentityPolicy.declaration_value,
+              ]),
+              source_sha256: declaredPathlessIdentityPolicy.source_sha256,
+              view_index: declaredPathlessIdentityPolicy.view_index,
+              declaration_index: declaredPathlessIdentityPolicy.declaration_index,
+              declaration_value: declaredPathlessIdentityPolicy.declaration_value,
+              left_observed_member_paths: [...left.member_paths],
+              right_observed_member_paths: [...right.member_paths],
+              left_painted_observation_count: left.painted_observation_count,
+              right_painted_observation_count: right.painted_observation_count,
+              complete_identical_structural_routes: sameTableSectionAnchor(left, right),
+              same_supported_composed_logical_slot: sameTableSectionLogicalPosition(left, right),
+              one_to_one_heading_match: true,
+              scan_local_heading_object_ids: [
+                left.logical_position?.scan_local_heading_object_id ?? null,
+                right.logical_position?.scan_local_heading_object_id ?? null,
+              ],
+              identity_evidence: 'exact-source-hash-plus-single-view-unique-plain-groupOrder-declaration-and-one-to-one-painted-heading-at-supported-slot',
+              dom_object_ids_are_diagnostic_only: true,
+              fixture_membership_inferred: false,
+              globally_empty_group_claimed: false,
+            });
+          }
+        }
+      }
+
       // A snapshot can observe no painted member paths for a section even when the section has
       // members elsewhere in the sweep; zero paths is not proof that the group is empty. Keep
-      // matching pathless observations as diagnostics, but do not union them: even the same DOM
-      // objects at the same supported location can be recycled for a different equal-label group.
+      // all unvalidated pathless matches diagnostic-only. The one source-backed declaration
+      // exception above is already recorded by exact local-key pair and never uses DOM IDs.
       for (let leftIndex = 0; leftIndex < sampleIds.length; leftIndex += 1) {
         for (let rightIndex = leftIndex + 1; rightIndex < sampleIds.length; rightIndex += 1) {
           for (const leftKey of sectionsBySample.get(sampleIds[leftIndex])) {
             const left = freshSweepTableSections.get(leftKey);
             for (const rightKey of sectionsBySample.get(sampleIds[rightIndex])) {
               const right = freshSweepTableSections.get(rightKey);
+              if (freshSweepDeclaredPathlessIdentityAcceptedPairs.has([leftKey, rightKey].sort().join('\u0000'))) {
+                if (freshSweepTableSectionReconciliationEvidence.length < 160) {
+                  freshSweepTableSectionReconciliationEvidence.push({
+                    reason: 'source-backed-declared-pathless-identity-pair-accepted-under-narrow-guard',
+                    left_key: leftKey,
+                    right_key: rightKey,
+                    left_sample: left.sample,
+                    right_sample: right.sample,
+                    heading_text: left.heading_text,
+                    left_observed_member_path_count: left.member_paths.size,
+                    right_observed_member_path_count: right.member_paths.size,
+                    same_complete_supported_anchor_routes: sameTableSectionAnchor(left, right),
+                    same_supported_logical_position: sameTableSectionLogicalPosition(left, right),
+                    identity_evidence: 'source hash, unique plain groupOrder declaration, one-to-one heading match; DOM IDs diagnostic only',
+                    reconciliation_ambiguous: false,
+                  });
+                }
+                continue;
+              }
               if ((left.member_paths.size > 0 && right.member_paths.size > 0)
                 || left.heading_text !== right.heading_text) continue;
               const sameAnchor = sameTableSectionAnchor(left, right);
@@ -6856,6 +7416,52 @@ async function readGroupOrderVisibleState(
         }
       }
       const rootEntries = [...rootRecords.values()];
+      if (declaredPathlessIdentityPolicy) {
+        const declaredComponents = rootEntries.filter((record) =>
+          record.heading_text === declaredPathlessIdentityPolicy.declaration_value);
+        const declaredLocalObservations = [...freshSweepTableSections.values()].filter((section) =>
+          section.heading_text === declaredPathlessIdentityPolicy.declaration_value);
+        const declaredComponent = declaredComponents.length === 1 ? declaredComponents[0] : null;
+        const declaredObservedSampleCount = new Set(declaredLocalObservations.map((section) => section.sample)).size;
+        const declaredAcceptedEdgeCount = freshSweepDeclaredPathlessIdentityEdges.length;
+        const resolved = declaredPathlessIdentityActive
+          && declaredComponents.length === 1
+          && declaredObservedSampleCount >= 2
+          && declaredAcceptedEdgeCount >= 1
+          && declaredComponent?.painted_observation_count > 0;
+        freshSweepDeclaredPathlessIdentityResolution = {
+          ...freshSweepDeclaredPathlessIdentityResolution,
+          status: resolved ? 'resolved-source-declared-heading-identity' : 'unresolved-or-ambiguous',
+          accepted_edge_count: declaredAcceptedEdgeCount,
+          resolved_component_count: declaredComponents.length,
+          observed_member_paths: declaredComponent ? [...declaredComponent.member_paths].sort() : [],
+          painted_heading_observation_count: declaredComponent?.painted_observation_count ?? 0,
+          observed_heading_sample_count: declaredObservedSampleCount,
+          required_minimum_accepted_edges: 1,
+          required_minimum_distinct_heading_samples: 2,
+          all_unobserved_member_path_sets_remain_empty: declaredLocalObservations.every((section) => section.member_paths.size === 0),
+          fixture_membership_inferred: false,
+          globally_empty_group_claimed: false,
+        };
+        if (!resolved) {
+          freshSweepTableSectionReconciliationAmbiguous = true;
+          if (freshSweepTableSectionReconciliationEvidence.length < 160) {
+            freshSweepTableSectionReconciliationEvidence.push({
+              reason: 'declared-pathless-heading-did-not-resolve-to-one-painted-component',
+              matching_component_count: declaredComponents.length,
+              local_observation_count: declaredLocalObservations.length,
+              distinct_heading_sample_count: declaredObservedSampleCount,
+              accepted_source_backed_edge_count: declaredAcceptedEdgeCount,
+              required_minimum_distinct_heading_samples: 2,
+              required_minimum_accepted_edges: 1,
+              painted_heading_observation_count: declaredComponent?.painted_observation_count ?? 0,
+              matching_local_keys: declaredLocalObservations.map((section) => section.key),
+              fixture_membership_inferred: false,
+              globally_empty_group_claimed: false,
+            });
+          }
+        }
+      }
       for (const record of rootEntries) {
         const localSectionsPerSample = new Map();
         for (const localKey of record.local_keys) {
@@ -7428,8 +8034,27 @@ async function readGroupOrderVisibleState(
         + JSON.stringify(freshSweepUnpaintedTableSectionKeys.slice(0, 24)) + '.');
     }
     if (freshSweepTableSectionReconciliationAmbiguous) {
-      ambiguityReasons.push('Repeated or virtualized table sections require shared member paths or another stable semantic identity; pathless DOM continuity is diagnostic only: '
+      ambiguityReasons.push('Repeated or virtualized table sections require shared member paths or the one narrowly validated source-declared identity; pathless DOM continuity is diagnostic only: '
         + JSON.stringify(freshSweepTableSectionReconciliationEvidence.slice(0, 12)) + '.');
+    }
+    if (freshSweepTableSectionAcceptedReconciliationEvidenceTruncated) {
+      ambiguityReasons.push('Accepted table-section reconciliation evidence exceeded its 256-edge report bound, so a complete ownership audit is unavailable.');
+    }
+    if (freshSweepSameSnapshotPathlessPairAmbiguitiesTruncated) {
+      ambiguityReasons.push('Same-snapshot pathless-section ambiguity diagnostics exceeded their report bound.');
+    }
+    if (!declaredPathlessIdentitySelfCheck.passed) {
+      ambiguityReasons.push('The CI self-check for declared pathless group identity failed: '
+        + JSON.stringify(declaredPathlessIdentitySelfCheck.cases.filter((entry) => !entry.passed)) + '.');
+    }
+    if (!sameSnapshotSectionPairSelfCheck.passed) {
+      ambiguityReasons.push('The CI self-check for same-snapshot table-section ambiguity failed: '
+        + JSON.stringify(sameSnapshotSectionPairSelfCheck.cases.filter((entry) => !entry.passed)) + '.');
+    }
+    if (declaredPathlessIdentityPolicy
+        && declaredPathlessIdentityActive
+        && freshSweepDeclaredPathlessIdentityResolution.status !== 'resolved-source-declared-heading-identity') {
+      ambiguityReasons.push('The one source-declared pathless group heading did not resolve to exactly one painted structural component.');
     }
     if (freshSweepOrderingAmbiguous) {
       ambiguityReasons.push('Fresh DOM sweep positions did not establish one stable DOM or column order for every result and group.');
@@ -7560,12 +8185,35 @@ async function readGroupOrderVisibleState(
         fresh_sweep_table_section_accepted_reconciliation_evidence: freshSweepTableSectionAcceptedReconciliationEvidence,
         fresh_sweep_table_section_accepted_reconciliation_evidence_truncated: freshSweepTableSectionAcceptedReconciliationEvidenceTruncated,
         fresh_sweep_table_section_reconciliation_evidence: freshSweepTableSectionReconciliationEvidence,
+        fresh_sweep_same_snapshot_pathless_pair_ambiguities: freshSweepSameSnapshotPathlessPairAmbiguities,
+        fresh_sweep_same_snapshot_pathless_pair_ambiguities_truncated: freshSweepSameSnapshotPathlessPairAmbiguitiesTruncated,
         fresh_sweep_table_section_snapshot_orders: [...freshSweepTableSectionSnapshotOrders.entries()].map(([sample, mappings]) => ({
           sample,
           ordered_global_section_keys: mappings.map((mapping) => mapping.global_key),
           local_to_global_sections: mappings,
         })),
         fresh_sweep_table_section_reconciliation_ambiguous: freshSweepTableSectionReconciliationAmbiguous,
+        fresh_sweep_declared_pathless_identity_policy: {
+          status: declaredIdentityCapture.status,
+          reason: declaredIdentityCapture.reason,
+          active_in_page: declaredPathlessIdentityActive,
+          source_path: declaredPathlessIdentityPolicy?.source_path ?? null,
+          source_sha256: declaredPathlessIdentityPolicy?.source_sha256 ?? null,
+          observed_source_sha256_before_scan: declaredIdentityCapture.observed_source_sha256,
+          view_index: declaredPathlessIdentityPolicy?.view_index ?? null,
+          declaration_index: declaredPathlessIdentityPolicy?.declaration_index ?? null,
+          declaration_value: declaredPathlessIdentityPolicy?.declaration_value ?? null,
+          declaration_syntax: declaredPathlessIdentityPolicy?.declaration_syntax ?? null,
+          validated_single_table_view: declaredPathlessIdentityActive,
+          visible_result_root_count: visibleResultRoots.length,
+          resolution: freshSweepDeclaredPathlessIdentityResolution,
+          multiply_observed_heading_evidence: freshSweepDeclaredPathlessIdentityHeadingAmbiguities,
+          fixture_membership_inferred: false,
+          globally_empty_group_claimed: false,
+        },
+        fresh_sweep_declared_pathless_identity_edges: freshSweepDeclaredPathlessIdentityEdges,
+        fresh_sweep_declared_pathless_identity_self_check: declaredPathlessIdentitySelfCheck,
+        fresh_sweep_same_snapshot_section_pair_self_check: sameSnapshotSectionPairSelfCheck,
         fresh_sweep_dom_object_id_scope: 'one-visible-state-page-evaluation',
         fresh_sweep_unpainted_table_section_keys: freshSweepUnpaintedTableSectionKeys,
         fresh_sweep_duplicate_path_samples: freshSweepDuplicatePathSamples,
@@ -7612,6 +8260,34 @@ async function readGroupOrderVisibleState(
   })()`, `C07.3 full visible-state extraction for ${scenario.id}`);
   if (!visibleState || !Array.isArray((visibleState as GroupOrderVisibleState).groups)) {
     throw new Error(`C07.3 visible-state extraction returned no group array for ${scenario.id}: ${JSON.stringify(visibleState).slice(0, 2_000)}`);
+  }
+  if (declaredIdentityCapture.policy && scenarioFixture) {
+    try {
+      const observedBytes = await readFile(resolveContainedPath(
+        scenarioFixture.vault_root,
+        declaredIdentityCapture.policy.source_path,
+      ));
+      const observedSourceSha256 = createHash("sha256").update(observedBytes).digest("hex");
+      const sourceUnchanged = observedBytes.length === declaredIdentityCapture.policy.source_bytes
+        && observedSourceSha256 === declaredIdentityCapture.policy.source_sha256;
+      visibleState.visibility_sampling.fresh_sweep_declared_pathless_identity_policy = {
+        ...visibleState.visibility_sampling.fresh_sweep_declared_pathless_identity_policy,
+        source_hash_verified_after_scan: sourceUnchanged,
+        observed_source_sha256_after_scan: observedSourceSha256,
+      };
+      if (!sourceUnchanged) {
+        visibleState.extraction_ambiguous = true;
+        visibleState.ambiguity_reasons.push("The active .base source hash changed during the declared groupOrder identity scan; source-backed pathless reconciliation is rejected.");
+      }
+    } catch (error) {
+      visibleState.visibility_sampling.fresh_sweep_declared_pathless_identity_policy = {
+        ...visibleState.visibility_sampling.fresh_sweep_declared_pathless_identity_policy,
+        source_hash_verified_after_scan: false,
+        source_hash_error_after_scan: error instanceof Error ? error.message : String(error),
+      };
+      visibleState.extraction_ambiguous = true;
+      visibleState.ambiguity_reasons.push("The active .base source could not be rechecked after the declared groupOrder identity scan; source-backed pathless reconciliation is rejected.");
+    }
   }
   return visibleState;
 }
@@ -7687,8 +8363,14 @@ function emptyGroupOrderVisibleState(scenario: GroupOrderScenario): GroupOrderVi
       fresh_sweep_table_section_accepted_reconciliation_evidence: [],
       fresh_sweep_table_section_accepted_reconciliation_evidence_truncated: false,
       fresh_sweep_table_section_reconciliation_evidence: [],
+      fresh_sweep_same_snapshot_pathless_pair_ambiguities: [],
+      fresh_sweep_same_snapshot_pathless_pair_ambiguities_truncated: false,
       fresh_sweep_table_section_snapshot_orders: [],
       fresh_sweep_table_section_reconciliation_ambiguous: false,
+      fresh_sweep_declared_pathless_identity_policy: {status: "not-captured", fixture_membership_inferred: false, globally_empty_group_claimed: false},
+      fresh_sweep_declared_pathless_identity_edges: [],
+      fresh_sweep_declared_pathless_identity_self_check: {passed: false, cases: []},
+      fresh_sweep_same_snapshot_section_pair_self_check: {passed: false, cases: []},
       fresh_sweep_dom_object_id_scope: "not-captured",
       fresh_sweep_unpainted_table_section_keys: [],
       fresh_sweep_duplicate_path_samples: 0,
@@ -7735,6 +8417,7 @@ async function captureGroupOrderScenario(
   connection: DevToolsConnection,
   scenario: GroupOrderScenario,
   fixturePaths: string[],
+  scenarioFixture: GroupOrderScenarioFixture,
   stage: "first-open" | "reopen",
 ): Promise<GroupOrderScenarioObservation> {
   let visible = emptyGroupOrderVisibleState(scenario);
@@ -7913,7 +8596,7 @@ async function captureGroupOrderScenario(
     probePhase = "settle-and-extract-visible-state";
     while (Date.now() < settleDeadline) {
       await delay(500);
-      const next = await readGroupOrderVisibleState(connection, scenario, fixturePaths);
+      const next = await readGroupOrderVisibleState(connection, scenario, fixturePaths, scenarioFixture);
       visible = next;
       recordState(next);
       const nextFingerprint = JSON.stringify(next);
@@ -7959,7 +8642,7 @@ async function captureGroupOrderScenario(
     }
     await delay(250);
     try {
-      visible = await readGroupOrderVisibleState(connection, scenario, fixturePaths);
+      visible = await readGroupOrderVisibleState(connection, scenario, fixturePaths, scenarioFixture);
       recordState(visible);
     } catch (retryError) {
       retryProbeError = retryError instanceof Error ? retryError.message : String(retryError);
@@ -15797,6 +16480,36 @@ async function runBasesGroupOrderReferenceProbe(): Promise<void> {
     const fixtureSetup = await createGroupOrderReferenceFixture();
     const fixture = fixtureSetup.fixture;
     const scenarioFixtures = fixtureSetup.scenarioFixtures;
+    const emptyHeadingScenario = fixture.scenarios.find((scenario) =>
+      scenario.id === "yaml-desc-precedence-listed-unlisted-empty-and-duplicate");
+    const emptyHeadingFixture = emptyHeadingScenario ? scenarioFixtures[emptyHeadingScenario.id] : undefined;
+    const emptyHeadingSourceBytes = emptyHeadingScenario && emptyHeadingFixture
+      ? emptyHeadingFixture.source_files[emptyHeadingScenario.base_path]
+      : undefined;
+    const emptyHeadingSourceHash = emptyHeadingScenario && emptyHeadingFixture
+      ? emptyHeadingFixture.source_hashes[emptyHeadingScenario.base_path]
+      : undefined;
+    if (!emptyHeadingScenario || !emptyHeadingSourceBytes || !emptyHeadingSourceHash) {
+      throw new Error("C07.3 missing the exact seeded source for the narrowly scoped pathless groupOrder identity self-check");
+    }
+    const declaredIdentitySourceSelfCheck = groupOrderDeclaredPathlessIdentitySourceSelfCheck(
+      emptyHeadingScenario,
+      emptyHeadingSourceBytes,
+      emptyHeadingSourceHash,
+    );
+    basesReport.declared_pathless_group_identity_source_self_check = declaredIdentitySourceSelfCheck;
+    basesReport.declared_pathless_group_identity_scope = {
+      scenario_id: emptyHeadingScenario.id,
+      source_path: emptyHeadingScenario.base_path,
+      declaration_value: "Explicitly empty",
+      exception_scope: "one unique plain-string groupOrder declaration in one hash-verified, single-view YAML table source; it identifies only the observed heading slot across snapshots",
+      fixture_membership_inferred: false,
+      globally_empty_group_claimed: false,
+      ordinary_section_edges_still_require_shared_canonical_member_paths: true,
+    };
+    if (!declaredIdentitySourceSelfCheck.passed) {
+      throw new Error(`C07.3 declared pathless group identity source self-check failed: ${JSON.stringify(declaredIdentitySourceSelfCheck)}`);
+    }
     const firstViews: Record<string, GroupOrderScenarioObservation> = {};
     const reopenedViews: Record<string, GroupOrderScenarioObservation> = {};
     const firstSourceHashesByScenario: Record<string, Record<string, GroupOrderSourceHash>> = {};
@@ -15894,7 +16607,13 @@ async function runBasesGroupOrderReferenceProbe(): Promise<void> {
           scenario.id,
           scenarioFixture.vault_root,
         );
-        firstViews[scenario.id] = await captureGroupOrderScenario(firstConnection, scenario, scenarioFixture.fixture_paths, "first-open");
+        firstViews[scenario.id] = await captureGroupOrderScenario(
+          firstConnection,
+          scenario,
+          scenarioFixture.fixture_paths,
+          scenarioFixture,
+          "first-open",
+        );
         scenarioEntry.first_open_observation = firstViews[scenario.id];
         firstSourceHashesByScenario[scenario.id] = await recordGroupOrderSourceCheckpoint(
           scenarioFixture.source_hashes,
@@ -15970,7 +16689,13 @@ async function runBasesGroupOrderReferenceProbe(): Promise<void> {
           scenario.id,
           scenarioFixture.vault_root,
         );
-        reopenedViews[scenario.id] = await captureGroupOrderScenario(secondConnection, scenario, scenarioFixture.fixture_paths, "reopen");
+        reopenedViews[scenario.id] = await captureGroupOrderScenario(
+          secondConnection,
+          scenario,
+          scenarioFixture.fixture_paths,
+          scenarioFixture,
+          "reopen",
+        );
         scenarioEntry.reopen_observation = reopenedViews[scenario.id];
         reopenedSourceHashesByScenario[scenario.id] = await recordGroupOrderSourceCheckpoint(
           scenarioFixture.source_hashes,
@@ -16007,6 +16732,22 @@ async function runBasesGroupOrderReferenceProbe(): Promise<void> {
       result_count: view.result_count,
       viewport: view.viewport,
       ordered_group_headings: view.ordered_group_headings,
+      declared_pathless_group_identity: (() => {
+        const policy = view.visibility_sampling.fresh_sweep_declared_pathless_identity_policy;
+        const resolution = policy.resolution as Record<string, unknown> | undefined;
+        return {
+          status: resolution?.status ?? null,
+          source_sha256: policy.source_sha256 ?? null,
+          source_hash_verified_after_scan: policy.source_hash_verified_after_scan ?? null,
+          view_index: policy.view_index ?? null,
+          declaration_index: policy.declaration_index ?? null,
+          declaration_value: policy.declaration_value ?? null,
+          resolved_component_count: resolution?.resolved_component_count ?? null,
+          observed_member_paths: resolution?.observed_member_paths ?? null,
+          fixture_membership_inferred: resolution?.fixture_membership_inferred ?? null,
+          globally_empty_group_claimed: resolution?.globally_empty_group_claimed ?? null,
+        };
+      })(),
       groups: view.groups.map((group) => ({heading_text: group.heading_text, member_paths: group.member_paths})),
       ungrouped_visible_file_paths: view.ungrouped_visible_file_paths,
       unassigned_visible_file_paths: view.unassigned_visible_file_paths,
@@ -16049,6 +16790,25 @@ async function runBasesGroupOrderReferenceProbe(): Promise<void> {
         }
         const expectedPaths = view.visible_fixture_path_links.map((entry) => entry.path).sort();
         const mappedPaths = [...view.groups.flatMap((group) => group.member_paths), ...view.ungrouped_visible_file_paths].sort();
+        const identityPolicy = view.visibility_sampling.fresh_sweep_declared_pathless_identity_policy;
+        const identityResolution = identityPolicy.resolution as Record<string, unknown> | undefined;
+        const identitySampleCount = identityResolution?.observed_heading_sample_count;
+        const identityEdgeCount = identityResolution?.accepted_edge_count;
+        const declaredIdentityValid = scenario.id !== "yaml-desc-precedence-listed-unlisted-empty-and-duplicate"
+          || (identityPolicy.status === "verified"
+            && identityPolicy.active_in_page === true
+            && identityPolicy.source_hash_verified_after_scan === true
+            && identityResolution?.status === "resolved-source-declared-heading-identity"
+            && identityResolution.resolved_component_count === 1
+            && typeof identitySampleCount === "number"
+            && Number.isInteger(identitySampleCount)
+            && identitySampleCount >= 2
+            && typeof identityEdgeCount === "number"
+            && Number.isInteger(identityEdgeCount)
+            && identityEdgeCount >= 1
+            && identityResolution.fixture_membership_inferred === false
+            && identityResolution.globally_empty_group_claimed === false
+            && view.visibility_sampling.fresh_sweep_declared_pathless_identity_self_check.passed);
         const valid = view.stage === expectedStage
           && view.requested_file_path === scenario.base_path
           && view.selection_succeeded
@@ -16057,6 +16817,7 @@ async function runBasesGroupOrderReferenceProbe(): Promise<void> {
             || (scenario.expected_error_outcome === "visible-error" && hasExplicitVisibleGroupOrderParseError(view)))
           && view.state_settled
           && !view.extraction_ambiguous
+          && declaredIdentityValid
           && view.unassigned_visible_file_paths.length === 0
           && view.unmapped_visible_path_candidates.length === 0
           && view.unmapped_visible_row_candidates.length === 0
@@ -16071,6 +16832,7 @@ async function runBasesGroupOrderReferenceProbe(): Promise<void> {
             reasons: [
               ...(!view.selection_succeeded || view.active_file_path !== scenario.base_path ? ["exact target selection was not captured"] : []),
               ...(!view.state_settled ? ["visible state did not settle"] : []),
+              ...(!declaredIdentityValid ? ["the source-backed declared pathless group identity was not uniquely validated for this unchanged active table source"] : []),
               ...(view.extraction_ambiguous || view.unassigned_visible_file_paths.length > 0 || view.unmapped_visible_path_candidates.length > 0 || view.unmapped_visible_row_candidates.length > 0
                 ? [`group/member extraction was incomplete or ambiguous${view.unmapped_visible_path_candidates.length > 0 || view.unmapped_visible_row_candidates.length > 0
                   ? `; unmapped link candidates=${JSON.stringify(view.unmapped_visible_path_candidates)}; unmapped row candidates=${JSON.stringify(view.unmapped_visible_row_candidates)}`
@@ -16164,9 +16926,41 @@ async function runBasesGroupOrderReferenceProbe(): Promise<void> {
     basesReport.reference_source_mutation_observed = sourceCheckpoints.some((checkpoint) => (checkpoint.changes?.length ?? 0) > 0);
     basesReport.source_preservation_passed = sourceCheckpoints.length > 0 && sourceCheckpoints.every((checkpoint) => checkpoint.unchanged);
     basesReport.source_observation_recording_complete = sourceObservationRecordingComplete;
-    basesReport.capture_status = Object.values(scenarioAcceptance).every(Boolean) ? "completed" : "incomplete";
-    if (!Object.values(scenarioAcceptance).every(Boolean) || !sourceObservationRecordingComplete) {
-      throw new Error(`C07.3 groupOrder first-open/reopen capture acceptance failed: ${JSON.stringify({scenario_acceptance: scenarioAcceptance, source_observation_recording_complete: sourceObservationRecordingComplete, incomplete_scenarios: incompleteScenarios}).slice(0, 12_000)}`);
+    const declaredIdentityScenarioId = "yaml-desc-precedence-listed-unlisted-empty-and-duplicate";
+    const firstDeclaredIdentityPolicy = firstViews[declaredIdentityScenarioId]
+      ?.visibility_sampling.fresh_sweep_declared_pathless_identity_policy;
+    const reopenedDeclaredIdentityPolicy = reopenedViews[declaredIdentityScenarioId]
+      ?.visibility_sampling.fresh_sweep_declared_pathless_identity_policy;
+    const firstDeclaredIdentityResolution = firstDeclaredIdentityPolicy?.resolution as Record<string, unknown> | undefined;
+    const reopenedDeclaredIdentityResolution = reopenedDeclaredIdentityPolicy?.resolution as Record<string, unknown> | undefined;
+    const hasRequiredDeclaredIdentityEdges = (resolution: Record<string, unknown> | undefined): boolean => {
+      const sampleCount = resolution?.observed_heading_sample_count;
+      const edgeCount = resolution?.accepted_edge_count;
+      return typeof sampleCount === "number" && Number.isInteger(sampleCount) && sampleCount >= 2
+        && typeof edgeCount === "number" && Number.isInteger(edgeCount) && edgeCount >= 1;
+    };
+    const declaredIdentityAcceptance = {
+      source_self_check_passed: declaredIdentitySourceSelfCheck.passed === true,
+      first_open_page_self_check_passed: firstViews[declaredIdentityScenarioId]
+        ?.visibility_sampling.fresh_sweep_declared_pathless_identity_self_check.passed === true,
+      reopen_page_self_check_passed: reopenedViews[declaredIdentityScenarioId]
+        ?.visibility_sampling.fresh_sweep_declared_pathless_identity_self_check.passed === true,
+      first_open_source_hash_verified_after_scan: firstDeclaredIdentityPolicy?.source_hash_verified_after_scan === true,
+      reopen_source_hash_verified_after_scan: reopenedDeclaredIdentityPolicy?.source_hash_verified_after_scan === true,
+      first_open_cross_snapshot_edge_threshold_passed: hasRequiredDeclaredIdentityEdges(firstDeclaredIdentityResolution),
+      reopen_cross_snapshot_edge_threshold_passed: hasRequiredDeclaredIdentityEdges(reopenedDeclaredIdentityResolution),
+    };
+    const declaredIdentityAcceptancePassed = Object.values(declaredIdentityAcceptance).every(Boolean);
+    basesReport.declared_pathless_group_identity_acceptance = {
+      ...declaredIdentityAcceptance,
+      passed: declaredIdentityAcceptancePassed,
+    };
+    const allScenariosAccepted = Object.values(scenarioAcceptance).every(Boolean);
+    basesReport.capture_status = allScenariosAccepted && sourceObservationRecordingComplete && declaredIdentityAcceptancePassed
+      ? "completed"
+      : "incomplete";
+    if (!allScenariosAccepted || !sourceObservationRecordingComplete || !declaredIdentityAcceptancePassed) {
+      throw new Error(`C07.3 groupOrder first-open/reopen capture acceptance failed: ${JSON.stringify({scenario_acceptance: scenarioAcceptance, source_observation_recording_complete: sourceObservationRecordingComplete, declared_pathless_group_identity_acceptance: declaredIdentityAcceptance, incomplete_scenarios: incompleteScenarios}).slice(0, 12_000)}`);
     }
     basesReport.status = "captured-reference-only";
     basesReport.rust_parity_claimed = false;
