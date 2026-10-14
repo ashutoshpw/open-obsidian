@@ -3373,10 +3373,11 @@
         ".agents/tasks/2026-10-07/evidence/r2.8.118-attempt-1-5ab14b5.json",
         ".agents/tasks/2026-10-07/evidence/r2.8.119-attempt-1-2a18016.json",
         ".agents/tasks/2026-10-07/evidence/r2.8.120-attempt-1-985af8a.json",
-        ".agents/tasks/2026-10-07/evidence/r2.8.121-attempt-1-7210269.json"
+        ".agents/tasks/2026-10-07/evidence/r2.8.121-attempt-1-7210269.json",
+        ".agents/tasks/2026-10-07/evidence/r2.8.122-attempt-1-5d75a5e.json"
       ],
       "tested_source_tree": null,
-      "blocker": "R2.8.121 attempt 1 is terminal and not accepted on exact SHA 7210269101a81d6a8743ed70cb66f4d1ff2369fb: six of seven workflows and 17 of 20 jobs passed, while all three platform round-trip jobs failed. Linux timeout diagnostics missed a manual refresh request because the harness used a stale pre-click snapshot even though the log recorded the request and successful three-entry result; macOS stopped before picker interaction on a Swift type-checking error in the display-metrics script; Windows tried to select Untitled.md before opening the Note to inspect selector. See .agents/tasks/2026-10-07/evidence/r2.8.121-attempt-1-7210269.json. R2.8.122 bundles the related harness repairs and is pending exact-SHA CI. Keep C07.3 pending until a later exact-SHA three-platform capture meets the count-to-unique-visible-path and exact empty-observation criteria; do not claim Rust parity or a full-fixture membership oracle from reference UI results.",
+      "blocker": "R2.8.122 is terminal and failed on exact SHA 5d75a5e2e08cf85b70debe2d96ab06fef4f20974: 17/20 jobs passed and the Linux, macOS, and Windows Obsidian round-trip jobs failed; see evidence/r2.8.122-attempt-1-5d75a5e.json. Linux table root cause was stale preliminary unmapped-row warnings despite unique exact-path matches in a complete fresh sweep; the formula Kanban root cause was exact painted card-root hit targets rejected by title-subtree-only sampling. macOS had four String(CGFloat) compile errors, and Windows did not wait for/confirm the exact selector target before OCR. R2.8.123 contains the reviewed repair package and is not yet submitted. Keep C07.3 pending until a later exact-SHA three-platform capture meets all count, unique-path, ordering, ownership, and exact empty-observation criteria; do not claim Rust parity or a full-fixture membership oracle from reference UI results.",
       "gate_class": "implementation",
       "decision_id": "D03",
       "legacy_status": "implemented",
@@ -10287,12 +10288,12 @@
       "source": {
         "path": ".agents/tasks/2026-10-07/goal.md",
         "heading": "Mandatory execution workflow: GitHub CI only",
-        "clause": "Define named, reviewable milestones as meaningful, bounded CI batches sized for the full, potentially multi-hour CI suite. Keep minor edits, isolated fixes, intermediate commits, and partial milestones local; push exactly once to origin/main only after the complete implementation and reviewed acceptance package are ready. Wait until every required workflow/job for that exact SHA is terminal before another milestone or repair push. A repair milestone must batch related corrections into a complete, reviewable deliverable; a single minor correction does not warrant its own push. The milestone is achieved only after all required jobs pass and results are reconciled for that SHA."
+        "clause": "Do not push every minor change. A push submits exactly one complete, named milestone or complete repair milestone after implementation and acceptance review. Keep minor edits, isolated fixes, and intermediate commits local; do not create artificial milestones or bundle unrelated work. Keep origin/main fixed at the submitted SHA until all required workflows and jobs are terminal. A milestone is achieved only after every required exact-SHA job passes and results are reconciled; CI may take several hours, so run independent checks in parallel where safe."
       },
       "checkpoint": "R0",
       "owner": "xtask",
       "mandatory": true,
-      "acceptance_criteria": "Related minor changes and focused commits accumulate locally and do not trigger individual pushes or fresh CI batches. Each named milestone is one coherent, bounded batch for the potentially multi-hour CI suite, with exactly one origin/main push after its full implementation and reviewed acceptance package are ready. Do not push minor edits, partial milestones, or incremental feedback; wait until all required workflows/jobs for the submitted SHA are terminal before another milestone or repair push. Repair milestones must bundle related fixes into a complete, reviewable deliverable; a lone minor correction does not justify a separate push. Run independent checks in parallel where safe. Record implementation-complete / CI-pending at submission; accept the milestone only after every required workflow/job passes and results are reconciled for its exact SHA.",
+      "acceptance_criteria": "Minor work and focused commits accumulate locally without individual CI pushes. Push origin/main exactly once for each complete, coherent named milestone or repair; wait for all required jobs on that SHA to become terminal before another push. Do not create a milestone for a small edit or combine unrelated work. Record implementation-complete / CI-pending at submission and achieved / CI-passed only after every required exact-SHA workflow/job passes and evidence is reconciled. Use safe parallel CI execution to make efficient use of the multi-hour runner batch.",
       "fixture_ids": [
         "fixture:mig-002"
       ],
@@ -10336,6 +10337,11 @@
           "kind": "rust-migration-goal",
           "version": "2026-10-14-explicit-milestone-submission-cadence",
           "sha256": "9f52c70fc56d565e7337a951925178942d4df7a4c88a3c7e195051ef6356e8db"
+        },
+        {
+          "kind": "rust-migration-goal",
+          "version": "2026-10-14-exact-milestone-only-ci-submission",
+          "sha256": "24dcd2c55648b2af640aa8eda3229734132f00069a8efed28eceb7b8324df14a"
         }
       ],
       "applicable_platforms": [
@@ -10356,7 +10362,7 @@
       "rust_owner": "xtask",
       "mapping_status": "reviewed",
       "migration_disposition": "retained",
-      "migration_acceptance": "Each meaningful, bounded milestone is submitted in exactly one reviewed origin/main push after its implementation and acceptance package are complete; minor changes and partial work stay local. Size the batch for the full, potentially multi-hour CI suite and wait until all required workflows/jobs for its exact SHA are terminal before another milestone or repair push. Repair milestones bundle related corrections into a complete, reviewable deliverable; a single minor fix does not warrant its own push. Run independent checks in parallel where safe. Mark the milestone achieved only after every required job passes and exact-SHA results/evidence are reconciled.",
+      "migration_acceptance": "Minor work and focused commits accumulate locally without individual CI pushes. Push origin/main exactly once for each complete, coherent named milestone or repair; wait for all required jobs on that SHA to become terminal before another push. Do not create a milestone for a small edit or combine unrelated work. Record implementation-complete / CI-pending at submission and achieved / CI-passed only after every required exact-SHA workflow/job passes and evidence is reconciled. Use safe parallel CI execution to make efficient use of the multi-hour runner batch.",
       "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence."
     },
     {

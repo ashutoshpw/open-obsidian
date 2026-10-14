@@ -224,6 +224,14 @@ type GroupOrderUnmappedRowCandidate = {
   scroll_positions: GroupOrderScrollPosition[];
 };
 
+type GroupOrderPreSweepRowResolution = GroupOrderUnmappedRowCandidate & {
+  resolution: "resolved-by-complete-fresh-sweep" | "unresolved";
+  matched_path: string | null;
+  fresh_sweep_observation_count: number;
+  group_keys: string[];
+  resolution_reasons: string[];
+};
+
 type GroupOrderMappedRowPathCandidate = {
   path: string;
   text: string;
@@ -251,6 +259,7 @@ type GroupOrderFreshSweepOffset = {
     group_key: string | null;
     column_ordinal: number | null;
     local_dom_ordinal: number;
+    title_hit_diagnostics?: Record<string, unknown>;
   }>;
   mapped_row_path_candidates: GroupOrderMappedRowPathCandidate[];
   unmapped_rows: GroupOrderUnmappedRowCandidate[];
@@ -308,6 +317,12 @@ type GroupOrderVisibleState = {
     node_identity_change_count: number;
     node_identity_change_examples: Array<{kind: string; before: string; after: string; class_name: string}>;
   };
+  pre_sweep_unmapped_visible_row_candidates: GroupOrderUnmappedRowCandidate[];
+  pre_sweep_row_reconciliation: {
+    fresh_sweep_evidence_eligible: boolean;
+    resolved_candidates: GroupOrderPreSweepRowResolution[];
+    unresolved_candidates: GroupOrderPreSweepRowResolution[];
+  };
   groups: GroupOrderGroupObservation[];
   ungrouped_visible_file_paths: string[];
   unassigned_visible_file_paths: string[];
@@ -326,6 +341,7 @@ type GroupOrderVisibleState = {
     group_keys: string[];
     column_ordinal: number | null;
     fresh_sweep_observation_count: number;
+    title_hit_diagnostics?: Record<string, unknown>;
   }>;
   mapped_visible_row_path_candidates: GroupOrderMappedRowPathCandidate[];
   unmapped_visible_path_candidates: GroupOrderUnmappedPathCandidate[];
@@ -1449,7 +1465,7 @@ async function clickMacOSFirstRunOpenButtonVisually(
   const openRight = open.boundingBox.x + open.boundingBox.width;
   const openTop = 1 - (open.boundingBox.y + open.boundingBox.height);
   const openBottom = 1 - open.boundingBox.y;
-  const displayScript = `import AppKit\nimport CoreGraphics\nimport Foundation\nlet screens = NSScreen.screens\nguard screens.count == 1 else { fatalError("Display metrics require the single-display macOS CI screen") }\nguard let screenNumber = screens[0].deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber else { fatalError("Could not read the macOS CI screen number") }\nlet displayID = CGDirectDisplayID(screenNumber.uint32Value)\nlet bounds = CGDisplayBounds(displayID)\nguard bounds.width > 0, bounds.height > 0 else { fatalError("Could not read the selected macOS display bounds") }\nlet screenCountText = String(screens.count)\nlet originXText = String(bounds.origin.x)\nlet originYText = String(bounds.origin.y)\nlet widthText = String(bounds.width)\nlet heightText = String(bounds.height)\nlet fields = [screenCountText, originXText, originYText, widthText, heightText]\nprint(fields.joined(separator: ","))`;
+  const displayScript = `import AppKit\nimport CoreGraphics\nimport Foundation\nlet screens = NSScreen.screens\nguard screens.count == 1 else { fatalError("Display metrics require the single-display macOS CI screen") }\nguard let screenNumber = screens[0].deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber else { fatalError("Could not read the macOS CI screen number") }\nlet displayID = CGDirectDisplayID(screenNumber.uint32Value)\nlet bounds = CGDisplayBounds(displayID)\nguard bounds.width > 0, bounds.height > 0 else { fatalError("Could not read the selected macOS display bounds") }\nlet screenCountText = String(screens.count)\nlet originXText = String(Double(bounds.origin.x))\nlet originYText = String(Double(bounds.origin.y))\nlet widthText = String(Double(bounds.width))\nlet heightText = String(Double(bounds.height))\nlet fields = [screenCountText, originXText, originYText, widthText, heightText]\nprint(fields.joined(separator: ","))`;
   let displayOutput: string;
   try {
     displayOutput = execFileSync("swift", ["-e", displayScript], {encoding: "utf8", stdio: ["ignore", "pipe", "pipe"]}).trim();
@@ -2236,6 +2252,203 @@ function windowsSelectorDismissConfirmsClosed(action: unknown): boolean {
       && dismissal.target_option_visible_after_dismissal === false;
   } catch {
     return false;
+  }
+}
+
+function windowsNoteSelectorObservationConfirmsSameTarget(
+  before: Record<string, unknown>,
+  after: Record<string, unknown>,
+): boolean {
+  const beforeTarget = before.target_option as Record<string, unknown> | null;
+  const afterTarget = after.target_option as Record<string, unknown> | null;
+  if (!beforeTarget || !afterTarget) return false;
+  if (before.selector_count !== 1 || after.selector_count !== 1) return false;
+  if (before.selector_is_offscreen !== false || after.selector_is_offscreen !== false) return false;
+  if (beforeTarget.name !== afterTarget.name || beforeTarget.control_type !== "ControlType.RadioButton") return false;
+  if (afterTarget.control_type !== "ControlType.RadioButton") return false;
+  if (beforeTarget.is_offscreen !== false || afterTarget.is_offscreen !== false) return false;
+  if (beforeTarget.positive_bounds !== true || afterTarget.positive_bounds !== true) return false;
+  const supportedBefore = before.selector_expand_collapse_supported === true;
+  const supportedAfter = after.selector_expand_collapse_supported === true;
+  if (supportedBefore !== supportedAfter) return false;
+  if (supportedBefore && (
+    !["Expanded", "PartiallyExpanded"].includes(String(before.selector_expand_collapse_state))
+    || !["Expanded", "PartiallyExpanded"].includes(String(after.selector_expand_collapse_state))
+  )) return false;
+  return (["left", "top", "width", "height"] as const).every((key) => {
+    const beforeValue = Number(beforeTarget[key]);
+    const afterValue = Number(afterTarget[key]);
+    return Number.isFinite(beforeValue) && Number.isFinite(afterValue) && Math.abs(beforeValue - afterValue) <= 1;
+  });
+}
+
+async function captureWindowsNoteSelectorOptionScreenshot(
+  filename: string,
+  targetOption: Record<string, unknown>,
+): Promise<{pngPath: string; geometry: string}> {
+  const pngPath = join(reportDirectory, filename);
+  const coordinates = ["left", "top", "width", "height"].map((key) => Number(targetOption[key]));
+  if (!coordinates.every(Number.isFinite) || coordinates[2] <= 0 || coordinates[3] <= 0) {
+    throw new Error(`Windows note selector target has invalid UI Automation bounds: ${JSON.stringify(targetOption)}`);
+  }
+  const script = `
+    $ErrorActionPreference = "Stop"
+    Add-Type -AssemblyName System.Drawing
+    Add-Type -AssemblyName System.Windows.Forms
+    $screen = [System.Windows.Forms.SystemInformation]::VirtualScreen
+    $targetLeft = [int][math]::Floor([double]$env:OPENOBSIDIAN_TARGET_LEFT)
+    $targetTop = [int][math]::Floor([double]$env:OPENOBSIDIAN_TARGET_TOP)
+    $targetRight = [int][math]::Ceiling($targetLeft + [double]$env:OPENOBSIDIAN_TARGET_WIDTH)
+    $targetBottom = [int][math]::Ceiling($targetTop + [double]$env:OPENOBSIDIAN_TARGET_HEIGHT)
+    $left = [math]::Max($screen.Left, $targetLeft - 24)
+    $top = [math]::Max($screen.Top, $targetTop - 8)
+    $right = [math]::Min($screen.Right, $targetRight + 24)
+    $bottom = [math]::Min($screen.Bottom, $targetBottom + 8)
+    $width = $right - $left
+    $height = $bottom - $top
+    if ($width -le 0 -or $height -le 0) {
+      throw "The note-selector target bounds do not intersect the visible desktop: x=$left y=$top width=$width height=$height"
+    }
+    $bitmap = [System.Drawing.Bitmap]::new($width, $height)
+    $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
+    try {
+      $graphics.CopyFromScreen($left, $top, 0, 0, $bitmap.Size)
+      $bitmap.Save($env:OBSIDIAN_SCREENSHOT_PATH, [System.Drawing.Imaging.ImageFormat]::Png)
+    } finally {
+      $graphics.Dispose()
+      $bitmap.Dispose()
+    }
+    [ordered]@{geometry = "x=$left y=$top width=$width height=$height"} | ConvertTo-Json -Compress
+  `;
+  const output = execFileSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", script], {
+    encoding: "utf8",
+    env: {
+      ...process.env,
+      OBSIDIAN_SCREENSHOT_PATH: pngPath,
+      OPENOBSIDIAN_TARGET_LEFT: String(coordinates[0]),
+      OPENOBSIDIAN_TARGET_TOP: String(coordinates[1]),
+      OPENOBSIDIAN_TARGET_WIDTH: String(coordinates[2]),
+      OPENOBSIDIAN_TARGET_HEIGHT: String(coordinates[3]),
+    },
+    stdio: ["ignore", "pipe", "pipe"],
+  }).trim();
+  const capture = JSON.parse(output) as {geometry?: unknown};
+  if (typeof capture.geometry !== "string") {
+    throw new Error(`Windows note selector screenshot returned no crop geometry: ${output}`);
+  }
+  return {pngPath, geometry: capture.geometry};
+}
+
+async function readWindowsExpandedNoteSelectorTarget(
+  child: ChildProcess,
+  expectedPath: string,
+): Promise<Record<string, unknown>> {
+  const processId = child.pid;
+  if (!processId) throw new Error("OpenObsidian did not expose its process id for note selector inspection");
+  const script = `
+    $ErrorActionPreference = "Stop"
+    Add-Type -AssemblyName UIAutomationClient
+    Add-Type -AssemblyName UIAutomationTypes
+    $processId = [int]$env:OPENOBSIDIAN_WINDOW_PROCESS_ID
+    $expectedPath = $env:OPENOBSIDIAN_EXPECTED_NOTE_PATH.Replace([string][char]92, "/")
+    $root = [System.Windows.Automation.AutomationElement]::RootElement
+    $condition = [System.Windows.Automation.PropertyCondition]::new(
+      [System.Windows.Automation.AutomationElement]::ProcessIdProperty,
+      $processId
+    )
+    $deadline = [DateTime]::UtcNow.AddSeconds(20)
+    $lastObservation = $null
+    while ([DateTime]::UtcNow -lt $deadline) {
+      $elements = $root.FindAll([System.Windows.Automation.TreeScope]::Descendants, $condition)
+      $selectors = @()
+      $targetOptions = @()
+      $visibleNoteOptionNames = @()
+      foreach ($element in $elements) {
+        try {
+          $current = $element.Current
+          if ($current.ControlType.ProgrammaticName -eq "ControlType.Button" -and $current.Name -eq "Note to inspect") {
+            $selectors += $element
+          }
+          if ($current.ControlType.ProgrammaticName -ne "ControlType.RadioButton" -or $current.IsOffscreen) { continue }
+          $normalizedName = $current.Name.Replace([string][char]92, "/")
+          if ($normalizedName -match "\\.(md|base|canvas)$") { $visibleNoteOptionNames += $normalizedName }
+          if ($normalizedName -ceq $expectedPath) {
+            $bounds = $current.BoundingRectangle
+            $targetOptions += [pscustomobject]@{
+              element = $element
+              name = $normalizedName
+              is_offscreen = [bool]$current.IsOffscreen
+              left = [double]$bounds.Left
+              top = [double]$bounds.Top
+              width = [double]$bounds.Width
+              height = [double]$bounds.Height
+            }
+          }
+        } catch {
+          throw "Could not read a note selector UI Automation element: $($_.Exception.Message)"
+        }
+      }
+      $selectorState = "unsupported"
+      $selectorIsOffscreen = $null
+      $selectorSupported = $false
+      if ($selectors.Count -eq 1) {
+        $selectorIsOffscreen = [bool]$selectors[0].Current.IsOffscreen
+        $expandPattern = $null
+        $selectorSupported = $selectors[0].TryGetCurrentPattern(
+          [System.Windows.Automation.ExpandCollapsePattern]::Pattern,
+          [ref]$expandPattern
+        )
+        if ($selectorSupported) { $selectorState = $expandPattern.Current.ExpandCollapseState.ToString() }
+      }
+      $target = if ($targetOptions.Count -eq 1) { $targetOptions[0] } else { $null }
+      $positiveTargetBounds = $null -ne $target -and $target.width -gt 0 -and $target.height -gt 0
+      $lastObservation = [pscustomobject]@{
+        selector_count = $selectors.Count
+        selector_is_offscreen = $selectorIsOffscreen
+        selector_expand_collapse_supported = [bool]$selectorSupported
+        selector_expand_collapse_state = $selectorState
+        visible_note_option_names = @($visibleNoteOptionNames)
+        exact_target_match_count = $targetOptions.Count
+        target_option = if ($target) {
+          [pscustomobject]@{
+            name = $target.name
+            control_type = "ControlType.RadioButton"
+            is_offscreen = $target.is_offscreen
+            left = $target.left
+            top = $target.top
+            width = $target.width
+            height = $target.height
+            positive_bounds = $positiveTargetBounds
+          }
+        } else { $null }
+      }
+      $selectorIsExpanded = $selectorState -in @("Expanded", "PartiallyExpanded")
+      $targetProvesExpanded = -not $selectorSupported -and $null -ne $target
+      if ($selectors.Count -eq 1 -and -not $selectorIsOffscreen -and
+          $targetOptions.Count -eq 1 -and $positiveTargetBounds -and
+          ($selectorIsExpanded -or $targetProvesExpanded)) {
+        $lastObservation | ConvertTo-Json -Compress -Depth 5
+        exit 0
+      }
+      Start-Sleep -Milliseconds 250
+    }
+    throw "Timed out waiting for the exact visible note selector option; expected=$expectedPath; last=$($lastObservation | ConvertTo-Json -Compress -Depth 5)"
+  `;
+  try {
+    const output = execFileSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", script], {
+      encoding: "utf8",
+      env: {
+        ...process.env,
+        OPENOBSIDIAN_WINDOW_PROCESS_ID: String(processId),
+        OPENOBSIDIAN_EXPECTED_NOTE_PATH: expectedPath,
+      },
+      stdio: ["ignore", "pipe", "pipe"],
+    }).trim();
+    return JSON.parse(output) as Record<string, unknown>;
+  } catch (error) {
+    const failure = error as NodeJS.ErrnoException & {stderr?: Buffer | string; stdout?: Buffer | string};
+    const output = [failure.stdout, failure.stderr].filter(Boolean).map(String).join("\n").trim();
+    throw new Error(`Could not confirm the expanded Windows note selector for ${expectedPath}: ${output || failure.message}`);
   }
 }
 
@@ -4524,12 +4737,10 @@ async function readGroupOrderVisibleState(
       return paintedTextSamples >= Math.max(1, Math.ceil(samples.length * 0.6));
     };
     const inspectPaintedCardTitleText = (element, card) => {
-      if (hitTestPaintedText(element, card)) {
-        return {painted: true, diagnostics: {caret_text_hit_test_passed: true, method: 'caret-text-hit-test'}};
-      }
+      const caretTextHitTestPassed = hitTestPaintedText(element, card);
       const diagnostics = {
-        caret_text_hit_test_passed: false,
-        method: 'title-subtree-hit-test',
+        caret_text_hit_test_passed: caretTextHitTestPassed,
+        method: 'title-range-hit-test',
         title_visible: Boolean(element && visible(element)),
         card_painted: Boolean(card && hitTestPainted(card)),
         title_text_painted: Boolean(element && textNodeIsPainted(element)),
@@ -4538,6 +4749,13 @@ async function readGroupOrderVisibleState(
         sample_point_count: 0,
         title_subtree_hit_samples: 0,
         painted_title_subtree_hit_samples: 0,
+        card_surface_hit_samples: 0,
+        caret_text_hit_samples: 0,
+        card_surface_caret_text_hit_samples: 0,
+        unrelated_hit_sample_count: 0,
+        no_hit_sample_count: 0,
+        required_painted_samples: 0,
+        hit_target_samples: [],
         non_title_hit_targets: [],
         reason: '',
       };
@@ -4595,23 +4813,79 @@ async function readGroupOrderVisibleState(
         return {painted: false, diagnostics};
       }
       const nonTitleHitTargets = new Map();
+      const hitTargetSamples = [];
       for (const {x, y} of points) {
+        const rangeAtPoint = document.caretRangeFromPoint?.(x, y);
+        const caretAtPoint = document.caretPositionFromPoint?.(x, y);
+        const caretNode = rangeAtPoint?.startContainer ?? caretAtPoint?.offsetNode ?? null;
+        const caretTextHit = Boolean(caretNode
+          && caretNode.nodeType === Node.TEXT_NODE
+          && element.contains(caretNode)
+          && textNodeIsPainted(caretNode));
+        if (caretTextHit) diagnostics.caret_text_hit_samples += 1;
         const hit = document.elementFromPoint(x, y);
+        if (!hit) {
+          diagnostics.no_hit_sample_count += 1;
+          hitTargetSamples.push({x, y, category: 'no-hit', tag: null, class_name: '', caret_text_hit: caretTextHit});
+          continue;
+        }
         const titleSubtreeHit = Boolean(hit && (hit === element || element.contains(hit)));
         if (titleSubtreeHit) {
           diagnostics.title_subtree_hit_samples += 1;
           if (textNodeIsPainted(hit)) diagnostics.painted_title_subtree_hit_samples += 1;
-        } else if (hit) {
-          const key = hit.tagName.toLowerCase() + '.' + String(hit.getAttribute('class') || '').trim().replace(/\s+/g, '.');
+          hitTargetSamples.push({
+            x,
+            y,
+            category: 'title-subtree',
+            tag: hit.tagName.toLowerCase(),
+            class_name: hit.getAttribute('class') || '',
+            caret_text_hit: caretTextHit,
+          });
+        } else if (hit === card) {
+          diagnostics.card_surface_hit_samples += 1;
+          if (caretTextHit) diagnostics.card_surface_caret_text_hit_samples += 1;
+          hitTargetSamples.push({
+            x,
+            y,
+            category: 'exact-card-root',
+            tag: hit.tagName.toLowerCase(),
+            class_name: hit.getAttribute('class') || '',
+            caret_text_hit: caretTextHit,
+          });
+          const key = hit.tagName.toLowerCase() + '.' + String(hit.getAttribute('class') || '').trim().replace(/\\s+/g, '.');
+          const previous = nonTitleHitTargets.get(key) || {tag: hit.tagName.toLowerCase(), class_name: hit.getAttribute('class') || '', count: 0};
+          previous.count += 1;
+          nonTitleHitTargets.set(key, previous);
+        } else {
+          diagnostics.unrelated_hit_sample_count += 1;
+          hitTargetSamples.push({
+            x,
+            y,
+            category: 'unrelated-target',
+            tag: hit.tagName.toLowerCase(),
+            class_name: hit.getAttribute('class') || '',
+            caret_text_hit: caretTextHit,
+          });
+          const key = hit.tagName.toLowerCase() + '.' + String(hit.getAttribute('class') || '').trim().replace(/\\s+/g, '.');
           const previous = nonTitleHitTargets.get(key) || {tag: hit.tagName.toLowerCase(), class_name: hit.getAttribute('class') || '', count: 0};
           previous.count += 1;
           nonTitleHitTargets.set(key, previous);
         }
       }
-      diagnostics.non_title_hit_targets = [...nonTitleHitTargets.values()].slice(0, 8);
       const requiredPaintedSamples = Math.max(1, Math.ceil(points.length * 0.6));
-      const painted = diagnostics.painted_title_subtree_hit_samples >= requiredPaintedSamples;
-      diagnostics.reason = painted ? '' : 'title-subtree-hit-test-below-threshold';
+      diagnostics.required_painted_samples = requiredPaintedSamples;
+      diagnostics.hit_target_samples = hitTargetSamples;
+      diagnostics.non_title_hit_targets = [...nonTitleHitTargets.values()];
+      const validPaintedSamples = diagnostics.painted_title_subtree_hit_samples + diagnostics.card_surface_hit_samples;
+      const cardSurfaceTextEvidencePresent = diagnostics.card_surface_hit_samples === 0
+        || diagnostics.card_surface_caret_text_hit_samples > 0;
+      diagnostics.card_surface_text_evidence_present = cardSurfaceTextEvidencePresent;
+      const painted = diagnostics.unrelated_hit_sample_count === 0
+        && diagnostics.no_hit_sample_count === 0
+        && diagnostics.caret_text_hit_samples > 0
+        && cardSurfaceTextEvidencePresent
+        && validPaintedSamples >= requiredPaintedSamples;
+      diagnostics.reason = painted ? '' : 'title-range-hit-test-below-threshold-or-covered-by-unrelated-target';
       return {painted, diagnostics};
     };
     let scrollActions = 0;
@@ -5054,6 +5328,7 @@ async function readGroupOrderVisibleState(
           class_name: card.getAttribute('class') || '',
           source_scope: 'kanban',
           row_class_name: card.getAttribute('class') || '',
+          title_hit_diagnostics: titleDiagnostics[0],
           top: visibilitySample?.visibility_sample_bounds.top ?? bounds.top,
           left: visibilitySample?.visibility_sample_bounds.left ?? bounds.left,
           ...visibilitySample,
@@ -5124,7 +5399,7 @@ async function readGroupOrderVisibleState(
           left: visibilitySample?.visibility_sample_bounds.left ?? bounds.left,
         };
       });
-    const unmappedVisibleRowCandidates = visibleRowElements
+    const preSweepUnmappedVisibleRowCandidates = visibleRowElements
       .filter((row) => {
         return !rowIsHeader(row) && !rowIsGroupHeading(row) && !rowHasPathCandidate(row)
           && !mappedPathlessRows.has(row) && Boolean(textOf(row));
@@ -5499,6 +5774,7 @@ async function readGroupOrderVisibleState(
           group_key: groupKey,
           column_ordinal: columnOrdinal,
           local_dom_ordinal: localOrdinal,
+          ...(entry.title_hit_diagnostics ? {title_hit_diagnostics: entry.title_hit_diagnostics} : {}),
         };
         if (!freshSweepResultRecords.has(entry.path)) {
           freshSweepResultRecords.set(entry.path, {
@@ -5510,6 +5786,7 @@ async function readGroupOrderVisibleState(
             class_name: entry.class_name,
             source_scope: layout === 'kanban' ? 'kanban' : 'table',
             row_class_name: entry.row_class_name || '',
+            ...(entry.title_hit_diagnostics ? {title_hit_diagnostics: entry.title_hit_diagnostics} : {}),
             top: bounds.top,
             left: bounds.left,
             visibility_sample_sequence: freshSweepPositions,
@@ -5578,6 +5855,7 @@ async function readGroupOrderVisibleState(
             text: title,
             class_name: card.getAttribute('class') || '',
             row_class_name: card.getAttribute('class') || '',
+            title_hit_diagnostics: titleCheck.diagnostics,
           }, groupKey, columnOrdinal, column, cardOrdinalByElement.get(card) ?? -1);
         }
       } else if (selectedResultRoot) {
@@ -5846,6 +6124,55 @@ async function readGroupOrderVisibleState(
       }
     }
     const allUnmappedVisiblePathCandidates = [...unmappedVisiblePathCandidates, ...freshSweepUnmappedCandidates];
+    const freshSweepEvidenceEligibleForPreSweepRows = layout === 'table'
+      && freshSweepPositions > 0
+      && freshSweepCoverageComplete
+      && resultCount !== null
+      && freshSweepUniquePaths.length === resultCount
+      && freshSweepUnmappedPathSamples === 0
+      && freshSweepUnmappedRowSamples === 0
+      && freshSweepDuplicatePathSamples === 0
+      && freshSweepUnownedResultSamples === 0
+      && !freshSweepOrderingAmbiguous
+      && !freshSweepGroupOwnershipAmbiguous
+      && !freshSweepHeadingIdentityAmbiguous
+      && nodeIdentityChanges.length === 0
+      && allUnmappedVisiblePathCandidates.length === 0
+      && unassignedVisibleFilePaths.length === 0;
+    const preSweepRowReconciliation = preSweepUnmappedVisibleRowCandidates.map((candidate) => {
+      const fixturePathMatches = candidate.fixture_path_matches;
+      const matchedPath = fixturePathMatches.length === 1 ? fixturePathMatches[0] : null;
+      const freshRecord = matchedPath ? freshSweepResultRecords.get(matchedPath) : null;
+      const groupKeys = matchedPath ? [...(freshSweepPathGroupKeys.get(matchedPath) ?? [])] : [];
+      const groupOwnerIsStable = groupByProperty ? groupKeys.length === 1 : groupKeys.length === 0;
+      const resolutionReasons = [];
+      if (!freshSweepEvidenceEligibleForPreSweepRows) {
+        resolutionReasons.push('The exhaustive fresh sweep did not pass all completeness, uniqueness, mapping, ordering, and ownership gates.');
+      }
+      if (fixturePathMatches.length !== 1) {
+        resolutionReasons.push('The preliminary row text did not map to exactly one fixture path.');
+      }
+      if (!freshRecord || freshRecord.observations.length === 0 || !freshSweepPaths.has(matchedPath)) {
+        resolutionReasons.push('The candidate path was not independently observed by the exhaustive fresh sweep.');
+      }
+      if (!groupOwnerIsStable) {
+        resolutionReasons.push(groupByProperty
+          ? 'The fresh sweep did not establish exactly one stable group owner for the candidate path.'
+          : 'The ungrouped table unexpectedly recorded group ownership for the candidate path.');
+      }
+      return {
+        ...candidate,
+        resolution: resolutionReasons.length === 0 ? 'resolved-by-complete-fresh-sweep' : 'unresolved',
+        matched_path: matchedPath,
+        fresh_sweep_observation_count: freshRecord?.observations.length ?? 0,
+        group_keys: groupKeys,
+        resolution_reasons: resolutionReasons,
+      };
+    });
+    const resolvedPreSweepRowCandidates = preSweepRowReconciliation
+      .filter((candidate) => candidate.resolution === 'resolved-by-complete-fresh-sweep');
+    const unresolvedPreSweepRowCandidates = preSweepRowReconciliation
+      .filter((candidate) => candidate.resolution === 'unresolved');
     const errorSpecificPattern = /invalid|unsupported|must be|could not|failed|failure|malformed|error|exception|rejected|unable to/i;
     const activeErrorElements = [...(root?.querySelectorAll('[role="alert"], .bases-error, [class*="error"]') ?? [])]
       .filter((element) => hitTestPaintedText(element));
@@ -5878,7 +6205,7 @@ async function readGroupOrderVisibleState(
       && freshSweepUniquePaths.length === 0
       && allUnmappedVisiblePathCandidates.length === 0
       && freshSweepUnmappedRowSamples === 0
-      && unmappedVisibleRowCandidates.length === 0
+      && unresolvedPreSweepRowCandidates.length === 0
       && occludedKanbanDomCandidates.length === 0
       && (layout === 'kanban' ? kanbanContainers.length === 0 : tableRoots.length === 0);
     const emptyTableOutcome = layout === 'table'
@@ -5897,7 +6224,7 @@ async function readGroupOrderVisibleState(
       && ungroupedVisibleFilePaths.length === 0
       && unassignedVisibleFilePaths.length === 0
       && allUnmappedVisiblePathCandidates.length === 0
-      && unmappedVisibleRowCandidates.length === 0
+      && unresolvedPreSweepRowCandidates.length === 0
       && visibleErrorTexts.length === 0
       && !notices.some((text) => errorSpecificPattern.test(text));
     const ambiguityReasons = [];
@@ -5915,7 +6242,7 @@ async function readGroupOrderVisibleState(
     }
     if (groupRecords.some((group) => !group.heading_text)) ambiguityReasons.push('A visible group marker has no extractable heading text.');
     if (allUnmappedVisiblePathCandidates.length > 0) ambiguityReasons.push('One or more visible file-link candidates could not be mapped to a unique fixture path.');
-    if (unmappedVisibleRowCandidates.length > 0) ambiguityReasons.push('One or more visible data rows or cards have no uniquely mapped fixture file.');
+    if (unresolvedPreSweepRowCandidates.length > 0) ambiguityReasons.push('One or more preliminary visible data rows could not be reconciled with a complete, unique fresh-sweep result and stable group ownership.');
     if (unassignedVisibleFilePaths.length > 0) ambiguityReasons.push('One or more visible fixture file links could not be assigned to a group or an ungrouped view.');
     if (layout === 'kanban' && freshSweepUniquePaths.length > 0 && groupRecords.length === 0 && !emptyErrorOutcome) {
       ambiguityReasons.push('The Kanban view rendered fixture files without detectable group headings.');
@@ -6014,6 +6341,7 @@ async function readGroupOrderVisibleState(
       group_keys: link.group_keys,
       column_ordinal: link.column_ordinal,
       fresh_sweep_observation_count: link.observations.length,
+      ...(link.title_hit_diagnostics ? {title_hit_diagnostics: link.title_hit_diagnostics} : {}),
     }));
     return {
       requested_file_path: requestedPath,
@@ -6067,6 +6395,12 @@ async function readGroupOrderVisibleState(
         node_identity_change_count: nodeIdentityChanges.length,
         node_identity_change_examples: nodeIdentityChanges.slice(0, 30),
       },
+      pre_sweep_unmapped_visible_row_candidates: preSweepUnmappedVisibleRowCandidates,
+      pre_sweep_row_reconciliation: {
+        fresh_sweep_evidence_eligible: freshSweepEvidenceEligibleForPreSweepRows,
+        resolved_candidates: resolvedPreSweepRowCandidates,
+        unresolved_candidates: unresolvedPreSweepRowCandidates,
+      },
       groups: groupRecords.map(({index, heading_text, heading_class_name, heading_bounds, heading_visibility_sample, member_paths}) => ({
         index,
         heading_text,
@@ -6080,7 +6414,7 @@ async function readGroupOrderVisibleState(
       visible_fixture_path_links: visibleFixturePathLinks,
       mapped_visible_row_path_candidates: mappedVisibleRowPathCandidates,
       unmapped_visible_path_candidates: allUnmappedVisiblePathCandidates,
-      unmapped_visible_row_candidates: [...unmappedVisibleRowCandidates, ...freshSweepUnmappedRows],
+      unmapped_visible_row_candidates: [...unresolvedPreSweepRowCandidates, ...freshSweepUnmappedRows],
       visible_group_marker_count: freshSweepHeadingKeys.size,
       unmapped_group_marker_count: groupRecords.filter((group) => !group.heading_text).length,
       occluded_kanban_dom_candidates: occludedKanbanDomCandidates,
@@ -6175,6 +6509,12 @@ function emptyGroupOrderVisibleState(scenario: GroupOrderScenario): GroupOrderVi
     unassigned_visible_file_paths: [],
     visible_fixture_path_links: [],
     mapped_visible_row_path_candidates: [],
+    pre_sweep_unmapped_visible_row_candidates: [],
+    pre_sweep_row_reconciliation: {
+      fresh_sweep_evidence_eligible: false,
+      resolved_candidates: [],
+      unresolved_candidates: [],
+    },
     unmapped_visible_path_candidates: [],
     unmapped_visible_row_candidates: [],
     visible_group_marker_count: 0,
@@ -8971,14 +9311,71 @@ async function selectReferenceNoteForEmbedResolution(
     if (!windowsSelectorOpenConfirms(selectorOpenAction)) {
       throw new Error(`Windows UI Automation did not confirm opening the exact note selector: ${selectorOpenAction}`);
     }
-    const openMenuScreenshot = await captureOpenObsidianScreenshot(
-      windowId,
-      child,
-      "openobsidian-authored-image-note-selector",
-    );
-    const targetPathVisibleByOcr = ocrTextContainsPhrase(openMenuScreenshot.ocrText, targetPath);
+    const expandedSelectorCaptures: Array<{
+      pngPath: string;
+      cropGeometry: string;
+      ocrText: string;
+      uiAutomationBefore: Record<string, unknown>;
+      uiAutomationAfter: Record<string, unknown>;
+      uiAutomationSameTargetAfterCapture: boolean;
+    }> = [];
+    let expandedSelectorScreenshotPath = "";
+    let expandedSelectorCropGeometry = "";
+    let expandedSelectorOcrText = "";
+    let expandedSelectorUiAutomationBefore: Record<string, unknown> | null = null;
+    let expandedSelectorUiAutomationAfter: Record<string, unknown> | null = null;
+    let uiAutomationSameTargetAfterCapture = false;
+    let targetPathVisibleByOcr = false;
+    for (let attempt = 1; attempt <= 3; attempt += 1) {
+      const uiAutomationBefore = await readWindowsExpandedNoteSelectorTarget(child, targetPath);
+      const targetOption = uiAutomationBefore.target_option as Record<string, unknown>;
+      const screenshot = await captureWindowsNoteSelectorOptionScreenshot(
+        `openobsidian-authored-image-note-selector-expanded-${attempt}.png`,
+        targetOption,
+      );
+      const screenshotOcr = await readScreenshotOcr(screenshot.pngPath);
+      const uiAutomationAfter = await readWindowsExpandedNoteSelectorTarget(child, targetPath);
+      const sameTargetAfterCapture = windowsNoteSelectorObservationConfirmsSameTarget(uiAutomationBefore, uiAutomationAfter);
+      expandedSelectorCaptures.push({
+        pngPath: screenshot.pngPath,
+        cropGeometry: screenshot.geometry,
+        ocrText: screenshotOcr,
+        uiAutomationBefore,
+        uiAutomationAfter,
+        uiAutomationSameTargetAfterCapture: sameTargetAfterCapture,
+      });
+      expandedSelectorScreenshotPath = screenshot.pngPath;
+      expandedSelectorCropGeometry = screenshot.geometry;
+      expandedSelectorOcrText = screenshotOcr;
+      expandedSelectorUiAutomationBefore = uiAutomationBefore;
+      expandedSelectorUiAutomationAfter = uiAutomationAfter;
+      uiAutomationSameTargetAfterCapture = sameTargetAfterCapture;
+      targetPathVisibleByOcr = ocrTextContainsPhrase(screenshotOcr, targetPath) && sameTargetAfterCapture;
+      if (targetPathVisibleByOcr) break;
+      if (attempt < 3) await delay(250);
+    }
+    const selectorCaptureEvidence = {
+      ui_automation_before_capture: expandedSelectorUiAutomationBefore,
+      ui_automation_after_capture: expandedSelectorUiAutomationAfter,
+      same_target_remained_visible_after_capture: uiAutomationSameTargetAfterCapture,
+      screenshot_attempts: expandedSelectorCaptures.map((capture) => ({
+        screenshot: relative(reportDirectory, capture.pngPath),
+        crop_geometry: capture.cropGeometry,
+        ocr_text: capture.ocrText.slice(0, 2_000),
+        ui_automation_before_capture: capture.uiAutomationBefore,
+        ui_automation_after_capture: capture.uiAutomationAfter,
+        same_target_remained_visible_after_capture: capture.uiAutomationSameTargetAfterCapture,
+      })),
+      target_path_visible_by_ocr: targetPathVisibleByOcr,
+    };
+    const openReport = report.openobsidian_open as Record<string, unknown>;
+    const priorSelectorCaptures = Array.isArray(openReport.windows_authored_note_selector_capture_attempts)
+      ? openReport.windows_authored_note_selector_capture_attempts
+      : [];
+    openReport.windows_authored_note_selector_capture_attempts = [...priorSelectorCaptures, selectorCaptureEvidence];
+    await saveReport();
     if (!targetPathVisibleByOcr) {
-      throw new Error(`Windows screenshot OCR did not confirm that ${targetPath} is visible in the expanded note selector`);
+      throw new Error(`Windows target-row screenshot OCR and post-capture UI Automation did not jointly confirm ${targetPath} in the expanded selector; UI Automation before=${JSON.stringify(expandedSelectorUiAutomationBefore)}; UI Automation after=${JSON.stringify(expandedSelectorUiAutomationAfter)}; crop=${expandedSelectorCropGeometry}; screenshot=${relative(reportDirectory, expandedSelectorScreenshotPath)}; OCR=${JSON.stringify(expandedSelectorOcrText.slice(0, 2_000))}`);
     }
     const selectionAction = await invokeNativeAccessibleControl(child, windowId, targetPath, undefined, true);
     if (!windowsSelectionConfirmsPath(selectionAction, targetPath)) {
@@ -8991,7 +9388,13 @@ async function selectReferenceNoteForEmbedResolution(
     return {
       strategy: "windows_ui_automation_exact_path_from_expanded_selector",
       collapsed_selector_screenshot: relative(reportDirectory, collapsedSelectorScreenshot.pngPath),
-      expanded_selector_screenshot: relative(reportDirectory, openMenuScreenshot.pngPath),
+      expanded_selector_screenshot: relative(reportDirectory, expandedSelectorScreenshotPath),
+      expanded_selector_crop_geometry: expandedSelectorCropGeometry,
+      expanded_selector_ui_automation_before_capture: expandedSelectorUiAutomationBefore,
+      expanded_selector_ui_automation_after_capture: expandedSelectorUiAutomationAfter,
+      same_target_remained_visible_after_capture: uiAutomationSameTargetAfterCapture,
+      expanded_selector_ocr: expandedSelectorOcrText.slice(0, 4_000),
+      expanded_selector_screenshot_attempt_count: expandedSelectorCaptures.length,
       target_path_visible_by_ocr: targetPathVisibleByOcr,
       selector_open_action: selectorOpenAction,
       selection_action: selectionAction,
