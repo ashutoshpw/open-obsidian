@@ -1,0 +1,167 @@
+{
+  "milestone": "R2.8.113 macOS Canvas OCR readback repair",
+  "attempt": 1,
+  "source_sha": "f87842ada8519af5b1ad5952625e855b9e921a23",
+  "branch": "main",
+  "pushed_to": "origin/main",
+  "outcome": "failed",
+  "status_snapshot": {
+    "observed_at": "2026-10-14T03:00:14Z",
+    "jobs_total": 20,
+    "success": 19,
+    "failure": 1,
+    "queued": 0,
+    "in_progress": 0
+  },
+  "workflow_runs": [
+    {
+      "name": "Rust migration inventory",
+      "run_id": 38502834122,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38502834122",
+      "head_sha": "f87842ada8519af5b1ad5952625e855b9e921a23",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [{"job_id": 115653519847, "name": "inventory", "status": "completed", "conclusion": "success"}],
+      "artifacts": []
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 38502834140,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38502834140",
+      "head_sha": "f87842ada8519af5b1ad5952625e855b9e921a23",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"job_id": 115653519895, "name": "ubuntu-latest", "status": "completed", "conclusion": "success"},
+        {"job_id": 115653520101, "name": "macos-latest", "status": "completed", "conclusion": "success"},
+        {"job_id": 115653520204, "name": "windows-latest", "status": "completed", "conclusion": "success"}
+      ],
+      "artifacts": []
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 38502834137,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38502834137",
+      "head_sha": "f87842ada8519af5b1ad5952625e855b9e921a23",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"job_id": 115653520144, "name": "macos-latest", "status": "completed", "conclusion": "success"},
+        {"job_id": 115653520284, "name": "windows-latest", "status": "completed", "conclusion": "success"},
+        {"job_id": 115653520345, "name": "ubuntu-latest", "status": "completed", "conclusion": "success"}
+      ],
+      "artifacts": [
+        {"id": 11865889171, "name": "openobsidian-macOS-preview-f87842ada8519af5b1ad5952625e855b9e921a23", "size_bytes": 397395784, "digest": "sha256:93c72010e7f4d2e6aa5526cebc519f1e6541b990a8664cb52e7e0f76f4cfff5e", "expired": false},
+        {"id": 11866677943, "name": "openobsidian-Windows-preview-f87842ada8519af5b1ad5952625e855b9e921a23", "size_bytes": 163006126, "digest": "sha256:b383007813358b40acc92cd44058e40584dbf56bb1da90968d7a91672acab99b", "expired": false},
+        {"id": 11866268599, "name": "openobsidian-Linux-preview-f87842ada8519af5b1ad5952625e855b9e921a23", "size_bytes": 125946850, "digest": "sha256:8e20a8098140530901e1cc34f59be0063d60e65459b09515137ffc108b638c58", "expired": false}
+      ]
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 38502834129,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38502834129",
+      "head_sha": "f87842ada8519af5b1ad5952625e855b9e921a23",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"job_id": 115653519877, "name": "macos-latest", "status": "completed", "conclusion": "success"},
+        {"job_id": 115653520089, "name": "windows-latest", "status": "completed", "conclusion": "success"},
+        {"job_id": 115653520120, "name": "ubuntu-latest", "status": "completed", "conclusion": "success"}
+      ],
+      "artifacts": [
+        {"id": 11866313553, "name": "plugin-renderer-lifecycle-macOS-f87842ada8519af5b1ad5952625e855b9e921a23", "size_bytes": 3238, "digest": "sha256:77570bdb783c82beeed04ce7dd15402798e9a13ed2e88e9d0f6f3de005de9620", "expired": false},
+        {"id": 11866568100, "name": "plugin-renderer-lifecycle-Windows-f87842ada8519af5b1ad5952625e855b9e921a23", "size_bytes": 3242, "digest": "sha256:bdc7dcf37d7a69641046c91b3ca6421dcbabb6e6777f612ae1de3504a3da1759", "expired": false},
+        {"id": 11865824037, "name": "plugin-renderer-lifecycle-Linux-f87842ada8519af5b1ad5952625e855b9e921a23", "size_bytes": 3221, "digest": "sha256:d00d853e2c69f3ca8bb4c8272c0ab1f1fe8a33693868c3939480473e00b80775", "expired": false}
+      ]
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 38502834142,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38502834142",
+      "head_sha": "f87842ada8519af5b1ad5952625e855b9e921a23",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"job_id": 115653520311, "name": "macos-latest", "status": "completed", "conclusion": "success"},
+        {"job_id": 115653520521, "name": "ubuntu-latest", "status": "completed", "conclusion": "success"},
+        {"job_id": 115653520612, "name": "windows-latest", "status": "completed", "conclusion": "success"}
+      ],
+      "artifacts": [
+        {"id": 11866038461, "name": "loaded-plugin-workflows-macOS-f87842ada8519af5b1ad5952625e855b9e921a23", "size_bytes": 171485, "digest": "sha256:b53ec1f559417b0f1b46bf6721576ff83448d3bd85206cc92044d9ee2cfa1242", "expired": false},
+        {"id": 11866528158, "name": "loaded-plugin-workflows-Linux-f87842ada8519af5b1ad5952625e855b9e921a23", "size_bytes": 171477, "digest": "sha256:1b2cb358ea1cd0483b1b9d82da564ba1334fdcd948b28b459aed64f3f85497db", "expired": false},
+        {"id": 11866667871, "name": "loaded-plugin-workflows-Windows-f87842ada8519af5b1ad5952625e855b9e921a23", "size_bytes": 171497, "digest": "sha256:a2509d77675639db8ab4277bdd60b30f609f4d407447198cc1949550bf75597f", "expired": false}
+      ]
+    },
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 38502834143,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38502834143",
+      "head_sha": "f87842ada8519af5b1ad5952625e855b9e921a23",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"job_id": 115653519974, "name": "minimum supported Rust (1.95)", "status": "completed", "conclusion": "success"},
+        {"job_id": 115653520121, "name": "rust (macos-latest)", "status": "completed", "conclusion": "success"},
+        {"job_id": 115653520160, "name": "rust (ubuntu-latest)", "status": "completed", "conclusion": "success"},
+        {"job_id": 115653520229, "name": "rust (windows-latest)", "status": "completed", "conclusion": "success"}
+      ],
+      "artifacts": [
+        {"id": 11866653359, "name": "openobsidian-rust-preview-f87842ada8519af5b1ad5952625e855b9e921a23", "size_bytes": 11114034, "digest": "sha256:8d2538fe38b5abf0aa7dcb44fc8acb41fdc965ee9e18cb0e6357a17a76923c4e", "expired": false},
+        {"id": 11866618517, "name": "rust-plugin-runtime-Linux-f87842ada8519af5b1ad5952625e855b9e921a23", "size_bytes": 2695, "digest": "sha256:1ddd1cd252678ae82688a725571b8d0003c04e06add9e84271a28b864e34fcbf", "expired": false},
+        {"id": 11866643459, "name": "rust-plugin-runtime-macOS-f87842ada8519af5b1ad5952625e855b9e921a23", "size_bytes": 2698, "digest": "sha256:f6e3fdc98b549df91974e87edc7085b1b0a11bef9ba775c8e650cfc1ec3b76df", "expired": false},
+        {"id": 11867250296, "name": "rust-plugin-runtime-Windows-f87842ada8519af5b1ad5952625e855b9e921a23", "size_bytes": 2715, "digest": "sha256:fdde0b3ec76b18e08d93b8f11f7f4c73a2f7b98c59ae37225defd1695285616a", "expired": false}
+      ]
+    },
+    {
+      "name": "Obsidian vault round-trip acceptance",
+      "run_id": 38502834121,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38502834121",
+      "head_sha": "f87842ada8519af5b1ad5952625e855b9e921a23",
+      "status": "completed",
+      "conclusion": "failure",
+      "jobs": [
+        {"job_id": 115653519937, "name": "Obsidian 1.14.4 vault round-trip on windows-latest", "status": "completed", "conclusion": "success"},
+        {"job_id": 115653520198, "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04", "status": "completed", "conclusion": "success"},
+        {"job_id": 115653520285, "name": "Obsidian 1.14.4 vault round-trip on macos-latest", "status": "completed", "conclusion": "failure"}
+      ],
+      "artifacts": [
+        {"id": 11867485175, "name": "obsidian-vault-roundtrip-Linux-f87842ada8519af5b1ad5952625e855b9e921a23", "size_bytes": 15200042, "digest": "sha256:839be5cde4ebbc0e6b3ff999a7c5e26719a0d542d2f03e1a782befcb6e933baf", "report_sha256": "f09ded70ebc584e6c262ec6f57745ae09a4edf31d8c830c82b0453588e00b965", "expired": false, "c07_2": "captured-reference-mutation"},
+        {"id": 11867485057, "name": "obsidian-vault-roundtrip-Windows-f87842ada8519af5b1ad5952625e855b9e921a23", "size_bytes": 13947085, "digest": "sha256:eb90c14cf4a54a3a6fa4151afc1e74fd986bf167b32a359eddd28b0111058118", "report_sha256": "69a147207be5cbef12aec6a7828c28cbb4c38c472d240612b09fb2e80df23874", "expired": false, "c07_2": "captured-reference-mutation"},
+        {"id": 11867240221, "name": "obsidian-vault-roundtrip-macOS-f87842ada8519af5b1ad5952625e855b9e921a23", "size_bytes": 16138505, "digest": "sha256:e7b4e8490c96c6a0bd742aa6ce87e832893784cd65d726cfc50dfe75c068e2d8", "report_sha256": "85f7d8e8db772340d662d9273244b4ea85f96c1883a00fb3e2878f97818126ee", "expired": false, "c07_2": "not reached"}
+      ]
+    }
+  ],
+  "platform_evidence": {
+    "rust_ci": {"ubuntu": "passed", "macos": "passed", "windows": "passed", "minimum_rust": "1.95 passed"},
+    "roundtrip_reference_app": {"product": "Obsidian Desktop", "version": "1.14.4", "macos_runner": "macos26 / arm64"}
+  },
+  "macos_roundtrip_failure": {
+    "job_id": 115653520285,
+    "job_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38502834121/job/115653520285",
+    "failed_step": "Author, open, snapshot, and reopen the same vault",
+    "stage": "note_creation: position the existing Canvas path field before entry",
+    "failure_class": "OCR field-positioning failure; AX exposed no matching field and the fail-closed screenshot fallback found no unique value candidate",
+    "expected_visible_value": "Boards/Idea.canvas",
+    "accessibility_match_count": 0,
+    "full_screenshot_ocr": {"label": "Canvas path", "candidate_count": 0, "label_bounds": {"left": 261, "top": 432, "width": 137, "height": 24}},
+    "focused_crop": {"raw_file": "openobsidian-canvas-field-search-canvas-path-1791946615187-raw.png", "raw_dimensions": {"width": 221, "height": 32}, "ocr_file": "openobsidian-canvas-field-search-canvas-path-1791946615187-ocr.png", "ocr_dimensions": {"width": 884, "height": 128}, "raw_to_ocr_scale": {"x": 4, "y": 4}, "bounds": {"left": 203, "top": 206, "width": 221, "height": 32}, "tesseract": [{"psm": "7", "text": "fecardsideacanvas", "candidate_count": 0}, {"psm": "6", "text": "fecardsideacanvas", "candidate_count": 0}]},
+    "screenshots_and_crops": [
+      {"file": "openobsidian-canvas-input-canvas-path-before.png", "sha256": "41d61aa41c9738b3d4b9b16d9bf441d4857faf22dd22b21d16d99a63bb80d6f6", "observation": "The visible UI shows Boards/Idea.canvas in the Canvas path input."},
+      {"file": "openobsidian-canvas-field-search-canvas-path-1791946615187-ocr.png", "sha256": "f5580e68671848ab5b3e6dba3b8a1ba09c66de8a5e1411f7d2aa63c8f5983fd4", "observation": "The focused processed crop visibly shows Boards/Idea.canvas although Tesseract misreads it."}
+    ],
+    "c06_edit_path_readback": {"status": "passed", "expected": "C06 Reference.canvas", "clipboard_exact": true, "vision_exact": true, "vision_confidence": 1.0, "selection_collapse_key_sent": true, "screenshot_sha256": "c5ae0a034e393753139418d65dd3e6ac7265ecd82435eb5a0678b94d1ce2bc24", "crop_sha256": "473e3840c9a2c153ce50f6a430df03a75f4c5b12ea4f091b334ddf919655d969"},
+    "c07_2": "not reached on macOS; captured on Linux and Windows",
+    "github_log": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38502834121/job/115653520285"
+  },
+  "analysis": "R2.8.113 repaired the earlier C06 Canvas edit-path readback: macOS Vision recognized the exact value and clipboard equality passed. A separate populated Create-note Canvas path field then failed before interaction because macOS accessibility returned zero fields and Tesseract PSM 7/6 misread the visible Boards/Idea.canvas value, leaving zero OCR candidates. This is a field-positioning false negative, not an absent value or CI infrastructure failure. The round-trip gate correctly failed closed; C07.2 was not reached on macOS.",
+  "local_review": "The downloaded GitHub artifact screenshot and focused crop were visually inspected read-only. No local application tests, builds, OCR/runtime probes, formatters, typechecks, or lint checks were run.",
+  "next_milestone": {
+    "name": "R2.8.114 macOS Vision fallback for populated Canvas field positioning",
+    "scope": "When both focused-crop Tesseract passes produce zero candidates on macOS, run the existing Vision OCR on the focused processed crop. Require exactly one case-preserving, whitespace-normalized match to the configured current field value, confidence at least 0.80, a valid in-crop bounding box, and the existing unique label-relative geometry filter. Do not use Vision to resolve Tesseract ambiguity or nonzero fuzzy candidates; do not fall back to estimated label offsets. Record source, raw and mapped boxes, confidence, crop geometry, and rejected candidates in CI evidence.",
+    "acceptance": "The macOS round-trip must use this focused Vision positioning fallback for Boards/Idea.canvas, set and read back the field with exact clipboard and exact visual verification, then complete C06 and C07.2. All seven required workflows and 20 jobs must pass on the repair SHA."
+  },
+  "known_observations": [
+    "Linux and Windows C07.2 captures completed with captured-reference-mutation; these are observations of pinned Obsidian behavior, not Rust source-preservation evidence.",
+    "The Rust CI workflow passed all four jobs, including Ubuntu, macOS, Windows, and MSRV Rust 1.95."
+  ]
+}

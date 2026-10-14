@@ -1069,6 +1069,8 @@ print(String(decoding: data, as: UTF8.self))
   if (!Array.isArray(candidates) || candidates.some((candidate) =>
     typeof candidate.text !== "string"
     || !Number.isFinite(candidate.confidence)
+    || candidate.confidence < 0
+    || candidate.confidence > 1
     || ![candidate.boundingBox?.x, candidate.boundingBox?.y, candidate.boundingBox?.width, candidate.boundingBox?.height].every(Number.isFinite)
   )) {
     throw new Error("macOS Vision OCR returned an invalid text-candidate payload");
@@ -5910,7 +5912,7 @@ type CanvasInputFieldLayout = {
   fieldTextBoundsOcr: OcrWordBounds | null;
   fieldCenter: {x: number; y: number};
   fieldPositionSource: "visible-field-text-ocr" | "label-offset-fallback" | "label-anchored-readback-crop";
-  fieldTextOcrSource: "full-screenshot-ocr" | "focused-raw-crop" | "label-offset-fallback";
+  fieldTextOcrSource: "full-screenshot-ocr" | "focused-processed-crop-tesseract" | "focused-vision-crop" | "label-offset-fallback";
   fieldSearchCrop: {
     rawCropPath: string;
     ocrCropPath: string;
@@ -5919,11 +5921,29 @@ type CanvasInputFieldLayout = {
     ocrCropDimensions: {width: number; height: number};
     rawToOcrScale: {x: number; y: number};
     attempts: Array<{
+      engine: "tesseract";
       pageSegmentationMode: string;
       text: string;
       candidates: OcrWordBounds[];
       matchingCandidates: OcrWordBounds[];
     }>;
+    vision: {
+      imagePath: string;
+      confidenceFloor: number;
+      candidates: Array<{
+        text: string;
+        confidence: number;
+        boundingBox: MacOSVisionTextCandidate["boundingBox"];
+        validBounds: boolean;
+        exactText: boolean;
+        confidenceAccepted: boolean;
+        mappedBoundsOcr: OcrWordBounds | null;
+        geometryAccepted: boolean;
+        accepted: boolean;
+        rejection: string | null;
+      }>;
+      error: string;
+    } | null;
   } | null;
   cropBounds: {left: number; top: number; width: number; height: number};
   coordinateSpace: "window" | "desktop";
@@ -5985,6 +6005,7 @@ async function findCanvasInputTextInFocusedRawCrop(
   imageDimensions: {width: number; height: number},
 ): Promise<{
   candidate: OcrWordBounds | null;
+  source: "focused-processed-crop-tesseract" | "focused-vision-crop" | null;
   search: NonNullable<CanvasInputFieldLayout["fieldSearchCrop"]>;
 }> {
   const expectedRegion = canvasInputExpectedRegion(label, controlName, scaleX, scaleY);
@@ -6021,6 +6042,7 @@ async function findCanvasInputTextInFocusedRawCrop(
     ocrCropDimensions,
     rawToOcrScale: {x: cropScaleX, y: cropScaleY},
     attempts,
+    vision: null,
   };
   for (const pageSegmentationMode of ["7", "6"]) {
     const tsv = runTesseractTsv(ocrCropPath, pageSegmentationMode);
@@ -6040,10 +6062,77 @@ async function findCanvasInputTextInFocusedRawCrop(
       .map((line) => (line.split("\t")[11] ?? "").trim())
       .filter(Boolean)
       .join(" ");
-    attempts.push({pageSegmentationMode, text, candidates: mappedCandidates, matchingCandidates});
-    if (matchingCandidates.length === 1) return {candidate: matchingCandidates[0]!, search};
+    attempts.push({engine: "tesseract", pageSegmentationMode, text, candidates: mappedCandidates, matchingCandidates});
+    if (matchingCandidates.length === 1) return {candidate: matchingCandidates[0]!, source: "focused-processed-crop-tesseract", search};
   }
-  return {candidate: null, search};
+
+  // Vision is a narrowly-scoped fallback for the observed macOS case where
+  // both Tesseract passes produce no candidate at all. Do not let it resolve
+  // a Tesseract ambiguity or an approximate candidate that failed geometry.
+  const tesseractProducedCandidates = attempts.some((attempt) => attempt.candidates.length > 0);
+  const visionConfidenceFloor = 0.8;
+  if (process.platform === "darwin" && !tesseractProducedCandidates) {
+    try {
+      const visionCandidates = await readMacOSVisionTextCandidates(ocrCropPath);
+      const expectedText = targetFieldText.replace(/\s+/g, " ").trim();
+      const diagnosedCandidates = visionCandidates.map((visionCandidate) => {
+        const {x, y, width, height} = visionCandidate.boundingBox;
+        const validBounds = [x, y, width, height].every(Number.isFinite)
+          && x >= 0 && y >= 0 && width > 0 && height > 0
+          && x + width <= 1 + 1e-6 && y + height <= 1 + 1e-6;
+        const mappedBoundsOcr: OcrWordBounds | null = validBounds
+          ? {
+            text: visionCandidate.text,
+            left: (left + x * ocrCropDimensions.width / cropScaleX) * scaleX,
+            top: (top + (1 - y - height) * ocrCropDimensions.height / cropScaleY) * scaleY,
+            width: width * ocrCropDimensions.width / cropScaleX * scaleX,
+            height: height * ocrCropDimensions.height / cropScaleY * scaleY,
+          }
+          : null;
+        const exactText = visionCandidate.text.replace(/\s+/g, " ").trim() === expectedText;
+        const confidenceAccepted = visionCandidate.confidence >= visionConfidenceFloor;
+        const geometryAccepted = Boolean(mappedBoundsOcr
+          && canvasInputCandidateMatchesLabel(mappedBoundsOcr, label, controlName, scaleX, scaleY));
+        const accepted = validBounds && exactText && confidenceAccepted && geometryAccepted;
+        const rejection = accepted ? null : [
+          !validBounds ? "invalid-or-out-of-crop-bounds" : "",
+          !exactText ? "text-not-an-exact-case-preserving-match" : "",
+          !confidenceAccepted ? "confidence-below-floor" : "",
+          !geometryAccepted ? "outside-configured-label-relative-field-region" : "",
+        ].filter(Boolean).join(", ");
+        return {
+          text: visionCandidate.text,
+          confidence: visionCandidate.confidence,
+          boundingBox: visionCandidate.boundingBox,
+          validBounds,
+          exactText,
+          confidenceAccepted,
+          mappedBoundsOcr,
+          geometryAccepted,
+          accepted,
+          rejection,
+        };
+      });
+      search.vision = {
+        imagePath: relative(reportDirectory, ocrCropPath),
+        confidenceFloor: visionConfidenceFloor,
+        candidates: diagnosedCandidates,
+        error: "",
+      };
+      const accepted = diagnosedCandidates.filter((candidate) => candidate.accepted && candidate.mappedBoundsOcr);
+      if (accepted.length === 1) {
+        return {candidate: accepted[0]!.mappedBoundsOcr!, source: "focused-vision-crop", search};
+      }
+    } catch (error) {
+      search.vision = {
+        imagePath: relative(reportDirectory, ocrCropPath),
+        confidenceFloor: visionConfidenceFloor,
+        candidates: [],
+        error: error instanceof Error ? error.message : "unknown macOS Vision OCR error",
+      };
+    }
+  }
+  return {candidate: null, source: null, search};
 }
 
 function canvasInputCandidateMatchesLabel(
@@ -6172,7 +6261,7 @@ async function locateCanvasTextInput(
     if (focusedSearch.candidate) {
       labelBoundsOcr = fieldSearchLabelBoundsOcr;
       fieldTextBoundsOcr = focusedSearch.candidate;
-      fieldTextOcrSource = "focused-raw-crop";
+      fieldTextOcrSource = focusedSearch.source ?? "focused-processed-crop-tesseract";
     } else {
       fieldSearchFailure = `Could not uniquely locate the ${controlName} field text in its label-relative OCR region: full_screenshot=${fieldSearchFailure || "no unique match"}; focused_crop=${JSON.stringify(fieldSearchCrop)}`;
     }
