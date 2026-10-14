@@ -68,6 +68,11 @@ const basesDirectionFixturePaths = [
 ];
 const omittedBasesDirection = "OMITTED";
 const invalidBasesDirection = "SIDEWAYS";
+const normalizedInvalidBasesDirection = Buffer.from(
+  "views:\n  - type: table\n    name: C07 group direction SIDEWAYS\n",
+  "utf8",
+);
+const normalizedInvalidBasesDirectionSha256 = "6db35053b1d4aa0aca718364f906cd8820193c635ba002958f953d1aa03548cc";
 const obsidianAsset = requiredEnv("OBSIDIAN_RELEASE_ASSET");
 const obsidianSourcePlatform = requiredEnv("OBSIDIAN_SOURCE_PLATFORM");
 const seedMarkdownPath = "Nested Ω/space note.md";
@@ -123,12 +128,13 @@ const report: Record<string, unknown> = {
   },
   bases_group_direction_reference: {
     status: "pending",
-    milestone: "R2.8.105-C07.2-unsupported-view-reopen-source-preservation-repair",
-    capture_scope: "Record pinned Obsidian behavior only; Rust fixture reconciliation and parity acceptance are a separate milestone.",
+    milestone: "R2.8.106-C07.2-reference-rewrite-and-reopen-capture",
+    capture_scope: "Record pinned Obsidian behavior, including its exact unsupported-view source rewrite; Rust fixture reconciliation and byte-preserving parity acceptance are separate.",
     application: "Pinned Obsidian Desktop 1.14.4",
     explicit_direction_expectation: "Record rendered ASC/DESC group and row order without judging it against a Rust or preset expectation; reconcile the captured result in the follow-up parity milestone.",
     omitted_direction_expectation: "The pinned app rejects the tested native-YAML groupBy mapping when direction is omitted with `groupBy` must be a object; capture the settled exact-file error state on first open and reopen, record no group or row order, and do not infer a default.",
-    workspace_restore_expectation: "After each session captures all four direction cases, make the supported ASC view active before shutdown. Confirm Obsidian restores ASC on the next startup, then explicitly select and capture all four cases; keep strict source hashes around every transition.",
+    workspace_restore_expectation: "After each session captures all four direction cases, make the supported ASC view active before shutdown. Keep the original source hashes immutable. At any post-open source-hash checkpoint, record only the exact known Invalid Direction.base normalization (122 to 62 bytes, groupBy removed) as pinned-app behavior; fail for any other change. If it occurs, restore only that generated file from its recorded seed after shutdown and before the reopened session, record the reseed, then capture the four original cases again.",
+    source_preservation_expectation: "A source rewrite by pinned Obsidian is reported as a reference-app mutation, never as Rust source-preservation success. Rust parse/encode preservation remains a separate strict requirement.",
     fixture_paths_to_observe: basesDirectionFixturePaths,
     omitted_direction: omittedBasesDirection,
     invalid_direction: invalidBasesDirection,
@@ -140,7 +146,7 @@ const report: Record<string, unknown> = {
     "The run proves read-only startup, source preview and close, external note creation, in-place edit, and rename followed by explicit UI refresh and preview, native image-embed resolution and external attachment removal followed by refresh/re-resolution, plus explicit Canvas text-card note preview/review/confirmation before first-open and reopened-vault visibility, native folder-picker selection and cancellation, and Obsidian reopen on the recorded runner platform only; other operating systems require their own passing artifact.",
     "The deliberate external note creation, in-place note edit, attachment removal, and note rename each establish a new baseline; all subsequent no-op operations must preserve the latest applicable baseline exactly.",
     "The Canvas check uses a dedicated reference-compatible fixture and fresh Obsidian profile, edits one native text card with no write before explicit save, verifies the saved JSON differs only at that selected card's text while preserving sibling nodes and edges, creates one Markdown note afterward with the edited text-card bytes, exposes the edited text and referenced block content, and checks the edited Canvas and note after first-open and reopened-vault sessions. The codec's rich unknown-field fixture remains covered by Rust tests and is not opened by Obsidian. This does not certify every Canvas workflow or cross-platform behavior beyond the recorded runner.",
-    "The C07 reference probe opens synthetic Bases files with explicit ASC and DESC, omitted direction, and an unsupported direction. For ASC and DESC it captures every rendered group and file row from all Bases table roots on first open and reopen, including the null-value group containing the .base files, without judging observed ordering against preset expectations. For the tested omitted-direction native-YAML mapping, it captures the settled exact-file parse rejection (`groupBy` must be a object) and records no group or row order; it does not infer a default. The unsupported direction remains a capture-only observation. Before each shutdown, the probe explicitly restores ASC as the active view so the unsupported view is selected intentionally after reopening rather than restored automatically; it records this precondition, screenshots, and exact source hashes. Interpretation and Rust fixture reconciliation belong to the follow-up parity milestone.",
+    "The C07 reference probe opens synthetic Bases files with explicit ASC and DESC, omitted direction, and an unsupported direction. For ASC and DESC it captures every rendered group and file row from all Bases table roots on first open and reopen, including the null-value group containing the .base files, without judging observed ordering against preset expectations. For the tested omitted-direction native-YAML mapping, it captures the settled exact-file parse rejection (`groupBy` must be a object) and records no group or row order; it does not infer a default. The unsupported direction remains a capture-only observation. Before each shutdown, the probe explicitly restores ASC. It retains the original source hash baseline and reports Obsidian's exact 62-byte Invalid Direction.base rewrite if it occurs at any post-open source-hash checkpoint; the generated file is reseeded between sessions so the reopened view is captured from the original fixture, with that harness action reported. This reference-app mutation is not evidence that Rust preserves the source. Interpretation and Rust fixture reconciliation belong to the follow-up parity milestone.",
     "This run does not certify all product C01 flows or general plugin/theme compatibility.",
   ],
 };
@@ -1661,21 +1667,105 @@ async function createBasesDirectionFixture(): Promise<Record<string, {bytes: num
 async function assertBasesDirectionSourceHashes(
   expected: Record<string, {bytes: number; sha256: string}>,
   stage: string,
+  allowKnownReferenceRewrite = false,
+  capturedBytes?: Record<string, Buffer>,
+  unexpectedMismatches?: string[],
 ): Promise<Record<string, {bytes: number; sha256: string}>> {
   const observed: Record<string, {bytes: number; sha256: string}> = {};
   for (const [path, baseline] of Object.entries(expected)) {
-    const bytes = await readFile(join(basesVaultRoot, path));
+    let bytes: Buffer;
+    try {
+      bytes = await readFile(join(basesVaultRoot, path));
+    } catch (error) {
+      const basesReport = report.bases_group_direction_reference as Record<string, unknown>;
+      basesReport.reference_app_source_preservation_passed = false;
+      const message = `Could not read C07 source ${path} ${stage}: ${error instanceof Error ? error.message : String(error)}`;
+      if (unexpectedMismatches) {
+        unexpectedMismatches.push(message);
+        continue;
+      }
+      throw new Error(message);
+    }
+    if (capturedBytes) capturedBytes[path] = bytes;
     const actual = {
       bytes: bytes.length,
       sha256: createHash("sha256").update(bytes).digest("hex"),
     };
     observed[path] = actual;
     if (actual.bytes !== baseline.bytes || actual.sha256 !== baseline.sha256) {
-      await writeFile(join(reportDirectory, `bases-direction-source-changed-${stage.replaceAll(/[^a-z0-9-]/gi, "-")}-${basename(path)}`), bytes);
-      throw new Error(`Obsidian changed C07 source ${path} ${stage}: expected ${baseline.bytes} bytes / ${baseline.sha256}, got ${actual.bytes} bytes / ${actual.sha256}`);
+      const artifactPath = `bases-direction-source-changed-${stage.replaceAll(/[^a-z0-9-]/gi, "-")}-${basename(path)}`;
+      await writeFile(join(reportDirectory, artifactPath), bytes);
+      const isKnownReferenceRewrite = allowKnownReferenceRewrite
+        && path === "Invalid Direction.base"
+        && actual.bytes === normalizedInvalidBasesDirection.length
+        && actual.sha256 === normalizedInvalidBasesDirectionSha256
+        && bytes.equals(normalizedInvalidBasesDirection);
+      if (isKnownReferenceRewrite) continue;
+      const basesReport = report.bases_group_direction_reference as Record<string, unknown>;
+      basesReport.reference_app_source_preservation_passed = false;
+      const mismatch = `Obsidian changed C07 source ${path} ${stage}: expected ${baseline.bytes} bytes / ${baseline.sha256}, got ${actual.bytes} bytes / ${actual.sha256}`;
+      if (unexpectedMismatches) {
+        unexpectedMismatches.push(mismatch);
+        continue;
+      }
+      throw new Error(mismatch);
     }
   }
   return observed;
+}
+
+async function recordBasesDirectionReferenceRewrite(
+  expected: Record<string, {bytes: number; sha256: string}>,
+  observed: Record<string, {bytes: number; sha256: string}>,
+  bytes: Buffer,
+  session: "first_open" | "reopen",
+  stage: string,
+): Promise<boolean> {
+  const path = "Invalid Direction.base";
+  const baseline = expected[path];
+  const actual = observed[path];
+  if (actual.bytes === baseline.bytes && actual.sha256 === baseline.sha256) return false;
+
+  if (actual.bytes !== normalizedInvalidBasesDirection.length
+    || actual.sha256 !== normalizedInvalidBasesDirectionSha256
+    || bytes.length !== actual.bytes
+    || createHash("sha256").update(bytes).digest("hex") !== actual.sha256
+    || !bytes.equals(normalizedInvalidBasesDirection)) {
+    throw new Error(`Pinned Obsidian C07 reference mutation did not match the recorded normalization at ${stage}`);
+  }
+  const artifactPath = `bases-direction-source-changed-${stage.replaceAll(/[^a-z0-9-]/gi, "-")}-${basename(path)}`;
+  const basesReport = report.bases_group_direction_reference as Record<string, unknown>;
+  const observations = (basesReport.source_rewrite_observations ?? []) as Array<Record<string, unknown>>;
+  const priorObservation = observations.find((item) => {
+    const after = item.after as {bytes?: number; sha256?: string} | undefined;
+    return item.session === session && item.path === path && after?.sha256 === actual.sha256;
+  });
+  if (priorObservation) {
+    const checkpoints = (priorObservation.checkpoints ?? [priorObservation.first_observed_stage ?? priorObservation.stage]) as string[];
+    if (!checkpoints.includes(stage)) checkpoints.push(stage);
+    priorObservation.checkpoints = checkpoints;
+    await saveReport();
+    return true;
+  }
+  const observation = {
+    session,
+    first_observed_stage: stage,
+    checkpoints: [stage],
+    path,
+    source_preserved: false,
+    before: baseline,
+    after: actual,
+    exact_bytes: bytes.toString("utf8"),
+    artifact: artifactPath,
+  };
+  observations.push(observation);
+  basesReport.source_rewrite_observations = observations;
+  basesReport.reference_app_source_preservation_passed = false;
+  if (basesReport.source_rewrite_first_detected_at === undefined) {
+    basesReport.source_rewrite_first_detected_at = {session, stage, path};
+  }
+  await saveReport();
+  return true;
 }
 
 async function createFixture(): Promise<void> {
@@ -8109,6 +8199,7 @@ async function runBasesDirectionReferenceProbe(): Promise<void> {
   let secondProcess: ChildProcess | undefined;
   let secondConnection: DevToolsConnection | undefined;
   let sourceHashes: Record<string, {bytes: number; sha256: string}> | undefined;
+  let reopenSeedSnapshot: SnapshotEntry[] | undefined;
   const readActiveBasesWorkspaceView = async (connection: DevToolsConnection) => await connection.evaluateJson<{
     active_file_path: string | null;
     active_view_type: string | null;
@@ -8126,6 +8217,29 @@ async function runBasesDirectionReferenceProbe(): Promise<void> {
   })()`);
   try {
     sourceHashes = await createBasesDirectionFixture();
+    basesReport.source_rewrite_observations = [];
+    basesReport.reference_app_source_preservation_passed = null;
+    const checkReferenceSourceHashes = async (
+      stage: string,
+      session: "first_open" | "reopen",
+    ): Promise<Record<string, {bytes: number; sha256: string}>> => {
+      const capturedBytes: Record<string, Buffer> = {};
+      const unexpectedMismatches: string[] = [];
+      const observed = await assertBasesDirectionSourceHashes(sourceHashes!, stage, true, capturedBytes, unexpectedMismatches);
+      const invalidDirectionHash = observed["Invalid Direction.base"];
+      const invalidDirectionBytes = capturedBytes["Invalid Direction.base"];
+      if (invalidDirectionHash && invalidDirectionBytes) {
+        await recordBasesDirectionReferenceRewrite(
+          sourceHashes!,
+          observed,
+          invalidDirectionBytes,
+          session,
+          stage,
+        );
+      }
+      if (unexpectedMismatches.length > 0) throw new Error(unexpectedMismatches.join("; "));
+      return observed;
+    };
     const seedSnapshot = await snapshotTree(basesVaultRoot);
     snapshots.bases_direction_seed = seedSnapshot;
     basesReport.first_open_source_hashes = await assertBasesDirectionSourceHashes(sourceHashes, "before-first-open");
@@ -8156,22 +8270,26 @@ async function runBasesDirectionReferenceProbe(): Promise<void> {
     await chooseRestrictedMode(firstConnection, firstSession, basesVaultName, "Synthetic C07 group-direction fixture.");
 
     const firstViews: Record<string, BasesDirectionViewObservation> = {};
+    const firstViewSourceHashes: Record<string, Record<string, {bytes: number; sha256: string}>> = {};
     firstSession.views = firstViews;
+    firstSession.source_hashes_after_each_view = firstViewSourceHashes;
     for (const direction of ["ASC", "DESC", omittedBasesDirection, invalidBasesDirection] as const) {
       firstViews[direction] = await verifyBasesDirectionVisible(firstConnection, direction, `first-open`);
       await saveReport();
-      await assertBasesDirectionSourceHashes(sourceHashes, `first-open-${direction.toLowerCase()}`);
+      firstViewSourceHashes[direction] = await checkReferenceSourceHashes(
+        `first-open-${direction.toLowerCase()}`,
+        "first_open",
+      );
+      await saveReport();
     }
-    firstSession.source_hashes_after_views = await assertBasesDirectionSourceHashes(sourceHashes, "first-open-before-shutdown");
+    firstSession.source_hashes_after_views = await checkReferenceSourceHashes("first-open-before-shutdown", "first_open");
     firstSession.workspace_reset_before_shutdown = await verifyBasesDirectionVisible(
       firstConnection,
       "ASC",
       "first-open-shutdown-restore",
     );
-    firstSession.source_hashes_after_workspace_reset = await assertBasesDirectionSourceHashes(
-      sourceHashes,
-      "first-open-after-shutdown-restore",
-    );
+    const firstResetHashes = await checkReferenceSourceHashes("first-open-after-shutdown-restore", "first_open");
+    firstSession.source_hashes_after_workspace_reset = firstResetHashes;
     await saveReport();
     await delay(2_000);
     await stopProcess(firstProcess, firstConnection);
@@ -8180,9 +8298,18 @@ async function runBasesDirectionReferenceProbe(): Promise<void> {
 
     const afterFirstClose = await snapshotTree(basesVaultRoot);
     snapshots.bases_direction_after_first_close = afterFirstClose;
-    const firstCloseHashes = await assertBasesDirectionSourceHashes(sourceHashes, "first-shutdown");
+    const firstCloseHashes = await checkReferenceSourceHashes("first-shutdown", "first_open");
+    const firstCloseRewriteObserved = firstCloseHashes["Invalid Direction.base"].sha256
+      === normalizedInvalidBasesDirectionSha256;
     const firstCloseChanges = changedPaths(seedSnapshot, afterFirstClose);
-    const firstCloseUnexpectedChanges = firstCloseChanges.filter((change) => !workspaceStateAllowlist.includes(change.path));
+    const firstCloseUnexpectedChanges = firstCloseChanges.filter((change) => {
+      if (workspaceStateAllowlist.includes(change.path)) return false;
+      const isRecordedReferenceRewrite = firstCloseRewriteObserved
+        && change.path === "Invalid Direction.base"
+        && change.after?.bytes === normalizedInvalidBasesDirection.length
+        && change.after?.sha256 === normalizedInvalidBasesDirectionSha256;
+      return !isRecordedReferenceRewrite;
+    });
     if (firstCloseUnexpectedChanges.length > 0) {
       throw new Error(`C07 Bases first open changed unapproved vault content: ${JSON.stringify(firstCloseUnexpectedChanges).slice(0, 6_000)}`);
     }
@@ -8191,13 +8318,38 @@ async function runBasesDirectionReferenceProbe(): Promise<void> {
     firstSession.vault_changes_during_obsidian_session = firstCloseChanges;
     await saveReport();
 
+    const invalidDirectionSeedPath = join(reportDirectory, "bases-direction-Invalid Direction-base.seed");
+    const invalidDirectionSeedBytes = await readFile(invalidDirectionSeedPath);
+    const invalidDirectionBeforeReseed = firstCloseHashes["Invalid Direction.base"];
+    const reseededInvalidDirection = invalidDirectionBeforeReseed.bytes !== sourceHashes["Invalid Direction.base"].bytes
+      || invalidDirectionBeforeReseed.sha256 !== sourceHashes["Invalid Direction.base"].sha256;
+    if (reseededInvalidDirection) {
+      await writeFile(join(basesVaultRoot, "Invalid Direction.base"), invalidDirectionSeedBytes);
+    }
+    const sourceHashesBeforeReopen = await assertBasesDirectionSourceHashes(
+      sourceHashes,
+      "before-reopen-after-reference-fixture-reseed",
+    );
+    basesReport.source_reseed_before_reopen = {
+      performed_by_probe: reseededInvalidDirection,
+      reason: "Restore the synthetic unsupported-direction seed after recording Obsidian's exact reference rewrite so the reopened observation reads the original test input.",
+      path: "Invalid Direction.base",
+      before: invalidDirectionBeforeReseed,
+      after: sourceHashesBeforeReopen["Invalid Direction.base"],
+      seed_artifact: "bases-direction-Invalid Direction-base.seed",
+    };
+    reopenSeedSnapshot = await snapshotTree(basesVaultRoot);
+    snapshots.bases_direction_reopen_seed = reopenSeedSnapshot;
+    await saveReport();
+
     secondProcess = await createObsidianProfile(profileDirectory, 9227, "obsidian-bases-direction-reopen.log");
     const second = await connectObsidian(9227);
     secondConnection = second.connection;
     const secondSession: Record<string, unknown> = {
       devtools_browser: second.browserVersion,
       first_target: {title: second.target.title ?? "", url: second.target.url ?? ""},
-      source_hashes_before_reopen: firstCloseHashes,
+      source_hashes_before_reopen: sourceHashesBeforeReopen,
+      reopened_fixture_seed_snapshot: reopenSeedSnapshot,
     };
     basesReport.second_session = secondSession;
     await chooseRestrictedMode(secondConnection, secondSession, basesVaultName, "Synthetic C07 group-direction fixture.");
@@ -8206,13 +8358,13 @@ async function runBasesDirectionReferenceProbe(): Promise<void> {
     secondSession.workspace_startup_screenshot = workspaceStartupScreenshot;
     await captureObsidianScreenshot(secondConnection, workspaceStartupScreenshot);
     await saveReport();
-    secondSession.source_hashes_immediately_after_startup = await assertBasesDirectionSourceHashes(
-      sourceHashes,
+    secondSession.source_hashes_immediately_after_startup = await checkReferenceSourceHashes(
       "reopen-workspace-immediately-after-startup",
+      "reopen",
     );
     await saveReport();
     const restoredWorkspaceView = await waitFor(
-      "R2.8.105: Obsidian to restore the supported ASC view before reopened capture",
+      "R2.8.106: Obsidian to restore the supported ASC view before reopened capture",
       async () => await readActiveBasesWorkspaceView(secondConnection),
       (state) => state.active_file_path === "Ascending.base" && state.active_view_type === "bases",
       45_000,
@@ -8221,29 +8373,30 @@ async function runBasesDirectionReferenceProbe(): Promise<void> {
     const supportedRestoreScreenshot = "obsidian-bases-direction-supported-view-restored.png";
     secondSession.workspace_restore_screenshot = supportedRestoreScreenshot;
     await captureObsidianScreenshot(secondConnection, supportedRestoreScreenshot);
-    secondSession.source_hashes_after_workspace_restore = await assertBasesDirectionSourceHashes(
-      sourceHashes,
-      "reopen-workspace-restore",
-    );
+    secondSession.source_hashes_after_workspace_restore = await checkReferenceSourceHashes("reopen-workspace-restore", "reopen");
     await saveReport();
 
     const reopenedViews: Record<string, BasesDirectionViewObservation> = {};
+    const reopenedViewSourceHashes: Record<string, Record<string, {bytes: number; sha256: string}>> = {};
     secondSession.views = reopenedViews;
+    secondSession.source_hashes_after_each_view = reopenedViewSourceHashes;
     for (const direction of ["ASC", "DESC", omittedBasesDirection, invalidBasesDirection] as const) {
       reopenedViews[direction] = await verifyBasesDirectionVisible(secondConnection, direction, `reopen`);
       await saveReport();
-      await assertBasesDirectionSourceHashes(sourceHashes, `reopen-${direction.toLowerCase()}`);
+      reopenedViewSourceHashes[direction] = await checkReferenceSourceHashes(
+        `reopen-${direction.toLowerCase()}`,
+        "reopen",
+      );
+      await saveReport();
     }
-    secondSession.source_hashes_after_views = await assertBasesDirectionSourceHashes(sourceHashes, "reopen-before-shutdown");
+    secondSession.source_hashes_after_views = await checkReferenceSourceHashes("reopen-before-shutdown", "reopen");
     secondSession.workspace_reset_before_shutdown = await verifyBasesDirectionVisible(
       secondConnection,
       "ASC",
       "reopen-shutdown-restore",
     );
-    secondSession.source_hashes_after_workspace_reset = await assertBasesDirectionSourceHashes(
-      sourceHashes,
-      "reopen-after-shutdown-restore",
-    );
+    const secondResetHashes = await checkReferenceSourceHashes("reopen-after-shutdown-restore", "reopen");
+    secondSession.source_hashes_after_workspace_reset = secondResetHashes;
     await saveReport();
     await delay(2_000);
     await stopProcess(secondProcess, secondConnection);
@@ -8252,15 +8405,35 @@ async function runBasesDirectionReferenceProbe(): Promise<void> {
 
     const afterSecondClose = await snapshotTree(basesVaultRoot);
     snapshots.bases_direction_after_reopen = afterSecondClose;
-    const secondCloseHashes = await assertBasesDirectionSourceHashes(sourceHashes, "reopen-shutdown");
-    const reopenChanges = changedPaths(afterFirstClose, afterSecondClose);
-    const reopenUnexpectedChanges = reopenChanges.filter((change) => !workspaceStateAllowlist.includes(change.path));
+    const secondCloseHashes = await checkReferenceSourceHashes("reopen-shutdown", "reopen");
+    const reopenChanges = changedPaths(reopenSeedSnapshot ?? afterFirstClose, afterSecondClose);
+    const reopenRewriteObserved = secondCloseHashes["Invalid Direction.base"].bytes !== sourceHashes["Invalid Direction.base"].bytes
+      || secondCloseHashes["Invalid Direction.base"].sha256 !== sourceHashes["Invalid Direction.base"].sha256;
+    const reopenUnexpectedChanges = reopenChanges.filter((change) => {
+      if (workspaceStateAllowlist.includes(change.path)) return false;
+      const isRecordedReferenceRewrite = reopenRewriteObserved
+        && change.path === "Invalid Direction.base"
+        && change.after?.bytes === normalizedInvalidBasesDirection.length
+        && change.after?.sha256 === normalizedInvalidBasesDirectionSha256;
+      return !isRecordedReferenceRewrite;
+    });
     if (reopenUnexpectedChanges.length > 0) {
       throw new Error(`C07 Bases reopen changed unapproved vault content: ${JSON.stringify(reopenUnexpectedChanges).slice(0, 6_000)}`);
     }
     snapshots.bases_direction_reopen_changes = reopenChanges;
     basesReport.second_shutdown_source_hashes = secondCloseHashes;
-    basesReport.source_hashes_unchanged_across_both_sessions = isDeepStrictEqual(sourceHashes, secondCloseHashes);
+    const sourceRewriteObservations = basesReport.source_rewrite_observations as Array<Record<string, unknown>>;
+    const noReferenceSourceRewriteObserved = sourceRewriteObservations.length === 0;
+    const finalSourceHashesMatchSeed = isDeepStrictEqual(sourceHashes, secondCloseHashes);
+    basesReport.source_hashes_unchanged_across_both_sessions = noReferenceSourceRewriteObserved && finalSourceHashesMatchSeed;
+    basesReport.reference_app_source_preservation_passed = basesReport.source_hashes_unchanged_across_both_sessions;
+    basesReport.source_hashes_unchanged_except_known_reference_rewrite = Object.entries(secondCloseHashes).every(([path, actual]) => {
+      const baseline = sourceHashes?.[path];
+      return Boolean(baseline && ((actual.bytes === baseline.bytes && actual.sha256 === baseline.sha256)
+        || (path === "Invalid Direction.base"
+          && actual.bytes === normalizedInvalidBasesDirection.length
+          && actual.sha256 === normalizedInvalidBasesDirectionSha256)));
+    });
     const allDirections = ["ASC", "DESC", omittedBasesDirection, invalidBasesDirection] as const;
     const supportedDirections = ["ASC", "DESC"] as const;
     basesReport.group_order_by_direction_on_first_open = Object.fromEntries(
@@ -8369,7 +8542,7 @@ async function runBasesDirectionReferenceProbe(): Promise<void> {
     );
     basesReport.invalid_direction_observation_on_first_open = firstViews[invalidBasesDirection];
     basesReport.invalid_direction_observation_after_reopen = reopenedViews[invalidBasesDirection];
-    if (!basesReport.source_hashes_unchanged_across_both_sessions
+    if (!basesReport.source_hashes_unchanged_except_known_reference_rewrite
       || !basesReport.group_order_stable_across_reopen
       || !basesReport.row_order_stable_across_reopen
       || !Object.values(basesReport.fixture_path_set_captured_on_first_open as Record<string, boolean>).every(Boolean)
@@ -8394,16 +8567,49 @@ async function runBasesDirectionReferenceProbe(): Promise<void> {
       || !reopenedViews[invalidBasesDirection].selection_succeeded
       || !firstViews[invalidBasesDirection].state_settled
       || !reopenedViews[invalidBasesDirection].state_settled) {
-      throw new Error("C07 Bases group direction or source-preservation assertions failed after reopen");
+      throw new Error("C07 Bases first-open/reopen capture assertions failed");
     }
-    basesReport.status = "passed";
+    basesReport.capture_status = "completed";
+    basesReport.status = basesReport.reference_app_source_preservation_passed === true
+      ? "passed"
+      : "captured-reference-mutation";
+    report.reference_capture_summary = {
+      status: "completed",
+      c07_capture_status: basesReport.status,
+      reference_app_source_preservation_passed: basesReport.reference_app_source_preservation_passed,
+      source_rewrite_observation_count: (basesReport.source_rewrite_observations as unknown[]).length,
+      interpretation: "C07.2 reference capture completed. A passing capture records pinned-app behavior and does not establish Rust source-preservation parity.",
+    };
     await saveReport();
   } catch (error) {
     basesReport.status = "failed";
     basesReport.error = error instanceof Error ? error.message : String(error);
     if (sourceHashes) {
       try {
-        basesReport.source_hashes_after_failure = await assertBasesDirectionSourceHashes(sourceHashes, "failure");
+        const failureBytes: Record<string, Buffer> = {};
+        const failureMismatches: string[] = [];
+        const failureHashes = await assertBasesDirectionSourceHashes(
+          sourceHashes,
+          "failure",
+          true,
+          failureBytes,
+          failureMismatches,
+        );
+        basesReport.source_hashes_after_failure = failureHashes;
+        const invalidDirectionHash = failureHashes["Invalid Direction.base"];
+        const invalidDirectionSnapshot = failureBytes["Invalid Direction.base"];
+        if (invalidDirectionHash && invalidDirectionSnapshot) {
+          await recordBasesDirectionReferenceRewrite(
+            sourceHashes,
+            failureHashes,
+            invalidDirectionSnapshot,
+            secondProcess || secondConnection ? "reopen" : "first_open",
+            "failure",
+          );
+        }
+        if (failureMismatches.length > 0) {
+          basesReport.source_preservation_failure = failureMismatches.join("; ");
+        }
       } catch (sourceError) {
         basesReport.source_preservation_failure = sourceError instanceof Error ? sourceError.message : String(sourceError);
       }
@@ -8499,5 +8705,9 @@ try {
   await saveReport();
 }
 
-console.log(`Obsidian vault round-trip acceptance: ${String(report.status)}; report=${join(reportDirectory, "obsidian-vault-roundtrip-report.json")}`);
+const referenceCaptureSummary = report.reference_capture_summary as Record<string, unknown> | undefined;
+const captureMessage = referenceCaptureSummary
+  ? `; C07 reference capture=${String(referenceCaptureSummary.status)}; source preservation=${String(referenceCaptureSummary.reference_app_source_preservation_passed)}`
+  : "";
+console.log(`Obsidian vault round-trip acceptance: ${String(report.status)}${captureMessage}; report=${join(reportDirectory, "obsidian-vault-roundtrip-report.json")}`);
 if (report.status !== "passed") process.exit(1);

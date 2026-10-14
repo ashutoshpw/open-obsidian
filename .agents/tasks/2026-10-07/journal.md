@@ -5932,3 +5932,103 @@ set before shutdown. It also restores ASC before the second shutdown and checks
 hashes after both reset transitions. The accepted ASC/DESC, omitted-error, and
 SIDEWAYS observations remain separate from these workspace-reset observations.
 No local executable validation was run.
+
+## 2026-10-13 — R2.8.105 submitted to GitHub Actions
+
+Pushed the single accumulated R2.8.105 repair commit
+`45ae26c71d274097bf5ca9827e61cf6e9f0c3413` after confirming `origin/main` still
+matched starting SHA `11931b9a9003857caf00542e74a45f7fb6947f65`. Parked
+`crates/doc/src/bases.rs` and `fixtures/c07-bases.json` were excluded. All seven
+required workflows were created for the exact SHA: Rust CI `38484650452`, plugin
+renderer `38484650432`, Obsidian round-trip `38484650445`, quality `38484650496`,
+loaded plugins `38484650479`, inventory `38484650459`, and desktop build
+`38484650469`. They were queued at the first poll. Track the job conclusions and
+artifact metadata in
+[evidence/r2.8.105-attempt-1-45ae26c.json](evidence/r2.8.105-attempt-1-45ae26c.json).
+Keep origin/main fixed until the complete CI batch is terminal. No local
+executable validation was run.
+
+## 2026-10-13 — R2.8.105 CI reconciled
+
+All seven required workflows and all jobs are terminal on exact SHA
+45ae26c71d274097bf5ca9827e61cf6e9f0c3413. Inventory, desktop build, plugin
+renderer, loaded plugins, Rust CI, and quality passed. The quality workflow's
+initial Windows CDP timeout (Electron CDP evaluation exceeded 8000ms) passed
+on same-SHA failed-job retry attempt 2. The three Linux, macOS, and Windows
+Obsidian round-trip jobs failed at the same strict
+first-open-after-shutdown-restore hash check: Invalid Direction.base changed
+from 122 bytes / SHA-256
+fb9d112de60508c86bdde1c2ebf989143a379ff6ce59cc89e958865cfe43afe0 to 62 bytes
+/ SHA-256
+6db35053b1d4aa0aca718364f906cd8820193c635ba002958f953d1aa03548cc, dropping
+groupBy. First-open ASC/DESC, omitted-direction parse rejection, and SIDEWAYS
+observations settled on every platform; the strict hash failure prevented
+reopen captures. The reports do not isolate whether the rewrite happened while
+switching views, saving workspace state, or restoring the workspace.
+
+The full exact-SHA jobs, retry, artifacts, and platform findings are recorded
+in [evidence/r2.8.105-attempt-1-45ae26c.json](evidence/r2.8.105-attempt-1-45ae26c.json).
+R2.8.105 is terminal but not accepted. Keep origin/main at
+45ae26c71d274097bf5ca9827e61cf6e9f0c3413 while the next named capture-repair
+milestone is analyzed and prepared locally; push once its implementation and
+CI-ready acceptance package are complete. No local executable validation was
+run.
+
+## 2026-10-14 — R2.8.106 planned
+
+The R2.8.105 artifacts bound the source rewrite to the interval after the
+SIDEWAYS view was captured and before the hash check following the explicit ASC
+workspace reset. The reports do not establish which internal Obsidian write
+caused it. All three platforms produced the same 62-byte `Invalid Direction.base`
+with SHA-256
+`6db35053b1d4aa0aca718364f906cd8820193c635ba002958f953d1aa03548cc`, dropping
+the `groupBy` mapping.
+
+R2.8.106 will keep the original source hashes as the immutable reference,
+capture this exact reference-app normalization as a deviation rather than a
+preservation pass, and fail on any other or different source change. It will
+record and restore only the generated unsupported-direction fixture between
+sessions, then complete explicit first-open and reopened captures on Linux,
+macOS, and Windows. Rust source-byte preservation remains a separate strict
+acceptance condition; the parked Rust Bases parser and fixture edits stay out
+of this capture milestone. Required CI is the full seven-workflow R2 batch.
+Push once after the probe, acceptance notes, and evidence schema are ready, and
+hold the resulting SHA until every required workflow is terminal and
+reconciled. No local executable validation will be run.
+
+## 2026-10-14 — R2.8.106 capture contract and CI cadence clarified
+
+Strengthened `goal.md` to say explicitly that minor edits and local commits do not
+start the large CI suite: group related changes into one named milestone, push
+one CI-ready batch, and keep that SHA unchanged until the full required workflow
+set is terminal and reconciled. Added the reopen comparisons to C07.2 tracking:
+ASC/DESC group and member-row order, and the omitted-direction visible parse
+error. Clarified that the pinned app's exact synthetic-fixture normalization is
+reference behavior only; Rust byte preservation remains independent and strict.
+
+The R2.8.106 probe now recognizes and records only the exact 62-byte
+`Invalid Direction.base` normalization at every post-open source-hash checkpoint,
+retaining the immutable original baseline and checkpoint history. It reseeds
+only that generated file between sessions and reports completed capture separately
+from source preservation. The before-first-open and before-reopen seed checks stay
+strict. Rust Bases parser and fixture changes remain parked outside this batch.
+
+`origin/main` and local `HEAD` remain `45ae26c71d274097bf5ca9827e61cf6e9f0c3413`.
+No local executable validation was run. Finish static review and evidence
+metadata before the single R2.8.106 milestone push.
+
+Static review tightened the failure report as well: source preservation starts
+unproven, becomes true only after both complete sessions match their seed, and
+becomes false on either the known normalization or any unexpected hash mismatch.
+The report wording now matches the acceptance scope of all post-open hash
+checkpoints. No local executable validation was run.
+
+The hash checkpoint now passes its captured file bytes directly to the rewrite
+recorder, so the SHA, bytes artifact, and first-observed stage describe one
+snapshot even if the app writes the file again immediately afterward. The
+report's workspace-restore description now covers every post-open hash checkpoint.
+
+The checkpoint scan also collects missing/unreadable source paths instead of
+aborting mid-scan. It continues far enough to record the known mutation, then
+fails the workflow with all unrelated source mismatches included. The failure
+path preserves the same behavior.

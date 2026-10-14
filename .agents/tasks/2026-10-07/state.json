@@ -2,18 +2,19 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-13T23:29:47Z",
+  "updated_at": "2026-10-14T00:13:05Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "11931b9a9003857caf00542e74a45f7fb6947f65",
-  "current_milestone": "R2.8.105 C07.2 unsupported-view reopen source-preservation repair (local; not pushed)",
-  "next_action": "R2.8.105's focused workspace-reset capture change and acceptance package are prepared locally. Finish static source review, verify origin/main still equals starting SHA 11931b9a9003857caf00542e74a45f7fb6947f65, stage only the C07.2 probe and migration-progress files, and submit one accumulated repair batch. Exclude crates/doc/src/bases.rs and fixtures/c07-bases.json. Then hold the exact pushed SHA until every required workflow and job is terminal and reconciled.",
-  "push_status": "R2.8.104 was pushed once to origin/main at 11931b9a9003857caf00542e74a45f7fb6947f65. All seven required workflows and all 20 jobs are terminal: 17 passed and the three Linux/macOS/Windows Obsidian round-trip jobs failed at the same reopen-asc source-hash check. Their reports show Obsidian restored the SIDEWAYS view and removed Invalid Direction.base's groupBy mapping. The full exact-SHA job/artifact evidence is evidence/r2.8.104-attempt-1-11931b9.json. No follow-up batch has been pushed.",
+  "last_reconciled_head": "45ae26c71d274097bf5ca9827e61cf6e9f0c3413",
+  "current_milestone": "R2.8.106 C07.2 reference rewrite characterization and complete reopen capture (in progress)",
+  "next_action": "Finish static review and R2.8.106 evidence notes locally. Keep the pinned-app rewrite as a captured reference mutation, compare ASC/DESC ordering and omitted-direction errors across reopen, and exclude the parked Rust Bases parser/fixture edits. Once the acceptance package is CI-ready, push one milestone batch and keep origin/main fixed until all seven exact-SHA workflows are terminal and reconciled.",
+  "push_status": "R2.8.105 was pushed once to origin/main as 45ae26c71d274097bf5ca9827e61cf6e9f0c3413. All seven required workflow runs and all jobs are terminal. Inventory, quality (after same-SHA failed-job retry), desktop build, plugin renderer, loaded plugins, and Rust CI passed; all three Obsidian round-trip platform jobs failed at the same strict source-hash check. The effective latest results are 17 passed and 3 failed. Keep the remote tip fixed while preparing the next named milestone.",
   "blockers": [
     "R2.8.102 attempt 1 is terminal but not accepted on 636b8fbe935b4225ef724d1fa56df3a7d92c4d49. Six required workflows passed; all three Obsidian round-trip jobs failed because Obsidian rewrote the synthetic Ascending.base from quoted name/property note.team to canonical unquoted name/property team. R2.8.103 corrected that source normalization and captured matching ASC/DESC behavior, but its own terminal blocker is the omitted-direction parse error described below. Keep local Rust evaluator/fixture edits separate until reference capture is finalized.",
     "R2.8.103 attempt 1 is terminal but not accepted on exact SHA de462533be90985ba1dbb368e70231ffc1edd815. All seven required workflows and 20 jobs finished: 17 jobs passed; Linux, macOS, and Windows Obsidian round-trip jobs failed after selecting Omitted Direction.base and displaying the same groupBy parse error with no rendered groups/rows. Explicit ASC/DESC captures matched across the platforms and source hashes remained unchanged. The probe did not reach SIDEWAYS or reopen. R2.8.104 continued through all first-open cases but exposed a second source-preservation issue during workspace restoration; keep the remote SHA fixed until the focused R2.8.105 repair package is complete.",
-    "R2.8.104 attempt 1 is terminal but not accepted on exact SHA 11931b9a9003857caf00542e74a45f7fb6947f65. All seven workflows and 20 jobs are terminal: 17 passed and Linux, macOS, and Windows Obsidian round-trip jobs failed identically after Obsidian restored SIDEWAYS and removed groupBy from Invalid Direction.base. R2.8.105 must reset the active workspace view to ASC before shutdown and explicitly capture all four cases after reopen while retaining strict source hashes."
+    "R2.8.104 attempt 1 is terminal but not accepted on exact SHA 11931b9a9003857caf00542e74a45f7fb6947f65. All seven workflows and 20 jobs are terminal: 17 passed and Linux, macOS, and Windows Obsidian round-trip jobs failed identically after Obsidian restored SIDEWAYS and removed groupBy from Invalid Direction.base. The R2.8.105 follow-up and its terminal findings are recorded below.",
+    "R2.8.105 attempt 1 is terminal but not accepted on exact SHA 45ae26c71d274097bf5ca9827e61cf6e9f0c3413. Six required workflows passed; the initial Windows quality timeout passed on same-SHA retry attempt 2. Linux, macOS, and Windows round-trip jobs failed at first-open-after-shutdown-restore because Invalid Direction.base changed from 122 bytes / SHA-256 fb9d112de60508c86bdde1c2ebf989143a379ff6ce59cc89e958865cfe43afe0 to 62 bytes / SHA-256 6db35053b1d4aa0aca718364f906cd8820193c635ba002958f953d1aa03548cc, dropping groupBy. The first-open direction observations settled, but reopen captures did not complete. Exact evidence is in evidence/r2.8.105-attempt-1-45ae26c.json. The precise point of rewrite remains to be isolated before the next repair milestone."
   ],
   "phases": {
     "R0": {
@@ -52,7 +53,7 @@
         "plugin-renderer"
       ],
       "implementation_sha": "779a33325be6e1cb5ebee30d7a69afa60a4da571",
-      "next_action": "Finish the probe control flow, requirement/evidence updates, and acceptance notes locally. Keep the provisional Rust Bases parser/evaluator and fixture changes out of this batch. Push one accumulated batch only after its acceptance package is ready, then hold that exact SHA until all seven required workflows and jobs are terminal and reconciled."
+      "next_action": "R2.8.106 is a reference-capture milestone. Record the exact pinned-app rewrite and its stage while retaining the original hash baseline, reseed the synthetic unsupported-direction file explicitly between sessions, and capture all requested views on Linux/macOS/Windows. Keep the Rust source-preservation contract strict and keep parked Rust Bases changes out of this batch. Push once the implementation and evidence package are ready; wait for all seven required workflows before another push."
     },
     "R3": {
       "status": "pending",
@@ -34325,8 +34326,48 @@
         "OpenObsidian Rust CI",
         "Obsidian vault round-trip acceptance"
       ],
+      "attempts": [
+        {
+          "attempt": 1,
+          "source_sha": "45ae26c71d274097bf5ca9827e61cf6e9f0c3413",
+          "outcome": "not_accepted",
+          "evidence": "evidence/r2.8.105-attempt-1-45ae26c.json",
+          "workflow_runs": {
+            "quality": 38484650496,
+            "inventory": 38484650459,
+            "loaded_plugins": 38484650479,
+            "desktop_build": 38484650469,
+            "rust_ci": 38484650452,
+            "vault_roundtrip": 38484650445,
+            "plugin_renderer": 38484650432
+          }
+        }
+      ],
+      "next_action": "The exact-SHA CI batch is terminal and reconciled in evidence/r2.8.105-attempt-1-45ae26c.json. R2.8.105 is not accepted because all three round-trip jobs detected the same source rewrite before reopen captures. Prepare R2.8.106 locally; keep origin/main at 45ae26c until its acceptance package is ready."
+    },
+    "R2.8.106": {
+      "status": "in_progress",
+      "starting_sha": "45ae26c71d274097bf5ca9827e61cf6e9f0c3413",
+      "scope": "Complete C07.2 pinned-app first-open/reopen capture after R2.8.105 bounded the Invalid Direction.base rewrite to the interval after SIDEWAYS capture and before the post-ASC hash check. Keep original source hashes immutable; record only the exact known 62-byte Obsidian normalization as a reference-app mutation, explicitly reseed the synthetic unsupported-direction file between sessions, and preserve full selection/render/source evidence. Keep the Rust source-preservation requirement strict and exclude the parked Rust Bases parser and fixture edits.",
+      "acceptance": [
+        "Record first-open and reopened ASC, DESC, omitted-direction, and SIDEWAYS captures on Linux, macOS, and Windows, including active path/type, settled body/notices, all group/file rows, row order, DOM diagnostics, screenshots, and exact source hashes.",
+        "Treat the pinned Obsidian rewrite as a reference observation only: Invalid Direction.base may become exactly 62 bytes with SHA-256 6db35053b1d4aa0aca718364f906cd8820193c635ba002958f953d1aa03548cc; preserve the original hash baseline, capture the changed bytes and first observed checkpoint at any source-hash checkpoint after the first open, and fail for any other source change.",
+        "If the first session normalizes Invalid Direction.base, restore only that synthetic file from its recorded seed after shutdown and before the second session; record the original and restored hashes and compare the second session against the original seed.",
+        "Compare explicit ASC/DESC group order and per-group row order across first open and reopen; compare the omitted-direction visible parse error across both sessions; capture unsupported-direction behavior without inferring a fallback.",
+        "Report reference-app source preservation as false when the normalization occurs; do not count this as Rust source-preservation evidence. Keep C07.2 pending until a later Rust parity milestone proves byte-preserving encode behavior and reconciles the completed pinned-app captures.",
+        "All seven required GitHub Actions workflows pass on the exact pushed SHA and all jobs are terminal; per-platform artifacts contain complete C07.2 captures and mutation evidence. Run no local executable validation."
+      ],
+      "required_workflows": [
+        "Rust migration inventory",
+        "OpenObsidian quality",
+        "OpenObsidian desktop build",
+        "OpenObsidian plugin renderer matrix",
+        "OpenObsidian loaded plugin workflows",
+        "OpenObsidian Rust CI",
+        "Obsidian vault round-trip acceptance"
+      ],
       "attempts": [],
-      "next_action": "R2.8.105's supported-view reset implementation and acceptance notes are prepared after static source review. Verify origin/main still equals starting SHA 11931b9a9003857caf00542e74a45f7fb6947f65, stage only the C07.2 probe and migration-progress files, and push one accumulated repair batch; exclude crates/doc/src/bases.rs and fixtures/c07-bases.json. Then hold the exact SHA until all seven workflows and jobs are terminal."
+      "next_action": "Static-review the reference probe and acceptance/evidence metadata, then stage only the C07.2 probe, migration progress files, and reconciled R2.8.105 evidence. Exclude crates/doc/src/bases.rs and fixtures/c07-bases.json. Push once when the milestone package is CI-ready; then hold the exact SHA until all seven required workflows are terminal and reconciled."
     }
   },
   "ci_preparation": {
