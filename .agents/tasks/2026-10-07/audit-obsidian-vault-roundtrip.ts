@@ -121,6 +121,8 @@ type GroupOrderScenario = {
   layout: "table" | "kanban";
   group_by_property?: string;
   coverage: string[];
+  expected_error_outcome?: "visible-error";
+  expected_error_text?: string;
   source: string | Record<string, unknown>;
 };
 
@@ -194,9 +196,18 @@ type GroupOrderVisibleState = {
   }>;
   visible_group_marker_count: number;
   unmapped_group_marker_count: number;
+  occluded_kanban_dom_candidates: Array<{
+    kind: "group-heading" | "card";
+    text: string;
+    class_name: string;
+    top: number;
+    left: number;
+  }>;
   visible_error_texts: string[];
   notices: string[];
-  dom_diagnostics: Array<{tag: string; class_name: string; role: string | null; text: string; top: number; left: number}>;
+  explicit_error_surface: boolean;
+  error_surface_scope: "active-view" | "requested-file-matched-notice" | "none";
+  dom_diagnostics: Array<{tag: string; class_name: string; role: string | null; text: string; top: number; left: number; painted?: boolean}>;
   extraction_ambiguous: boolean;
   ambiguity_reasons: string[];
 };
@@ -204,7 +215,7 @@ type GroupOrderVisibleState = {
 type GroupOrderScenarioObservation = GroupOrderVisibleState & {
   stage: "first-open" | "reopen";
   ordered_group_headings: string[];
-  error_surface_classification: "loaded-bases-view" | "non-bases-view-with-visible-error" | "non-bases-view-without-visible-error";
+  error_surface_classification: "loaded-bases-view" | "loaded-bases-view-with-visible-error" | "non-bases-view-with-visible-error" | "non-bases-view-without-visible-error";
   state_settled: boolean;
   state_samples: Array<{
     active_file_path: string | null;
@@ -216,8 +227,11 @@ type GroupOrderScenarioObservation = GroupOrderVisibleState & {
     unassigned_visible_file_paths: string[];
     unmapped_visible_path_candidates: GroupOrderVisibleState["unmapped_visible_path_candidates"];
     unmapped_visible_row_candidates: GroupOrderVisibleState["unmapped_visible_row_candidates"];
+    occluded_kanban_dom_candidates: GroupOrderVisibleState["occluded_kanban_dom_candidates"];
     visible_error_texts: string[];
     notices: string[];
+    explicit_error_surface: boolean;
+    error_surface_scope: GroupOrderVisibleState["error_surface_scope"];
   }>;
   screenshot: string | null;
   screenshot_error?: string;
@@ -1470,14 +1484,59 @@ function windowsSelectorDismissConfirmsClosed(action: unknown): boolean {
   if (typeof action !== "string") return false;
   try {
     const dismissal = JSON.parse(action) as {
-      action?: unknown;
       control_type?: unknown;
       name?: unknown;
+      dismissal_action?: unknown;
+      visible_note_options_before_dismissal?: unknown;
+      visible_note_options_after_dismissal?: unknown;
+      stable_empty_scans?: unknown;
+      selector_visible_after_dismissal?: unknown;
+      selector_is_offscreen_before_dismissal?: unknown;
+      selector_is_offscreen_after_dismissal?: unknown;
+      expand_collapse_read_status_before?: unknown;
+      expand_collapse_read_status_after?: unknown;
+      expand_collapse_supported_before?: unknown;
+      expand_collapse_state_before?: unknown;
+      expand_collapse_supported_after?: unknown;
+      expand_collapse_state_after?: unknown;
+      target_option_visible_before_dismissal?: unknown;
       target_option_visible_after_dismissal?: unknown;
     };
+    const visibleBefore = typeof dismissal.visible_note_options_before_dismissal === "number"
+      ? dismissal.visible_note_options_before_dismissal
+      : -1;
+    const expandedBefore = dismissal.expand_collapse_state_before === "Expanded"
+      || dismissal.expand_collapse_state_before === "PartiallyExpanded";
+    const escapeWasJustified = visibleBefore > 0
+      ? dismissal.target_option_visible_before_dismissal === true
+        && (dismissal.expand_collapse_read_status_before === "unsupported"
+          || (dismissal.expand_collapse_read_status_before === "supported" && expandedBefore))
+      : visibleBefore === 0
+        && dismissal.expand_collapse_read_status_before === "supported"
+        && expandedBefore;
+    const alreadyCollapsedWasObserved = visibleBefore === 0
+      && dismissal.target_option_visible_before_dismissal === false
+      && dismissal.expand_collapse_read_status_before === "supported"
+      && dismissal.expand_collapse_state_before === "Collapsed";
+    const collapsedAfter = dismissal.expand_collapse_read_status_after === "supported"
+      ? dismissal.expand_collapse_state_after === "Collapsed"
+      : dismissal.expand_collapse_read_status_after === "unsupported"
+        && dismissal.expand_collapse_read_status_before === "unsupported"
+        && dismissal.dismissal_action === "WScript.Shell.SendKeys(Escape)"
+        && visibleBefore > 0;
     return dismissal.name === "Note to inspect"
       && dismissal.control_type === "ControlType.Button"
-      && dismissal.action === "WScript.Shell.SendKeys(Escape)"
+      && (dismissal.dismissal_action === "WScript.Shell.SendKeys(Escape)"
+        || dismissal.dismissal_action === "already-collapsed")
+      && typeof dismissal.visible_note_options_before_dismissal === "number"
+      && ((dismissal.dismissal_action === "WScript.Shell.SendKeys(Escape)" && escapeWasJustified)
+        || (dismissal.dismissal_action === "already-collapsed" && alreadyCollapsedWasObserved))
+      && dismissal.visible_note_options_after_dismissal === 0
+      && dismissal.stable_empty_scans === 3
+      && dismissal.selector_visible_after_dismissal === true
+      && dismissal.selector_is_offscreen_before_dismissal === false
+      && dismissal.selector_is_offscreen_after_dismissal === false
+      && collapsedAfter
       && dismissal.target_option_visible_after_dismissal === false;
   } catch {
     return false;
@@ -1496,42 +1555,158 @@ async function dismissWindowsNoteSelectorMenu(child: ChildProcess, expectedPath:
     $shell = New-Object -ComObject WScript.Shell
     if (-not $shell.AppActivate($processId)) { throw "Could not focus OpenObsidian before dismissing the expanded note selector" }
     Start-Sleep -Milliseconds 100
-    $shell.SendKeys("{ESC}")
-    Start-Sleep -Milliseconds 150
     $root = [System.Windows.Automation.AutomationElement]::RootElement
     $condition = [System.Windows.Automation.PropertyCondition]::new(
       [System.Windows.Automation.AutomationElement]::ProcessIdProperty,
       $processId
     )
+    function Read-SelectorExpandCollapseState($element) {
+      if ($null -eq $element) {
+        return [pscustomobject]@{ status = "missing-element"; supported = $null; state = $null; error = "selector element was not present in this UIA scan" }
+      }
+      try {
+        $pattern = $null
+        $supported = $element.TryGetCurrentPattern([System.Windows.Automation.ExpandCollapsePattern]::Pattern, [ref]$pattern)
+        if (-not $supported) {
+          return [pscustomobject]@{ status = "unsupported"; supported = $false; state = $null; error = $null }
+        }
+        try {
+          $state = $pattern.Current.ExpandCollapseState.ToString()
+          if ($state -notin @("Collapsed", "Expanded", "PartiallyExpanded", "LeafNode")) {
+            return [pscustomobject]@{ status = "error"; supported = $true; state = $null; error = "UIA returned an unknown expansion state: $state" }
+          }
+          return [pscustomobject]@{ status = "supported"; supported = $true; state = $state; error = $null }
+        } catch {
+          return [pscustomobject]@{ status = "error"; supported = $true; state = $null; error = $_.Exception.Message }
+        }
+      } catch {
+        return [pscustomobject]@{ status = "error"; supported = $null; state = $null; error = $_.Exception.Message }
+      }
+    }
     $selector = $null
+    $selectorMatchesBefore = 0
+    $selectorOffscreenBefore = $true
+    $visibleNoteOptionsBefore = 0
+    $visibleNoteOptionsAfter = 0
+    $targetOptionVisibleBefore = $false
     $targetOptionVisible = $false
+    $dismissalAction = "already-collapsed"
+    $elements = $root.FindAll([System.Windows.Automation.TreeScope]::Descendants, $condition)
+    foreach ($element in $elements) {
+      try {
+        $current = $element.Current
+        $normalizedName = $current.Name.Replace([string][char]92, "/")
+        if ($current.ControlType.ProgrammaticName -eq "ControlType.Button" -and $current.Name -eq "Note to inspect") {
+          $selectorMatchesBefore += 1
+          $selector = $element
+          $selectorOffscreenBefore = $current.IsOffscreen
+        }
+        if ($current.ControlType.ProgrammaticName -eq "ControlType.RadioButton" -and
+            $normalizedName -match "\\.(md|base|canvas)$" -and -not $current.IsOffscreen) {
+          $visibleNoteOptionsBefore += 1
+          if ($normalizedName -eq $expectedPath) { $targetOptionVisibleBefore = $true }
+        }
+      } catch {
+        throw "Could not read a process UI Automation element before selector dismissal: $($_.Exception.Message)"
+      }
+    }
+    if ($selectorMatchesBefore -ne 1) { throw "UI Automation expected one Note to inspect button before dismissal, found $selectorMatchesBefore" }
+    if ($selectorOffscreenBefore) { throw "UI Automation exposed the Note to inspect button as offscreen before dismissal" }
+    $selectorExpansionBefore = Read-SelectorExpandCollapseState $selector
+    if ($selectorExpansionBefore.status -eq "error" -or $selectorExpansionBefore.status -eq "missing-element") {
+      throw "Could not read the note-selector expansion pattern before dismissal: $($selectorExpansionBefore.error)"
+    }
+    $selectorWasExpanded = $selectorExpansionBefore.state -eq "Expanded" -or $selectorExpansionBefore.state -eq "PartiallyExpanded"
+    if ($visibleNoteOptionsBefore -gt 0 -and -not $targetOptionVisibleBefore) {
+      throw "The exact selected note path is not visible in the expanded selector"
+    }
+    if ($selectorExpansionBefore.status -eq "unsupported" -and $visibleNoteOptionsBefore -eq 0) {
+      throw "UI Automation exposed neither the selector expansion state nor any note-path options; the collapsed state cannot be confirmed"
+    }
+    if ($selectorExpansionBefore.status -eq "supported"
+        -and $selectorExpansionBefore.state -notin @("Collapsed", "Expanded", "PartiallyExpanded")) {
+      throw "UI Automation exposed a non-expandable note selector with unexpected state: $($selectorExpansionBefore.state)"
+    }
+    if ($visibleNoteOptionsBefore -gt 0 -or $selectorWasExpanded) {
+      if ($selectorExpansionBefore.status -eq "supported" -and $selectorExpansionBefore.state -eq "Collapsed") {
+        throw "UI Automation reports the selector collapsed while visible note options remain"
+      }
+      $dismissalAction = "WScript.Shell.SendKeys(Escape)"
+      $shell.SendKeys("{ESC}")
+      Start-Sleep -Milliseconds 150
+    } elseif ($selectorExpansionBefore.status -eq "supported" -and $selectorExpansionBefore.state -ne "Collapsed") {
+      throw "UI Automation exposes an unknown note-selector expansion state: $($selectorExpansionBefore.state)"
+    }
     $deadline = [DateTime]::UtcNow.AddSeconds(3)
-    do {
+    $stableEmptyScans = 0
+    $selectorExpansionAfter = $selectorExpansionBefore
+    $selectorVisibleAfterDismissal = $false
+    while ($stableEmptyScans -lt 3 -and [DateTime]::UtcNow -lt $deadline) {
       $elements = $root.FindAll([System.Windows.Automation.TreeScope]::Descendants, $condition)
+      $visibleNoteOptionsAfter = 0
       $targetOptionVisible = $false
+      $selectorAfter = $null
+      $selectorMatchesAfter = 0
+      $selectorOffscreenAfter = $true
       foreach ($element in $elements) {
         try {
           $current = $element.Current
           $normalizedName = $current.Name.Replace([string][char]92, "/")
           if ($current.ControlType.ProgrammaticName -eq "ControlType.Button" -and $current.Name -eq "Note to inspect") {
-            $selector = $element
+            $selectorMatchesAfter += 1
+            $selectorAfter = $element
+            $selectorOffscreenAfter = $current.IsOffscreen
           }
           if ($current.ControlType.ProgrammaticName -eq "ControlType.RadioButton" -and
-              $normalizedName -eq $expectedPath -and -not $current.IsOffscreen) {
-            $targetOptionVisible = $true
+              $normalizedName -match "\\.(md|base|canvas)$" -and -not $current.IsOffscreen) {
+            $visibleNoteOptionsAfter += 1
+            if ($normalizedName -eq $expectedPath) { $targetOptionVisible = $true }
           }
-        } catch {}
+        } catch {
+          throw "Could not read a process UI Automation element after selector dismissal: $($_.Exception.Message)"
+        }
       }
-      if ($targetOptionVisible) {
-        Start-Sleep -Milliseconds 100
+      if ($selectorMatchesAfter -ne 1) { throw "UI Automation expected one Note to inspect button after dismissal, found $selectorMatchesAfter" }
+      $selectorVisibleAfterDismissal = $null -ne $selectorAfter -and -not $selectorOffscreenAfter
+      $selectorExpansionAfter = Read-SelectorExpandCollapseState $selectorAfter
+      if ($selectorExpansionAfter.status -eq "error") {
+        throw "Could not read the note-selector expansion pattern after dismissal: $($selectorExpansionAfter.error)"
       }
-    } while ($targetOptionVisible -and [DateTime]::UtcNow -lt $deadline)
-    if ($null -eq $selector) { throw "UI Automation did not expose the Note to inspect button" }
-    if ($targetOptionVisible) { throw "Escape did not dismiss the expanded note selector" }
+      $expansionConfirmsClosed = ($selectorExpansionAfter.status -eq "supported" -and
+        $selectorExpansionAfter.state -eq "Collapsed")
+      if ($selectorExpansionAfter.status -eq "unsupported"
+          -and $selectorExpansionBefore.status -eq "unsupported"
+          -and $dismissalAction -eq "WScript.Shell.SendKeys(Escape)"
+          -and $visibleNoteOptionsBefore -gt 0) {
+        $expansionConfirmsClosed = $true
+      }
+      if ($visibleNoteOptionsAfter -eq 0 -and $selectorVisibleAfterDismissal -and $expansionConfirmsClosed) {
+        $stableEmptyScans += 1
+      } else {
+        $stableEmptyScans = 0
+      }
+      if ($stableEmptyScans -lt 3) { Start-Sleep -Milliseconds 100 }
+    }
+    if ($visibleNoteOptionsAfter -gt 0 -or -not $selectorVisibleAfterDismissal -or $stableEmptyScans -ne 3) {
+      throw "The note selector did not remain observable in three consecutive empty UI Automation scans after dismissal"
+    }
     [pscustomobject]@{
-      name = $selector.Current.Name
-      control_type = $selector.Current.ControlType.ProgrammaticName
-      action = "WScript.Shell.SendKeys(Escape)"
+      name = $selectorAfter.Current.Name
+      control_type = $selectorAfter.Current.ControlType.ProgrammaticName
+      dismissal_action = $dismissalAction
+      visible_note_options_before_dismissal = $visibleNoteOptionsBefore
+      visible_note_options_after_dismissal = $visibleNoteOptionsAfter
+      stable_empty_scans = $stableEmptyScans
+      selector_visible_after_dismissal = $selectorVisibleAfterDismissal
+      selector_is_offscreen_before_dismissal = $selectorOffscreenBefore
+      selector_is_offscreen_after_dismissal = $selectorOffscreenAfter
+      expand_collapse_read_status_before = $selectorExpansionBefore.status
+      expand_collapse_read_status_after = $selectorExpansionAfter.status
+      expand_collapse_supported_before = $selectorExpansionBefore.supported
+      expand_collapse_state_before = $selectorExpansionBefore.state
+      expand_collapse_supported_after = $selectorExpansionAfter.supported
+      expand_collapse_state_after = $selectorExpansionAfter.state
+      target_option_visible_before_dismissal = $targetOptionVisibleBefore
       target_option_visible_after_dismissal = $targetOptionVisible
     } | ConvertTo-Json -Compress
   `;
@@ -1548,7 +1723,7 @@ async function dismissWindowsNoteSelectorMenu(child: ChildProcess, expectedPath:
   } catch (error) {
     const failure = error as NodeJS.ErrnoException & {stderr?: Buffer | string; stdout?: Buffer | string};
     const output = [failure.stdout, failure.stderr].filter(Boolean).map(String).join("\n").trim();
-    throw new Error(`Could not dismiss the expanded Windows note selector through its UI Automation button: ${output || failure.message}`);
+    throw new Error(`Could not confirm the Windows note selector was closed: ${output || failure.message}`);
   }
 }
 
@@ -2033,6 +2208,16 @@ async function createGroupOrderReferenceFixture(): Promise<{
     if (!scenario.base_path.startsWith("Bases/") || !scenario.base_path.endsWith(".base")) {
       throw new Error(`Unsafe C07.3 groupOrder base path: ${scenario.base_path}`);
     }
+    if (scenario.expected_error_outcome === "visible-error") {
+      const expectedErrorText = typeof scenario.expected_error_text === "string" ? scenario.expected_error_text.trim() : "";
+      const hasGroupOrderContext = /\b(?:groupBy|groupOrder|group by|group order)\b/i.test(expectedErrorText);
+      const hasFailureWording = /\b(?:invalid|unsupported|must|could not|failed|malformed|error|exception|rejected|unable)\b/i.test(expectedErrorText);
+      if (expectedErrorText.length < 20 || !hasGroupOrderContext || !hasFailureWording) {
+        throw new Error(`C07.3 ${scenario.id} must name the specific groupBy/groupOrder failure in expected_error_text`);
+      }
+    } else if (scenario.expected_error_outcome !== undefined || scenario.expected_error_text !== undefined) {
+      throw new Error(`C07.3 ${scenario.id} declares error expectations without expected_error_outcome=visible-error`);
+    }
     resolveContainedPath(groupOrderVaultRoot, scenario.base_path);
     if (sourceFiles[scenario.base_path]) throw new Error(`Duplicate C07.3 groupOrder fixture path: ${scenario.base_path}`);
     if (scenario.source_format === "native-yaml" && typeof scenario.source !== "string") {
@@ -2136,6 +2321,8 @@ async function createGroupOrderReferenceFixture(): Promise<{
     source_format: scenario.source_format,
     layout: scenario.layout,
     group_by_property: scenario.group_by_property ?? null,
+    expected_error_outcome: scenario.expected_error_outcome ?? null,
+    expected_error_text: scenario.expected_error_text?.trim() ?? null,
     coverage: scenario.coverage,
     source_sha256: sourceHashes[scenario.base_path]?.sha256 ?? null,
     isolated_vault_path: scenarioFixtures[scenario.id]?.vault_root ?? null,
@@ -2152,6 +2339,8 @@ async function createGroupOrderReferenceFixture(): Promise<{
     "The YAML custom-tag case records parser/tag rejection for the supplied source. It is a separate syntax probe and is not counted as an app-level unsupported groupOrder entry.",
     "Unless a candidate visibly demonstrates app-level rejection after the Bases view loads, unsupported app-level groupOrder entry behavior remains unprobed and Rust C07.3 parity remains blocked on that characterization.",
     "Visible membership is recorded as pinned-app behavior; the probe requires at least one mapped fixture path from a loaded view but does not claim an independent expected-member oracle for notes omitted entirely from the UI.",
+    "Painted-text visibility uses discrete 3x3 hit/caret samples; narrow occluders can fall between samples, text/background contrast is not measured, and legitimate rows or cards outside the CI viewport can fail exact membership coverage.",
+    "Windows note-path radio scans cover all UI Automation descendants for the process rather than a verified selector-popup subtree, so an unrelated visible path radio can cause a fail-closed false failure. IsOffscreen status is UIA evidence and does not prove that the selector button is unobscured at the pixel level.",
   ];
   await writeFile(join(reportDirectory, "c07-group-order-fixture.json"), fixtureBytes);
   return {fixture, sources: sourceFiles, sourceHashes, scenarioFixtures};
@@ -2428,6 +2617,10 @@ async function readGroupOrderVisibleState(
     const fixturePaths = ${JSON.stringify(fixturePaths)};
     const requestedPath = ${JSON.stringify(scenario.base_path)};
     const layout = ${JSON.stringify(scenario.layout)};
+    const groupByProperty = ${JSON.stringify(scenario.group_by_property ?? null)};
+    const scenarioId = ${JSON.stringify(scenario.id)};
+    const scenarioExpectsVisibleError = ${JSON.stringify(scenario.expected_error_outcome === "visible-error")};
+    const expectedErrorText = ${JSON.stringify(scenario.expected_error_text?.trim() ?? null)};
     const root = document.querySelector('.workspace-leaf.mod-active') ?? document.body;
     const view = window.app?.workspace?.activeLeaf?.view;
     const body = root?.innerText ?? '';
@@ -2435,9 +2628,142 @@ async function readGroupOrderVisibleState(
     const visible = (element) => {
       const style = window.getComputedStyle(element);
       const bounds = element.getBoundingClientRect();
-      return style.display !== 'none' && style.visibility !== 'hidden' && bounds.width > 0 && bounds.height > 0;
+      return style.display !== 'none' && style.visibility !== 'hidden' && Number(style.opacity) > 0.05
+        && bounds.width > 0 && bounds.height > 0
+        && bounds.right > 0 && bounds.bottom > 0
+        && bounds.left < window.innerWidth && bounds.top < window.innerHeight;
+    };
+    const kanbanContainers = layout === 'kanban' && root
+      ? [...root.querySelectorAll('.bases-kanban-container')]
+      : [];
+    const kanbanRoot = layout === 'kanban'
+      ? (kanbanContainers.length === 1 ? kanbanContainers[0] : null)
+      : root;
+    const hitTestPainted = (element, minimumCoverage = 0.5) => {
+      if (!visible(element)) return false;
+      let effectiveOpacity = 1;
+      for (let ancestor = element; ancestor; ancestor = ancestor.parentElement) {
+        const style = window.getComputedStyle(ancestor);
+        const opacity = Number(style.opacity);
+        if (style.display === 'none' || style.visibility === 'hidden' || !Number.isFinite(opacity)) return false;
+        effectiveOpacity *= opacity;
+        if (effectiveOpacity <= 0.05) return false;
+      }
+      const clipped = clipToVisibleBounds(element, element.getBoundingClientRect());
+      if (!clipped || clipped.coverage < minimumCoverage) return false;
+      const points = [];
+      for (const xFraction of [0.2, 0.5, 0.8]) {
+        for (const yFraction of [0.2, 0.5, 0.8]) {
+          points.push({
+            x: clipped.left + (clipped.right - clipped.left) * xFraction,
+            y: clipped.top + (clipped.bottom - clipped.top) * yFraction,
+          });
+        }
+      }
+      const paintedSamples = points.filter(({x, y}) => {
+        const hit = document.elementFromPoint(x, y);
+        return Boolean(hit && (hit === element || element.contains(hit)));
+      });
+      return paintedSamples.length >= Math.max(1, Math.ceil(points.length * 0.6));
     };
     const textOf = (element) => normalize(element?.innerText || element?.textContent || '');
+    const clipToVisibleBounds = (element, bounds) => {
+      const originalArea = Math.max(0, bounds.width) * Math.max(0, bounds.height);
+      if (originalArea === 0) return null;
+      const clipped = {
+        left: Math.max(0, bounds.left),
+        top: Math.max(0, bounds.top),
+        right: Math.min(window.innerWidth, bounds.right),
+        bottom: Math.min(window.innerHeight, bounds.bottom),
+      };
+      for (let ancestor = element.parentElement; ancestor; ancestor = ancestor.parentElement) {
+        const style = window.getComputedStyle(ancestor);
+        const ancestorBounds = ancestor.getBoundingClientRect();
+        if (/(hidden|clip|scroll|auto|overlay)/.test(style.overflowX)) {
+          clipped.left = Math.max(clipped.left, ancestorBounds.left);
+          clipped.right = Math.min(clipped.right, ancestorBounds.right);
+        }
+        if (/(hidden|clip|scroll|auto|overlay)/.test(style.overflowY)) {
+          clipped.top = Math.max(clipped.top, ancestorBounds.top);
+          clipped.bottom = Math.min(clipped.bottom, ancestorBounds.bottom);
+        }
+      }
+      const width = Math.max(0, clipped.right - clipped.left);
+      const height = Math.max(0, clipped.bottom - clipped.top);
+      const area = width * height;
+      return area > 0 ? {...clipped, width, height, coverage: area / originalArea} : null;
+    };
+    const textNodeIsPainted = (node) => {
+      let element = node?.nodeType === Node.ELEMENT_NODE ? node : node?.parentElement;
+      let effectiveOpacity = 1;
+      for (let ancestor = element; ancestor; ancestor = ancestor.parentElement) {
+        const style = window.getComputedStyle(ancestor);
+        const opacity = Number(style.opacity);
+        if (style.display === 'none' || style.visibility === 'hidden' || !Number.isFinite(opacity)) return false;
+        effectiveOpacity *= opacity;
+        if (effectiveOpacity <= 0.05) return false;
+      }
+      if (!element) return false;
+      const style = window.getComputedStyle(element);
+      const alphaOf = (color) => {
+        const normalized = String(color || '').replace(/\\s+/g, '').toLowerCase();
+        if (normalized === 'transparent') return 0;
+        const rgba = normalized.match(/^rgba\\([^/]*,([\\d.]+)(%)?\\)$/);
+        if (rgba) return Number(rgba[1]) / (rgba[2] ? 100 : 1);
+        const modern = normalized.match(/\\/([\\d.]+)%?\\)$/);
+        if (modern) return Number(modern[1]) / (modern[0].includes('%') ? 100 : 1);
+        return 1;
+      };
+      const fillColor = style.getPropertyValue('-webkit-text-fill-color');
+      return alphaOf(style.color) > 0.05 && (!fillColor || fillColor === 'currentcolor' || alphaOf(fillColor) > 0.05);
+    };
+    const hitTestPaintedText = (element) => {
+      if (!hitTestPainted(element) || !textOf(element)) return false;
+      const textRange = document.createRange();
+      textRange.selectNodeContents(element);
+      const rects = [...textRange.getClientRects()];
+      let totalArea = 0;
+      let visibleArea = 0;
+      const samples = [];
+      for (const bounds of rects) {
+        const boundsArea = Math.max(0, bounds.width) * Math.max(0, bounds.height);
+        if (boundsArea === 0) continue;
+        totalArea += boundsArea;
+        const clipped = clipToVisibleBounds(element, bounds);
+        if (!clipped) continue;
+        visibleArea += clipped.width * clipped.height;
+        for (const xFraction of [0.2, 0.5, 0.8]) {
+          for (const yFraction of [0.2, 0.5, 0.8]) {
+            samples.push({
+              x: clipped.left + clipped.width * xFraction,
+              y: clipped.top + clipped.height * yFraction,
+            });
+          }
+        }
+      }
+      if (totalArea === 0 || visibleArea / totalArea < 0.6 || samples.length === 0) return false;
+      let paintedTextSamples = 0;
+      for (const {x, y} of samples) {
+        const hit = document.elementFromPoint(x, y);
+        if (!hit || (hit !== element && !element.contains(hit))) continue;
+        const rangeAtPoint = document.caretRangeFromPoint?.(x, y);
+        const caretAtPoint = document.caretPositionFromPoint?.(x, y);
+        const node = rangeAtPoint?.startContainer ?? caretAtPoint?.offsetNode ?? null;
+        if (node && (node === element || element.contains(node)) && textNodeIsPainted(node)) paintedTextSamples += 1;
+      }
+      return paintedTextSamples >= Math.max(1, Math.ceil(samples.length * 0.6));
+    };
+    const paintedKanbanColumns = layout === 'kanban' && kanbanRoot
+      ? [...kanbanRoot.querySelectorAll('.bases-kanban-column')].filter((column) => {
+        const header = column.querySelector('.bases-kanban-column-header');
+        const cards = [...column.querySelectorAll('.bases-kanban-card')];
+        return Boolean((header && hitTestPainted(header, 0.2))
+          || cards.some((card) => hitTestPainted(card))
+          || hitTestPainted(column, 0.2));
+      })
+      : [];
+    const observationRoot = layout === 'kanban' ? kanbanRoot : root;
+    const occludedKanbanDomCandidates = [];
     const addPathAlias = (aliases, alias, path) => {
       const key = alias.toLowerCase();
       if (!aliases.has(key)) aliases.set(key, path);
@@ -2471,7 +2797,11 @@ async function readGroupOrderVisibleState(
       return pathByName.get(stem) ?? null;
     };
     const linkSelector = 'a[data-href], [data-href], a[data-path], [data-path], a.internal-link, .internal-link';
-    const rawLinks = root ? [...root.querySelectorAll(linkSelector)].filter(visible) : [];
+    const rawLinks = observationRoot
+      ? [...observationRoot.querySelectorAll(linkSelector)].filter((link) => textOf(link)
+        ? hitTestPaintedText(link)
+        : hitTestPainted(link))
+      : [];
     const rawCandidates = rawLinks.map((element) => {
       const candidate = element.getAttribute('data-href') || element.getAttribute('data-path') || textOf(element);
       return {element, candidate, path: pathFor(candidate)};
@@ -2485,7 +2815,7 @@ async function readGroupOrderVisibleState(
       const tableRoot = element.closest('.bases-table, [role="table"], table');
       return tableRoot ? 'table' : layout === 'kanban' ? 'kanban' : owner ? 'explicit-row' : 'unscoped';
     };
-    const pathLinks = retainedCandidates
+    const linkedPathLinks = retainedCandidates
       .filter((entry) => entry.path)
       .map(({element, path}, index) => {
         const bounds = element.getBoundingClientRect();
@@ -2519,6 +2849,11 @@ async function readGroupOrderVisibleState(
       });
     const classTokens = (element) => [...(element.classList || [])].map((token) => token.toLowerCase());
     const hasGroupMarker = (element) => {
+      if (layout === 'kanban') {
+        return element.matches('.bases-group-heading')
+          && Boolean(element.closest('.bases-kanban-column-header'))
+          && Boolean(element.closest('.bases-kanban-column'));
+      }
       const classes = classTokens(element);
       return classes.some((token) => token === 'bases-group-row'
           || token === 'bases-group-heading'
@@ -2531,16 +2866,27 @@ async function readGroupOrderVisibleState(
         || element.hasAttribute('data-group')
         || element.getAttribute('role') === 'group';
     };
-    const markerElements = root
-      ? [...root.querySelectorAll('[class], [data-group], [role="group"]')].filter((element) => visible(element) && hasGroupMarker(element))
+    const rawMarkerElements = kanbanRoot
+      ? [...kanbanRoot.querySelectorAll('[class], [data-group], [role="group"]')].filter((element) => hasGroupMarker(element))
       : [];
-    const leafMarkers = markerElements.filter((element) => !markerElements.some((nested) => nested !== element && element.contains(nested)));
+    const markerElements = rawMarkerElements.filter((element) => {
+      if (hitTestPaintedText(element)) return true;
+      if (layout === 'kanban') {
+        const bounds = element.getBoundingClientRect();
+        occludedKanbanDomCandidates.push({kind: 'group-heading', text: textOf(element), class_name: element.getAttribute('class') || '', top: bounds.top, left: bounds.left});
+      }
+      return false;
+    });
+    const leafMarkers = layout === 'kanban'
+      ? markerElements
+      : markerElements.filter((element) => !markerElements.some((nested) => nested !== element && element.contains(nested)));
     const headingMarkers = leafMarkers.map((element, index) => {
       const bounds = element.getBoundingClientRect();
       const label = normalize(element.getAttribute('data-group') || element.getAttribute('aria-label') || textOf(element));
       const rowOwner = element.closest('.bases-tr, .bases-row, .bases-table-row, tr, [role="row"], li, [role="listitem"]');
       return {
         element,
+        column: layout === 'kanban' ? element.closest('.bases-kanban-column') : null,
         index,
         label,
         class_name: element.getAttribute('class') || '',
@@ -2551,7 +2897,42 @@ async function readGroupOrderVisibleState(
     }).sort((left, right) => layout === 'kanban'
       ? left.left - right.left || left.top - right.top || left.index - right.index
       : left.top - right.top || left.left - right.left || left.index - right.index);
-    const tableRoots = root ? [...root.querySelectorAll('.bases-table, [role="table"], table')] : [];
+    const kanbanCardPathLinks = [];
+    if (layout === 'kanban' && kanbanRoot) {
+      const cards = [...kanbanRoot.querySelectorAll('.bases-kanban-card')]
+        .filter((card) => paintedKanbanColumns.includes(card.closest('.bases-kanban-column')));
+      for (const card of cards) {
+        const bounds = card.getBoundingClientRect();
+        if (!hitTestPainted(card)) {
+          occludedKanbanDomCandidates.push({kind: 'card', text: textOf(card), class_name: card.getAttribute('class') || '', top: bounds.top, left: bounds.left});
+          continue;
+        }
+        const titleCandidates = [...card.querySelectorAll('.bases-kanban-card-property.mod-title')].filter(visible);
+        const titleNodes = titleCandidates.filter(hitTestPaintedText);
+        if (titleCandidates.length !== 1 || titleNodes.length !== 1) {
+          occludedKanbanDomCandidates.push({kind: 'card', text: textOf(card), class_name: card.getAttribute('class') || '', top: bounds.top, left: bounds.left});
+          continue;
+        }
+        const title = textOf(titleNodes[0]);
+        const path = pathFor(title);
+        if (!path) continue;
+        const column = card.closest('.bases-kanban-column');
+        kanbanCardPathLinks.push({
+          element: card,
+          column,
+          path,
+          text: title,
+          class_name: card.getAttribute('class') || '',
+          source_scope: 'kanban',
+          row_class_name: card.getAttribute('class') || '',
+          top: bounds.top,
+          left: bounds.left,
+          index: linkedPathLinks.length + kanbanCardPathLinks.length,
+        });
+      }
+    }
+    const pathLinks = layout === 'kanban' ? kanbanCardPathLinks : linkedPathLinks;
+    const tableRoots = observationRoot ? [...observationRoot.querySelectorAll('.bases-table, [role="table"], table')] : [];
     const groupRecords = headingMarkers.map((marker, index) => ({
       index,
       heading_text: marker.label,
@@ -2560,15 +2941,17 @@ async function readGroupOrderVisibleState(
       member_paths: [],
       marker,
     }));
-    const visibleRowElements = root
-      ? [...root.querySelectorAll('.bases-tr, .bases-row, .bases-table-row, .bases-card, .bases-kanban-card, tr, [role="row"]')].filter(visible)
+    const visibleRowElements = observationRoot
+      ? [...observationRoot.querySelectorAll('.bases-tr, .bases-row, .bases-table-row, .bases-card, .bases-kanban-card, tr, [role="row"]')]
+        .filter((row) => hitTestPaintedText(row))
       : [];
     const unmappedVisibleRowCandidates = visibleRowElements
       .filter((row) => {
         const isHeader = row.matches('thead tr, .bases-table-header, [role="columnheader"]')
           || Boolean(row.querySelector('th, [role="columnheader"]'));
         const isGroupHeading = hasGroupMarker(row) || markerElements.some((marker) => row.contains(marker));
-        const hasPathCandidate = retainedCandidates.some((candidate) => row.contains(candidate.element));
+        const hasPathCandidate = retainedCandidates.some((candidate) => row.contains(candidate.element))
+          || pathLinks.some((candidate) => row.contains(candidate.element));
         return !isHeader && !isGroupHeading && !hasPathCandidate && Boolean(textOf(row));
       })
       .map((row) => {
@@ -2604,39 +2987,13 @@ async function readGroupOrderVisibleState(
         }
       }
     } else if (layout === 'kanban' && groupRecords.length > 0) {
-      const groupContainers = groupRecords.map((group) => {
-        let container = group.marker.element;
-        let ancestor = group.marker.element.parentElement;
-        while (ancestor && ancestor !== root) {
-          const headingsInside = headingMarkers.filter((marker) => ancestor.contains(marker.element));
-          if (headingsInside.length !== 1) break;
-          const tokens = classTokens(ancestor);
-          const structural = tokens.some((token) => token.includes('group') || token.includes('column') || token.includes('lane'))
-            || ancestor.getAttribute('role') === 'group'
-            || ancestor.hasAttribute('data-group');
-          if (structural) {
-            container = ancestor;
-            break;
-          }
-          ancestor = ancestor.parentElement;
-        }
-        return {group, container};
-      });
       for (const link of pathLinks) {
-        const owners = groupContainers.filter(({container}) => container.contains(link.element));
-        owners.sort((left, right) => {
-          const leftBounds = left.container.getBoundingClientRect();
-          const rightBounds = right.container.getBoundingClientRect();
-          return (leftBounds.width * leftBounds.height) - (rightBounds.width * rightBounds.height);
-        });
-        const owner = owners[0];
-        if (owners.length > 1) {
+        const owners = groupRecords.filter((group) => group.marker.column === link.column);
+        if (owners.length !== 1) {
           unassignedVisibleFilePaths.push(link.path);
-        } else if (owner) {
-          owner.group.member_paths.push(link.path);
-        } else {
-          unassignedVisibleFilePaths.push(link.path);
+          continue;
         }
+        owners[0].member_paths.push(link.path);
       }
     } else {
       for (const link of pathLinks) {
@@ -2654,28 +3011,99 @@ async function readGroupOrderVisibleState(
         return (left?.top ?? 0) - (right?.top ?? 0) || (left?.left ?? 0) - (right?.left ?? 0) || (left?.index ?? 0) - (right?.index ?? 0);
       });
     }
-    const visibleErrorTexts = [...new Set([...document.querySelectorAll('[role="alert"], .bases-error, [class*="error"]')]
-      .filter(visible).map(textOf).filter(Boolean))];
-    const notices = [...new Set([...(document.querySelectorAll('.notice, .modal-container, [role="alert"]'))]
-      .filter(visible).map(textOf).filter(Boolean))];
     const errorSpecificPattern = /invalid|unsupported|must be|could not|failed|failure|malformed|error|exception|rejected|unable to/i;
-    const explicitErrorSurface = visibleErrorTexts.length > 0
-      || notices.some((text) => errorSpecificPattern.test(text))
-      || /parse error|failed to parse|could not parse|invalid \.base|must be (?:a|an)|unsupported (?:group|entry|value)/i.test(body);
+    const activeErrorElements = [...(root?.querySelectorAll('[role="alert"], .bases-error, [class*="error"]') ?? [])]
+      .filter((element) => hitTestPaintedText(element));
+    const visibleErrorTexts = [...new Set(activeErrorElements
+      .map(textOf)
+      .filter((text) => Boolean(text) && errorSpecificPattern.test(text)))];
+    const notices = [...new Set([...(document.querySelectorAll('.notice, .modal-container, [role="alert"]'))]
+      .filter((element) => hitTestPaintedText(element)).map(textOf).filter(Boolean))];
+    const explicitBodyErrorPattern = /parse error|failed to parse|could not parse|invalid \\.base|must be (?:a|an)|unsupported (?:group|entry|value)/i;
+    const explicitBodyErrorTexts = [...new Set([...(root?.querySelectorAll('p, div, span, small, strong, em') ?? [])]
+      .filter((element) => explicitBodyErrorPattern.test(textOf(element)) && hitTestPaintedText(element))
+      .map(textOf).filter(Boolean))];
+    const requestedBaseName = (requestedPath.split('/').pop() || '').replace(/\\.base$/i, '').toLowerCase();
+    const expectedErrorTextLower = expectedErrorText?.toLowerCase() || '';
+    const expectedActiveViewError = scenarioExpectsVisibleError && Boolean(expectedErrorTextLower)
+      && [...visibleErrorTexts, ...explicitBodyErrorTexts]
+        .some((text) => text.toLowerCase().includes(expectedErrorTextLower));
+    const matchingErrorNotice = scenarioExpectsVisibleError && Boolean(expectedErrorTextLower)
+      && notices.some((text) => errorSpecificPattern.test(text)
+        && (text.toLowerCase().includes(requestedBaseName) || text.toLowerCase().includes(scenarioId.toLowerCase()))
+        && text.toLowerCase().includes(expectedErrorTextLower));
+    const activeViewError = expectedActiveViewError;
+    const errorSurfaceScope = expectedActiveViewError
+      ? 'active-view'
+      : matchingErrorNotice ? 'requested-file-matched-notice' : 'none';
+    const explicitErrorSurface = expectedActiveViewError || matchingErrorNotice;
+    const emptyErrorOutcome = scenarioExpectsVisibleError
+      && explicitErrorSurface
+      && groupRecords.length === 0
+      && pathLinks.length === 0
+      && unmappedVisiblePathCandidates.length === 0
+      && unmappedVisibleRowCandidates.length === 0
+      && occludedKanbanDomCandidates.length === 0
+      && (layout === 'kanban' ? kanbanContainers.length === 0 : tableRoots.length === 0);
     const ambiguityReasons = [];
+    if (layout === 'kanban' && kanbanContainers.length > 1) {
+      ambiguityReasons.push('Expected at most one Kanban container under the active view, found ' + kanbanContainers.length + '.');
+    }
+    if (layout === 'kanban' && !emptyErrorOutcome && kanbanContainers.length !== 1) {
+      ambiguityReasons.push('Expected exactly one loaded Kanban container, found ' + kanbanContainers.length + '.');
+    }
     if (groupRecords.some((group) => !group.heading_text)) ambiguityReasons.push('A visible group marker has no extractable heading text.');
     if (unmappedVisiblePathCandidates.length > 0) ambiguityReasons.push('One or more visible file-link candidates could not be mapped to a unique fixture path.');
-    if (unmappedVisibleRowCandidates.length > 0) ambiguityReasons.push('One or more visible data rows have no uniquely mapped fixture file link.');
+    if (unmappedVisibleRowCandidates.length > 0) ambiguityReasons.push('One or more visible data rows or cards have no uniquely mapped fixture file.');
     if (unassignedVisibleFilePaths.length > 0) ambiguityReasons.push('One or more visible fixture file links could not be assigned to a group or an ungrouped view.');
-    if (layout === 'kanban' && pathLinks.length > 0 && groupRecords.length === 0 && !explicitErrorSurface) {
+    if (layout === 'kanban' && pathLinks.length > 0 && groupRecords.length === 0 && !emptyErrorOutcome) {
       ambiguityReasons.push('The Kanban view rendered fixture files without detectable group headings.');
     }
-    if (layout === 'table' && scenario.group_by_property && pathLinks.length > 0
-      && groupRecords.length === 0 && !explicitErrorSurface) {
+    if (layout === 'kanban' && !emptyErrorOutcome) {
+      for (const column of paintedKanbanColumns) {
+        const headings = groupRecords.filter((group) => group.marker.column === column);
+        if (headings.length !== 1) {
+          ambiguityReasons.push('A painted Kanban column must have exactly one visible group heading; found ' + headings.length + '.');
+        }
+      }
+      for (const group of groupRecords) {
+        if (!paintedKanbanColumns.includes(group.marker.column)) {
+          ambiguityReasons.push('Visible Kanban heading ' + JSON.stringify(group.heading_text) + ' has no uniquely painted column.');
+        }
+      }
+      const expectedNotePaths = fixturePaths.filter((path) => /\.md$/i.test(path)).sort();
+      const observedCardPaths = pathLinks.map((link) => link.path).sort();
+      if (JSON.stringify(expectedNotePaths) !== JSON.stringify(observedCardPaths)) {
+        ambiguityReasons.push('Visible Kanban cards did not map one-to-one to every fixture Markdown path.');
+      }
+      for (const group of groupRecords) {
+        const column = group.marker.element.closest('.bases-kanban-column');
+        const countElement = column?.querySelector('.bases-kanban-column-count');
+        const countText = textOf(countElement);
+        const declaredCount = /^\d+$/.test(countText) ? Number(countText) : null;
+        if (declaredCount === null || declaredCount !== group.member_paths.length) {
+          ambiguityReasons.push('Kanban group ' + JSON.stringify(group.heading_text) + ' card count did not match its rendered column count.');
+        }
+      }
+    }
+    if (layout === 'table' && groupByProperty && pathLinks.length > 0
+      && groupRecords.length === 0 && !emptyErrorOutcome) {
       ambiguityReasons.push('A grouped table rendered fixture files without detectable group headings.');
     }
-    if (pathLinks.length === 0 && unmappedVisiblePathCandidates.length === 0 && !explicitErrorSurface) {
-      ambiguityReasons.push('A C07.3 scenario rendered no mapped fixture file links and showed no explicit visible error.');
+    if (scenarioExpectsVisibleError && !explicitErrorSurface) {
+      ambiguityReasons.push('The scenario expected a visible error surface, but none was observed.');
+    }
+    if (!emptyErrorOutcome) {
+      const expectedRenderedPaths = fixturePaths.filter((path) => /\\.md$/i.test(path)).sort();
+      const observedRenderedPaths = pathLinks.map((link) => link.path).sort();
+      if (JSON.stringify(expectedRenderedPaths) !== JSON.stringify(observedRenderedPaths)) {
+        ambiguityReasons.push('The renderer did not show every fixture Markdown row exactly once.');
+      }
+    }
+    if (pathLinks.length === 0 && unmappedVisiblePathCandidates.length === 0 && !emptyErrorOutcome) {
+      ambiguityReasons.push(layout === 'kanban'
+        ? 'A C07.3 Kanban scenario rendered no uniquely mapped fixture cards and showed no explicit visible error.'
+        : 'A C07.3 scenario rendered no mapped fixture file links and showed no explicit visible error.');
     }
     const diagnosticsElements = root ? [...root.querySelectorAll('[class], [data-group], [role="group"]')].filter(visible) : [];
     const domDiagnostics = diagnosticsElements
@@ -2683,7 +3111,8 @@ async function readGroupOrderVisibleState(
       .slice(0, 160)
       .map((element) => {
         const bounds = element.getBoundingClientRect();
-        return {tag: element.tagName.toLowerCase(), class_name: element.getAttribute('class') || '', role: element.getAttribute('role'), text: textOf(element).slice(0, 240), top: bounds.top, left: bounds.left};
+        const kanbanCandidate = layout === 'kanban' && element.matches('.bases-group-heading, .bases-kanban-card');
+        return {tag: element.tagName.toLowerCase(), class_name: element.getAttribute('class') || '', role: element.getAttribute('role'), text: textOf(element).slice(0, 240), top: bounds.top, left: bounds.left, ...(kanbanCandidate ? {painted: element.matches('.bases-group-heading') ? hitTestPaintedText(element) : hitTestPainted(element)} : {})};
       });
     const visibleFixturePathLinks = pathLinks.map((link) => ({
       path: link.path,
@@ -2708,8 +3137,11 @@ async function readGroupOrderVisibleState(
       unmapped_visible_row_candidates: unmappedVisibleRowCandidates,
       visible_group_marker_count: leafMarkers.length,
       unmapped_group_marker_count: groupRecords.filter((group) => !group.heading_text).length,
+      occluded_kanban_dom_candidates: occludedKanbanDomCandidates,
       visible_error_texts: visibleErrorTexts,
       notices,
+      explicit_error_surface: explicitErrorSurface,
+      error_surface_scope: errorSurfaceScope,
       dom_diagnostics: domDiagnostics,
       extraction_ambiguous: ambiguityReasons.length > 0,
       ambiguity_reasons: ambiguityReasons,
@@ -2758,8 +3190,11 @@ function emptyGroupOrderVisibleState(scenario: GroupOrderScenario): GroupOrderVi
     unmapped_visible_row_candidates: [],
     visible_group_marker_count: 0,
     unmapped_group_marker_count: 0,
+    occluded_kanban_dom_candidates: [],
     visible_error_texts: [],
     notices: [],
+    explicit_error_surface: false,
+    error_surface_scope: "none",
     dom_diagnostics: [],
     extraction_ambiguous: false,
     ambiguity_reasons: [],
@@ -2767,11 +3202,7 @@ function emptyGroupOrderVisibleState(scenario: GroupOrderScenario): GroupOrderVi
 }
 
 function hasExplicitVisibleGroupOrderParseError(state: GroupOrderVisibleState): boolean {
-  const errorPattern = /invalid|unsupported|must be|could not|failed|failure|malformed|error|exception|rejected|unable to/i;
-  const explicitBodyPattern = /parse error|failed to parse|could not parse|invalid \.base|must be (?:a|an)|unsupported (?:group|entry|value)/i;
-  return state.visible_error_texts.length > 0
-    || state.notices.some((text) => errorPattern.test(text))
-    || explicitBodyPattern.test(state.body);
+  return state.explicit_error_surface;
 }
 
 async function captureGroupOrderScenario(
@@ -2801,8 +3232,11 @@ async function captureGroupOrderScenario(
       unassigned_visible_file_paths: state.unassigned_visible_file_paths,
       unmapped_visible_path_candidates: state.unmapped_visible_path_candidates,
       unmapped_visible_row_candidates: state.unmapped_visible_row_candidates,
+      occluded_kanban_dom_candidates: state.occluded_kanban_dom_candidates,
       visible_error_texts: state.visible_error_texts,
       notices: state.notices,
+      explicit_error_surface: state.explicit_error_surface,
+      error_surface_scope: state.error_surface_scope,
     };
     if (stateSamples.length === 0 || !isDeepStrictEqual(stateSamples[stateSamples.length - 1], sample)) {
       stateSamples.push(sample);
@@ -2904,7 +3338,8 @@ async function captureGroupOrderScenario(
     if (visible.active_file_path !== scenario.base_path || !visible.selection_succeeded) {
       throw new Error(`${stage}: the exact .base was not active after selection; state=${JSON.stringify(visible).slice(0, 8_000)}`);
     }
-    if (visible.active_view_type !== "bases" && !hasExplicitVisibleGroupOrderParseError(visible)) {
+    if (visible.active_view_type !== "bases"
+        && !(scenario.expected_error_outcome === "visible-error" && hasExplicitVisibleGroupOrderParseError(visible))) {
       throw new Error(`${stage}: the exact .base was not opened as a Bases view and no explicit visible parse/error state was captured; state=${JSON.stringify(visible).slice(0, 8_000)}`);
     }
     if (!stateSettled) {
@@ -2944,7 +3379,9 @@ async function captureGroupOrderScenario(
     ...visible,
     ordered_group_headings: visible.groups.map((group) => group.heading_text),
     error_surface_classification: visible.active_view_type === "bases"
-      ? "loaded-bases-view"
+      ? hasExplicitVisibleGroupOrderParseError(visible)
+        ? "loaded-bases-view-with-visible-error"
+        : "loaded-bases-view"
       : hasExplicitVisibleGroupOrderParseError(visible)
         ? "non-bases-view-with-visible-error"
         : "non-bases-view-without-visible-error",
@@ -5209,6 +5646,8 @@ async function selectReferenceNoteForEmbedResolution(
       target_path_visible_by_ocr: ocrTextContainsPhrase(openMenuScreenshot.ocrText, targetPath),
       selection_action: selectionAction,
       selector_dismiss_action: dismissAction,
+      selector_dismiss_confirmed_closed: true,
+      selector_dismiss_confirmation_method: "the Note to inspect button remained visible through three consecutive scans with zero visible note-path radio buttons; ExpandCollapseState was read successfully and Collapsed when the pattern was available",
       exact_selected_path: targetPath,
     };
   }
@@ -5388,6 +5827,32 @@ async function runReferenceExternalNoteRefresh(
   const selectedByWindowsUiAutomation = process.platform === "win32"
     && windowsSelectionConfirmsPath(refreshReport.select_external_note_action, externalRefreshMarkdownPath);
   refreshReport.external_note_selected_by_exact_windows_uia = selectedByWindowsUiAutomation;
+  if (process.platform === "win32") {
+    if (!selectedByWindowsUiAutomation) {
+      throw new Error(`Windows UI Automation did not confirm exact selection of ${externalRefreshMarkdownPath}: ${refreshReport.select_external_note_action}`);
+    }
+    refreshReport.selector_dismiss_status = "pending";
+    refreshReport.selector_dismiss_confirmed_closed = false;
+    await saveReport();
+    let selectorDismissAction: string;
+    try {
+      selectorDismissAction = await dismissWindowsNoteSelectorMenu(child, externalRefreshMarkdownPath);
+    } catch (error) {
+      refreshReport.selector_dismiss_status = "unconfirmed";
+      refreshReport.selector_dismiss_confirmed_closed = false;
+      refreshReport.selector_dismiss_error = error instanceof Error ? error.message : String(error);
+      await saveReport();
+      throw error;
+    }
+    refreshReport.selector_dismiss_action = selectorDismissAction;
+    refreshReport.selector_dismiss_confirmed_closed = windowsSelectorDismissConfirmsClosed(selectorDismissAction);
+    refreshReport.selector_dismiss_status = refreshReport.selector_dismiss_confirmed_closed ? "confirmed_by_uia_proxy" : "unconfirmed";
+    refreshReport.selector_dismiss_confirmation_method = "the Note to inspect button remained visible through three consecutive scans with zero visible note-path radio buttons; ExpandCollapseState was read successfully and Collapsed when the pattern was available";
+    await saveReport();
+    if (!refreshReport.selector_dismiss_confirmed_closed) {
+      throw new Error(`Windows UI Automation did not confirm the note selector was collapsed after selecting ${externalRefreshMarkdownPath}: ${selectorDismissAction}`);
+    }
+  }
   let selectedByPreviousButton = false;
   if (process.platform === "linux" || process.platform === "darwin") {
     const expectedNavigationLog = `OpenObsidian CI note navigation: source=previous_button, selected=${externalRefreshMarkdownPath}`;
@@ -10602,7 +11067,8 @@ async function runBasesGroupOrderReferenceProbe(): Promise<void> {
           && view.requested_file_path === scenario.base_path
           && view.selection_succeeded
           && view.active_file_path === scenario.base_path
-          && (view.active_view_type === "bases" || hasExplicitVisibleGroupOrderParseError(view))
+          && (view.active_view_type === "bases"
+            || (scenario.expected_error_outcome === "visible-error" && hasExplicitVisibleGroupOrderParseError(view)))
           && view.state_settled
           && !view.extraction_ambiguous
           && view.unassigned_visible_file_paths.length === 0
