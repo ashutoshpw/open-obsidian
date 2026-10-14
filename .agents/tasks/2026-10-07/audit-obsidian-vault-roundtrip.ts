@@ -1,8 +1,8 @@
 import {createHash} from "node:crypto";
 import {execFileSync} from "node:child_process";
-import {lstat, mkdir, readFile, readdir, readlink, realpath, rename, unlink, writeFile} from "node:fs/promises";
+import {lstat, mkdir, readFile, readdir, readlink, realpath, rename, rm, unlink, writeFile} from "node:fs/promises";
 import {createWriteStream} from "node:fs";
-import {basename, dirname, join, relative, resolve, sep} from "node:path";
+import {basename, dirname, isAbsolute, join, relative, resolve, sep} from "node:path";
 import {spawn, type ChildProcess} from "node:child_process";
 import {isDeepStrictEqual} from "node:util";
 
@@ -20,12 +20,98 @@ type CdpResponse = {
   error?: {message?: string};
 };
 
+type CdpRemoteObject = {
+  type?: string;
+  subtype?: string;
+  className?: string;
+  description?: string;
+  value?: unknown;
+  unserializableValue?: string;
+  objectId?: string;
+  preview?: unknown;
+};
+
+type CdpExceptionDetails = {
+  exceptionId?: number;
+  text?: string;
+  lineNumber?: number;
+  columnNumber?: number;
+  scriptId?: string;
+  url?: string;
+  exception?: CdpRemoteObject;
+  stackTrace?: {
+    description?: string;
+    callFrames?: Array<{
+      functionName?: string;
+      scriptId?: string;
+      url?: string;
+      lineNumber?: number;
+      columnNumber?: number;
+    }>;
+  };
+};
+
+function summarizeCdpRemoteObject(remote: CdpRemoteObject | undefined): Record<string, unknown> | null {
+  if (!remote) return null;
+  const primitiveValue = remote.value === null || ["string", "number", "boolean"].includes(typeof remote.value)
+    ? remote.value
+    : undefined;
+  let valuePreview: string | undefined;
+  if (remote.value !== undefined && primitiveValue === undefined) {
+    try {
+      valuePreview = JSON.stringify(remote.value)?.slice(0, 4_000);
+    } catch {
+      valuePreview = String(remote.value).slice(0, 4_000);
+    }
+  }
+  return {
+    type: remote.type,
+    subtype: remote.subtype,
+    className: remote.className,
+    description: remote.description,
+    value: primitiveValue,
+    value_preview: valuePreview,
+    unserializableValue: remote.unserializableValue,
+    objectId: remote.objectId,
+    preview: remote.preview,
+  };
+}
+
+function runtimeEvaluationDiagnostics(response: CdpResponse): Record<string, unknown> {
+  const result = response.result?.result as CdpRemoteObject | undefined;
+  const details = response.result?.exceptionDetails as CdpExceptionDetails | undefined;
+  return {
+    remote_object: summarizeCdpRemoteObject(result),
+    exception_details: details ? {
+      exceptionId: details.exceptionId,
+      text: details.text,
+      lineNumber: details.lineNumber,
+      columnNumber: details.columnNumber,
+      scriptId: details.scriptId,
+      url: details.url,
+      exception: summarizeCdpRemoteObject(details.exception),
+      stackTrace: details.stackTrace ? {
+        description: details.stackTrace.description,
+        callFrames: (details.stackTrace.callFrames ?? []).map((frame) => ({
+          functionName: frame.functionName,
+          scriptId: frame.scriptId,
+          url: frame.url,
+          lineNumber: frame.lineNumber,
+          columnNumber: frame.columnNumber,
+        })),
+      } : undefined,
+    } : null,
+  };
+}
+
 type SnapshotEntry = {
   path: string;
   kind: "file" | "directory" | "symlink" | "other";
   bytes?: number;
   sha256?: string;
   target?: string;
+  target_bytes_base64?: string;
+  target_sha256?: string;
 };
 
 type GroupOrderScenario = {
@@ -47,6 +133,23 @@ type GroupOrderFixture = {
 };
 
 type GroupOrderSourceHash = {bytes: number; sha256: string};
+
+type GroupOrderMinimalRendererState = {
+  requested_file_path: string;
+  active_file_path: string | null;
+  active_view_type: string | null;
+  title: string;
+  body: string;
+  view_access_error?: string;
+};
+
+type GroupOrderScenarioFixture = {
+  vault_root: string;
+  source_files: Record<string, Buffer>;
+  source_hashes: Record<string, GroupOrderSourceHash>;
+  fixture_paths: string[];
+  seed_artifacts: Record<string, string>;
+};
 
 type GroupOrderGroupObservation = {
   index: number;
@@ -74,9 +177,23 @@ type GroupOrderVisibleState = {
     top: number;
     left: number;
   }>;
+  unmapped_visible_path_candidates: Array<{
+    candidate: string;
+    text: string;
+    class_name: string;
+    source_scope: string;
+    top: number;
+    left: number;
+  }>;
+  unmapped_visible_row_candidates: Array<{
+    text: string;
+    class_name: string;
+    tag: string;
+    top: number;
+    left: number;
+  }>;
   visible_group_marker_count: number;
   unmapped_group_marker_count: number;
-  unmapped_group_candidate_count: number;
   visible_error_texts: string[];
   notices: string[];
   dom_diagnostics: Array<{tag: string; class_name: string; role: string | null; text: string; top: number; left: number}>;
@@ -97,12 +214,18 @@ type GroupOrderScenarioObservation = GroupOrderVisibleState & {
     groups: GroupOrderGroupObservation[];
     ungrouped_visible_file_paths: string[];
     unassigned_visible_file_paths: string[];
+    unmapped_visible_path_candidates: GroupOrderVisibleState["unmapped_visible_path_candidates"];
+    unmapped_visible_row_candidates: GroupOrderVisibleState["unmapped_visible_row_candidates"];
     visible_error_texts: string[];
     notices: string[];
   }>;
   screenshot: string | null;
   screenshot_error?: string;
   probe_error?: string;
+  probe_phase?: string;
+  probe_retry_error?: string;
+  minimal_renderer_state?: GroupOrderMinimalRendererState;
+  minimal_renderer_state_error?: string;
 };
 
 const reportDirectory = resolve(requiredEnv("OBSIDIAN_REPORT_DIRECTORY"));
@@ -199,7 +322,7 @@ const report: Record<string, unknown> = {
   },
   fixture: {
     privacy: "Generated synthetic data only; no personal vault content or credentials.",
-    vault_path: "$RUNNER_TEMP/openobsidian-c01-roundtrip/C01.2 Roundtrip Fixture",
+    vault_path: vaultRoot,
     seed_markdown_path: seedMarkdownPath,
     authored_note_path: null,
     attachment_path: attachmentPath,
@@ -233,8 +356,8 @@ const report: Record<string, unknown> = {
     application: "Pinned Obsidian Desktop 1.14.4",
     fixture_id: "fixture:c07-group-order-reference",
     fixture_source_path: "fixtures/c07-group-order-reference.json",
-    strict_source_preservation_expectation: "Every generated .base and note source must retain its original byte count and SHA-256 at each first-open/reopen checkpoint. Unlike the separate C07.2 probe, no reference-app rewrite is accepted or reseeded.",
-    observation_expectation: "Capture the exact selected .base, active view type, visible error/notices and whether the state is a loaded Bases view or a non-Bases error view, ordered group headings as an array with a stable ordinal, every rendered member path/order, all state samples and screenshots. Record actual fallback behavior without assigning an undocumented meaning to malformed input. Fail closed when a rendered group or row cannot be mapped unambiguously.",
+    strict_source_preservation_expectation: "Record the original and every observed post-open/reopen .base and note byte count, SHA-256, and exact raw bytes. Reference-app rewrites are observations and must not abort the capture; reseed from the recorded source after first-open shutdown so the reopen capture starts from the same input, and report that harness write. This is separate from the strict Rust parser/encoder requirement to preserve source bytes exactly.",
+    observation_expectation: "Capture the exact selected .base, active view type, visible error/notices and whether the state is a loaded Bases view or a non-Bases error view, ordered group headings as an array with a stable ordinal, every rendered member path/order, all state samples and screenshots. A loaded view with zero mapped fixture paths is incomplete unless an explicit visible error is captured, including for empty groupOrder lists. Record actual fallback behavior without assigning an undocumented meaning to malformed input. Fail closed when a rendered group or row cannot be mapped unambiguously.",
     unsupported_entry_scope: "Probe valid-input JSON non-finite-number and YAML binary-tag candidates without assuming either is unsupported. If neither produces visible app-level rejection after the Bases view loads, record app-level unsupported groupOrder entry behavior as unresolved and keep Rust C07.3 parity blocked.",
     rust_parity_claimed: false,
     scenarios: [],
@@ -247,7 +370,7 @@ const report: Record<string, unknown> = {
     "The deliberate external note creation, in-place note edit, attachment removal, and note rename each establish a new baseline; all subsequent no-op operations must preserve the latest applicable baseline exactly.",
     "The Canvas check uses a dedicated reference-compatible fixture and fresh Obsidian profile, edits one native text card with no write before explicit save, verifies the saved JSON differs only at that selected card's text while preserving sibling nodes and edges, creates one Markdown note afterward with the edited text-card bytes, exposes the edited text and referenced block content, and checks the edited Canvas and note after first-open and reopened-vault sessions. The codec's rich unknown-field fixture remains covered by Rust tests and is not opened by Obsidian. This does not certify every Canvas workflow or cross-platform behavior beyond the recorded runner.",
     "The C07 reference probe opens synthetic Bases files with explicit ASC and DESC, omitted direction, and an unsupported direction. For ASC and DESC it captures every rendered group and file row from all Bases table roots on first open and reopen, including the null-value group containing the .base files, without judging observed ordering against preset expectations. For the tested omitted-direction native-YAML mapping, it captures the settled exact-file parse rejection (`groupBy` must be a object) and records no group or row order; it does not infer a default. The unsupported direction remains a capture-only observation. Before each shutdown, the probe explicitly restores ASC. It retains the original source hash baseline and reports Obsidian's exact 62-byte Invalid Direction.base rewrite if it occurs at any post-open source-hash checkpoint; the generated file is reseeded between sessions so the reopened view is captured from the original fixture, with that harness action reported. This reference-app mutation is not evidence that Rust preserves the source. Interpretation and Rust fixture reconciliation belong to the follow-up parity milestone.",
-    "The separate C07.3 reference probe uses a generated synthetic vault and captures JSON-compatible and native-YAML .base scenarios for groupOrder precedence, listed and unlisted groups, explicit empty groups, empty lists, duplicates, null versus missing values, typed scalar/array/object values and rendered-label collisions, groupOrder without groupBy, malformed shapes, JSON 1e999 and YAML !!binary boundary candidates, YAML tag rejection, and a dependent-formula Kanban view. It records whether candidate rejection occurs on a non-Bases error surface or within a loaded Bases view. Unless a candidate visibly demonstrates an unsupported entry after Bases loads, that behavior remains unprobed and Rust C07.3 parity stays blocked. For each scenario it captures the exact active .base, ordered group-heading array and every member path/order, visible errors/notices, stable state samples, and screenshots on first open and reopen. It strictly checks all .base and note source hashes at every checkpoint. An incomplete or ambiguous UI extraction fails closed. These observations characterize Obsidian only and do not establish Rust parity.",
+    "The separate C07.3 reference probe uses a generated synthetic vault and captures JSON-compatible and native-YAML .base scenarios for groupOrder precedence, listed and unlisted groups, explicit empty groups, empty lists, duplicates, null versus missing values, typed scalar/array/object values and rendered-label collisions, groupOrder without groupBy, malformed shapes, JSON 1e999 and YAML !!binary boundary candidates, YAML tag rejection, and a dependent-formula Kanban view. Each scenario runs in its own copy of the complete synthetic vault and its own Obsidian profile so every view has the same file membership and rewrites cannot contaminate other scenarios. It records whether candidate rejection occurs on a non-Bases error surface or within a loaded Bases view. Unless a candidate visibly demonstrates app-level rejection after Bases loads, that behavior remains unprobed and Rust C07.3 parity stays blocked. For each scenario it captures the exact active .base, ordered group-heading array and every member path/order, visible errors/notices, stable state samples, and screenshots on first open and reopen. At every checkpoint it records source path sets, byte counts, hashes, and exact raw artifacts for changed/new source files. After first-open shutdown it restores the recorded seeds, reports that harness reseed, and begins the same scenario's reopen from identical bytes. Reference-app rewrites remain reference observations; they are never Rust source-preservation evidence. An incomplete or ambiguous UI extraction fails closed. These observations characterize Obsidian only and do not establish Rust parity.",
     "This run does not certify all product C01 flows or general plugin/theme compatibility.",
   ],
 };
@@ -319,29 +442,30 @@ class DevToolsConnection {
     this.socket.send(JSON.stringify({id, method, params}));
   }
 
-  async evaluateJson<T>(expression: string): Promise<T> {
+  async evaluateJson<T>(expression: string, label = "renderer expression"): Promise<T> {
     const response = await this.request("Runtime.evaluate", {
       expression: `JSON.stringify(${expression})`,
       returnByValue: true,
       awaitPromise: true,
     });
-    const value = (response.result?.result as {value?: unknown} | undefined)?.value;
-    if (typeof value !== "string") {
-      const exception = response.result?.exceptionDetails as {text?: string} | undefined;
-      throw new Error(`Obsidian renderer evaluation returned no JSON value: ${exception?.text ?? "unknown error"}`);
+    const remoteObject = response.result?.result as CdpRemoteObject | undefined;
+    const value = remoteObject?.value;
+    if (response.result?.exceptionDetails || typeof value !== "string") {
+      throw new Error(`Obsidian renderer evaluation returned no JSON value (${label}): ${JSON.stringify(runtimeEvaluationDiagnostics(response))}`);
     }
     return JSON.parse(value) as T;
   }
 
-  async evaluate(expression: string): Promise<unknown> {
+  async evaluate(expression: string, label = "renderer expression"): Promise<unknown> {
     const response = await this.request("Runtime.evaluate", {
       expression,
       returnByValue: true,
       awaitPromise: true,
     });
-    const exception = response.result?.exceptionDetails as {text?: string} | undefined;
-    if (exception) throw new Error(`Obsidian renderer evaluation failed: ${exception.text ?? "unknown error"}`);
-    return (response.result?.result as {value?: unknown} | undefined)?.value;
+    if (response.result?.exceptionDetails) {
+      throw new Error(`Obsidian renderer evaluation failed (${label}): ${JSON.stringify(runtimeEvaluationDiagnostics(response))}`);
+    }
+    return (response.result?.result as CdpRemoteObject | undefined)?.value;
   }
 
   close(): void {
@@ -353,6 +477,47 @@ function requiredEnv(name: string): string {
   const value = process.env[name];
   if (!value) throw new Error(`Required GitHub Actions environment variable ${name} is missing`);
   return value;
+}
+
+function resolveContainedPath(root: string, relativePath: string): string {
+  if (!relativePath || relativePath.includes("\\") || relativePath.split("/").some((part) => (
+    !part || part === "." || part === ".." || part.includes(":") || part.trimEnd() !== part || part.endsWith(".")
+  ))) {
+    throw new Error(`Unsafe relative path: ${relativePath}`);
+  }
+  const resolvedRoot = resolve(root);
+  const destination = resolve(resolvedRoot, relativePath);
+  const pathFromRoot = relative(resolvedRoot, destination);
+  if (!pathFromRoot || pathFromRoot === ".." || pathFromRoot.startsWith(`..${sep}`) || isAbsolute(pathFromRoot)) {
+    throw new Error(`Path escapes its destination root: ${relativePath}`);
+  }
+  return destination;
+}
+
+async function assertNoSymlinkPathComponents(root: string, relativePath: string): Promise<string> {
+  const destination = resolveContainedPath(root, relativePath);
+  const resolvedRoot = resolve(root);
+  const rootMetadata = await lstat(resolvedRoot);
+  if (rootMetadata.isSymbolicLink() || !rootMetadata.isDirectory()) {
+    throw new Error(`Destination root is not a real directory: ${resolvedRoot}`);
+  }
+  const components = relative(resolvedRoot, destination).split(sep);
+  let current = resolvedRoot;
+  for (let index = 0; index < components.length; index += 1) {
+    current = join(current, components[index]);
+    let metadata;
+    try {
+      metadata = await lstat(current);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") break;
+      throw error;
+    }
+    if (metadata.isSymbolicLink()) throw new Error(`Destination path contains a symlink: ${current}`);
+    if (index < components.length - 1 && !metadata.isDirectory()) {
+      throw new Error(`Destination path ancestor is not a directory: ${current}`);
+    }
+  }
+  return destination;
 }
 
 function delay(milliseconds: number): Promise<void> {
@@ -1744,7 +1909,7 @@ async function createCanvasReferenceFixture(): Promise<{bytes: number; sha256: s
   await writeFile(join(reportDirectory, "canvas-reference-seed.canvas"), canvasBytes);
   const canvasReport = report.canvas_reference_reopen as Record<string, unknown>;
   canvasReport.vault_name = canvasVaultName;
-  canvasReport.vault_path = "$RUNNER_TEMP/openobsidian-c01-roundtrip/C06 Canvas Reference Fixture";
+  canvasReport.vault_path = canvasVaultRoot;
   canvasReport.fixture_profile = "Reference-compatible known-field Canvas document; the Rust codec's unknown-field fixture remains in fixtures/c06-canvas.json and is not opened by Obsidian.";
   canvasReport.path = canvasPath;
   canvasReport.marker = canvasMarker;
@@ -1803,7 +1968,7 @@ async function createBasesDirectionFixture(): Promise<Record<string, {bytes: num
     }]));
   const basesReport = report.bases_group_direction_reference as Record<string, unknown>;
   basesReport.vault_name = basesVaultName;
-  basesReport.vault_path = "$RUNNER_TEMP/openobsidian-c01-roundtrip/C07 Bases Direction Reference Fixture";
+  basesReport.vault_path = basesVaultRoot;
   basesReport.source_hashes_before_open = sourceHashes;
   basesReport.note_order_by_path = [
     {path: "Notes/01-zulu-first.md", group: "Zulu"},
@@ -1825,7 +1990,10 @@ async function createGroupOrderReferenceFixture(): Promise<{
   fixture: GroupOrderFixture;
   sources: Record<string, Buffer>;
   sourceHashes: Record<string, GroupOrderSourceHash>;
+  scenarioFixtures: Record<string, GroupOrderScenarioFixture>;
 }> {
+  await rm(groupOrderVaultRoot, {recursive: true, force: true});
+  await mkdir(groupOrderVaultRoot, {recursive: true});
   const fixtureBytes = await readFile(groupOrderScenarioFixturePath);
   const fixture = JSON.parse(fixtureBytes.toString("utf8")) as GroupOrderFixture;
   if (fixture.schema_version !== 1 || fixture.id !== "fixture:c07-group-order-reference") {
@@ -1833,6 +2001,13 @@ async function createGroupOrderReferenceFixture(): Promise<{
   }
   if (!Array.isArray(fixture.notes) || fixture.notes.length === 0 || !Array.isArray(fixture.scenarios) || fixture.scenarios.length === 0) {
     throw new Error("C07.3 groupOrder fixture must contain synthetic notes and scenarios");
+  }
+  if (fixture.scenarios.length !== 14) {
+    throw new Error(`C07.3 groupOrder fixture must contain exactly 14 scenarios; found ${fixture.scenarios.length}`);
+  }
+  const scenarioIds = fixture.scenarios.map((scenario) => scenario.id);
+  if (scenarioIds.some((id) => typeof id !== "string" || !/^[a-z0-9][a-z0-9-]*$/.test(id)) || new Set(scenarioIds).size !== scenarioIds.length) {
+    throw new Error("C07.3 groupOrder scenario IDs must be path-safe, non-empty, and unique");
   }
   const requiredCoverage = [
     "direction-precedence", "listed-unlisted", "empty-group", "duplicate-declaration", "empty-order-list",
@@ -1847,16 +2022,18 @@ async function createGroupOrderReferenceFixture(): Promise<{
 
   const sourceFiles: Record<string, Buffer> = {};
   for (const note of fixture.notes) {
-    if (!note.path.startsWith("Notes/") || !note.path.endsWith(".md") || note.path.split("/").includes("..")) {
+    if (!note.path.startsWith("Notes/") || !note.path.endsWith(".md")) {
       throw new Error(`Unsafe C07.3 groupOrder note path: ${note.path}`);
     }
+    resolveContainedPath(groupOrderVaultRoot, note.path);
     if (sourceFiles[note.path]) throw new Error(`Duplicate C07.3 groupOrder fixture path: ${note.path}`);
     sourceFiles[note.path] = Buffer.from(note.source, "utf8");
   }
   for (const scenario of fixture.scenarios) {
-    if (!scenario.base_path.startsWith("Bases/") || !scenario.base_path.endsWith(".base") || scenario.base_path.split("/").includes("..")) {
+    if (!scenario.base_path.startsWith("Bases/") || !scenario.base_path.endsWith(".base")) {
       throw new Error(`Unsafe C07.3 groupOrder base path: ${scenario.base_path}`);
     }
+    resolveContainedPath(groupOrderVaultRoot, scenario.base_path);
     if (sourceFiles[scenario.base_path]) throw new Error(`Duplicate C07.3 groupOrder fixture path: ${scenario.base_path}`);
     if (scenario.source_format === "native-yaml" && typeof scenario.source !== "string") {
       throw new Error(`C07.3 ${scenario.id} source does not match its ${scenario.source_format} format`);
@@ -1904,30 +2081,53 @@ async function createGroupOrderReferenceFixture(): Promise<{
     sourceFiles[scenario.base_path] = Buffer.from(source, "utf8");
   }
 
-  await mkdir(join(groupOrderVaultRoot, "Notes"), {recursive: true});
-  await mkdir(join(groupOrderVaultRoot, "Bases"), {recursive: true});
-  await mkdir(join(groupOrderVaultRoot, ".obsidian", "plugins"), {recursive: true});
-  await mkdir(join(groupOrderVaultRoot, ".obsidian", "themes"), {recursive: true});
-  const files: Record<string, Buffer> = {
-    ...sourceFiles,
+  const configFiles: Record<string, Buffer> = {
     ".obsidian/app.json": await readFile(join(vaultRoot, ".obsidian", "app.json")),
     ".obsidian/appearance.json": await readFile(join(vaultRoot, ".obsidian", "appearance.json")),
     ".obsidian/community-plugins.json": await readFile(join(vaultRoot, ".obsidian", "community-plugins.json")),
     ".obsidian/core-plugins.json": await readFile(join(vaultRoot, ".obsidian", "core-plugins.json")),
   };
-  for (const [path, bytes] of Object.entries(files)) {
-    const destination = join(groupOrderVaultRoot, path);
-    await mkdir(dirname(destination), {recursive: true});
-    await writeFile(destination, bytes);
-  }
-
   const sourceHashes = Object.fromEntries(Object.entries(sourceFiles).map(([path, bytes]) => [path, {
     bytes: bytes.length,
     sha256: createHash("sha256").update(bytes).digest("hex"),
   }]));
+  const scenarioFixtures: Record<string, GroupOrderScenarioFixture> = {};
+  for (const scenario of fixture.scenarios) {
+    const scenarioSourceFiles = {...sourceFiles};
+    const scenarioSourceHashes = Object.fromEntries(Object.entries(scenarioSourceFiles).map(([path, bytes]) => [path, {
+      bytes: bytes.length,
+      sha256: createHash("sha256").update(bytes).digest("hex"),
+    }]));
+    const scenarioVaultRoot = resolveContainedPath(groupOrderVaultRoot, scenario.id);
+    const files = {...scenarioSourceFiles, ...configFiles};
+    for (const [path, bytes] of Object.entries(files)) {
+      const destination = resolveContainedPath(scenarioVaultRoot, path);
+      await mkdir(dirname(destination), {recursive: true});
+      await writeFile(await assertNoSymlinkPathComponents(scenarioVaultRoot, path), bytes);
+    }
+    const fixturePaths = Object.keys(scenarioSourceHashes).sort((left, right) => left.localeCompare(right, "en"));
+    const seedArtifacts: Record<string, string> = {};
+    for (const path of Object.keys(scenarioSourceFiles)) {
+      const pathToken = Buffer.from(path, "utf8").toString("hex");
+      seedArtifacts[path] = `c07-group-order-seeds/${scenario.id}/${pathToken}.seed`;
+    }
+    scenarioFixtures[scenario.id] = {
+      vault_root: scenarioVaultRoot,
+      source_files: scenarioSourceFiles,
+      source_hashes: scenarioSourceHashes,
+      fixture_paths: fixturePaths,
+      seed_artifacts: seedArtifacts,
+    };
+    for (const [path, bytes] of Object.entries(scenarioSourceFiles)) {
+      const artifactPath = resolveContainedPath(reportDirectory, seedArtifacts[path]);
+      await mkdir(dirname(artifactPath), {recursive: true});
+      await writeFile(artifactPath, bytes);
+    }
+  }
   const basesReport = report.bases_group_order_reference as Record<string, unknown>;
-  basesReport.vault_name = groupOrderVaultName;
-  basesReport.vault_path = "$RUNNER_TEMP/openobsidian-c01-roundtrip/C07 Group Order Reference Fixture";
+  basesReport.scenario_vault_container_name = groupOrderVaultName;
+  basesReport.work_directory = workDirectory;
+  basesReport.scenario_vault_container_path = groupOrderVaultRoot;
   basesReport.fixture_manifest_sha256 = createHash("sha256").update(fixtureBytes).digest("hex");
   basesReport.scenario_count = fixture.scenarios.length;
   basesReport.scenario_inputs = fixture.scenarios.map((scenario) => ({
@@ -1938,61 +2138,285 @@ async function createGroupOrderReferenceFixture(): Promise<{
     group_by_property: scenario.group_by_property ?? null,
     coverage: scenario.coverage,
     source_sha256: sourceHashes[scenario.base_path]?.sha256 ?? null,
+    isolated_vault_path: scenarioFixtures[scenario.id]?.vault_root ?? null,
+    source_hashes: scenarioFixtures[scenario.id]?.source_hashes ?? {},
+    seed_artifacts: scenarioFixtures[scenario.id]?.seed_artifacts ?? {},
   }));
-  basesReport.source_hashes_before_open = sourceHashes;
+  basesReport.source_hashes_before_open = Object.fromEntries(Object.entries(scenarioFixtures).map(([id, scenarioFixture]) => [id, scenarioFixture.source_hashes]));
   basesReport.note_order_by_path = fixture.notes.map((note) => ({path: note.path, content_sha256: sourceHashes[note.path]?.sha256 ?? null}));
-  basesReport.fixture_paths_to_observe = Object.keys(sourceHashes).sort((left, right) => left.localeCompare(right, "en"));
+  basesReport.fixture_paths_to_observe = Object.fromEntries(Object.entries(scenarioFixtures).map(([id, scenarioFixture]) => [id, scenarioFixture.fixture_paths]));
+  basesReport.scenario_isolation = "Each groupOrder scenario has its own copy of the complete synthetic vault, including all 14 .base inputs and shared Markdown notes, so every view has identical file membership while app rewrites cannot contaminate another scenario. Each vault uses a unique Obsidian profile and is restarted for its reopen capture.";
   basesReport.reference_app_asset_sha256 = obsidianSha256;
   basesReport.coverage_limitations = [
     "The JSON 1e999 and YAML !!binary cases are syntax-valid boundary/tag value candidates. Their outcomes are observations; neither is asserted to be unsupported before the pinned app is captured.",
     "The YAML custom-tag case records parser/tag rejection for the supplied source. It is a separate syntax probe and is not counted as an app-level unsupported groupOrder entry.",
     "Unless a candidate visibly demonstrates app-level rejection after the Bases view loads, unsupported app-level groupOrder entry behavior remains unprobed and Rust C07.3 parity remains blocked on that characterization.",
+    "Visible membership is recorded as pinned-app behavior; the probe requires at least one mapped fixture path from a loaded view but does not claim an independent expected-member oracle for notes omitted entirely from the UI.",
   ];
-  for (const [path, bytes] of Object.entries(sourceFiles)) {
-    const artifactPath = join(reportDirectory, "c07-group-order-seeds", `${path.replaceAll("/", "--")}.seed`);
-    await mkdir(dirname(artifactPath), {recursive: true});
-    await writeFile(artifactPath, bytes);
-  }
   await writeFile(join(reportDirectory, "c07-group-order-fixture.json"), fixtureBytes);
-  return {fixture, sources: sourceFiles, sourceHashes};
+  return {fixture, sources: sourceFiles, sourceHashes, scenarioFixtures};
 }
 
-async function assertGroupOrderSourceHashes(
+async function recordGroupOrderSourceCheckpoint(
   expected: Record<string, GroupOrderSourceHash>,
   stage: string,
+  scenarioId: string,
+  scenarioVaultRoot: string,
 ): Promise<Record<string, GroupOrderSourceHash>> {
-  const snapshot = await snapshotTree(groupOrderVaultRoot);
-  const actualSourcePaths = snapshot
-    .filter((entry) => entry.kind === "file" && /\.(?:base|md)$/i.test(entry.path))
-    .map((entry) => entry.path)
-    .sort((left, right) => left.localeCompare(right, "en"));
-  const expectedSourcePaths = Object.keys(expected).sort((left, right) => left.localeCompare(right, "en"));
-  const observed: Record<string, GroupOrderSourceHash> = {};
-  for (const path of actualSourcePaths) {
-    const entry = snapshot.find((candidate) => candidate.kind === "file" && candidate.path === path);
-    if (entry?.bytes !== undefined && entry.sha256) observed[path] = {bytes: entry.bytes, sha256: entry.sha256};
+  const errors: string[] = [];
+  let snapshot: SnapshotEntry[] = [];
+  try {
+    const scenarioRootRelativePath = relative(workDirectory, scenarioVaultRoot).split(sep).join("/");
+    const guardedRoot = await assertNoSymlinkPathComponents(workDirectory, scenarioRootRelativePath);
+    const rootMetadata = await lstat(guardedRoot);
+    if (!rootMetadata.isDirectory()) throw new Error(`C07.3 scenario vault root is not a directory: ${guardedRoot}`);
+    snapshot = await snapshotTree(scenarioVaultRoot);
+  } catch (error) {
+    errors.push(error instanceof Error ? error.message : String(error));
   }
-  const mismatches = [
-    ...expectedSourcePaths.filter((path) => !observed[path]).map((path) => ({path, kind: "missing", expected: expected[path]})),
-    ...actualSourcePaths.filter((path) => !expected[path]).map((path) => ({path, kind: "unexpected", observed: observed[path]})),
-    ...expectedSourcePaths.filter((path) => observed[path]
-      && (observed[path].bytes !== expected[path].bytes || observed[path].sha256 !== expected[path].sha256))
-      .map((path) => ({path, kind: "changed", expected: expected[path], observed: observed[path]})),
-  ];
+  const expectedSourcePaths = Object.keys(expected).sort((left, right) => left.localeCompare(right, "en"));
+  const expectedSourcePathSet = new Set(expectedSourcePaths);
+  const sourceEntries = snapshot.filter((entry) => /\.(?:base|md)$/i.test(entry.path)
+    || (entry.kind !== "directory" && expectedSourcePaths.some((path) => path.startsWith(`${entry.path}/`))));
+  const actualSourceEntries = new Map(sourceEntries.map((entry) => [entry.path, entry]));
+  const observed: Record<string, GroupOrderSourceHash> = {};
+  for (const entry of sourceEntries) {
+    if (entry.bytes !== undefined && entry.sha256) observed[entry.path] = {bytes: entry.bytes, sha256: entry.sha256};
+  }
+  const changes: Array<Record<string, unknown>> = [];
+  const artifactStage = stage.replaceAll(/[^a-z0-9-]/gi, "-");
+  const describeObservedEntry = async (entry: SnapshotEntry): Promise<Record<string, unknown>> => {
+    const description: Record<string, unknown> = {kind: entry.kind};
+    if (entry.kind === "file" && entry.bytes !== undefined && entry.sha256) {
+      description.bytes = entry.bytes;
+      description.sha256 = entry.sha256;
+      const bytes = await readFile(await assertNoSymlinkPathComponents(scenarioVaultRoot, entry.path));
+      const artifactName = `c07-group-order-source-${scenarioId}-${artifactStage}-${entry.sha256}.bin`;
+      await writeFile(resolveContainedPath(reportDirectory, artifactName), bytes);
+      const verified = bytes.length === entry.bytes && createHash("sha256").update(bytes).digest("hex") === entry.sha256;
+      description.exact_observed_bytes_artifact = artifactName;
+      description.exact_observed_bytes_verified = verified;
+      if (!verified) throw new Error(`Source bytes changed while recording ${entry.path} at ${stage}`);
+      return description;
+    }
+    if (entry.kind === "symlink") {
+      description.target = entry.target ?? null;
+      description.target_sha256 = entry.target_sha256 ?? null;
+      if (entry.target_bytes_base64 === undefined || !entry.target_sha256) throw new Error(`Symlink target evidence is incomplete for ${entry.path} at ${stage}`);
+      const targetBytes = Buffer.from(entry.target_bytes_base64, "base64");
+      const artifactName = `c07-group-order-link-${scenarioId}-${artifactStage}-${entry.target_sha256}.bin`;
+      await writeFile(resolveContainedPath(reportDirectory, artifactName), targetBytes);
+      const verified = createHash("sha256").update(targetBytes).digest("hex") === entry.target_sha256;
+      description.exact_target_bytes_artifact = artifactName;
+      description.exact_target_bytes_verified = verified;
+      if (!verified) throw new Error(`Symlink target bytes changed while recording ${entry.path} at ${stage}`);
+      description.exact_observed_state_recorded = true;
+      return description;
+    }
+    if (entry.kind === "directory") {
+      const descendants = snapshot.filter((candidate) => candidate.path.startsWith(`${entry.path}/`));
+      const directoryEntries: Array<Record<string, unknown>> = [];
+      let exactSubtreeRecorded = true;
+      for (const descendant of descendants) {
+        const nested: Record<string, unknown> = {path: descendant.path, kind: descendant.kind};
+        const pathToken = createHash("sha256").update(descendant.path, "utf8").digest("hex");
+        if (descendant.kind === "file" && descendant.bytes !== undefined && descendant.sha256) {
+          const bytes = await readFile(await assertNoSymlinkPathComponents(scenarioVaultRoot, descendant.path));
+          const artifactName = `c07-group-order-subtree-file-${scenarioId}-${artifactStage}-${pathToken}-${descendant.sha256}.bin`;
+          await writeFile(resolveContainedPath(reportDirectory, artifactName), bytes);
+          const verified = bytes.length === descendant.bytes && createHash("sha256").update(bytes).digest("hex") === descendant.sha256;
+          nested.bytes = descendant.bytes;
+          nested.sha256 = descendant.sha256;
+          nested.exact_observed_bytes_artifact = artifactName;
+          nested.exact_observed_bytes_verified = verified;
+          exactSubtreeRecorded = exactSubtreeRecorded && verified;
+        } else if (descendant.kind === "file") {
+          exactSubtreeRecorded = false;
+        } else if (descendant.kind === "symlink" && descendant.target_bytes_base64 !== undefined && descendant.target_sha256) {
+          const targetBytes = Buffer.from(descendant.target_bytes_base64, "base64");
+          const artifactName = `c07-group-order-subtree-link-${scenarioId}-${artifactStage}-${pathToken}-${descendant.target_sha256}.bin`;
+          await writeFile(resolveContainedPath(reportDirectory, artifactName), targetBytes);
+          const verified = createHash("sha256").update(targetBytes).digest("hex") === descendant.target_sha256;
+          nested.target = descendant.target ?? null;
+          nested.target_sha256 = descendant.target_sha256;
+          nested.exact_target_bytes_artifact = artifactName;
+          nested.exact_target_bytes_verified = verified;
+          exactSubtreeRecorded = exactSubtreeRecorded && verified;
+        } else if (descendant.kind === "symlink" || descendant.kind === "other") {
+          exactSubtreeRecorded = false;
+        }
+        directoryEntries.push(nested);
+      }
+      const manifest = Buffer.from(`${JSON.stringify({root: entry.path, kind: "directory", entries: directoryEntries}, null, 2)}\n`, "utf8");
+      const manifestSha256 = createHash("sha256").update(manifest).digest("hex");
+      const manifestArtifact = `c07-group-order-subtree-${scenarioId}-${artifactStage}-${manifestSha256}.json`;
+      await writeFile(resolveContainedPath(reportDirectory, manifestArtifact), manifest);
+      description.directory_entries = directoryEntries;
+      description.directory_manifest_artifact = manifestArtifact;
+      description.directory_manifest_sha256 = manifestSha256;
+      description.exact_observed_state_recorded = exactSubtreeRecorded;
+      return description;
+    }
+    description.exact_observed_state_recorded = false;
+    return description;
+  };
+  const observedStateRecorded = (description: Record<string, unknown>): boolean => description.kind === "file"
+    ? description.exact_observed_bytes_verified === true
+    : description.kind === "symlink"
+      ? description.exact_target_bytes_verified === true
+      : description.exact_observed_state_recorded === true;
+  for (const path of expectedSourcePaths) {
+    const entry = actualSourceEntries.get(path);
+    if (!entry) {
+      changes.push({path, status: "missing", expected: expected[path], observed: null});
+      continue;
+    }
+    if (entry.kind === "file" && entry.bytes === expected[path].bytes && entry.sha256 === expected[path].sha256) continue;
+    const change: Record<string, unknown> = {
+      path,
+      status: entry.kind === "file" ? "changed" : "type-changed",
+      expected: expected[path],
+      observed: null,
+    };
+    try {
+      const description = await describeObservedEntry(entry);
+      change.observed = description;
+      change.exact_observed_state_recorded = observedStateRecorded(description);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      change.exact_observed_state_error = message;
+      errors.push(`Could not preserve exact observed state for ${path} at ${stage}: ${message}`);
+    }
+    changes.push(change);
+  }
+  for (const entry of sourceEntries.filter((candidate) => !expectedSourcePathSet.has(candidate.path))) {
+    const change: Record<string, unknown> = {path: entry.path, status: "new", expected: null, observed: null};
+    try {
+      const description = await describeObservedEntry(entry);
+      change.observed = description;
+      change.exact_observed_state_recorded = observedStateRecorded(description);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      change.exact_observed_state_error = message;
+      errors.push(`Could not preserve exact observed state for new source ${entry.path} at ${stage}: ${message}`);
+    }
+    changes.push(change);
+  }
   const basesReport = report.bases_group_order_reference as Record<string, unknown>;
   const checkpoints = (basesReport.source_hash_checkpoints ?? []) as Array<Record<string, unknown>>;
-  checkpoints.push({stage, expected, observed, unchanged: mismatches.length === 0});
+  const unchanged = changes.length === 0 && errors.length === 0 && expectedSourcePaths.every((path) => Boolean(observed[path]));
+  checkpoints.push({scenario_id: scenarioId, stage, expected, observed, changes, errors, unchanged});
   basesReport.source_hash_checkpoints = checkpoints;
-  if (mismatches.length > 0) {
-    const artifact = `c07-group-order-source-mismatch-${stage.replaceAll(/[^a-z0-9-]/gi, "-")}.json`;
-    await writeFile(join(reportDirectory, artifact), `${JSON.stringify({stage, mismatches, expected, observed}, null, 2)}\n`);
+  if (!unchanged) {
     basesReport.source_preservation_passed = false;
-    basesReport.source_preservation_failure = {stage, mismatches};
-    await saveReport();
-    throw new Error(`C07.3 source hashes changed at ${stage}: ${JSON.stringify(mismatches).slice(0, 6_000)}`);
+    basesReport.reference_source_mutation_observed = basesReport.reference_source_mutation_observed === true || changes.length > 0;
+    const failures = (basesReport.source_preservation_failures ?? []) as Array<Record<string, unknown>>;
+    failures.push({scenario_id: scenarioId, stage, changes, errors});
+    basesReport.source_preservation_failures = failures;
+  } else if (basesReport.source_preservation_passed === undefined) {
+    basesReport.source_preservation_passed = true;
   }
-  basesReport.source_preservation_passed = true;
+  await saveReport();
   return observed;
+}
+
+async function reseedGroupOrderScenarioSources(
+  scenarioId: string,
+  scenarioVaultRoot: string,
+  sourceFiles: Record<string, Buffer>,
+  before: Record<string, GroupOrderSourceHash>,
+): Promise<void> {
+  const scenarioRootRelativePath = relative(workDirectory, scenarioVaultRoot).split(sep).join("/");
+  const guardedRoot = await assertNoSymlinkPathComponents(workDirectory, scenarioRootRelativePath);
+  const rootMetadata = await lstat(guardedRoot);
+  if (!rootMetadata.isDirectory()) throw new Error(`C07.3 scenario vault root is not a directory: ${guardedRoot}`);
+  const snapshot = await snapshotTree(scenarioVaultRoot);
+  const expectedPaths = new Set(Object.keys(sourceFiles));
+  const removedSourceEntries: Array<Record<string, unknown>> = [];
+  const entriesByPath = new Map(snapshot.map((entry) => [entry.path, entry]));
+  const removedPaths = new Set<string>();
+  const removalOrder = snapshot.slice().sort((left, right) => right.path.split("/").length - left.path.split("/").length
+    || right.path.localeCompare(left.path, "en"));
+  for (const entry of removalOrder) {
+    const isSourcePath = /\.(?:base|md)$/i.test(entry.path);
+    const obstructsExpectedSource = entry.kind !== "directory"
+      && [...expectedPaths].some((path) => path.startsWith(`${entry.path}/`));
+    const expectedPathHasWrongKind = expectedPaths.has(entry.path) && entry.kind !== "file";
+    const removeEntry = (entry.kind === "symlink" && (isSourcePath || obstructsExpectedSource || expectedPathHasWrongKind))
+      || (isSourcePath && (!expectedPaths.has(entry.path) || expectedPathHasWrongKind))
+      || expectedPathHasWrongKind
+      || obstructsExpectedSource;
+    if (!removeEntry) continue;
+    const record: Record<string, unknown> = {path: entry.path, kind: entry.kind};
+    if (isSourcePath || obstructsExpectedSource || expectedPathHasWrongKind) {
+      if (entry.kind === "file") {
+        const bytes = await readFile(await assertNoSymlinkPathComponents(scenarioVaultRoot, entry.path));
+        const sha256 = createHash("sha256").update(bytes).digest("hex");
+        const artifact = `c07-group-order-source-${scenarioId}-before-reseed-${sha256}.bin`;
+        await writeFile(resolveContainedPath(reportDirectory, artifact), bytes);
+        record.bytes = bytes.length;
+        record.sha256 = sha256;
+        record.exact_observed_bytes_artifact = artifact;
+      } else if (entry.kind === "symlink") {
+        record.target = entry.target ?? null;
+        record.target_sha256 = entry.target_sha256 ?? null;
+        if (entry.target_bytes_base64 === undefined || !entry.target_sha256) {
+          throw new Error(`C07.3 reseed cannot preserve symlink target evidence for ${entry.path}`);
+        }
+        const targetBytes = Buffer.from(entry.target_bytes_base64, "base64");
+        const targetArtifact = `c07-group-order-link-${scenarioId}-before-reseed-${entry.target_sha256}.bin`;
+        await writeFile(resolveContainedPath(reportDirectory, targetArtifact), targetBytes);
+        record.exact_target_bytes_artifact = targetArtifact;
+        record.exact_target_bytes_verified = createHash("sha256").update(targetBytes).digest("hex") === entry.target_sha256;
+        if (record.exact_target_bytes_verified !== true) {
+          throw new Error(`C07.3 reseed cannot verify symlink target evidence for ${entry.path}`);
+        }
+      }
+      removedSourceEntries.push(record);
+    }
+    const entryPath = resolveContainedPath(scenarioVaultRoot, entry.path);
+    if (entry.kind === "symlink") await unlink(entryPath);
+    else await rm(entryPath, {recursive: true, force: true});
+    removedPaths.add(entry.path);
+  }
+  for (const [path, bytes] of Object.entries(sourceFiles)) {
+    const destination = resolveContainedPath(scenarioVaultRoot, path);
+    const parentParts = path.split("/").slice(0, -1);
+    for (let index = 0; index < parentParts.length; index += 1) {
+      const ancestor = parentParts.slice(0, index + 1).join("/");
+      const ancestorEntry = entriesByPath.get(ancestor);
+      if (ancestorEntry && ancestorEntry.kind !== "directory" && !removedPaths.has(ancestor)) {
+        throw new Error(`C07.3 reseed left a non-directory source ancestor in place: ${ancestor}`);
+      }
+    }
+    await mkdir(dirname(destination), {recursive: true});
+    await writeFile(await assertNoSymlinkPathComponents(scenarioVaultRoot, path), bytes);
+  }
+  const expectedAfter = Object.fromEntries(Object.entries(sourceFiles).map(([path, bytes]) => [path, {
+    bytes: bytes.length,
+    sha256: createHash("sha256").update(bytes).digest("hex"),
+  }]));
+  const after: Record<string, GroupOrderSourceHash> = {};
+  for (const path of Object.keys(sourceFiles)) {
+    const bytes = await readFile(await assertNoSymlinkPathComponents(scenarioVaultRoot, path));
+    after[path] = {bytes: bytes.length, sha256: createHash("sha256").update(bytes).digest("hex")};
+  }
+  const exactSeedRestored = isDeepStrictEqual(expectedAfter, after);
+  const basesReport = report.bases_group_order_reference as Record<string, unknown>;
+  const events = (basesReport.source_reseed_events ?? []) as Array<Record<string, unknown>>;
+  events.push({
+    scenario_id: scenarioId,
+    after_stage: "first-open-after-shutdown",
+    before,
+    after,
+    expected_after: expectedAfter,
+    removed_source_entries: removedSourceEntries,
+    restored_source_files: Object.keys(sourceFiles).sort((left, right) => left.localeCompare(right, "en")),
+    exact_seed_restored: exactSeedRestored,
+  });
+  basesReport.source_reseed_events = events;
+  await saveReport();
+  if (!exactSeedRestored) throw new Error(`C07.3 harness reseed failed to restore exact source bytes for ${scenarioId}`);
 }
 
 async function readGroupOrderVisibleState(
@@ -2004,7 +2428,6 @@ async function readGroupOrderVisibleState(
     const fixturePaths = ${JSON.stringify(fixturePaths)};
     const requestedPath = ${JSON.stringify(scenario.base_path)};
     const layout = ${JSON.stringify(scenario.layout)};
-    const allowEmptyGroupedResult = ${JSON.stringify(scenario.coverage.includes("empty-order-list"))};
     const root = document.querySelector('.workspace-leaf.mod-active') ?? document.body;
     const view = window.app?.workspace?.activeLeaf?.view;
     const body = root?.innerText ?? '';
@@ -2015,43 +2438,83 @@ async function readGroupOrderVisibleState(
       return style.display !== 'none' && style.visibility !== 'hidden' && bounds.width > 0 && bounds.height > 0;
     };
     const textOf = (element) => normalize(element?.innerText || element?.textContent || '');
-    const pathByName = new Map(fixturePaths.flatMap((path) => {
-      const filename = path.split('/').at(-1) || path;
+    const addPathAlias = (aliases, alias, path) => {
+      const key = alias.toLowerCase();
+      if (!aliases.has(key)) aliases.set(key, path);
+      else if (aliases.get(key) !== path) aliases.set(key, null);
+    };
+    const exactPathByLower = new Map();
+    const pathByName = new Map();
+    for (const path of fixturePaths) {
+      const parts = path.split('/');
+      const filename = parts[parts.length - 1] || path;
       const stem = filename.replace(/\\.(?:md|base)$/i, '');
-      return [[filename.toLowerCase(), path], [stem.toLowerCase(), path]];
-    }));
+      addPathAlias(exactPathByLower, path, path);
+      addPathAlias(pathByName, filename, path);
+      addPathAlias(pathByName, stem, path);
+    }
     const pathFor = (candidate) => {
       if (!candidate) return null;
-      const normalized = String(candidate).trim().replaceAll('\\\\', '/').split('/').filter((part) => part && part !== '.').join('/');
-      const exact = fixturePaths.find((path) => path.toLowerCase() === normalized.toLowerCase());
-      if (exact) return exact;
-      const basename = normalized.split('/').at(-1).toLowerCase();
+      const candidateText = String(candidate).trim();
+      if (candidateText.startsWith('/') || candidateText.startsWith('\\\\')) return null;
+      const rawParts = candidateText.split('\\\\').join('/').split('/');
+      if (rawParts.some((part) => part === '..' || part.includes(':'))) return null;
+      const normalized = rawParts.filter((part) => part && part !== '.').join('/');
+      if (!normalized) return null;
+      const exactKey = normalized.toLowerCase();
+      if (exactPathByLower.has(exactKey)) return exactPathByLower.get(exactKey);
+      const parts = normalized.split('/');
+      if (parts.length !== 1) return null;
+      const basename = (parts[parts.length - 1] || '').toLowerCase();
       const stem = basename.replace(/\\.(?:md|base)$/i, '');
-      return pathByName.get(basename) ?? pathByName.get(stem) ?? null;
+      if (pathByName.has(basename)) return pathByName.get(basename);
+      return pathByName.get(stem) ?? null;
     };
     const linkSelector = 'a[data-href], [data-href], a[data-path], [data-path], a.internal-link, .internal-link';
     const rawLinks = root ? [...root.querySelectorAll(linkSelector)].filter(visible) : [];
-    const pathForLink = (element) => pathFor(element.getAttribute('data-href') || element.getAttribute('data-path') || textOf(element));
-    const pathLinks = rawLinks
-      .filter((element) => pathForLink(element))
-      .filter((element) => !rawLinks.some((nested) => nested !== element
-        && element.contains(nested)
-        && pathForLink(nested) === pathForLink(element)))
-      .map((element, index) => {
+    const rawCandidates = rawLinks.map((element) => {
+      const candidate = element.getAttribute('data-href') || element.getAttribute('data-path') || textOf(element);
+      return {element, candidate, path: pathFor(candidate)};
+    });
+    const candidateKey = (entry) => entry.path ?? entry.candidate.trim().toLowerCase();
+    const retainedCandidates = rawCandidates.filter((entry) => !rawCandidates.some((nested) => nested !== entry
+      && entry.element.contains(nested.element)
+      && candidateKey(nested) === candidateKey(entry)));
+    const linkScope = (element) => {
+      const owner = element.closest('.bases-tr, .bases-row, .bases-table-row, .bases-card, .bases-kanban-card, tr, [role="row"], li, [role="listitem"]');
+      const tableRoot = element.closest('.bases-table, [role="table"], table');
+      return tableRoot ? 'table' : layout === 'kanban' ? 'kanban' : owner ? 'explicit-row' : 'unscoped';
+    };
+    const pathLinks = retainedCandidates
+      .filter((entry) => entry.path)
+      .map(({element, path}, index) => {
         const bounds = element.getBoundingClientRect();
         const owner = element.closest('.bases-tr, .bases-row, .bases-table-row, .bases-card, .bases-kanban-card, tr, [role="row"], li, [role="listitem"]');
         const tableRoot = element.closest('.bases-table, [role="table"], table');
         const ownerClass = owner?.getAttribute('class') || '';
         return {
           element,
-          path: pathForLink(element),
+          path,
           text: textOf(element),
           class_name: element.getAttribute('class') || '',
-          source_scope: tableRoot || (layout === 'table' && owner) ? 'table' : layout === 'kanban' ? 'kanban' : owner ? 'explicit-row' : 'unscoped',
+          source_scope: tableRoot ? 'table' : layout === 'kanban' ? 'kanban' : owner ? 'explicit-row' : 'unscoped',
           row_class_name: ownerClass,
           top: bounds.top,
           left: bounds.left,
           index,
+        };
+      });
+    const unmappedVisiblePathCandidates = retainedCandidates
+      .filter((entry) => !entry.path)
+      .map(({element, candidate}) => {
+        const bounds = element.getBoundingClientRect();
+        return {
+          candidate,
+          text: textOf(element),
+          class_name: element.getAttribute('class') || '',
+          source_scope: linkScope(element),
+          top: bounds.top,
+          left: bounds.left,
         };
       });
     const classTokens = (element) => [...(element.classList || [])].map((token) => token.toLowerCase());
@@ -2097,6 +2560,27 @@ async function readGroupOrderVisibleState(
       member_paths: [],
       marker,
     }));
+    const visibleRowElements = root
+      ? [...root.querySelectorAll('.bases-tr, .bases-row, .bases-table-row, .bases-card, .bases-kanban-card, tr, [role="row"]')].filter(visible)
+      : [];
+    const unmappedVisibleRowCandidates = visibleRowElements
+      .filter((row) => {
+        const isHeader = row.matches('thead tr, .bases-table-header, [role="columnheader"]')
+          || Boolean(row.querySelector('th, [role="columnheader"]'));
+        const isGroupHeading = hasGroupMarker(row) || markerElements.some((marker) => row.contains(marker));
+        const hasPathCandidate = retainedCandidates.some((candidate) => row.contains(candidate.element));
+        return !isHeader && !isGroupHeading && !hasPathCandidate && Boolean(textOf(row));
+      })
+      .map((row) => {
+        const bounds = row.getBoundingClientRect();
+        return {
+          text: textOf(row).slice(0, 500),
+          class_name: row.getAttribute('class') || '',
+          tag: row.tagName.toLowerCase(),
+          top: bounds.top,
+          left: bounds.left,
+        };
+      });
     const ungroupedVisibleFilePaths = [];
     const unassignedVisibleFilePaths = [];
     if (tableRoots.length > 0 || (layout === 'table' && groupRecords.length > 0)) {
@@ -2170,20 +2654,18 @@ async function readGroupOrderVisibleState(
         return (left?.top ?? 0) - (right?.top ?? 0) || (left?.left ?? 0) - (right?.left ?? 0) || (left?.index ?? 0) - (right?.index ?? 0);
       });
     }
-    const visibleErrorTexts = root
-      ? [...new Set([...root.querySelectorAll('[role="alert"], .bases-error, [class*="error"]')]
-        .filter(visible).map(textOf).filter(Boolean))]
-      : [];
+    const visibleErrorTexts = [...new Set([...document.querySelectorAll('[role="alert"], .bases-error, [class*="error"]')]
+      .filter(visible).map(textOf).filter(Boolean))];
     const notices = [...new Set([...(document.querySelectorAll('.notice, .modal-container, [role="alert"]'))]
       .filter(visible).map(textOf).filter(Boolean))];
-    const explicitErrorSurface = visibleErrorTexts.some((text) => /parse|invalid|unsupported|must be|could not|failed to|malformed|yaml|json/i.test(text))
-      || notices.some((text) => /parse|invalid|unsupported|must be|could not|failed to|malformed|yaml|json/i.test(text))
+    const errorSpecificPattern = /invalid|unsupported|must be|could not|failed|failure|malformed|error|exception|rejected|unable to/i;
+    const explicitErrorSurface = visibleErrorTexts.length > 0
+      || notices.some((text) => errorSpecificPattern.test(text))
       || /parse error|failed to parse|could not parse|invalid \.base|must be (?:a|an)|unsupported (?:group|entry|value)/i.test(body);
-    const groupLikeCandidates = markerElements.filter((element) => !leafMarkers.includes(element)
-      && !leafMarkers.some((marker) => element.contains(marker)));
     const ambiguityReasons = [];
     if (groupRecords.some((group) => !group.heading_text)) ambiguityReasons.push('A visible group marker has no extractable heading text.');
-    if (groupLikeCandidates.length > 0) ambiguityReasons.push('Group-like DOM markers were not mapped to a unique heading.');
+    if (unmappedVisiblePathCandidates.length > 0) ambiguityReasons.push('One or more visible file-link candidates could not be mapped to a unique fixture path.');
+    if (unmappedVisibleRowCandidates.length > 0) ambiguityReasons.push('One or more visible data rows have no uniquely mapped fixture file link.');
     if (unassignedVisibleFilePaths.length > 0) ambiguityReasons.push('One or more visible fixture file links could not be assigned to a group or an ungrouped view.');
     if (layout === 'kanban' && pathLinks.length > 0 && groupRecords.length === 0 && !explicitErrorSurface) {
       ambiguityReasons.push('The Kanban view rendered fixture files without detectable group headings.');
@@ -2192,9 +2674,8 @@ async function readGroupOrderVisibleState(
       && groupRecords.length === 0 && !explicitErrorSurface) {
       ambiguityReasons.push('A grouped table rendered fixture files without detectable group headings.');
     }
-    if (layout === 'table' && scenario.group_by_property && pathLinks.length === 0 && groupRecords.length === 0
-      && !allowEmptyGroupedResult && !explicitErrorSurface) {
-      ambiguityReasons.push('A grouped table rendered no groups or fixture rows and showed no explicit visible error, so an empty result cannot be distinguished from a DOM extraction miss.');
+    if (pathLinks.length === 0 && unmappedVisiblePathCandidates.length === 0 && !explicitErrorSurface) {
+      ambiguityReasons.push('A C07.3 scenario rendered no mapped fixture file links and showed no explicit visible error.');
     }
     const diagnosticsElements = root ? [...root.querySelectorAll('[class], [data-group], [role="group"]')].filter(visible) : [];
     const domDiagnostics = diagnosticsElements
@@ -2223,17 +2704,42 @@ async function readGroupOrderVisibleState(
       ungrouped_visible_file_paths: ungroupedVisibleFilePaths,
       unassigned_visible_file_paths: unassignedVisibleFilePaths,
       visible_fixture_path_links: visibleFixturePathLinks,
+      unmapped_visible_path_candidates: unmappedVisiblePathCandidates,
+      unmapped_visible_row_candidates: unmappedVisibleRowCandidates,
       visible_group_marker_count: leafMarkers.length,
       unmapped_group_marker_count: groupRecords.filter((group) => !group.heading_text).length,
-      unmapped_group_candidate_count: groupLikeCandidates.length,
       visible_error_texts: visibleErrorTexts,
       notices,
       dom_diagnostics: domDiagnostics,
       extraction_ambiguous: ambiguityReasons.length > 0,
       ambiguity_reasons: ambiguityReasons,
     };
-  })()`);
+  })()`, `C07.3 full visible-state extraction for ${scenario.id}`);
   return visibleState;
+}
+
+async function readGroupOrderMinimalRendererState(
+  connection: DevToolsConnection,
+  requestedPath: string,
+): Promise<GroupOrderMinimalRendererState> {
+  return await connection.evaluateJson<GroupOrderMinimalRendererState>(`(() => {
+    const root = document.querySelector('.workspace-leaf.mod-active') ?? document.body;
+    const state = {
+      requested_file_path: ${JSON.stringify(requestedPath)},
+      active_file_path: null,
+      active_view_type: null,
+      title: document.title || '',
+      body: String(root?.innerText ?? '').slice(0, 4_000),
+    };
+    try {
+      const view = window.app?.workspace?.activeLeaf?.view;
+      state.active_file_path = typeof view?.file?.path === 'string' ? view.file.path : null;
+      state.active_view_type = typeof view?.getViewType === 'function' ? view.getViewType() : null;
+    } catch (error) {
+      state.view_access_error = String(error && (error.stack || error.message || error));
+    }
+    return state;
+  })()`, `C07.3 minimal renderer-state probe for ${requestedPath}`);
 }
 
 function emptyGroupOrderVisibleState(scenario: GroupOrderScenario): GroupOrderVisibleState {
@@ -2248,9 +2754,10 @@ function emptyGroupOrderVisibleState(scenario: GroupOrderScenario): GroupOrderVi
     ungrouped_visible_file_paths: [],
     unassigned_visible_file_paths: [],
     visible_fixture_path_links: [],
+    unmapped_visible_path_candidates: [],
+    unmapped_visible_row_candidates: [],
     visible_group_marker_count: 0,
     unmapped_group_marker_count: 0,
-    unmapped_group_candidate_count: 0,
     visible_error_texts: [],
     notices: [],
     dom_diagnostics: [],
@@ -2260,9 +2767,9 @@ function emptyGroupOrderVisibleState(scenario: GroupOrderScenario): GroupOrderVi
 }
 
 function hasExplicitVisibleGroupOrderParseError(state: GroupOrderVisibleState): boolean {
-  const errorPattern = /parse|invalid|unsupported|must be|could not|failed to|malformed|yaml|json/i;
+  const errorPattern = /invalid|unsupported|must be|could not|failed|failure|malformed|error|exception|rejected|unable to/i;
   const explicitBodyPattern = /parse error|failed to parse|could not parse|invalid \.base|must be (?:a|an)|unsupported (?:group|entry|value)/i;
-  return state.visible_error_texts.some((text) => errorPattern.test(text))
+  return state.visible_error_texts.length > 0
     || state.notices.some((text) => errorPattern.test(text))
     || explicitBodyPattern.test(state.body);
 }
@@ -2279,6 +2786,10 @@ async function captureGroupOrderScenario(
   let screenshot: string | null = null;
   let screenshotError: string | undefined;
   let probeError: string | undefined;
+  let probePhase: string | undefined;
+  let retryProbeError: string | undefined;
+  let minimalRendererState: GroupOrderMinimalRendererState | undefined;
+  let minimalRendererStateError: string | undefined;
   const recordState = (state: GroupOrderVisibleState): void => {
     const sample: GroupOrderScenarioObservation["state_samples"][number] = {
       active_file_path: state.active_file_path,
@@ -2288,6 +2799,8 @@ async function captureGroupOrderScenario(
       groups: state.groups,
       ungrouped_visible_file_paths: state.ungrouped_visible_file_paths,
       unassigned_visible_file_paths: state.unassigned_visible_file_paths,
+      unmapped_visible_path_candidates: state.unmapped_visible_path_candidates,
+      unmapped_visible_row_candidates: state.unmapped_visible_row_candidates,
       visible_error_texts: state.visible_error_texts,
       notices: state.notices,
     };
@@ -2306,6 +2819,7 @@ async function captureGroupOrderScenario(
   };
 
   try {
+    probePhase = "list-visible-vault-paths";
     const listVisiblePaths = async (): Promise<string[]> => await connection.evaluateJson<string[]>(`(() => {
       const visible = (element) => {
         const bounds = element.getBoundingClientRect();
@@ -2316,9 +2830,10 @@ async function captureGroupOrderScenario(
         .filter(visible)
         .map((element) => element.getAttribute('data-path') || '')
         .filter(Boolean);
-    })()`);
+    })()`, "C07.3 visible vault-path list");
     let visiblePaths = await listVisiblePaths();
     if (!visiblePaths.includes(scenario.base_path)) {
+      probePhase = "expand-target-folder";
       const parentPath = scenario.base_path.split("/").slice(0, -1).join("/");
       await connection.evaluateJson<boolean>(`(() => {
         const targetPath = ${JSON.stringify(parentPath)};
@@ -2337,7 +2852,8 @@ async function captureGroupOrderScenario(
           || folder.closest('.nav-folder')?.classList.contains('is-collapsed');
         if (collapsed) folder.click();
         return true;
-      })()`);
+      })()`, "C07.3 expand target folder");
+      probePhase = "wait-for-target-file";
       visiblePaths = await waitFor(
         `${stage}: Obsidian to list ${scenario.base_path}`,
         listVisiblePaths,
@@ -2348,6 +2864,7 @@ async function captureGroupOrderScenario(
     if (!visiblePaths.includes(scenario.base_path)) {
       throw new Error(`${stage}: Obsidian did not list the exact C07.3 target ${scenario.base_path}`);
     }
+    probePhase = "select-target-base";
     const clicked = await connection.evaluateJson<boolean>(`(() => {
       const path = ${JSON.stringify(scenario.base_path)};
       const visible = (element) => {
@@ -2361,12 +2878,13 @@ async function captureGroupOrderScenario(
         || element.closest('.nav-file')) || candidates[0];
       target?.click();
       return Boolean(target);
-    })()`);
+    })()`, "C07.3 select target .base");
     if (!clicked) throw new Error(`${stage}: Obsidian did not expose ${scenario.base_path} for selection`);
 
     let stableFingerprint = "";
     let stableSamples = 0;
     const settleDeadline = Date.now() + 45_000;
+    probePhase = "settle-and-extract-visible-state";
     while (Date.now() < settleDeadline) {
       await delay(500);
       const next = await readGroupOrderVisibleState(connection, scenario, fixturePaths);
@@ -2382,6 +2900,7 @@ async function captureGroupOrderScenario(
       if (stableSamples >= 3) break;
     }
     stateSettled = stableSamples >= 3;
+    probePhase = "validate-captured-state";
     if (visible.active_file_path !== scenario.base_path || !visible.selection_succeeded) {
       throw new Error(`${stage}: the exact .base was not active after selection; state=${JSON.stringify(visible).slice(0, 8_000)}`);
     }
@@ -2403,15 +2922,24 @@ async function captureGroupOrderScenario(
       throw new Error(`${stage}: visible fixture file links were not completely mapped to group/member order; visible=${JSON.stringify(expectedMappedPaths)} mapped=${JSON.stringify(observedMappedPaths)}`);
     }
   } catch (error) {
+    const primaryPhase = probePhase ?? "unknown-capture-phase";
     probeError = error instanceof Error ? error.message : String(error);
-    visible = await readGroupOrderVisibleState(connection, scenario, fixturePaths).catch(() => visible);
-    recordState(visible);
+    probePhase = primaryPhase;
+    try {
+      minimalRendererState = await readGroupOrderMinimalRendererState(connection, scenario.base_path);
+    } catch (stateProbeError) {
+      minimalRendererStateError = stateProbeError instanceof Error ? stateProbeError.message : String(stateProbeError);
+    }
+    await delay(250);
+    try {
+      visible = await readGroupOrderVisibleState(connection, scenario, fixturePaths);
+      recordState(visible);
+    } catch (retryError) {
+      retryProbeError = retryError instanceof Error ? retryError.message : String(retryError);
+    }
   }
 
   await captureScreenshot();
-  if (screenshotError) {
-    probeError = [probeError, `Required screenshot capture failed: ${screenshotError}`].filter(Boolean).join(" ");
-  }
   return {
     ...visible,
     ordered_group_headings: visible.groups.map((group) => group.heading_text),
@@ -2427,6 +2955,10 @@ async function captureGroupOrderScenario(
     screenshot,
     ...(screenshotError ? {screenshot_error: screenshotError} : {}),
     ...(probeError ? {probe_error: probeError} : {}),
+    ...(probePhase ? {probe_phase: probePhase} : {}),
+    ...(retryProbeError ? {probe_retry_error: retryProbeError} : {}),
+    ...(minimalRendererState ? {minimal_renderer_state: minimalRendererState} : {}),
+    ...(minimalRendererStateError ? {minimal_renderer_state_error: minimalRendererStateError} : {}),
   };
 }
 
@@ -2576,18 +3108,27 @@ async function createFixture(): Promise<void> {
 async function snapshotTree(root: string): Promise<SnapshotEntry[]> {
   const entries: SnapshotEntry[] = [];
   async function visit(directory: string): Promise<void> {
+    const directoryMetadata = await lstat(directory);
+    if (!directoryMetadata.isDirectory()) throw new Error(`Source tree directory changed type while snapshotting: ${directory}`);
     const children = await readdir(directory, {withFileTypes: true});
     children.sort((left, right) => left.name.localeCompare(right.name, "en"));
     for (const child of children) {
       const absolutePath = join(directory, child.name);
       const relativePath = relative(root, absolutePath).split(sep).join("/");
       const metadata = await lstat(absolutePath);
-      if (child.isSymbolicLink()) {
-        entries.push({path: relativePath, kind: "symlink", target: await readlink(absolutePath)});
-      } else if (child.isDirectory()) {
+      if (metadata.isSymbolicLink()) {
+        const targetBytes = await readlink(absolutePath, {encoding: "buffer"});
+        entries.push({
+          path: relativePath,
+          kind: "symlink",
+          target: targetBytes.toString("utf8"),
+          target_bytes_base64: targetBytes.toString("base64"),
+          target_sha256: createHash("sha256").update(targetBytes).digest("hex"),
+        });
+      } else if (metadata.isDirectory()) {
         entries.push({path: relativePath, kind: "directory"});
         await visit(absolutePath);
-      } else if (child.isFile()) {
+      } else if (metadata.isFile()) {
         const bytes = await readFile(absolutePath);
         entries.push({
           path: relativePath,
@@ -3319,7 +3860,7 @@ async function selectOpenObsidianVaultFromNativePicker(
     path_entry_interaction: pathEntryInteraction,
     folder_selection_interaction: folderSelectionInteraction,
     screenshots,
-    selected_path: `$RUNNER_TEMP/openobsidian-c01-roundtrip/${relative(workDirectory, targetRoot).split(sep).join("/")}`,
+    selected_path: targetRoot,
   };
 }
 
@@ -6049,7 +6590,7 @@ async function runOpenObsidian(noOpBaseline: SnapshotEntry[]): Promise<SnapshotE
     (report.openobsidian_open as Record<string, unknown>).status = "passed";
     (report.openobsidian_open as Record<string, unknown>).selected_vault_visible = true;
     (report.openobsidian_open as Record<string, unknown>).expected_markdown_count_visible = true;
-    (report.openobsidian_app_data as Record<string, unknown>).root = `$RUNNER_TEMP/openobsidian-c01-roundtrip/${relative(workDirectory, appDataRoot).split(sep).join("/")}`;
+    (report.openobsidian_app_data as Record<string, unknown>).root = appDataRoot;
     (report.openobsidian_app_data as Record<string, unknown>).canonical_root_is_outside_vault = true;
     (report.openobsidian_app_data as Record<string, unknown>).snapshot_after_startup = initialAppData;
     await saveReport();
@@ -7860,7 +8401,7 @@ async function runOpenObsidianCanvasTextEdit(
     if (relativeAppData === "" || (!relativeAppData.startsWith(`..${sep}`) && relativeAppData !== ".." && !relativeAppData.startsWith(sep))) {
       throw new Error("OpenObsidian's Canvas text-edit application data directory is inside the selected vault");
     }
-    editReport.app_data_root = `$RUNNER_TEMP/openobsidian-c01-roundtrip/${relative(workDirectory, appDataRoot).split(sep).join("/")}`;
+    editReport.app_data_root = appDataRoot;
     editReport.app_data_canonical_root_is_outside_vault = true;
 
     const beforeEdit = await snapshotTree(canvasVaultRoot);
@@ -8182,7 +8723,7 @@ async function runOpenObsidianCanvasNoteCreation(
     if (relativeAppData === "" || (!relativeAppData.startsWith(`..${sep}`) && relativeAppData !== ".." && !relativeAppData.startsWith(sep))) {
       throw new Error("OpenObsidian's Canvas note-creation application data directory is inside the selected vault");
     }
-    noteReport.app_data_root = `$RUNNER_TEMP/openobsidian-c01-roundtrip/${relative(workDirectory, appDataRoot).split(sep).join("/")}`;
+    noteReport.app_data_root = appDataRoot;
     noteReport.app_data_canonical_root_is_outside_vault = true;
     const appDataBeforeCreation = await snapshotTree(appDataRoot);
     noteReport.app_data_snapshot_before_creation = appDataBeforeCreation;
@@ -9802,33 +10343,39 @@ async function runBasesDirectionReferenceProbe(): Promise<void> {
 }
 
 async function runBasesGroupOrderReferenceProbe(): Promise<void> {
-  const profileDirectory = join(workDirectory, "group-order-obsidian-profile");
+  const profilesRoot = join(workDirectory, "group-order-obsidian-profiles");
   const basesReport = report.bases_group_order_reference as Record<string, unknown>;
   const snapshots = report.vault_snapshots as Record<string, unknown>;
   basesReport.status = "running";
-  let firstProcess: ChildProcess | undefined;
-  let firstConnection: DevToolsConnection | undefined;
-  let secondProcess: ChildProcess | undefined;
-  let secondConnection: DevToolsConnection | undefined;
-  let sourceHashes: Record<string, GroupOrderSourceHash> | undefined;
+  basesReport.capture_status = "running";
   try {
+    await rm(profilesRoot, {recursive: true, force: true});
+    await mkdir(profilesRoot, {recursive: true});
     const fixtureSetup = await createGroupOrderReferenceFixture();
     const fixture = fixtureSetup.fixture;
-    sourceHashes = fixtureSetup.sourceHashes;
-    const fixturePaths = Object.keys(sourceHashes).sort((left, right) => left.localeCompare(right, "en"));
+    const scenarioFixtures = fixtureSetup.scenarioFixtures;
     const firstViews: Record<string, GroupOrderScenarioObservation> = {};
     const reopenedViews: Record<string, GroupOrderScenarioObservation> = {};
     const firstSourceHashesByScenario: Record<string, Record<string, GroupOrderSourceHash>> = {};
     const reopenedSourceHashesByScenario: Record<string, Record<string, GroupOrderSourceHash>> = {};
     const firstSession: Record<string, unknown> = {
-      source_hashes_before_open: sourceHashes,
-      views: firstViews,
+      source_hashes_before_open: Object.fromEntries(Object.entries(scenarioFixtures).map(([id, scenario]) => [id, scenario.source_hashes])),
+      source_hashes_after_startup: {},
+      source_hashes_after_vault_selection: {},
       source_hashes_after_each_view: firstSourceHashesByScenario,
+      source_hashes_after_shutdown: {},
+      scenario_runs: {},
+      views: firstViews,
     };
     const secondSession: Record<string, unknown> = {
-      source_hashes_before_reopen: sourceHashes,
-      views: reopenedViews,
+      source_hashes_before_reopen: Object.fromEntries(Object.entries(scenarioFixtures).map(([id, scenario]) => [id, scenario.source_hashes])),
+      source_hashes_after_startup: {},
+      source_hashes_after_vault_restore: {},
       source_hashes_after_each_view: reopenedSourceHashesByScenario,
+      source_hashes_after_shutdown: {},
+      workspace_view_immediately_after_startup: {},
+      scenario_runs: {},
+      views: reopenedViews,
     };
     basesReport.first_session = firstSession;
     basesReport.second_session = secondSession;
@@ -9841,97 +10388,170 @@ async function runBasesGroupOrderReferenceProbe(): Promise<void> {
       coverage: scenario.coverage,
       first_open_observation: null as GroupOrderScenarioObservation | null,
       reopen_observation: null as GroupOrderScenarioObservation | null,
+      scenario_vault_path: scenarioFixtures[scenario.id]?.vault_root ?? null,
+      source_hashes_at_seed: scenarioFixtures[scenario.id]?.source_hashes ?? {},
+      seed_artifacts: scenarioFixtures[scenario.id]?.seed_artifacts ?? {},
     }));
     basesReport.scenarios = scenarioReport;
-    basesReport.source_hashes_before_open = sourceHashes;
-    basesReport.source_hashes_before_reopen = sourceHashes;
+    basesReport.source_hashes_before_open = firstSession.source_hashes_before_open;
+    basesReport.source_hashes_before_reopen = secondSession.source_hashes_before_reopen;
     snapshots.group_order_seed = await snapshotTree(groupOrderVaultRoot);
-    await assertGroupOrderSourceHashes(sourceHashes, "before-first-open");
     await saveReport();
-
-    firstProcess = await createObsidianProfile(profileDirectory, 9228, "obsidian-group-order-first-open.log");
-    const first = await connectObsidian(9228);
-    firstConnection = first.connection;
-    firstSession.devtools_browser = first.browserVersion;
-    firstSession.first_target = {title: first.target.title ?? "", url: first.target.url ?? ""};
-    firstSession.source_hashes_after_startup = await assertGroupOrderSourceHashes(sourceHashes, "first-open-after-startup");
-    const firstRunBody = await waitForRenderer(
-      firstConnection,
-      "document.body?.innerText ?? ''",
-      (body) => body.includes("Open folder as vault"),
-      "Obsidian's first-run C07.3 groupOrder reference vault screen",
-    );
-    firstSession.first_run_text = firstRunBody.slice(0, 2_000);
-    await captureObsidianScreenshot(firstConnection, "obsidian-group-order-first-run.png");
-    firstConnection = await chooseVaultDirectory(firstConnection, 9228, {
-      targetRoot: groupOrderVaultRoot,
-      reporter: basesReport,
-      screenshotPrefix: "obsidian-group-order",
-    });
-    await chooseRestrictedMode(firstConnection, firstSession, groupOrderVaultName, "Synthetic C07.3 groupOrder fixture.");
-    firstSession.source_hashes_after_vault_open = await assertGroupOrderSourceHashes(sourceHashes, "first-open-after-vault-selection");
 
     for (const scenario of fixture.scenarios) {
-      firstViews[scenario.id] = await captureGroupOrderScenario(firstConnection, scenario, fixturePaths, "first-open");
       const scenarioEntry = scenarioReport.find((entry) => entry.id === scenario.id)!;
-      scenarioEntry.first_open_observation = firstViews[scenario.id];
-      firstSourceHashesByScenario[scenario.id] = await assertGroupOrderSourceHashes(sourceHashes, `first-open-${scenario.id}`);
-      await saveReport();
-    }
-    firstSession.source_hashes_before_shutdown = await assertGroupOrderSourceHashes(sourceHashes, "first-open-before-shutdown");
-    await saveReport();
-    await delay(2_000);
-    await stopProcess(firstProcess, firstConnection);
-    firstProcess = undefined;
-    firstConnection = undefined;
-    snapshots.group_order_after_first_close = await snapshotTree(groupOrderVaultRoot);
-    firstSession.source_hashes_after_shutdown = await assertGroupOrderSourceHashes(sourceHashes, "first-open-after-shutdown");
-    await saveReport();
-
-    secondSession.source_hashes_before_reopen = await assertGroupOrderSourceHashes(sourceHashes, "before-reopen");
-    secondProcess = await createObsidianProfile(profileDirectory, 9229, "obsidian-group-order-reopen.log");
-    const second = await connectObsidian(9229);
-    secondConnection = second.connection;
-    secondSession.devtools_browser = second.browserVersion;
-    secondSession.first_target = {title: second.target.title ?? "", url: second.target.url ?? ""};
-    secondSession.source_hashes_after_startup = await assertGroupOrderSourceHashes(sourceHashes, "reopen-after-startup");
-    await chooseRestrictedMode(secondConnection, secondSession, groupOrderVaultName, "Synthetic C07.3 groupOrder fixture.");
-    secondSession.workspace_view_immediately_after_startup = await secondConnection.evaluateJson<{
-      active_file_path: string | null;
-      active_view_type: string | null;
-      title: string;
-      body: string;
-    }>(`(() => {
-      const view = window.app?.workspace?.activeLeaf?.view;
-      const root = document.querySelector('.workspace-leaf.mod-active') ?? document.body;
-      return {
-        active_file_path: view?.file?.path ?? null,
-        active_view_type: view?.getViewType?.() ?? null,
-        title: document.title,
-        body: (root?.innerText ?? '').slice(0, 4_000),
+      const scenarioFixture = scenarioFixtures[scenario.id];
+      if (!scenarioFixture) throw new Error(`C07.3 scenario ${scenario.id} has no isolated fixture`);
+      const profileDirectory = join(profilesRoot, scenario.id);
+      const vaultName = basename(scenarioFixture.vault_root);
+      const firstScenarioRun: Record<string, unknown> = {
+        vault_name: vaultName,
+        vault_path: scenarioFixture.vault_root,
+        profile_id: scenario.id,
       };
-    })()`);
-    await captureObsidianScreenshot(secondConnection, "obsidian-group-order-workspace-startup.png");
-    secondSession.source_hashes_after_vault_restore = await assertGroupOrderSourceHashes(sourceHashes, "reopen-after-vault-restore");
-    await saveReport();
+      const secondScenarioRun: Record<string, unknown> = {
+        vault_name: vaultName,
+        vault_path: scenarioFixture.vault_root,
+        profile_id: scenario.id,
+      };
+      (firstSession.scenario_runs as Record<string, unknown>)[scenario.id] = firstScenarioRun;
+      (secondSession.scenario_runs as Record<string, unknown>)[scenario.id] = secondScenarioRun;
 
-    for (const scenario of fixture.scenarios) {
-      reopenedViews[scenario.id] = await captureGroupOrderScenario(secondConnection, scenario, fixturePaths, "reopen");
-      const scenarioEntry = scenarioReport.find((entry) => entry.id === scenario.id)!;
-      scenarioEntry.reopen_observation = reopenedViews[scenario.id];
-      reopenedSourceHashesByScenario[scenario.id] = await assertGroupOrderSourceHashes(sourceHashes, `reopen-${scenario.id}`);
+      await recordGroupOrderSourceCheckpoint(scenarioFixture.source_hashes, "before-first-open", scenario.id, scenarioFixture.vault_root);
+      let firstProcess: ChildProcess | undefined;
+      let firstConnection: DevToolsConnection | undefined;
+      try {
+        firstProcess = await createObsidianProfile(profileDirectory, 9228, `obsidian-group-order-${scenario.id}-first-open.log`);
+        const first = await connectObsidian(9228);
+        firstConnection = first.connection;
+        firstScenarioRun.devtools_browser = first.browserVersion;
+        firstScenarioRun.first_target = {title: first.target.title ?? "", url: first.target.url ?? ""};
+        const firstRunBody = await waitForRenderer(
+          firstConnection,
+          "document.body?.innerText ?? ''",
+          (body) => body.includes("Open folder as vault"),
+          `Obsidian's first-run screen for C07.3 scenario ${scenario.id}`,
+        );
+        firstScenarioRun.first_run_text = firstRunBody.slice(0, 2_000);
+        (firstSession.source_hashes_after_startup as Record<string, unknown>)[scenario.id] = await recordGroupOrderSourceCheckpoint(
+          scenarioFixture.source_hashes,
+          "first-open-after-startup",
+          scenario.id,
+          scenarioFixture.vault_root,
+        );
+        firstConnection = await chooseVaultDirectory(firstConnection, 9228, {
+          targetRoot: scenarioFixture.vault_root,
+          reporter: firstScenarioRun,
+          screenshotPrefix: `obsidian-group-order-${scenario.id}`,
+        });
+        await chooseRestrictedMode(firstConnection, firstScenarioRun, vaultName, basename(scenario.base_path, ".base"));
+        (firstSession.source_hashes_after_vault_selection as Record<string, unknown>)[scenario.id] = await recordGroupOrderSourceCheckpoint(
+          scenarioFixture.source_hashes,
+          "first-open-after-vault-selection",
+          scenario.id,
+          scenarioFixture.vault_root,
+        );
+        firstViews[scenario.id] = await captureGroupOrderScenario(firstConnection, scenario, scenarioFixture.fixture_paths, "first-open");
+        scenarioEntry.first_open_observation = firstViews[scenario.id];
+        firstSourceHashesByScenario[scenario.id] = await recordGroupOrderSourceCheckpoint(
+          scenarioFixture.source_hashes,
+          "first-open-after-capture",
+          scenario.id,
+          scenarioFixture.vault_root,
+        );
+      } catch (error) {
+        firstScenarioRun.error = error instanceof Error ? error.message : String(error);
+      } finally {
+        await stopProcess(firstProcess, firstConnection).catch((error) => {
+          firstScenarioRun.shutdown_error = error instanceof Error ? error.message : String(error);
+        });
+      }
+      const firstHashesAfterShutdown = await recordGroupOrderSourceCheckpoint(
+        scenarioFixture.source_hashes,
+        "first-open-after-shutdown",
+        scenario.id,
+        scenarioFixture.vault_root,
+      );
+      (firstSession.source_hashes_after_shutdown as Record<string, unknown>)[scenario.id] = firstHashesAfterShutdown;
+      snapshots[`group_order_after_first_close_${scenario.id}`] = await snapshotTree(scenarioFixture.vault_root);
       await saveReport();
+
+      try {
+        await reseedGroupOrderScenarioSources(
+          scenario.id,
+          scenarioFixture.vault_root,
+          scenarioFixture.source_files,
+          firstHashesAfterShutdown,
+        );
+      } catch (error) {
+        secondScenarioRun.reseed_error = error instanceof Error ? error.message : String(error);
+        await saveReport();
+        await rm(profileDirectory, {recursive: true, force: true});
+        continue;
+      }
+      await recordGroupOrderSourceCheckpoint(scenarioFixture.source_hashes, "before-reopen-after-reseed", scenario.id, scenarioFixture.vault_root);
+
+      let secondProcess: ChildProcess | undefined;
+      let secondConnection: DevToolsConnection | undefined;
+      try {
+        secondProcess = await createObsidianProfile(profileDirectory, 9229, `obsidian-group-order-${scenario.id}-reopen.log`);
+        const second = await connectObsidian(9229);
+        secondConnection = second.connection;
+        secondScenarioRun.devtools_browser = second.browserVersion;
+        secondScenarioRun.first_target = {title: second.target.title ?? "", url: second.target.url ?? ""};
+        await chooseRestrictedMode(secondConnection, secondScenarioRun, vaultName, basename(scenario.base_path, ".base"));
+        (secondSession.source_hashes_after_startup as Record<string, unknown>)[scenario.id] = await recordGroupOrderSourceCheckpoint(
+          scenarioFixture.source_hashes,
+          "reopen-after-startup",
+          scenario.id,
+          scenarioFixture.vault_root,
+        );
+        (secondSession.workspace_view_immediately_after_startup as Record<string, unknown>)[scenario.id] = await secondConnection.evaluateJson<{
+          active_file_path: string | null;
+          active_view_type: string | null;
+          title: string;
+          body: string;
+        }>(`(() => {
+          const view = window.app?.workspace?.activeLeaf?.view;
+          const root = document.querySelector('.workspace-leaf.mod-active') ?? document.body;
+          return {
+            active_file_path: view?.file?.path ?? null,
+            active_view_type: view?.getViewType?.() ?? null,
+            title: document.title,
+            body: (root?.innerText ?? '').slice(0, 4_000),
+          };
+        })()`);
+        (secondSession.source_hashes_after_vault_restore as Record<string, unknown>)[scenario.id] = await recordGroupOrderSourceCheckpoint(
+          scenarioFixture.source_hashes,
+          "reopen-after-vault-restore",
+          scenario.id,
+          scenarioFixture.vault_root,
+        );
+        reopenedViews[scenario.id] = await captureGroupOrderScenario(secondConnection, scenario, scenarioFixture.fixture_paths, "reopen");
+        scenarioEntry.reopen_observation = reopenedViews[scenario.id];
+        reopenedSourceHashesByScenario[scenario.id] = await recordGroupOrderSourceCheckpoint(
+          scenarioFixture.source_hashes,
+          "reopen-after-capture",
+          scenario.id,
+          scenarioFixture.vault_root,
+        );
+      } catch (error) {
+        secondScenarioRun.error = error instanceof Error ? error.message : String(error);
+      } finally {
+        await stopProcess(secondProcess, secondConnection).catch((error) => {
+          secondScenarioRun.shutdown_error = error instanceof Error ? error.message : String(error);
+        });
+      }
+      (secondSession.source_hashes_after_shutdown as Record<string, unknown>)[scenario.id] = await recordGroupOrderSourceCheckpoint(
+        scenarioFixture.source_hashes,
+        "reopen-after-shutdown",
+        scenario.id,
+        scenarioFixture.vault_root,
+      );
+      snapshots[`group_order_after_reopen_${scenario.id}`] = await snapshotTree(scenarioFixture.vault_root);
+      await saveReport();
+      await rm(profileDirectory, {recursive: true, force: true});
     }
-    secondSession.source_hashes_before_shutdown = await assertGroupOrderSourceHashes(sourceHashes, "reopen-before-shutdown");
-    await saveReport();
-    await delay(2_000);
-    await stopProcess(secondProcess, secondConnection);
-    secondProcess = undefined;
-    secondConnection = undefined;
-    snapshots.group_order_after_reopen = await snapshotTree(groupOrderVaultRoot);
-    const finalSourceHashes = await assertGroupOrderSourceHashes(sourceHashes, "reopen-after-shutdown");
-    basesReport.source_hashes_after_reopen = finalSourceHashes;
-    basesReport.source_hashes_unchanged_across_both_sessions = isDeepStrictEqual(sourceHashes, finalSourceHashes);
 
     const comparableObservation = (view: GroupOrderScenarioObservation) => ({
       requested_file_path: view.requested_file_path,
@@ -9946,6 +10566,8 @@ async function runBasesGroupOrderReferenceProbe(): Promise<void> {
       ungrouped_visible_file_paths: view.ungrouped_visible_file_paths,
       unassigned_visible_file_paths: view.unassigned_visible_file_paths,
       visible_fixture_path_links: view.visible_fixture_path_links.map((link) => ({path: link.path, text: link.text})),
+      unmapped_visible_path_candidates: view.unmapped_visible_path_candidates,
+      unmapped_visible_row_candidates: view.unmapped_visible_row_candidates,
       visible_error_texts: view.visible_error_texts,
       notices: view.notices,
       error_surface_classification: view.error_surface_classification,
@@ -9955,11 +10577,25 @@ async function runBasesGroupOrderReferenceProbe(): Promise<void> {
     const scenarioComparison: Record<string, boolean> = {};
     const scenarioAcceptance: Record<string, boolean> = {};
     const incompleteScenarios: Array<{id: string; stage: string; reasons: string[]}> = [];
+    const firstRunRecords = firstSession.scenario_runs as Record<string, Record<string, unknown>>;
+    const reopenRunRecords = secondSession.scenario_runs as Record<string, Record<string, unknown>>;
     for (const scenario of fixture.scenarios) {
       const firstView = firstViews[scenario.id];
       const reopenedView = reopenedViews[scenario.id];
       const complete = (view: GroupOrderScenarioObservation | undefined, expectedStage: "first-open" | "reopen"): boolean => {
-        if (!view) return false;
+        if (!view) {
+          const runRecord = expectedStage === "first-open" ? firstRunRecords[scenario.id] : reopenRunRecords[scenario.id];
+          incompleteScenarios.push({
+            id: scenario.id,
+            stage: expectedStage,
+            reasons: [
+              `${expectedStage} did not produce a structured observation`,
+              ...(typeof runRecord?.error === "string" ? [runRecord.error] : []),
+              ...(typeof runRecord?.reseed_error === "string" ? [runRecord.reseed_error] : []),
+            ],
+          });
+          return false;
+        }
         const expectedPaths = view.visible_fixture_path_links.map((entry) => entry.path).sort();
         const mappedPaths = [...view.groups.flatMap((group) => group.member_paths), ...view.ungrouped_visible_file_paths].sort();
         const valid = view.stage === expectedStage
@@ -9970,6 +10606,8 @@ async function runBasesGroupOrderReferenceProbe(): Promise<void> {
           && view.state_settled
           && !view.extraction_ambiguous
           && view.unassigned_visible_file_paths.length === 0
+          && view.unmapped_visible_path_candidates.length === 0
+          && view.unmapped_visible_row_candidates.length === 0
           && isDeepStrictEqual(expectedPaths, mappedPaths)
           && Boolean(view.screenshot)
           && !view.screenshot_error
@@ -9981,7 +10619,11 @@ async function runBasesGroupOrderReferenceProbe(): Promise<void> {
             reasons: [
               ...(!view.selection_succeeded || view.active_file_path !== scenario.base_path ? ["exact target selection was not captured"] : []),
               ...(!view.state_settled ? ["visible state did not settle"] : []),
-              ...(view.extraction_ambiguous || view.unassigned_visible_file_paths.length > 0 ? ["group/member extraction was incomplete or ambiguous"] : []),
+              ...(view.extraction_ambiguous || view.unassigned_visible_file_paths.length > 0 || view.unmapped_visible_path_candidates.length > 0 || view.unmapped_visible_row_candidates.length > 0
+                ? [`group/member extraction was incomplete or ambiguous${view.unmapped_visible_path_candidates.length > 0 || view.unmapped_visible_row_candidates.length > 0
+                  ? `; unmapped link candidates=${JSON.stringify(view.unmapped_visible_path_candidates)}; unmapped row candidates=${JSON.stringify(view.unmapped_visible_row_candidates)}`
+                  : ""}`]
+                : []),
               ...(!isDeepStrictEqual(expectedPaths, mappedPaths) ? ["visible fixture paths do not equal the mapped group/member paths"] : []),
               ...(!view.screenshot || view.screenshot_error ? ["required screenshot is missing"] : []),
               ...(view.probe_error ? [view.probe_error] : []),
@@ -9996,15 +10638,83 @@ async function runBasesGroupOrderReferenceProbe(): Promise<void> {
         && isDeepStrictEqual(comparableObservation(firstView), comparableObservation(reopenedView));
       scenarioComparison[scenario.id] = stable;
       scenarioAcceptance[scenario.id] = firstComplete && reopenedComplete && stable;
+      if (firstComplete && reopenedComplete && !stable) {
+        incompleteScenarios.push({id: scenario.id, stage: "reopen", reasons: ["first-open and reopened visible observations differ"]});
+      }
     }
     basesReport.scenario_comparison_stable_across_reopen = scenarioComparison;
     basesReport.scenario_acceptance_passed = scenarioAcceptance;
     basesReport.incomplete_scenarios = incompleteScenarios;
-    basesReport.source_preservation_passed = basesReport.source_hashes_unchanged_across_both_sessions === true
-      && ((basesReport.source_hash_checkpoints as Array<{unchanged: boolean}> | undefined) ?? []).every((checkpoint) => checkpoint.unchanged);
-    basesReport.capture_status = "completed";
-    if (!basesReport.source_preservation_passed || !Object.values(scenarioAcceptance).every(Boolean)) {
-      throw new Error(`C07.3 groupOrder first-open/reopen acceptance failed: ${JSON.stringify({source_preservation_passed: basesReport.source_preservation_passed, scenario_acceptance: scenarioAcceptance, incomplete_scenarios: incompleteScenarios}).slice(0, 12_000)}`);
+    const sourceCheckpoints = (basesReport.source_hash_checkpoints as Array<{
+      scenario_id: string;
+      stage: string;
+      unchanged: boolean;
+      changes?: Array<Record<string, unknown>>;
+      errors?: string[];
+    }> | undefined) ?? [];
+    const requiredSourceCheckpointStages = [
+      "before-first-open",
+      "first-open-after-startup",
+      "first-open-after-vault-selection",
+      "first-open-after-capture",
+      "first-open-after-shutdown",
+      "before-reopen-after-reseed",
+      "reopen-after-startup",
+      "reopen-after-vault-restore",
+      "reopen-after-capture",
+      "reopen-after-shutdown",
+    ];
+    const expectedCheckpointKeys = new Set(fixture.scenarios.flatMap((scenario) =>
+      requiredSourceCheckpointStages.map((stage) => `${scenario.id}\u0000${stage}`)));
+    const checkpointCounts = new Map<string, number>();
+    for (const checkpoint of sourceCheckpoints) {
+      const key = `${checkpoint.scenario_id}\u0000${checkpoint.stage}`;
+      checkpointCounts.set(key, (checkpointCounts.get(key) ?? 0) + 1);
+    }
+    const missingSourceCheckpoints = [...expectedCheckpointKeys]
+      .filter((key) => !checkpointCounts.has(key))
+      .map((key) => {
+        const [scenario_id, stage] = key.split("\u0000");
+        return {scenario_id, stage};
+      });
+    const duplicateSourceCheckpoints = [...checkpointCounts.entries()]
+      .filter(([, count]) => count > 1)
+      .map(([key, count]) => {
+        const [scenario_id, stage] = key.split("\u0000");
+        return {scenario_id, stage, count};
+      });
+    const unexpectedSourceCheckpoints = [...checkpointCounts.keys()]
+      .filter((key) => !expectedCheckpointKeys.has(key))
+      .map((key) => {
+        const [scenario_id, stage] = key.split("\u0000");
+        return {scenario_id, stage};
+      });
+    const sourceCheckpointMatrixComplete = missingSourceCheckpoints.length === 0
+      && duplicateSourceCheckpoints.length === 0
+      && unexpectedSourceCheckpoints.length === 0
+      && sourceCheckpoints.length === expectedCheckpointKeys.size;
+    basesReport.source_checkpoint_matrix = {
+      required_stages: requiredSourceCheckpointStages,
+      expected_count: expectedCheckpointKeys.size,
+      observed_count: sourceCheckpoints.length,
+      missing: missingSourceCheckpoints,
+      duplicates: duplicateSourceCheckpoints,
+      unexpected: unexpectedSourceCheckpoints,
+      complete: sourceCheckpointMatrixComplete,
+    };
+    const reopenedHashesAtShutdown = secondSession.source_hashes_after_shutdown as Record<string, Record<string, GroupOrderSourceHash>>;
+    const sourceObservationRecordingComplete = sourceCheckpointMatrixComplete && sourceCheckpoints.every((checkpoint) =>
+      (checkpoint.errors?.length ?? 0) === 0
+      && (checkpoint.changes ?? []).every((change) => change.status === "missing" || change.exact_observed_state_recorded === true));
+    basesReport.source_hashes_unchanged_across_both_sessions = sourceCheckpoints.length > 0 && sourceCheckpoints.every((checkpoint) => checkpoint.unchanged);
+    basesReport.source_hashes_match_seed_after_reopen = Object.entries(scenarioFixtures).every(([id, scenarioFixture]) =>
+      isDeepStrictEqual(scenarioFixture.source_hashes, reopenedHashesAtShutdown[id] ?? {}));
+    basesReport.reference_source_mutation_observed = sourceCheckpoints.some((checkpoint) => (checkpoint.changes?.length ?? 0) > 0);
+    basesReport.source_preservation_passed = sourceCheckpoints.length > 0 && sourceCheckpoints.every((checkpoint) => checkpoint.unchanged);
+    basesReport.source_observation_recording_complete = sourceObservationRecordingComplete;
+    basesReport.capture_status = Object.values(scenarioAcceptance).every(Boolean) ? "completed" : "incomplete";
+    if (!Object.values(scenarioAcceptance).every(Boolean) || !sourceObservationRecordingComplete) {
+      throw new Error(`C07.3 groupOrder first-open/reopen capture acceptance failed: ${JSON.stringify({scenario_acceptance: scenarioAcceptance, source_observation_recording_complete: sourceObservationRecordingComplete, incomplete_scenarios: incompleteScenarios}).slice(0, 12_000)}`);
     }
     basesReport.status = "captured-reference-only";
     basesReport.rust_parity_claimed = false;
@@ -10013,27 +10723,18 @@ async function runBasesGroupOrderReferenceProbe(): Promise<void> {
       c07_2_capture_status: (report.bases_group_direction_reference as Record<string, unknown>).status,
       c07_3_group_order_capture_status: basesReport.status,
       rust_parity_claimed: false,
-      interpretation: "Pinned-app C07.3 observations were captured on this runner. A completed reference capture does not establish Rust groupOrder parity.",
+      reference_source_mutation_observed: basesReport.reference_source_mutation_observed,
+      interpretation: "Pinned-app C07.3 observations were captured on this runner. Exact Obsidian source rewrites are recorded as reference behavior and do not establish Rust source preservation or groupOrder parity.",
     };
     await saveReport();
   } catch (error) {
     basesReport.status = "failed";
+    basesReport.capture_status = "incomplete";
     basesReport.error = error instanceof Error ? error.message : String(error);
-    if (sourceHashes) {
-      try {
-        basesReport.source_hashes_at_failure = await assertGroupOrderSourceHashes(sourceHashes, "failure");
-      } catch (sourceError) {
-        basesReport.source_preservation_failure = sourceError instanceof Error ? sourceError.message : String(sourceError);
-      }
-    }
     await saveReport();
     throw error;
-  } finally {
-    await stopProcess(firstProcess, firstConnection).catch(() => undefined);
-    await stopProcess(secondProcess, secondConnection).catch(() => undefined);
   }
 }
-
 async function run(): Promise<void> {
   await mkdir(reportDirectory, {recursive: true});
   await mkdir(workDirectory, {recursive: true});
@@ -10119,8 +10820,13 @@ try {
 }
 
 const referenceCaptureSummary = report.reference_capture_summary as Record<string, unknown> | undefined;
+const sourceObservationMessage = typeof referenceCaptureSummary?.reference_source_mutation_observed === "boolean"
+  ? `; pinned-app source mutation observed=${String(referenceCaptureSummary.reference_source_mutation_observed)}`
+  : typeof referenceCaptureSummary?.reference_app_source_preservation_passed === "boolean"
+    ? `; C07.2 pinned-app source hashes preserved=${String(referenceCaptureSummary.reference_app_source_preservation_passed)}`
+    : "";
 const captureMessage = referenceCaptureSummary
-  ? `; C07 reference capture=${String(referenceCaptureSummary.status)}; source preservation=${String(referenceCaptureSummary.reference_app_source_preservation_passed)}`
+  ? `; C07 reference capture=${String(referenceCaptureSummary.status)}${sourceObservationMessage}`
   : "";
 console.log(`Obsidian vault round-trip acceptance: ${String(report.status)}${captureMessage}; report=${join(reportDirectory, "obsidian-vault-roundtrip-report.json")}`);
 if (report.status !== "passed") process.exit(1);

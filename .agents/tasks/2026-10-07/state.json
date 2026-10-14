@@ -2,15 +2,15 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-14T03:54:38Z",
+  "updated_at": "2026-10-14T04:48:56Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "15ee500b04be9acef86a1b5fbf3d1e0ccb5bf7b7",
-  "current_milestone": "R2.8.115 C07.3 pinned Obsidian groupOrder reference characterization (in progress)",
-  "next_action": "The R2.8.115 C07.3 reference-capture package is complete and passed independent static review. Verify origin/main is still at 15ee500b04be9acef86a1b5fbf3d1e0ccb5bf7b7, make one accumulated milestone commit and push, then reconcile all seven exact-SHA workflows and 20 jobs. Do not implement Rust groupOrder semantics until reference behavior is recorded; keep unsupported app-level entries unresolved if neither boundary candidate proves rejection.",
-  "push_status": "R2.8.114 remains the last accepted push at exact SHA 15ee500b04be9acef86a1b5fbf3d1e0ccb5bf7b7. R2.8.115 is complete locally, independently reviewed, and not pushed; no CI run has been requested. Push once for this milestone, then hold origin/main through all required workflows.",
-  "blockers": [],
+  "last_reconciled_head": "30d0ad5de778dbeb36a7963cec78d39f391b0e59",
+  "current_milestone": "R2.8.116 C07.3 cross-platform capture repair (in progress)",
+  "next_action": "R2.8.115 attempt 1 is terminal and failed on exact SHA 30d0ad5de778dbeb36a7963cec78d39f391b0e59: 17/20 jobs passed, and all three Obsidian round-trip jobs failed at the same C07.3 source-hash guard. R2.8.116 remains local. Its acceptance now requires isolated scenario vault/profile state, exact changed-source evidence, safe reseeding, a complete 140-entry checkpoint matrix, unambiguous visible rows and paths, actionable renderer errors, accurate scenario-vault paths, and a fail-closed minimum for empty renders. Complete pending read-only reviews and the CI-ready evidence package, then make one accumulated milestone push and wait for its full exact-SHA CI batch.",
+  "push_status": "origin/main is at 30d0ad5de778dbeb36a7963cec78d39f391b0e59. Its complete CI batch is terminal with 17/20 jobs passed and three round-trip failures. No R2.8.116 repair has been pushed. Keep the current tip until the complete, reviewed repair package is ready; the revised goal policy requires one accumulated push per coherent milestone, not per minor change.",
+  "blockers": ["C07.3 reference capture is incomplete: the pinned app rewrote a generated .base before the source guard completed, and DevTools structured evaluation returned Uncaught on all three OSes. No Rust C07.3 parity claim is supported."],
   "phases": {
     "R0": {
       "status": "complete",
@@ -48,7 +48,7 @@
         "plugin-renderer"
       ],
       "implementation_sha": "15ee500b04be9acef86a1b5fbf3d1e0ccb5bf7b7",
-      "next_action": "The R2.8.115 C07.3 capture package is complete and independently reviewed. Verify origin/main is still at 15ee500b04be9acef86a1b5fbf3d1e0ccb5bf7b7, push one accumulated milestone SHA, and reconcile all seven exact-SHA workflows/20 jobs. Keep Rust parity blocked if neither valid-input candidate establishes app-level unsupported-entry behavior."
+      "next_action": "R2.8.115 is terminal but not accepted: 17/20 jobs passed and all three Obsidian round-trip jobs failed at C07.3. R2.8.116 capture repair is in progress locally; keep origin/main at 30d0ad5de778dbeb36a7963cec78d39f391b0e59 until one complete repair milestone batch is ready."
     },
     "R3": {
       "status": "pending",
@@ -77,6 +77,8 @@
     }
   },
   "completed_actions": [
+    "R2.8.116 source-only repair work is in progress locally. Each of the 14 C07.3 scenarios is isolated in its own vault/profile; first-open source changes are recorded with exact bytes/hashes, then original files are restored and verified before reopen. CDP failure diagnostics and a minimal independent state probe are retained. Added guards for exactly 14 unique path-safe scenario IDs, resolved-path containment for fixture/evidence writes, and collision-safe seed artifact names; corrected the terminal log so C07.3 reports pinned-app mutation evidence instead of an undefined source-preservation field. Updated goal.md to define a milestone as a coherent deliverable rather than an individual commit/fix, with one accumulated origin/main push and CI batch only after that milestone package is complete. No root local tests, builds, typechecks, formatter, lint, or runtime validation ran; a read-only reviewer inadvertently ran git diff --check.",
+    "R2.8.116 static review follow-up now records `.base`/`.md` symlinks, directories and other non-file entries, captures symlink target bytes and complete directory-subtree manifests with exact file/link artifacts, and leaves unrecordable special entries incomplete. It distinguishes true missing paths, removes source-path symlinks before reseeding, and checks vault path ancestors before source reads/writes. C07.3 renderer extraction now fails closed for unmapped visible links/rows, ambiguous aliases, traversal-like paths, and unexpected empty renders; it avoids `Array.at`/`replaceAll` in the affected renderer path and only classifies links as table rows when they are inside a table. Reported vault paths come from configured roots. Revised goal wording says minor edits stay local, each complete named milestone gets one accumulated push, and milestone achievement requires passing exact-SHA CI. Independent read-only review is in progress; no local executable validation ran.",
     "R2.8.104 attempt 1 is terminal but not accepted on exact SHA 11931b9a9003857caf00542e74a45f7fb6947f65. All seven required workflows and 20 jobs finished: 17 passed; all three Obsidian round-trip jobs failed at reopen-asc because restoring the previously active SIDEWAYS view caused Obsidian to rewrite Invalid Direction.base from 122 bytes to 62 bytes by dropping groupBy. The settled omitted parse error and ASC/DESC first-open captures were consistent across platforms. Complete exact job and 16-artifact metadata are in evidence/r2.8.104-attempt-1-11931b9.json. No local executable validation was run.",
     "R2.8.103 attempt 1 was reconciled as terminal but not accepted on exact SHA de462533be90985ba1dbb368e70231ffc1edd815. Seventeen of 20 jobs passed; the three pinned Obsidian round-trip jobs all captured matching ASC/DESC group orders and unchanged source hashes, then failed on the selected omitted-direction .base with the same visible groupBy parse error. All artifact IDs, sizes, digests, expirations, and job outcomes are recorded in evidence/r2.8.103-attempt-1-de46253.json. The goal now explicitly says not to push after every minor change and to batch work at a named milestone boundary. No local executable validation was run.",
     "R2.8.100 repair attempt 3 passed all seven required GitHub Actions workflows and all 20 jobs on exact SHA 779a33325be6e1cb5ebee30d7a69afa60a4da571. C08 and the R2.8.100 milestone are accepted; exact run/job IDs and 16 artifact IDs, sizes, SHA-256 digests, and expirations are in evidence/r2.8.100-attempt-3-779a333.json. The Obsidian round-trip artifact does not contain C07 probe data because C07 was not in that SHA. No local executable validation was run.",
@@ -36136,7 +36138,7 @@
       "push_status": "Accepted on exact SHA 15ee500b04be9acef86a1b5fbf3d1e0ccb5bf7b7: seven required workflows, 20/20 jobs, and three platform round-trip artifacts passed and were reconciled."
     },
     "R2.8.115": {
-      "status": "in_progress",
+      "status": "failed",
       "starting_sha": "15ee500b04be9acef86a1b5fbf3d1e0ccb5bf7b7",
       "scope": "Capture pinned Obsidian 1.14.4 groupOrder behavior as a reference-only C07.3 milestone. Do not implement Rust groupOrder semantics in this slice.",
       "deliverable": "A scenario-driven round-trip probe and synthetic fixtures that capture ordered group headings, typed-value label collisions, row membership/order, visibility and parse/error behavior on first open and reopen while proving .base and note sources unchanged.",
@@ -36162,9 +36164,71 @@
         "Windows"
       ],
       "expected_evidence_path_template": "evidence/r2.8.115-attempt-1-{short-sha}.json",
+      "implementation_sha": "30d0ad5de778dbeb36a7963cec78d39f391b0e59",
+      "attempts": [
+        {
+          "attempt": 1,
+          "source_sha": "30d0ad5de778dbeb36a7963cec78d39f391b0e59",
+          "outcome": "failed",
+          "evidence": "evidence/r2.8.115-attempt-1-30d0ad5.json",
+          "workflow_runs": {
+            "inventory": 38508718956,
+            "quality": 38508718987,
+            "desktop_build": 38508719004,
+            "plugin_renderer": 38508718953,
+            "loaded_plugins": 38508718982,
+            "rust_ci": 38508718977,
+            "vault_roundtrip": 38508718974
+          },
+          "status_snapshot": {
+            "observed_at": "2026-10-14T04:10:06Z",
+            "jobs_total": 20,
+            "success": 17,
+            "failure": 3,
+            "queued": 0,
+            "in_progress": 0
+          }
+        }
+      ],
+    "push_status": "Pushed once to origin/main as 30d0ad5de778dbeb36a7963cec78d39f391b0e59. All 20 jobs are terminal: 17 passed and the three Obsidian round-trip jobs failed on the same C07.3 source-hash guard. The complete report, job, artifact, and hash evidence is in evidence/r2.8.115-attempt-1-30d0ad5.json. No repair was pushed.",
+    "next_action": "Prepare named R2.8.116 locally. Preserve and report original and post-open source bytes/hashes without stopping capture on an Obsidian rewrite; isolate scenario inputs; expose full DevTools evaluation exceptions and obtain unambiguous ordered heading/member data for all 14 scenarios on first open and reopen. Keep the Rust source-preservation requirement unchanged. Push once only after this repair package is complete and reviewed, then reconcile its full exact-SHA CI batch.",
+    "evidence": "evidence/r2.8.115-attempt-1-30d0ad5.json"
+    },
+    "R2.8.116": {
+      "status": "in_progress",
+      "starting_sha": "30d0ad5de778dbeb36a7963cec78d39f391b0e59",
+      "scope": "Repair the C07.3 pinned-reference capture after the R2.8.115 terminal CI failure. Do not implement Rust groupOrder semantics and do not weaken Rust source-preservation requirements.",
+      "deliverable": "A cross-platform probe that completes structured first-open/reopen capture for all 14 C07.3 scenarios, records any pinned-app source rewrite with original and post-open bytes/hashes, and retains exact screenshots, errors, headings, and row memberships.",
+      "acceptance": [
+        "Record the original bytes and SHA-256 of each generated .base and note, plus post-open/reopen bytes and SHA-256; preserve the observed Obsidian rewrite as reference evidence instead of aborting before the UI observation. Include the exact changed bytes or a reversible diff in each OS artifact.",
+        "At every source checkpoint distinguish an absent path from a present non-file entry. Record exact symlink targets and a complete directory subtree; leave unsupported special entries explicitly incomplete. Remove or reject source-path symlinks before reseeding and never follow a symlink while writing within an isolated vault.",
+        "Require exactly ten named source checkpoints for each of the 14 scenarios (140 total), with no missing, duplicate, or unexpected scenario/stage pairs. Classify filesystem entries from lstat metadata and recheck directory type before recursion.",
+        "Isolate each scenario's source state so an Obsidian write from one scenario cannot affect another scenario's first-open or reopen result; record the exact active .base, loaded Bases view or explicit visible error surface, stable ordered group headings, and every member path/order.",
+        "Capture actionable DevTools exception details and resolve the renderer evaluation failure seen on all three OSes. Reject visible link candidates or data rows that cannot map to one fixture path; detect ambiguous aliases, absolute-like paths and traversal-like paths. A loaded Bases view must expose at least one mapped fixture path unless it displays an explicit error/alert surface or error-specific notice/body text, including for empty-order-list scenarios. Informational YAML/JSON notices alone do not qualify as errors. Record all visible membership as observed; the probe does not claim an independent oracle for notes omitted entirely from the UI. Screenshots are supplemental and do not replace structured selection, group, membership, and reopen fields.",
+        "Report the actual configured scenario vault paths and identify the parent container separately; do not label the container as an opened vault or substitute a hardcoded RUNNER_TEMP path.",
+        "Complete all 14 scenarios on first open and reopen on Linux, macOS, and Windows. Keep JSON 1e999 and YAML !!binary as candidates; do not claim app-level unsupported-entry behavior unless the loaded Bases view visibly rejects a candidate.",
+        "All seven required workflows and all 20 jobs pass on the exact repair SHA; executable validation runs only in GitHub Actions."
+      ],
+      "required_workflows": [
+        "Rust migration inventory",
+        "OpenObsidian quality",
+        "OpenObsidian desktop build",
+        "OpenObsidian plugin renderer matrix",
+        "OpenObsidian loaded plugin workflows",
+        "OpenObsidian Rust CI",
+        "Obsidian vault round-trip acceptance"
+      ],
+      "platforms": ["Ubuntu 24.04", "macOS", "Windows"],
+      "expected_evidence_path_template": "evidence/r2.8.116-attempt-1-{short-sha}.json",
+      "static_reviews": {
+        "checkpoint_and_filesystem_review": "passed: all 140 scenario/stage pairs are required; entries classify from lstat metadata and directories are rechecked before recursion; no executable validation ran",
+        "ui_and_path_review": "passed: absolute-like and traversal candidates fail closed, unmapped rows/links are rejected, zero-path loaded views require explicit error evidence, and informational YAML/JSON notices do not count as errors",
+        "report_and_membership_review": "passed: container and opened scenario vault paths are distinct; observed membership limitation is stated; no independent expected-member oracle is claimed",
+        "known_hardening_caveat": "A narrow filesystem TOCTOU window remains between lstat and subsequent read/readdir operations; the reviewer judged it non-blocking for this CI capture workflow."
+      },
       "attempts": [],
-      "push_status": "Not pushed. Keep all R2.8.115 changes local until the full acceptance package is complete and reviewed; then make one accumulated push and hold that SHA until the seven-workflow CI batch is terminal.",
-      "next_action": "Complete static review of the isolated C07.3 scenario reader and acceptance gates. Run executable acceptance only through the seven required GitHub Actions workflows after one reviewed milestone push; keep Rust parity blocked unless a valid candidate demonstrates app-level unsupported-entry behavior or that gap receives separate evidence."
+      "push_status": "Not pushed. Accumulate and review the complete repair package locally, then make one origin/main push and hold that SHA through all required CI results.",
+      "next_action": "Static reviews pass and the CI-ready acceptance/evidence package is complete. Commit the accumulated R2.8.116 package locally, confirm origin/main remains at the failed baseline SHA, push exactly once for this milestone, then reconcile the complete seven-workflow exact-SHA CI batch. Run no local executable validation."
     }
   },
   "ci_preparation": {
