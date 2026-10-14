@@ -259,6 +259,8 @@ type GroupOrderFreshSweepOffset = {
     group_key: string | null;
     column_ordinal: number | null;
     local_dom_ordinal: number;
+    visibility_sample_sequence: number;
+    scroll_positions: GroupOrderScrollPosition[];
     title_hit_diagnostics?: Record<string, unknown>;
   }>;
   mapped_row_path_candidates: GroupOrderMappedRowPathCandidate[];
@@ -275,6 +277,7 @@ type GroupOrderVisibleState = {
   result_count: number | null;
   result_count_texts: string[];
   result_count_evidence: GroupOrderResultCountEvidence[];
+  kanban_rendered_count_evidence: Array<Record<string, unknown>>;
   zero_result_outcome_classification: "empty-group-order-list" | "yaml-binary-candidate-observation" | null;
   viewport: {width: number; height: number; available_width: number; available_height: number};
   visibility_sampling: {
@@ -309,6 +312,7 @@ type GroupOrderVisibleState = {
     fresh_sweep_unmapped_rows: GroupOrderUnmappedRowCandidate[];
     fresh_sweep_unmapped_candidates: GroupOrderUnmappedPathCandidate[];
     fresh_sweep_unowned_result_samples: number;
+    fresh_sweep_unowned_result_observations: Array<Record<string, unknown>>;
     fresh_sweep_duplicate_path_samples: number;
     fresh_sweep_ordering_ambiguous: boolean;
     fresh_sweep_group_ownership_ambiguous: boolean;
@@ -380,6 +384,7 @@ type GroupOrderScenarioObservation = GroupOrderVisibleState & {
     result_count: number | null;
     result_count_texts: string[];
     result_count_evidence: GroupOrderResultCountEvidence[];
+    kanban_rendered_count_evidence: Array<Record<string, unknown>>;
     zero_result_outcome_classification: GroupOrderVisibleState["zero_result_outcome_classification"];
     viewport: {width: number; height: number; available_width: number; available_height: number};
     visibility_sampling: GroupOrderVisibleState["visibility_sampling"];
@@ -5690,6 +5695,7 @@ async function readGroupOrderVisibleState(
     let freshSweepUnmappedRowSamples = 0;
     let freshSweepDuplicatePathSamples = 0;
     let freshSweepUnownedResultSamples = 0;
+    const freshSweepUnownedResultObservations = [];
     let freshSweepCoverageComplete = true;
     let freshSweepOrderingAmbiguous = false;
     let freshSweepGroupOwnershipAmbiguous = false;
@@ -5867,9 +5873,12 @@ async function readGroupOrderVisibleState(
       }
       return {ordered, ambiguous};
     };
-    const addPathGroupObservation = (path, groupKey) => {
+    const addPathGroupObservation = (path, groupKey, unownedEvidence = null) => {
       if (!groupKey) {
-        if (groupByProperty || layout === 'kanban') freshSweepUnownedResultSamples += 1;
+        if (groupByProperty || layout === 'kanban') {
+          freshSweepUnownedResultSamples += 1;
+          if (layout === 'kanban' && unownedEvidence) freshSweepUnownedResultObservations.push(unownedEvidence);
+        }
         return;
       }
       if (!freshSweepPathGroupKeys.has(path)) freshSweepPathGroupKeys.set(path, new Set());
@@ -5892,7 +5901,7 @@ async function readGroupOrderVisibleState(
       freshSweepNodeIdentities.set(link.element, identityNow);
     }
     const initialHeadingIdentityEntries = headingIdentityEntries(
-      scopedHeadingIdentityElements(rawMarkerElements),
+      scopedHeadingIdentityElements(markerElements),
     );
     recordHeadingIdentityEntries(initialHeadingIdentityEntries, {source: 'initial-dom'});
     const scanFreshSweepPosition = async (scrollContainer, containerClass, axis, requestedOffset) => {
@@ -5941,7 +5950,8 @@ async function readGroupOrderVisibleState(
       const freshRawMarkers = observationRoot
         ? [...observationRoot.querySelectorAll('[class], [data-group], [role="group"]')].filter(hasGroupMarker)
         : [];
-      const freshMarkers = scopedHeadingIdentityElements(freshRawMarkers);
+      const freshMarkers = scopedHeadingIdentityElements(freshRawMarkers.filter((element) =>
+        visible(element) && hitTestPaintedText(element)));
       const freshMarkerIdentityEntries = headingIdentityEntries(freshMarkers);
       recordHeadingIdentityEntries(freshMarkerIdentityEntries, {
         source: 'fresh-sweep',
@@ -5962,6 +5972,7 @@ async function readGroupOrderVisibleState(
           if (!freshSweepHeadingRecords.has(key)) {
             freshSweepHeadingRecords.set(key, {
               key,
+              base_identity: identityEntry.base_identity,
               element,
               label: normalize(element.getAttribute('data-group') || element.getAttribute('aria-label') || textOf(element)),
               class_name: element.getAttribute('class') || '',
@@ -6014,6 +6025,8 @@ async function readGroupOrderVisibleState(
           group_key: groupKey,
           column_ordinal: columnOrdinal,
           local_dom_ordinal: localOrdinal,
+          visibility_sample_sequence: freshSweepPositions,
+          scroll_positions: scrollPositions,
           ...(entry.title_hit_diagnostics ? {title_hit_diagnostics: entry.title_hit_diagnostics} : {}),
         };
         if (!freshSweepResultRecords.has(entry.path)) {
@@ -6043,7 +6056,21 @@ async function readGroupOrderVisibleState(
         }
         freshSweepResultRecords.get(entry.path).observations.push(observation);
         offsetEvidence.result_group_assignments.push(observation);
-        addPathGroupObservation(entry.path, groupKey);
+        const paintedColumnHeadings = layout === 'kanban'
+          ? markerObservations.filter((marker) => marker.painted && marker.column === column)
+          : [];
+        addPathGroupObservation(entry.path, groupKey, groupKey ? null : {
+          path: entry.path,
+          group_key: null,
+          column_ordinal: columnOrdinal,
+          local_dom_ordinal: localOrdinal,
+          visible_painted_heading_candidate_count: paintedColumnHeadings.length,
+          visible_painted_heading_keys: paintedColumnHeadings.map((marker) => marker.key),
+          visibility_sample_sequence: freshSweepPositions,
+          card_bounds: {top: bounds.top, left: bounds.left, width: bounds.width, height: bounds.height},
+          scroll_positions: scrollPositions,
+          title_hit_diagnostics: entry.title_hit_diagnostics ?? null,
+        });
         resultEntries.push({...entry, column_ordinal: columnOrdinal, column, local_dom_ordinal: localOrdinal});
       };
       if (layout === 'kanban' && kanbanRoot) {
@@ -6086,7 +6113,7 @@ async function readGroupOrderVisibleState(
           }
           const column = card.closest('.bases-kanban-column');
           const columnOrdinal = rawKanbanColumns.indexOf(column);
-          const columnHeadings = markerObservations.filter((marker) => marker.column === column);
+          const columnHeadings = markerObservations.filter((marker) => marker.painted && marker.column === column);
           const groupKey = columnHeadings.length === 1 ? columnHeadings[0].key : null;
           if (columnOrdinal >= 0) freshSweepPaintedKanbanColumnOrdinals.add(columnOrdinal);
           recordResult({
@@ -6325,6 +6352,20 @@ async function readGroupOrderVisibleState(
         group_keys: groupKeys,
       };
     });
+    const reconciledUnownedKanbanObservations = freshSweepUnownedResultObservations.map((observation) => {
+      const groupKeys = [...(freshSweepPathGroupKeys.get(observation.path) ?? [])];
+      const groupOwners = groupKeys.map((key) => ({
+        key,
+        column_ordinal: freshSweepHeadingRecords.get(key)?.column_ordinal ?? null,
+      }));
+      return {
+        ...observation,
+        reconciled_group_keys: groupKeys,
+        reconciled_group_owners: groupOwners,
+        reconciled_to_one_stable_owner: groupKeys.length === 1
+          && groupOwners[0].column_ordinal === observation.column_ordinal,
+      };
+    });
     groupRecords = freshSweepOrderedHeadings.map((key, index) => {
       const heading = freshSweepHeadingRecords.get(key);
       const marker = {
@@ -6336,6 +6377,7 @@ async function readGroupOrderVisibleState(
       return {
         index,
         key,
+        base_identity: heading.base_identity,
         heading_text: heading.label,
         heading_class_name: heading.class_name,
         heading_bounds: {top: heading.top, left: heading.left},
@@ -6468,6 +6510,7 @@ async function readGroupOrderVisibleState(
       && visibleErrorTexts.length === 0
       && !notices.some((text) => errorSpecificPattern.test(text));
     const ambiguityReasons = [];
+    const kanbanRenderedCountEvidence = [];
     if ((layout === 'table' || layout === 'kanban') && !selectedResultRoot && !explicitErrorSurface) {
       ambiguityReasons.push('Expected exactly one visible result root for the loaded Bases view, found ' + visibleResultRoots.length + '.');
     }
@@ -6484,6 +6527,12 @@ async function readGroupOrderVisibleState(
     if (allUnmappedVisiblePathCandidates.length > 0) ambiguityReasons.push('One or more visible file-link candidates could not be mapped to a unique fixture path.');
     if (unresolvedPreSweepRowCandidates.length > 0) ambiguityReasons.push('One or more preliminary visible data rows could not be reconciled with a complete, unique fresh-sweep result and stable group ownership.');
     if (unassignedVisibleFilePaths.length > 0) ambiguityReasons.push('One or more visible fixture file links could not be assigned to a group or an ungrouped view.');
+    const unreconciledUnownedKanbanObservations = reconciledUnownedKanbanObservations
+      .filter((observation) => observation.reconciled_to_one_stable_owner !== true);
+    if (layout === 'kanban' && unreconciledUnownedKanbanObservations.length > 0) {
+      ambiguityReasons.push('One or more Kanban cards with a partially clipped or missing heading observation could not be reconciled to exactly one stable painted heading owner: '
+        + JSON.stringify(unreconciledUnownedKanbanObservations.slice(0, 12)));
+    }
     if (layout === 'kanban' && freshSweepUniquePaths.length > 0 && groupRecords.length === 0 && !emptyErrorOutcome) {
       ambiguityReasons.push('The Kanban view rendered fixture files without detectable group headings.');
     }
@@ -6500,39 +6549,150 @@ async function readGroupOrderVisibleState(
           ambiguityReasons.push('Visible Kanban heading ' + JSON.stringify(group.heading_text) + ' has no uniquely painted column.');
         }
       }
-      for (const group of groupRecords) {
+      const countSampleLimit = maximumFreshSweepPositions;
+      if (groupRecords.length > countSampleLimit) {
+        ambiguityReasons.push('Kanban rendered-count verification is bounded to ' + countSampleLimit
+          + ' headings, but the view has ' + groupRecords.length + '.');
+      }
+      for (let groupIndex = 0; groupIndex < groupRecords.length; groupIndex += 1) {
+        const group = groupRecords[groupIndex];
         const headingElement = group.marker.element;
-        const column = headingElement?.closest('.bases-kanban-column') ?? null;
-        const headerElement = headingElement?.closest('.bases-kanban-column-header')
-          ?? column?.querySelector(':scope > .bases-kanban-column-header')
-          ?? null;
-        const countElements = column ? [...column.querySelectorAll('.bases-kanban-column-count')] : [];
-        const headerCountElements = headerElement
-          ? [...headerElement.querySelectorAll('.bases-kanban-column-count')]
+        const originalColumn = headingElement?.closest('.bases-kanban-column') ?? null;
+        const originalHeader = headingElement?.closest('.bases-kanban-column-header') ?? null;
+        const originalColumnOrdinal = rawKanbanColumns.indexOf(originalColumn);
+        const capturedColumnOrdinal = rawKanbanColumns.indexOf(group.marker.column);
+        if (groupIndex >= countSampleLimit) {
+          kanbanRenderedCountEvidence.push({
+            group_key: group.key,
+            heading_text: group.heading_text,
+            column_ordinal: originalColumnOrdinal,
+            captured_column_ordinal: capturedColumnOrdinal,
+            expected_count: group.member_paths.length,
+            sampled: false,
+            sample_limit: countSampleLimit,
+            accepted: false,
+          });
+          continue;
+        }
+        const headingScrollSucceeded = await scrollIntoView(headingElement);
+        const headingBounds = headingElement?.getBoundingClientRect();
+        const headingText = textOf(headingElement);
+        const headingVisible = Boolean(headingElement && visible(headingElement));
+        const headingPainted = Boolean(headingScrollSucceeded && headingVisible && hitTestPaintedText(headingElement));
+        const headingScrollPositions = headingElement ? readScrollPositions(headingElement) : [];
+        const columnAfterHeading = headingElement?.closest('.bases-kanban-column') ?? null;
+        const headerAfterHeading = headingElement?.closest('.bases-kanban-column-header') ?? null;
+        const headerCountElements = headerAfterHeading
+          ? [...headerAfterHeading.querySelectorAll('.bases-kanban-column-count')]
           : [];
         const countElement = headerCountElements.length === 1 ? headerCountElements[0] : null;
+        const countScrollSucceeded = await scrollIntoView(countElement);
+        const column = headingElement?.closest('.bases-kanban-column') ?? null;
+        const headerElement = headingElement?.closest('.bases-kanban-column-header') ?? null;
+        const countElements = column ? [...column.querySelectorAll('.bases-kanban-column-count')] : [];
+        const currentHeaderCountElements = headerElement
+          ? [...headerElement.querySelectorAll('.bases-kanban-column-count')]
+          : [];
         const countText = textOf(countElement);
-        const declaredCount = /^\d+$/.test(countText) ? Number(countText) : null;
+        const declaredCount = /^\\d+$/.test(countText) ? Number(countText) : null;
+        const countVisible = Boolean(countScrollSucceeded && countElement && visible(countElement));
+        const countPainted = Boolean(countVisible && hitTestPaintedText(countElement));
+        const countScrollPositions = countElement ? readScrollPositions(countElement) : [];
         const columnOrdinal = rawKanbanColumns.indexOf(column);
-        const capturedColumnOrdinal = rawKanbanColumns.indexOf(group.marker.column);
-        const columnIdentityAmbiguous = columnOrdinal < 0
-          || columnOrdinal !== capturedColumnOrdinal
+        const headingColumnOrdinal = rawKanbanColumns.indexOf(columnAfterHeading);
+        const headingInHeader = Boolean(headerElement && headingElement && headerElement.contains(headingElement));
+        const countNodeOwnershipStable = Boolean(countElement
+          && countElement.isConnected
+          && currentHeaderCountElements.length === 1
+          && currentHeaderCountElements[0] === countElement
+          && countElement.closest('.bases-kanban-column') === column
+          && countElement.closest('.bases-kanban-column-header') === headerElement
+          && headerElement?.contains(countElement));
+        const headingIdentityAfterSampling = headingElement ? headingBaseIdentity(headingElement) : '';
+        const headingIdentityStable = headingIdentityAfterSampling === group.base_identity;
+        const columnIdentityAmbiguous = !headingElement?.isConnected
+          || originalColumnOrdinal < 0
+          || columnOrdinal !== originalColumnOrdinal
+          || headingColumnOrdinal !== originalColumnOrdinal
+          || originalColumnOrdinal !== capturedColumnOrdinal
+          || !originalColumn?.isConnected
+          || !originalHeader?.isConnected
+          || column !== originalColumn
+          || headerAfterHeading !== originalHeader
+          || headerElement !== originalHeader
           || !column?.isConnected
           || !headerElement?.isConnected
-          || !column.contains(headingElement);
-        const countMismatch = declaredCount === null || declaredCount !== group.member_paths.length;
-        if (columnIdentityAmbiguous || countMismatch) {
+          || !column.contains(headingElement)
+          || !headingInHeader
+          || !headingIdentityStable;
+        const countMismatch = declaredCount === null
+          || declaredCount !== group.member_paths.length
+          || !countVisible
+          || !countPainted
+          || !countNodeOwnershipStable;
+        const countBounds = countElement?.getBoundingClientRect();
+        kanbanRenderedCountEvidence.push({
+          group_key: group.key,
+          heading_text: group.heading_text,
+          column_ordinal: columnOrdinal,
+          captured_column_ordinal: capturedColumnOrdinal,
+          sampled: true,
+          column_connected: Boolean(column?.isConnected),
+          header_connected: Boolean(headerElement?.isConnected),
+          heading_in_header: headingInHeader,
+          heading_identity_stable: headingIdentityStable,
+          heading_sample: {
+            scroll_succeeded: headingScrollSucceeded,
+            text: headingText,
+            bounds: headingBounds ? {
+              top: headingBounds.top,
+              left: headingBounds.left,
+              width: headingBounds.width,
+              height: headingBounds.height,
+            } : null,
+            visible: headingVisible,
+            painted: headingPainted,
+            scroll_positions: headingScrollPositions,
+          },
+          count_descendant_count: countElements.length,
+          header_count_descendant_count: headerCountElements.length,
+          count_scroll_succeeded: countScrollSucceeded,
+          count_visible: countVisible,
+          count_painted: countPainted,
+          count_node_ownership_stable: countNodeOwnershipStable,
+          count_scroll_positions: countScrollPositions,
+          selected_count_element: countElement && countBounds ? {
+            tag_name: countElement.tagName.toLowerCase(),
+            class_name: countElement.getAttribute('class') || '',
+            text: countText,
+            bounds: {
+              top: countBounds.top,
+              left: countBounds.left,
+              width: countBounds.width,
+              height: countBounds.height,
+            },
+          } : null,
+          expected_count: group.member_paths.length,
+          observed_count: declaredCount,
+          accepted: headingPainted && !columnIdentityAmbiguous && !countMismatch,
+        });
+        if (!headingPainted || columnIdentityAmbiguous || countMismatch) {
           const columnHeaderText = textOf(headerElement);
-          const countBounds = countElement?.getBoundingClientRect();
           const failureReasons = [];
+          if (!headingPainted) failureReasons.push('owning heading was not visible and painted at its sampled scroll position');
           if (columnIdentityAmbiguous) failureReasons.push('owning column identity was ambiguous');
           if (countMismatch) {
             failureReasons.push('card count expected ' + group.member_paths.length
-              + ' but observed ' + JSON.stringify(countText));
+              + ' but observed ' + JSON.stringify(countText)
+              + ' (scroll=' + countScrollSucceeded
+              + ', visible=' + countVisible
+              + ', painted=' + countPainted
+              + ', ownership_stable=' + countNodeOwnershipStable + ')');
           }
           ambiguityReasons.push('Kanban group ' + JSON.stringify(group.heading_text)
             + ' failed rendered-column validation: ' + failureReasons.join('; ')
             + ' (column ordinal ' + columnOrdinal
+            + ', heading column ordinal ' + headingColumnOrdinal
             + ', captured column ordinal ' + capturedColumnOrdinal
             + ', count descendants ' + countElements.length
             + ', header count descendants ' + headerCountElements.length
@@ -6550,6 +6710,7 @@ async function readGroupOrderVisibleState(
             + ', header ' + JSON.stringify(columnHeaderText)
             + ', column connected ' + Boolean(column?.isConnected)
             + ', header connected ' + Boolean(headerElement?.isConnected)
+            + ', heading in header ' + headingInHeader
             + ', heading contained ' + Boolean(column && headingElement && column.contains(headingElement)) + ').');
         }
       }
@@ -6637,6 +6798,7 @@ async function readGroupOrderVisibleState(
       result_count: resultCount,
       result_count_texts: resultCountTexts,
       result_count_evidence: resultCountEvidence,
+      kanban_rendered_count_evidence: kanbanRenderedCountEvidence,
       zero_result_outcome_classification: zeroResultOutcomeClassification,
       viewport,
       visibility_sampling: {
@@ -6671,6 +6833,7 @@ async function readGroupOrderVisibleState(
         fresh_sweep_unmapped_rows: freshSweepUnmappedRows.slice(0, 80),
         fresh_sweep_unmapped_candidates: freshSweepUnmappedCandidates.slice(0, 80),
         fresh_sweep_unowned_result_samples: freshSweepUnownedResultSamples,
+        fresh_sweep_unowned_result_observations: reconciledUnownedKanbanObservations.slice(0, 160),
         fresh_sweep_duplicate_path_samples: freshSweepDuplicatePathSamples,
         fresh_sweep_ordering_ambiguous: freshSweepOrderingAmbiguous,
         fresh_sweep_group_ownership_ambiguous: freshSweepGroupOwnershipAmbiguous,
@@ -6752,6 +6915,7 @@ function emptyGroupOrderVisibleState(scenario: GroupOrderScenario): GroupOrderVi
     result_count: null,
     result_count_texts: [],
     result_count_evidence: [],
+    kanban_rendered_count_evidence: [],
     zero_result_outcome_classification: null,
     viewport: {width: 0, height: 0, available_width: 0, available_height: 0},
     visibility_sampling: {
@@ -6780,6 +6944,7 @@ function emptyGroupOrderVisibleState(scenario: GroupOrderScenario): GroupOrderVi
       fresh_sweep_unmapped_rows: [],
       fresh_sweep_unmapped_candidates: [],
       fresh_sweep_unowned_result_samples: 0,
+      fresh_sweep_unowned_result_observations: [],
       fresh_sweep_duplicate_path_samples: 0,
       fresh_sweep_ordering_ambiguous: false,
       fresh_sweep_group_ownership_ambiguous: false,
@@ -6845,6 +7010,7 @@ async function captureGroupOrderScenario(
       result_count: state.result_count,
       result_count_texts: state.result_count_texts,
       result_count_evidence: state.result_count_evidence,
+      kanban_rendered_count_evidence: state.kanban_rendered_count_evidence,
       zero_result_outcome_classification: state.zero_result_outcome_classification,
       viewport: state.viewport,
       visibility_sampling: state.visibility_sampling,

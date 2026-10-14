@@ -2,20 +2,21 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-14T11:28:44Z",
+  "updated_at": "2026-10-14T12:13:19Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "d609d3400d622deca105bfc0ddb11e6eef19e781",
-  "current_milestone": "R2.8.125 grouped repair for macOS picker dismissal and cross-platform formula-Kanban count attribution (implementation-complete / CI-pending)",
-  "next_action": "Commit the reviewed R2.8.125 package locally and push it once to origin/main to trigger the required GitHub CI batch. Record the submitted SHA and all exact-SHA run/job IDs, then keep origin/main pinned until the full batch is terminal. Do not run local executable validation.",
-  "push_status": "R2.8.124 is terminal/failed at d609d3400d622deca105bfc0ddb11e6eef19e781: six of seven workflows and 17/20 jobs passed; all three round-trip jobs failed. R2.8.125 is implementation-complete and independently source-reviewed as one bounded repair package. It is ready for one push to origin/main; after submission, keep origin/main at the exact SHA until all required workflows/jobs are terminal. No local executable validation ran.",
+  "last_reconciled_head": "f2295fb0861564115b51c679b083579277e5465e",
+  "current_milestone": "R2.8.126 C07.3 scroll-aware Kanban ownership and rendered-count evidence repair (implementation-complete / ready for one submission)",
+  "next_action": "Complete the reviewed R2.8.126 C07.3 scroll-aware ownership/count evidence repair, reconcile R2.8.125 failure evidence, and push the whole milestone once to origin/main. Wait for all seven required workflows and 20 jobs on that exact SHA to become terminal before another push. No local executable validation.",
+  "push_status": "R2.8.125 was pushed once to origin/main at f2295fb0861564115b51c679b083579277e5465e. Its exact-SHA batch is terminal: six of seven workflows and 17/20 jobs passed; the three Windows/macOS/Linux Obsidian round-trip jobs failed only the formula-dependent Kanban count scenario. Keep the remote at this terminal SHA until the single grouped R2.8.126 repair submission.",
   "blockers": [
     "C07.3 pinned Obsidian reference behavior remains incomplete and Rust parity is not established. R2.8.119 failed all three platform round-trip jobs on exact SHA 2a18016de043ea8ec82529feabb4912d439efa2; see evidence/r2.8.119-attempt-1-2a18016.json. Do not claim Rust C07.3 parity or a full-fixture membership oracle from reference UI results.",
     "R2.8.120 failed its terminal exact-SHA CI batch on 985af8aa18be53c285221b2ed21d4062e69b9f3d. Linux C07.3 table row diagnostics reject visible rows despite each uniquely matching an already captured fixture path; formula Kanban extraction records no card memberships although the screenshot shows the 5/4/4/0 cards. macOS display metrics failed before first-run picker interaction, and Windows stopped after picker closure when the host HWND changed. See evidence/r2.8.120-attempt-1-985af8a.json; keep C07.3 pending.",
     "R2.8.121 is terminal/failed on exact SHA 7210269101a81d6a8743ed70cb66f4d1ff2369fb: six of seven required workflows and 17 of 20 jobs passed; the Linux, macOS, and Windows Obsidian round-trip jobs failed. All seven workflows/20 jobs are terminal. See evidence/r2.8.121-attempt-1-7210269.json; R2.8.122 groups the three focused harness repairs for one reviewed submission.",
     "R2.8.123 exact-SHA CI is terminal/failed: six of seven workflows and 17/20 jobs passed; all four Rust CI jobs passed; macOS, Windows, and Ubuntu round-trip jobs failed. macOS failed OCR despite a uniquely identified visible native chooser; Windows failed OCR despite stable exact-target UIA evidence and a captured target row; Linux rejected all 13 formula-Kanban cards because caret text hits were zero although every title-range sample hit its exact card root, while the screenshots visibly show the expected 5/4/4/0 groups. The other 13 C07.3 scenarios and source-observation recording passed. Full run/job/artifact details and digests are in evidence/r2.8.123-attempt-1-ee8e3bd.json. Keep C07.3 pending and keep origin/main at this SHA until the complete grouped R2.8.124 repair milestone is ready.",
-    "R2.8.124 terminal/failed on exact SHA d609d3400d622deca105bfc0ddb11e6eef19e781: six of seven workflows and 17/20 jobs passed; macOS, Windows, and Linux Obsidian round-trip jobs failed. Windows/Linux formula-dependent Kanban acceptance rejected the count gate on first-open/reopen although artifacts show 13 paths and 5/4/4/0 groups/count labels; the query operand is not recorded. See evidence/r2.8.124-attempt-1-d609d34.json. C07.3 remains pending while R2.8.125 is prepared."
+    "R2.8.124 terminal/failed on exact SHA d609d3400d622deca105bfc0ddb11e6eef19e781: six of seven workflows and 17/20 jobs passed; macOS, Windows, and Linux Obsidian round-trip jobs failed. Windows/Linux formula-dependent Kanban acceptance rejected the count gate on first-open/reopen although artifacts show 13 paths and 5/4/4/0 groups/count labels; the query operand is not recorded. See evidence/r2.8.124-attempt-1-d609d34.json. C07.3 remains pending while R2.8.125 is prepared.",
+    "R2.8.125 failed on exact SHA f2295fb0861564115b51c679b083579277e5465e: six of seven workflows and 17/20 jobs passed; all three platform round-trip jobs failed the formula-dependent Kanban count assertion on first-open/reopen despite matching displayed labels and memberships 5/4/4/0. Keep C07.3 pending; see evidence/r2.8.125-attempt-1-f2295fb.json."
   ],
   "phases": {
     "R0": {
@@ -54,7 +55,7 @@
         "plugin-renderer"
       ],
       "implementation_sha": "15ee500b04be9acef86a1b5fbf3d1e0ccb5bf7b7",
-      "next_action": "R2.8.122 is terminal/failed on exact SHA 5d75a5e2e08cf85b70debe2d96ab06fef4f20974: 17/20 jobs passed; Linux, macOS and Windows round-trip acceptance failed. Reconcile the three failures into one bounded repair milestone, then push it once only after static review. No local executable validation.",
+      "next_action": "R2.8.125 is terminal/failed at f2295fb0861564115b51c679b083579277e5465e (6/7 workflows, 17/20 jobs passed). R2.8.126 is the complete reviewed C07.3 scroll-aware ownership/count evidence repair; push it once, then reconcile all seven workflows and 20 jobs before any later push.",
       "implementation_sha_note": "15ee500b04be9acef86a1b5fbf3d1e0ccb5bf7b7 is the last accepted R2 Rust implementation milestone (R2.8.114); R2.8.115–R2.8.121 are reference-capture/harness work, and R2.8.119, R2.8.120 and R2.8.121 failed."
     },
     "R3": {
@@ -39390,7 +39391,7 @@
       "next_action": "R2.8.124 is terminal/failed. Proceed with the planned R2.8.125 grouped repair and exact-SHA CI acceptance; keep C07.3 pending."
     },
     "R2.8.125": {
-      "status": "implementation-complete / CI-pending",
+      "status": "failed / CI-terminal",
       "starting_sha": "d609d3400d622deca105bfc0ddb11e6eef19e781",
       "scope": "Repair the terminal R2.8.124 macOS picker dismissal and the cross-platform formula-dependent Kanban count gate in one bounded, reviewable round-trip harness milestone.",
       "deliverable": "A fail-closed macOS Go to Folder flow that keeps the exact picker available for its explicit accessibility-verified Open click, plus a Kanban count check tied to the current group heading’s owning column/header with diagnostics that identify the exact column and count evidence. Preserve the exact-card-surface title-range fallback and all existing path, ownership, sweep, and reopen checks.",
@@ -39424,7 +39425,7 @@
         ],
         "local_executable_validation": false
       },
-      "next_action": "Commit and push the complete package once; reconcile all seven required workflows and 20 jobs on the submitted SHA before another push.",
+      "next_action": "R2.8.125 is terminal and failed. Submit the complete, reviewed R2.8.126 C07.3 ownership/count evidence repair once; keep C07.3 pending until required exact-SHA CI passes.",
       "static_reviews": {
         "status": "passed; exact-SHA behavior pending GitHub CI",
         "findings": [
@@ -39432,7 +39433,108 @@
           "Kanban count review found the current-heading column/header lookup conservative and fail-closed. It checks captured/live ordinal agreement, connected column/header, heading containment and exactly one header count element; failure evidence includes both ordinals, element identity/text/bounds and descendant counts. Prior reports do not prove the root cause, so the exact-SHA CI result remains authoritative."
         ],
         "local_executable_validation": false
-      }
+      },
+      "attempts": [
+        {
+          "attempt": 1,
+          "source_sha": "f2295fb0861564115b51c679b083579277e5465e",
+          "submitted_at": "2026-10-14T11:33:07Z",
+          "outcome": "failed",
+          "workflow_runs": {
+            "OpenObsidian Rust CI": 38557361962,
+            "OpenObsidian desktop build": 38557361928,
+            "OpenObsidian plugin renderer matrix": 38557362022,
+            "OpenObsidian loaded plugin workflows": 38557361981,
+            "Obsidian vault round-trip acceptance": 38557361985,
+            "Rust migration inventory": 38557361978,
+            "OpenObsidian quality": 38557361939
+          },
+          "job_ids": {
+            "OpenObsidian Rust CI": [
+              115829710063,
+              115829710314,
+              115829710331,
+              115829710434
+            ],
+            "OpenObsidian desktop build": [
+              115829709767,
+              115829710288,
+              115829710294
+            ],
+            "OpenObsidian plugin renderer matrix": [
+              115829710305,
+              115829710649,
+              115829710671
+            ],
+            "OpenObsidian loaded plugin workflows": [
+              115829710365,
+              115829710715,
+              115829710778
+            ],
+            "Obsidian vault round-trip acceptance": [
+              115829782125,
+              115829782280,
+              115829782367
+            ],
+            "Rust migration inventory": [
+              115829710385
+            ],
+            "OpenObsidian quality": [
+              115829711090,
+              115829711238,
+              115829711806
+            ]
+          },
+          "status_snapshot": {
+            "observed_at": "2026-10-14T12:13:19Z",
+            "expected_workflows": 7,
+            "completed_successful_workflows": 6,
+            "failed_workflows": 1,
+            "in_progress_workflows": 0,
+            "queued_workflows": 0,
+            "expected_jobs": 20,
+            "passed_jobs": 17,
+            "failed_jobs": 3,
+            "in_progress_jobs": 0,
+            "queued_jobs": 0,
+            "remote_tip": "f2295fb0861564115b51c679b083579277e5465e"
+          },
+          "evidence_path": "evidence/r2.8.125-attempt-1-f2295fb.json",
+          "observed_failures": [
+            {
+              "job_id": 115829782125,
+              "platform": "Windows",
+              "finding": "Only yaml-formula-dependent-kanban failed at first-open and reopen. All four group count labels show 5/4/4/0, matching membership, but every rendered-count assertion fails. The other 13 C07.3 scenarios and source-observation recording passed.",
+              "artifact_id": 11891641716,
+              "artifact_digest": "sha256:422313b2218d9edd2fa8c64561d3e80dd9043a02315b67b4e7fb131544b542e3",
+              "report_sha256": "9b41848afd574229cf58d588b350221fbf056f552430484bec379f59471f49d8",
+              "first_open_screenshot_sha256": "3665863717c572c5799eb5503fa609d3c227ace8df1fbda9984caaff7234cc20",
+              "reopen_screenshot_sha256": "3665863717c572c5799eb5503fa609d3c227ace8df1fbda9984caaff7234cc20"
+            },
+            {
+              "job_id": 115829782367,
+              "platform": "Linux",
+              "finding": "Only yaml-formula-dependent-kanban failed at first-open and reopen. All four group count labels show 5/4/4/0, matching membership, but every rendered-count assertion fails. The other 13 C07.3 scenarios and source-observation recording passed.",
+              "artifact_id": 11891582275,
+              "artifact_digest": "sha256:142572658b44d97ad2215993a3fea69d01e58bac6ca40dbdb03b85bfb1f7414f",
+              "report_sha256": "5671212650fcc0c63d4505bf228b5b720785d9b12b08aa9ac70d2489af84574d",
+              "first_open_screenshot_sha256": "25531356ce47b7c82f85bd978e1e369a15a1c6eab97b362eada98359d5740192",
+              "reopen_screenshot_sha256": "25531356ce47b7c82f85bd978e1e369a15a1c6eab97b362eada98359d5740192"
+            },
+            {
+              "job_id": 115829782280,
+              "platform": "macOS",
+              "finding": "Only yaml-formula-dependent-kanban failed at first-open and reopen; all four displayed group counts match 5/4/4/0 and membership. The other 13 C07.3 scenarios and source-observation recording passed. Separately, C07.2 reports the pinned Obsidian app rewrote Invalid Direction.base in both sessions; this is captured as a reference-app mutation and is not a second thrown C07.3 acceptance failure.",
+              "artifact_id": 11893305046,
+              "artifact_digest": "sha256:8a5f007f5287c461e7a78b78cb478745a7ef989f6708f202cd1ce089e4615d82",
+              "report_sha256": "1c3c46e632d03325bce383011785e8c793cf101cc57476babc3fc99683a496cc",
+              "first_open_screenshot_sha256": "78475649a38a92983d35118b5b20f2932db0dfe687241870665c31a2f8aa02a7",
+              "reopen_screenshot_sha256": "78475649a38a92983d35118b5b20f2932db0dfe687241870665c31a2f8aa02a7"
+            }
+          ]
+        }
+      ],
+      "terminal_note": "The strong source-based explanation is the single-backslash digit regex inside the embedded renderer template in f2295fb; the local repair doubles the template escape. Reports do not record the evaluated expression, so treat this as an inference until the next exact-SHA report."
     }
   },
   "ci_preparation": {
@@ -39496,5 +39598,82 @@
       "evidence": "evidence/parallel-quality-checks-8c84978.json"
     }
   },
-  "current_requirement_count": 220
+  "current_requirement_count": 220,
+  "current_ci_attempt": {
+    "milestone": "R2.8.125",
+    "attempt": 1,
+    "implementation_sha": "f2295fb0861564115b51c679b083579277e5465e",
+    "submitted_at": "2026-10-14T11:33:07Z",
+    "status": "completed / failure",
+    "evidence_file": "evidence/r2.8.125-attempt-1-f2295fb.json",
+    "summary": {
+      "expected_workflows": 7,
+      "completed_successful_workflows": 6,
+      "failed_workflows": 1,
+      "in_progress_workflows": 0,
+      "queued_workflows": 0,
+      "expected_jobs": 20,
+      "passed_jobs": 17,
+      "failed_jobs": 3,
+      "in_progress_jobs": 0,
+      "queued_jobs": 0,
+      "remote_tip": "f2295fb0861564115b51c679b083579277e5465e"
+    },
+    "workflow_run_ids": [
+      38557361962,
+      38557361928,
+      38557362022,
+      38557361981,
+      38557361985,
+      38557361978,
+      38557361939
+    ],
+    "status_observed_at": "2026-10-14T12:13:19Z"
+  },
+  "planned_next_milestone": {
+    "milestone": "R2.8.126",
+    "name": "C07.3 scroll-aware Kanban ownership and rendered-count evidence repair",
+    "status": "implementation-complete / ready for one milestone submission; R2.8.125 terminal failures reconciled; independent static review passed",
+    "deliverable": "Complete the C07.3 Kanban harness repair: reconcile partially clipped edge observations with stable per-card painted-heading ownership; sample each heading and unique rendered count in view; recheck connected column/header ownership; retain successful and failed per-node evidence; and correctly escape the numeric-count regex inside the embedded renderer template. Fold in terminal R2.8.125 failures only within this coherent C07.3 deliverable.",
+    "acceptance": [
+      "Every unique painted Kanban card has exactly one stable painted group owner in the same column across the exhaustive sweep; partial unowned edge samples are retained and reconciled, while never-owned cards or conflicting owners fail closed.",
+      "For each group, separately scroll and sample the heading and its unique numeric header count; the embedded renderer must parse digit counts correctly; require painted visibility, unchanged connected column/header identity, exact count equality, and record bounds, flags, and scroll positions. More than 128 groups fails closed with explicit unsampled evidence.",
+      "Carry successful and failed ownership/count evidence into settle samples, first-open/reopen observations, and the saved report; inspect exact-SHA artifacts for all 14 C07.3 scenarios.",
+      "After R2.8.125 is terminal, complete static review and one push for this whole reviewed milestone; all seven required workflows and all 20 jobs must pass on its exact SHA. No local executable validation."
+    ],
+    "required_workflows": [
+      "OpenObsidian Rust CI",
+      "Obsidian vault round-trip acceptance",
+      "Rust migration inventory",
+      "OpenObsidian loaded plugin workflows",
+      "OpenObsidian desktop build",
+      "OpenObsidian quality",
+      "OpenObsidian plugin renderer matrix"
+    ],
+    "evidence": "Exact-SHA three-OS round-trip reports, artifacts and hashes; successful and failed per-heading/per-count observations; all workflow/job URLs and conclusions.",
+    "depends_on": "R2.8.125 is terminal/failed. The complete grouped repair is ready for one submission; do not push another SHA until this package is committed and reviewed.",
+    "terminal_failure_context": "All three platform reports fail only yaml-formula-dependent-kanban first-open/reopen count validation. The source-template regex escape is a strong inference, not direct runtime evidence. C07.2 separately records Obsidian rewriting Invalid Direction.base in both sessions; C07.3 source observation remains complete."
+  },
+  "planned_following_milestone": {
+    "milestone": "R2.8.127",
+    "name": "C07.4 JavaScript-number behavior reference capture",
+    "status": "planned / unstarted; follows the C07.3 rendered-ownership gate repair",
+    "deliverable": "A dedicated pinned-Obsidian 1.14.4 reference capture for numeric sort, relational/equality filters, array contains, and identity around 2^53, retaining source hashes, first-open/reopen visible row order, and exact platform reports. No Rust semantic change until the reference outcome is recorded.",
+    "acceptance": [
+      "Characterize values at, below, and above 2^53 plus distinct JSON integer/float spellings that JavaScript parses to the same Number; capture sorting, comparison filters, equality, and array contains separately.",
+      "Capture the exact active .base, visible ordered row paths, count, source bytes/hashes, and screenshots on first open and reopen on Linux, macOS, and Windows; fail closed for ambiguous or incomplete row mapping.",
+      "All seven required workflows and all 20 jobs pass on one exact SHA; reports and artifact IDs/digests are reconciled before the milestone is accepted."
+    ],
+    "required_workflows": [
+      "OpenObsidian Rust CI",
+      "Obsidian vault round-trip acceptance",
+      "Rust migration inventory",
+      "OpenObsidian loaded plugin workflows",
+      "OpenObsidian desktop build",
+      "OpenObsidian quality",
+      "OpenObsidian plugin renderer matrix"
+    ],
+    "evidence": "Exact-SHA three-OS round-trip reports, artifacts and hashes; source-preservation checkpoint records; all workflow/job URLs and conclusions.",
+    "depends_on": "R2.8.126 must pass exact-SHA CI before starting this separate reference-capture package; one complete push per milestone."
+  }
 }

@@ -1,0 +1,282 @@
+{
+  "milestone": "R2.8.125",
+  "attempt": 1,
+  "status": "completed / failed; all seven workflows and 20 jobs terminal",
+  "captured_at": "2026-10-14T12:13:19Z",
+  "source_sha": "f2295fb0861564115b51c679b083579277e5465e",
+  "push": {
+    "pushed_once": true,
+    "remote_tip_at_submission": "f2295fb0861564115b51c679b083579277e5465e",
+    "submitted_at": "2026-10-14T11:33:07Z"
+  },
+  "validation_policy": "GitHub Actions only; no local executable validation was run.",
+  "summary": {
+    "expected_workflows": 7,
+    "completed_successful_workflows": 6,
+    "failed_workflows": 1,
+    "in_progress_workflows": 0,
+    "queued_workflows": 0,
+    "expected_jobs": 20,
+    "passed_jobs": 17,
+    "failed_jobs": 3,
+    "in_progress_jobs": 0,
+    "queued_jobs": 0,
+    "remote_tip": "f2295fb0861564115b51c679b083579277e5465e"
+  },
+  "workflows": [
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 38557361962,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38557361962",
+      "head_sha": "f2295fb0861564115b51c679b083579277e5465e",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "id": 115829710063,
+          "name": "rust (macos-latest)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 115829710314,
+          "name": "rust (ubuntu-latest)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 115829710331,
+          "name": "minimum supported Rust (1.95)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 115829710434,
+          "name": "rust (windows-latest)",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 38557361928,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38557361928",
+      "head_sha": "f2295fb0861564115b51c679b083579277e5465e",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "id": 115829709767,
+          "name": "windows-latest",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 115829710288,
+          "name": "ubuntu-latest",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 115829710294,
+          "name": "macos-latest",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 38557362022,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38557362022",
+      "head_sha": "f2295fb0861564115b51c679b083579277e5465e",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "id": 115829710305,
+          "name": "macos-latest",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 115829710649,
+          "name": "ubuntu-latest",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 115829710671,
+          "name": "windows-latest",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 38557361981,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38557361981",
+      "head_sha": "f2295fb0861564115b51c679b083579277e5465e",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "id": 115829710365,
+          "name": "ubuntu-latest",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 115829710715,
+          "name": "macos-latest",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 115829710778,
+          "name": "windows-latest",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "Obsidian vault round-trip acceptance",
+      "run_id": 38557361985,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38557361985",
+      "head_sha": "f2295fb0861564115b51c679b083579277e5465e",
+      "status": "completed",
+      "conclusion": "failure",
+      "jobs": [
+        {
+          "id": 115829782125,
+          "name": "Obsidian 1.14.4 vault round-trip on windows-latest",
+          "status": "completed",
+          "conclusion": "failure"
+        },
+        {
+          "id": 115829782280,
+          "name": "Obsidian 1.14.4 vault round-trip on macos-latest",
+          "status": "completed",
+          "conclusion": "failure"
+        },
+        {
+          "id": 115829782367,
+          "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04",
+          "status": "completed",
+          "conclusion": "failure"
+        }
+      ],
+      "artifacts": [
+        {
+          "id": 11891641716,
+          "name": "obsidian-vault-roundtrip-Windows-f2295fb0861564115b51c679b083579277e5465e",
+          "size_in_bytes": 20162602,
+          "digest": "sha256:422313b2218d9edd2fa8c64561d3e80dd9043a02315b67b4e7fb131544b542e3",
+          "created_at": "2026-10-14T11:48:24Z",
+          "expires_at": "2026-11-13T11:48:21Z",
+          "report_sha256": "9b41848afd574229cf58d588b350221fbf056f552430484bec379f59471f49d8",
+          "formula_kanban_first_open_screenshot_sha256": "3665863717c572c5799eb5503fa609d3c227ace8df1fbda9984caaff7234cc20",
+          "formula_kanban_reopen_screenshot_sha256": "3665863717c572c5799eb5503fa609d3c227ace8df1fbda9984caaff7234cc20",
+          "failure": "yaml-formula-dependent-kanban first-open and reopen: expected group counts 5/4/4/0 and observed matching text \"5\"/\"4\"/\"4\"/\"0\"; report marks each rendered-count gate failed."
+        },
+        {
+          "id": 11891582275,
+          "name": "obsidian-vault-roundtrip-Linux-f2295fb0861564115b51c679b083579277e5465e",
+          "size_in_bytes": 19536439,
+          "digest": "sha256:142572658b44d97ad2215993a3fea69d01e58bac6ca40dbdb03b85bfb1f7414f",
+          "created_at": "2026-10-14T11:51:14Z",
+          "expires_at": "2026-11-13T11:51:08Z",
+          "report_sha256": "5671212650fcc0c63d4505bf228b5b720785d9b12b08aa9ac70d2489af84574d",
+          "formula_kanban_first_open_screenshot_sha256": "25531356ce47b7c82f85bd978e1e369a15a1c6eab97b362eada98359d5740192",
+          "formula_kanban_reopen_screenshot_sha256": "25531356ce47b7c82f85bd978e1e369a15a1c6eab97b362eada98359d5740192",
+          "failure": "yaml-formula-dependent-kanban first-open and reopen: expected group counts 5/4/4/0 and observed matching text \"5\"/\"4\"/\"4\"/\"0\"; report marks each rendered-count gate failed."
+        },
+        {
+          "id": 11893305046,
+          "name": "obsidian-vault-roundtrip-macOS-f2295fb0861564115b51c679b083579277e5465e",
+          "size_in_bytes": 28946509,
+          "digest": "sha256:8a5f007f5287c461e7a78b78cb478745a7ef989f6708f202cd1ce089e4615d82",
+          "created_at": "2026-10-14T12:07:26Z",
+          "expires_at": "2026-11-13T12:07:24Z",
+          "report_sha256": "1c3c46e632d03325bce383011785e8c793cf101cc57476babc3fc99683a496cc",
+          "formula_kanban_first_open_screenshot_sha256": "78475649a38a92983d35118b5b20f2932db0dfe687241870665c31a2f8aa02a7",
+          "formula_kanban_reopen_screenshot_sha256": "78475649a38a92983d35118b5b20f2932db0dfe687241870665c31a2f8aa02a7",
+          "failure": "yaml-formula-dependent-kanban first-open and reopen: expected group counts 5/4/4/0 and displayed matching values; rendered-count gates fail. C07.2 separately records the known Invalid Direction.base rewrite by pinned Obsidian in both sessions."
+        }
+      ]
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 38557361978,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38557361978",
+      "head_sha": "f2295fb0861564115b51c679b083579277e5465e",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "id": 115829710385,
+          "name": "inventory",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 38557361939,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38557361939",
+      "head_sha": "f2295fb0861564115b51c679b083579277e5465e",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "id": 115829711090,
+          "name": "ubuntu-latest",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 115829711238,
+          "name": "windows-latest",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 115829711806,
+          "name": "macos-latest",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ],
+  "review_notes": [
+    {
+      "reviewer_scope": "macOS picker transition, read-only static review",
+      "finding": "R2.8.125 removes the suspected extra Return and retains exact-panel identity, enabled Open, disappearance, and final canonical target-path checks. Residual diagnostic risk: successful AppleScript exit alone does not prove the Go to Folder navigation reached targetRoot before the Open click; wrong selection should fail at the final exact path check rather than silently pass."
+    },
+    {
+      "reviewer_scope": "formula-Kanban count ownership and diagnostics, read-only static review",
+      "finding": "Count validation now derives the connected column/header from the observed heading and requires exactly one count descendant; failure diagnostics expose selected node text/bounds, both ordinals, descendant counts, and containment/connectivity. Residual evidence gap: the selected count node itself is not checked for painted visibility, and successful count operands are not retained in the report."
+    },
+    {
+      "observed_at": "2026-10-14T11:55:12Z",
+      "finding": "Windows and Ubuntu reports show matching expected and rendered count text, connected same-column header ownership, and all other 13 scenarios passing. Submitted source f2295fb places a single-backslash \\d regex inside the embedded renderer template literal; JavaScript template cooking likely changes it to /^d+$/, leaving declaredCount null. Strong source/report inference, not proven runtime evidence because the report does not record evaluated source or parsed count. A local double-escape correction is present in the next repair draft."
+    },
+    {
+      "observed_at": "2026-10-14T11:56:42Z",
+      "reviewer": "independent static source review",
+      "scope": "local uncommitted C07.3 Kanban ownership/count repair",
+      "finding": "The local repair samples each heading and unique count after scrolling, rechecks paint and same-node/column/header ownership, reconciles partial unowned card observations only to one painted owner in the same column, and fails closed above the 128-group cap. No concrete false-pass or false-failure path was found for the reported four-column case. This source review does not prove the next exact-SHA CI will pass."
+    },
+    {
+      "observed_at": "2026-10-14T12:13:19Z",
+      "reviewer": "terminal macOS report/log review",
+      "scope": "exact-SHA C07.3 failure and separate C07.2 reference mutation",
+      "finding": "The macOS acceptance error is the same formula-Kanban C07.3 first-open/reopen count failure as Windows/Linux. C07.2 also records Obsidian rewriting Invalid Direction.base in both sessions (122 bytes/hash fb9d112de60508c86bdde1c2ebf989143a379ff6ce59cc89e958865cfe43afe0 to 62 bytes/hash 6db35053b1d4aa0aca718364f906cd8820193c635ba002958f953d1aa03548cc); this is a separate reference-app mutation record, not a second thrown C07.3 acceptance error. C07.3 source hashes match the seeded source after reopen."
+    }
+  ]
+}
