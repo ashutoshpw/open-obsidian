@@ -2,20 +2,21 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-14T01:01:49Z",
+  "updated_at": "2026-10-14T01:19:39Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "fdb74ab3893b63bc9e77e7e7b12c27fd1f1821aa",
-  "current_milestone": "R2.8.108 C07.2 Rust Bases parity and source preservation",
-  "next_action": "Complete R2.8.108 locally: finish static review of the Rust Bases direction and invalid-source paths, ensure fixtures match the exact three-platform captures and source-preservation requirements, and prepare the complete acceptance package. Keep all minor edits local; push one accumulated origin/main batch only after the named milestone is complete, then wait for all required CI jobs to become terminal before another push. Do not run local executable validation.",
-  "push_status": "R2.8.107 is accepted on exact SHA fdb74ab3893b63bc9e77e7e7b12c27fd1f1821aa: all seven required workflows and all 20 jobs passed. Linux/macOS/Windows round-trip reports and artifact metadata are reconciled in evidence/r2.8.107-attempt-1-fdb74ab.json. No new SHA has been pushed.",
+  "last_reconciled_head": "af2866641a8105ba643543ad49ee295a2dd063ba",
+  "current_milestone": "R2.8.109 C07.2 Rust Bases CI repair",
+  "next_action": "Complete the R2.8.109 repair package locally: align the unsupported-formula fixture's missing-group expectation with the implemented None label, apply the exact rustfmt layout reported by CI, preserve the explicit unprobed-policy assertions, and retain the refreshed fixture inventory hash. Then commit and push one accumulated milestone batch to origin/main. Run all validation only in GitHub Actions and hold the resulting SHA until all required jobs are terminal.",
+  "push_status": "R2.8.108 attempt 1 is terminal but not accepted on exact SHA af2866641a8105ba643543ad49ee295a2dd063ba. All seven required workflows and 20 jobs are terminal: 16 passed and four Rust CI jobs failed on the shared unsupported-formula fixture mismatch; Ubuntu also failed formatting. All three Obsidian round-trip jobs passed and their artifacts are reconciled in evidence/r2.8.108-attempt-1-af28666.json. The R2.8.109 repair package is local and has not been pushed.",
   "blockers": [
     "R2.8.102 attempt 1 is terminal but not accepted on 636b8fbe935b4225ef724d1fa56df3a7d92c4d49. Six required workflows passed; all three Obsidian round-trip jobs failed because Obsidian rewrote the synthetic Ascending.base from quoted name/property note.team to canonical unquoted name/property team. R2.8.103 corrected that source normalization and captured matching ASC/DESC behavior, but its own terminal blocker is the omitted-direction parse error described below. Keep local Rust evaluator/fixture edits separate until reference capture is finalized.",
     "R2.8.103 attempt 1 is terminal but not accepted on exact SHA de462533be90985ba1dbb368e70231ffc1edd815. All seven required workflows and 20 jobs finished: 17 jobs passed; Linux, macOS, and Windows Obsidian round-trip jobs failed after selecting Omitted Direction.base and displaying the same groupBy parse error with no rendered groups/rows. Explicit ASC/DESC captures matched across the platforms and source hashes remained unchanged. The probe did not reach SIDEWAYS or reopen. R2.8.104 continued through all first-open cases but exposed a second source-preservation issue during workspace restoration; keep the remote SHA fixed until the focused R2.8.105 repair package is complete.",
     "R2.8.104 attempt 1 is terminal but not accepted on exact SHA 11931b9a9003857caf00542e74a45f7fb6947f65. All seven workflows and 20 jobs are terminal: 17 passed and Linux, macOS, and Windows Obsidian round-trip jobs failed identically after Obsidian restored SIDEWAYS and removed groupBy from Invalid Direction.base. The R2.8.105 follow-up and its terminal findings are recorded below.",
     "R2.8.105 attempt 1 is terminal but not accepted on exact SHA 45ae26c71d274097bf5ca9827e61cf6e9f0c3413. Six required workflows passed; the initial Windows quality timeout passed on same-SHA retry attempt 2. Linux, macOS, and Windows round-trip jobs failed at first-open-after-shutdown-restore because Invalid Direction.base changed from 122 bytes / SHA-256 fb9d112de60508c86bdde1c2ebf989143a379ff6ce59cc89e958865cfe43afe0 to 62 bytes / SHA-256 6db35053b1d4aa0aca718364f906cd8820193c635ba002958f953d1aa03548cc, dropping groupBy. The first-open direction observations settled, but reopen captures did not complete. Exact evidence is in evidence/r2.8.105-attempt-1-45ae26c.json. The precise point of rewrite remains to be isolated before the next repair milestone.",
-    "R2.8.106 attempt 1 failed only the macOS Obsidian round-trip job on exact SHA 95d2bab0acb88b672de5bab84cac0085989c6b96. The fresh screenshot and exact OCR crop show the requested Canvas New Markdown path, but pbpaste returns empty and the probe aborts before C07.2. Linux and Windows completed C07.2. The reference capture is not Rust source-preservation evidence; keep C07.2 pending."
+    "R2.8.106 attempt 1 failed only the macOS Obsidian round-trip job on exact SHA 95d2bab0acb88b672de5bab84cac0085989c6b96. The fresh screenshot and exact OCR crop show the requested Canvas New Markdown path, but pbpaste returns empty and the probe aborts before C07.2. Linux and Windows completed C07.2. The reference capture is not Rust source-preservation evidence; keep C07.2 pending.",
+    "R2.8.108 attempt 1 is terminal but not accepted on exact SHA af2866641a8105ba643543ad49ee295a2dd063ba. All seven required workflows and 20 jobs finished: 16 passed and all four Rust CI jobs failed on the unsupported-formula fixture expecting an empty label instead of None; Ubuntu also failed rustfmt. All three Obsidian round-trip jobs passed with C07.2 artifacts reconciled in evidence/r2.8.108-attempt-1-af28666.json. R2.8.109 packages the focused repair."
   ],
   "phases": {
     "R0": {
@@ -34437,7 +34438,7 @@
     "R2.8.108": {
       "status": "in_progress",
       "starting_sha": "fdb74ab3893b63bc9e77e7e7b12c27fd1f1821aa",
-      "implementation_sha": null,
+      "implementation_sha": "af2866641a8105ba643543ad49ee295a2dd063ba",
       "scope": "Complete C07.2 Rust Bases groupBy parity and source preservation against the pinned Obsidian 1.14.4 captures on Linux, macOS, and Windows. Keep C07.3 groupOrder and C07.4 locale/numeric comparator semantics outside this milestone.",
       "acceptance": [
         "JSON and native YAML explicit ASC/DESC group directions are parsed and evaluated; exact .base source bytes and unknown root/view/groupBy fields survive parse/encode.",
@@ -34457,10 +34458,53 @@
         "OpenObsidian Rust CI",
         "Obsidian vault round-trip acceptance"
       ],
-      "evidence": "evidence/r2.8.107-attempt-1-fdb74ab.json",
+      "evidence": "evidence/r2.8.108-attempt-1-af28666.json",
+      "reference_evidence": "evidence/r2.8.107-attempt-1-fdb74ab.json",
+      "attempts": [
+        {
+          "attempt": 1,
+          "source_sha": "af2866641a8105ba643543ad49ee295a2dd063ba",
+          "outcome": "failure",
+          "evidence": "evidence/r2.8.108-attempt-1-af28666.json",
+          "workflow_runs": {
+            "quality": 38493628594,
+            "inventory": 38493628637,
+            "desktop_build": 38493628597,
+            "plugin_renderer": 38493628715,
+            "loaded_plugins": 38493628640,
+            "rust_ci": 38493628593,
+            "vault_roundtrip": 38493628618
+          }
+        }
+      ],
+      "push_status": "Attempt 1 is terminal but not accepted on exact SHA af2866641a8105ba643543ad49ee295a2dd063ba. All seven required workflows and 20 jobs are terminal: 16 passed and all four Rust CI jobs failed on the same unsupported-formula fixture mismatch. Ubuntu also failed formatting with seven CI-reported source layout changes. All three Obsidian round-trip jobs passed; artifact and report hashes are recorded in evidence/r2.8.108-attempt-1-af28666.json.",
+      "next_action": "R2.8.108 attempt 1 is reconciled. Continue under R2.8.109: align the unsupported-formula expected missing-group label with None, apply CI-requested rustfmt changes, retain unprobed-policy assertions, and refresh the fixture inventory hash. Package the related repairs and evidence together, then push once to trigger the fresh required CI batch. Do not run local executable validation."
+    },
+    "R2.8.109": {
+      "status": "in_progress",
+      "starting_sha": "af2866641a8105ba643543ad49ee295a2dd063ba",
+      "implementation_sha": null,
+      "scope": "Repair the terminal R2.8.108 CI failures as one milestone: update the unsupported-formula fixture to expect the missing-value group label None, apply the CI-reported Rust formatting, preserve explicit policy assertions for unprobed groupBy cases, and refresh fixture inventory metadata. Keep C07.3 groupOrder and C07.4 locale/numeric comparator semantics out of scope.",
+      "acceptance": [
+        "The unsupported-formula collision fixture records the missing formula result as group label None while still proving the source property does not fabricate a formula value or create a source-property group.",
+        "The seven layout changes reported by the Ubuntu rustfmt check are applied; all added unprobed behavior assertions remain in place.",
+        "The fixture SHA-256 matches its migration inventory entry.",
+        "All seven required GitHub Actions workflows and all 20 jobs pass on the exact pushed SHA, including Rust CI on Linux, macOS, Windows, and MSRV plus the three-platform Obsidian round-trip.",
+        "All executable validation runs only in GitHub Actions; no local test, build, formatter, lint, or validation result is used."
+      ],
+      "required_workflows": [
+        "Rust migration inventory",
+        "OpenObsidian quality",
+        "OpenObsidian desktop build",
+        "OpenObsidian plugin renderer matrix",
+        "OpenObsidian loaded plugin workflows",
+        "OpenObsidian Rust CI",
+        "Obsidian vault round-trip acceptance"
+      ],
+      "reference_evidence": "evidence/r2.8.108-attempt-1-af28666.json",
       "attempts": [],
-      "push_status": "The implementation and acceptance package are ready for one accumulated origin/main push; no R2.8.108 changes have been pushed yet.",
-      "next_action": "Verify origin/main still matches the recorded R2.8.107 SHA, then commit and push the complete R2.8.108 batch once. Hold that exact SHA until all required GitHub Actions workflows are terminal and reconciled. Do not run local executable validation."
+      "push_status": "No R2.8.109 push yet. The focused repair and evidence updates are local; push one accumulated batch only after the named milestone package is ready.",
+      "next_action": "Review and commit the complete R2.8.109 repair package locally, push it once to origin/main, then wait for all seven required workflows and 20 jobs on its exact SHA to become terminal."
     }
   },
   "ci_preparation": {

@@ -6198,5 +6198,105 @@ the C07.2 Rust Bases slice. The package covers explicit JSON/native-YAML
 ASC/DESC order, missing-last groups, omitted-direction native-YAML rejection,
 SIDEWAYS flat results, source-byte and unknown-field retention, malformed
 shapes, and explicit unprobed JSON omission/scalar behavior. The fixture hash
-matches its migration inventory row. One accumulated push will submit the
+matches its migration inventory row. One accumulated push submitted the
 milestone for required GitHub CI; no executable validation was run locally.
+
+## R2.8.108 pushed; exact-SHA CI pending
+
+Pushed the single accumulated milestone commit
+`af2866641a8105ba643543ad49ee295a2dd063ba` to `origin/main` after confirming
+the remote started at `fdb74ab3893b63bc9e77e7e7b12c27fd1f1821aa`. At
+2026-10-14T01:04:01Z, the inventory workflow had passed; 18 jobs were running,
+one was queued, and none had failed across the other six workflows. Exact run
+and job IDs/URLs are in `evidence/r2.8.108-attempt-1-af28666.json`. Keep
+`origin/main` at this SHA until all seven workflows and all 20 jobs are
+terminal, then reconcile every result and artifact. No local executable
+validation was run.
+
+## R2.8.108 CI progress — five workflows passed
+
+At 2026-10-14T01:05:42Z, exact SHA
+`af2866641a8105ba643543ad49ee295a2dd063ba` had five of seven workflows pass:
+inventory, quality, desktop build, loaded-plugin workflows, and plugin-renderer
+matrix. Thirteen of 20 jobs succeeded; all four Rust CI jobs and all three
+Obsidian round-trip jobs remained in progress. No failures were reported.
+Updated run/job status is in `evidence/r2.8.108-attempt-1-af28666.json`; keep
+`origin/main` fixed until all seven workflows are terminal.
+
+## R2.8.108 CI progress — Rust failures identified
+
+At 2026-10-14T01:06:58Z, 13/20 jobs had passed, two Rust CI jobs had failed
+(macOS and Ubuntu workspace tests), and five jobs remained active: Rust MSRV,
+Windows Rust, and the three-platform Obsidian round-trip. Ubuntu also reported
+a formatting failure. The Rust workflow itself remains in progress, and GitHub
+does not yet expose failed-step logs; collect them after it becomes terminal.
+Current statuses are in `evidence/r2.8.108-attempt-1-af28666.json`. Keep
+`origin/main` fixed at `af2866641a8105ba643543ad49ee295a2dd063ba` until every
+workflow and job is terminal. No local executable validation was run.
+
+## R2.8.108 CI progress — three Rust failures confirmed
+
+At 2026-10-14T01:13:08Z, 13/20 jobs had passed, all three Rust OS workspace
+test jobs had failed, and four jobs remained active: Rust MSRV and the three
+Obsidian round-trip jobs. Ubuntu also failed formatting. GitHub logs confirm the
+same test mismatch on macOS, Ubuntu, and Windows: the implementation displays
+the missing formula group as `None`, while the older unsupported-formula
+fixture expects an empty label. Ubuntu rustfmt reported seven layout changes
+in `crates/doc/src/bases.rs`. The focused fixture expectation and exact
+CI-requested formatting corrections are prepared locally, and the changed
+fixture inventory hash is updated. Keep `origin/main` fixed at the submitted
+SHA until all current jobs are terminal; only then define and push the named
+repair milestone. No local executable validation was run.
+
+## R2.8.108 CI progress — Rust terminal, Windows round-trip passed
+
+At 2026-10-14T01:14:27Z, 14/20 jobs had passed, all four Rust CI jobs had
+failed on the unsupported-formula fixture's stale empty-group label, and two
+Obsidian round-trip jobs (Ubuntu and macOS) remained active. The Windows
+round-trip passed and uploaded artifact `11863541910` (13,725,681 bytes;
+archive SHA-256 `bb7a8f71252040697b3951d118068b15d15ee8584ea71ea0849eeeab485f51ef`;
+report SHA-256 `de6222f77dd0b6c850159db0e591d2411892fc7550945bca45a1c7342802ddd7`).
+Its C07.2 capture completed; exact artifact metadata and concise observations
+are in `evidence/r2.8.108-attempt-1-af28666.json`. Keep `origin/main` fixed
+until the two remaining jobs and the full round-trip workflow are terminal.
+No local executable validation was run.
+
+## R2.8.108 CI progress — Linux round-trip passed
+
+At 2026-10-14T01:15:57Z, 15/20 jobs had passed, all four Rust CI jobs had
+failed on the stale unsupported-formula fixture label, and only the macOS
+Obsidian round-trip remained active. The Linux round-trip passed and uploaded
+artifact `11863532481` (15,199,717 bytes; archive SHA-256
+`2c1178f23b5dbe677c759ced844707c18c23dada3d471cb6a06a3473b5c72262`; report
+SHA-256 `1cbb8ffdadc8e90653afccd10dffb3f54e1faa53b9c3a20d8bad08a43f28b25b`).
+The Linux report confirms stable captured ASC/DESC groups and row ordering
+after reopen. Exact artifact records are in
+`evidence/r2.8.108-attempt-1-af28666.json`. Keep `origin/main` fixed until
+macOS and the full workflow are terminal. No local executable validation was
+run.
+
+## R2.8.108 attempt 1 terminal — not accepted
+
+At 2026-10-14T01:17:09Z, all seven required workflows and all 20 jobs were
+terminal on exact SHA `af2866641a8105ba643543ad49ee295a2dd063ba`: 16 passed and
+four Rust CI jobs failed. Each Rust platform/MSRV job reports the same
+unsupported-formula fixture mismatch: actual missing-result group label
+`None`, expected `""`; Ubuntu also failed rustfmt with seven layout changes.
+The three-platform Obsidian round-trip passed and all reports retain stable
+ASC/DESC groups and row order after reopen, the omitted-direction parse error,
+and flat SIDEWAYS results. Artifact IDs, archive/report hashes, and exact run
+and job IDs are reconciled in `evidence/r2.8.108-attempt-1-af28666.json`.
+R2.8.108 is not accepted because Rust CI failed. No local executable
+validation was run.
+
+## R2.8.109 repair milestone started
+
+After every R2.8.108 workflow became terminal, defined a single repair batch:
+update the unsupported-formula fixture to expect the missing-result label
+`None`, apply the exact rustfmt changes requested by Ubuntu CI, preserve the
+explicit assertions for unprobed JSON groupBy behavior, and refresh the
+fixture inventory hash. C07.3 and C07.4 remain outside this repair. The
+complete source, fixture, inventory, state, journal, and failed-attempt
+evidence package is being prepared locally; it will be pushed once to
+`origin/main` only after the milestone package is ready. No local executable
+validation was run.

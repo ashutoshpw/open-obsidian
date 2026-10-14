@@ -524,11 +524,8 @@ fn parse_native_view(
     let name = mapping_get(entries, "name")
         .and_then(YamlValue::as_string)
         .map(str::to_owned);
-    let (group_by, group_by_descending, fatal_invalid_source) = parse_native_group_by(
-        mapping_get(entries, "groupBy"),
-        name.as_deref(),
-        issues,
-    );
+    let (group_by, group_by_descending, fatal_invalid_source) =
+        parse_native_group_by(mapping_get(entries, "groupBy"), name.as_deref(), issues);
 
     Ok(BaseView {
         view_type,
@@ -985,19 +982,15 @@ fn evaluate_selected_base_view(
                 .get(field)
                 .filter(|value| !value.is_null())
                 .cloned();
-            let key = value.as_ref().map_or_else(
-                || "missing".to_owned(),
-                |value| format!("value:{value}"),
-            );
+            let key = value
+                .as_ref()
+                .map_or_else(|| "missing".to_owned(), |value| format!("value:{value}"));
             let index = match group_indices.get(&key) {
                 Some(index) => *index,
                 None => {
                     let index = groups.len();
                     group_indices.insert(key.clone(), index);
-                    let group_label = value.as_ref().map_or_else(
-                        || "None".to_owned(),
-                        js_string,
-                    );
+                    let group_label = value.as_ref().map_or_else(|| "None".to_owned(), js_string);
                     group_sort_values.push(value);
                     groups.push(BaseGroup {
                         key: group_label,
@@ -1017,10 +1010,7 @@ fn evaluate_selected_base_view(
         ordered_groups.sort_by(|(_, left), (_, right)| {
             compare_group_values(left.as_ref(), right.as_ref(), descending)
         });
-        groups = ordered_groups
-            .into_iter()
-            .map(|(group, _)| group)
-            .collect();
+        groups = ordered_groups.into_iter().map(|(group, _)| group).collect();
     }
     Ok(BaseEvaluation {
         view,
@@ -1689,6 +1679,16 @@ mod tests {
                     group.key
                 );
             }
+        }
+    }
+
+    fn assert_unprobed_group_by_policy(case_id: &str, case: &Value) {
+        if case["reference_status"].as_str() == Some("unprobed") {
+            assert_eq!(
+                case["handling_policy"].as_str(),
+                Some("fail-safe-no-grouping"),
+                "{case_id}: unprobed groupBy handling"
+            );
         }
     }
 
@@ -2896,10 +2896,18 @@ mod tests {
                 Some("unprobed"),
                 "{case_id}"
             );
+            assert_eq!(
+                case["handling_policy"].as_str(),
+                Some("retain-property-and-first-seen-order"),
+                "{case_id}: unprobed groupBy handling"
+            );
             let source = source_for_case(case);
-            let document =
-                parse_base(&source).unwrap_or_else(|error| panic!("{case_id}: {error}"));
-            assert_eq!(document.source_bytes(), source.as_slice(), "{case_id}: source bytes");
+            let document = parse_base(&source).unwrap_or_else(|error| panic!("{case_id}: {error}"));
+            assert_eq!(
+                document.source_bytes(),
+                source.as_slice(),
+                "{case_id}: source bytes"
+            );
             assert_eq!(encode_base(&document).as_slice(), source.as_slice());
             assert!(document.issues().is_empty(), "{case_id}: parse issues");
             assert_eq!(document.views()[0].group_by.as_deref(), Some("team"));
@@ -2925,9 +2933,9 @@ mod tests {
             .expect("invalid group direction cases must be an array")
         {
             let case_id = case["id"].as_str().expect("case id must be a string");
+            assert_unprobed_group_by_policy(case_id, case);
             let source = source_for_case(case);
-            let document =
-                parse_base(&source).unwrap_or_else(|error| panic!("{case_id}: {error}"));
+            let document = parse_base(&source).unwrap_or_else(|error| panic!("{case_id}: {error}"));
             assert_eq!(
                 document.source_bytes(),
                 source.as_slice(),
@@ -2983,10 +2991,14 @@ mod tests {
             .expect("invalid groupBy cases must be an array")
         {
             let case_id = case["id"].as_str().expect("case id must be a string");
+            assert_unprobed_group_by_policy(case_id, case);
             let source = source_for_case(case);
-            let document =
-                parse_base(&source).unwrap_or_else(|error| panic!("{case_id}: {error}"));
-            assert_eq!(document.source_bytes(), source.as_slice(), "{case_id}: source bytes");
+            let document = parse_base(&source).unwrap_or_else(|error| panic!("{case_id}: {error}"));
+            assert_eq!(
+                document.source_bytes(),
+                source.as_slice(),
+                "{case_id}: source bytes"
+            );
             assert_eq!(encode_base(&document).as_slice(), source.as_slice());
             assert_eq!(document.issues().len(), 1, "{case_id}: issue count");
             assert_eq!(document.issues()[0].kind, BaseIssueKind::InvalidSource);

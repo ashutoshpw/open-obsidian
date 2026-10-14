@@ -131,9 +131,9 @@
         "row_count": 2,
         "issue_count": 1,
         "paths": ["z.md", "a.md"],
-        "group_names": [""],
+        "group_names": ["None"],
         "group_paths": {
-          "": ["z.md", "a.md"]
+          "None": ["z.md", "a.md"]
         }
       }
     }

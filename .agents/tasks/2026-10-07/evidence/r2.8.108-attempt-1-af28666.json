@@ -1,0 +1,185 @@
+{
+  "milestone": "R2.8.108 C07.2 Rust Bases parity and source preservation",
+  "attempt": 1,
+  "source_sha": "af2866641a8105ba643543ad49ee295a2dd063ba",
+  "parent_sha": "fdb74ab3893b63bc9e77e7e7b12c27fd1f1821aa",
+  "observed_at": "2026-10-14T01:17:09Z",
+  "outcome": "failure",
+  "summary": {
+    "workflow_count": 7,
+    "all_workflows_terminal": true,
+    "jobs": {
+      "total": 20,
+      "success": 16,
+      "failure": 4,
+      "queued": 0,
+      "in_progress": 0,
+      "other": 0
+    },
+    "snapshot_note": "Final exact-SHA reconciliation at 2026-10-14T01:17:09Z: all seven required workflows and 20 jobs are terminal; 16 jobs passed and all four Rust CI jobs failed. Each Rust job reports the same unsupported-formula fixture mismatch (actual group label [\"None\"], expected [\"\"]); Ubuntu also failed formatting with seven source layout changes. All three Obsidian round-trip jobs passed, and their report artifacts confirm ASC/DESC group order, stable group/row order after reopen, omitted-direction parse errors, and flat SIDEWAYS results. The failed Rust jobs mean R2.8.108 is not accepted. All runs match exact SHA af2866641a8105ba643543ad49ee295a2dd063ba.",
+    "remote_sha_held": true
+  },
+  "status_snapshots": [
+    {
+      "observed_at": "2026-10-14T01:04:01Z",
+      "jobs": {"total": 20, "success": 1, "failure": 0, "queued": 1, "in_progress": 18, "other": 0},
+      "note": "Initial snapshot: inventory passed; other six workflows were queued or running."
+    },
+    {
+      "observed_at": "2026-10-14T01:05:42Z",
+      "jobs": {"total": 20, "success": 13, "failure": 0, "queued": 0, "in_progress": 7, "other": 0},
+      "note": "Inventory, quality, desktop build, loaded-plugin workflows, and plugin-renderer matrix passed. Rust CI and all three Obsidian round-trip jobs remain in progress."
+    },
+    {
+      "observed_at": "2026-10-14T01:06:58Z",
+      "jobs": {"total": 20, "success": 13, "failure": 2, "queued": 0, "in_progress": 5, "other": 0},
+      "note": "macOS and Ubuntu workspace-test jobs failed and Ubuntu formatting failed; Rust MSRV, Windows Rust, and three round-trip jobs remain active. Failed-step logs were not yet available while Rust CI was running."
+    },
+    {
+      "observed_at": "2026-10-14T01:13:08Z",
+      "jobs": {"total": 20, "success": 13, "failure": 3, "queued": 0, "in_progress": 4, "other": 0},
+      "note": "All three Rust workspace-test jobs are terminal failures from one unsupported-formula fixture group-label mismatch; Ubuntu also failed rustfmt. Rust MSRV and all three Obsidian round-trip jobs remain active. Full failed-step logs were retrieved; keep origin/main fixed until all jobs are terminal."
+    },
+    {
+      "observed_at": "2026-10-14T01:14:27Z",
+      "jobs": {"total": 20, "success": 14, "failure": 4, "queued": 0, "in_progress": 2, "other": 0},
+      "note": "All four Rust jobs failed on the same missing-value group-label expectation; Ubuntu also failed rustfmt. Windows Obsidian round-trip passed and uploaded its evidence artifact. Ubuntu and macOS round-trip jobs remain active; keep origin/main fixed until both are terminal."
+    },
+    {
+      "observed_at": "2026-10-14T01:15:57Z",
+      "jobs": {"total": 20, "success": 15, "failure": 4, "queued": 0, "in_progress": 1, "other": 0},
+      "note": "Ubuntu Obsidian round-trip also passed and uploaded its evidence artifact. macOS is the only active job; keep origin/main fixed until it is terminal."
+    },
+    {
+      "observed_at": "2026-10-14T01:17:09Z",
+      "jobs": {"total": 20, "success": 16, "failure": 4, "queued": 0, "in_progress": 0, "other": 0},
+      "note": "All seven required workflows and all 20 jobs are terminal. The three-platform Obsidian round-trip passed; all four Rust CI jobs failed on the same fixture mismatch, and Ubuntu additionally failed formatting. R2.8.108 is not accepted."
+    }
+  ],
+  "required_workflows": [
+    "Rust migration inventory",
+    "OpenObsidian quality",
+    "OpenObsidian desktop build",
+    "OpenObsidian plugin renderer matrix",
+    "OpenObsidian loaded plugin workflows",
+    "OpenObsidian Rust CI",
+    "Obsidian vault round-trip acceptance"
+  ],
+  "runs": [
+    {
+      "workflow": "Rust migration inventory",
+      "run_id": 38493628637,
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38493628637",
+      "jobs": [
+        {"name": "inventory", "job_id": 115624317052, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38493628637/job/115624317052"}
+      ]
+    },
+    {
+      "workflow": "OpenObsidian quality",
+      "run_id": 38493628594,
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38493628594",
+      "jobs": [
+        {"name": "ubuntu-latest", "job_id": 115624317156, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38493628594/job/115624317156"},
+        {"name": "macos-latest", "job_id": 115624317529, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38493628594/job/115624317529"},
+        {"name": "windows-latest", "job_id": 115624317561, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38493628594/job/115624317561"}
+      ]
+    },
+    {
+      "workflow": "OpenObsidian desktop build",
+      "run_id": 38493628597,
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38493628597",
+      "jobs": [
+        {"name": "macos-latest", "job_id": 115624317513, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38493628597/job/115624317513"},
+        {"name": "windows-latest", "job_id": 115624317720, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38493628597/job/115624317720"},
+        {"name": "ubuntu-latest", "job_id": 115624317747, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38493628597/job/115624317747"}
+      ]
+    },
+    {
+      "workflow": "OpenObsidian plugin renderer matrix",
+      "run_id": 38493628715,
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38493628715",
+      "jobs": [
+        {"name": "ubuntu-latest", "job_id": 115624317722, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38493628715/job/115624317722"},
+        {"name": "macos-latest", "job_id": 115624317946, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38493628715/job/115624317946"},
+        {"name": "windows-latest", "job_id": 115624318066, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38493628715/job/115624318066"}
+      ]
+    },
+    {
+      "workflow": "OpenObsidian loaded plugin workflows",
+      "run_id": 38493628640,
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38493628640",
+      "jobs": [
+        {"name": "macos-latest", "job_id": 115624317538, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38493628640/job/115624317538"},
+        {"name": "windows-latest", "job_id": 115624317792, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38493628640/job/115624317792"},
+        {"name": "ubuntu-latest", "job_id": 115624317891, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38493628640/job/115624317891"}
+      ]
+    },
+    {
+      "workflow": "OpenObsidian Rust CI",
+      "run_id": 38493628593,
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38493628593",
+      "jobs": [
+        {"name": "minimum supported Rust (1.95)", "job_id": 115624317071, "status": "completed", "conclusion": "failure", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38493628593/job/115624317071"},
+        {"name": "rust (macos-latest)", "job_id": 115624317268, "status": "completed", "conclusion": "failure", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38493628593/job/115624317268"},
+        {"name": "rust (ubuntu-latest)", "job_id": 115624317291, "status": "completed", "conclusion": "failure", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38493628593/job/115624317291"},
+        {"name": "rust (windows-latest)", "job_id": 115624317348, "status": "completed", "conclusion": "failure", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38493628593/job/115624317348"}
+      ]
+    },
+    {
+      "workflow": "Obsidian vault round-trip acceptance",
+      "run_id": 38493628618,
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38493628618",
+      "jobs": [
+        {"name": "Obsidian 1.14.4 vault round-trip on windows-latest", "job_id": 115624317313, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38493628618/job/115624317313"},
+        {"name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04", "job_id": 115624317546, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38493628618/job/115624317546"},
+        {"name": "Obsidian 1.14.4 vault round-trip on macos-latest", "job_id": 115624317703, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38493628618/job/115624317703"}
+      ]
+    }
+  ],
+  "artifacts": [
+    {
+      "id": 11863541910,
+      "name": "obsidian-vault-roundtrip-Windows-af2866641a8105ba643543ad49ee295a2dd063ba",
+      "job_id": 115624317313,
+      "size_in_bytes": 13725681,
+      "archive_sha256": "bb7a8f71252040697b3951d118068b15d15ee8584ea71ea0849eeeab485f51ef",
+      "expires_at": "2026-11-13T01:13:08Z",
+      "report_sha256": "de6222f77dd0b6c850159db0e591d2411892fc7550945bca45a1c7342802ddd7",
+      "result": "Windows C07.2 reference capture completed. ASC/DESC groups and row order matched after reopen; omitted direction showed the captured parse error and no groups/rows. The report records Obsidian rewriting Invalid Direction.base and restoring it for the reopen capture."
+    },
+    {
+      "id": 11863532481,
+      "name": "obsidian-vault-roundtrip-Linux-af2866641a8105ba643543ad49ee295a2dd063ba",
+      "job_id": 115624317546,
+      "size_in_bytes": 15199717,
+      "archive_sha256": "2c1178f23b5dbe677c759ced844707c18c23dada3d471cb6a06a3473b5c72262",
+      "expires_at": "2026-11-13T01:15:25Z",
+      "report_sha256": "1cbb8ffdadc8e90653afccd10dffb3f54e1faa53b9c3a20d8bad08a43f28b25b",
+      "result": "Linux C07.2 reference capture passed on the exact source SHA. ASC/DESC group order and row order matched after reopen; the report records Obsidian's SIDEWAYS rewrite and exact seed restoration."
+    },
+    {
+      "id": 11863198224,
+      "name": "obsidian-vault-roundtrip-macOS-af2866641a8105ba643543ad49ee295a2dd063ba",
+      "job_id": 115624317703,
+      "size_in_bytes": 20732947,
+      "archive_sha256": "a9b8305942bc3a9c5a1e7e17553a960e163174712118227fcade781f6ab39ada",
+      "expires_at": "2026-11-13T01:16:27Z",
+      "report_sha256": "be804d9f2f561154c1e8ccaadd0d179a892cdbc43b8bc1a2e0163dff84c6a2d8",
+      "result": "macOS C07.2 reference capture passed on the exact source SHA. ASC/DESC groups and rows matched Linux and Windows; omitted direction showed the captured parse error with no rows/groups, and SIDEWAYS showed 10 flat results. The report records Obsidian's Invalid Direction.base rewrite and seed restoration for reopen."
+    }
+  ]
+}

@@ -1342,7 +1342,7 @@
     },
     {
       "path": "fixtures/c07-unsupported-formula.json",
-      "sha256": "ddfd92ddf593dbbeb5f6747726c5dc83404c0ab7c2291bf9a9b3bdacf97c9f0d",
+      "sha256": "d4ff09e6ee0d0cf103206227efb6f7e7551d71e58d6217d13b1923ad11aec2fa",
       "rust_owner": "crates/doc",
       "mapping_status": "reviewed",
       "status": "pending",
