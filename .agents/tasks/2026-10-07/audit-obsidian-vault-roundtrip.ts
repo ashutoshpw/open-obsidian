@@ -209,6 +209,23 @@ type GroupOrderResultCountEvidence = {
 };
 
 type GroupOrderViewportPreparation = {
+  capture_mode: "cdp-emulated-desktop";
+  native_display_before_emulation: {
+    inner_width: number;
+    inner_height: number;
+    outer_width: number;
+    outer_height: number;
+    screen_width: number;
+    screen_height: number;
+    available_width: number;
+    available_height: number;
+  };
+  emulated_device_metrics: {
+    width: number;
+    height: number;
+    device_scale_factor: number;
+    mobile: boolean;
+  };
   left_sidebar_collapsed: boolean;
   requested_width: number;
   requested_height: number;
@@ -216,6 +233,8 @@ type GroupOrderViewportPreparation = {
   actual_height: number;
   actual_outer_width: number;
   actual_outer_height: number;
+  actual_device_pixel_ratio: number;
+  effective_metrics_match_requested: boolean;
 };
 
 type GroupOrderUnmappedPathCandidate = {
@@ -329,6 +348,7 @@ type GroupOrderVisibleState = {
     data_rows: number;
     painted_data_rows: number;
     fresh_sweep_positions: number;
+    fresh_sweep_scroll_step_fraction: number;
     fresh_sweep_coverage_complete: boolean;
     fresh_sweep_path_samples: number;
     fresh_sweep_unique_paths: string[];
@@ -354,6 +374,7 @@ type GroupOrderVisibleState = {
     fresh_sweep_unowned_result_samples: number;
     fresh_sweep_unowned_result_observations: Array<Record<string, unknown>>;
     fresh_sweep_unresolved_group_owner_paths: string[];
+    fresh_sweep_group_ownership_complete: boolean;
     fresh_sweep_resolved_table_sections: Array<Record<string, unknown>>;
     fresh_sweep_table_section_observations: Array<Record<string, unknown>>;
     fresh_sweep_table_section_accepted_reconciliation_evidence: Array<Record<string, unknown>>;
@@ -466,6 +487,7 @@ type GroupOrderScenarioObservation = GroupOrderVisibleState & {
     error_surface_scope: GroupOrderVisibleState["error_surface_scope"];
   }>;
   screenshot: string | null;
+  screenshot_dimensions: {width: number; height: number} | null;
   screenshot_error?: string;
   probe_error?: string;
   probe_phase?: string;
@@ -5934,6 +5956,7 @@ async function readGroupOrderVisibleState(
     let freshSweepGroupOwnershipAmbiguous = false;
     let freshSweepHeadingIdentityAmbiguous = false;
     const maximumFreshSweepPositions = 128;
+    const freshSweepScrollStepFraction = 0.25;
     const headingBaseIdentity = (element) => {
       const dataGroup = normalize(element.getAttribute('data-group'));
       const ariaLabel = normalize(element.getAttribute('aria-label'));
@@ -7160,7 +7183,7 @@ async function readGroupOrderVisibleState(
             while (true) {
               const maximum = Math.max(0, container[sizeProperty] - axisViewport);
               if (maximum <= sweptMaximum) break;
-              const step = Math.max(1, Math.floor(Math.max(1, axisViewport) * 0.75));
+              const step = Math.max(1, Math.floor(Math.max(1, axisViewport) * freshSweepScrollStepFraction));
               const offsets = [0];
               for (let offset = step; offset < maximum; offset += step) offsets.push(offset);
               offsets.push(maximum);
@@ -7178,6 +7201,7 @@ async function readGroupOrderVisibleState(
         }
       }
     }
+    const freshSweepUniquePaths = [...freshSweepPaths].sort();
     const freshSweepResolvedTableSections = new Map();
     let freshSweepOrderedTableSectionKeys = [];
     let freshSweepDeclaredPathlessIdentityResolution = {
@@ -7849,7 +7873,6 @@ async function readGroupOrderVisibleState(
       }
       if (freshSweepTableSectionReconciliationAmbiguous) freshSweepGroupOwnershipAmbiguous = true;
     }
-    const freshSweepUniquePaths = [...freshSweepPaths].sort();
     const freshSweepUniqueHeadings = [...freshSweepHeadingKeys].sort();
     let freshSweepOrderedPaths = [];
     if (layout === 'kanban') {
@@ -8404,6 +8427,7 @@ async function readGroupOrderVisibleState(
         data_rows: rowCandidates.length,
         painted_data_rows: visibleRowElements.length,
         fresh_sweep_positions: freshSweepPositions,
+        fresh_sweep_scroll_step_fraction: freshSweepScrollStepFraction,
         fresh_sweep_coverage_complete: freshSweepCoverageComplete,
         fresh_sweep_path_samples: freshSweepPathSamples,
         fresh_sweep_unique_paths: freshSweepUniquePaths,
@@ -8429,6 +8453,16 @@ async function readGroupOrderVisibleState(
         fresh_sweep_unowned_result_samples: freshSweepUnownedResultSamples,
         fresh_sweep_unowned_result_observations: reconciledUnownedResultObservations.slice(0, 160),
         fresh_sweep_unresolved_group_owner_paths: freshSweepUnresolvedGroupOwnerPaths,
+        fresh_sweep_group_ownership_complete: !groupByProperty || (
+          freshSweepCoverageComplete
+          && freshSweepPositions > 0
+          && resultCount !== null
+          && freshSweepUniquePaths.length === resultCount
+          && freshSweepUnresolvedGroupOwnerPaths.length === 0
+          && reconciledUnownedResultObservations.every((observation) => observation.reconciled_to_one_stable_owner === true)
+          && !freshSweepGroupOwnershipAmbiguous
+          && !freshSweepTableSectionReconciliationAmbiguous
+        ),
         fresh_sweep_resolved_table_sections: freshSweepOrderedTableSectionKeys.map((key, index) => {
           const section = freshSweepResolvedTableSections.get(key);
           return {
@@ -8620,6 +8654,7 @@ function emptyGroupOrderVisibleState(scenario: GroupOrderScenario): GroupOrderVi
       data_rows: 0,
       painted_data_rows: 0,
       fresh_sweep_positions: 0,
+      fresh_sweep_scroll_step_fraction: 0.25,
       fresh_sweep_coverage_complete: false,
       fresh_sweep_path_samples: 0,
       fresh_sweep_unique_paths: [],
@@ -8639,6 +8674,7 @@ function emptyGroupOrderVisibleState(scenario: GroupOrderScenario): GroupOrderVi
       fresh_sweep_unowned_result_samples: 0,
       fresh_sweep_unowned_result_observations: [],
       fresh_sweep_unresolved_group_owner_paths: [],
+      fresh_sweep_group_ownership_complete: false,
       fresh_sweep_resolved_table_sections: [],
       fresh_sweep_table_section_observations: [],
       fresh_sweep_table_section_accepted_reconciliation_evidence: [],
@@ -8705,6 +8741,7 @@ async function captureGroupOrderScenario(
   const stateSamples: GroupOrderScenarioObservation["state_samples"] = [];
   let stateSettled = false;
   let screenshot: string | null = null;
+  let screenshotDimensions: {width: number; height: number} | null = null;
   let screenshotError: string | undefined;
   let probeError: string | undefined;
   let probePhase: string | undefined;
@@ -8747,9 +8784,11 @@ async function captureGroupOrderScenario(
     screenshot = `obsidian-group-order-${stage}-${scenario.id.replaceAll(/[^a-z0-9-]/gi, "-")}.png`;
     try {
       await captureObsidianScreenshot(connection, screenshot);
+      screenshotDimensions = await pngDimensions(join(reportDirectory, screenshot));
     } catch (error) {
       screenshotError = error instanceof Error ? error.message : String(error);
       screenshot = null;
+      screenshotDimensions = null;
     }
   };
 
@@ -8830,46 +8869,73 @@ async function captureGroupOrderScenario(
     }
 
     probePhase = "prepare-full-results-viewport";
-    viewportPreparation = await connection.evaluateJson<GroupOrderViewportPreparation>(`(() => {
+    const nativeDisplay = await connection.evaluateJson<{
+      left_sidebar_collapsed: boolean;
+      inner_width: number;
+      inner_height: number;
+      outer_width: number;
+      outer_height: number;
+      screen_width: number;
+      screen_height: number;
+      available_width: number;
+      available_height: number;
+    }>(`(() => {
       const leftSplit = window.app?.workspace?.leftSplit;
-      if (!leftSplit || typeof leftSplit.collapse !== 'function') {
-        return {
-          left_sidebar_collapsed: false,
-          requested_width: 0,
-          requested_height: 0,
-          actual_width: window.innerWidth,
-          actual_height: window.innerHeight,
-          actual_outer_width: window.outerWidth,
-          actual_outer_height: window.outerHeight,
-        };
-      }
-      if (!leftSplit.collapsed) leftSplit.collapse();
-      const requestedWidth = Number(window.screen?.availWidth ?? window.innerWidth);
-      const requestedHeight = Number(window.screen?.availHeight ?? window.innerHeight);
-      if (requestedWidth > window.outerWidth || requestedHeight > window.outerHeight) {
-        window.resizeTo(requestedWidth, requestedHeight);
-      }
+      if (leftSplit && typeof leftSplit.collapse === 'function' && !leftSplit.collapsed) leftSplit.collapse();
       return {
-        left_sidebar_collapsed: Boolean(leftSplit.collapsed),
-        requested_width: requestedWidth,
-        requested_height: requestedHeight,
-        actual_width: window.innerWidth,
-        actual_height: window.innerHeight,
-        actual_outer_width: window.outerWidth,
-        actual_outer_height: window.outerHeight,
+        left_sidebar_collapsed: Boolean(leftSplit && leftSplit.collapsed),
+        inner_width: window.innerWidth,
+        inner_height: window.innerHeight,
+        outer_width: window.outerWidth,
+        outer_height: window.outerHeight,
+        screen_width: Number(window.screen?.width ?? window.innerWidth),
+        screen_height: Number(window.screen?.height ?? window.innerHeight),
+        available_width: Number(window.screen?.availWidth ?? window.innerWidth),
+        available_height: Number(window.screen?.availHeight ?? window.innerHeight),
       };
-    })()`, "C07.3 prepare Bases observation viewport");
-    if (!viewportPreparation.left_sidebar_collapsed) {
-      throw new Error(`${stage}: could not collapse Obsidian's left sidebar before the complete-results capture; requested viewport=${viewportPreparation.requested_width}x${viewportPreparation.requested_height}`);
+    })()`, "C07.3 record native display and collapse left sidebar");
+    if (!nativeDisplay.left_sidebar_collapsed) {
+      throw new Error(`${stage}: could not collapse Obsidian's left sidebar before the complete-results capture`);
+    }
+    const emulatedDeviceMetrics = {width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false};
+    const emulationResponse = await connection.request("Emulation.setDeviceMetricsOverride", {
+      ...emulatedDeviceMetrics,
+      screenWidth: emulatedDeviceMetrics.width,
+      screenHeight: emulatedDeviceMetrics.height,
+    });
+    if (emulationResponse.error) {
+      throw new Error(`${stage}: could not set the controlled desktop viewport: ${emulationResponse.error.message || "unknown DevTools error"}`);
     }
     await delay(500);
-    const actualViewport = await connection.evaluateJson<Pick<GroupOrderViewportPreparation, "actual_width" | "actual_height" | "actual_outer_width" | "actual_outer_height">>(`({
+    const actualViewport = await connection.evaluateJson<Pick<GroupOrderViewportPreparation, "actual_width" | "actual_height" | "actual_outer_width" | "actual_outer_height" | "actual_device_pixel_ratio">>(`({
       actual_width: window.innerWidth,
       actual_height: window.innerHeight,
       actual_outer_width: window.outerWidth,
       actual_outer_height: window.outerHeight,
+      actual_device_pixel_ratio: window.devicePixelRatio,
     })`, "C07.3 record prepared viewport dimensions");
-    viewportPreparation = {...viewportPreparation, ...actualViewport};
+    const {left_sidebar_collapsed: leftSidebarCollapsed, ...nativeDisplayMetrics} = nativeDisplay;
+    const effectiveMetricsMatchRequested = actualViewport.actual_width === emulatedDeviceMetrics.width
+      && actualViewport.actual_height === emulatedDeviceMetrics.height
+      && actualViewport.actual_device_pixel_ratio === emulatedDeviceMetrics.deviceScaleFactor;
+    viewportPreparation = {
+      capture_mode: "cdp-emulated-desktop",
+      native_display_before_emulation: nativeDisplayMetrics,
+      emulated_device_metrics: {
+        width: emulatedDeviceMetrics.width,
+        height: emulatedDeviceMetrics.height,
+        device_scale_factor: emulatedDeviceMetrics.deviceScaleFactor,
+        mobile: emulatedDeviceMetrics.mobile,
+      },
+      left_sidebar_collapsed: leftSidebarCollapsed,
+      requested_width: emulatedDeviceMetrics.width,
+      requested_height: emulatedDeviceMetrics.height,
+      effective_metrics_match_requested: effectiveMetricsMatchRequested,
+      ...actualViewport,
+    };
+    if (!effectiveMetricsMatchRequested) {
+      throw new Error(`${stage}: CDP-emulated renderer metrics did not match the requested ${emulatedDeviceMetrics.width}x${emulatedDeviceMetrics.height} viewport at deviceScaleFactor ${emulatedDeviceMetrics.deviceScaleFactor}; actual=${actualViewport.actual_width}x${actualViewport.actual_height}@${actualViewport.actual_device_pixel_ratio}`);
+    }
 
     let stableFingerprint = "";
     let stableSamples = 0;
@@ -8948,6 +9014,7 @@ async function captureGroupOrderScenario(
     viewport_preparation: viewportPreparation,
     state_samples: stateSamples,
     screenshot,
+    screenshot_dimensions: screenshotDimensions,
     ...(screenshotError ? {screenshot_error: screenshotError} : {}),
     ...(probeError ? {probe_error: probeError} : {}),
     ...(probePhase ? {probe_phase: probePhase} : {}),
@@ -17130,19 +17197,30 @@ async function runBasesGroupOrderReferenceProbe(): Promise<void> {
           && !view.groups.some((group) => declaredHeadingLabels.has(group.heading_text));
         const declaredIdentityValid = scenario.id !== "yaml-desc-precedence-listed-unlisted-empty-and-duplicate"
           || (identityCommonValid && (resolvedDeclaredIdentityValid || notObservedPaintedDeclaredIdentityValid));
+        const expectedVisibleError = scenario.expected_error_outcome === "visible-error"
+          && hasExplicitVisibleGroupOrderParseError(view);
+        const groupOwnershipComplete = expectedVisibleError
+          || view.visibility_sampling.fresh_sweep_group_ownership_complete;
         const valid = view.stage === expectedStage
           && view.requested_file_path === scenario.base_path
           && view.selection_succeeded
           && view.active_file_path === scenario.base_path
           && (view.active_view_type === "bases"
-            || (scenario.expected_error_outcome === "visible-error" && hasExplicitVisibleGroupOrderParseError(view)))
+            || expectedVisibleError)
           && view.state_settled
           && !view.extraction_ambiguous
+          && groupOwnershipComplete
           && declaredIdentityValid
           && view.unassigned_visible_file_paths.length === 0
           && view.unmapped_visible_path_candidates.length === 0
           && view.unmapped_visible_row_candidates.length === 0
           && isDeepStrictEqual(expectedPaths, mappedPaths)
+          && view.viewport_preparation?.capture_mode === "cdp-emulated-desktop"
+          && view.viewport_preparation.effective_metrics_match_requested
+          && view.viewport.width === view.viewport_preparation.actual_width
+          && view.viewport.height === view.viewport_preparation.actual_height
+          && view.screenshot_dimensions?.width === view.viewport_preparation.actual_width
+          && view.screenshot_dimensions?.height === view.viewport_preparation.actual_height
           && Boolean(view.screenshot)
           && !view.screenshot_error
           && !view.probe_error;
@@ -17153,6 +17231,7 @@ async function runBasesGroupOrderReferenceProbe(): Promise<void> {
             reasons: [
               ...(!view.selection_succeeded || view.active_file_path !== scenario.base_path ? ["exact target selection was not captured"] : []),
               ...(!view.state_settled ? ["visible state did not settle"] : []),
+              ...(!groupOwnershipComplete ? ["fresh-sweep group ownership is incomplete or ambiguous"] : []),
               ...(!declaredIdentityValid ? ["the declared pathless group heading was neither strictly source-resolved nor absent from a complete painted sweep"] : []),
               ...(view.extraction_ambiguous || view.unassigned_visible_file_paths.length > 0 || view.unmapped_visible_path_candidates.length > 0 || view.unmapped_visible_row_candidates.length > 0
                 ? [`group/member extraction was incomplete or ambiguous${view.unmapped_visible_path_candidates.length > 0 || view.unmapped_visible_row_candidates.length > 0
@@ -17160,6 +17239,15 @@ async function runBasesGroupOrderReferenceProbe(): Promise<void> {
                   : ""}`]
                 : []),
               ...(!isDeepStrictEqual(expectedPaths, mappedPaths) ? ["visible fixture paths do not equal the mapped group/member paths"] : []),
+              ...(view.viewport_preparation?.effective_metrics_match_requested !== true ? ["CDP-emulated renderer dimensions did not match the requested desktop viewport"] : []),
+              ...(view.viewport.width !== view.viewport_preparation?.actual_width
+                || view.viewport.height !== view.viewport_preparation?.actual_height
+                ? ["settled renderer viewport dimensions differed from the verified CDP-emulated viewport"]
+                : []),
+              ...(view.screenshot_dimensions?.width !== view.viewport_preparation?.actual_width
+                || view.screenshot_dimensions?.height !== view.viewport_preparation?.actual_height
+                ? ["renderer screenshot pixel dimensions did not match the captured renderer viewport"]
+                : []),
               ...(!view.screenshot || view.screenshot_error ? ["required screenshot is missing"] : []),
               ...(view.probe_error ? [view.probe_error] : []),
             ],

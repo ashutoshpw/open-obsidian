@@ -7137,19 +7137,201 @@ A read-only follow-up review found a conditional false-merge path in the initial
 
 An independent static re-review confirmed `joinSections` is reachable only from the shared-path edge loop, final ownership derives from those roots, and ambiguous extraction is rejected. The active milestone acceptance/evidence now reflects the pathless diagnostic-only rule. R2.8.127 remains unpushed with no exact-SHA CI run; C07.3 remains pending. No local tests, builds, type checks, formatting, lint, or runtime validation were run. Unrelated C09 Rust edits remain unstaged. The managed-cloud environment-status connector is unavailable and `/etc/codex/network-policy.json` is missing, so supported network readiness is not established and no push was attempted.
 
+## R2.8.128 planning note — C09.2 native appearance projection (2026-10-14T14:47:27Z)
 
-## R2.8.127 C07.3 final ownership review — 2026-10-14T19:39:19Z
+The migration goal now says GitHub CI runs are milestone batches: minor edits and focused commits accumulate locally, a named milestone is pushed once after implementation and review, and “achieved” is reserved for an exact-SHA CI pass. R2.8.127 remains ready but unsubmitted. The managed-cloud status tool is unavailable and `/etc/codex/network-policy.json` is absent, so the environment instructions do not establish readiness; no network operation was attempted.
 
-Added empty-state defaults for the same-snapshot pathless-pair ambiguity list, its truncation flag, and the pair self-check. Independent read-only follow-up found no remaining source-level C07.3 gap after this correction. The acceptance ledger now records selected-root heading/row event ordering and fail-closed behavior when accepted-edge evidence is truncated.
+Three read-only audits of the current C09 draft found that configuration discovery already includes sorted `.obsidian` and `.obsidian-*` roots, typed projections, and inert CSS analysis, while the new UI still hardcodes `.obsidian/appearance.json`, omits `VaultStyleAsset.analysis` findings, and has no appearance-specific egui interaction coverage. The UI already uses asynchronous discovery keyed by vault root and invalidates it on vault open and refresh. Existing test helpers support temporary vaults, `egui_kittest`, async polling, and byte-preservation snapshots. A separate plugin audit found no Rust plugin discovery/enablement host callsites yet, so C09.1 cannot be completed by a standalone policy helper.
 
-Clarified `goal.md` that GitHub CI is a milestone acceptance batch, not a per-change feedback loop. Minor changes remain local in the active milestone. A single push to `origin/main` starts CI after the named implementation, review, and evidence notes are ready; keep the submitted SHA fixed until every required workflow/job is terminal, even if the batch takes several hours.
+Recorded independent local milestone R2.8.128 for explicit configuration-root selection, selected-root-only appearance projection, bounded CSS/theme diagnostics, refresh behavior, fixture-backed egui tests authored for GitHub CI, and related documentation. Keep it unpushed until R2.8.127's exact-SHA batch is terminal. C07.4 remains planned as R2.8.129 and blocked on R2.8.127 passing. No local executable validation was run.
 
-C07.3 is implementation-complete / CI-pending, not achieved. No local tests, builds, formatting, lint, runtime validation, commit, or push occurred.
+## R2.8.128 — review follow-ups and milestone-only CI gate (2026-10-14T15:03:09Z)
+
+Clarified `goal.md` with an absolute push gate: commits, minor edits, cleanup and isolated fixes stay local; one push to `origin/main` submits a complete, reviewed named milestone; the submitted SHA is CI-pending until every required job passes. This batches a potentially multi-hour CI run instead of triggering one for each edit.
+
+Expanded the C09.2 appearance interaction coverage by reading expected outcomes from the fixture, observing the actual egui context when switching roots, covering the sole-alternate and empty-inventory defaults, asserting successful refresh before fallback, and checking that the UI states CSS analysis is incomplete and heuristic. Bounded the missing-settings path display and removed the contradictory empty-inventory message. Two independent read-only source reviews were requested. No local tests, builds, formatting, lint, runtime validation, commit, or push was performed. Keep R2.8.128 unpushed pending final review, R2.8.127 terminal CI, and supported network readiness.
+
+Final read-only reviews confirmed the C09.2 selection, refresh, CSS disclaimer, and fixture interactions by inspection; one review checked the new character-bound helper and its Unicode test. The helper now keeps the truncation mark within the 128-character cap. Reviews did not identify a source/API blocker; they noted asset/value omission caps are not separately tested. No executable validation was run. R2.8.128 remains complete locally but unsubmitted until R2.8.127's batch is terminal and supported cloud readiness exists.
+
+## C07.5 bounded file-property preparation (2026-10-14T15:52:44Z)
+
+Clarified the milestone CI gate in `goal.md`: keep minor changes and focused commits local; push once per complete, reviewed named milestone; hold `origin/main` at the submitted SHA until every required job is terminal; and mark a milestone achieved only after all exact-SHA jobs pass. The round-trip workflow groups independent setup, cache, reference-install and build steps with GitHub Actions' `parallel` syntax.
+
+The C07.5 collector now uses bounded stat-only inventory, a reserved per-row metadata allowance, and per-file reads capped by both the file limit and remaining aggregate Markdown budget. Typed file-property lookups distinguish available, missing and unavailable states; filters fail closed on unavailable/non-JSON values, and sorts/groups report issues when typed values cannot be compared safely. Focused source tests were added for those cases, including the legacy path fallback.
+
+The pinned Obsidian capture fixture now includes `file.file`, hidden and `.obsidian` paths, typed Markdown metadata, and small PNG, PDF, WAV, MP4 and opaque binary inputs. The capture records initial, in-app edit, external-refresh and reopen stages; bounded active-view data fields are observed without invoking accessors. Exact evaluated Bases property types remain unresolved unless the pinned runtime exposes them directly, so no parity claim is made. Read-only reviews found the inventory, cap accounting, path handling and bounded-read logic consistent; Unix `O_NONBLOCK` is documented as a best-effort FIFO guard, not a cross-platform guarantee for every special file.
+
+No local tests, build, formatting, lint, application run or runtime validation was performed. This C07.5 work remains local and unsubmitted; CI has not started, and no milestone is marked achieved.
+
+## C07.5 capture serializer follow-up (2026-10-14T15:59:26Z)
+
+A read-only review found remaining direct function-name reads and direct `active_view.file.path` / `getViewType()` access. The capture now reads function names and the file path through data-property descriptors, describes ordinary accessors without invoking them, and invokes `getViewType()` only when descriptor lookup finds a data-property function. Independent source re-review confirmed those ordinary accessor issues are addressed; the report states that Proxy reflection traps may still run and that `getViewType()` itself executes. Candidate-specific evaluated Bases value types remain unresolved; the capture does not claim their semantics. No local executable validation, commit, or push was performed; C07.5 remains unsubmitted and has no CI result.
+
+## R2.8.128 — C09.2 diagnostic-boundary coverage (2026-10-14T16:05:09Z)
+
+A fresh read-only review found that the source display limits were not directly covered at their boundary, and invalid appearance values lacked UI fallback evidence. Added CI-authored egui cases with 14 discovered CSS assets and seven theme variables to assert the 12-asset and six-value display bounds and their omitted counts; added unsupported mode/color/font-size checks for system appearance and default zoom. Clarified the milestone wording: switching configuration subfolders reprojects the already discovered inventory, while opening a different vault and completing refresh after disk changes reload discovery. These source changes remain local and await independent read-only review; no tests, builds, formatting, lint, runtime validation, commit, or push ran. R2.8.128 is not CI-accepted and remains separate from C07.5.
+
+## C07.5 — incomplete source-index status surfaced (2026-10-14T16:09:57Z)
+
+The migration cadence in `goal.md` now explicitly batches minor changes locally, submits one completed named milestone per push, and holds `origin/main` at that SHA until every required CI job is terminal; multi-hour CI is not triggered for interim feedback.
+
+A fresh source audit confirmed that the bounded Bases collector still returns `Unavailable` for `file.tags`, `file.links`, `file.backlinks`, and `file.embeds` without emitting a collection issue or making the result incomplete. The collector now emits one evaluation-level collection issue and sets `complete=false` while the bounded shared Markdown index and pinned Obsidian 1.14.4 semantics are absent. The fixture-backed engine case asserts the incomplete state, issue, and unavailable fields. This is explicit pending behavior, not C07.5 completion; reference evidence and the actual single-pass index remain required.
+
+R2.8.127 remains locally committed at `8307b0d8add1cbfab1c444c448cb970a90bf004c`; the local `origin/main` ref is still `7d0eab11637bc9163694a0697ab2e8b93f98dc17`. No push or exact-SHA CI was started. The environment-status connector is unavailable and `/etc/codex/network-policy.json` is absent, so supported network readiness is not established. The R2.8.128 unsupported-mode assertion was corrected to the rendered label, but its fresh follow-up review has not returned. No local tests, builds, formatting, lint, runtime validation, or application launches were run.
+
+## C07.5 — rendered property rows retain path evidence (2026-10-14T16:13:25Z)
+
+The pinned Obsidian capture now records per-table header and cell indexes plus bounded raw `data-path`/`data-href` observations attached to each visible row, including each attribute element's visibility state. This makes the row-to-property evidence easier to reconcile while retaining raw attributes; it does not normalize paths, infer object types, or claim complete table membership. The capture remains GitHub-CI-only. No tests, builds, formatters, lint, runtime probes, or application launches were run; no commit or push was made.
+
+## C07.5 — bounded document extraction primitives (2026-10-14T16:17:01Z)
+
+`MarkdownSource` now offers capped link-reference and inline-tag scans. Each API returns whether the scan finished and stops before appending a reference/tag beyond its supplied limit. The inline-tag candidate skips frontmatter and code ranges and recognizes Unicode alphanumeric segments, underscores, hyphens, and nested-tag slashes. CI-authored boundary cases cover exact limits, one-over limits, code/frontmatter exclusions, heading hashes, URL fragments, link subpaths, and ordinary text. These are extraction primitives only; exact Obsidian semantics remain unpinned, and the engine has not yet wired them into a shared per-evaluation index. No local tests, builds, formatting, lint, runtime validation, or app launches were run.
+
+## C07.5 — bounded per-evaluation source index candidate (2026-10-14T16:34:04Z)
+
+Clarified `goal.md` so each push is treated as a multi-hour CI batch: minor work and focused commits stay local, one complete reviewed milestone is pushed once, and only one milestone batch may be in flight. `origin/main` stays fixed at its submitted SHA until all required workflows and jobs are terminal.
+
+The C07.5 collector now consumes the bounded document scanners during its existing note reads. It combines frontmatter and body tag candidates, includes links found in frontmatter/body, separates embeds, builds reverse backlinks from the same inventory, and reports unresolved or incomplete indexes explicitly. A reusable path index replaces a full-vault scan per link; conservative index and derived-value accounting keeps file lists unavailable when the metadata budget cannot support them. CI-authored tests cover the fixture projection, tags, internal links, embeds, backlinks, unresolved links, and the shared 100,000-reference limit.
+
+These remain candidate projections. The overall result stays incomplete pending checksum-pinned Obsidian 1.14.4 evidence for exact tag/link/embed, file-property, and refresh semantics. No local tests, builds, formatter, Clippy, type checks, runtime probes, or application launches were run. No commit or push was made; `origin/main` remains at `7d0eab11637bc9163694a0697ab2e8b93f98dc17`, and supported network readiness remains unavailable.
+
+## C07.5 and CI cadence — bounded scanner and milestone push gate (2026-10-14T16:41:33Z)
+
+Strengthened `goal.md` into a pre-push gate: small changes and focused commits accumulate locally; one reviewed, documented, acceptance-ready named milestone is pushed once; and `origin/main` stays at that SHA while its potentially multi-hour required CI batch runs. A new milestone push waits until all required jobs finish. Source/workflow repairs are grouped into a later repair milestone; only source-free transient infrastructure failures rerun the affected job on the same SHA.
+
+The bounded inline-tag candidate now skips wiki links, Markdown link destinations, URL fragments, and heading markers, and reports an incomplete scan for unterminated link-like spans. The pinned C07.5 reference capture now fails the workflow if any required lifecycle stage lacks either its Obsidian runtime observation or Bases row probe. These remain candidate/reference-evidence improvements, not proof of Obsidian parity. Static source inspection found the capture's required fields match what each stage records; no local executable validation was run. No commit or push was made.
+
+## C07.5 and CI cadence — static-review corrections (2026-10-14T16:44:37Z)
+
+Independent read-only review found an unbounded heading-hash lookahead and that stray `](` text could be mistaken for a Markdown destination. Heading detection now inspects at most seven hashes; destination scanning starts only after a balanced link label; escaped Markdown punctuation is skipped. CI-authored cases cover unterminated wiki/destination markup, escaped hashtags, and unmatched closing-bracket text. A cadence review found no conflict with the workflow and prompted one explicit clarification: same-SHA infrastructure reruns remain part of the in-flight batch, so the next milestone push waits for them to finish.
+
+These source and document changes are still unvalidated locally by design; no tests, builds, formatters, type checks, or runtime probes were run. The C07.5 semantics remain candidate projections pending pinned Obsidian evidence. No commit or push was made.
+
+## C07.5 — nested Markdown label follow-up (2026-10-14T16:46:48Z)
+
+A second static review noted that a valid inner link label could be hidden by an unmatched outer `[` in the lightweight bracket counter. Destination recognition now begins when `](` closes any currently open label, even when an outer label remains unmatched; a CI-authored case checks that the destination fragment is excluded. No executable validation or push was performed.
+
+## C07.5 — metadata boundary and semantics guard (2026-10-14T17:16:17Z)
+
+A read-only review confirmed source-index tag retention uses a strict `<` check, so a tag list at the exact remaining metadata budget is omitted and reported unavailable. Added a defensive completeness guard for non-Markdown `file.properties`: if the pinned-semantics gate is later enabled but the projection remains unavailable, the evaluation emits a path-specific issue and stays incomplete. Updated the public `complete` field documentation to include pinned property semantics. C07.5 still awaits pinned Obsidian 1.14.4 evidence and exact-SHA GitHub CI; no executable validation, commit, or push was performed.
+
+## C07.5 namespace routing and milestone push gate (2026-10-14T17:29:12Z)
+
+Made the goal's pre-push condition explicit: minor fixes, docs, workflow edits, and their local commits stay unpushed until they are part of one named, reviewed, acceptance-ready milestone. One push starts that milestone's CI batch; a milestone remains CI-pending until every required exact-SHA job passes.
+
+A fresh source review found that the Bases evaluator could route bare `tags` and `note.tags` through the unverified typed `file.tags` projection. Formula and filter lookup now treats only explicit `file.*` names as typed fields; bare and `note.*` names retain frontmatter lookup. Added CI-authored namespace collision coverage for formulas and filters and an engine assertion that collected frontmatter tags remain available while `file.tags` is unavailable. Corrected the C09.2 duplicate-theme UI expectation to the exact two-file count; an independent read-only scan found no remaining stale wording or mismatch in the bounded-summary callers.
+
+The C07.5 namespace correction is awaiting a final independent read-only review. C07.5 remains pending pinned Obsidian 1.14.4 semantics, and R2.8.127/R2.8.128 remain unsubmitted. Local HEAD is `8307b0d8add1cbfab1c444c448cb970a90bf004c`; `origin/main` remains `7d0eab11637bc9163694a0697ab2e8b93f98dc17`. No tests, builds, formatting, lint, runtime validation, commit, or push were performed. Supported cloud network readiness is still not established.
+
+## C07.5 namespace review complete (2026-10-14T17:30:06Z)
+
+An independent read-only follow-up confirmed that bare and `note.tags` formula/filter references use Markdown frontmatter, explicit `file.tags` remains unavailable and fails closed, and the regression cases exercise both paths. The engine assertion checks that the real collector retains frontmatter tags while its file-tag projection remains gated. No validation was run. Clarified the Bases architecture page to document the namespace boundary and that ordinary frontmatter availability is subject to the source and metadata limits.
+
+## C07.5 — inventory handle bound and milestone terminology (2026-10-14T17:36:28Z)
+
+Clarified `goal.md` so a named implementation milestone must be complete, reviewed, and acceptance-ready before one push starts its CI batch; minor edits and focused commits remain local, and “achieved” is reserved for the exact-SHA full CI pass. In the regular-file inventory, queued child directories now retain relative paths rather than open handles and are reopened component-by-component with no-follow checks when traversed. Added a CI-authored wide-tree regression case with 1,536 sibling directories and a nested file. Independent review is pending. No tests, builds, formatting, lint, runtime validation, commit, or push were performed; C07.5 semantics remain candidates pending pinned Obsidian 1.14.4 evidence.
+
+## Goal cadence and C09.2 CSS resource bounds — 2026-10-14T18:01:20Z
+
+Made the goal's CI cadence explicit: task-level edits, focused fixes, cleanups, docs, workflow changes, and individual commits stay local; one reviewed, acceptance-ready named milestone gets one push, and its exact-SHA batch must become terminal before the next milestone push. The formal achieved state still requires the full CI pass.
+
+Clarified the CSS inventory's direct-directory-entry cap and renamed the aggregate analysis status to reflect that analysis can run while its output is omitted for insufficient remaining retention budget. The UI and architecture description now state that distinction accurately. Added a CI-authored egui regression that exceeds the selector cap and verifies truncated findings remain inconclusive; existing vault regressions cover aggregate source, asset, and retained-analysis budgets. Two read-only reviews found no remaining blocker after one review caught and corrected wording that implied the entire aggregate budget was exhausted.
+
+No tests, builds, formatting, lint, runtime validation, commit, or push were performed. R2.8.128 remains unsubmitted; R2.8.127 remains unpushed, and C07.5 still awaits independent review and pinned Obsidian 1.14.4 evidence. Keep `origin/main` at `7d0eab11637bc9163694a0697ab2e8b93f98dc17` while supported cloud network readiness remains unavailable.
+
+## C07.5 inventory traversal review — 2026-10-14T18:03:57Z
+
+An independent read-only review found no defect in the bounded regular-file traversal or its 1,536-sibling regression. Pending directories retain paths rather than open handles; each path is reopened component-by-component with no-follow checks. The entry, component-walk, path-byte, and returned-row limits are represented in the inventory summary, and truncation remains fail-closed.
+
+No local executable validation or push occurred. Pinned Obsidian 1.14.4 semantics remain outstanding; keep unverified `file.*` projections disabled. Supported cloud network readiness has not been established.
+
+## R2.8.127 review refinement and C09.2 refresh coverage — 2026-10-14T18:29:16Z
+
+Refined the C07.3 empty-group exception to rely only on the exact unchanged YAML source hash, its single validated active table view, and one unique plain-string `Explicitly empty` declaration. Each accepted edge requires one painted heading per side, complete identical routes, the same supported composed slot, no observed member paths, and a one-to-one match. Generic pathless pairs still fail closed unless the exact pair was accepted through that guard. The page self-check rejects changed hashes, duplicate/typed/malformed declarations, repeated or unpainted headings, incomplete routes, unsupported/different slots, and observed member paths. Both first-open and reopen reports now require at least two observed samples and one actual source-backed edge. Two independent read-only reviews found the source guard and final acceptance consistent.
+
+Added a C09.2 egui refresh regression that externally updates the selected root's appearance settings and adds a CSS theme, then checks refreshed appearance and diagnostics and verifies refresh made no extra writes. Independent source review found no actionable gap.
+
+Updated `goal.md` to reserve pushes to `origin/main` for one complete, reviewed named milestone, never for minor edits or incremental CI; keep the submitted SHA until every required workflow is terminal, even when CI takes several hours. No tests, builds, formatting, lint, runtime validation, commit, or push were performed. R2.8.127 working-tree refinements and C09.2/C07.5 work remain local; supported network readiness is unavailable and `origin/main` remains at `7d0eab11637bc9163694a0697ab2e8b93f98dc17`.
+
+## C09.2 appearance invalidation and source diagnostics — 2026-10-14T18:36:38Z
+
+Added a CI-authored egui regression for a selected `.obsidian-*` root replaced by a regular file, checking refresh fallback and no writes. Configuration discovery now records only a compact issue kind for root-level `appearance.json` files that contain malformed or non-object JSON; the UI identifies the selected source, keeps the system theme active, and does not report the file as missing. Added vault and egui regression coverage for both invalid forms and refresh after external edits, and updated the native appearance documentation and R2.8.128 acceptance/evidence notes. Independent source review is pending.
+
+No local tests, builds, formatting, lint, runtime validation, commit, or push were performed. R2.8.128 remains unsubmitted; R2.8.127 remains unpushed with no exact-SHA CI, and C07.5 candidate semantics remain unverified against pinned Obsidian 1.14.4. `origin/main` remains at `7d0eab11637bc9163694a0697ab2e8b93f98dc17`; supported network readiness has not been established.
+
+## C07.5 source-index candidate coverage and C09.2 discovery wording — 2026-10-14T18:49:32Z
+
+Factored the production Bases source-reference resolver and reverse-backlink candidate builder into a private helper used by evaluation. CI-authored source coverage now exercises its resolved link/embed/backlink candidates, verifies embeds do not create backlinks, distinguishes unresolved link and embed incompleteness, and covers exact derived-metadata boundaries for tags, raw references, typed file references, and backlinks. An independent read-only source review found the refactor and boundary cases consistent; two direct completeness assertions were added after that review. The `file.*` evaluation gate remains closed pending pinned Obsidian 1.14.4 semantics.
+
+Corrected the C09.2 empty-settings wording in the UI and architecture notes: discovery may find no regular `appearance.json` when the path is absent or an entry is ignored as non-regular. No discovery or symlink policy changed.
+
+A read-only CI-readiness audit confirmed that the `origin/main` batch is terminal and failed, the connected GitHub identity has repository admin permission, and no read-only evidence establishes Git transport readiness or direct-main update policy; the executor network-policy file is absent. R2.8.127 refinements remain mixed with local C09.2/C07.5 edits and unpushed. No tests, builds, formatting, lint, runtime validation, commit, or push were performed.
+
+## CI cadence clarification and C07.5 capture coverage — 2026-10-14T19:04:51Z
+
+Clarified goal.md so a milestone is implementation-complete only after its bounded deliverable, review, and evidence notes are ready for one push. The pushed SHA remains CI-pending until every required exact-SHA job passes; minor changes and incremental CI pushes remain out of scope. CI may take several hours, so the next milestone push waits for the current full batch to become terminal.
+
+C07.5 now compares the rendered-cell matrix path set with the fresh scroll-sweep path set and exposes uncovered or out-of-sweep paths; a point-in-time viewport matrix is marked partial when it does not cover the sweep. Visible-row path mapping accepts only visible path attributes and retains ignored candidates separately. The Rust no-write regression seeds the fixture's exact hex/base64 payloads. Per-stage read-only snapshots cover the complete isolated Obsidian profile root and vault. The Bases architecture notes reflect those evidence limits.
+
+Independent read-only review found no blocker in these follow-ups. Typed file.* semantics remain gated pending pinned Obsidian 1.14.4 evidence. No tests, builds, type checks, formatting, lint, runtime validation, app launch, commit, or push were performed. Local migration changes remain mixed and unsubmitted; origin/main is still 7d0eab11637bc9163694a0697ab2e8b93f98dc17, and supported Git transport/direct-main readiness has not been established.
+
+## C07.5 empty-sweep and header-evidence closure — 2026-10-14T19:30:51Z
+
+Tightened the pinned capture's file inventory to reject empty paths. The per-row cell/header matrix now rejects an empty result sweep for the nonempty C07.5 fixture, reports expected property-header labels separately from minimum row coverage, and changes every candidate to `observation-incomplete` when row/inventory gates fail. A thrown row probe now records explicit incomplete candidate statuses with unknown exact-header observations. The point-in-time viewport matrix uses the same display/visibility/opacity and viewport-intersection rule, states that clipping, occlusion, ancestor opacity, and painted text are not established, and preserves header/cell indexes from full DOM order before filtering.
+
+Two independent read-only review passes found and closed the empty-sweep, error-status, visibility, and index-alignment gaps. All typed `file.*` semantics remain gated pending pinned Obsidian 1.14.4 evidence. No local tests, builds, type checks, formatting, lint, runtime validation, app launch, commit, or push were performed. `origin/main` remains at `7d0eab11637bc9163694a0697ab2e8b93f98dc17`; the migration worktree is still mixed and unsubmitted.
+
+## R2.8.127 C07.3 fallback and final source review — 2026-10-14T19:39:19Z
+
+Added explicit empty-state defaults for the same-snapshot pathless-pair ambiguity list, its truncation flag, and the pair self-check. An independent read-only follow-up found no remaining source-level C07.3 gap after this correction; the C07.3 acceptance ledger now records selected-root heading/row event ordering and fail-closed behavior when accepted-edge evidence is truncated. C07.3 is source-reviewed, but its milestone-specific documentation and isolation from C07.5/C09.2 work remain before submission; it is not CI-passed.
+
+Clarified `goal.md` that GitHub CI is a milestone acceptance batch rather than a per-change feedback loop. Minor changes stay in the active milestone; one push starts CI after the milestone implementation, review, and evidence notes are ready. Keep `origin/main` at the submitted SHA until the full required batch is terminal, even if that takes several hours.
+
+No local tests, builds, formatting, lint, runtime validation, commit, or push occurred. `origin/main` remains at `7d0eab11637bc9163694a0697ab2e8b93f98dc17`.
+
+
+## R2.8.127 C07.3 submitted; exact-SHA CI pending — 2026-10-14T19:47:08Z
+
+Pushed the reviewed C07.3 milestone once to `origin/main`; the submitted implementation SHA is `7439e2cb765b5f8c7a7e29740c42fff53b38f411`. All seven required workflows are attached to this SHA. The Rust migration inventory passed. At this observation, 5 of 20 jobs had passed, 14 were running, one was queued, and zero had failed. Run/job IDs and URLs are recorded in [`.agents/tasks/2026-10-07/evidence/r2.8.127-attempt-1-7439e2c.json`](.agents/tasks/2026-10-07/evidence/r2.8.127-attempt-1-7439e2c.json).
+
+Keep `origin/main` at `7439e2cb765b5f8c7a7e29740c42fff53b38f411` until every required job is terminal. Do not push another milestone or source fix while this batch is pending. Uncommitted C07.5/C09.2 work is excluded from the submitted SHA. No local executable validation occurred.
+
+
+## R2.8.127 C07.3 exact-SHA CI failures recorded — 2026-10-14T19:50:07Z
+
+Read-only job logs for macOS (`116066844327`) and Linux (`116066844494`) show the same parser failure before C07.3 scenario capture: an unescaped nested template literal in the browser-script string at embedded line 6803. Five of seven workflows have completed successfully; 14 of 20 jobs passed, two failed, and four remain in progress. The Windows round-trip job and three Rust CI jobs are still pending. Run and job links, conclusions, and current limitations are recorded in [`.agents/tasks/2026-10-07/evidence/r2.8.127-attempt-1-7439e2c.json`](.agents/tasks/2026-10-07/evidence/r2.8.127-attempt-1-7439e2c.json).
+
+Prepared a source-only local correction that builds the local section key with string concatenation. Independent review is pending. Do not push a repair or other milestone while any current-SHA job is pending; wait for the complete batch, then submit one reviewed repair milestone. No local executable validation occurred.
 
 ## R2.8.127 C07.3 exact-SHA batch terminal — 2026-10-14T19:59:50Z
+
 All seven required workflows and 20 jobs on SHA `7439e2cb765b5f8c7a7e29740c42fff53b38f411` are terminal. Six workflows and 17 jobs passed. The three Obsidian 1.14.4 round-trip jobs failed before scenario capture on Windows (`116066843994`), macOS (`116066844327`), and Linux (`116066844494`) with the same nested template-literal parse error at embedded line 6803. Rust CI passed on all four jobs, including Windows and minimum Rust 1.95; the other five workflows also passed. Full run/job records, artifact IDs, sizes and digests are in [`.agents/tasks/2026-10-07/evidence/r2.8.127-attempt-1-7439e2c.json`](.agents/tasks/2026-10-07/evidence/r2.8.127-attempt-1-7439e2c.json). The available Windows artifact is the separate note-selector accessibility report; no C07.3 round-trip report was produced.
 
 The local C07.3 repair now replaces all nested evaluator template literals with equivalent concatenation and removes backticks from two embedded comments. Independent source review confirmed that the key strings and NUL separator are preserved and that the affected evaluator contains only its intended opening and closing delimiters. No local executable checks were run. The repair package is implementation-complete / CI-pending and ready for one push; it excludes C07.5/C09.2 work. `origin/main` remains at the initial submitted SHA until the repair is submitted, then must remain fixed until the full repair batch is terminal.
+
+
+## R2.8.127 C07.3 repair CI status — 2026-10-14T20:10:23Z
+
+The repair batch on exact SHA `eee1f3d0cfbc7ad74f7bac3d561bb252ad6d4554` has 5/7 required workflows and 15/20 jobs passing so far; 2 workflows and 5 jobs remain in progress. No required job has failed at this observation. `origin/main` was confirmed at the submitted SHA. Run/job IDs and the latest conclusions are recorded in [`evidence/r2.8.127-attempt-2-eee1f3d.json`](evidence/r2.8.127-attempt-2-eee1f3d.json). Keep the remote at this SHA until all 20 jobs are terminal; no new push or local executable validation occurred.
+
+
+## R2.8.127 C07.3 repair CI progress — 2026-10-14T20:16:30Z
+
+The exact-SHA Rust CI workflow (run 38629091204) completed successfully on `eee1f3d0cfbc7ad74f7bac3d561bb252ad6d4554`; minimum Rust 1.95 and Ubuntu/macOS/Windows Rust jobs all passed. The exact-SHA batch is now 6/7 workflows and 17/20 jobs passed. The three Obsidian 1.14.4 round-trip jobs remain in progress on Ubuntu (`116075761509`), macOS (`116075761819`), and Windows (`116075762082`); no failures are currently recorded. Status and job IDs are updated in [`evidence/r2.8.127-attempt-2-eee1f3d.json`](evidence/r2.8.127-attempt-2-eee1f3d.json). Keep `origin/main` at the submitted SHA until all required jobs are terminal. No local executable validation or push occurred.
+
+## C09.2 CSS cap coverage and exact-SHA CI progress — 2026-10-14T20:27:58Z
+
+Added a `crates/doc` regression for 65 unique privileged selectors over the 64-example cap and an egui case that verifies the resulting Vault truncation status, inconclusive message, and absence of precheck claims. Expanded the directory-cap UI scenario across both `themes` and `snippets`, crossing their shared per-root entry budget and preserving lower-bound snippet reporting. Updated the acceptance wording and UI message to identify estimated retained-analysis output. Two independent read-only reviews found no blocker; no local executable validation occurred.
+
+On exact SHA `eee1f3d0cfbc7ad74f7bac3d561bb252ad6d4554`, Rust CI and five companion workflows passed. The Ubuntu (`116075761509`) and Windows (`116075762082`) round-trip jobs failed; macOS (`116075761819`) remains active. Failure logs and artifact metadata are unavailable until the parent workflow is terminal. Keep `origin/main` fixed, do not push, and continue only independent local work while macOS runs.
+
+## Goal push cadence clarified — 2026-10-14T20:30:24Z
+
+Made the `goal.md` push gate explicit at the top: minor edits, focused fixes, cleanup and commits stay local during a named milestone; push the reviewed complete milestone once; keep the submitted SHA fixed until its required CI batch is terminal; call it achieved only after all required jobs pass. This clarifies the batching policy and does not change the active CI submission. No local executable validation, commit or push occurred.
+
+## C07.3 repair artifacts identify an embedded binding error — 2026-10-14T20:32:38Z
+
+Downloaded the completed Linux and Windows CI artifacts for run `38629091142`; both round-trip reports fail at C07.3 renderer extraction with `ReferenceError: declaredIdentityCapture is not defined` at embedded line 3193. Their artifact IDs, archive digests, report SHA-256 values and report summaries are recorded in `evidence/r2.8.127-attempt-2-eee1f3d.json`. The local embedded script injects this host value as `declaredPathlessIdentityCapture`; changed the affected browser-body references to that injected identifier. Independent read-only review confirmed the host-side setup, injection, and post-evaluation hash verification remain unchanged. This correction is local to the next C07.3 repair milestone; the macOS job on the submitted SHA remains active, so no push occurred. No local executable validation occurred.
 
 ## R2.8.127 C07.3 repair attempt 2 is CI-terminal/failed — 2026-10-14T20:48:22Z
 
@@ -7158,3 +7340,55 @@ All seven required workflows and 20 jobs on exact SHA `eee1f3d0cfbc7ad74f7bac3d5
 ## C07.3 macOS timeout scope reviewed — 2026-10-14T21:00:59Z
 
 Inspected the macOS artifact and exact job log for run `38629091142`. C01.2 and C07.2 completed; C07.3 recorded first-open/reopen observations through `yaml-malformed-scalar-order` (11 of 14 scenario pairs), while the remaining three were absent and the report stayed pending. An independent read-only CI review concluded the shared 40-minute job cap prevents a complete C07.3 artifact and recommended 90 minutes because the repaired extraction may take longer than the failing probe. Raised the round-trip job limit to 90 minutes locally as part of the C07.3 repair attempt 3. `goal.md` now explicitly forbids overlapping milestone batches while required jobs are pending. No local executable validation, commit, or push occurred.
+
+## R2.8.127 C07.3 repair attempt 3 submitted — 2026-10-14T21:08:12Z
+
+Pushed the reviewed C07.3 binding and timeout repair once to `origin/main` at exact SHA `1ded8e1ac2237c7b61ca38b46e1d1d777d0225c5`. The four embedded browser-body references now use the injected `declaredPathlessIdentityCapture` value, and the Obsidian round-trip job timeout is 90 minutes based on the incomplete macOS attempt-2 artifact. The seven required workflows have started; the initial snapshot shows 3/7 workflows completed, 10/20 jobs passed, 9 running, and 1 queued. All run/job IDs and URLs are recorded in [`evidence/r2.8.127-attempt-3-1ded8e1.json`](evidence/r2.8.127-attempt-3-1ded8e1.json). Keep `origin/main` at this SHA until every required job is terminal. C07.5 and C09.2 remain local and unsubmitted. No local executable validation occurred.
+
+## R2.8.127 C07.3 repair attempt 3 CI progress — 2026-10-14T21:16:34Z
+
+The exact-SHA CI batch on `1ded8e1ac2237c7b61ca38b46e1d1d777d0225c5` has 5/7 workflows and 16/20 jobs passing; the Rust Windows job and the Ubuntu, Windows, and macOS Obsidian 1.14.4 round-trip jobs remain in progress. No failures are recorded. The refreshed workflow/job snapshot is in [`evidence/r2.8.127-attempt-3-1ded8e1.json`](evidence/r2.8.127-attempt-3-1ded8e1.json). Keep `origin/main` at the submitted SHA until every required job is terminal.
+
+While that batch runs, the local C07.5 failure-report path now uses a shared bounded sample constructor. Its CI-only contract check covers renderer-truncated, host-truncated, untruncated and host-known watched-path-cap reports, plus final deadline status with the retained sample cause. Independent read-only reviews found no blocker in the report shape or timeout flow. C07.5 and C09.2 remain local and unsubmitted. No local executable validation, commit, or push occurred.
+
+## R2.8.127 C07.3 repair attempt 3 CI progress and local review findings — 2026-10-14T21:19:23Z
+
+On exact SHA `1ded8e1ac2237c7b61ca38b46e1d1d777d0225c5`, Rust CI has completed successfully, bringing the batch to 6/7 workflows and 17/20 jobs passed. The Ubuntu, Windows, and macOS Obsidian round-trip jobs remain in progress; no failures are recorded. Refreshed evidence is in [`evidence/r2.8.127-attempt-3-1ded8e1.json`](evidence/r2.8.127-attempt-3-1ded8e1.json). Keep `origin/main` at the submitted SHA until every required job is terminal.
+
+A read-only C07.5 review found that retained header/cell/row/message strings, result-count text, and the normalized DOM text projection were omitted from the combined captured-string budget; these projections now consume the shared cap before emission. The stable span now uses host monotonic sample-completion elapsed times, retained per sample, rather than wall-clock timestamps. The C07.5 acceptance wording and CI-only contract check were updated; a second read-only review is pending. No local executable validation occurred.
+
+A read-only C09.2 review found an isolation dependency: its selected appearance read calls `VaultRoot::open_regular_file_nofollow`, which currently exists only in local C07.5 changes and depends on the Unix `libc` dependency. State now sequences C09.2 after the separate C07.5 milestone passes and calls out workflow/fixture exclusions between those submissions. No code was committed or pushed.
+
+## C07.3 attempt 3 failures and milestone-gated push clarification — 2026-10-14T21:46:32Z
+
+On exact SHA `1ded8e1ac2237c7b61ca38b46e1d1d777d0225c5`, the six companion workflows and 17 jobs passed; Ubuntu round-trip job `116104954862` and Windows round-trip job `116104955292` failed, while macOS job `116104955380` remains in progress. Linux/Windows artifacts show three shared issues: the pathless-identity self-check closes over the active scenario, the target YAML `Explicitly empty` heading is absent on first-open and reopen, and unpainted zero-path headings introduce false section ambiguity. Linux also shows clipped `Alpha`/`Bravo` and typed-value headings despite the top-of-sweep capture containing their painted headings and rows. See [`evidence/r2.8.127-attempt-3-1ded8e1.json`](evidence/r2.8.127-attempt-3-1ded8e1.json).
+
+Prepared local C07.3 repairs: pass an explicit target policy into the identity decision and its CI self-check; keep unpainted markers diagnostic-only and clear local ownership after them so visible rows can resolve only by canonical paths to painted-backed sections elsewhere; characterize a complete-sweep `not-observed-painted` result for the declared empty group without synthesizing a heading/membership or claiming global emptiness. These changes remain unvalidated and unpushed; wait for the macOS job and full batch to become terminal before submitting a complete reviewed repair milestone.
+
+Refined [`goal.md`](goal.md) to distinguish `implementation-complete / CI-pending` (one milestone push requests CI) from `achieved / CI-passed` (all required jobs pass on the exact SHA). Minor changes and focused commits stay local; do not stack another push while a multi-hour CI batch has pending jobs. No local executable validation, commit, or push occurred.
+
+## R2.8.128 C07.3 repair work and milestone push policy — 2026-10-14T22:10:22Z
+
+Attempt 3 on `1ded8e1ac2237c7b61ca38b46e1d1d777d0225c5` is terminal: 17/20 jobs passed and all three Obsidian round-trip platform jobs failed. Run, job, artifact, and report-hash evidence is reconciled in [`evidence/r2.8.127-attempt-3-1ded8e1.json`](evidence/r2.8.127-attempt-3-1ded8e1.json); no required jobs remain pending.
+
+The local R2.8.128 source repair now binds the declared-heading pair proof once, passes it to the eligibility decision, and serializes that same proof on accepted edges. The declared-identity scenario gate now includes source and scan self-check acceptance. The raw first-open/reopen comparison report explicitly describes its narrower meaning. These local changes have not been validated by executable checks or pushed.
+
+Clarified [`goal.md`](goal.md): commits and minor corrections remain local throughout an active milestone; one push to `origin/main` requests CI only after the complete, reviewed milestone is ready; no subsequent push occurs while any required workflow/job is pending, even if CI takes several hours. C07.5 and C09.2 remain outside this milestone. No commit or push was made.
+
+An independent read-only re-review found no remaining acceptance blocker: accepted edges use the same bound proof checked by the decision helper, and target-scenario acceptance includes source/scan self-checks plus both strict stage dispositions. The review caught a wording nuance in the raw first-open/reopen stability field; its report text now says stability requires both stage completeness gates and matching comparable projections, with strict identity checks applied separately. No executable validation was run.
+
+## R2.8.128 exact-SHA CI reconciliation and grouped C07.3 repair — 2026-10-14T23:11:28Z
+
+R2.8.128 was pushed once to `origin/main` at `dc24dba8a5e27dfa6294b673e9e394d26d6fefa7`. All seven workflows and 20 jobs are now terminal: six companion workflows passed, and all three Obsidian round-trip platform jobs failed. macOS job `116138361874` failed at `2026-10-14T23:11:52Z`. Run, job, artifact IDs, report digests, platform summaries, and exact-SHA results are recorded in [`evidence/r2.8.128-dc24dba-ci.json`](evidence/r2.8.128-dc24dba-ci.json). Keep `origin/main` at this SHA until one complete reviewed repair milestone is ready.
+
+The exact-SHA reports confirm a temporal-dead-zone failure on Linux and Windows: `freshSweepUniquePaths` is read before initialization in the exhaustive C07.3 capture. Its snapshot now sits immediately after sweep traversal and before later consumers. Linux otherwise accepts its 13 non-target scenarios. Windows additionally fails missing-versus-null, YAML/JSON typed-value collisions, and malformed-order scenarios. The Windows malformed cases sampled offsets `0` and `429` with a `601px` scroll viewport, leaving visible rows without painted heading ownership; strict ownership rejection remains in force. The artifacts predate local CDP viewport emulation and therefore do not prove its effect.
+
+Prepared a grouped local C07.3 capture repair: reduce sweep steps from 75% to 25% of the scroll viewport; retain the explicitly labeled CDP-emulated `1440×1000` desktop viewport and require its effective renderer dimensions/device-pixel ratio to match; record screenshot pixel dimensions and require them to match the renderer viewport; and report `fresh_sweep_group_ownership_complete` independently from conflict flags, making that completeness a required acceptance condition. Read-only review found the ownership-completeness field must allow raw unowned observations only when each resolves to one stable canonical-path owner, while also requiring complete sweep coverage and matching result count. That correction and a final-viewport cross-check are being made locally. These changes remain unvalidated and unpushed; any unresolved or multiply-owned path still fails. No local executable validation, commit, or push occurred.
+
+## R2.8.129 C07.3 grouped repair review complete — 2026-10-15
+
+Reconciled R2.8.128 exact-SHA CI: run `38647641287` on `dc24dba8a5e27dfa6294b673e9e394d26d6fefa7` is terminal-failed, with 17/20 jobs passed and the three Ubuntu, Windows, and macOS Obsidian round-trip jobs failed. The seven workflow results, job IDs, artifact IDs, report digests, and limitations are in [`evidence/r2.8.128-dc24dba-ci.json`](evidence/r2.8.128-dc24dba-ci.json). Progress state and CI history now point to that terminal batch; the stale intermediate R2.8.127 status was corrected.
+
+Independent read-only review found the grouped local C07.3 repair fail-closed: complete sweeps and result-count agreement are required; unresolved paths or ambiguous ownership reject; unowned observations must resolve to one stable canonical-path owner; and effective emulated viewport, settled renderer viewport, and screenshot dimensions must agree. The position cap remains active, so a denser sweep that exceeds it fails visibly. Empirical cross-platform behavior remains for exact-SHA GitHub CI to decide.
+
+The planned R2.8.129 deliverable is implementation-complete and reviewed for one milestone submission. C07.5 fixture tracking/capture workflow changes and the mixed C07.5/C09.2 Rust work are excluded. The GitHub Actions `parallel:` workflow groups were also reviewed against the official syntax and dependency rules; no correction was identified. No local tests, builds, formatting, lint, runtime validation, commit, or push occurred.
