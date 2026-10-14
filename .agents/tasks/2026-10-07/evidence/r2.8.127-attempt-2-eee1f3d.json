@@ -1,0 +1,299 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.8.127 C07.3 embedded evaluator delimiter repair",
+  "attempt": 2,
+  "implementation_sha": "eee1f3d0cfbc7ad74f7bac3d561bb252ad6d4554",
+  "previous_origin_main_sha": "7439e2cb765b5f8c7a7e29740c42fff53b38f411",
+  "pushed_at": "2026-10-14T20:05:17Z",
+  "status_observed_at": "2026-10-14T20:47:26Z",
+  "status": "CI terminal and non-passing; 6/7 workflows and 17/20 jobs passed; 2 jobs failed, 1 macOS job was cancelled at the 40-minute job timeout, 0 pending.",
+  "summary": {
+    "expected_workflows": 7,
+    "completed_successful_workflows": 6,
+    "in_progress_workflows": 0,
+    "queued_workflows": 0,
+    "failed_workflows": 1,
+    "workflows_with_failed_jobs": 1,
+    "expected_jobs": 20,
+    "passed_jobs": 17,
+    "in_progress_jobs": 0,
+    "queued_jobs": 0,
+    "failed_jobs": 2,
+    "cancelled_jobs": 1,
+    "nonpassing_jobs": 3,
+    "remote_tip": "eee1f3d0cfbc7ad74f7bac3d561bb252ad6d4554"
+  },
+  "workflows": [
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 38629090910,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38629090910",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "id": 116075760869,
+          "name": "macos-latest",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38629090910/job/116075760869",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 116075761233,
+          "name": "ubuntu-latest",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38629090910/job/116075761233",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 116075761253,
+          "name": "windows-latest",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38629090910/job/116075761253",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 38629091152,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38629091152",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "id": 116075762296,
+          "name": "ubuntu-latest",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38629091152/job/116075762296",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 116075762413,
+          "name": "windows-latest",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38629091152/job/116075762413",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 116075763108,
+          "name": "macos-latest",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38629091152/job/116075763108",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "Obsidian vault round-trip acceptance",
+      "run_id": 38629091142,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38629091142",
+      "status": "completed",
+      "conclusion": "failure",
+      "jobs": [
+        {
+          "id": 116075761509,
+          "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38629091142/job/116075761509",
+          "status": "completed",
+          "conclusion": "failure"
+        },
+        {
+          "id": 116075761819,
+          "name": "Obsidian 1.14.4 vault round-trip on macos-latest",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38629091142/job/116075761819",
+          "status": "completed",
+          "conclusion": "cancelled"
+        },
+        {
+          "id": 116075762082,
+          "name": "Obsidian 1.14.4 vault round-trip on windows-latest",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38629091142/job/116075762082",
+          "status": "completed",
+          "conclusion": "failure"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 38629091204,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38629091204",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "id": 116075761382,
+          "name": "minimum supported Rust (1.95)",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38629091204/job/116075761382",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 116075761772,
+          "name": "rust (macos-latest)",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38629091204/job/116075761772",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 116075761852,
+          "name": "rust (ubuntu-latest)",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38629091204/job/116075761852",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 116075762109,
+          "name": "rust (windows-latest)",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38629091204/job/116075762109",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 38629090942,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38629090942",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "id": 116075766477,
+          "name": "ubuntu-latest",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38629090942/job/116075766477",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 116075766653,
+          "name": "macos-latest",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38629090942/job/116075766653",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 116075766710,
+          "name": "windows-latest",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38629090942/job/116075766710",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 38629091339,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38629091339",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "id": 116075762412,
+          "name": "macos-latest",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38629091339/job/116075762412",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 116075762968,
+          "name": "ubuntu-latest",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38629091339/job/116075762968",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 116075763016,
+          "name": "windows-latest",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38629091339/job/116075763016",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 38629090909,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38629090909",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "id": 116075760997,
+          "name": "inventory",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38629090909/job/116075760997",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ],
+  "artifacts": [
+    {
+      "id": 11926754740,
+      "run_id": 38629091142,
+      "workflow": "Obsidian vault round-trip acceptance",
+      "name": "obsidian-vault-roundtrip-macOS-eee1f3d0cfbc7ad74f7bac3d561bb252ad6d4554",
+      "size_in_bytes": 27041109,
+      "digest": "sha256:a65a2f17db595848c56f93750b1ca4637c58f543088c40a69252a5ba793b5dcf",
+      "expired": false,
+      "archive_download_url": "https://api.github.com/repos/ashutoshpw/open-obsidian/actions/artifacts/11926754740/zip",
+      "inspected_report": {
+        "name": "obsidian-vault-roundtrip-report.json",
+        "sha256": "3493970f388b7551f19de7987ca60c80da12acf52f011a40363132b66c8d6aec",
+        "status": "pending",
+        "c07_3_status": "running",
+        "failure": "The 40-minute job timeout cancelled the macOS round-trip before C07.3 completed; the uploaded report does not contain a terminal C07.3 result."
+      }
+    },
+    {
+      "id": 11925089274,
+      "run_id": 38629091142,
+      "workflow": "Obsidian vault round-trip acceptance",
+      "name": "obsidian-vault-roundtrip-Linux-eee1f3d0cfbc7ad74f7bac3d561bb252ad6d4554",
+      "size_in_bytes": 19053901,
+      "digest": "sha256:dc9caf0599389ae6a38457d395b1811668de355c6bb50d14371f8b75e9db2b2e",
+      "expired": false,
+      "archive_download_url": "https://api.github.com/repos/ashutoshpw/open-obsidian/actions/artifacts/11925089274/zip",
+      "inspected_report": {
+        "name": "obsidian-vault-roundtrip-report.json",
+        "sha256": "19d13ead970630bcf9020529db3397537c9d29b3815a35e49efe7bc20ae78a22",
+        "failure": "C07.3 renderer extraction throws ReferenceError: declaredIdentityCapture is not defined at embedded line 3193."
+      }
+    },
+    {
+      "id": 11925078760,
+      "run_id": 38629091142,
+      "workflow": "Obsidian vault round-trip acceptance",
+      "name": "obsidian-vault-roundtrip-Windows-eee1f3d0cfbc7ad74f7bac3d561bb252ad6d4554",
+      "size_in_bytes": 19920533,
+      "digest": "sha256:55757f422f17b3bb99c1f5d99a75629c5845098c8612d8b639138c42f80e4727",
+      "expired": false,
+      "archive_download_url": "https://api.github.com/repos/ashutoshpw/open-obsidian/actions/artifacts/11925078760/zip",
+      "inspected_report": {
+        "name": "obsidian-vault-roundtrip-report.json",
+        "sha256": "7942aad950573996a648287cda56d0da8f057691aca4968ac429f80d796345b8",
+        "failure": "C07.3 renderer extraction throws ReferenceError: declaredIdentityCapture is not defined at embedded line 3193."
+      }
+    }
+  ],
+  "artifacts_pending": false,
+  "note": "Latest exact-SHA status capture at 2026-10-14T20:47:26Z. All seven workflows and 20 jobs are terminal on eee1f3d0cfbc7ad74f7bac3d561bb252ad6d4554: six workflows and 17 jobs passed; Ubuntu and Windows round-trip jobs failed with the same C07.3 ReferenceError; the macOS round-trip job hit its configured 40-minute timeout and was cancelled while C07.3 remained running. Linux, Windows and macOS artifact IDs, archive digests and report hashes are recorded above. Keep origin/main at this SHA until the next complete reviewed repair milestone is ready.",
+  "failure_notes": [
+    "Ubuntu round-trip job 116075761509 failed in the author/open/snapshot/reopen step at 2026-10-14T20:19:20Z. Its report and completed job log confirm `ReferenceError: declaredIdentityCapture is not defined`; artifact ID, digest and report SHA are recorded above.",
+    "Windows round-trip job 116075762082 failed in the author/open/snapshot/reopen step at 2026-10-14T20:16:40Z. Its report and completed job log confirm the same `ReferenceError: declaredIdentityCapture is not defined`; artifact ID, digest and report SHA are recorded above.",
+    "macOS round-trip job 116075761819 was cancelled at 2026-10-14T20:45:59Z after the configured 40-minute job timeout. Its report artifact was uploaded successfully, but reports overall status `pending` and C07.3 status `running`; it cannot count as a pass. Artifact ID 11926754740, size, archive digest and report SHA are recorded above. Artifact inspection shows the C07.3 report had first-open/reopen observations through yaml-malformed-scalar-order (11 of 14 scenario pairs); the final three scenarios were absent when the 40-minute cap cancelled the job. C01.2 and C07.2 were complete."
+  ],
+  "repair_summary": {
+    "status": "CI-terminal; acceptance failed",
+    "source_changes": [
+      "local section key uses equivalent string concatenation",
+      "two embedded comments have no raw template delimiters",
+      "sample/path key uses equivalent concatenation and retains the NUL separator",
+      "global table-section key uses equivalent concatenation"
+    ],
+    "review": "Independent read-only source review confirmed equivalent keys and only the intended opening/closing template delimiters in the affected C07.3 evaluator.",
+    "local_executable_validation": false,
+    "previous_attempt_evidence": ".agents/tasks/2026-10-07/evidence/r2.8.127-attempt-1-7439e2c.json"
+  }
+}

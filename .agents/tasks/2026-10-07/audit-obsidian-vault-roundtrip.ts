@@ -7220,9 +7220,9 @@ async function readGroupOrderVisibleState(
             const right = freshSweepTableSections.get(rightKey);
             if (left.member_paths.size !== 0 || right.member_paths.size !== 0) continue;
             const decision = declaredPathlessIdentityPairDecision(left, right, {
-              source_hash_verified_before_scan: declaredIdentityCapture.status === 'verified',
+              source_hash_verified_before_scan: declaredPathlessIdentityCapture.status === 'verified',
               source_sha256: declaredPathlessIdentityPolicy.source_sha256,
-              observed_source_sha256: declaredIdentityCapture.observed_source_sha256,
+              observed_source_sha256: declaredPathlessIdentityCapture.observed_source_sha256,
               source_path: declaredPathlessIdentityPolicy.source_path,
               active_file_path: view?.file?.path ?? null,
               active_view_type: view?.getViewType?.() ?? null,
@@ -8194,12 +8194,12 @@ async function readGroupOrderVisibleState(
         })),
         fresh_sweep_table_section_reconciliation_ambiguous: freshSweepTableSectionReconciliationAmbiguous,
         fresh_sweep_declared_pathless_identity_policy: {
-          status: declaredIdentityCapture.status,
-          reason: declaredIdentityCapture.reason,
+          status: declaredPathlessIdentityCapture.status,
+          reason: declaredPathlessIdentityCapture.reason,
           active_in_page: declaredPathlessIdentityActive,
           source_path: declaredPathlessIdentityPolicy?.source_path ?? null,
           source_sha256: declaredPathlessIdentityPolicy?.source_sha256 ?? null,
-          observed_source_sha256_before_scan: declaredIdentityCapture.observed_source_sha256,
+          observed_source_sha256_before_scan: declaredPathlessIdentityCapture.observed_source_sha256,
           view_index: declaredPathlessIdentityPolicy?.view_index ?? null,
           declaration_index: declaredPathlessIdentityPolicy?.declaration_index ?? null,
           declaration_value: declaredPathlessIdentityPolicy?.declaration_value ?? null,

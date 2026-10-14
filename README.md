@@ -14,6 +14,6 @@ The selected folder remains the authoritative vault. OpenObsidian stores its pri
 
 ## Migration validation
 
-GitHub Actions is the only validation environment for the Rust migration. Run tests, builds, formatting checks, Clippy, fixture audits and runtime probes through the repository workflows. Do not substitute local test, build, lint, format or application-launch results for CI. Work is committed in small slices to `main`; exact-SHA workflow results and evidence are recorded under `.agents/tasks/2026-10-07/`.
+GitHub Actions is the only validation environment for the Rust migration. Run tests, builds, formatting checks, Clippy, fixture audits and runtime probes through the repository workflows. Do not substitute local test, build, lint, format or application-launch results for CI. Focused commits accumulate locally until a complete named milestone is ready; push once for that milestone, then wait for its exact-SHA CI batch to finish. Record workflow results and evidence under `.agents/tasks/2026-10-07/`.
 
 The migration workflow retains the Electron quality and packaging jobs as reference checks while adding the Rust three-platform workspace matrix and migration-inventory validation. A green workflow validates only the checks it contains; unsupported or untested product workflows remain explicitly pending.

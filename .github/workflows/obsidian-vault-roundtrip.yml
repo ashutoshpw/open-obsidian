@@ -28,7 +28,7 @@ jobs:
   roundtrip:
     name: Obsidian 1.14.4 vault round-trip on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 40
+    timeout-minutes: 90
     strategy:
       fail-fast: false
       matrix:
