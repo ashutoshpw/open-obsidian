@@ -1623,8 +1623,7 @@ async function dismissWindowsNoteSelectorMenu(child: ChildProcess, expectedPath:
     if ($selectorExpansionBefore.status -eq "unsupported" -and $visibleNoteOptionsBefore -eq 0) {
       throw "UI Automation exposed neither the selector expansion state nor any note-path options; the collapsed state cannot be confirmed"
     }
-    if ($selectorExpansionBefore.status -eq "supported"
-        -and $selectorExpansionBefore.state -notin @("Collapsed", "Expanded", "PartiallyExpanded")) {
+    if ($selectorExpansionBefore.status -eq "supported" -and $selectorExpansionBefore.state -notin @("Collapsed", "Expanded", "PartiallyExpanded")) {
       throw "UI Automation exposed a non-expandable note selector with unexpected state: $($selectorExpansionBefore.state)"
     }
     if ($visibleNoteOptionsBefore -gt 0 -or $selectorWasExpanded) {
@@ -1674,10 +1673,9 @@ async function dismissWindowsNoteSelectorMenu(child: ChildProcess, expectedPath:
       }
       $expansionConfirmsClosed = ($selectorExpansionAfter.status -eq "supported" -and
         $selectorExpansionAfter.state -eq "Collapsed")
-      if ($selectorExpansionAfter.status -eq "unsupported"
-          -and $selectorExpansionBefore.status -eq "unsupported"
-          -and $dismissalAction -eq "WScript.Shell.SendKeys(Escape)"
-          -and $visibleNoteOptionsBefore -gt 0) {
+      $expansionUnsupportedBeforeAndAfter = $selectorExpansionAfter.status -eq "unsupported" -and $selectorExpansionBefore.status -eq "unsupported"
+      $escapeDismissedVisibleMenu = $dismissalAction -eq "WScript.Shell.SendKeys(Escape)" -and $visibleNoteOptionsBefore -gt 0
+      if ($expansionUnsupportedBeforeAndAfter -and $escapeDismissedVisibleMenu) {
         $expansionConfirmsClosed = $true
       }
       if ($visibleNoteOptionsAfter -eq 0 -and $selectorVisibleAfterDismissal -and $expansionConfirmsClosed) {
