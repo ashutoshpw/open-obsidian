@@ -183,8 +183,8 @@ type GroupOrderResultCountEvidence = {
   tag: string;
   class_name: string;
   bounds: {top: number; left: number; width: number; height: number};
-  scope: "selected-table-shell" | "active-kanban-container";
-  selected_result_root: {tag: string; class_name: string; bounds: {top: number; left: number; width: number; height: number}};
+  scope: "selected-table-shell" | "selected-table-container" | "active-kanban-container";
+  selected_result_root: {tag: string; class_name: string; contained_visible_table_count: number | null; bounds: {top: number; left: number; width: number; height: number}};
   nearest_table_shell: {tag: string; class_name: string} | null;
   shared_container: {tag: string; class_name: string} | null;
 };
@@ -204,6 +204,7 @@ type GroupOrderUnmappedPathCandidate = {
   text: string;
   class_name: string;
   source_scope: string;
+  fixture_path_matches?: string[];
   top: number;
   left: number;
   visibility_sample_sequence: number;
@@ -213,6 +214,7 @@ type GroupOrderUnmappedPathCandidate = {
 
 type GroupOrderUnmappedRowCandidate = {
   text: string;
+  fixture_path_matches: string[];
   class_name: string;
   tag: string;
   top: number;
@@ -337,6 +339,7 @@ type GroupOrderVisibleState = {
 
 type GroupOrderScenarioObservation = GroupOrderVisibleState & {
   stage: "first-open" | "reopen";
+  target_selection_mode: "active-target-reused" | "visible-tree-selected";
   ordered_group_headings: string[];
   error_surface_classification: "loaded-bases-view" | "loaded-bases-view-with-visible-error" | "non-bases-view-with-visible-error" | "non-bases-view-without-visible-error";
   state_settled: boolean;
@@ -446,7 +449,7 @@ const report: Record<string, unknown> = {
     milestone: "R2.8.106-C07.2-reference-rewrite-and-reopen-capture",
     report_path: "bases_group_direction_reference",
   }, {
-    milestone: "R2.8.119-C07.3-cross-platform-capture-repair",
+    milestone: "R2.8.120-C07.3-cross-platform-capture-repair",
     report_path: "bases_group_order_reference",
   }],
   status: "pending",
@@ -498,7 +501,7 @@ const report: Record<string, unknown> = {
   },
   bases_group_order_reference: {
     status: "pending",
-    milestone: "R2.8.119-C07.3-cross-platform-capture-repair",
+    milestone: "R2.8.120-C07.3-cross-platform-capture-repair",
     source_sha: sourceSha,
     capture_scope: "Record actual pinned Obsidian 1.14.4 groupOrder behavior for JSON-compatible and native-YAML .base inputs, typed values, malformed configurations, JSON non-finite-number and YAML binary-tag candidates, and formula-derived Kanban grouping. Capture is reference characterization only and does not establish Rust parity.",
     application: "Pinned Obsidian Desktop 1.14.4",
@@ -1333,7 +1336,191 @@ function macOSApplicationWindowDescriptions(child: ChildProcess): string {
   return execFileSync("osascript", ["-e", script, String(child.pid ?? -1)], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]}).trim();
 }
 
-async function clickMacOSFirstRunOpenButton(child: ChildProcess): Promise<string> {
+async function clickMacOSFirstRunOpenButtonVisually(
+  child: ChildProcess,
+  reporter: Record<string, unknown>,
+): Promise<string> {
+  const screenshotPath = await captureDesktopScreenshot("obsidian-first-run-open-target.png");
+  const screenshotSize = await pngDimensions(screenshotPath);
+  const fallbackEvidenceBase = {
+    screenshot: relative(reportDirectory, screenshotPath),
+    screenshot_dimensions: screenshotSize,
+  };
+  reporter.first_run_open_visual_fallback = {
+    status: "screenshot-captured",
+    ...fallbackEvidenceBase,
+  };
+  const accessibilityEntries = macOSReadableAccessibilityWindowEntries(macOSApplicationWindowDescriptions(child));
+  const applicationWindows = accessibilityEntries.filter((entry) => /^AXWindow:/i.test(entry));
+  if (applicationWindows.length !== 1) {
+    throw new Error(`The OCR fallback expected exactly one readable OpenObsidian top-level window; found ${applicationWindows.length}: ${JSON.stringify(applicationWindows)}`);
+  }
+  const windowMatch = /^AXWindow:[^|]+\|bounds=(-?\d+),(-?\d+),(\d+),(\d+)$/i.exec(applicationWindows[0] ?? "");
+  if (!windowMatch) throw new Error(`The OCR fallback could not parse the single OpenObsidian window bounds: ${applicationWindows[0]}`);
+  const windowBounds = {
+    x: Number(windowMatch[1]),
+    y: Number(windowMatch[2]),
+    width: Number(windowMatch[3]),
+    height: Number(windowMatch[4]),
+  };
+  if (!(windowBounds.width > 0 && windowBounds.height > 0 && screenshotSize.width > 0 && screenshotSize.height > 0)) {
+    throw new Error(`The OCR fallback received invalid window or screenshot dimensions: window=${JSON.stringify(windowBounds)}; screenshot=${JSON.stringify(screenshotSize)}`);
+  }
+
+  const windowEvidenceBase = {
+    ...fallbackEvidenceBase,
+    application_window_bounds: windowBounds,
+    accessibility_windows: applicationWindows,
+  };
+  reporter.first_run_open_visual_fallback = {
+    status: "accessibility-window-verified-ocr-pending",
+    ...windowEvidenceBase,
+  };
+  let candidates: MacOSVisionTextCandidate[];
+  try {
+    candidates = await readMacOSVisionTextCandidates(screenshotPath);
+  } catch (error) {
+    reporter.first_run_open_visual_fallback = {
+      status: "failed-vision-ocr",
+      ...windowEvidenceBase,
+      error: error instanceof Error ? error.message : String(error),
+    };
+    throw error;
+  }
+  const normalizeText = (value: string): string => value.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  const validCandidate = (candidate: MacOSVisionTextCandidate): boolean => {
+    const {x, y, width, height} = candidate.boundingBox;
+    return candidate.confidence >= 0.8
+      && width > 0 && height > 0
+      && x >= 0 && y >= 0
+      && x + width <= 1.001 && y + height <= 1.001;
+  };
+  const openCandidates = candidates.filter((candidate) => validCandidate(candidate) && normalizeText(candidate.text) === "open");
+  const rowCandidates = candidates.filter((candidate) => validCandidate(candidate) && normalizeText(candidate.text) === "open folder as vault");
+  if (openCandidates.length !== 1 || rowCandidates.length !== 1) {
+    reporter.first_run_open_visual_fallback = {
+      status: "failed-ambiguous-ocr",
+      screenshot: relative(reportDirectory, screenshotPath),
+      screenshot_dimensions: screenshotSize,
+      open_candidate_count: openCandidates.length,
+      row_label_candidate_count: rowCandidates.length,
+      vision_candidates: candidates,
+      accessibility_windows: applicationWindows,
+    };
+    throw new Error(`The macOS first-run OCR fallback requires one high-confidence standalone Open label and one exact Open folder as vault row label; found open=${openCandidates.length}, row=${rowCandidates.length}`);
+  }
+
+  const open = openCandidates[0]!;
+  const row = rowCandidates[0]!;
+  const openCenterX = open.boundingBox.x + open.boundingBox.width / 2;
+  const openCenterYFromTop = 1 - (open.boundingBox.y + open.boundingBox.height / 2);
+  const rowRight = row.boundingBox.x + row.boundingBox.width;
+  const rowCenterYFromTop = 1 - (row.boundingBox.y + row.boundingBox.height / 2);
+  const verticalAlignment = Math.abs(openCenterYFromTop - rowCenterYFromTop);
+  const openLeft = open.boundingBox.x;
+  const openRight = open.boundingBox.x + open.boundingBox.width;
+  const openTop = 1 - (open.boundingBox.y + open.boundingBox.height);
+  const openBottom = 1 - open.boundingBox.y;
+  const displayScript = `import AppKit\nimport CoreGraphics\nimport Foundation\nlet screens = NSScreen.screens\nlet bounds = CGDisplayBounds(CGMainDisplayID())\nguard bounds.width > 0, bounds.height > 0 else { fatalError("Could not read the main display bounds") }\nprint(String(screens.count) + "," + String(bounds.origin.x) + "," + String(bounds.origin.y) + "," + String(bounds.width) + "," + String(bounds.height))`;
+  let displayOutput: string;
+  try {
+    displayOutput = execFileSync("swift", ["-e", displayScript], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]}).trim();
+  } catch (error) {
+    reporter.first_run_open_visual_fallback = {
+      status: "failed-display-metrics",
+      ...windowEvidenceBase,
+      open_candidate: open,
+      row_label_candidate: row,
+      vision_candidates: candidates,
+      error: error instanceof Error ? error.message : String(error),
+    };
+    throw error;
+  }
+  const displayValues = displayOutput.split(",").map(Number);
+  if (displayValues.length !== 5 || displayValues.some((value) => !Number.isFinite(value)) || displayValues[0] !== 1) {
+    reporter.first_run_open_visual_fallback = {
+      status: "failed-display-metrics",
+      ...windowEvidenceBase,
+      open_candidate: open,
+      row_label_candidate: row,
+      vision_candidates: candidates,
+      display_values: displayValues,
+    };
+    throw new Error(`The macOS first-run OCR fallback requires one readable display; got ${JSON.stringify(displayValues)}`);
+  }
+  const displayBounds = {x: displayValues[1]!, y: displayValues[2]!, width: displayValues[3]!, height: displayValues[4]!};
+  const screenshotAspect = screenshotSize.width / screenshotSize.height;
+  const displayAspect = displayBounds.width / displayBounds.height;
+  const clickX = displayBounds.x + openCenterX * displayBounds.width;
+  const clickY = displayBounds.y + openCenterYFromTop * displayBounds.height;
+  const targetLeft = displayBounds.x + openLeft * displayBounds.width;
+  const targetRight = displayBounds.x + openRight * displayBounds.width;
+  const targetTop = displayBounds.y + openTop * displayBounds.height;
+  const targetBottom = displayBounds.y + openBottom * displayBounds.height;
+  const insideWindow = targetLeft >= windowBounds.x
+    && targetRight <= windowBounds.x + windowBounds.width
+    && targetTop >= windowBounds.y
+    && targetBottom <= windowBounds.y + windowBounds.height;
+  if (openLeft <= rowRight
+      || verticalAlignment > 0.04
+      || !insideWindow
+      || Math.abs(screenshotAspect - displayAspect) > 0.02) {
+    reporter.first_run_open_visual_fallback = {
+      status: "failed-geometry",
+      screenshot: relative(reportDirectory, screenshotPath),
+      screenshot_dimensions: screenshotSize,
+      display_bounds: displayBounds,
+      application_window_bounds: windowBounds,
+      open_candidate: open,
+      row_label_candidate: row,
+      vertical_alignment_fraction: verticalAlignment,
+      screenshot_aspect: screenshotAspect,
+      display_aspect: displayAspect,
+      candidate_inside_application_window: insideWindow,
+      vision_candidates: candidates,
+    };
+    throw new Error(`The unique macOS Open OCR label was not aligned to the right of the exact Open folder as vault row inside the application window: horizontal=${openLeft > rowRight}; vertical_delta=${verticalAlignment}; inside_window=${insideWindow}; screenshot_aspect=${screenshotAspect}; display_aspect=${displayAspect}`);
+  }
+
+  const xFraction = Math.max(0, Math.min(1, openCenterX));
+  const yFraction = Math.max(0, Math.min(1, openCenterYFromTop));
+  const clickFractions = {x: xFraction, y: yFraction};
+  const clickEvidence = {
+    ...windowEvidenceBase,
+    display_bounds: displayBounds,
+    open_candidate: open,
+    row_label_candidate: row,
+    vertical_alignment_fraction: verticalAlignment,
+    screenshot_aspect: screenshotAspect,
+    display_aspect: displayAspect,
+    candidate_inside_application_window: insideWindow,
+    click_fractions: clickFractions,
+    vision_candidates: candidates,
+  };
+  reporter.first_run_open_visual_fallback = {
+    status: "geometry-verified-click-pending",
+    ...clickEvidence,
+  };
+  let click: string;
+  try {
+    click = await clickMacOSDesktopFraction(xFraction, yFraction);
+  } catch (error) {
+    reporter.first_run_open_visual_fallback = {
+      status: "failed-desktop-click",
+      ...clickEvidence,
+      error: error instanceof Error ? error.message : String(error),
+    };
+    throw error;
+  }
+  reporter.first_run_open_visual_fallback = {
+    status: "mouse-events-dispatched-to-verified-ocr-target",
+    ...clickEvidence,
+    click,
+  };
+  return `System Events exposed no AXButton named Open; dispatched mouse events to the unique high-confidence OCR Open label aligned with the exact Open folder as vault row inside the application window. ${click}`;
+}
+
+async function clickMacOSFirstRunOpenButton(child: ChildProcess, reporter: Record<string, unknown>): Promise<string> {
   const script = `on run argv
     tell application "System Events"
       set targetProcess to first process whose unix id is (item 1 of argv as integer)
@@ -1367,8 +1554,10 @@ async function clickMacOSFirstRunOpenButton(child: ChildProcess): Promise<string
         set AppleScript's text item delimiters to ""
         error "First-run Open-button enumeration had accessibility read errors: " & errorSummary
       end if
+      if (count of matchingButtons) is 0 then return "OPEN_BUTTON_NOT_EXPOSED"
       if (count of matchingButtons) is not 1 then error "Expected exactly one first-run Open accessibility button; found " & (count of matchingButtons)
       set targetButton to item 1 of matchingButtons
+      if (visible of targetButton) is not true then error "The exact first-run Open accessibility button is not visible"
       if (enabled of targetButton) is not true then error "The exact first-run Open accessibility button is disabled"
       set buttonPosition to position of targetButton
       set buttonSize to size of targetButton
@@ -1377,13 +1566,16 @@ async function clickMacOSFirstRunOpenButton(child: ChildProcess): Promise<string
       return "System Events dispatched a trusted click to the unique enabled AXButton Open at (" & (item 1 of buttonPosition as integer) & "," & (item 2 of buttonPosition as integer) & "," & (item 1 of buttonSize as integer) & "," & (item 2 of buttonSize as integer) & ")"
     end tell
   end run`;
+  let output: string;
   try {
-    return execFileSync("osascript", ["-e", script, String(child.pid ?? -1)], {encoding: "utf8", stdio: ["ignore", "pipe", "pipe"]}).trim();
+    output = execFileSync("osascript", ["-e", script, String(child.pid ?? -1)], {encoding: "utf8", stdio: ["ignore", "pipe", "pipe"]}).trim();
   } catch (error) {
     const failure = error as NodeJS.ErrnoException & {stderr?: Buffer | string; stdout?: Buffer | string};
     const output = [failure.stdout, failure.stderr].filter(Boolean).map(String).join("\n").trim();
     throw new Error(`Could not activate the unique visible first-run Open button through macOS accessibility: ${output || failure.message}`);
   }
+  if (output === "OPEN_BUTTON_NOT_EXPOSED") return await clickMacOSFirstRunOpenButtonVisually(child, reporter);
+  return output;
 }
 
 function macOSAccessibilityWindowEntries(descriptions: string): string[] {
@@ -2207,17 +2399,18 @@ async function clickFirstRunOpenButton(
   reporter: Record<string, unknown> = report.obsidian_authoring as Record<string, unknown>,
   child?: ChildProcess,
 ): Promise<void> {
-  const visible = await connection.evaluateJson<{matched: boolean; buttons: string[]}>(`(() => {
+  const visible = await connection.evaluateJson<{matchedCount: number; buttons: string[]}>(`(() => {
     const buttons = [...document.querySelectorAll('button,[role="button"]')];
     const summary = buttons.map((button) => (button.innerText || button.textContent || '').trim()).filter(Boolean);
-    const target = buttons.find((button) => (button.innerText || button.textContent || '').trim() === 'Open');
-    return {matched:Boolean(target),buttons:summary};
+    const matches = buttons.filter((button) => (button.innerText || button.textContent || '').trim() === 'Open');
+    return {matchedCount:matches.length,buttons:summary};
   })()`);
   reporter.first_run_buttons = visible.buttons;
-  if (!visible.matched) throw new Error(`Could not find Obsidian's exact Open button; visible button labels=${visible.buttons.join(" | ")}`);
+  reporter.first_run_open_button_match_count = visible.matchedCount;
+  if (visible.matchedCount !== 1) throw new Error(`Expected one exact Obsidian Open button; found ${visible.matchedCount}; visible button labels=${visible.buttons.join(" | ")}`);
   if (process.platform === "darwin") {
     if (!child?.pid) throw new Error("OpenObsidian did not expose its process id for macOS first-run Open activation");
-    reporter.first_run_open_activation = await clickMacOSFirstRunOpenButton(child);
+    reporter.first_run_open_activation = await clickMacOSFirstRunOpenButton(child, reporter);
     return;
   }
   // Electron's native folder picker blocks the renderer thread while it is open, so
@@ -2808,6 +3001,28 @@ async function chooseVaultDirectoryWindows(
     }
     const stdout = String(result.stdout ?? "").trim();
     const stderr = String(result.stderr ?? "").trim();
+    const nativePickerLine = stdout.split(/\r?\n/).find((line) => line.startsWith("NATIVE_PICKER_TOP_LEVEL_JSON:"));
+    if (nativePickerLine) {
+      const serializedPicker = nativePickerLine.slice("NATIVE_PICKER_TOP_LEVEL_JSON:".length);
+      try {
+        folderPickerRecord.native_picker_top_level = JSON.parse(serializedPicker);
+      } catch (error) {
+        folderPickerRecord.native_picker_top_level_parse_error = error instanceof Error ? error.message : String(error);
+        folderPickerRecord.native_picker_top_level_raw = serializedPicker;
+      }
+    }
+    const nativeInventoryLine = stdout.split(/\r?\n/).find((line) => line.startsWith("NATIVE_PICKER_CHILD_INVENTORY_JSON:"));
+    if (nativeInventoryLine) {
+      const serializedInventory = nativeInventoryLine.slice("NATIVE_PICKER_CHILD_INVENTORY_JSON:".length);
+      try {
+        folderPickerRecord.native_picker_child_inventory = JSON.parse(serializedInventory);
+      } catch (error) {
+        folderPickerRecord.native_picker_child_inventory_parse_error = error instanceof Error ? error.message : String(error);
+        folderPickerRecord.native_picker_child_inventory_raw = serializedInventory;
+      }
+    }
+    const nativeActivationLine = stdout.split(/\r?\n/).find((line) => line.startsWith("NATIVE_PICKER_BUTTON_ACTIVATION:"));
+    if (nativeActivationLine) folderPickerRecord.native_picker_button_activation = nativeActivationLine.slice("NATIVE_PICKER_BUTTON_ACTIVATION:".length);
     folderPickerRecord[`${stage}_stdout`] = stdout;
     folderPickerRecord[`${stage}_stderr`] = stderr;
     folderPickerRecord[`${stage}_exit_status`] = result.status;
@@ -2974,9 +3189,148 @@ async function chooseVaultDirectoryWindows(
     Add-Type -AssemblyName UIAutomationTypes
     Add-Type @'
     using System;
+    using System.Collections.Generic;
     using System.Runtime.InteropServices;
+    using System.Text;
+    using System.ComponentModel;
+
+    public struct OpenObsidianPickerRect {
+      public int Left;
+      public int Top;
+      public int Right;
+      public int Bottom;
+    }
+
+    public sealed class OpenObsidianPickerWindowSnapshot {
+      public long handle { get; set; }
+      public long parent_handle { get; set; }
+      public int process_id { get; set; }
+      public int thread_id { get; set; }
+      public string class_name { get; set; }
+      public string caption { get; set; }
+      public int control_id { get; set; }
+      public bool visible { get; set; }
+      public bool enabled { get; set; }
+      public int left { get; set; }
+      public int top { get; set; }
+      public int right { get; set; }
+      public int bottom { get; set; }
+      public int width { get; set; }
+      public int height { get; set; }
+      public bool has_bounds { get; set; }
+      public bool is_window { get; set; }
+      public string read_error { get; set; }
+    }
+
     public static class OpenObsidianPickerNative {
+      private delegate bool EnumChildProc(IntPtr handle, IntPtr parameter);
+      private const uint BM_CLICK = 0x00F5;
+      private const uint WM_GETTEXT = 0x000D;
+      private const uint SMTO_ABORTIFHUNG = 0x0002;
+      private const uint SMTO_BLOCK = 0x0001;
+      private const uint CAPTION_READ_TIMEOUT_MS = 2000;
+      private const int CAPTION_BUFFER_CHARS = 512;
       [DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow();
+      [DllImport("user32.dll", SetLastError = true)] private static extern bool IsWindow(IntPtr handle);
+      [DllImport("user32.dll")] private static extern IntPtr GetParent(IntPtr handle);
+      [DllImport("user32.dll")] private static extern bool IsChild(IntPtr parent, IntPtr handle);
+      [DllImport("user32.dll", SetLastError = true)] private static extern uint GetWindowThreadProcessId(IntPtr handle, out uint processId);
+      [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)] private static extern int GetClassName(IntPtr handle, StringBuilder className, int maxCount);
+      [DllImport("user32.dll")] private static extern bool IsWindowVisible(IntPtr handle);
+      [DllImport("user32.dll")] private static extern bool IsWindowEnabled(IntPtr handle);
+      [DllImport("user32.dll", SetLastError = true)] private static extern bool GetWindowRect(IntPtr handle, out OpenObsidianPickerRect rect);
+      [DllImport("user32.dll")] private static extern int GetDlgCtrlID(IntPtr handle);
+      [DllImport("user32.dll", SetLastError = true)] private static extern bool EnumChildWindows(IntPtr parent, EnumChildProc callback, IntPtr parameter);
+      [DllImport("user32.dll", SetLastError = true)] private static extern IntPtr SendMessageTimeout(IntPtr handle, uint message, IntPtr wParam, IntPtr lParam, uint flags, uint timeoutMs, out IntPtr result);
+      [DllImport("user32.dll", CharSet = CharSet.Unicode, ExactSpelling = true, SetLastError = true, EntryPoint = "SendMessageTimeoutW")]
+      private static extern IntPtr SendMessageTimeoutText(IntPtr handle, uint message, IntPtr wParam, [Out] StringBuilder text, uint flags, uint timeoutMs, out IntPtr result);
+
+      public static OpenObsidianPickerWindowSnapshot Inspect(IntPtr handle) {
+        var snapshot = new OpenObsidianPickerWindowSnapshot {
+          handle = handle.ToInt64(),
+          parent_handle = GetParent(handle).ToInt64(),
+          class_name = "",
+          caption = "",
+          read_error = ""
+        };
+        snapshot.is_window = IsWindow(handle);
+        if (!snapshot.is_window) {
+          snapshot.read_error = "HWND is no longer a window";
+          return snapshot;
+        }
+        uint processId;
+        snapshot.thread_id = (int)GetWindowThreadProcessId(handle, out processId);
+        snapshot.process_id = (int)processId;
+        var className = new StringBuilder(256);
+        if (GetClassName(handle, className, className.Capacity) <= 0) {
+          snapshot.read_error += "GetClassName failed (" + Marshal.GetLastWin32Error() + "); ";
+        } else {
+          snapshot.class_name = className.ToString();
+        }
+        var caption = new StringBuilder(CAPTION_BUFFER_CHARS);
+        IntPtr copied;
+        IntPtr textRead = SendMessageTimeoutText(
+          handle,
+          WM_GETTEXT,
+          new IntPtr(caption.Capacity),
+          caption,
+          SMTO_ABORTIFHUNG | SMTO_BLOCK,
+          CAPTION_READ_TIMEOUT_MS,
+          out copied);
+        if (textRead == IntPtr.Zero) {
+          snapshot.read_error += "SendMessageTimeout(WM_GETTEXT) failed or timed out (" + Marshal.GetLastWin32Error() + "); ";
+        } else if (copied.ToInt64() < 0 || copied.ToInt64() >= caption.Capacity - 1) {
+          snapshot.read_error += "SendMessageTimeout(WM_GETTEXT) returned an invalid or truncated character count (" + copied + "); ";
+        } else {
+          snapshot.caption = caption.ToString();
+        }
+        snapshot.control_id = GetDlgCtrlID(handle);
+        snapshot.visible = IsWindowVisible(handle);
+        snapshot.enabled = IsWindowEnabled(handle);
+        OpenObsidianPickerRect rect;
+        if (!GetWindowRect(handle, out rect)) {
+          snapshot.read_error += "GetWindowRect failed (" + Marshal.GetLastWin32Error() + "); ";
+        } else {
+          snapshot.left = rect.Left;
+          snapshot.top = rect.Top;
+          snapshot.right = rect.Right;
+          snapshot.bottom = rect.Bottom;
+          snapshot.width = rect.Right - rect.Left;
+          snapshot.height = rect.Bottom - rect.Top;
+          snapshot.has_bounds = true;
+        }
+        snapshot.read_error = snapshot.read_error.Trim();
+        return snapshot;
+      }
+
+      public static OpenObsidianPickerWindowSnapshot[] EnumerateChildren(IntPtr parent) {
+        var snapshots = new List<OpenObsidianPickerWindowSnapshot>();
+        EnumChildProc callback = delegate(IntPtr child, IntPtr parameter) {
+          var snapshot = Inspect(child);
+          snapshot.is_window = snapshot.is_window && IsChild(parent, child);
+          snapshots.Add(snapshot);
+          return true;
+        };
+        bool success = EnumChildWindows(parent, callback, IntPtr.Zero);
+        GC.KeepAlive(callback);
+        if (!success) {
+          int error = Marshal.GetLastWin32Error();
+          if (error != 0) throw new Win32Exception(error, "EnumChildWindows failed");
+        }
+        return snapshots.ToArray();
+      }
+
+      public static bool IsChildOf(IntPtr parent, IntPtr handle) {
+        return IsChild(parent, handle);
+      }
+
+      public static bool SendButtonClick(IntPtr handle, out long messageResult, out int error) {
+        IntPtr result;
+        IntPtr sent = SendMessageTimeout(handle, BM_CLICK, IntPtr.Zero, IntPtr.Zero, SMTO_ABORTIFHUNG, 2000, out result);
+        messageResult = result.ToInt64();
+        error = sent == IntPtr.Zero ? Marshal.GetLastWin32Error() : 0;
+        return sent != IntPtr.Zero;
+      }
     }
 '@
     $expectedProcessId = [int]$env:OPENOBSIDIAN_WINDOW_PROCESS_ID
@@ -3010,9 +3364,99 @@ async function chooseVaultDirectoryWindows(
     if ($buttonReadErrors.Count -gt 0) {
       throw "Could not read every button under the exact Obsidian folder picker; errors=$($buttonReadErrors -join ' | ')"
     }
-    if ($matchingButtons.Count -ne 1) {
+    if ($matchingButtons.Count -gt 1) {
       $labels = @($buttonLabels) -join " | "
       throw "Expected one Select Folder button inside the exact Obsidian picker; found $($matchingButtons.Count); picker buttons=$labels"
+    }
+    if ($matchingButtons.Count -eq 0) {
+      $nativePicker = [OpenObsidianPickerNative]::Inspect($pickerHandle)
+      $nativePickerJson = ConvertTo-Json -InputObject $nativePicker -Depth 4 -Compress
+      Write-Output "NATIVE_PICKER_TOP_LEVEL_JSON:$nativePickerJson"
+      if ($nativePicker.read_error) { throw "Could not read the exact picker HWND through Win32: $($nativePicker.read_error)" }
+      if (-not $nativePicker.is_window -or
+          $nativePicker.process_id -ne $expectedProcessId -or
+          $nativePicker.class_name -cne "#32770" -or
+          $nativePicker.caption -cne "Open folder as vault" -or
+          -not $nativePicker.visible -or
+          -not $nativePicker.enabled -or
+          -not $nativePicker.has_bounds -or
+          $nativePicker.width -le 0 -or
+          $nativePicker.height -le 0) {
+        throw "The recorded HWND is no longer the exact visible enabled Obsidian folder picker: $nativePickerJson"
+      }
+      if ([OpenObsidianPickerNative]::GetForegroundWindow().ToInt64() -ne $pickerHandle.ToInt64()) {
+        throw "The exact Obsidian picker lost foreground before native Select Folder lookup"
+      }
+      $nativeChildren = @([OpenObsidianPickerNative]::EnumerateChildren($pickerHandle))
+      $nativeChildrenJson = ConvertTo-Json -InputObject @($nativeChildren) -Depth 5 -Compress
+      Write-Output "NATIVE_PICKER_CHILD_INVENTORY_JSON:$nativeChildrenJson"
+      $nativeReadErrors = @($nativeChildren | Where-Object { $_.read_error })
+      if ($nativeReadErrors.Count -gt 0) {
+        throw "Win32 could not read every descendant of the exact Obsidian picker: $(@($nativeReadErrors | ForEach-Object { $_.read_error }) -join ' | ')"
+      }
+      $matchingNativeButtons = @($nativeChildren | Where-Object {
+        $_.is_window -and
+        $_.process_id -eq $expectedProcessId -and
+        $_.class_name -ceq "Button" -and
+        ([string]$_.caption).Replace("&", "") -ceq "Select Folder"
+      })
+      if ($matchingNativeButtons.Count -ne 1) {
+        throw "Expected one exact Win32 Button captioned Select Folder below the recorded Obsidian picker; found $($matchingNativeButtons.Count); picker HWND=$($pickerHandle.ToInt64()); native descendants=$nativeChildrenJson"
+      }
+      $nativeSelectFolder = $matchingNativeButtons[0]
+      if (-not $nativeSelectFolder.is_window -or
+          -not $nativeSelectFolder.visible -or
+          -not $nativeSelectFolder.enabled -or
+          -not $nativeSelectFolder.has_bounds -or
+          $nativeSelectFolder.width -le 0 -or
+          $nativeSelectFolder.height -le 0 -or
+          $nativeSelectFolder.left -lt $nativePicker.left -or
+          $nativeSelectFolder.top -lt $nativePicker.top -or
+          $nativeSelectFolder.right -gt $nativePicker.right -or
+          $nativeSelectFolder.bottom -gt $nativePicker.bottom) {
+        throw "The unique native Select Folder button is hidden, disabled, unreadable, zero-sized, or outside the exact picker rectangle: $($nativeSelectFolder | ConvertTo-Json -Compress)"
+      }
+      $pickerBeforeClick = [OpenObsidianPickerNative]::Inspect($pickerHandle)
+      $buttonBeforeClick = [OpenObsidianPickerNative]::Inspect([IntPtr]::new([long]$nativeSelectFolder.handle))
+      $pickerChanged = [bool]($pickerBeforeClick.read_error -or
+        -not $pickerBeforeClick.is_window -or
+        $pickerBeforeClick.process_id -ne $expectedProcessId -or
+        $pickerBeforeClick.class_name -cne "#32770" -or
+        $pickerBeforeClick.caption -cne "Open folder as vault" -or
+        -not $pickerBeforeClick.visible -or
+        -not $pickerBeforeClick.enabled -or
+        $pickerBeforeClick.left -ne $nativePicker.left -or
+        $pickerBeforeClick.top -ne $nativePicker.top -or
+        $pickerBeforeClick.right -ne $nativePicker.right -or
+        $pickerBeforeClick.bottom -ne $nativePicker.bottom)
+      $buttonChanged = [bool]($buttonBeforeClick.read_error -or
+        -not $buttonBeforeClick.is_window -or
+        -not [OpenObsidianPickerNative]::IsChildOf($pickerHandle, [IntPtr]::new([long]$nativeSelectFolder.handle)) -or
+        $buttonBeforeClick.process_id -ne $expectedProcessId -or
+        $buttonBeforeClick.class_name -cne "Button" -or
+        ([string]$buttonBeforeClick.caption).Replace("&", "") -cne "Select Folder" -or
+        $buttonBeforeClick.control_id -ne $nativeSelectFolder.control_id -or
+        -not $buttonBeforeClick.visible -or
+        -not $buttonBeforeClick.enabled -or
+        -not $buttonBeforeClick.has_bounds -or
+        $buttonBeforeClick.left -ne $nativeSelectFolder.left -or
+        $buttonBeforeClick.top -ne $nativeSelectFolder.top -or
+        $buttonBeforeClick.right -ne $nativeSelectFolder.right -or
+        $buttonBeforeClick.bottom -ne $nativeSelectFolder.bottom)
+      if ($pickerChanged -or $buttonChanged) {
+        throw "The exact picker or native Select Folder button identity/state/bounds changed before activation; picker=$($pickerBeforeClick | ConvertTo-Json -Compress); button=$($buttonBeforeClick | ConvertTo-Json -Compress)"
+      }
+      if ([OpenObsidianPickerNative]::GetForegroundWindow().ToInt64() -ne $pickerHandle.ToInt64()) {
+        throw "The exact Obsidian folder picker lost foreground before native Select Folder activation"
+      }
+      $nativeMessageResult = [long]0
+      $nativeMessageError = 0
+      $nativeClickSent = [OpenObsidianPickerNative]::SendButtonClick([IntPtr]::new([long]$nativeSelectFolder.handle), [ref]$nativeMessageResult, [ref]$nativeMessageError)
+      if (-not $nativeClickSent) {
+        throw "Could not send a bounded BM_CLICK to the exact native Select Folder button; Win32 error=$nativeMessageError"
+      }
+      Write-Output "NATIVE_PICKER_BUTTON_ACTIVATION:BM_CLICK; picker=$($pickerHandle.ToInt64()); child=$($nativeSelectFolder.handle); control_id=$($nativeSelectFolder.control_id); bounds=$($nativeSelectFolder.left),$($nativeSelectFolder.top),$($nativeSelectFolder.width),$($nativeSelectFolder.height); message_result=$nativeMessageResult"
+      return
     }
     $selectFolder = $matchingButtons[0]
     if (-not $selectFolder.Current.IsEnabled -or $selectFolder.Current.IsOffscreen) {
@@ -3895,6 +4339,7 @@ async function readGroupOrderVisibleState(
       [...observationRoot.querySelectorAll('*')].forEach((element, index) => stableDomOrdinalByElement.set(element, index));
     }
     const tableRoots = observationRoot ? [...observationRoot.querySelectorAll('.bases-table, [role="table"], table')] : [];
+    const tableContainerRoots = observationRoot ? [...observationRoot.querySelectorAll('.bases-table-container')] : [];
     const tableShells = observationRoot ? [...observationRoot.querySelectorAll('.bases-table, .bases-table-header, [role="table"], table')] : [];
     const occludedKanbanDomCandidates = [];
     const hitTestPainted = (element, minimumCoverage = 0.5) => {
@@ -4080,16 +4525,27 @@ async function readGroupOrderVisibleState(
       }
       return null;
     };
+    const visibleTableRoots = tableRoots.filter((element) => visible(element) && hitTestPainted(element, 0.2));
+    const visibleTableContainerCandidates = tableContainerRoots.filter((element) =>
+      visible(element) && hitTestPainted(element, 0.2));
+    const visibleTableContainers = visibleTableContainerCandidates.filter((container) => {
+      const containedVisibleTableRoots = visibleTableRoots.filter((table) => container.contains(table));
+      return containedVisibleTableRoots.length > 0
+        && containedVisibleTableRoots.length === visibleTableRoots.length;
+    }).filter((container, _index, candidates) =>
+      !candidates.some((candidate) => candidate !== container && candidate.contains(container)));
     const visiblePreferredTableRoots = tableRoots.filter((element) =>
       element.matches('.bases-table') && visible(element) && hitTestPainted(element, 0.2));
     const visibleFallbackTableRoots = tableRoots.filter((element) => visible(element) && hitTestPainted(element, 0.2));
     const visibleRootCandidates = visiblePreferredTableRoots.length > 0 ? visiblePreferredTableRoots : visibleFallbackTableRoots;
     const topLevelVisibleRootCandidates = visibleRootCandidates.filter((element) =>
       !visibleRootCandidates.some((candidate) => candidate !== element && candidate.contains(element)));
-    const visibleTableShells = topLevelVisibleRootCandidates.length > 0
-      ? topLevelVisibleRootCandidates
-      : tableShells.filter((element) => element.matches('.bases-table-header')
-        && visible(element) && hitTestPainted(element, 0.2));
+    const visibleTableShells = visibleTableContainerCandidates.length > 0
+      ? visibleTableContainers
+      : topLevelVisibleRootCandidates.length > 0
+        ? topLevelVisibleRootCandidates
+        : tableShells.filter((element) => element.matches('.bases-table-header')
+          && visible(element) && hitTestPainted(element, 0.2));
     const visibleKanbanRoots = layout === 'kanban' && kanbanRoot
       && kanbanContainers.length === 1 && visible(kanbanRoot) && hitTestPainted(kanbanRoot, 0.2)
       ? [kanbanRoot]
@@ -4119,20 +4575,30 @@ async function readGroupOrderVisibleState(
       const selectedRootEvidence = {
         tag: selectedResultRoot.tagName.toLowerCase(),
         class_name: selectedResultRoot.getAttribute('class') || '',
+        contained_visible_table_count: layout === 'table'
+          ? visibleTableRoots.filter((table) => selectedResultRoot.contains(table)).length
+          : null,
         bounds: (() => {
           const selectedBounds = selectedResultRoot.getBoundingClientRect();
           return {top: selectedBounds.top, left: selectedBounds.left, width: selectedBounds.width, height: selectedBounds.height};
         })(),
       };
+      const nearestTableShell = layout === 'table'
+        ? selectedResultRoot.matches('.bases-table-container')
+          ? visibleTableRoots.length === 1 ? visibleTableRoots[0] : null
+          : selectedResultRoot
+        : null;
       return [{
         text,
         tag: element.tagName.toLowerCase(),
         class_name: element.getAttribute('class') || '',
         bounds: {top: bounds.top, left: bounds.left, width: bounds.width, height: bounds.height},
-        scope: layout === 'table' ? 'selected-table-shell' : 'active-kanban-container',
+        scope: layout === 'table'
+          ? selectedResultRoot.matches('.bases-table-container') ? 'selected-table-container' : 'selected-table-shell'
+          : 'active-kanban-container',
         selected_result_root: selectedRootEvidence,
-        nearest_table_shell: layout === 'table'
-          ? {tag: selectedRootEvidence.tag, class_name: selectedRootEvidence.class_name}
+        nearest_table_shell: nearestTableShell
+          ? {tag: nearestTableShell.tagName.toLowerCase(), class_name: nearestTableShell.getAttribute('class') || ''}
           : null,
         shared_container: sharedContainer ? {
           tag: sharedContainer.tagName.toLowerCase(),
@@ -4168,37 +4634,29 @@ async function readGroupOrderVisibleState(
       }
       if (paintedHeader || paintedCard || await samplePaintedElement(column, 0.2)) paintedKanbanColumns.push(column);
     }
-    const addPathAlias = (aliases, alias, path) => {
-      const key = alias.toLowerCase();
-      if (!aliases.has(key)) aliases.set(key, path);
-      else if (aliases.get(key) !== path) aliases.set(key, null);
-    };
-    const exactPathByLower = new Map();
-    const pathByName = new Map();
-    for (const path of fixturePaths) {
-      const parts = path.split('/');
-      const filename = parts[parts.length - 1] || path;
-      const stem = filename.replace(/\\.(?:md|base)$/i, '');
-      addPathAlias(exactPathByLower, path, path);
-      addPathAlias(pathByName, filename, path);
-      addPathAlias(pathByName, stem, path);
-    }
-    const pathFor = (candidate) => {
-      if (!candidate) return null;
+    const fixturePathMatches = (candidate) => {
+      if (!candidate) return [];
       const candidateText = String(candidate).trim();
-      if (candidateText.startsWith('/') || candidateText.startsWith('\\\\')) return null;
+      if (candidateText.startsWith('/') || candidateText.startsWith('\\\\')) return [];
       const rawParts = candidateText.split('\\\\').join('/').split('/');
-      if (rawParts.some((part) => part === '..' || part.includes(':'))) return null;
+      if (rawParts.some((part) => part === '..' || part.includes(':'))) return [];
       const normalized = rawParts.filter((part) => part && part !== '.').join('/');
-      if (!normalized) return null;
-      const exactKey = normalized.toLowerCase();
-      if (exactPathByLower.has(exactKey)) return exactPathByLower.get(exactKey);
-      const parts = normalized.split('/');
-      if (parts.length !== 1) return null;
-      const basename = (parts[parts.length - 1] || '').toLowerCase();
-      const stem = basename.replace(/\\.(?:md|base)$/i, '');
-      if (pathByName.has(basename)) return pathByName.get(basename);
-      return pathByName.get(stem) ?? null;
+      if (!normalized) return [];
+      const normalizedLower = normalized.toLowerCase();
+      const exactMatches = fixturePaths.filter((path) => path.toLowerCase() === normalizedLower);
+      if (exactMatches.length > 0) return exactMatches;
+      if (normalized.includes('/')) return [];
+      const basename = normalizedLower;
+      return fixturePaths.filter((path) => {
+        const pathParts = path.split('/');
+        const filename = (pathParts[pathParts.length - 1] || path).toLowerCase();
+        const stem = filename.replace(/\\.(?:md|base)$/i, '');
+        return filename === basename || stem === basename;
+      });
+    };
+    const pathFor = (candidate) => {
+      const matches = fixturePathMatches(candidate);
+      return matches.length === 1 ? matches[0] : null;
     };
     const pathCandidateFor = (element) =>
       element.getAttribute('data-href') || element.getAttribute('data-path') || textOf(element);
@@ -4281,6 +4739,7 @@ async function readGroupOrderVisibleState(
           text: textOf(element),
           class_name: element.getAttribute('class') || '',
           source_scope: linkScope(element),
+          fixture_path_matches: fixturePathMatches(candidate),
           top: pathScrollEvidenceByElement.get(element)?.visibility_sample_bounds.top ?? bounds.top,
           left: pathScrollEvidenceByElement.get(element)?.visibility_sample_bounds.left ?? bounds.left,
           ...pathScrollEvidenceByElement.get(element),
@@ -4453,8 +4912,10 @@ async function readGroupOrderVisibleState(
       .map((row) => {
         const bounds = row.getBoundingClientRect();
         const visibilitySample = scrollEvidenceByElement.get(row);
+        const rowText = textOf(row);
         return {
-          text: textOf(row).slice(0, 500),
+          text: rowText.slice(0, 500),
+          fixture_path_matches: fixturePathMatches(rowText),
           class_name: row.getAttribute('class') || '',
           tag: row.tagName.toLowerCase(),
           top: visibilitySample?.visibility_sample_bounds.top ?? bounds.top,
@@ -4726,6 +5187,7 @@ async function readGroupOrderVisibleState(
           text: textOf(element),
           class_name: element.getAttribute('class') || '',
           source_scope: sourceScope,
+          fixture_path_matches: fixturePathMatches(candidate),
           top: bounds.top,
           left: bounds.left,
           visibility_sample_sequence: freshSweepPositions,
@@ -4954,8 +5416,10 @@ async function readGroupOrderVisibleState(
             freshSweepUnmappedRowSamples += 1;
             offsetEvidence.unmapped_row_samples += 1;
             const bounds = row.getBoundingClientRect();
+            const rowText = textOf(row);
             const unmappedRow = {
-              text: textOf(row).slice(0, 500),
+              text: rowText.slice(0, 500),
+              fixture_path_matches: fixturePathMatches(rowText),
               class_name: row.getAttribute('class') || '',
               tag: row.tagName.toLowerCase(),
               top: bounds.top,
@@ -5485,6 +5949,7 @@ async function captureGroupOrderScenario(
   let retryProbeError: string | undefined;
   let minimalRendererState: GroupOrderMinimalRendererState | undefined;
   let minimalRendererStateError: string | undefined;
+  let targetSelectionMode: GroupOrderScenarioObservation["target_selection_mode"] = "visible-tree-selected";
   const recordState = (state: GroupOrderVisibleState): void => {
     const sample: GroupOrderScenarioObservation["state_samples"][number] = {
       active_file_path: state.active_file_path,
@@ -5524,8 +5989,20 @@ async function captureGroupOrderScenario(
   };
 
   try {
-    probePhase = "list-visible-vault-paths";
-    const listVisiblePaths = async (): Promise<string[]> => await connection.evaluateJson<string[]>(`(() => {
+    probePhase = "inspect-active-target";
+    try {
+      minimalRendererState = await readGroupOrderMinimalRendererState(connection, scenario.base_path);
+    } catch (stateProbeError) {
+      minimalRendererStateError = stateProbeError instanceof Error ? stateProbeError.message : String(stateProbeError);
+    }
+    const targetAlreadyActive = stage === "reopen"
+      && Boolean(minimalRendererState
+        && minimalRendererState.active_file_path === scenario.base_path
+        && minimalRendererState.active_view_type === "bases");
+    if (targetAlreadyActive) targetSelectionMode = "active-target-reused";
+    if (!targetAlreadyActive) {
+      probePhase = "list-visible-vault-paths";
+      const listVisiblePaths = async (): Promise<string[]> => await connection.evaluateJson<string[]>(`(() => {
       const visible = (element) => {
         const bounds = element.getBoundingClientRect();
         const style = window.getComputedStyle(element);
@@ -5535,12 +6012,12 @@ async function captureGroupOrderScenario(
         .filter(visible)
         .map((element) => element.getAttribute('data-path') || '')
         .filter(Boolean);
-    })()`, "C07.3 visible vault-path list");
-    let visiblePaths = await listVisiblePaths();
-    if (!visiblePaths.includes(scenario.base_path)) {
-      probePhase = "expand-target-folder";
-      const parentPath = scenario.base_path.split("/").slice(0, -1).join("/");
-      await connection.evaluateJson<boolean>(`(() => {
+      })()`, "C07.3 visible vault-path list");
+      let visiblePaths = await listVisiblePaths();
+      if (!visiblePaths.includes(scenario.base_path)) {
+        probePhase = "expand-target-folder";
+        const parentPath = scenario.base_path.split("/").slice(0, -1).join("/");
+        await connection.evaluateJson<boolean>(`(() => {
         const targetPath = ${JSON.stringify(parentPath)};
         const visible = (element) => {
           const bounds = element.getBoundingClientRect();
@@ -5557,20 +6034,20 @@ async function captureGroupOrderScenario(
           || folder.closest('.nav-folder')?.classList.contains('is-collapsed');
         if (collapsed) folder.click();
         return true;
-      })()`, "C07.3 expand target folder");
-      probePhase = "wait-for-target-file";
-      visiblePaths = await waitFor(
-        `${stage}: Obsidian to list ${scenario.base_path}`,
-        listVisiblePaths,
-        (paths) => paths.includes(scenario.base_path),
-        30_000,
-      );
-    }
-    if (!visiblePaths.includes(scenario.base_path)) {
-      throw new Error(`${stage}: Obsidian did not list the exact C07.3 target ${scenario.base_path}`);
-    }
-    probePhase = "select-target-base";
-    const clicked = await connection.evaluateJson<boolean>(`(() => {
+        })()`, "C07.3 expand target folder");
+        probePhase = "wait-for-target-file";
+        visiblePaths = await waitFor(
+          `${stage}: Obsidian to list ${scenario.base_path}`,
+          listVisiblePaths,
+          (paths) => paths.includes(scenario.base_path),
+          30_000,
+        );
+      }
+      if (!visiblePaths.includes(scenario.base_path)) {
+        throw new Error(`${stage}: Obsidian did not list the exact C07.3 target ${scenario.base_path}`);
+      }
+      probePhase = "select-target-base";
+      const clicked = await connection.evaluateJson<boolean>(`(() => {
       const path = ${JSON.stringify(scenario.base_path)};
       const visible = (element) => {
         const bounds = element.getBoundingClientRect();
@@ -5583,8 +6060,9 @@ async function captureGroupOrderScenario(
         || element.closest('.nav-file')) || candidates[0];
       target?.click();
       return Boolean(target);
-    })()`, "C07.3 select target .base");
-    if (!clicked) throw new Error(`${stage}: Obsidian did not expose ${scenario.base_path} for selection`);
+      })()`, "C07.3 select target .base");
+      if (!clicked) throw new Error(`${stage}: Obsidian did not expose ${scenario.base_path} for selection`);
+    }
 
     probePhase = "prepare-full-results-viewport";
     viewportPreparation = await connection.evaluateJson<GroupOrderViewportPreparation>(`(() => {
@@ -5691,6 +6169,7 @@ async function captureGroupOrderScenario(
   return {
     ...visible,
     ordered_group_headings: visible.groups.map((group) => group.heading_text),
+    target_selection_mode: targetSelectionMode,
     error_surface_classification: visible.active_view_type === "bases"
       ? hasExplicitVisibleGroupOrderParseError(visible)
         ? "loaded-bases-view-with-visible-error"
@@ -10696,9 +11175,9 @@ async function readCanvasInputScreenshotValue(
 async function clickMacOSDesktopFraction(xFraction: number, yFraction: number): Promise<string> {
   if (!(Number.isFinite(xFraction) && Number.isFinite(yFraction)
     && xFraction >= 0 && xFraction <= 1 && yFraction >= 0 && yFraction <= 1)) {
-    throw new Error(`macOS Canvas field click fractions fall outside the captured desktop: (${xFraction},${yFraction})`);
+    throw new Error(`macOS desktop click fractions fall outside the captured desktop: (${xFraction},${yFraction})`);
   }
-  const swiftPath = join(workDirectory, "openobsidian-canvas-input-click.swift");
+  const swiftPath = join(workDirectory, "openobsidian-desktop-click.swift");
   await writeFile(swiftPath, `import AppKit
 import CoreGraphics
 import Foundation
@@ -10709,11 +11188,11 @@ guard CommandLine.arguments.count == 3,
     fatalError("Expected desktop click fractions")
 }
 guard NSScreen.screens.count == 1 else {
-    fatalError("Canvas field click mapping requires the single-display macOS CI screen")
+    fatalError("Desktop click mapping requires the single-display macOS CI screen")
 }
 let displayBounds = CGDisplayBounds(CGMainDisplayID())
 guard displayBounds.width > 0, displayBounds.height > 0 else {
-    fatalError("Could not read the main macOS display bounds")
+    fatalError("Could not read the main desktop display bounds")
 }
 let point = CGPoint(
     x: displayBounds.origin.x + CGFloat(xFraction) * displayBounds.width,
@@ -10721,7 +11200,7 @@ let point = CGPoint(
 )
 for type in [CGEventType.mouseMoved, .leftMouseDown, .leftMouseUp] {
     guard let event = CGEvent(mouseEventSource: nil, mouseType: type, mouseCursorPosition: point, mouseButton: .left) else {
-        fatalError("Could not create mouse event")
+        fatalError("Could not create desktop mouse event")
     }
     event.post(tap: .cghidEventTap)
     if type == .leftMouseDown { Thread.sleep(forTimeInterval: 0.08) }
@@ -10729,7 +11208,7 @@ for type in [CGEventType.mouseMoved, .leftMouseDown, .leftMouseUp] {
 print("\\(point.x),\\(point.y)")
 `);
   const point = execFileSync("swift", [swiftPath, String(xFraction), String(yFraction)], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]}).trim();
-  return `CoreGraphics clicked the OCR-positioned Canvas input at desktop fractions (${xFraction}, ${yFraction}), Quartz point (${point})`;
+  return `CoreGraphics dispatched mouse events to an OCR-positioned desktop target at fractions (${xFraction}, ${yFraction}), Quartz point (${point})`;
 }
 
 async function replaceLinuxOpenObsidianTextInputWithKeyboard(

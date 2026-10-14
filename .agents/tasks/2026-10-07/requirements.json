@@ -10284,12 +10284,12 @@
       "source": {
         "path": ".agents/tasks/2026-10-07/goal.md",
         "heading": "Mandatory execution workflow: GitHub CI only",
-        "clause": "Define named, reviewable milestones as meaningful, bounded CI batches; keep related minor changes and focused commits local and make one origin/main push only after the full milestone scope and reviewed acceptance package are complete. Do not push for incremental feedback. Mark it achieved only after all required jobs pass for that exact SHA, and hold the remote tip steady while its full CI batch runs."
+        "clause": "Define named, reviewable milestones as meaningful, bounded CI batches. Keep minor edits, isolated fixes, and focused commits local; make one origin/main push only after the complete milestone implementation and reviewed CI acceptance package are ready. Do not push or start a fresh CI batch for incremental feedback. Mark the milestone achieved only after every required job passes for its exact SHA, and keep the remote at one submitted SHA until its full CI batch is terminal."
       },
       "checkpoint": "R0",
       "owner": "xtask",
       "mandatory": true,
-      "acceptance_criteria": "Related minor changes and focused commits accumulate locally; each named milestone is a coherent, bounded CI batch with one reviewed origin/main submission only after its implementation and acceptance package are complete. Do not submit minor edits for incremental feedback or another milestone while any required workflow for the current SHA is pending. Run independent checks in parallel where safe. Accept a milestone only after every required workflow/job passes and results are reconciled for its exact SHA.",
+      "acceptance_criteria": "Related minor changes and focused commits accumulate locally and do not trigger individual pushes or fresh CI batches. Each named milestone is a coherent, bounded CI batch with exactly one reviewed origin/main submission after the complete implementation and acceptance package are ready. Do not submit minor edits for incremental feedback or another milestone while any required workflow for the current SHA is pending. Run independent checks in parallel where safe. Accept a milestone only after every required workflow/job passes and results are reconciled for its exact SHA.",
       "fixture_ids": [
         "fixture:mig-002"
       ],
@@ -10313,6 +10313,11 @@
           "kind": "rust-migration-goal",
           "version": "2026-10-14-single-submission-per-milestone",
           "sha256": "ca8a8036b4e11fab01c89e4a4be9560034afeb787fe653c01d72d49046533d15"
+        },
+        {
+          "kind": "rust-migration-goal",
+          "version": "2026-10-14-milestone-only-ci-submission",
+          "sha256": "72ffa528debfde44753d1228729f5e70848cd6bb831a776801163b30ada1a7ec"
         }
       ],
       "applicable_platforms": [
@@ -10333,7 +10338,7 @@
       "rust_owner": "xtask",
       "mapping_status": "reviewed",
       "migration_disposition": "retained",
-      "migration_acceptance": "Each meaningful, bounded milestone has one reviewed origin/main submission after the full implementation and acceptance package are complete; incremental pushes for minor feedback are prohibited. Exact-SHA CI evidence is reconciled, independent checks run in parallel where safe, and the next batch waits until the current required workflows are terminal. Mark the milestone achieved only after all required jobs pass.",
+      "migration_acceptance": "Each meaningful, bounded milestone has one reviewed origin/main submission after its full implementation and acceptance package are complete; individual minor changes do not trigger pushes or fresh CI batches. Exact-SHA CI evidence is reconciled, independent checks run in parallel where safe, and the next batch waits until the current required workflows are terminal. Mark the milestone achieved only after all required jobs pass.",
       "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence."
     },
     {
@@ -11027,7 +11032,7 @@
       "runtime_override": "Documentation upkeep is a continuing migration requirement; this row captures the final audited completion gate."
     }
   ],
-  "reviewed_at": "2026-10-14T08:22:00Z",
+  "reviewed_at": "2026-10-14T09:05:28Z",
   "mapping_review": {
     "status": "complete",
     "reviewed_requirement_count": 212,
@@ -11037,7 +11042,7 @@
     "post_r0_2_additions": [
       "MIG-016: maintain current, accurate documentation throughout migration and audit it at cutover."
     ],
-    "goal_sha256": "ca8a8036b4e11fab01c89e4a4be9560034afeb787fe653c01d72d49046533d15",
+    "goal_sha256": "72ffa528debfde44753d1228729f5e70848cd6bb831a776801163b30ada1a7ec",
     "policy": "Every inherited requirement was reviewed by ID and assigned a Rust owner, migration phase, acceptance criterion and retained/superseded/external disposition. Historical status/evidence remain preserved separately. Rust acceptance remains pending unless current exact-SHA migration evidence is attached; external items remain external_pending."
   }
 }
