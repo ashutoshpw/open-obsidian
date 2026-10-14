@@ -1,0 +1,218 @@
+{
+  "schema_version": 1,
+  "id": "fixture:c07-group-order-reference",
+  "description": "Synthetic pinned-Obsidian reference inputs for groupOrder ordering, visibility, typed values, malformed fallback, a syntactically valid non-finite JSON number entry candidate, a YAML binary-tag value candidate, YAML tag rejection, and formula-derived Kanban grouping. Outcomes are observations, not Rust parity expectations.",
+  "notes": [
+    {
+      "path": "Notes/01-alpha-first.md",
+      "source": "---\nteam: Alpha\ntyped: \"1\"\nlane: To do\n---\n\nSynthetic C07.3 alpha first row.\n"
+    },
+    {
+      "path": "Notes/02-alpha-second.md",
+      "source": "---\nteam: Alpha\ntyped: \"true\"\nlane: To do\n---\n\nSynthetic C07.3 alpha second row.\n"
+    },
+    {
+      "path": "Notes/03-zulu-first.md",
+      "source": "---\nteam: Zulu\ntyped: 1\nlane: In progress\n---\n\nSynthetic C07.3 zulu first row.\n"
+    },
+    {
+      "path": "Notes/04-zulu-second.md",
+      "source": "---\nteam: Zulu\ntyped: true\nlane: In progress\n---\n\nSynthetic C07.3 zulu second row.\n"
+    },
+    {
+      "path": "Notes/05-bravo-unlisted.md",
+      "source": "---\nteam: Bravo\ntyped: false\nlane: Done\n---\n\nSynthetic C07.3 unlisted group row.\n"
+    },
+    {
+      "path": "Notes/06-team-missing.md",
+      "source": "---\ntyped: null\nlane: To do\n---\n\nSynthetic C07.3 missing team property.\n"
+    },
+    {
+      "path": "Notes/07-team-null.md",
+      "source": "---\nteam: null\ntyped: [x]\nlane: Done\n---\n\nSynthetic C07.3 explicit null team.\n"
+    },
+    {
+      "path": "Notes/08-team-none-string.md",
+      "source": "---\nteam: \"None\"\ntyped: \"[x]\"\nlane: In progress\n---\n\nSynthetic C07.3 string label collision.\n"
+    },
+    {
+      "path": "Notes/09-typed-array.md",
+      "source": "---\ntyped: [x]\nlane: To do\n---\n\nSynthetic C07.3 array group value.\n"
+    },
+    {
+      "path": "Notes/10-typed-object.md",
+      "source": "---\ntyped:\n  key: x\nlane: Done\n---\n\nSynthetic C07.3 object group value.\n"
+    },
+    {
+      "path": "Notes/11-typed-null.md",
+      "source": "---\ntyped: null\nlane: In progress\n---\n\nSynthetic C07.3 explicit null group value.\n"
+    },
+    {
+      "path": "Notes/12-typed-missing.md",
+      "source": "---\nlane: Done\n---\n\nSynthetic C07.3 missing typed property.\n"
+    },
+    {
+      "path": "Notes/13-typed-false-string.md",
+      "source": "---\ntyped: \"false\"\nlane: To do\n---\n\nSynthetic C07.3 boolean label collision.\n"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "yaml-desc-precedence-listed-unlisted-empty-and-duplicate",
+      "base_path": "Bases/01 YAML precedence and visibility.base",
+      "source_format": "native-yaml",
+      "layout": "table",
+      "group_by_property": "team",
+      "coverage": ["direction-precedence", "listed-unlisted", "empty-group", "duplicate-declaration"],
+      "source": "views:\n  - type: table\n    name: C07.3 YAML DESC precedence\n    groupBy:\n      property: team\n      direction: DESC\n    groupOrder:\n      - Alpha\n      - Explicitly empty\n      - Zulu\n      - Alpha\n"
+    },
+    {
+      "id": "json-asc-precedence-listed-and-unlisted",
+      "base_path": "Bases/02 JSON precedence.base",
+      "source_format": "json",
+      "layout": "table",
+      "group_by_property": "team",
+      "coverage": ["json-source", "direction-precedence", "listed-unlisted", "duplicate-declaration"],
+      "source": {
+        "version": 1,
+        "views": [{
+          "type": "table",
+          "name": "C07.3 JSON ASC precedence",
+          "groupBy": {"property": "team", "direction": "ASC"},
+          "groupOrder": ["Zulu", "Alpha", "Zulu"]
+        }]
+      }
+    },
+    {
+      "id": "yaml-empty-group-order-list",
+      "base_path": "Bases/03 Empty order list.base",
+      "source_format": "native-yaml",
+      "layout": "table",
+      "group_by_property": "team",
+      "coverage": ["empty-order-list"],
+      "source": "views:\n  - type: table\n    name: C07.3 Empty groupOrder\n    groupBy:\n      property: team\n      direction: ASC\n    groupOrder: []\n"
+    },
+    {
+      "id": "json-empty-group-order-list",
+      "base_path": "Bases/12 JSON empty order list.base",
+      "source_format": "json",
+      "layout": "table",
+      "group_by_property": "team",
+      "coverage": ["json-source", "empty-order-list"],
+      "source": {
+        "version": 1,
+        "views": [{
+          "type": "table",
+          "name": "C07.3 JSON empty groupOrder",
+          "groupBy": {"property": "team", "direction": "ASC"},
+          "groupOrder": []
+        }]
+      }
+    },
+    {
+      "id": "json-non-finite-number-entry-candidate",
+      "base_path": "Bases/13 JSON non-finite number entry.base",
+      "source_format": "json",
+      "layout": "table",
+      "group_by_property": "team",
+      "coverage": ["json-source", "unsupported-entry-candidate", "non-finite-number-entry", "observed-visible-fallback"],
+      "source": "{\n  \"version\": 1,\n  \"views\": [{\n    \"type\": \"table\",\n    \"name\": \"C07.3 JSON non-finite number entry candidate\",\n    \"groupBy\": {\"property\": \"team\", \"direction\": \"ASC\"},\n    \"groupOrder\": [\"Alpha\", 1e999, \"Zulu\"]\n  }]\n}\n"
+    },
+    {
+      "id": "yaml-binary-tag-value-candidate",
+      "base_path": "Bases/14 YAML binary tag value candidate.base",
+      "source_format": "native-yaml",
+      "layout": "table",
+      "group_by_property": "team",
+      "coverage": ["yaml-binary-entry-candidate", "unsupported-entry-candidate", "observed-visible-fallback"],
+      "source": "views:\n  - type: table\n    name: C07.3 YAML binary-tag value candidate\n    groupBy:\n      property: team\n      direction: ASC\n    groupOrder:\n      - !!binary SGVsbG8=\n"
+    },
+    {
+      "id": "yaml-missing-vs-null-and-label-collision",
+      "base_path": "Bases/04 Missing and null.base",
+      "source_format": "native-yaml",
+      "layout": "table",
+      "group_by_property": "team",
+      "coverage": ["missing-vs-null", "null-inclusion", "rendered-label-collision"],
+      "source": "views:\n  - type: table\n    name: C07.3 Missing versus null\n    groupBy:\n      property: team\n      direction: ASC\n    groupOrder:\n      - null\n      - None\n      - Missing\n      - null\n"
+    },
+    {
+      "id": "yaml-group-order-without-group-by",
+      "base_path": "Bases/05 Order without groupBy.base",
+      "source_format": "native-yaml",
+      "layout": "table",
+      "coverage": ["group-order-without-group-by"],
+      "source": "views:\n  - type: table\n    name: C07.3 groupOrder without groupBy\n    groupOrder:\n      - Alpha\n      - Zulu\n"
+    },
+    {
+      "id": "yaml-typed-values-and-rendered-label-collisions",
+      "base_path": "Bases/06 Typed values.base",
+      "source_format": "native-yaml",
+      "layout": "table",
+      "group_by_property": "typed",
+      "coverage": ["typed-string", "typed-number", "typed-boolean", "typed-array", "typed-object", "typed-null", "typed-missing", "rendered-label-collision"],
+      "source": "views:\n  - type: table\n    name: C07.3 Typed values\n    groupBy:\n      property: typed\n      direction: ASC\n    groupOrder:\n      - \"1\"\n      - 1\n      - \"true\"\n      - true\n      - \"false\"\n      - false\n      - \"[x]\"\n      - [x]\n      - {key: x}\n      - null\n"
+    },
+    {
+      "id": "json-typed-values-and-rendered-label-collisions",
+      "base_path": "Bases/07 JSON typed values.base",
+      "source_format": "json",
+      "layout": "table",
+      "group_by_property": "typed",
+      "coverage": ["json-source", "typed-string", "typed-number", "typed-boolean", "typed-array", "typed-object", "typed-null", "typed-missing", "rendered-label-collision"],
+      "source": {
+        "version": 1,
+        "views": [{
+          "type": "table",
+          "name": "C07.3 JSON typed values",
+          "groupBy": {"property": "typed", "direction": "ASC"},
+          "groupOrder": ["1", 1, "true", true, "false", false, "[x]", ["x"], {"key": "x"}, null]
+        }]
+      }
+    },
+    {
+      "id": "yaml-malformed-scalar-order",
+      "base_path": "Bases/08 Malformed scalar order.base",
+      "source_format": "native-yaml",
+      "layout": "table",
+      "group_by_property": "team",
+      "coverage": ["malformed-shape", "observed-visible-fallback"],
+      "source": "views:\n  - type: table\n    name: C07.3 malformed scalar order\n    groupBy:\n      property: team\n      direction: ASC\n    groupOrder: Alpha\n"
+    },
+    {
+      "id": "json-malformed-mapping-order",
+      "base_path": "Bases/09 JSON malformed order.base",
+      "source_format": "json",
+      "layout": "table",
+      "group_by_property": "team",
+      "coverage": ["json-source", "malformed-shape", "observed-visible-fallback"],
+      "source": {
+        "version": 1,
+        "views": [{
+          "type": "table",
+          "name": "C07.3 JSON malformed order",
+          "groupBy": {"property": "team", "direction": "ASC"},
+          "groupOrder": {"allowed": "Alpha"}
+        }]
+      }
+    },
+    {
+      "id": "yaml-unsupported-tag-entry",
+      "base_path": "Bases/10 Unsupported entry.base",
+      "source_format": "native-yaml",
+      "layout": "table",
+      "group_by_property": "team",
+      "coverage": ["yaml-tag-parser-rejection-probe", "observed-visible-fallback"],
+      "source": "views:\n  - type: table\n    name: C07.3 YAML tag parser rejection probe\n    groupBy:\n      property: team\n      direction: ASC\n    groupOrder:\n      - !c07Unsupported Alpha\n"
+    },
+    {
+      "id": "yaml-formula-dependent-kanban",
+      "base_path": "Bases/11 Formula Kanban.base",
+      "source_format": "native-yaml",
+      "layout": "kanban",
+      "group_by_property": "formula.finalLane",
+      "coverage": ["formula-dependency", "formula-derived-grouping", "kanban", "group-order"],
+      "source": "formulas:\n  initialLane: lane\n  finalLane: formula.initialLane\nviews:\n  - type: kanban\n    name: C07.3 Formula dependency Kanban\n    groupBy:\n      property: formula.finalLane\n      direction: DESC\n    groupOrder:\n      - To do\n      - In progress\n      - Done\n      - Explicitly empty\n"
+    }
+  ]
+}

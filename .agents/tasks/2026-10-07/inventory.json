@@ -1331,6 +1331,16 @@
       "fixture_reader": "crates/doc"
     },
     {
+      "path": "fixtures/c07-group-order-reference.json",
+      "sha256": "1ecc2863c78a115fa48d4d2c4eef1bba90c13a494404ab2a10c862da97c518de",
+      "rust_owner": "crates/doc",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R2",
+      "purpose": "C07.3 pinned Obsidian 1.14.4 reference inputs for JSON and native-YAML groupOrder precedence, visibility, duplicates, empty lists/groups, typed values, missing/null distinctions, malformed input, valid non-finite JSON-number and YAML binary-tag entry candidates, YAML custom-tag parser rejection, and formula-derived Kanban grouping. Candidate outcomes are observed without asserting unsupported-entry behavior; reference characterization only, not Rust parity evidence.",
+      "fixture_reader": ".agents/tasks/2026-10-07/audit-obsidian-vault-roundtrip.ts"
+    },
+    {
       "path": "fixtures/c07-embedded-base-evaluation.json",
       "sha256": "befa8038835b14a7d54a17c18cedda8b8edafc83e367864f75b2114797f90c13",
       "rust_owner": "crates/doc",

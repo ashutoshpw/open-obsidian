@@ -28,6 +28,83 @@ type SnapshotEntry = {
   target?: string;
 };
 
+type GroupOrderScenario = {
+  id: string;
+  base_path: string;
+  source_format: "json" | "native-yaml";
+  layout: "table" | "kanban";
+  group_by_property?: string;
+  coverage: string[];
+  source: string | Record<string, unknown>;
+};
+
+type GroupOrderFixture = {
+  schema_version: number;
+  id: string;
+  description: string;
+  notes: Array<{path: string; source: string}>;
+  scenarios: GroupOrderScenario[];
+};
+
+type GroupOrderSourceHash = {bytes: number; sha256: string};
+
+type GroupOrderGroupObservation = {
+  index: number;
+  heading_text: string;
+  heading_class_name: string;
+  heading_bounds: {top: number; left: number};
+  member_paths: string[];
+};
+
+type GroupOrderVisibleState = {
+  requested_file_path: string;
+  selection_succeeded: boolean;
+  active_file_path: string | null;
+  active_view_type: string | null;
+  title: string;
+  body: string;
+  groups: GroupOrderGroupObservation[];
+  ungrouped_visible_file_paths: string[];
+  unassigned_visible_file_paths: string[];
+  visible_fixture_path_links: Array<{
+    path: string;
+    text: string;
+    class_name: string;
+    source_scope: string;
+    top: number;
+    left: number;
+  }>;
+  visible_group_marker_count: number;
+  unmapped_group_marker_count: number;
+  unmapped_group_candidate_count: number;
+  visible_error_texts: string[];
+  notices: string[];
+  dom_diagnostics: Array<{tag: string; class_name: string; role: string | null; text: string; top: number; left: number}>;
+  extraction_ambiguous: boolean;
+  ambiguity_reasons: string[];
+};
+
+type GroupOrderScenarioObservation = GroupOrderVisibleState & {
+  stage: "first-open" | "reopen";
+  ordered_group_headings: string[];
+  error_surface_classification: "loaded-bases-view" | "non-bases-view-with-visible-error" | "non-bases-view-without-visible-error";
+  state_settled: boolean;
+  state_samples: Array<{
+    active_file_path: string | null;
+    active_view_type: string | null;
+    selection_succeeded: boolean;
+    body: string;
+    groups: GroupOrderGroupObservation[];
+    ungrouped_visible_file_paths: string[];
+    unassigned_visible_file_paths: string[];
+    visible_error_texts: string[];
+    notices: string[];
+  }>;
+  screenshot: string | null;
+  screenshot_error?: string;
+  probe_error?: string;
+};
+
 const reportDirectory = resolve(requiredEnv("OBSIDIAN_REPORT_DIRECTORY"));
 const workDirectory = resolve(requiredEnv("OBSIDIAN_ROUNDTRIP_WORK_DIRECTORY"));
 const vaultRoot = join(workDirectory, "C01.2 Roundtrip Fixture");
@@ -35,6 +112,9 @@ const canvasVaultName = "C06 Canvas Reference Fixture";
 const canvasVaultRoot = join(workDirectory, canvasVaultName);
 const basesVaultName = "C07 Bases Direction Reference Fixture";
 const basesVaultRoot = join(workDirectory, basesVaultName);
+const groupOrderVaultName = "C07 Group Order Reference Fixture";
+const groupOrderVaultRoot = join(workDirectory, groupOrderVaultName);
+const groupOrderScenarioFixturePath = join(process.cwd(), "fixtures", "c07-group-order-reference.json");
 const obsidianBinary = resolve(requiredEnv("OBSIDIAN_BINARY"));
 const openObsidianBinary = resolve(requiredEnv("OPENOBSIDIAN_BINARY"));
 const obsidianVersion = requiredEnv("OBSIDIAN_RELEASE_VERSION");
@@ -95,6 +175,9 @@ const report: Record<string, unknown> = {
   included_milestone_sections: [{
     milestone: "R2.8.106-C07.2-reference-rewrite-and-reopen-capture",
     report_path: "bases_group_direction_reference",
+  }, {
+    milestone: "R2.8.115-C07.3-group-order-reference-characterization",
+    report_path: "bases_group_order_reference",
   }],
   status: "pending",
   started_at: startedAt,
@@ -143,6 +226,19 @@ const report: Record<string, unknown> = {
     omitted_direction: omittedBasesDirection,
     invalid_direction: invalidBasesDirection,
   },
+  bases_group_order_reference: {
+    status: "pending",
+    milestone: "R2.8.115-C07.3-group-order-reference-characterization",
+    capture_scope: "Record actual pinned Obsidian 1.14.4 groupOrder behavior for JSON-compatible and native-YAML .base inputs, typed values, malformed configurations, JSON non-finite-number and YAML binary-tag candidates, and formula-derived Kanban grouping. Capture is reference characterization only and does not establish Rust parity.",
+    application: "Pinned Obsidian Desktop 1.14.4",
+    fixture_id: "fixture:c07-group-order-reference",
+    fixture_source_path: "fixtures/c07-group-order-reference.json",
+    strict_source_preservation_expectation: "Every generated .base and note source must retain its original byte count and SHA-256 at each first-open/reopen checkpoint. Unlike the separate C07.2 probe, no reference-app rewrite is accepted or reseeded.",
+    observation_expectation: "Capture the exact selected .base, active view type, visible error/notices and whether the state is a loaded Bases view or a non-Bases error view, ordered group headings as an array with a stable ordinal, every rendered member path/order, all state samples and screenshots. Record actual fallback behavior without assigning an undocumented meaning to malformed input. Fail closed when a rendered group or row cannot be mapped unambiguously.",
+    unsupported_entry_scope: "Probe valid-input JSON non-finite-number and YAML binary-tag candidates without assuming either is unsupported. If neither produces visible app-level rejection after the Bases view loads, record app-level unsupported groupOrder entry behavior as unresolved and keep Rust C07.3 parity blocked.",
+    rust_parity_claimed: false,
+    scenarios: [],
+  },
   vault_snapshots: {},
   openobsidian_app_data: {},
   workspace_state_allowlist: workspaceStateAllowlist,
@@ -151,6 +247,7 @@ const report: Record<string, unknown> = {
     "The deliberate external note creation, in-place note edit, attachment removal, and note rename each establish a new baseline; all subsequent no-op operations must preserve the latest applicable baseline exactly.",
     "The Canvas check uses a dedicated reference-compatible fixture and fresh Obsidian profile, edits one native text card with no write before explicit save, verifies the saved JSON differs only at that selected card's text while preserving sibling nodes and edges, creates one Markdown note afterward with the edited text-card bytes, exposes the edited text and referenced block content, and checks the edited Canvas and note after first-open and reopened-vault sessions. The codec's rich unknown-field fixture remains covered by Rust tests and is not opened by Obsidian. This does not certify every Canvas workflow or cross-platform behavior beyond the recorded runner.",
     "The C07 reference probe opens synthetic Bases files with explicit ASC and DESC, omitted direction, and an unsupported direction. For ASC and DESC it captures every rendered group and file row from all Bases table roots on first open and reopen, including the null-value group containing the .base files, without judging observed ordering against preset expectations. For the tested omitted-direction native-YAML mapping, it captures the settled exact-file parse rejection (`groupBy` must be a object) and records no group or row order; it does not infer a default. The unsupported direction remains a capture-only observation. Before each shutdown, the probe explicitly restores ASC. It retains the original source hash baseline and reports Obsidian's exact 62-byte Invalid Direction.base rewrite if it occurs at any post-open source-hash checkpoint; the generated file is reseeded between sessions so the reopened view is captured from the original fixture, with that harness action reported. This reference-app mutation is not evidence that Rust preserves the source. Interpretation and Rust fixture reconciliation belong to the follow-up parity milestone.",
+    "The separate C07.3 reference probe uses a generated synthetic vault and captures JSON-compatible and native-YAML .base scenarios for groupOrder precedence, listed and unlisted groups, explicit empty groups, empty lists, duplicates, null versus missing values, typed scalar/array/object values and rendered-label collisions, groupOrder without groupBy, malformed shapes, JSON 1e999 and YAML !!binary boundary candidates, YAML tag rejection, and a dependent-formula Kanban view. It records whether candidate rejection occurs on a non-Bases error surface or within a loaded Bases view. Unless a candidate visibly demonstrates an unsupported entry after Bases loads, that behavior remains unprobed and Rust C07.3 parity stays blocked. For each scenario it captures the exact active .base, ordered group-heading array and every member path/order, visible errors/notices, stable state samples, and screenshots on first open and reopen. It strictly checks all .base and note source hashes at every checkpoint. An incomplete or ambiguous UI extraction fails closed. These observations characterize Obsidian only and do not establish Rust parity.",
     "This run does not certify all product C01 flows or general plugin/theme compatibility.",
   ],
 };
@@ -1722,6 +1819,615 @@ async function createBasesDirectionFixture(): Promise<Record<string, {bytes: num
     await writeFile(join(reportDirectory, `bases-direction-${basename(path).replaceAll(".", "-")}.seed`), bytes);
   }
   return sourceHashes;
+}
+
+async function createGroupOrderReferenceFixture(): Promise<{
+  fixture: GroupOrderFixture;
+  sources: Record<string, Buffer>;
+  sourceHashes: Record<string, GroupOrderSourceHash>;
+}> {
+  const fixtureBytes = await readFile(groupOrderScenarioFixturePath);
+  const fixture = JSON.parse(fixtureBytes.toString("utf8")) as GroupOrderFixture;
+  if (fixture.schema_version !== 1 || fixture.id !== "fixture:c07-group-order-reference") {
+    throw new Error(`Unexpected C07.3 groupOrder fixture identity: ${fixture.id}`);
+  }
+  if (!Array.isArray(fixture.notes) || fixture.notes.length === 0 || !Array.isArray(fixture.scenarios) || fixture.scenarios.length === 0) {
+    throw new Error("C07.3 groupOrder fixture must contain synthetic notes and scenarios");
+  }
+  const requiredCoverage = [
+    "direction-precedence", "listed-unlisted", "empty-group", "duplicate-declaration", "empty-order-list",
+    "missing-vs-null", "group-order-without-group-by", "typed-string", "typed-number", "typed-boolean",
+    "typed-array", "typed-object", "typed-null", "typed-missing", "rendered-label-collision", "malformed-shape",
+    "unsupported-entry-candidate", "non-finite-number-entry", "yaml-binary-entry-candidate", "yaml-tag-parser-rejection-probe",
+    "formula-dependency", "formula-derived-grouping", "kanban",
+  ];
+  const coverage = new Set(fixture.scenarios.flatMap((scenario) => scenario.coverage));
+  const missingCoverage = requiredCoverage.filter((name) => !coverage.has(name));
+  if (missingCoverage.length > 0) throw new Error(`C07.3 groupOrder fixture omits required scenarios: ${missingCoverage.join(", ")}`);
+
+  const sourceFiles: Record<string, Buffer> = {};
+  for (const note of fixture.notes) {
+    if (!note.path.startsWith("Notes/") || !note.path.endsWith(".md") || note.path.split("/").includes("..")) {
+      throw new Error(`Unsafe C07.3 groupOrder note path: ${note.path}`);
+    }
+    if (sourceFiles[note.path]) throw new Error(`Duplicate C07.3 groupOrder fixture path: ${note.path}`);
+    sourceFiles[note.path] = Buffer.from(note.source, "utf8");
+  }
+  for (const scenario of fixture.scenarios) {
+    if (!scenario.base_path.startsWith("Bases/") || !scenario.base_path.endsWith(".base") || scenario.base_path.split("/").includes("..")) {
+      throw new Error(`Unsafe C07.3 groupOrder base path: ${scenario.base_path}`);
+    }
+    if (sourceFiles[scenario.base_path]) throw new Error(`Duplicate C07.3 groupOrder fixture path: ${scenario.base_path}`);
+    if (scenario.source_format === "native-yaml" && typeof scenario.source !== "string") {
+      throw new Error(`C07.3 ${scenario.id} source does not match its ${scenario.source_format} format`);
+    }
+    let parsedJsonSource: Record<string, unknown> | undefined;
+    if (scenario.source_format === "json") {
+      if (typeof scenario.source === "string") {
+        try {
+          parsedJsonSource = JSON.parse(scenario.source) as Record<string, unknown>;
+        } catch (error) {
+          throw new Error(`C07.3 ${scenario.id} JSON source is syntactically invalid: ${error instanceof Error ? error.message : String(error)}`);
+        }
+      } else {
+        parsedJsonSource = scenario.source;
+      }
+      if (!parsedJsonSource || typeof parsedJsonSource !== "object" || Array.isArray(parsedJsonSource)) {
+        throw new Error(`C07.3 ${scenario.id} JSON source must be a .base object`);
+      }
+    }
+    if (scenario.group_by_property) {
+      if (scenario.source_format === "json") {
+        const source = parsedJsonSource!;
+        const view = (source.views as Array<Record<string, unknown>> | undefined)?.[0];
+        const groupBy = view?.groupBy as Record<string, unknown> | undefined;
+        if (!groupBy || groupBy.property !== scenario.group_by_property
+          || (groupBy.direction !== "ASC" && groupBy.direction !== "DESC")) {
+          throw new Error(`C07.3 ${scenario.id} must use the captured explicit groupBy mapping and direction`);
+        }
+      } else {
+        const yamlSource = scenario.source as string;
+        const escapedProperty = scenario.group_by_property.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        const groupByMapping = new RegExp(`groupBy:\\s*\\n\\s+property:\\s*${escapedProperty}\\s*\\n\\s+direction:\\s*(?:ASC|DESC)(?:\\s|$)`);
+        if (!groupByMapping.test(yamlSource)) {
+          throw new Error(`C07.3 ${scenario.id} must use the captured explicit groupBy mapping and direction`);
+        }
+      }
+    } else if (scenario.source_format === "native-yaml"
+      ? /(?:^|\n)\s*groupBy\s*:/m.test(scenario.source as string)
+      : Boolean((parsedJsonSource?.views as Array<Record<string, unknown>> | undefined)?.[0]?.groupBy !== undefined)) {
+      throw new Error(`C07.3 ${scenario.id} is the no-groupBy scenario and must omit groupBy`);
+    }
+    const source = scenario.source_format === "json"
+      ? typeof scenario.source === "string" ? `${scenario.source.trimEnd()}\n` : `${JSON.stringify(scenario.source, null, 2)}\n`
+      : scenario.source as string;
+    sourceFiles[scenario.base_path] = Buffer.from(source, "utf8");
+  }
+
+  await mkdir(join(groupOrderVaultRoot, "Notes"), {recursive: true});
+  await mkdir(join(groupOrderVaultRoot, "Bases"), {recursive: true});
+  await mkdir(join(groupOrderVaultRoot, ".obsidian", "plugins"), {recursive: true});
+  await mkdir(join(groupOrderVaultRoot, ".obsidian", "themes"), {recursive: true});
+  const files: Record<string, Buffer> = {
+    ...sourceFiles,
+    ".obsidian/app.json": await readFile(join(vaultRoot, ".obsidian", "app.json")),
+    ".obsidian/appearance.json": await readFile(join(vaultRoot, ".obsidian", "appearance.json")),
+    ".obsidian/community-plugins.json": await readFile(join(vaultRoot, ".obsidian", "community-plugins.json")),
+    ".obsidian/core-plugins.json": await readFile(join(vaultRoot, ".obsidian", "core-plugins.json")),
+  };
+  for (const [path, bytes] of Object.entries(files)) {
+    const destination = join(groupOrderVaultRoot, path);
+    await mkdir(dirname(destination), {recursive: true});
+    await writeFile(destination, bytes);
+  }
+
+  const sourceHashes = Object.fromEntries(Object.entries(sourceFiles).map(([path, bytes]) => [path, {
+    bytes: bytes.length,
+    sha256: createHash("sha256").update(bytes).digest("hex"),
+  }]));
+  const basesReport = report.bases_group_order_reference as Record<string, unknown>;
+  basesReport.vault_name = groupOrderVaultName;
+  basesReport.vault_path = "$RUNNER_TEMP/openobsidian-c01-roundtrip/C07 Group Order Reference Fixture";
+  basesReport.fixture_manifest_sha256 = createHash("sha256").update(fixtureBytes).digest("hex");
+  basesReport.scenario_count = fixture.scenarios.length;
+  basesReport.scenario_inputs = fixture.scenarios.map((scenario) => ({
+    id: scenario.id,
+    base_path: scenario.base_path,
+    source_format: scenario.source_format,
+    layout: scenario.layout,
+    group_by_property: scenario.group_by_property ?? null,
+    coverage: scenario.coverage,
+    source_sha256: sourceHashes[scenario.base_path]?.sha256 ?? null,
+  }));
+  basesReport.source_hashes_before_open = sourceHashes;
+  basesReport.note_order_by_path = fixture.notes.map((note) => ({path: note.path, content_sha256: sourceHashes[note.path]?.sha256 ?? null}));
+  basesReport.fixture_paths_to_observe = Object.keys(sourceHashes).sort((left, right) => left.localeCompare(right, "en"));
+  basesReport.reference_app_asset_sha256 = obsidianSha256;
+  basesReport.coverage_limitations = [
+    "The JSON 1e999 and YAML !!binary cases are syntax-valid boundary/tag value candidates. Their outcomes are observations; neither is asserted to be unsupported before the pinned app is captured.",
+    "The YAML custom-tag case records parser/tag rejection for the supplied source. It is a separate syntax probe and is not counted as an app-level unsupported groupOrder entry.",
+    "Unless a candidate visibly demonstrates app-level rejection after the Bases view loads, unsupported app-level groupOrder entry behavior remains unprobed and Rust C07.3 parity remains blocked on that characterization.",
+  ];
+  for (const [path, bytes] of Object.entries(sourceFiles)) {
+    const artifactPath = join(reportDirectory, "c07-group-order-seeds", `${path.replaceAll("/", "--")}.seed`);
+    await mkdir(dirname(artifactPath), {recursive: true});
+    await writeFile(artifactPath, bytes);
+  }
+  await writeFile(join(reportDirectory, "c07-group-order-fixture.json"), fixtureBytes);
+  return {fixture, sources: sourceFiles, sourceHashes};
+}
+
+async function assertGroupOrderSourceHashes(
+  expected: Record<string, GroupOrderSourceHash>,
+  stage: string,
+): Promise<Record<string, GroupOrderSourceHash>> {
+  const snapshot = await snapshotTree(groupOrderVaultRoot);
+  const actualSourcePaths = snapshot
+    .filter((entry) => entry.kind === "file" && /\.(?:base|md)$/i.test(entry.path))
+    .map((entry) => entry.path)
+    .sort((left, right) => left.localeCompare(right, "en"));
+  const expectedSourcePaths = Object.keys(expected).sort((left, right) => left.localeCompare(right, "en"));
+  const observed: Record<string, GroupOrderSourceHash> = {};
+  for (const path of actualSourcePaths) {
+    const entry = snapshot.find((candidate) => candidate.kind === "file" && candidate.path === path);
+    if (entry?.bytes !== undefined && entry.sha256) observed[path] = {bytes: entry.bytes, sha256: entry.sha256};
+  }
+  const mismatches = [
+    ...expectedSourcePaths.filter((path) => !observed[path]).map((path) => ({path, kind: "missing", expected: expected[path]})),
+    ...actualSourcePaths.filter((path) => !expected[path]).map((path) => ({path, kind: "unexpected", observed: observed[path]})),
+    ...expectedSourcePaths.filter((path) => observed[path]
+      && (observed[path].bytes !== expected[path].bytes || observed[path].sha256 !== expected[path].sha256))
+      .map((path) => ({path, kind: "changed", expected: expected[path], observed: observed[path]})),
+  ];
+  const basesReport = report.bases_group_order_reference as Record<string, unknown>;
+  const checkpoints = (basesReport.source_hash_checkpoints ?? []) as Array<Record<string, unknown>>;
+  checkpoints.push({stage, expected, observed, unchanged: mismatches.length === 0});
+  basesReport.source_hash_checkpoints = checkpoints;
+  if (mismatches.length > 0) {
+    const artifact = `c07-group-order-source-mismatch-${stage.replaceAll(/[^a-z0-9-]/gi, "-")}.json`;
+    await writeFile(join(reportDirectory, artifact), `${JSON.stringify({stage, mismatches, expected, observed}, null, 2)}\n`);
+    basesReport.source_preservation_passed = false;
+    basesReport.source_preservation_failure = {stage, mismatches};
+    await saveReport();
+    throw new Error(`C07.3 source hashes changed at ${stage}: ${JSON.stringify(mismatches).slice(0, 6_000)}`);
+  }
+  basesReport.source_preservation_passed = true;
+  return observed;
+}
+
+async function readGroupOrderVisibleState(
+  connection: DevToolsConnection,
+  scenario: GroupOrderScenario,
+  fixturePaths: string[],
+): Promise<GroupOrderVisibleState> {
+  const visibleState = await connection.evaluateJson<GroupOrderVisibleState>(`(() => {
+    const fixturePaths = ${JSON.stringify(fixturePaths)};
+    const requestedPath = ${JSON.stringify(scenario.base_path)};
+    const layout = ${JSON.stringify(scenario.layout)};
+    const allowEmptyGroupedResult = ${JSON.stringify(scenario.coverage.includes("empty-order-list"))};
+    const root = document.querySelector('.workspace-leaf.mod-active') ?? document.body;
+    const view = window.app?.workspace?.activeLeaf?.view;
+    const body = root?.innerText ?? '';
+    const normalize = (value) => (value || '').replace(/\\s+/g, ' ').trim();
+    const visible = (element) => {
+      const style = window.getComputedStyle(element);
+      const bounds = element.getBoundingClientRect();
+      return style.display !== 'none' && style.visibility !== 'hidden' && bounds.width > 0 && bounds.height > 0;
+    };
+    const textOf = (element) => normalize(element?.innerText || element?.textContent || '');
+    const pathByName = new Map(fixturePaths.flatMap((path) => {
+      const filename = path.split('/').at(-1) || path;
+      const stem = filename.replace(/\\.(?:md|base)$/i, '');
+      return [[filename.toLowerCase(), path], [stem.toLowerCase(), path]];
+    }));
+    const pathFor = (candidate) => {
+      if (!candidate) return null;
+      const normalized = String(candidate).trim().replaceAll('\\\\', '/').split('/').filter((part) => part && part !== '.').join('/');
+      const exact = fixturePaths.find((path) => path.toLowerCase() === normalized.toLowerCase());
+      if (exact) return exact;
+      const basename = normalized.split('/').at(-1).toLowerCase();
+      const stem = basename.replace(/\\.(?:md|base)$/i, '');
+      return pathByName.get(basename) ?? pathByName.get(stem) ?? null;
+    };
+    const linkSelector = 'a[data-href], [data-href], a[data-path], [data-path], a.internal-link, .internal-link';
+    const rawLinks = root ? [...root.querySelectorAll(linkSelector)].filter(visible) : [];
+    const pathForLink = (element) => pathFor(element.getAttribute('data-href') || element.getAttribute('data-path') || textOf(element));
+    const pathLinks = rawLinks
+      .filter((element) => pathForLink(element))
+      .filter((element) => !rawLinks.some((nested) => nested !== element
+        && element.contains(nested)
+        && pathForLink(nested) === pathForLink(element)))
+      .map((element, index) => {
+        const bounds = element.getBoundingClientRect();
+        const owner = element.closest('.bases-tr, .bases-row, .bases-table-row, .bases-card, .bases-kanban-card, tr, [role="row"], li, [role="listitem"]');
+        const tableRoot = element.closest('.bases-table, [role="table"], table');
+        const ownerClass = owner?.getAttribute('class') || '';
+        return {
+          element,
+          path: pathForLink(element),
+          text: textOf(element),
+          class_name: element.getAttribute('class') || '',
+          source_scope: tableRoot || (layout === 'table' && owner) ? 'table' : layout === 'kanban' ? 'kanban' : owner ? 'explicit-row' : 'unscoped',
+          row_class_name: ownerClass,
+          top: bounds.top,
+          left: bounds.left,
+          index,
+        };
+      });
+    const classTokens = (element) => [...(element.classList || [])].map((token) => token.toLowerCase());
+    const hasGroupMarker = (element) => {
+      const classes = classTokens(element);
+      return classes.some((token) => token === 'bases-group-row'
+          || token === 'bases-group-heading'
+          || token === 'bases-group-header'
+          || token.includes('group-heading')
+          || token.includes('group-header')
+          || token.includes('kanban-column')
+          || token.includes('column-heading')
+          || token.includes('lane-header'))
+        || element.hasAttribute('data-group')
+        || element.getAttribute('role') === 'group';
+    };
+    const markerElements = root
+      ? [...root.querySelectorAll('[class], [data-group], [role="group"]')].filter((element) => visible(element) && hasGroupMarker(element))
+      : [];
+    const leafMarkers = markerElements.filter((element) => !markerElements.some((nested) => nested !== element && element.contains(nested)));
+    const headingMarkers = leafMarkers.map((element, index) => {
+      const bounds = element.getBoundingClientRect();
+      const label = normalize(element.getAttribute('data-group') || element.getAttribute('aria-label') || textOf(element));
+      const rowOwner = element.closest('.bases-tr, .bases-row, .bases-table-row, tr, [role="row"], li, [role="listitem"]');
+      return {
+        element,
+        index,
+        label,
+        class_name: element.getAttribute('class') || '',
+        top: bounds.top,
+        left: bounds.left,
+        row_owner: rowOwner,
+      };
+    }).sort((left, right) => layout === 'kanban'
+      ? left.left - right.left || left.top - right.top || left.index - right.index
+      : left.top - right.top || left.left - right.left || left.index - right.index);
+    const tableRoots = root ? [...root.querySelectorAll('.bases-table, [role="table"], table')] : [];
+    const groupRecords = headingMarkers.map((marker, index) => ({
+      index,
+      heading_text: marker.label,
+      heading_class_name: marker.class_name,
+      heading_bounds: {top: marker.top, left: marker.left},
+      member_paths: [],
+      marker,
+    }));
+    const ungroupedVisibleFilePaths = [];
+    const unassignedVisibleFilePaths = [];
+    if (tableRoots.length > 0 || (layout === 'table' && groupRecords.length > 0)) {
+      const events = [
+        ...groupRecords.map((group) => ({kind: 'group', top: group.heading_bounds.top, left: group.heading_bounds.left, index: group.index, group})),
+        ...pathLinks.map((link) => ({kind: 'file', top: link.top, left: link.left, index: link.index, link})),
+      ].sort((left, right) => left.top - right.top || left.left - right.left || left.index - right.index);
+      let activeGroup = null;
+      for (const event of events) {
+        if (event.kind === 'group') {
+          activeGroup = event.group;
+        } else {
+          const link = event.link;
+          if (activeGroup && (link.source_scope === 'table' || tableRoots.some((tableRoot) => tableRoot.contains(link.element)))) {
+            activeGroup.member_paths.push(link.path);
+          } else if (link.source_scope === 'table') {
+            ungroupedVisibleFilePaths.push(link.path);
+          } else {
+            unassignedVisibleFilePaths.push(link.path);
+          }
+        }
+      }
+    } else if (layout === 'kanban' && groupRecords.length > 0) {
+      const groupContainers = groupRecords.map((group) => {
+        let container = group.marker.element;
+        let ancestor = group.marker.element.parentElement;
+        while (ancestor && ancestor !== root) {
+          const headingsInside = headingMarkers.filter((marker) => ancestor.contains(marker.element));
+          if (headingsInside.length !== 1) break;
+          const tokens = classTokens(ancestor);
+          const structural = tokens.some((token) => token.includes('group') || token.includes('column') || token.includes('lane'))
+            || ancestor.getAttribute('role') === 'group'
+            || ancestor.hasAttribute('data-group');
+          if (structural) {
+            container = ancestor;
+            break;
+          }
+          ancestor = ancestor.parentElement;
+        }
+        return {group, container};
+      });
+      for (const link of pathLinks) {
+        const owners = groupContainers.filter(({container}) => container.contains(link.element));
+        owners.sort((left, right) => {
+          const leftBounds = left.container.getBoundingClientRect();
+          const rightBounds = right.container.getBoundingClientRect();
+          return (leftBounds.width * leftBounds.height) - (rightBounds.width * rightBounds.height);
+        });
+        const owner = owners[0];
+        if (owners.length > 1) {
+          unassignedVisibleFilePaths.push(link.path);
+        } else if (owner) {
+          owner.group.member_paths.push(link.path);
+        } else {
+          unassignedVisibleFilePaths.push(link.path);
+        }
+      }
+    } else {
+      for (const link of pathLinks) {
+        if (groupRecords.length === 0 && link.source_scope !== 'unscoped') {
+          ungroupedVisibleFilePaths.push(link.path);
+        } else {
+          unassignedVisibleFilePaths.push(link.path);
+        }
+      }
+    }
+    for (const group of groupRecords) {
+      group.member_paths.sort((leftPath, rightPath) => {
+        const left = pathLinks.find((link) => link.path === leftPath);
+        const right = pathLinks.find((link) => link.path === rightPath);
+        return (left?.top ?? 0) - (right?.top ?? 0) || (left?.left ?? 0) - (right?.left ?? 0) || (left?.index ?? 0) - (right?.index ?? 0);
+      });
+    }
+    const visibleErrorTexts = root
+      ? [...new Set([...root.querySelectorAll('[role="alert"], .bases-error, [class*="error"]')]
+        .filter(visible).map(textOf).filter(Boolean))]
+      : [];
+    const notices = [...new Set([...(document.querySelectorAll('.notice, .modal-container, [role="alert"]'))]
+      .filter(visible).map(textOf).filter(Boolean))];
+    const explicitErrorSurface = visibleErrorTexts.some((text) => /parse|invalid|unsupported|must be|could not|failed to|malformed|yaml|json/i.test(text))
+      || notices.some((text) => /parse|invalid|unsupported|must be|could not|failed to|malformed|yaml|json/i.test(text))
+      || /parse error|failed to parse|could not parse|invalid \.base|must be (?:a|an)|unsupported (?:group|entry|value)/i.test(body);
+    const groupLikeCandidates = markerElements.filter((element) => !leafMarkers.includes(element)
+      && !leafMarkers.some((marker) => element.contains(marker)));
+    const ambiguityReasons = [];
+    if (groupRecords.some((group) => !group.heading_text)) ambiguityReasons.push('A visible group marker has no extractable heading text.');
+    if (groupLikeCandidates.length > 0) ambiguityReasons.push('Group-like DOM markers were not mapped to a unique heading.');
+    if (unassignedVisibleFilePaths.length > 0) ambiguityReasons.push('One or more visible fixture file links could not be assigned to a group or an ungrouped view.');
+    if (layout === 'kanban' && pathLinks.length > 0 && groupRecords.length === 0 && !explicitErrorSurface) {
+      ambiguityReasons.push('The Kanban view rendered fixture files without detectable group headings.');
+    }
+    if (layout === 'table' && scenario.group_by_property && pathLinks.length > 0
+      && groupRecords.length === 0 && !explicitErrorSurface) {
+      ambiguityReasons.push('A grouped table rendered fixture files without detectable group headings.');
+    }
+    if (layout === 'table' && scenario.group_by_property && pathLinks.length === 0 && groupRecords.length === 0
+      && !allowEmptyGroupedResult && !explicitErrorSurface) {
+      ambiguityReasons.push('A grouped table rendered no groups or fixture rows and showed no explicit visible error, so an empty result cannot be distinguished from a DOM extraction miss.');
+    }
+    const diagnosticsElements = root ? [...root.querySelectorAll('[class], [data-group], [role="group"]')].filter(visible) : [];
+    const domDiagnostics = diagnosticsElements
+      .filter((element) => hasGroupMarker(element) || /card|kanban|table|row/i.test(element.getAttribute('class') || ''))
+      .slice(0, 160)
+      .map((element) => {
+        const bounds = element.getBoundingClientRect();
+        return {tag: element.tagName.toLowerCase(), class_name: element.getAttribute('class') || '', role: element.getAttribute('role'), text: textOf(element).slice(0, 240), top: bounds.top, left: bounds.left};
+      });
+    const visibleFixturePathLinks = pathLinks.map((link) => ({
+      path: link.path,
+      text: link.text,
+      class_name: link.class_name,
+      source_scope: link.source_scope,
+      top: link.top,
+      left: link.left,
+    }));
+    return {
+      requested_file_path: requestedPath,
+      selection_succeeded: view?.file?.path === requestedPath,
+      active_file_path: view?.file?.path ?? null,
+      active_view_type: view?.getViewType?.() ?? null,
+      title: document.title,
+      body: body.slice(0, 10_000),
+      groups: groupRecords.map(({index, heading_text, heading_class_name, heading_bounds, member_paths}) => ({index, heading_text, heading_class_name, heading_bounds, member_paths})),
+      ungrouped_visible_file_paths: ungroupedVisibleFilePaths,
+      unassigned_visible_file_paths: unassignedVisibleFilePaths,
+      visible_fixture_path_links: visibleFixturePathLinks,
+      visible_group_marker_count: leafMarkers.length,
+      unmapped_group_marker_count: groupRecords.filter((group) => !group.heading_text).length,
+      unmapped_group_candidate_count: groupLikeCandidates.length,
+      visible_error_texts: visibleErrorTexts,
+      notices,
+      dom_diagnostics: domDiagnostics,
+      extraction_ambiguous: ambiguityReasons.length > 0,
+      ambiguity_reasons: ambiguityReasons,
+    };
+  })()`);
+  return visibleState;
+}
+
+function emptyGroupOrderVisibleState(scenario: GroupOrderScenario): GroupOrderVisibleState {
+  return {
+    requested_file_path: scenario.base_path,
+    selection_succeeded: false,
+    active_file_path: null,
+    active_view_type: null,
+    title: "",
+    body: "",
+    groups: [],
+    ungrouped_visible_file_paths: [],
+    unassigned_visible_file_paths: [],
+    visible_fixture_path_links: [],
+    visible_group_marker_count: 0,
+    unmapped_group_marker_count: 0,
+    unmapped_group_candidate_count: 0,
+    visible_error_texts: [],
+    notices: [],
+    dom_diagnostics: [],
+    extraction_ambiguous: false,
+    ambiguity_reasons: [],
+  };
+}
+
+function hasExplicitVisibleGroupOrderParseError(state: GroupOrderVisibleState): boolean {
+  const errorPattern = /parse|invalid|unsupported|must be|could not|failed to|malformed|yaml|json/i;
+  const explicitBodyPattern = /parse error|failed to parse|could not parse|invalid \.base|must be (?:a|an)|unsupported (?:group|entry|value)/i;
+  return state.visible_error_texts.some((text) => errorPattern.test(text))
+    || state.notices.some((text) => errorPattern.test(text))
+    || explicitBodyPattern.test(state.body);
+}
+
+async function captureGroupOrderScenario(
+  connection: DevToolsConnection,
+  scenario: GroupOrderScenario,
+  fixturePaths: string[],
+  stage: "first-open" | "reopen",
+): Promise<GroupOrderScenarioObservation> {
+  let visible = emptyGroupOrderVisibleState(scenario);
+  const stateSamples: GroupOrderScenarioObservation["state_samples"] = [];
+  let stateSettled = false;
+  let screenshot: string | null = null;
+  let screenshotError: string | undefined;
+  let probeError: string | undefined;
+  const recordState = (state: GroupOrderVisibleState): void => {
+    const sample: GroupOrderScenarioObservation["state_samples"][number] = {
+      active_file_path: state.active_file_path,
+      active_view_type: state.active_view_type,
+      selection_succeeded: state.selection_succeeded,
+      body: state.body.slice(0, 10_000),
+      groups: state.groups,
+      ungrouped_visible_file_paths: state.ungrouped_visible_file_paths,
+      unassigned_visible_file_paths: state.unassigned_visible_file_paths,
+      visible_error_texts: state.visible_error_texts,
+      notices: state.notices,
+    };
+    if (stateSamples.length === 0 || !isDeepStrictEqual(stateSamples[stateSamples.length - 1], sample)) {
+      stateSamples.push(sample);
+    }
+  };
+  const captureScreenshot = async (): Promise<void> => {
+    screenshot = `obsidian-group-order-${stage}-${scenario.id.replaceAll(/[^a-z0-9-]/gi, "-")}.png`;
+    try {
+      await captureObsidianScreenshot(connection, screenshot);
+    } catch (error) {
+      screenshotError = error instanceof Error ? error.message : String(error);
+      screenshot = null;
+    }
+  };
+
+  try {
+    const listVisiblePaths = async (): Promise<string[]> => await connection.evaluateJson<string[]>(`(() => {
+      const visible = (element) => {
+        const bounds = element.getBoundingClientRect();
+        const style = window.getComputedStyle(element);
+        return style.display !== 'none' && style.visibility !== 'hidden' && bounds.width > 0 && bounds.height > 0;
+      };
+      return [...document.querySelectorAll('[data-path]')]
+        .filter(visible)
+        .map((element) => element.getAttribute('data-path') || '')
+        .filter(Boolean);
+    })()`);
+    let visiblePaths = await listVisiblePaths();
+    if (!visiblePaths.includes(scenario.base_path)) {
+      const parentPath = scenario.base_path.split("/").slice(0, -1).join("/");
+      await connection.evaluateJson<boolean>(`(() => {
+        const targetPath = ${JSON.stringify(parentPath)};
+        const visible = (element) => {
+          const bounds = element.getBoundingClientRect();
+          const style = window.getComputedStyle(element);
+          return style.display !== 'none' && style.visibility !== 'hidden' && bounds.width > 0 && bounds.height > 0;
+        };
+        const folder = [...document.querySelectorAll('[data-path]')]
+          .find((element) => element.getAttribute('data-path') === targetPath
+            && visible(element)
+            && (element.classList.contains('nav-folder-title') || element.closest('.nav-folder')));
+        if (!folder) return false;
+        const collapsed = folder.classList.contains('is-collapsed')
+          || folder.getAttribute('aria-expanded') === 'false'
+          || folder.closest('.nav-folder')?.classList.contains('is-collapsed');
+        if (collapsed) folder.click();
+        return true;
+      })()`);
+      visiblePaths = await waitFor(
+        `${stage}: Obsidian to list ${scenario.base_path}`,
+        listVisiblePaths,
+        (paths) => paths.includes(scenario.base_path),
+        30_000,
+      );
+    }
+    if (!visiblePaths.includes(scenario.base_path)) {
+      throw new Error(`${stage}: Obsidian did not list the exact C07.3 target ${scenario.base_path}`);
+    }
+    const clicked = await connection.evaluateJson<boolean>(`(() => {
+      const path = ${JSON.stringify(scenario.base_path)};
+      const visible = (element) => {
+        const bounds = element.getBoundingClientRect();
+        const style = window.getComputedStyle(element);
+        return style.display !== 'none' && style.visibility !== 'hidden' && bounds.width > 0 && bounds.height > 0;
+      };
+      const candidates = [...document.querySelectorAll('[data-path]')]
+        .filter((element) => element.getAttribute('data-path') === path && visible(element));
+      const target = candidates.find((element) => element.classList.contains('nav-file-title')
+        || element.closest('.nav-file')) || candidates[0];
+      target?.click();
+      return Boolean(target);
+    })()`);
+    if (!clicked) throw new Error(`${stage}: Obsidian did not expose ${scenario.base_path} for selection`);
+
+    let stableFingerprint = "";
+    let stableSamples = 0;
+    const settleDeadline = Date.now() + 45_000;
+    while (Date.now() < settleDeadline) {
+      await delay(500);
+      const next = await readGroupOrderVisibleState(connection, scenario, fixturePaths);
+      visible = next;
+      recordState(next);
+      const nextFingerprint = JSON.stringify(next);
+      if (next.selection_succeeded && nextFingerprint === stableFingerprint) {
+        stableSamples += 1;
+      } else {
+        stableFingerprint = nextFingerprint;
+        stableSamples = 0;
+      }
+      if (stableSamples >= 3) break;
+    }
+    stateSettled = stableSamples >= 3;
+    if (visible.active_file_path !== scenario.base_path || !visible.selection_succeeded) {
+      throw new Error(`${stage}: the exact .base was not active after selection; state=${JSON.stringify(visible).slice(0, 8_000)}`);
+    }
+    if (visible.active_view_type !== "bases" && !hasExplicitVisibleGroupOrderParseError(visible)) {
+      throw new Error(`${stage}: the exact .base was not opened as a Bases view and no explicit visible parse/error state was captured; state=${JSON.stringify(visible).slice(0, 8_000)}`);
+    }
+    if (!stateSettled) {
+      throw new Error(`${stage}: selected .base did not reach a stable visible state; samples=${JSON.stringify(stateSamples).slice(0, 8_000)}`);
+    }
+    if (visible.extraction_ambiguous) {
+      throw new Error(`${stage}: visible group or file extraction was ambiguous: ${visible.ambiguity_reasons.join(" ")}`);
+    }
+    const expectedMappedPaths = visible.visible_fixture_path_links.map((entry) => entry.path).sort();
+    const observedMappedPaths = [
+      ...visible.groups.flatMap((group) => group.member_paths),
+      ...visible.ungrouped_visible_file_paths,
+    ].sort();
+    if (!isDeepStrictEqual(expectedMappedPaths, observedMappedPaths)) {
+      throw new Error(`${stage}: visible fixture file links were not completely mapped to group/member order; visible=${JSON.stringify(expectedMappedPaths)} mapped=${JSON.stringify(observedMappedPaths)}`);
+    }
+  } catch (error) {
+    probeError = error instanceof Error ? error.message : String(error);
+    visible = await readGroupOrderVisibleState(connection, scenario, fixturePaths).catch(() => visible);
+    recordState(visible);
+  }
+
+  await captureScreenshot();
+  if (screenshotError) {
+    probeError = [probeError, `Required screenshot capture failed: ${screenshotError}`].filter(Boolean).join(" ");
+  }
+  return {
+    ...visible,
+    ordered_group_headings: visible.groups.map((group) => group.heading_text),
+    error_surface_classification: visible.active_view_type === "bases"
+      ? "loaded-bases-view"
+      : hasExplicitVisibleGroupOrderParseError(visible)
+        ? "non-bases-view-with-visible-error"
+        : "non-bases-view-without-visible-error",
+    body: visible.body.slice(0, 10_000),
+    stage,
+    state_settled: stateSettled,
+    state_samples: stateSamples,
+    screenshot,
+    ...(screenshotError ? {screenshot_error: screenshotError} : {}),
+    ...(probeError ? {probe_error: probeError} : {}),
+  };
 }
 
 async function assertBasesDirectionSourceHashes(
@@ -9095,6 +9801,239 @@ async function runBasesDirectionReferenceProbe(): Promise<void> {
   }
 }
 
+async function runBasesGroupOrderReferenceProbe(): Promise<void> {
+  const profileDirectory = join(workDirectory, "group-order-obsidian-profile");
+  const basesReport = report.bases_group_order_reference as Record<string, unknown>;
+  const snapshots = report.vault_snapshots as Record<string, unknown>;
+  basesReport.status = "running";
+  let firstProcess: ChildProcess | undefined;
+  let firstConnection: DevToolsConnection | undefined;
+  let secondProcess: ChildProcess | undefined;
+  let secondConnection: DevToolsConnection | undefined;
+  let sourceHashes: Record<string, GroupOrderSourceHash> | undefined;
+  try {
+    const fixtureSetup = await createGroupOrderReferenceFixture();
+    const fixture = fixtureSetup.fixture;
+    sourceHashes = fixtureSetup.sourceHashes;
+    const fixturePaths = Object.keys(sourceHashes).sort((left, right) => left.localeCompare(right, "en"));
+    const firstViews: Record<string, GroupOrderScenarioObservation> = {};
+    const reopenedViews: Record<string, GroupOrderScenarioObservation> = {};
+    const firstSourceHashesByScenario: Record<string, Record<string, GroupOrderSourceHash>> = {};
+    const reopenedSourceHashesByScenario: Record<string, Record<string, GroupOrderSourceHash>> = {};
+    const firstSession: Record<string, unknown> = {
+      source_hashes_before_open: sourceHashes,
+      views: firstViews,
+      source_hashes_after_each_view: firstSourceHashesByScenario,
+    };
+    const secondSession: Record<string, unknown> = {
+      source_hashes_before_reopen: sourceHashes,
+      views: reopenedViews,
+      source_hashes_after_each_view: reopenedSourceHashesByScenario,
+    };
+    basesReport.first_session = firstSession;
+    basesReport.second_session = secondSession;
+    const scenarioReport = fixture.scenarios.map((scenario) => ({
+      id: scenario.id,
+      base_path: scenario.base_path,
+      source_format: scenario.source_format,
+      layout: scenario.layout,
+      group_by_property: scenario.group_by_property ?? null,
+      coverage: scenario.coverage,
+      first_open_observation: null as GroupOrderScenarioObservation | null,
+      reopen_observation: null as GroupOrderScenarioObservation | null,
+    }));
+    basesReport.scenarios = scenarioReport;
+    basesReport.source_hashes_before_open = sourceHashes;
+    basesReport.source_hashes_before_reopen = sourceHashes;
+    snapshots.group_order_seed = await snapshotTree(groupOrderVaultRoot);
+    await assertGroupOrderSourceHashes(sourceHashes, "before-first-open");
+    await saveReport();
+
+    firstProcess = await createObsidianProfile(profileDirectory, 9228, "obsidian-group-order-first-open.log");
+    const first = await connectObsidian(9228);
+    firstConnection = first.connection;
+    firstSession.devtools_browser = first.browserVersion;
+    firstSession.first_target = {title: first.target.title ?? "", url: first.target.url ?? ""};
+    firstSession.source_hashes_after_startup = await assertGroupOrderSourceHashes(sourceHashes, "first-open-after-startup");
+    const firstRunBody = await waitForRenderer(
+      firstConnection,
+      "document.body?.innerText ?? ''",
+      (body) => body.includes("Open folder as vault"),
+      "Obsidian's first-run C07.3 groupOrder reference vault screen",
+    );
+    firstSession.first_run_text = firstRunBody.slice(0, 2_000);
+    await captureObsidianScreenshot(firstConnection, "obsidian-group-order-first-run.png");
+    firstConnection = await chooseVaultDirectory(firstConnection, 9228, {
+      targetRoot: groupOrderVaultRoot,
+      reporter: basesReport,
+      screenshotPrefix: "obsidian-group-order",
+    });
+    await chooseRestrictedMode(firstConnection, firstSession, groupOrderVaultName, "Synthetic C07.3 groupOrder fixture.");
+    firstSession.source_hashes_after_vault_open = await assertGroupOrderSourceHashes(sourceHashes, "first-open-after-vault-selection");
+
+    for (const scenario of fixture.scenarios) {
+      firstViews[scenario.id] = await captureGroupOrderScenario(firstConnection, scenario, fixturePaths, "first-open");
+      const scenarioEntry = scenarioReport.find((entry) => entry.id === scenario.id)!;
+      scenarioEntry.first_open_observation = firstViews[scenario.id];
+      firstSourceHashesByScenario[scenario.id] = await assertGroupOrderSourceHashes(sourceHashes, `first-open-${scenario.id}`);
+      await saveReport();
+    }
+    firstSession.source_hashes_before_shutdown = await assertGroupOrderSourceHashes(sourceHashes, "first-open-before-shutdown");
+    await saveReport();
+    await delay(2_000);
+    await stopProcess(firstProcess, firstConnection);
+    firstProcess = undefined;
+    firstConnection = undefined;
+    snapshots.group_order_after_first_close = await snapshotTree(groupOrderVaultRoot);
+    firstSession.source_hashes_after_shutdown = await assertGroupOrderSourceHashes(sourceHashes, "first-open-after-shutdown");
+    await saveReport();
+
+    secondSession.source_hashes_before_reopen = await assertGroupOrderSourceHashes(sourceHashes, "before-reopen");
+    secondProcess = await createObsidianProfile(profileDirectory, 9229, "obsidian-group-order-reopen.log");
+    const second = await connectObsidian(9229);
+    secondConnection = second.connection;
+    secondSession.devtools_browser = second.browserVersion;
+    secondSession.first_target = {title: second.target.title ?? "", url: second.target.url ?? ""};
+    secondSession.source_hashes_after_startup = await assertGroupOrderSourceHashes(sourceHashes, "reopen-after-startup");
+    await chooseRestrictedMode(secondConnection, secondSession, groupOrderVaultName, "Synthetic C07.3 groupOrder fixture.");
+    secondSession.workspace_view_immediately_after_startup = await secondConnection.evaluateJson<{
+      active_file_path: string | null;
+      active_view_type: string | null;
+      title: string;
+      body: string;
+    }>(`(() => {
+      const view = window.app?.workspace?.activeLeaf?.view;
+      const root = document.querySelector('.workspace-leaf.mod-active') ?? document.body;
+      return {
+        active_file_path: view?.file?.path ?? null,
+        active_view_type: view?.getViewType?.() ?? null,
+        title: document.title,
+        body: (root?.innerText ?? '').slice(0, 4_000),
+      };
+    })()`);
+    await captureObsidianScreenshot(secondConnection, "obsidian-group-order-workspace-startup.png");
+    secondSession.source_hashes_after_vault_restore = await assertGroupOrderSourceHashes(sourceHashes, "reopen-after-vault-restore");
+    await saveReport();
+
+    for (const scenario of fixture.scenarios) {
+      reopenedViews[scenario.id] = await captureGroupOrderScenario(secondConnection, scenario, fixturePaths, "reopen");
+      const scenarioEntry = scenarioReport.find((entry) => entry.id === scenario.id)!;
+      scenarioEntry.reopen_observation = reopenedViews[scenario.id];
+      reopenedSourceHashesByScenario[scenario.id] = await assertGroupOrderSourceHashes(sourceHashes, `reopen-${scenario.id}`);
+      await saveReport();
+    }
+    secondSession.source_hashes_before_shutdown = await assertGroupOrderSourceHashes(sourceHashes, "reopen-before-shutdown");
+    await saveReport();
+    await delay(2_000);
+    await stopProcess(secondProcess, secondConnection);
+    secondProcess = undefined;
+    secondConnection = undefined;
+    snapshots.group_order_after_reopen = await snapshotTree(groupOrderVaultRoot);
+    const finalSourceHashes = await assertGroupOrderSourceHashes(sourceHashes, "reopen-after-shutdown");
+    basesReport.source_hashes_after_reopen = finalSourceHashes;
+    basesReport.source_hashes_unchanged_across_both_sessions = isDeepStrictEqual(sourceHashes, finalSourceHashes);
+
+    const comparableObservation = (view: GroupOrderScenarioObservation) => ({
+      requested_file_path: view.requested_file_path,
+      selection_succeeded: view.selection_succeeded,
+      active_file_path: view.active_file_path,
+      active_view_type: view.active_view_type,
+      state_settled: view.state_settled,
+      title: view.title,
+      body: view.body,
+      ordered_group_headings: view.ordered_group_headings,
+      groups: view.groups.map((group) => ({heading_text: group.heading_text, member_paths: group.member_paths})),
+      ungrouped_visible_file_paths: view.ungrouped_visible_file_paths,
+      unassigned_visible_file_paths: view.unassigned_visible_file_paths,
+      visible_fixture_path_links: view.visible_fixture_path_links.map((link) => ({path: link.path, text: link.text})),
+      visible_error_texts: view.visible_error_texts,
+      notices: view.notices,
+      error_surface_classification: view.error_surface_classification,
+      extraction_ambiguous: view.extraction_ambiguous,
+      ambiguity_reasons: view.ambiguity_reasons,
+    });
+    const scenarioComparison: Record<string, boolean> = {};
+    const scenarioAcceptance: Record<string, boolean> = {};
+    const incompleteScenarios: Array<{id: string; stage: string; reasons: string[]}> = [];
+    for (const scenario of fixture.scenarios) {
+      const firstView = firstViews[scenario.id];
+      const reopenedView = reopenedViews[scenario.id];
+      const complete = (view: GroupOrderScenarioObservation | undefined, expectedStage: "first-open" | "reopen"): boolean => {
+        if (!view) return false;
+        const expectedPaths = view.visible_fixture_path_links.map((entry) => entry.path).sort();
+        const mappedPaths = [...view.groups.flatMap((group) => group.member_paths), ...view.ungrouped_visible_file_paths].sort();
+        const valid = view.stage === expectedStage
+          && view.requested_file_path === scenario.base_path
+          && view.selection_succeeded
+          && view.active_file_path === scenario.base_path
+          && (view.active_view_type === "bases" || hasExplicitVisibleGroupOrderParseError(view))
+          && view.state_settled
+          && !view.extraction_ambiguous
+          && view.unassigned_visible_file_paths.length === 0
+          && isDeepStrictEqual(expectedPaths, mappedPaths)
+          && Boolean(view.screenshot)
+          && !view.screenshot_error
+          && !view.probe_error;
+        if (!valid) {
+          incompleteScenarios.push({
+            id: scenario.id,
+            stage: expectedStage,
+            reasons: [
+              ...(!view.selection_succeeded || view.active_file_path !== scenario.base_path ? ["exact target selection was not captured"] : []),
+              ...(!view.state_settled ? ["visible state did not settle"] : []),
+              ...(view.extraction_ambiguous || view.unassigned_visible_file_paths.length > 0 ? ["group/member extraction was incomplete or ambiguous"] : []),
+              ...(!isDeepStrictEqual(expectedPaths, mappedPaths) ? ["visible fixture paths do not equal the mapped group/member paths"] : []),
+              ...(!view.screenshot || view.screenshot_error ? ["required screenshot is missing"] : []),
+              ...(view.probe_error ? [view.probe_error] : []),
+            ],
+          });
+        }
+        return valid;
+      };
+      const firstComplete = complete(firstView, "first-open");
+      const reopenedComplete = complete(reopenedView, "reopen");
+      const stable = firstComplete && reopenedComplete
+        && isDeepStrictEqual(comparableObservation(firstView), comparableObservation(reopenedView));
+      scenarioComparison[scenario.id] = stable;
+      scenarioAcceptance[scenario.id] = firstComplete && reopenedComplete && stable;
+    }
+    basesReport.scenario_comparison_stable_across_reopen = scenarioComparison;
+    basesReport.scenario_acceptance_passed = scenarioAcceptance;
+    basesReport.incomplete_scenarios = incompleteScenarios;
+    basesReport.source_preservation_passed = basesReport.source_hashes_unchanged_across_both_sessions === true
+      && ((basesReport.source_hash_checkpoints as Array<{unchanged: boolean}> | undefined) ?? []).every((checkpoint) => checkpoint.unchanged);
+    basesReport.capture_status = "completed";
+    if (!basesReport.source_preservation_passed || !Object.values(scenarioAcceptance).every(Boolean)) {
+      throw new Error(`C07.3 groupOrder first-open/reopen acceptance failed: ${JSON.stringify({source_preservation_passed: basesReport.source_preservation_passed, scenario_acceptance: scenarioAcceptance, incomplete_scenarios: incompleteScenarios}).slice(0, 12_000)}`);
+    }
+    basesReport.status = "captured-reference-only";
+    basesReport.rust_parity_claimed = false;
+    report.reference_capture_summary = {
+      status: "completed",
+      c07_2_capture_status: (report.bases_group_direction_reference as Record<string, unknown>).status,
+      c07_3_group_order_capture_status: basesReport.status,
+      rust_parity_claimed: false,
+      interpretation: "Pinned-app C07.3 observations were captured on this runner. A completed reference capture does not establish Rust groupOrder parity.",
+    };
+    await saveReport();
+  } catch (error) {
+    basesReport.status = "failed";
+    basesReport.error = error instanceof Error ? error.message : String(error);
+    if (sourceHashes) {
+      try {
+        basesReport.source_hashes_at_failure = await assertGroupOrderSourceHashes(sourceHashes, "failure");
+      } catch (sourceError) {
+        basesReport.source_preservation_failure = sourceError instanceof Error ? sourceError.message : String(sourceError);
+      }
+    }
+    await saveReport();
+    throw error;
+  } finally {
+    await stopProcess(firstProcess, firstConnection).catch(() => undefined);
+    await stopProcess(secondProcess, secondConnection).catch(() => undefined);
+  }
+}
+
 async function run(): Promise<void> {
   await mkdir(reportDirectory, {recursive: true});
   await mkdir(workDirectory, {recursive: true});
@@ -9157,6 +10096,7 @@ async function run(): Promise<void> {
 
     await runCanvasReferenceProbe();
     await runBasesDirectionReferenceProbe();
+    await runBasesGroupOrderReferenceProbe();
 
     report.status = "passed";
     report.completed_at = new Date().toISOString();
