@@ -803,41 +803,56 @@ async function clickManualRefreshUntilRequested(
   previousRequestCount: number,
 ): Promise<string> {
   const clickActions: string[] = [];
+  const deadline = Date.now() + 30_000;
   let lastClickAt = 0;
-  const result = await waitFor(
-    "OpenObsidian to receive the explicit manual note-list refresh",
-    async () => {
-      const diagnostics = await readOpenObsidianRefreshDiagnostics();
-      const manualRequest = diagnostics.requests.find((request, index) => (
-        index >= previousRequestCount && request.source === "manual_button"
-      ));
-      if (manualRequest) return {diagnostics, manualRequest};
+  let diagnostics = await readOpenObsidianRefreshDiagnostics();
+  const findManualRequest = (value: OpenObsidianRefreshDiagnostics) => value.requests.find((request, index) => (
+    index >= previousRequestCount && request.source === "manual_button"
+  ));
 
-      const latestRequest = diagnostics.requests.at(-1);
-      const latestResult = diagnostics.consumedResults.at(-1);
-      const receiverBusy = diagnostics.receiverStates.at(-1)?.busy ?? false;
-      const latestRequestConsumed = !latestRequest || Boolean(latestResult && latestResult.line > latestRequest.line);
-      if (
-        !receiverBusy
-        && latestRequestConsumed
-        && clickActions.length < 4
-        && Date.now() - lastClickAt >= 500
-      ) {
-        clickActions.push(await invokeNativeAccessibleControl(
-          child,
-          windowId,
-          "Refresh note list",
-          "Markdown files found",
-          true,
-        ));
-        lastClickAt = Date.now();
-      }
-      return {diagnostics, manualRequest: null};
-    },
-    (value) => value.manualRequest !== null,
-    30_000,
+  while (Date.now() < deadline) {
+    const manualRequest = findManualRequest(diagnostics);
+    if (manualRequest) {
+      return clickActions.at(-1) ?? `Manual refresh request observed at log line ${manualRequest.line}`;
+    }
+
+    const latestRequest = diagnostics.requests.at(-1);
+    const latestResult = diagnostics.consumedResults.at(-1);
+    const receiverBusy = diagnostics.receiverStates.at(-1)?.busy ?? false;
+    const latestRequestConsumed = !latestRequest || Boolean(latestResult && latestResult.line > latestRequest.line);
+    if (
+      !receiverBusy
+      && latestRequestConsumed
+      && clickActions.length < 4
+      && Date.now() - lastClickAt >= 500
+    ) {
+      clickActions.push(await invokeNativeAccessibleControl(
+        child,
+        windowId,
+        "Refresh note list",
+        "Markdown files found",
+        true,
+      ));
+      lastClickAt = Date.now();
+      // The native click can take long enough for a request to arrive after
+      // the pre-click diagnostics snapshot. Always read the log again after it.
+      diagnostics = await readOpenObsidianRefreshDiagnostics();
+      const requestAfterClick = findManualRequest(diagnostics);
+      if (requestAfterClick) return clickActions.at(-1)!;
+    } else {
+      diagnostics = await readOpenObsidianRefreshDiagnostics();
+    }
+
+    if (Date.now() < deadline) await delay(250);
+  }
+
+  diagnostics = await readOpenObsidianRefreshDiagnostics();
+  const finalManualRequest = findManualRequest(diagnostics);
+  if (finalManualRequest) return clickActions.at(-1) ?? `Manual refresh request observed at log line ${finalManualRequest.line}`;
+  throw new Error(
+    `Timed out waiting for OpenObsidian to receive the explicit manual note-list refresh; `
+    + `click_actions=${JSON.stringify(clickActions)}; final=${JSON.stringify({diagnostics, manualRequest: null})}`,
   );
-  return clickActions.at(-1) ?? `Manual refresh request observed at log line ${result.manualRequest?.line ?? "unknown"}`;
 }
 
 async function waitForDevToolsVersion(port: number): Promise<{Browser?: string; "Protocol-Version"?: string}> {
@@ -1434,7 +1449,7 @@ async function clickMacOSFirstRunOpenButtonVisually(
   const openRight = open.boundingBox.x + open.boundingBox.width;
   const openTop = 1 - (open.boundingBox.y + open.boundingBox.height);
   const openBottom = 1 - open.boundingBox.y;
-  const displayScript = `import AppKit\nimport CoreGraphics\nimport Foundation\nlet screens = NSScreen.screens\nguard screens.count == 1 else { fatalError("Display metrics require the single-display macOS CI screen") }\nguard let screenNumber = screens[0].deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber else { fatalError("Could not read the macOS CI screen number") }\nlet displayID = CGDirectDisplayID(screenNumber.uint32Value)\nlet bounds = CGDisplayBounds(displayID)\nguard bounds.width > 0, bounds.height > 0 else { fatalError("Could not read the selected macOS display bounds") }\nprint(String(screens.count) + "," + String(bounds.origin.x) + "," + String(bounds.origin.y) + "," + String(bounds.width) + "," + String(bounds.height))`;
+  const displayScript = `import AppKit\nimport CoreGraphics\nimport Foundation\nlet screens = NSScreen.screens\nguard screens.count == 1 else { fatalError("Display metrics require the single-display macOS CI screen") }\nguard let screenNumber = screens[0].deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber else { fatalError("Could not read the macOS CI screen number") }\nlet displayID = CGDirectDisplayID(screenNumber.uint32Value)\nlet bounds = CGDisplayBounds(displayID)\nguard bounds.width > 0, bounds.height > 0 else { fatalError("Could not read the selected macOS display bounds") }\nlet screenCountText = String(screens.count)\nlet originXText = String(bounds.origin.x)\nlet originYText = String(bounds.origin.y)\nlet widthText = String(bounds.width)\nlet heightText = String(bounds.height)\nlet fields = [screenCountText, originXText, originYText, widthText, heightText]\nprint(fields.joined(separator: ","))`;
   let displayOutput: string;
   try {
     displayOutput = execFileSync("swift", ["-e", displayScript], {encoding: "utf8", stdio: ["ignore", "pipe", "pipe"]}).trim();
@@ -2140,6 +2155,22 @@ function windowsSelectionConfirmsPath(action: unknown, expectedPath: string): bo
     return selection.name === expectedPath
       && selection.control_type === "ControlType.RadioButton"
       && selection.action === "SelectionItemPattern.Select";
+  } catch {
+    return false;
+  }
+}
+
+function windowsSelectorOpenConfirms(action: unknown): boolean {
+  if (typeof action !== "string") return false;
+  try {
+    const opening = JSON.parse(action) as {
+      action?: unknown;
+      control_type?: unknown;
+      name?: unknown;
+    };
+    return opening.name === "Note to inspect"
+      && opening.control_type === "ControlType.Button"
+      && opening.action === "InvokePattern.Invoke";
   } catch {
     return false;
   }
@@ -8931,11 +8962,24 @@ async function selectReferenceNoteForEmbedResolution(
   }
 
   if (process.platform === "win32") {
+    const collapsedSelectorScreenshot = await captureOpenObsidianScreenshot(
+      windowId,
+      child,
+      "openobsidian-authored-image-note-selector-collapsed",
+    );
+    const selectorOpenAction = await invokeNativeAccessibleControl(child, windowId, "Note to inspect", currentPath);
+    if (!windowsSelectorOpenConfirms(selectorOpenAction)) {
+      throw new Error(`Windows UI Automation did not confirm opening the exact note selector: ${selectorOpenAction}`);
+    }
     const openMenuScreenshot = await captureOpenObsidianScreenshot(
       windowId,
       child,
       "openobsidian-authored-image-note-selector",
     );
+    const targetPathVisibleByOcr = ocrTextContainsPhrase(openMenuScreenshot.ocrText, targetPath);
+    if (!targetPathVisibleByOcr) {
+      throw new Error(`Windows screenshot OCR did not confirm that ${targetPath} is visible in the expanded note selector`);
+    }
     const selectionAction = await invokeNativeAccessibleControl(child, windowId, targetPath, undefined, true);
     if (!windowsSelectionConfirmsPath(selectionAction, targetPath)) {
       throw new Error(`Windows UI Automation did not confirm exact authored-note selection: ${selectionAction}`);
@@ -8946,8 +8990,10 @@ async function selectReferenceNoteForEmbedResolution(
     }
     return {
       strategy: "windows_ui_automation_exact_path_from_expanded_selector",
+      collapsed_selector_screenshot: relative(reportDirectory, collapsedSelectorScreenshot.pngPath),
       expanded_selector_screenshot: relative(reportDirectory, openMenuScreenshot.pngPath),
-      target_path_visible_by_ocr: ocrTextContainsPhrase(openMenuScreenshot.ocrText, targetPath),
+      target_path_visible_by_ocr: targetPathVisibleByOcr,
+      selector_open_action: selectorOpenAction,
       selection_action: selectionAction,
       selector_dismiss_action: dismissAction,
       selector_dismiss_confirmed_closed: true,
@@ -9981,21 +10027,17 @@ async function runReferenceExternalNoteRename(
     .filter((entry) => entry.kind === "file" && entry.path.toLowerCase().endsWith(".md"))
     .map((entry) => entry.path)
     .sort((left, right) => left.localeCompare(right, "en"));
-  if (process.platform === "win32") {
-    renameReport.open_note_selector_action = await invokeNativeAccessibleControl(
-      child,
-      window.window_id,
-      "Note to inspect",
-      authoredNotePath,
-    );
-  }
-  renameReport.select_note_action = await selectReferenceNoteForEmbedResolution(
+  const renameNoteSelection = await selectReferenceNoteForEmbedResolution(
     child,
     window.window_id,
     authoredNotePath,
     externalRefreshMarkdownPath,
     sortedNotePaths,
   );
+  renameReport.select_note_action = renameNoteSelection;
+  if (process.platform === "win32") {
+    renameReport.open_note_selector_action = renameNoteSelection.selector_open_action;
+  }
   renameReport.exact_external_note_selected_before_rename = true;
   renameReport.read_source_action = await invokeNativeAccessibleControl(
     child,

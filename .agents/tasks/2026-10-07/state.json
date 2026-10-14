@@ -2,17 +2,18 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-14T09:43:47Z",
+  "updated_at": "2026-10-14T10:01:57Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "985af8aa18be53c285221b2ed21d4062e69b9f3d",
-  "current_milestone": "R2.8.121 cross-platform C07.3 capture repair (implementation and static review complete; ready for one milestone submission; origin/main remains at 985af8aa18be53c285221b2ed21d4062e69b9f3d)",
-  "next_action": "Commit the complete R2.8.121 package locally and push once to origin/main to submit this named milestone. Record the pushed SHA as implementation-complete / CI-pending, then keep origin/main fixed until all seven exact-SHA workflows and 20 jobs are terminal. Do not run local executable validation or push minor follow-ups.",
-  "push_status": "R2.8.120 is terminal and failed on exact SHA 985af8aa18be53c285221b2ed21d4062e69b9f3d: six of seven workflows and 17 of 20 jobs passed; the Linux, macOS, and Windows round-trip jobs failed. All seven workflows and 20 jobs are terminal, and origin/main remains exactly at this SHA. R2.8.120 is not achieved. Full exact-SHA results and platform artifacts are recorded in evidence/r2.8.120-attempt-1-985af8a.json. R2.8.121 is now implemented and independently reviewed as one complete cross-platform capture repair; it is ready for one milestone submission. No R2.8.121 CI run has started.",
+  "last_reconciled_head": "7210269101a81d6a8743ed70cb66f4d1ff2369fb",
+  "current_milestone": "R2.8.122 cross-platform round-trip harness repair (implementation-complete locally and independently statically reviewed; ready for one milestone submission)",
+  "next_action": "Commit the complete reviewed R2.8.122 package locally, verify origin/main still points to 7210269101a81d6a8743ed70cb66f4d1ff2369fb, then push once. Record the new exact SHA as implementation-complete / CI-pending and hold origin/main until all seven required workflows and 20 jobs are terminal. Do not run local executable validation or push minor follow-ups.",
+  "push_status": "R2.8.121 was submitted once to origin/main at exact SHA 7210269101a81d6a8743ed70cb66f4d1ff2369fb. Read-only GitHub Actions reconciliation confirms all seven expected workflows completed on that SHA: six succeeded and the Obsidian vault round-trip workflow failed; the 20-job breakdown is 17 passed and three platform round-trip failures. Rust CI, desktop build, plugin-renderer, loaded-plugin, quality, and inventory workflows passed. Failure details and three report artifacts are recorded in evidence/r2.8.121-attempt-1-7210269.json. R2.8.121 is not achieved. R2.8.122 bundles the Swift display-script, Linux manual-refresh diagnostics, and Windows selector open/rename caller repair for one reviewed submission.",
   "blockers": [
     "C07.3 pinned Obsidian reference behavior remains incomplete and Rust parity is not established. R2.8.119 failed all three platform round-trip jobs on exact SHA 2a18016de043ea8ec82529feabb4912d439efa2; see evidence/r2.8.119-attempt-1-2a18016.json. Do not claim Rust C07.3 parity or a full-fixture membership oracle from reference UI results.",
-    "R2.8.120 failed its terminal exact-SHA CI batch on 985af8aa18be53c285221b2ed21d4062e69b9f3d. Linux C07.3 table row diagnostics reject visible rows despite each uniquely matching an already captured fixture path; formula Kanban extraction records no card memberships although the screenshot shows the 5/4/4/0 cards. macOS display metrics failed before first-run picker interaction, and Windows stopped after picker closure when the host HWND changed. See evidence/r2.8.120-attempt-1-985af8a.json; keep C07.3 pending."
+    "R2.8.120 failed its terminal exact-SHA CI batch on 985af8aa18be53c285221b2ed21d4062e69b9f3d. Linux C07.3 table row diagnostics reject visible rows despite each uniquely matching an already captured fixture path; formula Kanban extraction records no card memberships although the screenshot shows the 5/4/4/0 cards. macOS display metrics failed before first-run picker interaction, and Windows stopped after picker closure when the host HWND changed. See evidence/r2.8.120-attempt-1-985af8a.json; keep C07.3 pending.",
+    "R2.8.121 is terminal/failed on exact SHA 7210269101a81d6a8743ed70cb66f4d1ff2369fb: six of seven required workflows and 17 of 20 jobs passed; the Linux, macOS, and Windows Obsidian round-trip jobs failed. All seven workflows/20 jobs are terminal. See evidence/r2.8.121-attempt-1-7210269.json; R2.8.122 groups the three focused harness repairs for one reviewed submission."
   ],
   "phases": {
     "R0": {
@@ -51,8 +52,8 @@
         "plugin-renderer"
       ],
       "implementation_sha": "15ee500b04be9acef86a1b5fbf3d1e0ccb5bf7b7",
-      "next_action": "R2.8.120 is terminal/failed on exact SHA 985af8aa18be53c285221b2ed21d4062e69b9f3d. R2.8.121 now has a complete implementation and independent static review; make one milestone submission, then use GitHub Actions as the only executable validation and keep the remote fixed until every required job is terminal.",
-      "implementation_sha_note": "15ee500b04be9acef86a1b5fbf3d1e0ccb5bf7b7 is the last accepted R2 Rust implementation milestone (R2.8.114); later R2.8.115–R2.8.119 milestones were reference-capture/harness work, and R2.8.119 failed."
+      "next_action": "R2.8.121 is terminal/failed on exact SHA 7210269101a81d6a8743ed70cb66f4d1ff2369fb. R2.8.122 is implementation-complete and independently statically reviewed, including both Windows selector callers and all existing exact-path/close gates; submit the complete repair once, then wait for all seven exact-SHA workflows and 20 jobs before any further push.",
+      "implementation_sha_note": "15ee500b04be9acef86a1b5fbf3d1e0ccb5bf7b7 is the last accepted R2 Rust implementation milestone (R2.8.114); R2.8.115–R2.8.121 are reference-capture/harness work, and R2.8.119, R2.8.120 and R2.8.121 failed."
     },
     "R3": {
       "status": "pending",
@@ -38348,9 +38349,9 @@
       "next_action": "R2.8.120 is terminal and failed; its exact-SHA platform evidence is reconciled in evidence/r2.8.120-attempt-1-985af8a.json. Implement and review the complete R2.8.121 cross-platform C07.3 repair locally, then make one push for that milestone."
     },
     "R2.8.121": {
-      "status": "ready_for_submission",
+      "status": "CI-terminal / failed",
       "starting_sha": "985af8aa18be53c285221b2ed21d4062e69b9f3d",
-      "implementation_sha": null,
+      "implementation_sha": "7210269101a81d6a8743ed70cb66f4d1ff2369fb",
       "scope": "Repair the terminal R2.8.120 macOS, Windows, and Linux C07.3 capture failures as one bounded cross-platform round-trip milestone. Resolve macOS display metrics through NSScreenNumber to CGDirectDisplayID and retain subprocess failure details; allow the Windows host HWND to change only after the recorded picker closes and the uniquely identified same-process host is visible; reconcile Linux pathless table-row diagnostics only through unique fixture, row, and in-scope result-link matches; tighten Kanban title hit testing to painted title-subtree targets and record reason-specific diagnostics.",
       "deliverable": "A reviewed C07.3 reference capture package with all 14 scenarios captured on first-open and reopen across Ubuntu, macOS, and Windows, preserving exact picker/path, stable-state, mapping, source-checkpoint, and fail-closed ambiguity gates.",
       "acceptance": [
@@ -38381,8 +38382,105 @@
         "windows_fallback": "passed: independent read-only review confirmed the recorded picker PID/HWND disappearance, unique visible same-process baseline-class host, UIA read-error gate, and unchanged exact canonical path verification.",
         "linux_c07_extractor": "passed: independent read-only review confirmed selectedResultRoot-scoped link counts and matching-row uniqueness across initial and fresh sweeps; pathless row mapping remains diagnostic-only and cannot create extracted membership. Kanban fallback hit tests require painted title-node descendants, retain existing path/identity/count gates, and report title count, caret result, range visibility, hit classes, and rejection reason. The review's row-self-candidate classification finding was fixed in both passes and confirmed."
       },
+      "attempts": [
+        {
+          "attempt": 1,
+          "source_sha": "7210269101a81d6a8743ed70cb66f4d1ff2369fb",
+          "submitted_at": "2026-10-14T09:44:46Z",
+          "outcome": "failed",
+          "workflow_runs": {
+            "OpenObsidian Rust CI": 38544601707,
+            "OpenObsidian desktop build": 38544601709,
+            "OpenObsidian plugin renderer matrix": 38544601804,
+            "Obsidian vault round-trip acceptance": 38544601822,
+            "OpenObsidian loaded plugin workflows": 38544602072,
+            "OpenObsidian quality": 38544601737,
+            "Rust migration inventory": 38544601701
+          },
+          "workflow_urls": {
+            "OpenObsidian Rust CI": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38544601707",
+            "OpenObsidian desktop build": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38544601709",
+            "OpenObsidian plugin renderer matrix": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38544601804",
+            "Obsidian vault round-trip acceptance": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38544601822",
+            "OpenObsidian loaded plugin workflows": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38544602072",
+            "OpenObsidian quality": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38544601737",
+            "Rust migration inventory": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38544601701"
+          },
+          "job_ids": {
+            "OpenObsidian Rust CI": [115787434993, 115787435434, 115787435454, 115787435664],
+            "OpenObsidian desktop build": [115787436047, 115787436458, 115787436501],
+            "OpenObsidian plugin renderer matrix": [115787437284, 115787437424, 115787437567],
+            "Obsidian vault round-trip acceptance": [115787436806, 115787436899, 115787436951],
+            "OpenObsidian loaded plugin workflows": [115787437899, 115787438249, 115787438335],
+            "OpenObsidian quality": [115787436382, 115787436657, 115787436884],
+            "Rust migration inventory": [115787435372]
+          },
+          "status_snapshot": {
+            "observed_at": "2026-10-14T09:45:15Z",
+            "expected_workflows": 7,
+            "completed_successful_workflows": 1,
+            "failed_workflows": 0,
+            "in_progress_workflows": 5,
+            "queued_workflows": 1,
+            "expected_jobs": 20,
+            "passed_jobs": 2,
+            "failed_jobs": 0,
+            "in_progress_jobs": 17,
+            "queued_jobs": 1,
+            "remote_tip": "7210269101a81d6a8743ed70cb66f4d1ff2369fb"
+          },
+          "final_status_snapshot": {
+            "observed_at": "2026-10-14T09:55:29Z",
+            "expected_workflows": 7,
+            "completed_successful_workflows": 6,
+            "failed_workflows": 1,
+            "in_progress_workflows": 0,
+            "queued_workflows": 0,
+            "expected_jobs": 20,
+            "passed_jobs": 17,
+            "failed_jobs": 3,
+            "in_progress_jobs": 0,
+            "queued_jobs": 0,
+            "remote_tip": "7210269101a81d6a8743ed70cb66f4d1ff2369fb"
+          },
+          "evidence_path": "evidence/r2.8.121-attempt-1-7210269.json"
+        }
+      ],
+      "ci_failure_summary": {
+        "macOS": "Swift display-metrics script type-check failure in the chained String concatenation; capture stopped before the picker.",
+        "Linux": "The harness timed out from a stale pre-click diagnostics snapshot; the log shows the manual refresh request and successful result afterward.",
+        "Windows": "The image-embed step looked for Untitled.md before opening the Note to inspect selector."
+      },
+      "next_action": "R2.8.121 is terminal and failed; all seven workflows/20 jobs are reconciled in evidence/r2.8.121-attempt-1-7210269.json. The complete R2.8.122 cross-platform harness repair is statically reviewed and ready for one submission."
+    },
+    "R2.8.122": {
+      "status": "ready_for_submission",
+      "starting_sha": "7210269101a81d6a8743ed70cb66f4d1ff2369fb",
+      "implementation_sha": null,
+      "scope": "Repair the three terminal R2.8.121 round-trip harness failures as one bounded cross-platform milestone: avoid Swift display-metrics type-check complexity by building the same five CSV fields separately; reread refresh diagnostics after slow native clicks and at timeout so an already-logged manual request is not lost; and explicitly open and confirm the exact Windows Note to inspect button before selecting the authored note through UIA.",
+      "deliverable": "A reviewed round-trip harness repair that preserves all existing exact-path, expected-entry-count, successful refresh-result, image-resolution, and fail-closed acceptance gates while allowing the same C07.3/C01.2 scenarios to complete on macOS, Linux, and Windows.",
+      "acceptance": [
+        "The macOS Swift display-metrics helper compiles in CI and still emits exactly five finite comma-delimited fields in screen-count, origin-x, origin-y, width, height order.",
+        "The Linux manual refresh is accepted only after a new manual_button request is observed and its successful expected-count result is consumed while the refresh receiver is idle and settled; diagnostics are refreshed after each click and timeout.",
+        "The Windows authored-note image-embed and rename flows use one shared selector-open action each: record the collapsed selector, invoke and confirm Note to inspect / Button / InvokePattern.Invoke, capture the expanded selector and require OCR to show the exact target path before selecting its exact RadioButton, then confirm the same selector closed afterward.",
+        "All seven required workflows and 20 jobs pass for the exact submitted SHA; artifact hashes and platform results are reconciled. No local executable validation is used."
+      ],
+      "required_workflows": [
+        "OpenObsidian desktop build",
+        "OpenObsidian loaded plugin workflows",
+        "OpenObsidian plugin renderer matrix",
+        "OpenObsidian quality",
+        "Obsidian vault round-trip acceptance",
+        "OpenObsidian Rust CI",
+        "Rust migration inventory"
+      ],
+      "platforms": ["Ubuntu 24.04", "macOS latest", "Windows latest"],
+      "expected_evidence_path_template": "evidence/r2.8.122-attempt-<n>-<sha>.json",
+      "static_reviews": {
+        "macos_linux_windows_harness": "passed: independent re-review confirmed the shared helper opens the Windows selector once for both image-embed and rename, requires exact InvokePattern.Invoke and exact target-path OCR before RadioButton selection, and retains strict selected-path and close gates. Linux post-click/final rereads and downstream expected-count/idle/settling/visible-count checks remain intact; Swift CSV fields remain in order. Request/result pairing is line-order based by existing log design. Windows visual fallback cannot satisfy the exact-Invoke predicate and therefore fails closed."
+      },
       "attempts": [],
-      "next_action": "Create one local R2.8.121 milestone commit and push it once to origin/main. Record its exact SHA as implementation-complete / CI-pending and wait until all seven required workflows and 20 jobs are terminal before another push."
+      "next_action": "Commit the complete repair package locally and push it once to origin/main; record the exact SHA as implementation-complete / CI-pending, then hold origin/main until all seven required workflows and 20 jobs are terminal."
     }
   },
   "ci_preparation": {

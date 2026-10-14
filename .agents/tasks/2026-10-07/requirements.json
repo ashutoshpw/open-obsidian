@@ -3370,10 +3370,13 @@
         ".agents/tasks/2026-10-07/evidence/r2.8.115-attempt-1-30d0ad5.json",
         ".agents/tasks/2026-10-07/evidence/r2.8.116-attempt-1-f1dc540.json",
         ".agents/tasks/2026-10-07/evidence/r2.8.117-attempt-1-fd1d449.json",
-        ".agents/tasks/2026-10-07/evidence/r2.8.118-attempt-1-5ab14b5.json"
+        ".agents/tasks/2026-10-07/evidence/r2.8.118-attempt-1-5ab14b5.json",
+        ".agents/tasks/2026-10-07/evidence/r2.8.119-attempt-1-2a18016.json",
+        ".agents/tasks/2026-10-07/evidence/r2.8.120-attempt-1-985af8a.json",
+        ".agents/tasks/2026-10-07/evidence/r2.8.121-attempt-1-7210269.json"
       ],
       "tested_source_tree": null,
-      "blocker": "R2.8.118 attempt 1 is terminal and not accepted on exact SHA 5ab14b51f306deccb2377c46470435ee628ed004: six of seven workflows and 17 of 20 jobs passed, while all three platform round-trip jobs failed. Ubuntu produced no structured observations for all 14 scenarios because the async renderer result was serialized before awaiting; macOS failed to establish reliable native picker activation/identity; Windows stopped before C07.3 with a PowerShell ParserError. See .agents/tasks/2026-10-07/evidence/r2.8.118-attempt-1-5ab14b5.json. Keep C07.3 pending until a later exact-SHA three-platform capture meets the count-to-unique-visible-path and exact empty-observation criteria; do not claim Rust parity or a full-fixture membership oracle from reference UI results.",
+      "blocker": "R2.8.121 attempt 1 is terminal and not accepted on exact SHA 7210269101a81d6a8743ed70cb66f4d1ff2369fb: six of seven workflows and 17 of 20 jobs passed, while all three platform round-trip jobs failed. Linux timeout diagnostics missed a manual refresh request because the harness used a stale pre-click snapshot even though the log recorded the request and successful three-entry result; macOS stopped before picker interaction on a Swift type-checking error in the display-metrics script; Windows tried to select Untitled.md before opening the Note to inspect selector. See .agents/tasks/2026-10-07/evidence/r2.8.121-attempt-1-7210269.json. R2.8.122 bundles the related harness repairs and is pending exact-SHA CI. Keep C07.3 pending until a later exact-SHA three-platform capture meets the count-to-unique-visible-path and exact empty-observation criteria; do not claim Rust parity or a full-fixture membership oracle from reference UI results.",
       "gate_class": "implementation",
       "decision_id": "D03",
       "legacy_status": "implemented",
@@ -10328,6 +10331,11 @@
           "kind": "rust-migration-goal",
           "version": "2026-10-14-no-minor-repair-push",
           "sha256": "1185a710634269472513fec045fc07eeb1d1697c28a06f374740c707ff5935ce"
+        },
+        {
+          "kind": "rust-migration-goal",
+          "version": "2026-10-14-explicit-milestone-submission-cadence",
+          "sha256": "9f52c70fc56d565e7337a951925178942d4df7a4c88a3c7e195051ef6356e8db"
         }
       ],
       "applicable_platforms": [
