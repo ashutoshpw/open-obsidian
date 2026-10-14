@@ -1,0 +1,361 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.8.120",
+  "attempt": 1,
+  "source_sha": "985af8aa18be53c285221b2ed21d4062e69b9f3d",
+  "submitted_at": "2026-10-14T09:06:30Z",
+  "status_snapshot_at": "2026-10-14T09:24:51Z",
+  "status": "failed",
+  "remote_tip": "985af8aa18be53c285221b2ed21d4062e69b9f3d",
+  "expected_workflow_count": 7,
+  "expected_job_count": 20,
+  "all_runs_match_source_sha": true,
+  "workflows": [
+    {
+      "name": "Rust migration inventory",
+      "run_id": 38539998626,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38539998626",
+      "head_sha": "985af8aa18be53c285221b2ed21d4062e69b9f3d",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "id": 115772107265,
+          "name": "inventory",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38539998626/job/115772107265",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "Obsidian vault round-trip acceptance",
+      "run_id": 38539998344,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38539998344",
+      "head_sha": "985af8aa18be53c285221b2ed21d4062e69b9f3d",
+      "status": "completed",
+      "conclusion": "failure",
+      "jobs": [
+        {
+          "id": 115772106020,
+          "name": "Obsidian 1.14.4 vault round-trip on macos-latest",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38539998344/job/115772106020",
+          "status": "completed",
+          "conclusion": "failure"
+        },
+        {
+          "id": 115772106242,
+          "name": "Obsidian 1.14.4 vault round-trip on windows-latest",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38539998344/job/115772106242",
+          "status": "completed",
+          "conclusion": "failure"
+        },
+        {
+          "id": 115772106399,
+          "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38539998344/job/115772106399",
+          "status": "completed",
+          "conclusion": "failure"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 38539998313,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38539998313",
+      "head_sha": "985af8aa18be53c285221b2ed21d4062e69b9f3d",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "id": 115772106456,
+          "name": "windows-latest",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38539998313/job/115772106456",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 115772106823,
+          "name": "macos-latest",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38539998313/job/115772106823",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 115772106851,
+          "name": "ubuntu-latest",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38539998313/job/115772106851",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 38539998402,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38539998402",
+      "head_sha": "985af8aa18be53c285221b2ed21d4062e69b9f3d",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "id": 115772106697,
+          "name": "ubuntu-latest",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38539998402/job/115772106697",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 115772107025,
+          "name": "macos-latest",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38539998402/job/115772107025",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 115772107476,
+          "name": "windows-latest",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38539998402/job/115772107476",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 38539998327,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38539998327",
+      "head_sha": "985af8aa18be53c285221b2ed21d4062e69b9f3d",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "id": 115772106254,
+          "name": "minimum supported Rust (1.95)",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38539998327/job/115772106254",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 115772106511,
+          "name": "rust (macos-latest)",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38539998327/job/115772106511",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 115772106547,
+          "name": "rust (ubuntu-latest)",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38539998327/job/115772106547",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 115772106780,
+          "name": "rust (windows-latest)",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38539998327/job/115772106780",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 38539998337,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38539998337",
+      "head_sha": "985af8aa18be53c285221b2ed21d4062e69b9f3d",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "id": 115772106656,
+          "name": "macos-latest",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38539998337/job/115772106656",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 115772107074,
+          "name": "windows-latest",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38539998337/job/115772107074",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 115772107334,
+          "name": "ubuntu-latest",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38539998337/job/115772107334",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 38539998273,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38539998273",
+      "head_sha": "985af8aa18be53c285221b2ed21d4062e69b9f3d",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "id": 115772106060,
+          "name": "ubuntu-latest",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38539998273/job/115772106060",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 115772106377,
+          "name": "windows-latest",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38539998273/job/115772106377",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 115772106412,
+          "name": "macos-latest",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38539998273/job/115772106412",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ],
+  "counts": {
+    "workflows": 7,
+    "successful_workflows": 6,
+    "failed_workflows": 1,
+    "in_progress_workflows": 0,
+    "queued_workflows": 0,
+    "jobs": 20,
+    "successful_jobs": 17,
+    "failed_jobs": 3,
+    "in_progress_jobs": 0,
+    "queued_jobs": 0
+  },
+  "notes": [
+    "R2.8.120 was pushed once to origin/main at this exact SHA. All seven required workflows and 20 jobs are terminal; origin/main remains at this SHA.",
+    "The milestone failed because all three Obsidian round-trip platform jobs failed. Do not claim C07.3 capture completion or Rust parity.",
+    "No local tests, builds, formatting, linting, type checks, runtime probes, or application launches were used for validation. GitHub Actions is the only executable validation source."
+  ],
+  "status_reconciliations": [
+    {
+      "observed_at": "2026-10-14T09:19:05Z",
+      "source_sha": "985af8aa18be53c285221b2ed21d4062e69b9f3d",
+      "remote_tip": "985af8aa18be53c285221b2ed21d4062e69b9f3d",
+      "workflow_counts": {
+        "expected": 7,
+        "completed_successfully": 6,
+        "in_progress": 1,
+        "queued": 0
+      },
+      "job_counts": {
+        "expected": 20,
+        "passed": 17,
+        "failed": 2,
+        "in_progress": 1,
+        "queued": 0
+      },
+      "active_jobs": [
+        {
+          "id": 115772106399,
+          "workflow_run_id": 38539998344,
+          "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38539998344/job/115772106399"
+        }
+      ],
+      "failed_jobs": [
+        {
+          "id": 115772106020,
+          "platform": "macOS",
+          "stage": "first_run_open",
+          "summary": "The display-metrics Swift command failed before mouse dispatch, picker opening, or path entry. Its stderr was discarded in this source SHA, so the precise subprocess cause is unknown.",
+          "artifact_id": 11882570368,
+          "artifact_name": "obsidian-vault-roundtrip-macOS-985af8aa18be53c285221b2ed21d4062e69b9f3d",
+          "artifact_digest": "sha256:dddc828a06d254d8cd9a43f6e690c143af6d53a45292ade145a50a473df32cdb",
+          "report_sha256": "6a9303c766037a185b27ba144f420ac695870a148a66663daba10e98a44f94e7",
+          "first_run_open_target_screenshot_sha256": "fc77ed19695eff913ea1e085cc5f08a645b9558d382fd4c16c6526ed570a4ee7"
+        },
+        {
+          "id": 115772106242,
+          "platform": "Windows",
+          "stage": "picker_close",
+          "summary": "The exact picker and Select Folder button were identified; path entry completed and BM_CLICK was dispatched. The picker HWND disappeared, but Obsidian's visible host HWND changed, so the old-handle close predicate timed out before the canonical selected-path check.",
+          "artifact_id": 11881513525,
+          "artifact_name": "obsidian-vault-roundtrip-Windows-985af8aa18be53c285221b2ed21d4062e69b9f3d",
+          "artifact_digest": "sha256:c3c3cb647996d03011ab38db05137f0a91ebb38dc0d52f0aba4cf3a7cd079f8f",
+          "report_sha256": "416d787c5a65cf4f7cc044b4e6f854cf7b196ab7dff395dc27554201e59a1a54",
+          "picker_close_failure_screenshot_sha256": "2d68a1ff5ab3dd7cfbcabe88b77600f631e915f5bf501693a94ad9a7ceca7f68"
+        }
+      ],
+      "local_repair_preparation": [
+        "Resolve each macOS NSScreen's NSScreenNumber to its CGDirectDisplayID for all OCR display-bound mappings, and preserve Swift stderr/exit details in failure evidence.",
+        "Allow the Windows application host to adopt a new HWND after selection while requiring the recorded picker PID/HWND to disappear, exactly one visible same-process host of the baseline class, a read-error-free inventory, and the unchanged exact canonical selected-path check."
+      ],
+      "source_review": {
+        "macOS": "Independent read-only review approved screen-ID mapping and confirmed all OCR target, geometry, and picker/path gates remain.",
+        "Windows": "Independent read-only review approved host-HWND replacement after the picker absence check was tightened to the recorded PID/HWND. Canonical selected-path verification remains unchanged."
+      },
+      "local_executable_validation": "none"
+    },
+    {
+      "observed_at": "2026-10-14T09:24:51Z",
+      "source_sha": "985af8aa18be53c285221b2ed21d4062e69b9f3d",
+      "remote_tip": "985af8aa18be53c285221b2ed21d4062e69b9f3d",
+      "workflow_counts": {
+        "expected": 7,
+        "completed_successfully": 6,
+        "failed": 1,
+        "in_progress": 0,
+        "queued": 0
+      },
+      "job_counts": {
+        "expected": 20,
+        "passed": 17,
+        "failed": 3,
+        "in_progress": 0,
+        "queued": 0
+      },
+      "failed_jobs": [
+        {
+          "id": 115772106020,
+          "workflow_run_id": 38539998344,
+          "platform": "macOS",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38539998344/job/115772106020",
+          "stage": "first_run_open_display_metrics",
+          "confirmed": "The Swift display-metrics command failed before mouse dispatch, picker opening, or path entry. SHA 985af8aa18be53c285221b2ed21d4062e69b9f3d discarded stderr, so the precise subprocess error is unknown.",
+          "artifact_id": 11882570368,
+          "artifact_digest": "sha256:dddc828a06d254d8cd9a43f6e690c143af6d53a45292ade145a50a473df32cdb",
+          "report_sha256": "6a9303c766037a185b27ba144f420ac695870a148a66663daba10e98a44f94e7",
+          "first_run_open_target_screenshot_sha256": "fc77ed19695eff913ea1e085cc5f08a645b9558d382fd4c16c6526ed570a4ee7"
+        },
+        {
+          "id": 115772106242,
+          "workflow_run_id": 38539998344,
+          "platform": "Windows",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38539998344/job/115772106242",
+          "stage": "picker_close",
+          "confirmed": "The exact picker PID/HWND and Select Folder child were found; path entry completed and BM_CLICK was dispatched. The picker HWND disappeared and the host HWND changed; the old predicate stopped before finishVaultDirectorySelection and exact canonical selected-path verification.",
+          "artifact_id": 11881513525,
+          "artifact_digest": "sha256:c3c3cb647996d03011ab38db05137f0a91ebb38dc0d52f0aba4cf3a7cd079f8f",
+          "report_sha256": "416d787c5a65cf4f7cc044b4e6f854cf7b196ab7dff395dc27554201e59a1a54",
+          "picker_close_failure_screenshot_sha256": "2d68a1ff5ab3dd7cfbcabe88b77600f631e915f5bf501693a94ad9a7ceca7f68"
+        },
+        {
+          "id": 115772106399,
+          "workflow_run_id": 38539998344,
+          "platform": "Ubuntu 24.04",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38539998344/job/115772106399",
+          "stage": "c07_3_first_open_and_reopen_extraction",
+          "confirmed": "Five scenarios failed both first-open and reopen: yaml-typed-values-and-rendered-label-collisions, json-typed-values-and-rendered-label-collisions, yaml-malformed-scalar-order, json-malformed-mapping-order, and yaml-formula-dependent-kanban. In the four table scenarios, mapped links/group members match the 27-result count, but 2 or 9 painted .bases-tr rows are flagged despite each having one exact fixture_path_matches result. The Kanban screenshot shows 5/4/4/0 cards and four headings, while extraction records zero memberships, 104 repeated unmapped path samples, and 13 unmapped row candidates.",
+          "inference": "The table issue is likely a row-association false positive: the guard checks whether a candidate link is nested in the row and ignores a unique row-text path match already captured in the result set. The Kanban issue is likely the strict caret/text hit-test rejecting visible card title nodes; the report does not expose the failing subcondition, so this remains to be confirmed in repair review.",
+          "artifact_id": 11883315054,
+          "artifact_digest": "sha256:d883662f2292843455b2895c1545277a59c9aa8bd07c3c26ae82fccff4e35bd9",
+          "report_sha256": "3aa7b174c3efdae04b67eda93e72ac1973abe268a7f6479f4a400eda4a77894a"
+        }
+      ],
+      "local_executable_validation": "none"
+    }
+  ]
+}

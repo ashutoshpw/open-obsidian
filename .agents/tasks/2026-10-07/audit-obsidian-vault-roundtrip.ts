@@ -224,6 +224,15 @@ type GroupOrderUnmappedRowCandidate = {
   scroll_positions: GroupOrderScrollPosition[];
 };
 
+type GroupOrderMappedRowPathCandidate = {
+  path: string;
+  text: string;
+  class_name: string;
+  tag: string;
+  top: number;
+  left: number;
+};
+
 type GroupOrderFreshSweepOffset = {
   container_class: string;
   axis: "current" | "vertical" | "horizontal";
@@ -243,6 +252,7 @@ type GroupOrderFreshSweepOffset = {
     column_ordinal: number | null;
     local_dom_ordinal: number;
   }>;
+  mapped_row_path_candidates: GroupOrderMappedRowPathCandidate[];
   unmapped_rows: GroupOrderUnmappedRowCandidate[];
 };
 
@@ -317,6 +327,7 @@ type GroupOrderVisibleState = {
     column_ordinal: number | null;
     fresh_sweep_observation_count: number;
   }>;
+  mapped_visible_row_path_candidates: GroupOrderMappedRowPathCandidate[];
   unmapped_visible_path_candidates: GroupOrderUnmappedPathCandidate[];
   unmapped_visible_row_candidates: GroupOrderUnmappedRowCandidate[];
   visible_group_marker_count: number;
@@ -327,6 +338,7 @@ type GroupOrderVisibleState = {
     class_name: string;
     top: number;
     left: number;
+    title_diagnostics?: Record<string, unknown>;
   }>;
   visible_error_texts: string[];
   notices: string[];
@@ -359,6 +371,7 @@ type GroupOrderScenarioObservation = GroupOrderVisibleState & {
     groups: GroupOrderGroupObservation[];
     ungrouped_visible_file_paths: string[];
     unassigned_visible_file_paths: string[];
+    mapped_visible_row_path_candidates: GroupOrderVisibleState["mapped_visible_row_path_candidates"];
     unmapped_visible_path_candidates: GroupOrderVisibleState["unmapped_visible_path_candidates"];
     unmapped_visible_row_candidates: GroupOrderVisibleState["unmapped_visible_row_candidates"];
     occluded_kanban_dom_candidates: GroupOrderVisibleState["occluded_kanban_dom_candidates"];
@@ -449,7 +462,7 @@ const report: Record<string, unknown> = {
     milestone: "R2.8.106-C07.2-reference-rewrite-and-reopen-capture",
     report_path: "bases_group_direction_reference",
   }, {
-    milestone: "R2.8.120-C07.3-cross-platform-capture-repair",
+    milestone: "R2.8.121-C07.3-cross-platform-capture-repair",
     report_path: "bases_group_order_reference",
   }],
   status: "pending",
@@ -501,7 +514,7 @@ const report: Record<string, unknown> = {
   },
   bases_group_order_reference: {
     status: "pending",
-    milestone: "R2.8.120-C07.3-cross-platform-capture-repair",
+    milestone: "R2.8.121-C07.3-cross-platform-capture-repair",
     source_sha: sourceSha,
     capture_scope: "Record actual pinned Obsidian 1.14.4 groupOrder behavior for JSON-compatible and native-YAML .base inputs, typed values, malformed configurations, JSON non-finite-number and YAML binary-tag candidates, and formula-derived Kanban grouping. Capture is reference characterization only and does not establish Rust parity.",
     application: "Pinned Obsidian Desktop 1.14.4",
@@ -1421,11 +1434,12 @@ async function clickMacOSFirstRunOpenButtonVisually(
   const openRight = open.boundingBox.x + open.boundingBox.width;
   const openTop = 1 - (open.boundingBox.y + open.boundingBox.height);
   const openBottom = 1 - open.boundingBox.y;
-  const displayScript = `import AppKit\nimport CoreGraphics\nimport Foundation\nlet screens = NSScreen.screens\nlet bounds = CGDisplayBounds(CGMainDisplayID())\nguard bounds.width > 0, bounds.height > 0 else { fatalError("Could not read the main display bounds") }\nprint(String(screens.count) + "," + String(bounds.origin.x) + "," + String(bounds.origin.y) + "," + String(bounds.width) + "," + String(bounds.height))`;
+  const displayScript = `import AppKit\nimport CoreGraphics\nimport Foundation\nlet screens = NSScreen.screens\nguard screens.count == 1 else { fatalError("Display metrics require the single-display macOS CI screen") }\nguard let screenNumber = screens[0].deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber else { fatalError("Could not read the macOS CI screen number") }\nlet displayID = CGDirectDisplayID(screenNumber.uint32Value)\nlet bounds = CGDisplayBounds(displayID)\nguard bounds.width > 0, bounds.height > 0 else { fatalError("Could not read the selected macOS display bounds") }\nprint(String(screens.count) + "," + String(bounds.origin.x) + "," + String(bounds.origin.y) + "," + String(bounds.width) + "," + String(bounds.height))`;
   let displayOutput: string;
   try {
-    displayOutput = execFileSync("swift", ["-e", displayScript], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]}).trim();
+    displayOutput = execFileSync("swift", ["-e", displayScript], {encoding: "utf8", stdio: ["ignore", "pipe", "pipe"]}).trim();
   } catch (error) {
+    const displayCommandError = error as Error & {stderr?: unknown; stdout?: unknown; status?: unknown; signal?: unknown};
     reporter.first_run_open_visual_fallback = {
       status: "failed-display-metrics",
       ...windowEvidenceBase,
@@ -1433,6 +1447,10 @@ async function clickMacOSFirstRunOpenButtonVisually(
       row_label_candidate: row,
       vision_candidates: candidates,
       error: error instanceof Error ? error.message : String(error),
+      display_probe_stderr: displayCommandError.stderr == null ? "" : String(displayCommandError.stderr).trim(),
+      display_probe_stdout: displayCommandError.stdout == null ? "" : String(displayCommandError.stdout).trim(),
+      display_probe_exit_status: displayCommandError.status ?? null,
+      display_probe_signal: displayCommandError.signal ?? null,
     };
     throw error;
   }
@@ -3046,6 +3064,7 @@ async function chooseVaultDirectoryWindows(
   }
   let windowsBefore: WindowsTopLevelWindow[];
   let applicationWindowHandle: number | null = null;
+  let applicationWindowClassName: string | null = null;
   try {
     windowsBefore = windowsTopLevelWindowInventory();
     folderPickerRecord.windows_before_open_click = windowsBefore;
@@ -3059,7 +3078,13 @@ async function chooseVaultDirectoryWindows(
     if (visibleApplicationWindows.length !== 1) {
       throw new Error(`Windows top-level UIA baseline expected exactly one visible OpenObsidian window for process ${processId}; found ${visibleApplicationWindows.length}`);
     }
-    applicationWindowHandle = visibleApplicationWindows[0].native_window_handle;
+    const applicationWindow = visibleApplicationWindows[0];
+    if (!applicationWindow.class_name.trim()) {
+      throw new Error("Windows top-level UIA baseline did not expose the application window class");
+    }
+    applicationWindowHandle = applicationWindow.native_window_handle;
+    applicationWindowClassName = applicationWindow.class_name;
+    folderPickerRecord.application_window_before_selection = applicationWindow;
   } catch (error) {
     recordProcessErrorOutput("picker_inventory", error);
     folderPickerRecord.picker_inventory_status = "failed";
@@ -3500,15 +3525,26 @@ async function chooseVaultDirectoryWindows(
     const windowsAfterPickerClose = await waitFor(
       "the recorded Obsidian folder picker to close",
       async () => windowsTopLevelWindowInventory(),
-      (windows) => !windows.some((window) => window.process_id === processId
-        && window.native_window_handle === pickerWindow.native_window_handle)
-        && windows.some((window) => window.process_id === processId
-          && window.native_window_handle === applicationWindowHandle
-          && !window.is_offscreen)
-        && !windows.some((window) => window.read_error),
+      (windows) => {
+        const recordedPickerHandleStillPresent = windows.some((window) => window.process_id === processId
+          && window.native_window_handle === pickerWindow.native_window_handle);
+        const visibleApplicationHosts = windows.filter((window) => window.process_id === processId
+          && window.class_name === applicationWindowClassName
+          && window.native_window_handle > 0
+          && !window.is_offscreen);
+        return !recordedPickerHandleStillPresent
+          && visibleApplicationHosts.length === 1
+          && !windows.some((window) => window.read_error);
+      },
       15_000,
     );
     folderPickerRecord.windows_after_picker_close = windowsAfterPickerClose;
+    const applicationWindowsAfterClose = windowsAfterPickerClose.filter((window) => window.process_id === processId
+      && window.class_name === applicationWindowClassName
+      && window.native_window_handle > 0
+      && !window.is_offscreen);
+    folderPickerRecord.application_window_after_picker_close = applicationWindowsAfterClose[0] ?? null;
+    folderPickerRecord.application_window_handle_changed = applicationWindowsAfterClose[0]?.native_window_handle !== applicationWindowHandle;
   } catch (error) {
     recordProcessErrorOutput("picker_close", error);
     folderPickerRecord.picker_close_status = "failed";
@@ -4456,6 +4492,97 @@ async function readGroupOrderVisibleState(
       }
       return paintedTextSamples >= Math.max(1, Math.ceil(samples.length * 0.6));
     };
+    const inspectPaintedCardTitleText = (element, card) => {
+      if (hitTestPaintedText(element, card)) {
+        return {painted: true, diagnostics: {caret_text_hit_test_passed: true, method: 'caret-text-hit-test'}};
+      }
+      const diagnostics = {
+        caret_text_hit_test_passed: false,
+        method: 'title-subtree-hit-test',
+        title_visible: Boolean(element && visible(element)),
+        card_painted: Boolean(card && hitTestPainted(card)),
+        title_text_painted: Boolean(element && textNodeIsPainted(element)),
+        range_rect_count: 0,
+        visible_range_coverage: 0,
+        sample_point_count: 0,
+        title_subtree_hit_samples: 0,
+        painted_title_subtree_hit_samples: 0,
+        non_title_hit_targets: [],
+        reason: '',
+      };
+      if (!diagnostics.title_visible) {
+        diagnostics.reason = 'title-not-visible';
+        return {painted: false, diagnostics};
+      }
+      if (!diagnostics.card_painted) {
+        diagnostics.reason = 'card-not-painted';
+        return {painted: false, diagnostics};
+      }
+      if (!textOf(element)) {
+        diagnostics.reason = 'title-text-empty';
+        return {painted: false, diagnostics};
+      }
+      if (!diagnostics.title_text_painted) {
+        diagnostics.reason = 'title-text-style-not-painted';
+        return {painted: false, diagnostics};
+      }
+      const textRange = document.createRange();
+      textRange.selectNodeContents(element);
+      const rects = [...textRange.getClientRects()];
+      diagnostics.range_rect_count = rects.length;
+      let totalArea = 0;
+      let visibleArea = 0;
+      const points = [];
+      for (const bounds of rects) {
+        const area = Math.max(0, bounds.width) * Math.max(0, bounds.height);
+        if (area === 0) continue;
+        totalArea += area;
+        const clipped = clipToVisibleBounds(element, bounds);
+        if (!clipped) continue;
+        visibleArea += clipped.width * clipped.height;
+        for (const xFraction of [0.2, 0.5, 0.8]) {
+          for (const yFraction of [0.2, 0.5, 0.8]) {
+            points.push({
+              x: clipped.left + clipped.width * xFraction,
+              y: clipped.top + clipped.height * yFraction,
+            });
+          }
+        }
+      }
+      diagnostics.visible_range_coverage = totalArea > 0 ? visibleArea / totalArea : 0;
+      diagnostics.sample_point_count = points.length;
+      if (totalArea === 0) {
+        diagnostics.reason = 'title-range-has-no-area';
+        return {painted: false, diagnostics};
+      }
+      if (diagnostics.visible_range_coverage < 0.6) {
+        diagnostics.reason = 'title-range-visibility-below-threshold';
+        return {painted: false, diagnostics};
+      }
+      if (points.length === 0) {
+        diagnostics.reason = 'title-range-has-no-sample-points';
+        return {painted: false, diagnostics};
+      }
+      const nonTitleHitTargets = new Map();
+      for (const {x, y} of points) {
+        const hit = document.elementFromPoint(x, y);
+        const titleSubtreeHit = Boolean(hit && (hit === element || element.contains(hit)));
+        if (titleSubtreeHit) {
+          diagnostics.title_subtree_hit_samples += 1;
+          if (textNodeIsPainted(hit)) diagnostics.painted_title_subtree_hit_samples += 1;
+        } else if (hit) {
+          const key = hit.tagName.toLowerCase() + '.' + String(hit.getAttribute('class') || '').trim().replace(/\s+/g, '.');
+          const previous = nonTitleHitTargets.get(key) || {tag: hit.tagName.toLowerCase(), class_name: hit.getAttribute('class') || '', count: 0};
+          previous.count += 1;
+          nonTitleHitTargets.set(key, previous);
+        }
+      }
+      diagnostics.non_title_hit_targets = [...nonTitleHitTargets.values()].slice(0, 8);
+      const requiredPaintedSamples = Math.max(1, Math.ceil(points.length * 0.6));
+      const painted = diagnostics.painted_title_subtree_hit_samples >= requiredPaintedSamples;
+      diagnostics.reason = painted ? '' : 'title-subtree-hit-test-below-threshold';
+      return {painted, diagnostics};
+    };
     let scrollActions = 0;
     const scrollEvidenceByElement = new WeakMap();
     const waitForPaintFrames = () => new Promise((resolve) => {
@@ -4510,6 +4637,12 @@ async function readGroupOrderVisibleState(
     };
     const samplePaintedText = async (element, hitContainer = element) =>
       await scrollIntoView(element) && hitTestPaintedText(element, hitContainer);
+    const samplePaintedCardTitleText = async (element, card) => {
+      if (!await scrollIntoView(element)) {
+        return {painted: false, diagnostics: {caret_text_hit_test_passed: false, method: 'title-subtree-hit-test', reason: 'scroll-into-view-failed'}};
+      }
+      return inspectPaintedCardTitleText(element, card);
+    };
     const samplePaintedElement = async (element, minimumCoverage = 0.5) =>
       await scrollIntoView(element) && hitTestPainted(element, minimumCoverage);
     const exactResultCountElements = root
@@ -4848,11 +4981,29 @@ async function readGroupOrderVisibleState(
         }
         const titleCandidates = [...card.querySelectorAll('.bases-kanban-card-property.mod-title')].filter(visible);
         const titleNodes = [];
+        const titleDiagnostics = [];
         for (const titleNode of titleCandidates) {
-          if (await samplePaintedText(titleNode, card)) titleNodes.push(titleNode);
+          const titleCheck = await samplePaintedCardTitleText(titleNode, card);
+          titleDiagnostics.push(titleCheck.diagnostics);
+          if (titleCheck.painted) titleNodes.push(titleNode);
         }
         if (titleCandidates.length !== 1 || titleNodes.length !== 1) {
-          occludedKanbanDomCandidates.push({kind: 'card', text: textOf(card), class_name: card.getAttribute('class') || '', top: bounds.top, left: bounds.left});
+          occludedKanbanDomCandidates.push({
+            kind: 'card',
+            text: textOf(card),
+            class_name: card.getAttribute('class') || '',
+            top: bounds.top,
+            left: bounds.left,
+            title_diagnostics: {
+              visible_title_candidate_count: titleCandidates.length,
+              painted_title_candidate_count: titleNodes.length,
+              ...(titleCandidates.length === 1 ? {} : {
+                caret_text_hit_test_passed: false,
+                reason: 'visible-title-candidate-count-not-one',
+              }),
+              samples: titleDiagnostics,
+            },
+          });
           continue;
         }
         const title = textOf(titleNodes[0]);
@@ -4900,14 +5051,52 @@ async function readGroupOrderVisibleState(
     for (const row of rowCandidates) {
       if (await samplePaintedText(row)) visibleRowElements.push(row);
     }
+    const rowIsHeader = (row) => row.matches('thead tr, .bases-table-header, [role="columnheader"]')
+      || Boolean(row.querySelector('.bases-table-header, th, [role="columnheader"]'));
+    const rowIsGroupHeading = (row) => hasGroupMarker(row)
+      || markerElements.some((marker) => row.contains(marker));
+    const rowHasPathCandidate = (row) => retainedCandidates.some((candidate) =>
+      row === candidate.element || row.contains(candidate.element))
+      || pathLinks.some((candidate) => row === candidate.element || row.contains(candidate.element));
+    const rowTextPathByElement = new Map();
+    const rowTextPathCounts = new Map();
+    if (layout === 'table' && selectedResultRoot) {
+      for (const row of visibleRowElements) {
+        if (rowIsHeader(row) || rowIsGroupHeading(row) || !selectedResultRoot.contains(row)) continue;
+        const matches = fixturePathMatches(textOf(row));
+        if (matches.length !== 1) continue;
+        rowTextPathByElement.set(row, matches[0]);
+        rowTextPathCounts.set(matches[0], (rowTextPathCounts.get(matches[0]) || 0) + 1);
+      }
+    }
+    const mappedPathlessRows = new Set();
+    const mappedVisibleRowPathCandidates = [...rowTextPathByElement]
+      .filter(([row, path]) => {
+        const scopedPathLinks = pathLinks.filter((candidate) =>
+          candidate.path === path
+          && (candidate.element === selectedResultRoot || selectedResultRoot?.contains(candidate.element)));
+        const uniquelyMappedPathlessRow = !rowHasPathCandidate(row)
+          && rowTextPathCounts.get(path) === 1
+          && scopedPathLinks.length === 1;
+        if (uniquelyMappedPathlessRow) mappedPathlessRows.add(row);
+        return uniquelyMappedPathlessRow;
+      })
+      .map(([row, path]) => {
+        const bounds = row.getBoundingClientRect();
+        const visibilitySample = scrollEvidenceByElement.get(row);
+        return {
+          path,
+          text: textOf(row),
+          class_name: row.getAttribute('class') || '',
+          tag: row.tagName.toLowerCase(),
+          top: visibilitySample?.visibility_sample_bounds.top ?? bounds.top,
+          left: visibilitySample?.visibility_sample_bounds.left ?? bounds.left,
+        };
+      });
     const unmappedVisibleRowCandidates = visibleRowElements
       .filter((row) => {
-        const isHeader = row.matches('thead tr, .bases-table-header, [role="columnheader"]')
-          || Boolean(row.querySelector('.bases-table-header, th, [role="columnheader"]'));
-        const isGroupHeading = hasGroupMarker(row) || markerElements.some((marker) => row.contains(marker));
-        const hasPathCandidate = retainedCandidates.some((candidate) => row.contains(candidate.element))
-          || pathLinks.some((candidate) => row.contains(candidate.element));
-        return !isHeader && !isGroupHeading && !hasPathCandidate && Boolean(textOf(row));
+        return !rowIsHeader(row) && !rowIsGroupHeading(row) && !rowHasPathCandidate(row)
+          && !mappedPathlessRows.has(row) && Boolean(textOf(row));
       })
       .map((row) => {
         const bounds = row.getBoundingClientRect();
@@ -5177,10 +5366,11 @@ async function readGroupOrderVisibleState(
         ordered_paths: [],
         ordered_headings: [],
         result_group_assignments: [],
+        mapped_row_path_candidates: [],
         unmapped_rows: [],
       };
       freshSweepOffsets.push(offsetEvidence);
-      const unmappedCandidateEvidence = (element, candidate, sourceScope) => {
+      const unmappedCandidateEvidence = (element, candidate, sourceScope, diagnostics = undefined) => {
         const bounds = element.getBoundingClientRect();
         return {
           candidate: String(candidate || ''),
@@ -5193,6 +5383,7 @@ async function readGroupOrderVisibleState(
           visibility_sample_sequence: freshSweepPositions,
           visibility_sample_bounds: {top: bounds.top, left: bounds.left, width: bounds.width, height: bounds.height},
           scroll_positions: readScrollPositions(element),
+          ...(diagnostics ? {diagnostics} : {}),
         };
       };
       const pathsAtPosition = new Set();
@@ -5320,12 +5511,18 @@ async function readGroupOrderVisibleState(
         for (const card of freshCards) {
           if (!visible(card) || !hitTestPainted(card)) continue;
           const titles = [...card.querySelectorAll('.bases-kanban-card-property.mod-title')].filter(visible);
-          if (titles.length !== 1 || !hitTestPaintedText(titles[0], card)) {
+          const titleCheck = titles.length === 1
+            ? inspectPaintedCardTitleText(titles[0], card)
+            : {painted: false, diagnostics: {method: 'title-subtree-hit-test', caret_text_hit_test_passed: false, reason: 'visible-title-candidate-count-not-one'}};
+          if (titles.length !== 1 || !titleCheck.painted) {
             freshSweepPathSamples += 1;
             offsetEvidence.path_samples += 1;
             freshSweepUnmappedPathSamples += 1;
             offsetEvidence.unmapped_path_samples += 1;
-            freshSweepUnmappedCandidates.push(unmappedCandidateEvidence(card, textOf(card), 'kanban'));
+            freshSweepUnmappedCandidates.push(unmappedCandidateEvidence(card, textOf(card), 'kanban', {
+              visible_title_candidate_count: titles.length,
+              ...titleCheck.diagnostics,
+            }));
             continue;
           }
           const title = textOf(titles[0]);
@@ -5405,14 +5602,46 @@ async function readGroupOrderVisibleState(
           localOrdinal += 1;
         }
         lastTableGroupByScrollContainer.set(scrollContainer, activeTableGroup);
-        const freshRows = [...selectedResultRoot.querySelectorAll('.bases-tr, .bases-row, .bases-table-row, tr, [role="row"]')];
+        const freshRows = [...selectedResultRoot.querySelectorAll('.bases-tr, .bases-row, .bases-table-row, tr, [role="row"]')]
+          .filter((row) => visible(row) && hitTestPaintedText(row) && Boolean(textOf(row)));
+        const freshRowHasCandidate = (row) => retainedFreshLinks.some((entry) =>
+          row === entry.element || row.contains(entry.element));
+        const freshRowTextPathByElement = new Map();
+        const freshRowTextPathCounts = new Map();
         for (const row of freshRows) {
-          if (!visible(row) || !hitTestPaintedText(row) || !textOf(row)) continue;
           const isHeader = row.matches('thead tr, .bases-table-header, [role="columnheader"]')
             || Boolean(row.querySelector('.bases-table-header, th, [role="columnheader"]'));
           const isGroupHeading = hasGroupMarker(row) || tableMarkers.some((marker) => row.contains(marker.element));
-          const hasCandidate = retainedFreshLinks.some((entry) => row.contains(entry.element));
-          if (!isHeader && !isGroupHeading && !hasCandidate) {
+          if (isHeader || isGroupHeading || !selectedResultRoot.contains(row)) continue;
+          const matches = fixturePathMatches(textOf(row));
+          if (matches.length !== 1) continue;
+          freshRowTextPathByElement.set(row, matches[0]);
+          freshRowTextPathCounts.set(matches[0], (freshRowTextPathCounts.get(matches[0]) || 0) + 1);
+        }
+        const mappedFreshPathlessRows = new Set();
+        for (const [row, path] of freshRowTextPathByElement) {
+          const uniquelyMappedPathlessRow = !freshRowHasCandidate(row)
+            && freshRowTextPathCounts.get(path) === 1
+            && resultEntries.filter((entry) => entry.path === path).length === 1;
+          if (!uniquelyMappedPathlessRow) continue;
+          mappedFreshPathlessRows.add(row);
+          const bounds = row.getBoundingClientRect();
+          offsetEvidence.mapped_row_path_candidates.push({
+            path,
+            text: textOf(row),
+            class_name: row.getAttribute('class') || '',
+            tag: row.tagName.toLowerCase(),
+            top: bounds.top,
+            left: bounds.left,
+          });
+        }
+        for (const row of freshRows) {
+          const isHeader = row.matches('thead tr, .bases-table-header, [role="columnheader"]')
+            || Boolean(row.querySelector('.bases-table-header, th, [role="columnheader"]'));
+          const isGroupHeading = hasGroupMarker(row) || tableMarkers.some((marker) => row.contains(marker.element));
+          const hasCandidate = freshRowHasCandidate(row);
+          const hasMappedUniquePath = mappedFreshPathlessRows.has(row);
+          if (!isHeader && !isGroupHeading && !hasCandidate && !hasMappedUniquePath) {
             freshSweepUnmappedRowSamples += 1;
             offsetEvidence.unmapped_row_samples += 1;
             const bounds = row.getBoundingClientRect();
@@ -5818,6 +6047,7 @@ async function readGroupOrderVisibleState(
       ungrouped_visible_file_paths: ungroupedVisibleFilePaths,
       unassigned_visible_file_paths: unassignedVisibleFilePaths,
       visible_fixture_path_links: visibleFixturePathLinks,
+      mapped_visible_row_path_candidates: mappedVisibleRowPathCandidates,
       unmapped_visible_path_candidates: allUnmappedVisiblePathCandidates,
       unmapped_visible_row_candidates: [...unmappedVisibleRowCandidates, ...freshSweepUnmappedRows],
       visible_group_marker_count: freshSweepHeadingKeys.size,
@@ -5913,6 +6143,7 @@ function emptyGroupOrderVisibleState(scenario: GroupOrderScenario): GroupOrderVi
     ungrouped_visible_file_paths: [],
     unassigned_visible_file_paths: [],
     visible_fixture_path_links: [],
+    mapped_visible_row_path_candidates: [],
     unmapped_visible_path_candidates: [],
     unmapped_visible_row_candidates: [],
     visible_group_marker_count: 0,
@@ -5966,6 +6197,7 @@ async function captureGroupOrderScenario(
       groups: state.groups,
       ungrouped_visible_file_paths: state.ungrouped_visible_file_paths,
       unassigned_visible_file_paths: state.unassigned_visible_file_paths,
+      mapped_visible_row_path_candidates: state.mapped_visible_row_path_candidates,
       unmapped_visible_path_candidates: state.unmapped_visible_path_candidates,
       unmapped_visible_row_candidates: state.unmapped_visible_row_candidates,
       occluded_kanban_dom_candidates: state.occluded_kanban_dom_candidates,
@@ -7929,9 +8161,13 @@ guard CommandLine.arguments.count == 3,
 guard NSScreen.screens.count == 1 else {
     fatalError("Desktop OCR click mapping requires the single-display macOS CI screen")
 }
-let displayBounds = CGDisplayBounds(CGMainDisplayID())
+guard let screenNumber = NSScreen.screens[0].deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber else {
+    fatalError("Could not read the macOS CI screen number")
+}
+let displayID = CGDirectDisplayID(screenNumber.uint32Value)
+let displayBounds = CGDisplayBounds(displayID)
 guard displayBounds.width > 0, displayBounds.height > 0 else {
-    fatalError("Could not read the main macOS display bounds in Quartz coordinates")
+    fatalError("Could not read the selected macOS display bounds in Quartz coordinates")
 }
 guard (0.0...1.0).contains(xFraction), (0.0...1.0).contains(yFraction) else {
     fatalError("Desktop OCR click fractions fall outside the single-display screenshot")
@@ -11190,9 +11426,13 @@ guard CommandLine.arguments.count == 3,
 guard NSScreen.screens.count == 1 else {
     fatalError("Desktop click mapping requires the single-display macOS CI screen")
 }
-let displayBounds = CGDisplayBounds(CGMainDisplayID())
+guard let screenNumber = NSScreen.screens[0].deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber else {
+    fatalError("Could not read the macOS CI screen number")
+}
+let displayID = CGDirectDisplayID(screenNumber.uint32Value)
+let displayBounds = CGDisplayBounds(displayID)
 guard displayBounds.width > 0, displayBounds.height > 0 else {
-    fatalError("Could not read the main desktop display bounds")
+    fatalError("Could not read the selected desktop display bounds")
 }
 let point = CGPoint(
     x: displayBounds.origin.x + CGFloat(xFraction) * displayBounds.width,
@@ -14101,6 +14341,12 @@ async function runBasesGroupOrderReferenceProbe(): Promise<void> {
       ungrouped_visible_file_paths: view.ungrouped_visible_file_paths,
       unassigned_visible_file_paths: view.unassigned_visible_file_paths,
       visible_fixture_path_links: view.visible_fixture_path_links.map((link) => ({path: link.path, text: link.text})),
+      mapped_visible_row_path_candidates: view.mapped_visible_row_path_candidates.map((row) => ({
+        path: row.path,
+        text: row.text,
+        class_name: row.class_name,
+        tag: row.tag,
+      })),
       unmapped_visible_path_candidates: view.unmapped_visible_path_candidates,
       unmapped_visible_row_candidates: view.unmapped_visible_row_candidates,
       visible_error_texts: view.visible_error_texts,

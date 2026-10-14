@@ -10284,12 +10284,12 @@
       "source": {
         "path": ".agents/tasks/2026-10-07/goal.md",
         "heading": "Mandatory execution workflow: GitHub CI only",
-        "clause": "Define named, reviewable milestones as meaningful, bounded CI batches. Keep minor edits, isolated fixes, and focused commits local; make one origin/main push only after the complete milestone implementation and reviewed CI acceptance package are ready. Do not push or start a fresh CI batch for incremental feedback. Mark the milestone achieved only after every required job passes for its exact SHA, and keep the remote at one submitted SHA until its full CI batch is terminal."
+        "clause": "Define named, reviewable milestones as meaningful, bounded CI batches sized for the full, potentially multi-hour CI suite. Keep minor edits, isolated fixes, intermediate commits, and partial milestones local; push exactly once to origin/main only after the complete implementation and reviewed acceptance package are ready. Wait until every required workflow/job for that exact SHA is terminal before another milestone or repair push. A repair milestone must batch related corrections into a complete, reviewable deliverable; a single minor correction does not warrant its own push. The milestone is achieved only after all required jobs pass and results are reconciled for that SHA."
       },
       "checkpoint": "R0",
       "owner": "xtask",
       "mandatory": true,
-      "acceptance_criteria": "Related minor changes and focused commits accumulate locally and do not trigger individual pushes or fresh CI batches. Each named milestone is a coherent, bounded CI batch with exactly one reviewed origin/main submission after the complete implementation and acceptance package are ready. Do not submit minor edits for incremental feedback or another milestone while any required workflow for the current SHA is pending. Run independent checks in parallel where safe. Accept a milestone only after every required workflow/job passes and results are reconciled for its exact SHA.",
+      "acceptance_criteria": "Related minor changes and focused commits accumulate locally and do not trigger individual pushes or fresh CI batches. Each named milestone is one coherent, bounded batch for the potentially multi-hour CI suite, with exactly one origin/main push after its full implementation and reviewed acceptance package are ready. Do not push minor edits, partial milestones, or incremental feedback; wait until all required workflows/jobs for the submitted SHA are terminal before another milestone or repair push. Repair milestones must bundle related fixes into a complete, reviewable deliverable; a lone minor correction does not justify a separate push. Run independent checks in parallel where safe. Record implementation-complete / CI-pending at submission; accept the milestone only after every required workflow/job passes and results are reconciled for its exact SHA.",
       "fixture_ids": [
         "fixture:mig-002"
       ],
@@ -10318,6 +10318,16 @@
           "kind": "rust-migration-goal",
           "version": "2026-10-14-milestone-only-ci-submission",
           "sha256": "72ffa528debfde44753d1228729f5e70848cd6bb831a776801163b30ada1a7ec"
+        },
+        {
+          "kind": "rust-migration-goal",
+          "version": "2026-10-14-complete-milestone-push-gate",
+          "sha256": "de3944b86b8f6a4cc3c5dd6bce7c1c043aca432ba12c318b342cf9d24743a53d"
+        },
+        {
+          "kind": "rust-migration-goal",
+          "version": "2026-10-14-no-minor-repair-push",
+          "sha256": "1185a710634269472513fec045fc07eeb1d1697c28a06f374740c707ff5935ce"
         }
       ],
       "applicable_platforms": [
@@ -10338,7 +10348,7 @@
       "rust_owner": "xtask",
       "mapping_status": "reviewed",
       "migration_disposition": "retained",
-      "migration_acceptance": "Each meaningful, bounded milestone has one reviewed origin/main submission after its full implementation and acceptance package are complete; individual minor changes do not trigger pushes or fresh CI batches. Exact-SHA CI evidence is reconciled, independent checks run in parallel where safe, and the next batch waits until the current required workflows are terminal. Mark the milestone achieved only after all required jobs pass.",
+      "migration_acceptance": "Each meaningful, bounded milestone is submitted in exactly one reviewed origin/main push after its implementation and acceptance package are complete; minor changes and partial work stay local. Size the batch for the full, potentially multi-hour CI suite and wait until all required workflows/jobs for its exact SHA are terminal before another milestone or repair push. Repair milestones bundle related corrections into a complete, reviewable deliverable; a single minor fix does not warrant its own push. Run independent checks in parallel where safe. Mark the milestone achieved only after every required job passes and exact-SHA results/evidence are reconciled.",
       "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence."
     },
     {
@@ -11032,7 +11042,7 @@
       "runtime_override": "Documentation upkeep is a continuing migration requirement; this row captures the final audited completion gate."
     }
   ],
-  "reviewed_at": "2026-10-14T09:05:28Z",
+  "reviewed_at": "2026-10-14T09:27:07Z",
   "mapping_review": {
     "status": "complete",
     "reviewed_requirement_count": 212,
@@ -11042,7 +11052,7 @@
     "post_r0_2_additions": [
       "MIG-016: maintain current, accurate documentation throughout migration and audit it at cutover."
     ],
-    "goal_sha256": "72ffa528debfde44753d1228729f5e70848cd6bb831a776801163b30ada1a7ec",
+    "goal_sha256": "1185a710634269472513fec045fc07eeb1d1697c28a06f374740c707ff5935ce",
     "policy": "Every inherited requirement was reviewed by ID and assigned a Rust owner, migration phase, acceptance criterion and retained/superseded/external disposition. Historical status/evidence remain preserved separately. Rust acceptance remains pending unless current exact-SHA migration evidence is attached; external items remain external_pending."
   }
 }
