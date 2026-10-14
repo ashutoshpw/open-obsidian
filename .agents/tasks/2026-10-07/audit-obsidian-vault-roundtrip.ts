@@ -1669,6 +1669,18 @@ function macOSNativeOpenPanelIdentityCount(entries: string[], identity: string):
   return entries.filter((entry) => entry === identity && isMacOSNativeOpenPanelEntry(entry)).length;
 }
 
+function macOSNativeOpenPanelBounds(identity: string): {x: number; y: number; width: number; height: number} {
+  const windowMatch = /^AXWindow:(?:Open|Open folder as vault)\|bounds=(-?\d+),(-?\d+),(\d+),(\d+)$/i.exec(identity);
+  const sheetMatch = /^AXSheet:(?:Open|Open folder as vault)\|bounds=(-?\d+),(-?\d+),(\d+),(\d+)\|parent=AXWindow:[^|]+\|bounds=(-?\d+),(-?\d+),(\d+),(\d+)$/i.exec(identity);
+  const match = windowMatch ?? sheetMatch;
+  if (!match) throw new Error(`Cannot extract native Open panel bounds from accessibility identity ${identity}`);
+  const bounds = {x: Number(match[1]), y: Number(match[2]), width: Number(match[3]), height: Number(match[4])};
+  if (!(bounds.width > 0 && bounds.height > 0)) {
+    throw new Error(`Native Open panel accessibility identity has invalid bounds: ${identity}`);
+  }
+  return bounds;
+}
+
 function macOSAddedNativeOpenPanelEntries(before: string[], after: string[]): string[] {
   const remaining = new Map<string, number>();
   for (const entry of before) {
@@ -1976,12 +1988,9 @@ async function readScreenshotOcr(imagePath: string): Promise<string> {
   return runTesseractOcr(ocrImagePath, pageSegmentationModes);
 }
 
-async function readNativeFolderPickerOcr(imagePath: string): Promise<string> {
+async function readNativeFolderPickerOcr(imagePath: string, panelIdentity?: string): Promise<string> {
   if (process.platform !== "darwin") return await readScreenshotOcr(imagePath);
-  const ocrImagePath = join(reportDirectory, "openobsidian-vault-picker-cancel-open-ocr.png");
-  execFileSync("magick", [imagePath, "-gravity", "center", "-crop", "90%x75%+0+0", "+repage", "-colorspace", "Gray", "-level", "0%,35%", "-resize", "250%", ocrImagePath], {stdio: "ignore"});
-  const pageSegmentationModes = ["11", "6"];
-  return runTesseractOcr(ocrImagePath, pageSegmentationModes);
+  return (await inspectMacOSNativeOpenPanelScreenshot(imagePath, panelIdentity)).visible_text;
 }
 
 function runTesseractOcr(imagePath: string, pageSegmentationModes: string[]): string {
@@ -2048,6 +2057,94 @@ print(String(decoding: data, as: UTF8.self))
     throw new Error("macOS Vision OCR returned an invalid text-candidate payload");
   }
   return candidates;
+}
+
+async function inspectMacOSNativeOpenPanelScreenshot(
+  imagePath: string,
+  panelIdentity?: string,
+): Promise<{
+  method: "macOS Vision";
+  screenshot_dimensions: {width: number; height: number};
+  panel_identity: string | null;
+  panel_bounds: {x: number; y: number; width: number; height: number} | null;
+  visible_text: string;
+  vision_candidates: MacOSVisionTextCandidate[];
+  exact_cancel_candidates: MacOSVisionTextCandidate[];
+  exact_open_candidates: MacOSVisionTextCandidate[];
+  confirmed_native_picker_buttons: boolean;
+}> {
+  const screenshotDimensions = await pngDimensions(imagePath);
+  if (!(screenshotDimensions.width > 0 && screenshotDimensions.height > 0)) {
+    throw new Error(`macOS native picker screenshot has invalid dimensions: ${JSON.stringify(screenshotDimensions)}`);
+  }
+  const candidates = await readMacOSVisionTextCandidates(imagePath);
+  const panelBounds = panelIdentity ? macOSNativeOpenPanelBounds(panelIdentity) : null;
+  if (panelBounds && (
+    panelBounds.x < 0
+    || panelBounds.y < 0
+    || panelBounds.x + panelBounds.width > screenshotDimensions.width + 2
+    || panelBounds.y + panelBounds.height > screenshotDimensions.height + 2
+  )) {
+    throw new Error(`The exact macOS accessibility panel bounds do not fit the screenshot dimensions: panel=${JSON.stringify(panelBounds)} screenshot=${JSON.stringify(screenshotDimensions)}`);
+  }
+  const validCandidate = (candidate: MacOSVisionTextCandidate): boolean => {
+    const {x, y, width, height} = candidate.boundingBox;
+    return candidate.confidence >= 0.5
+      && width > 0 && height > 0
+      && x >= 0 && y >= 0
+      && x + width <= 1.001 && y + height <= 1.001;
+  };
+  const candidateBoundsAreInsidePanel = (candidate: MacOSVisionTextCandidate): boolean => {
+    if (!panelBounds) return true;
+    const left = candidate.boundingBox.x * screenshotDimensions.width;
+    const right = (candidate.boundingBox.x + candidate.boundingBox.width) * screenshotDimensions.width;
+    const top = (1 - candidate.boundingBox.y - candidate.boundingBox.height) * screenshotDimensions.height;
+    const bottom = (1 - candidate.boundingBox.y) * screenshotDimensions.height;
+    return left >= panelBounds.x - 2
+      && right <= panelBounds.x + panelBounds.width + 2
+      && top >= panelBounds.y - 2
+      && bottom <= panelBounds.y + panelBounds.height + 2;
+  };
+  const visibleCandidates = candidates.filter((candidate) => validCandidate(candidate) && candidateBoundsAreInsidePanel(candidate));
+  const normalizeLabel = (text: string): string => text.toLowerCase().replace(/[^a-z0-9]/g, "");
+  const exactCancelCandidates = panelBounds
+    ? visibleCandidates.filter((candidate) => candidate.confidence >= 0.8 && normalizeLabel(candidate.text) === "cancel")
+    : [];
+  const exactOpenCandidates = panelBounds
+    ? visibleCandidates.filter((candidate) => candidate.confidence >= 0.8 && normalizeLabel(candidate.text) === "open")
+    : [];
+  let buttonGeometryIsPlausible = false;
+  if (panelBounds && exactCancelCandidates.length === 1 && exactOpenCandidates.length === 1) {
+    const cancel = exactCancelCandidates[0]!;
+    const open = exactOpenCandidates[0]!;
+    const center = (candidate: MacOSVisionTextCandidate) => ({
+      x: (candidate.boundingBox.x + candidate.boundingBox.width / 2) * screenshotDimensions.width,
+      y: (1 - candidate.boundingBox.y - candidate.boundingBox.height / 2) * screenshotDimensions.height,
+    });
+    const cancelCenter = center(cancel);
+    const openCenter = center(open);
+    const cancelXFraction = (cancelCenter.x - panelBounds.x) / panelBounds.width;
+    const openXFraction = (openCenter.x - panelBounds.x) / panelBounds.width;
+    const cancelYFraction = (cancelCenter.y - panelBounds.y) / panelBounds.height;
+    const openYFraction = (openCenter.y - panelBounds.y) / panelBounds.height;
+    buttonGeometryIsPlausible = cancelCenter.x < openCenter.x
+      && cancelXFraction >= 0.5
+      && openXFraction >= 0.7
+      && cancelYFraction >= 0.78
+      && openYFraction >= 0.78
+      && Math.abs(cancelYFraction - openYFraction) <= 0.07;
+  }
+  return {
+    method: "macOS Vision",
+    screenshot_dimensions: screenshotDimensions,
+    panel_identity: panelIdentity ?? null,
+    panel_bounds: panelBounds,
+    visible_text: visibleCandidates.map((candidate) => candidate.text).join("\n"),
+    vision_candidates: visibleCandidates,
+    exact_cancel_candidates: exactCancelCandidates,
+    exact_open_candidates: exactOpenCandidates,
+    confirmed_native_picker_buttons: buttonGeometryIsPlausible,
+  };
 }
 
 function ocrTokenMatches(token: string, expected: string): boolean {
@@ -2258,6 +2355,7 @@ function windowsSelectorDismissConfirmsClosed(action: unknown): boolean {
 function windowsNoteSelectorObservationConfirmsSameTarget(
   before: Record<string, unknown>,
   after: Record<string, unknown>,
+  expectedPath?: string,
 ): boolean {
   const beforeTarget = before.target_option as Record<string, unknown> | null;
   const afterTarget = after.target_option as Record<string, unknown> | null;
@@ -2266,6 +2364,7 @@ function windowsNoteSelectorObservationConfirmsSameTarget(
   if (before.selector_is_offscreen !== false || after.selector_is_offscreen !== false) return false;
   if (beforeTarget.name !== afterTarget.name || beforeTarget.control_type !== "ControlType.RadioButton") return false;
   if (afterTarget.control_type !== "ControlType.RadioButton") return false;
+  if (expectedPath !== undefined && (beforeTarget.name !== expectedPath || afterTarget.name !== expectedPath)) return false;
   if (beforeTarget.is_offscreen !== false || afterTarget.is_offscreen !== false) return false;
   if (beforeTarget.positive_bounds !== true || afterTarget.positive_bounds !== true) return false;
   const supportedBefore = before.selector_expand_collapse_supported === true;
@@ -2450,6 +2549,127 @@ async function readWindowsExpandedNoteSelectorTarget(
     const output = [failure.stdout, failure.stderr].filter(Boolean).map(String).join("\n").trim();
     throw new Error(`Could not confirm the expanded Windows note selector for ${expectedPath}: ${output || failure.message}`);
   }
+}
+
+async function readWindowsSelectedNoteSelectorState(
+  child: ChildProcess,
+  expectedPath: string,
+): Promise<Record<string, unknown>> {
+  const processId = child.pid;
+  if (!processId) throw new Error("OpenObsidian did not expose its process id for selected-note verification");
+  const script = `
+    $ErrorActionPreference = "Stop"
+    Add-Type -AssemblyName UIAutomationClient
+    Add-Type -AssemblyName UIAutomationTypes
+    $processId = [int]$env:OPENOBSIDIAN_WINDOW_PROCESS_ID
+    $expectedPath = $env:OPENOBSIDIAN_EXPECTED_NOTE_PATH.Replace([string][char]92, "/")
+    $root = [System.Windows.Automation.AutomationElement]::RootElement
+    $condition = [System.Windows.Automation.PropertyCondition]::new(
+      [System.Windows.Automation.AutomationElement]::ProcessIdProperty,
+      $processId
+    )
+    $deadline = [DateTime]::UtcNow.AddSeconds(20)
+    $lastObservation = $null
+    while ([DateTime]::UtcNow -lt $deadline) {
+      $elements = $root.FindAll([System.Windows.Automation.TreeScope]::Descendants, $condition)
+      $selectors = @()
+      foreach ($element in $elements) {
+        try {
+          $current = $element.Current
+          if ($current.ControlType.ProgrammaticName -eq "ControlType.Button" -and $current.Name -eq "Note to inspect") {
+            $selectors += $element
+          }
+        } catch { throw "Could not read a note selector button: $($_.Exception.Message)" }
+      }
+      $selectorOffscreen = $null
+      $valuePatternSupported = $false
+      $selectorValue = $null
+      $targetOptions = @()
+      if ($selectors.Count -eq 1) {
+        try {
+          $selectorOffscreen = [bool]$selectors[0].Current.IsOffscreen
+          $valuePattern = $null
+          $valuePatternSupported = $selectors[0].TryGetCurrentPattern(
+            [System.Windows.Automation.ValuePattern]::Pattern,
+            [ref]$valuePattern
+          )
+          if ($valuePatternSupported) { $selectorValue = [string]$valuePattern.Current.Value }
+        } catch { throw "Could not read the note selector value: $($_.Exception.Message)" }
+        foreach ($element in $elements) {
+          try {
+            $current = $element.Current
+            if ($current.ControlType.ProgrammaticName -ne "ControlType.RadioButton" -or $current.IsOffscreen) { continue }
+            $normalizedName = $current.Name.Replace([string][char]92, "/")
+            if ($normalizedName -cne $expectedPath) { continue }
+            $selectionPattern = $null
+            $selectionPatternSupported = $element.TryGetCurrentPattern(
+              [System.Windows.Automation.SelectionItemPattern]::Pattern,
+              [ref]$selectionPattern
+            )
+            $targetOptions += [pscustomobject]@{
+              name = $normalizedName
+              control_type = $current.ControlType.ProgrammaticName
+              is_offscreen = [bool]$current.IsOffscreen
+              selection_pattern_supported = [bool]$selectionPatternSupported
+              is_selected = if ($selectionPatternSupported) { [bool]$selectionPattern.Current.IsSelected } else { $false }
+            }
+          } catch { throw "Could not read the exact selected note option: $($_.Exception.Message)" }
+        }
+      }
+      $normalizedValue = if ($null -ne $selectorValue) { $selectorValue.Replace([string][char]92, "/") } else { $null }
+      $targetOptionSelected = $false
+      if ($targetOptions.Count -eq 1) {
+        $targetOptionSelected = [bool]$targetOptions[0].selection_pattern_supported -and [bool]$targetOptions[0].is_selected
+      }
+      $lastObservation = [pscustomobject]@{
+        selector_count = $selectors.Count
+        selector_is_offscreen = $selectorOffscreen
+        value_pattern_supported = [bool]$valuePatternSupported
+        selector_value = $selectorValue
+        normalized_selector_value = $normalizedValue
+        expected_path = $expectedPath
+        target_option_count = $targetOptions.Count
+        target_option = if ($targetOptions.Count -eq 1) { $targetOptions[0] } else { $null }
+        target_option_is_selected = [bool]$targetOptionSelected
+      }
+      $targetOptionStateAcceptable = $targetOptions.Count -eq 1 -and $targetOptionSelected
+      if ($selectors.Count -eq 1 -and -not $selectorOffscreen -and $valuePatternSupported -and $normalizedValue -ceq $expectedPath -and $targetOptionStateAcceptable) {
+        $lastObservation | ConvertTo-Json -Compress -Depth 5
+        exit 0
+      }
+      Start-Sleep -Milliseconds 250
+    }
+    throw "Timed out waiting for the note selector to reflect the exact selected path; expected=$expectedPath; last=$($lastObservation | ConvertTo-Json -Compress -Depth 5)"
+  `;
+  try {
+    const output = execFileSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", script], {
+      encoding: "utf8",
+      env: {
+        ...process.env,
+        OPENOBSIDIAN_WINDOW_PROCESS_ID: String(processId),
+        OPENOBSIDIAN_EXPECTED_NOTE_PATH: expectedPath,
+      },
+      stdio: ["ignore", "pipe", "pipe"],
+    }).trim();
+    return JSON.parse(output) as Record<string, unknown>;
+  } catch (error) {
+    const failure = error as NodeJS.ErrnoException & {stderr?: Buffer | string; stdout?: Buffer | string};
+    const output = [failure.stdout, failure.stderr].filter(Boolean).map(String).join("\n").trim();
+    throw new Error(`Could not verify the selected Windows note path ${expectedPath}: ${output || failure.message}`);
+  }
+}
+
+function windowsSelectedNoteSelectorConfirmsPath(observation: unknown, expectedPath: string): boolean {
+  if (!observation || typeof observation !== "object" || Array.isArray(observation)) return false;
+  const state = observation as Record<string, unknown>;
+  const normalizePath = (value: unknown) => typeof value === "string" ? value.replace(/\\/g, "/") : null;
+  const targetOptionCount = Number(state.target_option_count);
+  const optionStateAcceptable = targetOptionCount === 1 && state.target_option_is_selected === true;
+  return state.selector_count === 1
+    && state.selector_is_offscreen === false
+    && state.value_pattern_supported === true
+    && normalizePath(state.normalized_selector_value ?? state.selector_value) === normalizePath(expectedPath)
+    && optionStateAcceptable;
 }
 
 async function dismissWindowsNoteSelectorMenu(child: ChildProcess, expectedPath: string): Promise<string> {
@@ -2826,7 +3046,7 @@ async function chooseVaultDirectoryMacOS(connection: DevToolsConnection, port: n
   const screenshotPrefix = options.screenshotPrefix ?? "";
   const pickerScreenshots: string[] = [];
   const folderPickerRecord: Record<string, unknown> = {
-    interaction: "macOS Open panel: record the first-run accessibility inventory, dispatch a trusted click to its unique enabled Open control, confirm one newly added native panel in accessibility and screenshot OCR, then enter the fixture path and click that exact panel's Open button",
+    interaction: "macOS Open panel: record the first-run accessibility inventory, dispatch a trusted click to its unique enabled Open control, confirm one newly added native panel and high-confidence Cancel/Open Vision candidates inside that exact panel's accessibility bounds, then enter the fixture path and click that exact panel's Open button",
     picker_screenshots: [],
     picker_open_status: "not-started",
     picker_baseline_status: "pending",
@@ -2957,9 +3177,12 @@ async function chooseVaultDirectoryMacOS(connection: DevToolsConnection, port: n
     pickerScreenshots.push(initialPickerScreenshot);
     folderPickerRecord.initial_picker_screenshot_status = "captured";
     folderPickerRecord.picker_screenshots = pickerScreenshots.map((path) => relative(reportDirectory, path));
-    folderPickerRecord.initial_picker_screenshot_ocr = (await readNativeFolderPickerOcr(initialPickerScreenshot)).slice(0, 2_000);
-    if (!nativeFolderPickerVisibleInOcr(String(folderPickerRecord.initial_picker_screenshot_ocr))) {
-      throw new Error(`The newly added panel ${pickerPanelIdentity} was not visibly confirmed as a native folder chooser by screenshot OCR: ${JSON.stringify(folderPickerRecord.initial_picker_screenshot_ocr)}`);
+    const initialPickerVisualEvidence = await inspectMacOSNativeOpenPanelScreenshot(initialPickerScreenshot, pickerPanelIdentity);
+    folderPickerRecord.initial_picker_screenshot_ocr = initialPickerVisualEvidence.visible_text.slice(0, 2_000);
+    folderPickerRecord.initial_picker_screenshot_vision_evidence = initialPickerVisualEvidence;
+    if (!initialPickerVisualEvidence.confirmed_native_picker_buttons
+        || !nativeFolderPickerVisibleInOcr(String(folderPickerRecord.initial_picker_screenshot_ocr))) {
+      throw new Error(`The newly added panel ${pickerPanelIdentity} was not visibly confirmed by high-confidence Cancel/Open text inside its exact accessibility bounds: ${JSON.stringify(initialPickerVisualEvidence)}`);
     }
     latestVisualConfirmationWindows = macOSApplicationWindowDescriptions(child);
     folderPickerRecord.picker_windows_at_visual_confirmation = latestVisualConfirmationWindows;
@@ -2972,7 +3195,7 @@ async function chooseVaultDirectoryMacOS(connection: DevToolsConnection, port: n
     if (visualConfirmationPanels.length !== 1 || visualConfirmationPanels[0] !== pickerPanelIdentity || visualConfirmationIdentityCount !== 1) {
       throw new Error(`The visually confirmed chooser no longer maps to exactly one current recorded panel ${pickerPanelIdentity}: added=${JSON.stringify(visualConfirmationPanels)} current_matches=${visualConfirmationIdentityCount}`);
     }
-    folderPickerRecord.picker_visual_confirmation_status = "confirmed-by-screenshot-ocr";
+    folderPickerRecord.picker_visual_confirmation_status = "confirmed-by-accessibility-bounded-vision";
   } catch (error) {
     folderPickerRecord.picker_visual_confirmation_status = "failed";
     folderPickerRecord.picker_visual_confirmation_error = error instanceof Error ? error.message : String(error);
@@ -3029,9 +3252,12 @@ async function chooseVaultDirectoryMacOS(connection: DevToolsConnection, port: n
     pickerScreenshots.push(pathEnteredScreenshot);
     folderPickerRecord.path_entry_screenshot_status = "captured";
     folderPickerRecord.picker_screenshots = pickerScreenshots.map((path) => relative(reportDirectory, path));
-    folderPickerRecord.path_entry_screenshot_ocr = (await readNativeFolderPickerOcr(pathEnteredScreenshot)).slice(0, 2_000);
-    if (!nativeFolderPickerVisibleInOcr(String(folderPickerRecord.path_entry_screenshot_ocr))) {
-      throw new Error(`The recorded native panel ${pickerPanelIdentity} was not visibly present after path entry: ${JSON.stringify(folderPickerRecord.path_entry_screenshot_ocr)}`);
+    const pathEntryVisualEvidence = await inspectMacOSNativeOpenPanelScreenshot(pathEnteredScreenshot, pickerPanelIdentity);
+    folderPickerRecord.path_entry_screenshot_ocr = pathEntryVisualEvidence.visible_text.slice(0, 2_000);
+    folderPickerRecord.path_entry_screenshot_vision_evidence = pathEntryVisualEvidence;
+    if (!pathEntryVisualEvidence.confirmed_native_picker_buttons
+        || !nativeFolderPickerVisibleInOcr(String(folderPickerRecord.path_entry_screenshot_ocr))) {
+      throw new Error(`The recorded native panel ${pickerPanelIdentity} was not visibly present after path entry according to exact-panel Vision evidence: ${JSON.stringify(pathEntryVisualEvidence)}`);
     }
     const pathEntryWindows = macOSApplicationWindowDescriptions(child);
     const pathEntryEntries = macOSReadableAccessibilityWindowEntries(pathEntryWindows);
@@ -3044,7 +3270,7 @@ async function chooseVaultDirectoryMacOS(connection: DevToolsConnection, port: n
     if (pathEntryPanels.length !== 1 || pathEntryPanels[0] !== pickerPanelIdentity || pathEntryIdentityCount !== 1) {
       throw new Error(`Path entry changed or duplicated the active native panel identity; expected one current ${pickerPanelIdentity}, added=${JSON.stringify(pathEntryPanels)} current_matches=${pathEntryIdentityCount}`);
     }
-    folderPickerRecord.path_entry_visual_confirmation_status = "confirmed-by-screenshot-ocr";
+    folderPickerRecord.path_entry_visual_confirmation_status = "confirmed-by-accessibility-bounded-vision";
   } catch (error) {
     folderPickerRecord.path_entry_screenshot_status = folderPickerRecord.path_entry_screenshot_status === "captured" ? "captured-ocr-failed" : "failed";
     folderPickerRecord.path_entry_screenshot_error = error instanceof Error ? error.message : String(error);
@@ -4740,7 +4966,7 @@ async function readGroupOrderVisibleState(
       const caretTextHitTestPassed = hitTestPaintedText(element, card);
       const diagnostics = {
         caret_text_hit_test_passed: caretTextHitTestPassed,
-        method: 'title-range-hit-test',
+        method: 'title-range-hit-test-with-exact-card-surface-fallback',
         title_visible: Boolean(element && visible(element)),
         card_painted: Boolean(card && hitTestPainted(card)),
         title_text_painted: Boolean(element && textNodeIsPainted(element)),
@@ -4877,13 +5103,28 @@ async function readGroupOrderVisibleState(
       diagnostics.hit_target_samples = hitTargetSamples;
       diagnostics.non_title_hit_targets = [...nonTitleHitTargets.values()];
       const validPaintedSamples = diagnostics.painted_title_subtree_hit_samples + diagnostics.card_surface_hit_samples;
-      const cardSurfaceTextEvidencePresent = diagnostics.card_surface_hit_samples === 0
-        || diagnostics.card_surface_caret_text_hit_samples > 0;
-      diagnostics.card_surface_text_evidence_present = cardSurfaceTextEvidencePresent;
+      const caretBackedTextEvidencePresent = diagnostics.caret_text_hit_samples > 0
+        && (diagnostics.card_surface_hit_samples === 0 || diagnostics.card_surface_caret_text_hit_samples > 0);
+      const exactCardSurfaceTitleRangeFallback = diagnostics.caret_text_hit_samples === 0
+        && Boolean(card && card.matches('.bases-kanban-card'))
+        && diagnostics.card_surface_hit_samples === points.length
+        && diagnostics.title_subtree_hit_samples === 0
+        && diagnostics.painted_title_subtree_hit_samples === 0
+        && diagnostics.unrelated_hit_sample_count === 0
+        && diagnostics.no_hit_sample_count === 0
+        && diagnostics.range_rect_count > 0
+        && diagnostics.visible_range_coverage >= 0.6
+        && diagnostics.title_visible
+        && diagnostics.title_text_painted
+        && diagnostics.card_painted;
+      diagnostics.card_surface_text_evidence_present = diagnostics.card_surface_caret_text_hit_samples > 0;
+      diagnostics.exact_card_surface_title_range_fallback_passed = exactCardSurfaceTitleRangeFallback;
+      diagnostics.visible_text_evidence_method = exactCardSurfaceTitleRangeFallback
+        ? 'exact-card-surface-title-range'
+        : caretBackedTextEvidencePresent ? 'caret-text-and-exact-hit-targets' : 'no-confirmed-title-text-hit';
       const painted = diagnostics.unrelated_hit_sample_count === 0
         && diagnostics.no_hit_sample_count === 0
-        && diagnostics.caret_text_hit_samples > 0
-        && cardSurfaceTextEvidencePresent
+        && (caretBackedTextEvidencePresent || exactCardSurfaceTitleRangeFallback)
         && validPaintedSamples >= requiredPaintedSamples;
       diagnostics.reason = painted ? '' : 'title-range-hit-test-below-threshold-or-covered-by-unrelated-target';
       return {painted, diagnostics};
@@ -7651,8 +7892,10 @@ async function selectOpenObsidianVaultFromNativePicker(
       reportTarget.native_picker_screenshots = screenshots.slice();
       reportTarget.native_picker_ready_screenshot_status = "captured";
       await saveReport();
-      pickerReadyOcr = await readNativeFolderPickerOcr(pickerReadyScreenshot);
+      const pickerReadyVisionEvidence = await inspectMacOSNativeOpenPanelScreenshot(pickerReadyScreenshot, pickerPanelIdentity);
+      pickerReadyOcr = pickerReadyVisionEvidence.visible_text;
       reportTarget.native_picker_screenshot_ocr = pickerReadyOcr.slice(0, 2_000);
+      reportTarget.native_picker_screenshot_vision_evidence = pickerReadyVisionEvidence;
       const visualInventory = macOSApplicationWindowDescriptions(child);
       latestMacVisualInventory = visualInventory;
       const visualEntries = macOSReadableAccessibilityWindowEntries(visualInventory);
@@ -7661,9 +7904,9 @@ async function selectOpenObsidianVaultFromNativePicker(
       reportTarget.native_picker_accessibility_windows_at_visual_confirmation = visualInventory;
       reportTarget.native_picker_added_panels_at_visual_confirmation = visualAddedPanels;
       reportTarget.native_picker_panel_identity_match_count_at_visual_confirmation = visualIdentityCount;
-      if (!pickerReadyOcr.trim() || !nativeFolderPickerVisibleInOcr(pickerReadyOcr)
+      if (!pickerReadyVisionEvidence.confirmed_native_picker_buttons || !nativeFolderPickerVisibleInOcr(pickerReadyOcr)
           || visualAddedPanels.length !== 1 || visualAddedPanels[0] !== pickerPanelIdentity || visualIdentityCount !== 1) {
-        throw new Error(`The macOS folder picker lacks combined visible screenshot and exact current accessibility evidence before path entry; OCR=${JSON.stringify(pickerReadyOcr.slice(0, 2_000))}; added panels=${JSON.stringify(visualAddedPanels)}; accessibility=${JSON.stringify(visualInventory)}`);
+        throw new Error(`The macOS folder picker lacks high-confidence Cancel/Open Vision candidates inside its exact current accessibility bounds before path entry; evidence=${JSON.stringify(pickerReadyVisionEvidence)}; added panels=${JSON.stringify(visualAddedPanels)}; accessibility=${JSON.stringify(visualInventory)}`);
       }
       reportTarget.native_picker_ready_screenshot_status = "visually-and-accessibly-confirmed";
       await saveReport();
@@ -7960,21 +8203,23 @@ async function cancelOpenObsidianNativePicker(
       openReport.picker_cancel_screenshots = screenshots.slice();
       openReport.picker_cancel_open_screenshot_status = "captured";
       await saveReport();
-      macCancellationOpenOcr = await readNativeFolderPickerOcr(pickerScreenshot);
-      pickerOpenOcr = macCancellationOpenOcr;
-      openReport.picker_cancel_open_screenshot_ocr = macCancellationOpenOcr.slice(0, 2_000);
       const accessibilityWindows = macOSApplicationWindowDescriptions(child);
       latestMacCancellationOpenInventory = accessibilityWindows;
       pickerAccessibilityWindows = accessibilityWindows;
       pickerWindowTitle = accessibilityWindows;
       const pickerEntries = macOSReadableAccessibilityWindowEntries(accessibilityWindows);
       const addedPanels = macOSAddedNativeOpenPanelEntries(pickerBaselineEntries, pickerEntries);
-      if (!macCancellationOpenOcr.trim() || !nativeFolderPickerVisibleInOcr(macCancellationOpenOcr) || addedPanels.length !== 1) {
-        throw new Error(`The native macOS Open panel lacks nonempty screenshot OCR and exactly one new accessibility identity before Escape; OCR=${JSON.stringify(macCancellationOpenOcr.slice(0, 2_000))}; added panels=${JSON.stringify(addedPanels)}; accessibility windows=${JSON.stringify(accessibilityWindows)}`);
-      }
       macPickerPanelIdentity = addedPanels[0] ?? null;
-      if (!macPickerPanelIdentity || macOSNativeOpenPanelIdentityCount(pickerEntries, macPickerPanelIdentity) !== 1) {
+      if (addedPanels.length !== 1 || !macPickerPanelIdentity || macOSNativeOpenPanelIdentityCount(pickerEntries, macPickerPanelIdentity) !== 1) {
         throw new Error(`The native macOS Open panel identity is absent or ambiguous before Escape: ${JSON.stringify(addedPanels)}`);
+      }
+      const cancellationOpenVisionEvidence = await inspectMacOSNativeOpenPanelScreenshot(pickerScreenshot, macPickerPanelIdentity);
+      macCancellationOpenOcr = cancellationOpenVisionEvidence.visible_text;
+      pickerOpenOcr = macCancellationOpenOcr;
+      openReport.picker_cancel_open_screenshot_ocr = macCancellationOpenOcr.slice(0, 2_000);
+      openReport.picker_cancel_open_screenshot_vision_evidence = cancellationOpenVisionEvidence;
+      if (!cancellationOpenVisionEvidence.confirmed_native_picker_buttons || !nativeFolderPickerVisibleInOcr(macCancellationOpenOcr)) {
+        throw new Error(`The native macOS Open panel lacks high-confidence Cancel/Open Vision candidates inside its exact accessibility bounds before Escape: ${JSON.stringify(cancellationOpenVisionEvidence)}`);
       }
       openReport.picker_cancel_panel_identity = macPickerPanelIdentity;
       openReport.picker_cancel_accessibility_windows_before_escape = accessibilityWindows;
@@ -9315,6 +9560,7 @@ async function selectReferenceNoteForEmbedResolution(
       pngPath: string;
       cropGeometry: string;
       ocrText: string;
+      ocrError: string | null;
       uiAutomationBefore: Record<string, unknown>;
       uiAutomationAfter: Record<string, unknown>;
       uiAutomationSameTargetAfterCapture: boolean;
@@ -9326,6 +9572,7 @@ async function selectReferenceNoteForEmbedResolution(
     let expandedSelectorUiAutomationAfter: Record<string, unknown> | null = null;
     let uiAutomationSameTargetAfterCapture = false;
     let targetPathVisibleByOcr = false;
+    let targetPathVisibleByUiAutomation = false;
     for (let attempt = 1; attempt <= 3; attempt += 1) {
       const uiAutomationBefore = await readWindowsExpandedNoteSelectorTarget(child, targetPath);
       const targetOption = uiAutomationBefore.target_option as Record<string, unknown>;
@@ -9333,13 +9580,20 @@ async function selectReferenceNoteForEmbedResolution(
         `openobsidian-authored-image-note-selector-expanded-${attempt}.png`,
         targetOption,
       );
-      const screenshotOcr = await readScreenshotOcr(screenshot.pngPath);
+      let screenshotOcr = "";
+      let screenshotOcrError: string | null = null;
+      try {
+        screenshotOcr = await readScreenshotOcr(screenshot.pngPath);
+      } catch (error) {
+        screenshotOcrError = error instanceof Error ? error.message : String(error);
+      }
       const uiAutomationAfter = await readWindowsExpandedNoteSelectorTarget(child, targetPath);
-      const sameTargetAfterCapture = windowsNoteSelectorObservationConfirmsSameTarget(uiAutomationBefore, uiAutomationAfter);
+      const sameTargetAfterCapture = windowsNoteSelectorObservationConfirmsSameTarget(uiAutomationBefore, uiAutomationAfter, targetPath);
       expandedSelectorCaptures.push({
         pngPath: screenshot.pngPath,
         cropGeometry: screenshot.geometry,
         ocrText: screenshotOcr,
+        ocrError: screenshotOcrError,
         uiAutomationBefore,
         uiAutomationAfter,
         uiAutomationSameTargetAfterCapture: sameTargetAfterCapture,
@@ -9351,7 +9605,10 @@ async function selectReferenceNoteForEmbedResolution(
       expandedSelectorUiAutomationAfter = uiAutomationAfter;
       uiAutomationSameTargetAfterCapture = sameTargetAfterCapture;
       targetPathVisibleByOcr = ocrTextContainsPhrase(screenshotOcr, targetPath) && sameTargetAfterCapture;
-      if (targetPathVisibleByOcr) break;
+      targetPathVisibleByUiAutomation = sameTargetAfterCapture
+        && (uiAutomationBefore.target_option as Record<string, unknown> | null)?.name === targetPath
+        && (uiAutomationAfter.target_option as Record<string, unknown> | null)?.name === targetPath;
+      if (targetPathVisibleByUiAutomation) break;
       if (attempt < 3) await delay(250);
     }
     const selectorCaptureEvidence = {
@@ -9362,11 +9619,14 @@ async function selectReferenceNoteForEmbedResolution(
         screenshot: relative(reportDirectory, capture.pngPath),
         crop_geometry: capture.cropGeometry,
         ocr_text: capture.ocrText.slice(0, 2_000),
+        ocr_error: capture.ocrError,
         ui_automation_before_capture: capture.uiAutomationBefore,
         ui_automation_after_capture: capture.uiAutomationAfter,
         same_target_remained_visible_after_capture: capture.uiAutomationSameTargetAfterCapture,
       })),
       target_path_visible_by_ocr: targetPathVisibleByOcr,
+      target_path_visible_by_ui_automation: targetPathVisibleByUiAutomation,
+      screenshot_scope: "The screenshot crop is generated directly from the exact visible UI Automation bounds of the expected radio-button option; OCR is retained as a diagnostic because it produced false negatives on a visibly readable row.",
     };
     const openReport = report.openobsidian_open as Record<string, unknown>;
     const priorSelectorCaptures = Array.isArray(openReport.windows_authored_note_selector_capture_attempts)
@@ -9374,13 +9634,19 @@ async function selectReferenceNoteForEmbedResolution(
       : [];
     openReport.windows_authored_note_selector_capture_attempts = [...priorSelectorCaptures, selectorCaptureEvidence];
     await saveReport();
-    if (!targetPathVisibleByOcr) {
-      throw new Error(`Windows target-row screenshot OCR and post-capture UI Automation did not jointly confirm ${targetPath} in the expanded selector; UI Automation before=${JSON.stringify(expandedSelectorUiAutomationBefore)}; UI Automation after=${JSON.stringify(expandedSelectorUiAutomationAfter)}; crop=${expandedSelectorCropGeometry}; screenshot=${relative(reportDirectory, expandedSelectorScreenshotPath)}; OCR=${JSON.stringify(expandedSelectorOcrText.slice(0, 2_000))}`);
+    if (!targetPathVisibleByUiAutomation) {
+      throw new Error(`Windows UI Automation did not preserve one exact visible ${targetPath} radio-button target across its bounds-derived screenshot capture; UI Automation before=${JSON.stringify(expandedSelectorUiAutomationBefore)}; UI Automation after=${JSON.stringify(expandedSelectorUiAutomationAfter)}; crop=${expandedSelectorCropGeometry}; screenshot=${relative(reportDirectory, expandedSelectorScreenshotPath)}; OCR diagnostic=${JSON.stringify(expandedSelectorOcrText.slice(0, 2_000))}`);
     }
     const selectionAction = await invokeNativeAccessibleControl(child, windowId, targetPath, undefined, true);
     if (!windowsSelectionConfirmsPath(selectionAction, targetPath)) {
       throw new Error(`Windows UI Automation did not confirm exact authored-note selection: ${selectionAction}`);
     }
+    const selectedNoteState = await readWindowsSelectedNoteSelectorState(child, targetPath);
+    openReport.windows_authored_note_selector_selection_confirmation = selectedNoteState;
+    if (!windowsSelectedNoteSelectorConfirmsPath(selectedNoteState, targetPath)) {
+      throw new Error(`Windows UI Automation did not confirm that the note selector now reflects the exact selected path ${targetPath}: ${JSON.stringify(selectedNoteState)}`);
+    }
+    await saveReport();
     const dismissAction = await dismissWindowsNoteSelectorMenu(child, targetPath);
     if (!windowsSelectorDismissConfirmsClosed(dismissAction)) {
       throw new Error(`Windows UI Automation did not dismiss the selector after confirming ${targetPath}: ${dismissAction}`);
@@ -9396,6 +9662,8 @@ async function selectReferenceNoteForEmbedResolution(
       expanded_selector_ocr: expandedSelectorOcrText.slice(0, 4_000),
       expanded_selector_screenshot_attempt_count: expandedSelectorCaptures.length,
       target_path_visible_by_ocr: targetPathVisibleByOcr,
+      target_path_visible_by_ui_automation: targetPathVisibleByUiAutomation,
+      selected_note_selector_state: selectedNoteState,
       selector_open_action: selectorOpenAction,
       selection_action: selectionAction,
       selector_dismiss_action: dismissAction,
