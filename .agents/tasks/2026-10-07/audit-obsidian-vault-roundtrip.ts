@@ -6786,8 +6786,8 @@ async function readGroupOrderVisibleState(
         // heading guard below; pathless sections never use heading/root object reuse as identity.
         // Location and object IDs are evaluation-scoped diagnostics, never durable identity.
         const tableMarkers = markerObservations.filter((marker) => selectedResultRoot.contains(marker.element));
-        // Bases may place a group heading as a sibling of its `.bases-table` child inside
-        // `.bases-table-container`. Keep one ordered ownership stream over the selected result
+        // Bases may place a group heading as a sibling of its table child inside
+        // a table container. Keep one ordered ownership stream over the selected result
         // root so the heading still owns the rows that follow it across that DOM boundary.
         const localSectionOrder = [];
         let localOrdinal = 0;
@@ -6800,7 +6800,7 @@ async function readGroupOrderVisibleState(
         for (const event of events) {
           if (event.kind === 'heading') {
             if (!groupByProperty) continue;
-            const localKey = `sample:${freshSweepPositions}|group:${localGroupOrdinal}`;
+            const localKey = 'sample:' + freshSweepPositions + '|group:' + localGroupOrdinal;
             const bounds = event.element.getBoundingClientRect();
             const marker = event.marker;
             freshSweepTableSections.set(localKey, {
@@ -7015,7 +7015,7 @@ async function readGroupOrderVisibleState(
         if (!sectionsBySample.has(section.sample)) sectionsBySample.set(section.sample, []);
         sectionsBySample.get(section.sample).push(key);
         for (const path of section.member_paths) {
-          const samplePathKey = `${section.sample}\u0000${path}`;
+          const samplePathKey = String(section.sample) + '\u0000' + path;
           if (!pathSectionsBySample.has(samplePathKey)) pathSectionsBySample.set(samplePathKey, new Set());
           pathSectionsBySample.get(samplePathKey).add(key);
         }
@@ -7522,7 +7522,7 @@ async function readGroupOrderVisibleState(
       rootEntries.sort((left, right) => left.first_sample - right.first_sample || left.first_order - right.first_order);
       const globalKeyByRoot = new Map();
       rootEntries.forEach((record, index) => {
-        const key = `table-section:${index}`;
+        const key = 'table-section:' + index;
         globalKeyByRoot.set(record.root, key);
         freshSweepResolvedTableSections.set(key, {...record, key, member_paths: []});
       });
