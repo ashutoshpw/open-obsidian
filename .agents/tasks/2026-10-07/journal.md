@@ -6300,3 +6300,83 @@ complete source, fixture, inventory, state, journal, and failed-attempt
 evidence package is being prepared locally; it will be pushed once to
 `origin/main` only after the milestone package is ready. No local executable
 validation was run.
+
+## R2.8.109 pushed; exact-SHA CI pending
+
+Pushed the single accumulated R2.8.109 repair commit
+`813cd81a226d2611162cc44193c939bc002eba88` to `origin/main` after verifying
+the remote still matched `af2866641a8105ba643543ad49ee295a2dd063ba`. The
+initial exact-SHA snapshot at 2026-10-14T01:20:30Z found all seven required
+workflows: inventory, quality, desktop build, plugin-renderer matrix,
+loaded-plugin workflows, Rust CI, and Obsidian vault round-trip. Three of 20
+jobs had passed, 16 were running, and one was queued. Exact run and job IDs
+are in `evidence/r2.8.109-attempt-1-813cd81.json`. Keep `origin/main` at this
+SHA until all required jobs are terminal; do not use local executable
+validation.
+
+## Goal push policy clarified (local)
+
+Clarified `goal.md` so CI is a checkpoint for a named, completed milestone:
+minor edits and intermediate commits remain local, and one accumulated
+`origin/main` push starts that milestone's full CI batch. Manual or other CI
+triggers for individual edits/incomplete milestones are prohibited. This
+documentation update remains local while R2.8.109 CI is active; bundle it with
+a later named milestone rather than creating a goal-only CI push. No local
+executable validation was run.
+
+## R2.8.109 attempt 1 terminal — not accepted
+
+All seven required workflows and 20 jobs are terminal on exact SHA
+`813cd81a226d2611162cc44193c939bc002eba88`: 19 jobs passed and one failed.
+Rust CI passed 4/4 (Ubuntu, macOS, Windows, Rust 1.95); the five companion
+workflows passed 13/13. The Linux and Windows Obsidian round-trip jobs passed
+with C07 captures; macOS failed before C07 in the Canvas clipboard interaction
+(AX found no field and the OCR-positioned fallback produced an empty
+clipboard). All three artifact and report hashes, exact run/job IDs, and
+platform observations are in
+`evidence/r2.8.109-attempt-1-813cd81.json`. R2.8.109 is not accepted. Compare
+the macOS failure with prior attempts to decide whether a same-SHA retry is a
+valid transient-infrastructure retry; otherwise prepare a named follow-up
+milestone. Keep `origin/main` at this SHA until that decision and any complete
+follow-up package are ready. No local executable validation was run.
+
+## R2.8.110 macOS Canvas reference-input repair started
+
+R2.8.109's only failing job is the macOS Obsidian round-trip. Compared with
+R2.8.106, the same macOS 26.6.2 / `macos-26-arm64` image shows the same
+AX-miss plus OCR-positioned keyboard fallback failure class on different
+Canvas fields. The current screenshot crop still showed the `text-card-id`
+hint after entry; this is reproducible field targeting/focus/readback behavior,
+not evidence of a transient runner outage, so no same-SHA retry is planned.
+
+Defined R2.8.110 to repair macOS Canvas input targeting using fresh visible
+placeholder/field bounds and clipboard paste, while requiring exact
+clipboard/accessibility readback or a literal exact line from a fresh
+field-anchored OCR crop only when clipboard readback is empty. Preserve the
+New Markdown blank-field probe, source/no-write snapshots, and explicit
+save/confirmation gates. Include the clarified milestone-only push policy and
+R2.8.109 terminal evidence in the single accumulated batch. Keep `origin/main`
+at `813cd81a226d2611162cc44193c939bc002eba88`; keep source edits local and
+push once only after the complete acceptance package is ready. No local
+executable validation was run.
+
+## R2.8.110 macOS Canvas input repair assembled locally
+
+The macOS fallback now searches both OCR modes while keeping each discovered
+form label paired with candidates from that same mode. It requires exactly one
+field-text match in the configured label-relative region: same row/right of
+label for inline inputs, and below/left of label for the wrapped New Markdown
+path. The selected field is pasted, the paste clipboard is cleared, and the
+focused value is copied back. Readback also requires the exact expected text in
+the fresh, unique label-relative crop; an empty clipboard may use one literal
+case-preserving line only when the clipboard command had no error. Ambiguous
+matches, clipboard errors, and nonempty mismatches fail closed. The report now
+records label/value OCR bounds, image dimensions, and the clicked field center
+to diagnose any remaining focus issue.
+
+Two independent static reviews found no neighboring-field acceptance path or
+type mismatch; the remaining risk is a fail-closed OCR/layout false negative.
+The push-cadence wording and R2.8.109 evidence are included with this milestone.
+The complete source/evidence/state package remains local for one accumulated
+milestone push. No local tests, builds, formatters, or executable validation
+were run.

@@ -2825,9 +2825,9 @@ function findOcrPhraseBounds(tsv: string, phrase: string, minimumTop = 0, lastMa
   return selected;
 }
 
-function findOcrJoinedPhraseBounds(tsv: string, phrase: string, minimumTop = 0, maxEdits = 1): OcrWordBounds | null {
+function findOcrJoinedPhraseBoundsCandidates(tsv: string, phrase: string, minimumTop = 0, maxEdits = 1): OcrWordBounds[] {
   const expected = phrase.toLowerCase().replace(/[^a-z0-9]/g, "");
-  if (!expected) return null;
+  if (!expected) return [];
 
   const wordsByLine = new Map<string, OcrWordBounds[]>();
   for (const line of tsv.split(/\r?\n/).slice(1)) {
@@ -2843,13 +2843,16 @@ function findOcrJoinedPhraseBounds(tsv: string, phrase: string, minimumTop = 0, 
     wordsByLine.set(lineId, words);
   }
 
+  const exactMatches = new Map<string, OcrWordBounds>();
+  const approximateMatches = new Map<string, OcrWordBounds>();
   for (const words of wordsByLine.values()) {
     for (let start = 0; start < words.length; start += 1) {
       let normalized = "";
       for (let end = start; end < words.length; end += 1) {
         normalized += words[end]!.text.toLowerCase().replace(/[^a-z0-9]/g, "");
         if (normalized.length > expected.length + maxEdits) break;
-        if (!editDistanceWithinLimit(normalized, expected, maxEdits)) continue;
+        const isExact = normalized === expected;
+        if (!isExact && !editDistanceWithinLimit(normalized, expected, maxEdits)) continue;
 
         const match = words.slice(start, end + 1);
         const left = Math.min(...match.map((word) => word.left));
@@ -2857,11 +2860,18 @@ function findOcrJoinedPhraseBounds(tsv: string, phrase: string, minimumTop = 0, 
         if (top < minimumTop) continue;
         const right = Math.max(...match.map((word) => word.left + word.width));
         const bottom = Math.max(...match.map((word) => word.top + word.height));
-        return {text: match.map((word) => word.text).join(" "), left, top, width: right - left, height: bottom - top};
+        const bounds = {text: match.map((word) => word.text).join(" "), left, top, width: right - left, height: bottom - top};
+        const matches = isExact ? exactMatches : approximateMatches;
+        matches.set(`${left}:${top}:${right}:${bottom}`, bounds);
       }
     }
   }
-  return null;
+  return [...(exactMatches.size > 0 ? exactMatches : approximateMatches).values()];
+}
+
+function findOcrJoinedPhraseBounds(tsv: string, phrase: string, minimumTop = 0, maxEdits = 1, lastMatch = false): OcrWordBounds | null {
+  const matches = findOcrJoinedPhraseBoundsCandidates(tsv, phrase, minimumTop, maxEdits);
+  return lastMatch ? matches.at(-1) ?? null : matches[0] ?? null;
 }
 
 async function pngDimensions(path: string): Promise<{width: number; height: number}> {
@@ -5843,7 +5853,9 @@ type CanvasInputFieldLayout = {
   ocrDimensions: {width: number; height: number};
   labelBoundsOcr: OcrWordBounds;
   labelBoundsImage: OcrWordBounds;
+  fieldTextBoundsOcr: OcrWordBounds | null;
   fieldCenter: {x: number; y: number};
+  fieldPositionSource: "visible-field-text-ocr" | "label-offset-fallback";
   cropBounds: {left: number; top: number; width: number; height: number};
   coordinateSpace: "window" | "desktop";
 };
@@ -5877,9 +5889,50 @@ const canvasInputHintValues: Readonly<Record<string, string>> = {
   "Canvas text draft": canvasMarker,
 };
 
+function canvasInputCandidateMatchesLabel(
+  candidate: OcrWordBounds,
+  label: OcrWordBounds,
+  controlName: string,
+  scaleX: number,
+  scaleY: number,
+): boolean {
+  const expectedCenterX = (label.left / scaleX) + canvasInputLabelXOffset(controlName);
+  const labelCenterY = label.top + label.height / 2;
+  const expectedCenterY = labelCenterY + (controlName === "New Markdown path" ? 22 * scaleY : 0);
+  const expectedRegion = {
+    left: (expectedCenterX - canvasInputCropWidth(controlName) / 2) * scaleX,
+    right: (expectedCenterX + canvasInputCropWidth(controlName) / 2) * scaleX,
+    top: expectedCenterY - 16 * scaleY,
+    bottom: expectedCenterY + 16 * scaleY,
+  };
+  const candidateRight = candidate.left + candidate.width;
+  const candidateCenterX = candidate.left + candidate.width / 2;
+  const candidateCenterY = candidate.top + candidate.height / 2;
+  const centerInConfiguredFieldRegion = candidateCenterX >= expectedRegion.left
+    && candidateCenterX <= expectedRegion.right
+    && candidateCenterY >= expectedRegion.top
+    && candidateCenterY <= expectedRegion.bottom;
+  if (!centerInConfiguredFieldRegion) return false;
+
+  if (controlName === "New Markdown path") {
+    const labelLeft = label.left;
+    const labelCenter = labelCenterY;
+    return candidateRight <= labelLeft + 4 * scaleX
+      && candidate.top >= label.top + label.height - 4 * scaleY
+      && candidateCenterY > labelCenter + label.height * 0.35;
+  }
+
+  const labelRight = label.left + label.width;
+  const sameRowTolerance = Math.max(8 * scaleY, Math.max(label.height, candidate.height) * 0.75);
+  return candidate.left >= labelRight - 4 * scaleX
+    && Math.abs(candidateCenterY - labelCenterY) <= sameRowTolerance
+    && candidateCenterX >= labelRight - 4 * scaleX;
+}
+
 async function locateCanvasTextInput(
   capture: Awaited<ReturnType<typeof captureOpenObsidianScreenshot>>,
   controlName: string,
+  expectedInputValue?: string,
 ): Promise<CanvasInputFieldLayout> {
   const coordinateSpace = process.platform === "darwin" ? "desktop" : "window";
   const imagePath = coordinateSpace === "desktop" ? capture.pngPath : capture.windowPngPath;
@@ -5905,7 +5958,12 @@ async function locateCanvasTextInput(
       controlName.replace("text-card", "textcard"),
     ]
     : [controlName];
+  const targetFieldText = controlName === "Canvas text draft"
+    ? undefined
+    : expectedInputValue ?? canvasInputHintValues[controlName];
   let labelBoundsOcr: OcrWordBounds | null = null;
+  let fieldTextBoundsOcr: OcrWordBounds | null = null;
+  let fieldSearchFailure = "";
   for (const tsv of tsvCandidates) {
     // The instruction above the form repeats these labels. Bound the search below its
     // opening words so OCR cannot mistake the instruction for a field label.
@@ -5913,18 +5971,37 @@ async function locateCanvasTextInput(
       ?? findOcrPhraseBounds(tsv, "Preview and confirm", 0)
       ?? findOcrPhraseBounds(tsv, "Load one", 0);
     if (!instructionBounds) continue;
-    const formRowMinimumTop = instructionBounds.top + instructionBounds.height;
+    const candidateFormRowMinimumTop = instructionBounds.top + instructionBounds.height;
+    let candidateLabelBounds: OcrWordBounds | null = null;
     for (const labelPhrase of labelPhrases) {
-      labelBoundsOcr = findOcrPhraseBounds(tsv, labelPhrase, formRowMinimumTop, true);
-      labelBoundsOcr ??= findOcrJoinedPhraseBounds(tsv, labelPhrase, formRowMinimumTop, 1);
-      if (labelBoundsOcr) break;
+      candidateLabelBounds = findOcrPhraseBounds(tsv, labelPhrase, candidateFormRowMinimumTop, true);
+      candidateLabelBounds ??= findOcrJoinedPhraseBounds(tsv, labelPhrase, candidateFormRowMinimumTop, 1);
+      if (candidateLabelBounds) break;
     }
-    if (labelBoundsOcr) break;
+    if (!candidateLabelBounds) continue;
+    const locatedCandidateLabelBounds = candidateLabelBounds;
+
+    const fieldTextCandidates = coordinateSpace === "desktop" && targetFieldText
+      ? findOcrJoinedPhraseBoundsCandidates(tsv, targetFieldText, candidateFormRowMinimumTop, 1)
+        .filter((candidate) => canvasInputCandidateMatchesLabel(candidate, locatedCandidateLabelBounds, controlName, scaleX, scaleY))
+      : [];
+    if (coordinateSpace === "desktop" && targetFieldText && fieldTextCandidates.length !== 1) {
+      fieldSearchFailure = `Could not uniquely locate the ${controlName} field text in its label-relative OCR region: candidate_count=${fieldTextCandidates.length}; candidates=${JSON.stringify(fieldTextCandidates)}; label=${JSON.stringify(locatedCandidateLabelBounds)}; screenshot=${relative(reportDirectory, imagePath)}`;
+      continue;
+    }
+    labelBoundsOcr = locatedCandidateLabelBounds;
+    fieldTextBoundsOcr = fieldTextCandidates[0] ?? null;
+    break;
   }
   if (!labelBoundsOcr) {
+    if (fieldSearchFailure) throw new Error(fieldSearchFailure);
     throw new Error(`Could not locate the visible ${controlName} label for screenshot-based input targeting: ${relative(reportDirectory, imagePath)}`);
   }
-
+  // macOS AX often omits egui text fields even when they have a labelled_by
+  // relationship. Use OCR bounds of the visible placeholder before entry and
+  // of the exact field value during readback instead of estimating the field
+  // position from a fixed offset. Constrain every match to the configured
+  // field region relative to this label and reject missing or ambiguous hits.
   const labelBoundsImage = {
     text: labelBoundsOcr.text,
     left: Math.round(labelBoundsOcr.left / scaleX),
@@ -5933,8 +6010,12 @@ async function locateCanvasTextInput(
     height: Math.max(1, Math.round(labelBoundsOcr.height / scaleY)),
   };
   const rowOffset = controlName === "New Markdown path" ? 22 : controlName === "Canvas text draft" ? 66 : 0;
-  const centerX = Math.round(labelBoundsImage.left + canvasInputLabelXOffset(controlName));
-  const centerY = Math.round(labelBoundsImage.top + labelBoundsImage.height / 2 + rowOffset);
+  const centerX = fieldTextBoundsOcr
+    ? Math.round((fieldTextBoundsOcr.left + fieldTextBoundsOcr.width / 2) / scaleX)
+    : Math.round(labelBoundsImage.left + canvasInputLabelXOffset(controlName));
+  const centerY = fieldTextBoundsOcr
+    ? Math.round((fieldTextBoundsOcr.top + fieldTextBoundsOcr.height / 2) / scaleY)
+    : Math.round(labelBoundsImage.top + labelBoundsImage.height / 2 + rowOffset);
   const cropWidth = canvasInputCropWidth(controlName);
   const cropHeight = controlName === "Canvas text draft" ? 72 : 32;
   const cropBounds = {
@@ -5956,7 +6037,9 @@ async function locateCanvasTextInput(
     ocrDimensions,
     labelBoundsOcr,
     labelBoundsImage,
+    fieldTextBoundsOcr,
     fieldCenter: {x: centerX, y: centerY},
+    fieldPositionSource: fieldTextBoundsOcr ? "visible-field-text-ocr" : "label-offset-fallback",
     cropBounds,
     coordinateSpace,
   };
@@ -5967,7 +6050,7 @@ async function readCanvasInputScreenshotValue(
   controlName: string,
   expectedValue: string,
 ): Promise<{exact: boolean; exactLine: boolean; text: string; cropPath: string; layout: CanvasInputFieldLayout}> {
-  const layout = await locateCanvasTextInput(capture, controlName);
+  const layout = await locateCanvasTextInput(capture, controlName, expectedValue);
   const cropPath = join(reportDirectory, `openobsidian-canvas-input-${controlName.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${Date.now()}-ocr.png`);
   const {left, top, width, height} = layout.cropBounds;
   const imageMagick = process.platform === "linux" ? "convert" : "magick";
@@ -6160,12 +6243,14 @@ async function replaceMacOSOpenObsidianTextInputWithKeyboard(
   logPath = join(reportDirectory, "openobsidian-canvas-note-create.log"),
 ): Promise<string> {
   const fileSafeName = controlName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-  const maximumPositionAttempts = controlName === "New Markdown path" ? 3 : 1;
+  const maximumPositionAttempts = controlName === "Canvas text draft" ? 1 : 3;
+  const requiresBlankFieldProbe = controlName !== "Canvas text draft";
   let before: Awaited<ReturnType<typeof captureOpenObsidianScreenshot>> | undefined;
   let layout: CanvasInputFieldLayout | undefined;
   let click = "";
   let lastPositionFailure = "no field-position attempt completed";
-  if (controlName === "New Markdown path") {
+  let initialFieldValueLength: number | null = null;
+  if (requiresBlankFieldProbe) {
     const probeScript = `on run argv
       set processId to (item 1 of argv) as integer
       tell application "System Events"
@@ -6192,6 +6277,7 @@ async function replaceMacOSOpenObsidianTextInputWithKeyboard(
         attemptLayout.fieldCenter.x / attemptLayout.imageDimensions.width,
         attemptLayout.fieldCenter.y / attemptLayout.imageDimensions.height,
       );
+      await delay(120);
       execFileSync("pbcopy", [], {input: "", stdio: ["pipe", "ignore", "ignore"]});
       execFileSync("osascript", ["-e", probeScript, String(child.pid ?? -1)], {stdio: "ignore"});
       const initialFieldValue = execFileSync("pbpaste", [], {
@@ -6199,8 +6285,9 @@ async function replaceMacOSOpenObsidianTextInputWithKeyboard(
         stdio: ["ignore", "pipe", "ignore"],
         timeout: 2_000,
       });
+      initialFieldValueLength = initialFieldValue.length;
       if (initialFieldValue !== "") {
-        lastPositionFailure = `clicked field was not blank (initial_readback_length=${initialFieldValue.length}); click=${attemptClick}; screenshot=${relative(reportDirectory, attemptBefore.pngPath)}`;
+        lastPositionFailure = `clicked field was not blank (initial_readback_length=${initialFieldValue.length}); position_source=${attemptLayout.fieldPositionSource}; click=${attemptClick}; screenshot=${relative(reportDirectory, attemptBefore.pngPath)}`;
         continue;
       }
       before = attemptBefore;
@@ -6209,7 +6296,7 @@ async function replaceMacOSOpenObsidianTextInputWithKeyboard(
       break;
     }
     if (!before || !layout) {
-      throw new Error(`macOS could not establish the blank New Markdown path field before typing after ${maximumPositionAttempts} fresh-position attempts: ${lastPositionFailure}`);
+      throw new Error(`macOS could not establish a blank ${controlName} field before typing after ${maximumPositionAttempts} fresh-position attempts: ${lastPositionFailure}`);
     }
   } else {
     await waitForOpenObsidianRefreshIdle(0, 0, false, logPath);
@@ -6219,26 +6306,38 @@ async function replaceMacOSOpenObsidianTextInputWithKeyboard(
       layout.fieldCenter.x / layout.imageDimensions.width,
       layout.fieldCenter.y / layout.imageDimensions.height,
     );
+    await delay(120);
   }
   if (!before || !layout) throw new Error(`Could not position the macOS ${controlName} input`);
-  const typeScript = `on run argv
+  const pasteScript = `on run argv
     set processId to (item 1 of argv) as integer
-    set replacement to item 2 of argv
     tell application "System Events"
       set targetProcess to first process whose unix id is processId
       set frontmost of targetProcess to true
       keystroke "a" using {command down}
       delay 0.1
-      keystroke replacement
-      delay 0.1
-      keystroke "a" using {command down}
-      keystroke "c" using {command down}
+      keystroke "v" using {command down}
       delay 0.1
       key code 124
     end tell
   end run`;
+  const copyFieldScript = `on run argv
+    set processId to (item 1 of argv) as integer
+    tell application "System Events"
+      set targetProcess to first process whose unix id is processId
+      set frontmost of targetProcess to true
+      keystroke "a" using {command down}
+      delay 0.1
+      keystroke "c" using {command down}
+    end tell
+  end run`;
+  execFileSync("pbcopy", [], {input: value, stdio: ["pipe", "ignore", "ignore"]});
+  execFileSync("osascript", ["-e", pasteScript, String(child.pid ?? -1)], {stdio: "ignore"});
+  await delay(150);
+  // Clear the value used for paste before copying the field back, so the
+  // following pbpaste result can only come from the focused field selection.
   execFileSync("pbcopy", [], {input: "", stdio: ["pipe", "ignore", "ignore"]});
-  execFileSync("osascript", ["-e", typeScript, String(child.pid ?? -1), value], {stdio: "ignore"});
+  execFileSync("osascript", ["-e", copyFieldScript, String(child.pid ?? -1)], {stdio: "ignore"});
   await waitForOpenObsidianRefreshIdle(0, 0, false, logPath);
   let clipboardReadback = "";
   let clipboardReadbackError = "";
@@ -6264,37 +6363,54 @@ async function replaceMacOSOpenObsidianTextInputWithKeyboard(
   } catch (error) {
     visualReadbackError = error instanceof Error ? error.message : "unknown screenshot OCR error";
   }
-  // This egui field can display the newly typed value even when macOS does not
-  // return its selection through pbpaste. Accept only a case-preserving OCR line
-  // (with whitespace normalization only) from the fresh labeled crop when empty.
-  const exactVisualPathFallback = controlName === "New Markdown path"
-    && clipboardReadback === ""
-    && visualReadback?.exactLine === true;
-  if (clipboardReadback !== value && !exactVisualPathFallback) {
-    throw new Error(`macOS clipboard readback did not confirm the exact ${controlName} value: expected_length=${value.length}; actual_length=${clipboardReadback.length}; clipboard_error=${clipboardReadbackError || "none"}; crop_ocr=${JSON.stringify(visualReadback?.text ?? "")}; visual_readback_error=${visualReadbackError || "none"}; click=${click}; crop=${visualReadback ? relative(reportDirectory, visualReadback.cropPath) : "unavailable"}; screenshot=${relative(reportDirectory, verification.pngPath)}`);
+  // Confirm the visible value in the label-relative field crop even when the
+  // clipboard returns the expected value. This ties readback to the requested
+  // control instead of proving only that some focused field was copied.
+  const exactVisualFieldReadback = controlName !== "Canvas text draft"
+    && visualReadback?.layout.fieldPositionSource === "visible-field-text-ocr"
+    && visualReadback?.exact === true;
+  if (controlName !== "Canvas text draft" && !exactVisualFieldReadback) {
+    throw new Error(`macOS ${controlName} field crop did not visually confirm the exact value in its label-relative OCR region: expected=${JSON.stringify(value)}; crop_ocr=${JSON.stringify(visualReadback?.text ?? "")}; visual_readback_error=${visualReadbackError || "none"}; click=${click}; crop=${visualReadback ? relative(reportDirectory, visualReadback.cropPath) : "unavailable"}; screenshot=${relative(reportDirectory, verification.pngPath)}`);
   }
-  if (controlName === "New Markdown path" && !visualReadback?.exact) {
-    throw new Error(`macOS New Markdown path field crop did not visually confirm the exact destination after clipboard readback: expected=${JSON.stringify(value)}; crop_ocr=${JSON.stringify(visualReadback?.text ?? "")}; visual_readback_error=${visualReadbackError || "none"}; click=${click}; crop=${visualReadback ? relative(reportDirectory, visualReadback.cropPath) : "unavailable"}; screenshot=${relative(reportDirectory, verification.pngPath)}`);
+  // egui can display the exact value even when macOS does not return its
+  // selection through pbpaste. Accept that fallback only when the fresh
+  // label-relative crop contains one literal, case-preserving line.
+  const exactVisualFieldFallback = controlName !== "Canvas text draft"
+    && clipboardReadback === ""
+    && clipboardReadbackError === ""
+    && visualReadback?.exactLine === true;
+  if (clipboardReadback !== value && !exactVisualFieldFallback) {
+    throw new Error(`macOS clipboard readback did not confirm the exact ${controlName} value: expected_length=${value.length}; actual_length=${clipboardReadback.length}; clipboard_error=${clipboardReadbackError || "none"}; crop_ocr=${JSON.stringify(visualReadback?.text ?? "")}; visual_readback_error=${visualReadbackError || "none"}; click=${click}; crop=${visualReadback ? relative(reportDirectory, visualReadback.cropPath) : "unavailable"}; screenshot=${relative(reportDirectory, verification.pngPath)}`);
   }
   return JSON.stringify({
     name: controlName,
-    action: "focused the OCR-positioned field, then Cmd+A and keyboard entry",
+    action: "focused the OCR-positioned field, Cmd+A and clipboard paste, then copied the selected field for readback",
     exact_readback: true,
     clipboard_exact: clipboardReadback === value,
     readback_source: clipboardReadback === value
       ? "macOS clipboard after selecting and copying the focused field"
-      : "exact OCR line from the fresh label-anchored field capture after clipboard readback was empty",
+      : "exact OCR line from a fresh field-text-anchored capture after clipboard readback was empty",
     readback_ocr: visualReadback?.text ?? "",
     visual_ocr_exact: visualReadback?.exact ?? false,
     visual_ocr_exact_line: visualReadback?.exactLine ?? false,
+    clipboard_readback_error: clipboardReadbackError || null,
     expected_length: value.length,
     readback_length: clipboardReadback.length,
-    position_source: "current visible label bounds and form layout",
+    initial_field_value_length: initialFieldValueLength,
+    position_source: layout.fieldPositionSource,
+    label_bounds_ocr: layout.labelBoundsOcr,
+    field_text_bounds_ocr: layout.fieldTextBoundsOcr,
+    field_center_image: layout.fieldCenter,
+    screenshot_dimensions: layout.imageDimensions,
+    ocr_dimensions: layout.ocrDimensions,
     click,
     before_screenshot: relative(reportDirectory, before.pngPath),
     readback_screenshot: relative(reportDirectory, verification.pngPath),
     readback_crop: visualReadback ? relative(reportDirectory, visualReadback.cropPath) : null,
     readback_crop_bounds: visualReadback?.layout.cropBounds ?? null,
+    readback_label_bounds_ocr: visualReadback?.layout.labelBoundsOcr ?? null,
+    readback_field_text_bounds_ocr: visualReadback?.layout.fieldTextBoundsOcr ?? null,
+    readback_screenshot_dimensions: visualReadback?.layout.imageDimensions ?? null,
   });
 }
 
