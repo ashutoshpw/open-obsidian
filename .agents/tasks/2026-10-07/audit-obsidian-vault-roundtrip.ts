@@ -446,7 +446,7 @@ const report: Record<string, unknown> = {
     milestone: "R2.8.106-C07.2-reference-rewrite-and-reopen-capture",
     report_path: "bases_group_direction_reference",
   }, {
-    milestone: "R2.8.118-C07.3-visible-result-identity-and-empty-result-repair",
+    milestone: "R2.8.119-C07.3-cross-platform-capture-repair",
     report_path: "bases_group_order_reference",
   }],
   status: "pending",
@@ -498,7 +498,7 @@ const report: Record<string, unknown> = {
   },
   bases_group_order_reference: {
     status: "pending",
-    milestone: "R2.8.118-C07.3-visible-result-identity-and-empty-result-repair",
+    milestone: "R2.8.119-C07.3-cross-platform-capture-repair",
     source_sha: sourceSha,
     capture_scope: "Record actual pinned Obsidian 1.14.4 groupOrder behavior for JSON-compatible and native-YAML .base inputs, typed values, malformed configurations, JSON non-finite-number and YAML binary-tag candidates, and formula-derived Kanban grouping. Capture is reference characterization only and does not establish Rust parity.",
     application: "Pinned Obsidian Desktop 1.14.4",
@@ -600,6 +600,20 @@ class DevToolsConnection {
     const value = remoteObject?.value;
     if (response.result?.exceptionDetails || typeof value !== "string") {
       throw new Error(`Obsidian renderer evaluation returned no JSON value (${label}): ${JSON.stringify(runtimeEvaluationDiagnostics(response))}`);
+    }
+    return JSON.parse(value) as T;
+  }
+
+  async evaluateJsonAwaited<T>(expression: string, label = "renderer expression"): Promise<T> {
+    const response = await this.request("Runtime.evaluate", {
+      expression: `(async () => JSON.stringify(await (${expression})))()`,
+      returnByValue: true,
+      awaitPromise: true,
+    });
+    const remoteObject = response.result?.result as CdpRemoteObject | undefined;
+    const value = remoteObject?.value;
+    if (response.result?.exceptionDetails || typeof value !== "string") {
+      throw new Error(`Obsidian renderer evaluation returned no awaited JSON value (${label}): ${JSON.stringify(runtimeEvaluationDiagnostics(response))}`);
     }
     return JSON.parse(value) as T;
   }
@@ -1070,52 +1084,137 @@ for type in [CGEventType.mouseMoved, .leftMouseDown, .leftMouseUp] {
   return `Sent a macOS mouse click to the visible Open vault control at (${clickX}, ${clickY}).`;
 }
 
-async function clickMacOSNativePickerOpenButton(child: ChildProcess): Promise<string> {
+async function clickMacOSNativePickerOpenButton(child: ChildProcess, expectedPanelIdentity: string): Promise<string> {
+  const expectedPanel = expectedPanelIdentity?.match(/^(AXSheet|AXWindow):([^|]+)\|bounds=(-?\d+),(-?\d+),(\d+),(\d+)(?:\|parent=(AXWindow):([^|]+)\|bounds=(-?\d+),(-?\d+),(\d+),(\d+))?$/);
+  if (!expectedPanel
+      || Number(expectedPanel[5]) <= 0
+      || Number(expectedPanel[6]) <= 0
+      || (expectedPanel[1] === "AXSheet" && (!expectedPanel[7] || Number(expectedPanel[11]) <= 0 || Number(expectedPanel[12]) <= 0))) {
+    throw new Error(`Invalid native macOS panel identity: ${expectedPanelIdentity}`);
+  }
   const boundsScript = `on run argv
     tell application "System Events"
       set targetProcess to first process whose unix id is (item 1 of argv as integer)
-      set matchingSheets to {}
-      repeat with candidateWindow in windows of targetProcess
-        try
-          repeat with candidateSheet in sheets of candidateWindow
+      set expectedPanelRole to item 2 of argv as text
+      set expectedPanelName to item 3 of argv as text
+      set expectedPanelX to item 4 of argv as integer
+      set expectedPanelY to item 5 of argv as integer
+      set expectedPanelWidth to item 6 of argv as integer
+      set expectedPanelHeight to item 7 of argv as integer
+      set matchingPanels to {}
+      set accessibilityReadErrors to {}
+      if expectedPanelRole is "AXSheet" then
+        if (count of argv) is not 13 then error "Expected parent identity and bounds for the recorded AXSheet"
+        set expectedParentRole to item 8 of argv as text
+        set expectedParentName to item 9 of argv as text
+        set expectedParentX to item 10 of argv as integer
+        set expectedParentY to item 11 of argv as integer
+        set expectedParentWidth to item 12 of argv as integer
+        set expectedParentHeight to item 13 of argv as integer
+        repeat with candidateWindow in windows of targetProcess
+          set parentMatches to false
+          try
+            set candidateParentRole to role of candidateWindow as text
+            set candidateParentName to name of candidateWindow as text
+            set candidateParentPosition to position of candidateWindow
+            set candidateParentSize to size of candidateWindow
+            set parentMatches to candidateParentRole is expectedParentRole and candidateParentName is expectedParentName and (item 1 of candidateParentPosition as integer) is expectedParentX and (item 2 of candidateParentPosition as integer) is expectedParentY and (item 1 of candidateParentSize as integer) is expectedParentWidth and (item 2 of candidateParentSize as integer) is expectedParentHeight
+          on error errorMessage
+            set end of accessibilityReadErrors to "parent window attributes: " & errorMessage
+          end try
+          set candidateSheets to {}
+          try
+            set candidateSheets to sheets of candidateWindow
+          on error errorMessage
+            set end of accessibilityReadErrors to "sheet enumeration: " & errorMessage
+          end try
+          set candidateSheetIndex to 0
+          repeat with candidateSheet in candidateSheets
+            set candidateSheetIndex to candidateSheetIndex + 1
             try
-              if (name of candidateSheet as text) is "Open" then set end of matchingSheets to candidateSheet
+              set candidateSheetRole to role of candidateSheet as text
+              set candidateSheetName to name of candidateSheet as text
+              set candidateSheetPosition to position of candidateSheet
+              set candidateSheetSize to size of candidateSheet
+              if parentMatches and candidateSheetRole is expectedPanelRole and candidateSheetName is expectedPanelName and (item 1 of candidateSheetPosition as integer) is expectedPanelX and (item 2 of candidateSheetPosition as integer) is expectedPanelY and (item 1 of candidateSheetSize as integer) is expectedPanelWidth and (item 2 of candidateSheetSize as integer) is expectedPanelHeight then
+                set end of matchingPanels to candidateSheet
+              end if
+            on error errorMessage
+              set end of accessibilityReadErrors to "sheet " & candidateSheetIndex & " attributes: " & errorMessage
             end try
           end repeat
-        end try
-      end repeat
-      if (count of matchingSheets) > 1 then error "Found multiple native Open sheets"
-      if (count of matchingSheets) is 1 then
-        set pickerElement to item 1 of matchingSheets
-      else
-        set matchingWindows to {}
+        end repeat
+      else if expectedPanelRole is "AXWindow" then
+        if (count of argv) is not 7 then error "Unexpected parent identity for the recorded AXWindow"
         repeat with candidateWindow in windows of targetProcess
           try
-            if (name of candidateWindow as text) is "Open" then set end of matchingWindows to candidateWindow
+            set candidateRole to role of candidateWindow as text
+            set candidateName to name of candidateWindow as text
+            set candidatePosition to position of candidateWindow
+            set candidateSize to size of candidateWindow
+            if candidateRole is expectedPanelRole and candidateName is expectedPanelName and (item 1 of candidatePosition as integer) is expectedPanelX and (item 2 of candidatePosition as integer) is expectedPanelY and (item 1 of candidateSize as integer) is expectedPanelWidth and (item 2 of candidateSize as integer) is expectedPanelHeight then
+              set end of matchingPanels to candidateWindow
+            end if
+          on error errorMessage
+            set end of accessibilityReadErrors to "window attributes: " & errorMessage
           end try
         end repeat
-        if (count of matchingWindows) is not 1 then error "Expected one native Open window or sheet; found " & (count of matchingWindows)
-        set pickerElement to item 1 of matchingWindows
+      else
+        error "Unsupported role for the recorded native panel: " & expectedPanelRole
       end if
+      if (count of accessibilityReadErrors) > 0 then
+        set AppleScript's text item delimiters to " | "
+        set errorSummary to accessibilityReadErrors as text
+        set AppleScript's text item delimiters to ""
+        error "Native panel identity enumeration had accessibility read errors: " & errorSummary
+      end if
+      if (count of matchingPanels) is not 1 then error "Expected exactly one recorded native panel " & expectedPanelRole & ":" & expectedPanelName & "; found " & (count of matchingPanels)
+      set pickerElement to item 1 of matchingPanels
       set matchingButtons to {}
-      repeat with candidateElement in (entire contents of pickerElement)
+      set accessibilityReadErrors to {}
+      set pickerDescendants to {}
+      try
+        set pickerDescendants to entire contents of pickerElement
+      on error errorMessage
+        set end of accessibilityReadErrors to "picker descendant enumeration: " & errorMessage
+      end try
+      set descendantIndex to 0
+      repeat with candidateElement in pickerDescendants
+        set descendantIndex to descendantIndex + 1
         try
-          if (role of candidateElement as text) is "AXButton" and (name of candidateElement as text) is "Open" then
+          set candidateRole to role of candidateElement as text
+          set candidateName to name of candidateElement as text
+          if candidateRole is "AXButton" and candidateName is "Open" then
             set end of matchingButtons to candidateElement
           end if
+        on error errorMessage
+          set end of accessibilityReadErrors to "picker descendant " & descendantIndex & " attributes: " & errorMessage
         end try
       end repeat
+      if (count of accessibilityReadErrors) > 0 then
+        set AppleScript's text item delimiters to " | "
+        set errorSummary to accessibilityReadErrors as text
+        set AppleScript's text item delimiters to ""
+        error "Native Open button enumeration had accessibility read errors: " & errorSummary
+      end if
       if (count of matchingButtons) is not 1 then error "Expected one native Open button in the picker; found " & (count of matchingButtons)
       set openButton to item 1 of matchingButtons
-      if (enabled of openButton) is not true then error "The native Open button is disabled"
-      set buttonPosition to position of openButton
-      set buttonSize to size of openButton
+      try
+        if (enabled of openButton) is not true then error "The native Open button is disabled"
+        set buttonPosition to position of openButton
+        set buttonSize to size of openButton
+      on error errorMessage
+        error "Could not read the unique native Open button state or bounds: " & errorMessage
+      end try
+      if (item 1 of buttonSize as integer) <= 0 or (item 2 of buttonSize as integer) <= 0 then error "The unique native Open button has invalid bounds"
       return (item 1 of buttonPosition as integer) & "," & (item 2 of buttonPosition as integer) & "," & (item 1 of buttonSize as integer) & "," & (item 2 of buttonSize as integer)
     end tell
   end run`;
   let bounds: string;
   try {
-    bounds = execFileSync("osascript", ["-e", boundsScript, String(child.pid ?? -1)], {encoding: "utf8", stdio: ["ignore", "pipe", "pipe"]}).trim();
+    const args = ["-e", boundsScript, String(child.pid ?? -1), ...expectedPanel.slice(1, 7).map((value) => value ?? "")];
+    if (expectedPanel[1] === "AXSheet") args.push(...expectedPanel.slice(7, 13).map((value) => value ?? ""));
+    bounds = execFileSync("osascript", args, {encoding: "utf8", stdio: ["ignore", "pipe", "pipe"]}).trim();
   } catch (error) {
     const failure = error as NodeJS.ErrnoException & {stderr?: Buffer | string; stdout?: Buffer | string};
     const output = [failure.stdout, failure.stderr].filter(Boolean).map(String).join("\n").trim();
@@ -1184,47 +1283,165 @@ function macOSApplicationWindowDescriptions(child: ChildProcess): string {
     tell application "System Events"
       set targetProcess to first process whose unix id is (item 1 of argv as integer)
       set windowDescriptions to {}
+      set windowIndex to 0
       try
         repeat with candidateWindow in windows of targetProcess
+          set windowIndex to windowIndex + 1
+          set candidateIdentity to ""
           try
             set candidateRole to role of candidateWindow as text
-          on error
-            set candidateRole to "window"
-          end try
-          try
             set candidateName to name of candidateWindow as text
-          on error
-            set candidateName to ""
+            set candidatePosition to position of candidateWindow
+            set candidateSize to size of candidateWindow
+            set candidateBounds to ((item 1 of candidatePosition as integer) as text) & "," & ((item 2 of candidatePosition as integer) as text) & "," & ((item 1 of candidateSize as integer) as text) & "," & ((item 2 of candidateSize as integer) as text)
+            set candidateIdentity to candidateRole & ":" & candidateName & "|bounds=" & candidateBounds
+            set end of windowDescriptions to candidateIdentity
+          on error errorMessage
+            set end of windowDescriptions to "accessibility read error:window " & windowIndex & ":" & errorMessage
           end try
-          set end of windowDescriptions to candidateRole & ":" & candidateName
+          set candidateSheets to {}
           try
-            repeat with candidateSheet in sheets of candidateWindow
-              try
-                set candidateSheetName to name of candidateSheet as text
-              on error
-                set candidateSheetName to ""
-              end try
-              set end of windowDescriptions to "AXSheet:" & candidateSheetName
-            end repeat
+            set candidateSheets to sheets of candidateWindow
+          on error errorMessage
+            set end of windowDescriptions to "accessibility read error:sheet enumeration for window " & windowIndex & ":" & errorMessage
           end try
+          set sheetIndex to 0
+          repeat with candidateSheet in candidateSheets
+            set sheetIndex to sheetIndex + 1
+            try
+              if candidateIdentity is "" then error "parent window identity was unreadable"
+              set candidateSheetRole to role of candidateSheet as text
+              set candidateSheetName to name of candidateSheet as text
+              set candidateSheetPosition to position of candidateSheet
+              set candidateSheetSize to size of candidateSheet
+              set candidateSheetBounds to ((item 1 of candidateSheetPosition as integer) as text) & "," & ((item 2 of candidateSheetPosition as integer) as text) & "," & ((item 1 of candidateSheetSize as integer) as text) & "," & ((item 2 of candidateSheetSize as integer) as text)
+              set end of windowDescriptions to candidateSheetRole & ":" & candidateSheetName & "|bounds=" & candidateSheetBounds & "|parent=" & candidateIdentity
+            on error errorMessage
+              set end of windowDescriptions to "accessibility read error:sheet " & windowIndex & "," & sheetIndex & ":" & errorMessage
+            end try
+          end repeat
         end repeat
       on error errorMessage
         set end of windowDescriptions to "accessibility error:" & errorMessage
       end try
-      return windowDescriptions as text
+      set AppleScript's text item delimiters to linefeed
+      set serializedDescriptions to windowDescriptions as text
+      set AppleScript's text item delimiters to ""
+      return serializedDescriptions
     end tell
   end run`;
   return execFileSync("osascript", ["-e", script, String(child.pid ?? -1)], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]}).trim();
 }
 
-function macOSNativePickerVisibleInAccessibility(descriptions: string): boolean {
-  if (/AXSheet:/i.test(descriptions) || /open.{0,40}vault/i.test(descriptions)) return true;
-  const windows = descriptions.match(/(?:AXWindow|standard window|dialog):/gi) ?? [];
-  return windows.length > 1;
+async function clickMacOSFirstRunOpenButton(child: ChildProcess): Promise<string> {
+  const script = `on run argv
+    tell application "System Events"
+      set targetProcess to first process whose unix id is (item 1 of argv as integer)
+      set frontmost of targetProcess to true
+      set matchingButtons to {}
+      set accessibilityReadErrors to {}
+      repeat with candidateWindow in windows of targetProcess
+        set windowContents to {}
+        try
+          set windowContents to entire contents of candidateWindow
+        on error errorMessage
+          set end of accessibilityReadErrors to "first-run window descendant enumeration: " & errorMessage
+        end try
+        set descendantIndex to 0
+        repeat with candidateButton in windowContents
+          set descendantIndex to descendantIndex + 1
+          try
+            set candidateRole to role of candidateButton as text
+            set candidateName to name of candidateButton as text
+            if candidateRole is "AXButton" and candidateName is "Open" then
+              set end of matchingButtons to candidateButton
+            end if
+          on error errorMessage
+            set end of accessibilityReadErrors to "first-run descendant " & descendantIndex & " attributes: " & errorMessage
+          end try
+        end repeat
+      end repeat
+      if (count of accessibilityReadErrors) > 0 then
+        set AppleScript's text item delimiters to " | "
+        set errorSummary to accessibilityReadErrors as text
+        set AppleScript's text item delimiters to ""
+        error "First-run Open-button enumeration had accessibility read errors: " & errorSummary
+      end if
+      if (count of matchingButtons) is not 1 then error "Expected exactly one first-run Open accessibility button; found " & (count of matchingButtons)
+      set targetButton to item 1 of matchingButtons
+      if (enabled of targetButton) is not true then error "The exact first-run Open accessibility button is disabled"
+      set buttonPosition to position of targetButton
+      set buttonSize to size of targetButton
+      if (item 1 of buttonSize) <= 0 or (item 2 of buttonSize) <= 0 then error "The exact first-run Open accessibility button has invalid bounds"
+      click targetButton
+      return "System Events dispatched a trusted click to the unique enabled AXButton Open at (" & (item 1 of buttonPosition as integer) & "," & (item 2 of buttonPosition as integer) & "," & (item 1 of buttonSize as integer) & "," & (item 2 of buttonSize as integer) & ")"
+    end tell
+  end run`;
+  try {
+    return execFileSync("osascript", ["-e", script, String(child.pid ?? -1)], {encoding: "utf8", stdio: ["ignore", "pipe", "pipe"]}).trim();
+  } catch (error) {
+    const failure = error as NodeJS.ErrnoException & {stderr?: Buffer | string; stdout?: Buffer | string};
+    const output = [failure.stdout, failure.stderr].filter(Boolean).map(String).join("\n").trim();
+    throw new Error(`Could not activate the unique visible first-run Open button through macOS accessibility: ${output || failure.message}`);
+  }
 }
 
-function macOSNativeOpenPanelVisibleInAccessibility(descriptions: string): boolean {
-  return /(?:AXSheet|AXWindow|standard window|dialog):\s*Open(?:,|$)/i.test(descriptions);
+function macOSAccessibilityWindowEntries(descriptions: string): string[] {
+  return descriptions.split(/\r?\n/).map((entry) => entry.trim()).filter(Boolean);
+}
+
+function macOSReadableAccessibilityWindowEntries(descriptions: string): string[] {
+  const entries = macOSAccessibilityWindowEntries(descriptions);
+  if (entries.length === 0) throw new Error("The macOS accessibility inventory was empty");
+  const readErrors = entries.filter((entry) => /^accessibility (?:error|read error):/i.test(entry));
+  if (readErrors.length > 0) throw new Error(`The macOS accessibility inventory contains read errors: ${readErrors.join(" | ")}`);
+  const incompleteEntries = entries.filter((entry) => /\|bounds=unavailable(?:\||$)/i.test(entry));
+  if (incompleteEntries.length > 0) throw new Error(`The macOS accessibility inventory contains incomplete bounds: ${incompleteEntries.join(" | ")}`);
+  const zeroSizeNativePanels = entries.filter((entry) => {
+    const windowMatch = /^AXWindow:(?:Open|Open folder as vault)\|bounds=(-?\d+),(-?\d+),(\d+),(\d+)$/i.exec(entry);
+    if (windowMatch && (Number(windowMatch[3]) <= 0 || Number(windowMatch[4]) <= 0)) return true;
+    const sheetMatch = /^AXSheet:(?:Open|Open folder as vault)\|bounds=(-?\d+),(-?\d+),(\d+),(\d+)\|parent=AXWindow:[^|]+\|bounds=(-?\d+),(-?\d+),(\d+),(\d+)$/i.exec(entry);
+    return Boolean(sheetMatch && (
+      Number(sheetMatch[3]) <= 0
+      || Number(sheetMatch[4]) <= 0
+      || Number(sheetMatch[7]) <= 0
+      || Number(sheetMatch[8]) <= 0
+    ));
+  });
+  if (zeroSizeNativePanels.length > 0) {
+    throw new Error(`The macOS accessibility inventory contains a zero-sized native Open panel or parent window: ${zeroSizeNativePanels.join(" | ")}`);
+  }
+  return entries;
+}
+
+function isMacOSNativeOpenPanelEntry(entry: string): boolean {
+  const nativeWindow = /^AXWindow:(?:Open|Open folder as vault)\|bounds=-?\d+,-?\d+,[1-9]\d*,[1-9]\d*$/i;
+  const nativeSheet = /^AXSheet:(?:Open|Open folder as vault)\|bounds=-?\d+,-?\d+,[1-9]\d*,[1-9]\d*\|parent=AXWindow:[^|]+\|bounds=-?\d+,-?\d+,[1-9]\d*,[1-9]\d*$/i;
+  return nativeWindow.test(entry) || nativeSheet.test(entry);
+}
+
+function macOSNativeOpenPanelEntries(descriptions: string): string[] {
+  return macOSReadableAccessibilityWindowEntries(descriptions).filter(isMacOSNativeOpenPanelEntry);
+}
+
+function macOSNativeOpenPanelIdentityCount(entries: string[], identity: string): number {
+  return entries.filter((entry) => entry === identity && isMacOSNativeOpenPanelEntry(entry)).length;
+}
+
+function macOSAddedNativeOpenPanelEntries(before: string[], after: string[]): string[] {
+  const remaining = new Map<string, number>();
+  for (const entry of before) {
+    if (!isMacOSNativeOpenPanelEntry(entry)) continue;
+    remaining.set(entry, (remaining.get(entry) ?? 0) + 1);
+  }
+  const added: string[] = [];
+  for (const entry of after) {
+    if (!isMacOSNativeOpenPanelEntry(entry)) continue;
+    const priorCount = remaining.get(entry) ?? 0;
+    if (priorCount > 0) remaining.set(entry, priorCount - 1);
+    else added.push(entry);
+  }
+  return added;
 }
 
 type WindowsTopLevelWindow = {
@@ -1988,6 +2205,7 @@ function vaultPickerScreenshotName(prefix: string, filename: string): string {
 async function clickFirstRunOpenButton(
   connection: DevToolsConnection,
   reporter: Record<string, unknown> = report.obsidian_authoring as Record<string, unknown>,
+  child?: ChildProcess,
 ): Promise<void> {
   const visible = await connection.evaluateJson<{matched: boolean; buttons: string[]}>(`(() => {
     const buttons = [...document.querySelectorAll('button,[role="button"]')];
@@ -1997,6 +2215,11 @@ async function clickFirstRunOpenButton(
   })()`);
   reporter.first_run_buttons = visible.buttons;
   if (!visible.matched) throw new Error(`Could not find Obsidian's exact Open button; visible button labels=${visible.buttons.join(" | ")}`);
+  if (process.platform === "darwin") {
+    if (!child?.pid) throw new Error("OpenObsidian did not expose its process id for macOS first-run Open activation");
+    reporter.first_run_open_activation = await clickMacOSFirstRunOpenButton(child);
+    return;
+  }
   // Electron's native folder picker blocks the renderer thread while it is open, so
   // dispatch the click without waiting for Runtime.evaluate's response.
   connection.send("Runtime.evaluate", {
@@ -2004,6 +2227,7 @@ async function clickFirstRunOpenButton(
       .find((button) => (button.innerText || button.textContent || '').trim() === 'Open')?.click())()`,
     returnByValue: true,
   });
+  reporter.first_run_open_activation = "Dispatched the exact Open button's DOM click through the renderer";
 }
 
 async function finishVaultDirectorySelection(
@@ -2147,20 +2371,46 @@ async function chooseVaultDirectoryMacOS(connection: DevToolsConnection, port: n
   const screenshotPrefix = options.screenshotPrefix ?? "";
   const pickerScreenshots: string[] = [];
   const folderPickerRecord: Record<string, unknown> = {
-    interaction: "macOS Open panel: bring Obsidian forward, enter the fixture path through Go to Folder (Command-Shift-G), then click the native Open button",
+    interaction: "macOS Open panel: record the first-run accessibility inventory, dispatch a trusted click to its unique enabled Open control, confirm one newly added native panel in accessibility and screenshot OCR, then enter the fixture path and click that exact panel's Open button",
     picker_screenshots: [],
     picker_open_status: "not-started",
+    picker_baseline_status: "pending",
     initial_picker_screenshot_status: "not-started",
+    picker_visual_confirmation_status: "not-started",
     path_entry_status: "not-started",
-    picker_visibility_wait_status: "pending",
+    picker_visibility_wait_status: "not-started",
     open_button_click_status: "not-started",
     picker_closed: false,
   };
   reporter.folder_picker = folderPickerRecord;
   await saveReport();
+
+  let pickerWindowsBeforeOpen: string;
+  let pickerEntriesBeforeOpen: string[];
   try {
-    await clickFirstRunOpenButton(connection, reporter);
-    folderPickerRecord.picker_open_status = "clicked-first-run-open";
+    pickerWindowsBeforeOpen = macOSApplicationWindowDescriptions(child);
+    pickerEntriesBeforeOpen = macOSReadableAccessibilityWindowEntries(pickerWindowsBeforeOpen);
+    folderPickerRecord.picker_baseline_status = "captured";
+    folderPickerRecord.picker_windows_before_open = pickerWindowsBeforeOpen;
+    folderPickerRecord.picker_entries_before_open = pickerEntriesBeforeOpen;
+    folderPickerRecord.native_open_panel_entries_before_open = macOSNativeOpenPanelEntries(pickerWindowsBeforeOpen);
+  } catch (error) {
+    folderPickerRecord.picker_baseline_status = "failed";
+    folderPickerRecord.picker_baseline_error = error instanceof Error ? error.message : String(error);
+    try {
+      folderPickerRecord.picker_windows_after_baseline_failure = macOSApplicationWindowDescriptions(child);
+    } catch (windowError) {
+      folderPickerRecord.picker_baseline_window_read_error = windowError instanceof Error ? windowError.message : String(windowError);
+    }
+    await saveReportAfterStageFailure("picker_baseline", folderPickerRecord, error);
+    throw error;
+  }
+  await saveReport();
+
+  let latestVisualConfirmationWindows: string | undefined;
+  try {
+    await clickFirstRunOpenButton(connection, reporter, child);
+    folderPickerRecord.picker_open_status = "activation-dispatched-awaiting-native-panel";
     await delay(1_000);
   } catch (error) {
     folderPickerRecord.picker_open_status = "failed";
@@ -2174,17 +2424,112 @@ async function chooseVaultDirectoryMacOS(connection: DevToolsConnection, port: n
     throw error;
   }
   await saveReport();
+
+  type MacOSPanelObservation = {descriptions: string; entries: string[]; addedPanels: string[]};
+  let latestPickerWindows = pickerWindowsBeforeOpen;
+  let latestPickerEntries = pickerEntriesBeforeOpen;
+  let latestAddedPanels: string[] = [];
+  const pickerInventoryReadErrors: string[] = [];
+  let pickerPanelIdentity = "";
+  folderPickerRecord.picker_visibility_wait_status = "pending";
+  let panelObservation: MacOSPanelObservation;
   try {
-    pickerScreenshots.push(await captureDesktopScreenshot(vaultPickerScreenshotName(screenshotPrefix, "obsidian-folder-picker-initial.png")));
-    folderPickerRecord.initial_picker_screenshot_status = "captured";
-    folderPickerRecord.picker_screenshots = pickerScreenshots.map((path) => relative(reportDirectory, path));
+    panelObservation = await waitFor(
+      "exactly one new macOS native Open panel after trusted first-run activation",
+      async () => {
+        try {
+          const descriptions = macOSApplicationWindowDescriptions(child);
+          latestPickerWindows = descriptions;
+          const entries = macOSReadableAccessibilityWindowEntries(descriptions);
+          const addedPanels = macOSAddedNativeOpenPanelEntries(pickerEntriesBeforeOpen, entries);
+          latestPickerEntries = entries;
+          latestAddedPanels = addedPanels;
+          return {descriptions, entries, addedPanels};
+        } catch (error) {
+          pickerInventoryReadErrors.push(error instanceof Error ? error.message : String(error));
+          return {descriptions: "", entries: [], addedPanels: []};
+        }
+      },
+      (observation) => observation.addedPanels.length > 0,
+      15_000,
+    );
+    folderPickerRecord.picker_windows_after_open_activation = panelObservation.descriptions;
+    folderPickerRecord.picker_entries_after_open_activation = panelObservation.entries;
+    folderPickerRecord.new_native_open_panel_entries = panelObservation.addedPanels;
+    folderPickerRecord.picker_window_read_errors_after_open_activation = pickerInventoryReadErrors;
+    if (panelObservation.addedPanels.length !== 1) {
+      throw new Error(`Expected exactly one newly added native macOS Open panel; found ${panelObservation.addedPanels.length}; entries=${JSON.stringify(panelObservation.entries)}`);
+    }
+    if (pickerInventoryReadErrors.length > 0) {
+      throw new Error(`The accessibility inventory had read errors while waiting for the native panel: ${pickerInventoryReadErrors.join(" | ")}`);
+    }
+    pickerPanelIdentity = panelObservation.addedPanels[0] ?? "";
+    if (!pickerPanelIdentity) throw new Error("The newly added native macOS Open panel had no recorded identity");
+    const currentPanelIdentityCount = macOSNativeOpenPanelIdentityCount(panelObservation.entries, pickerPanelIdentity);
+    if (currentPanelIdentityCount !== 1) {
+      throw new Error(`The newly added native macOS Open panel identity is not unique in the current inventory; expected one match for ${pickerPanelIdentity}, found ${currentPanelIdentityCount}`);
+    }
+    folderPickerRecord.picker_panel_identity = pickerPanelIdentity;
+    folderPickerRecord.picker_panel_identity_match_count_after_activation = currentPanelIdentityCount;
+    folderPickerRecord.picker_visibility_wait_status = "confirmed-new-panel-identity";
   } catch (error) {
-    folderPickerRecord.initial_picker_screenshot_status = "failed";
-    folderPickerRecord.initial_picker_screenshot_error = error instanceof Error ? error.message : String(error);
-    await saveReportAfterStageFailure("initial_picker_screenshot", folderPickerRecord, error);
+    folderPickerRecord.picker_visibility_wait_status = "failed";
+    folderPickerRecord.picker_visibility_wait_error = error instanceof Error ? error.message : String(error);
+    folderPickerRecord.picker_windows_after_open_activation = latestPickerWindows;
+    folderPickerRecord.picker_entries_after_open_activation = latestPickerEntries;
+    folderPickerRecord.new_native_open_panel_entries = latestAddedPanels;
+    folderPickerRecord.picker_window_read_errors_after_open_activation = pickerInventoryReadErrors;
+    try {
+      const path = await captureDesktopScreenshot(vaultPickerScreenshotName(screenshotPrefix, "obsidian-folder-picker-open-failure.png"));
+      pickerScreenshots.push(path);
+      folderPickerRecord.picker_screenshots = pickerScreenshots.map((screenshotPath) => relative(reportDirectory, screenshotPath));
+      folderPickerRecord.picker_open_failure_screenshot_status = "captured";
+      folderPickerRecord.picker_open_failure_screenshot_ocr = (await readNativeFolderPickerOcr(path)).slice(0, 2_000);
+    } catch (screenshotError) {
+      folderPickerRecord.picker_open_failure_screenshot_status = "failed";
+      folderPickerRecord.picker_open_failure_screenshot_error = screenshotError instanceof Error ? screenshotError.message : String(screenshotError);
+    }
+    await saveReportAfterStageFailure("picker_visibility_wait", folderPickerRecord, error);
     throw error;
   }
   await saveReport();
+
+  try {
+    folderPickerRecord.initial_picker_screenshot_status = "pending";
+    folderPickerRecord.picker_visual_confirmation_status = "pending";
+    await saveReport();
+    const initialPickerScreenshot = await captureDesktopScreenshot(vaultPickerScreenshotName(screenshotPrefix, "obsidian-folder-picker-initial.png"));
+    pickerScreenshots.push(initialPickerScreenshot);
+    folderPickerRecord.initial_picker_screenshot_status = "captured";
+    folderPickerRecord.picker_screenshots = pickerScreenshots.map((path) => relative(reportDirectory, path));
+    folderPickerRecord.initial_picker_screenshot_ocr = (await readNativeFolderPickerOcr(initialPickerScreenshot)).slice(0, 2_000);
+    if (!nativeFolderPickerVisibleInOcr(String(folderPickerRecord.initial_picker_screenshot_ocr))) {
+      throw new Error(`The newly added panel ${pickerPanelIdentity} was not visibly confirmed as a native folder chooser by screenshot OCR: ${JSON.stringify(folderPickerRecord.initial_picker_screenshot_ocr)}`);
+    }
+    latestVisualConfirmationWindows = macOSApplicationWindowDescriptions(child);
+    folderPickerRecord.picker_windows_at_visual_confirmation = latestVisualConfirmationWindows;
+    const visualConfirmationEntries = macOSReadableAccessibilityWindowEntries(latestVisualConfirmationWindows);
+    const visualConfirmationPanels = macOSAddedNativeOpenPanelEntries(pickerEntriesBeforeOpen, visualConfirmationEntries);
+    const visualConfirmationIdentityCount = macOSNativeOpenPanelIdentityCount(visualConfirmationEntries, pickerPanelIdentity);
+    folderPickerRecord.picker_entries_at_visual_confirmation = visualConfirmationEntries;
+    folderPickerRecord.new_native_open_panel_entries_at_visual_confirmation = visualConfirmationPanels;
+    folderPickerRecord.picker_panel_identity_match_count_at_visual_confirmation = visualConfirmationIdentityCount;
+    if (visualConfirmationPanels.length !== 1 || visualConfirmationPanels[0] !== pickerPanelIdentity || visualConfirmationIdentityCount !== 1) {
+      throw new Error(`The visually confirmed chooser no longer maps to exactly one current recorded panel ${pickerPanelIdentity}: added=${JSON.stringify(visualConfirmationPanels)} current_matches=${visualConfirmationIdentityCount}`);
+    }
+    folderPickerRecord.picker_visual_confirmation_status = "confirmed-by-screenshot-ocr";
+  } catch (error) {
+    folderPickerRecord.picker_visual_confirmation_status = "failed";
+    folderPickerRecord.picker_visual_confirmation_error = error instanceof Error ? error.message : String(error);
+    if (latestVisualConfirmationWindows !== undefined) {
+      folderPickerRecord.picker_windows_at_visual_confirmation = latestVisualConfirmationWindows;
+    }
+    if (folderPickerRecord.initial_picker_screenshot_status === "pending") folderPickerRecord.initial_picker_screenshot_status = "failed";
+    await saveReportAfterStageFailure("picker_visual_confirmation", folderPickerRecord, error);
+    throw error;
+  }
+  await saveReport();
+
   const script = `on run argv
     tell application "System Events"
       set targetProcess to first process whose unix id is (item 1 of argv as integer)
@@ -2198,57 +2543,22 @@ async function chooseVaultDirectoryMacOS(connection: DevToolsConnection, port: n
       key code 36
   end tell
   end run`;
-  let pickerVisible = false;
-  const pickerInventoryReadErrorsBeforePathEntry: string[] = [];
+  folderPickerRecord.path_entry_status = "pending";
+  await saveReport();
   try {
-    const pickerWindowsBeforePath = await waitFor(
-      "exact macOS native Open panel to become accessibility-visible before path entry",
-      async () => {
-        try {
-          return macOSApplicationWindowDescriptions(child);
-        } catch (error) {
-          pickerInventoryReadErrorsBeforePathEntry.push(error instanceof Error ? error.message : String(error));
-          return "";
-        }
-      },
-      (descriptions) => descriptions.trim().length > 0
-        && !/accessibility error:/i.test(descriptions)
-        && macOSNativeOpenPanelVisibleInAccessibility(descriptions),
-      15_000,
-    );
-    pickerVisible = true;
-    folderPickerRecord.picker_visibility_wait_status = "confirmed";
-    folderPickerRecord.picker_windows_before_path_entry = pickerWindowsBeforePath;
-    folderPickerRecord.picker_window_read_errors_before_path_entry = pickerInventoryReadErrorsBeforePathEntry;
-    folderPickerRecord.path_entry_status = "pending";
     const pathEntryStdout = execFileSync("osascript", ["-e", script, String(child.pid ?? -1), targetRoot], {
       encoding: "utf8",
       stdio: ["ignore", "pipe", "pipe"],
     }).trim();
     folderPickerRecord.path_entry_script_stdout = pathEntryStdout;
     folderPickerRecord.path_entry_status = "completed";
-    await delay(1_000);
-    pickerScreenshots.push(await captureDesktopScreenshot(vaultPickerScreenshotName(screenshotPrefix, "obsidian-folder-picker-after-path.png")));
-    folderPickerRecord.path_entry_screenshot_status = "captured";
-    folderPickerRecord.picker_screenshots = pickerScreenshots.map((path) => relative(reportDirectory, path));
   } catch (error) {
     const errorText = error instanceof Error ? error.message : String(error);
     const failure = error as NodeJS.ErrnoException & {stderr?: Buffer | string; stdout?: Buffer | string};
-    folderPickerRecord.picker_window_read_errors_before_path_entry = pickerInventoryReadErrorsBeforePathEntry;
-    if (pickerVisible) {
-      if (folderPickerRecord.path_entry_status === "completed") {
-        folderPickerRecord.path_entry_screenshot_status = "failed";
-        folderPickerRecord.path_entry_screenshot_error = errorText;
-      } else {
-        folderPickerRecord.path_entry_status = "failed";
-        folderPickerRecord.path_entry_error = errorText;
-        folderPickerRecord.path_entry_script_stdout = String(failure.stdout ?? "").trim();
-        folderPickerRecord.path_entry_script_stderr = String(failure.stderr ?? "").trim();
-      }
-    } else {
-      folderPickerRecord.picker_visibility_wait_status = "failed";
-      folderPickerRecord.picker_visibility_wait_error = errorText;
-    }
+    folderPickerRecord.path_entry_status = "failed";
+    folderPickerRecord.path_entry_error = errorText;
+    folderPickerRecord.path_entry_script_stdout = String(failure.stdout ?? "").trim();
+    folderPickerRecord.path_entry_script_stderr = String(failure.stderr ?? "").trim();
     try {
       folderPickerRecord.picker_windows_after_path_entry_failure = macOSApplicationWindowDescriptions(child);
     } catch (windowError) {
@@ -2258,9 +2568,39 @@ async function chooseVaultDirectoryMacOS(connection: DevToolsConnection, port: n
     throw error;
   }
   await saveReport();
+  await delay(1_000);
+  try {
+    const pathEnteredScreenshot = await captureDesktopScreenshot(vaultPickerScreenshotName(screenshotPrefix, "obsidian-folder-picker-after-path.png"));
+    pickerScreenshots.push(pathEnteredScreenshot);
+    folderPickerRecord.path_entry_screenshot_status = "captured";
+    folderPickerRecord.picker_screenshots = pickerScreenshots.map((path) => relative(reportDirectory, path));
+    folderPickerRecord.path_entry_screenshot_ocr = (await readNativeFolderPickerOcr(pathEnteredScreenshot)).slice(0, 2_000);
+    if (!nativeFolderPickerVisibleInOcr(String(folderPickerRecord.path_entry_screenshot_ocr))) {
+      throw new Error(`The recorded native panel ${pickerPanelIdentity} was not visibly present after path entry: ${JSON.stringify(folderPickerRecord.path_entry_screenshot_ocr)}`);
+    }
+    const pathEntryWindows = macOSApplicationWindowDescriptions(child);
+    const pathEntryEntries = macOSReadableAccessibilityWindowEntries(pathEntryWindows);
+    const pathEntryPanels = macOSAddedNativeOpenPanelEntries(pickerEntriesBeforeOpen, pathEntryEntries);
+    const pathEntryIdentityCount = macOSNativeOpenPanelIdentityCount(pathEntryEntries, pickerPanelIdentity);
+    folderPickerRecord.picker_windows_after_path_entry = pathEntryWindows;
+    folderPickerRecord.picker_entries_after_path_entry = pathEntryEntries;
+    folderPickerRecord.new_native_open_panel_entries_after_path_entry = pathEntryPanels;
+    folderPickerRecord.picker_panel_identity_match_count_after_path_entry = pathEntryIdentityCount;
+    if (pathEntryPanels.length !== 1 || pathEntryPanels[0] !== pickerPanelIdentity || pathEntryIdentityCount !== 1) {
+      throw new Error(`Path entry changed or duplicated the active native panel identity; expected one current ${pickerPanelIdentity}, added=${JSON.stringify(pathEntryPanels)} current_matches=${pathEntryIdentityCount}`);
+    }
+    folderPickerRecord.path_entry_visual_confirmation_status = "confirmed-by-screenshot-ocr";
+  } catch (error) {
+    folderPickerRecord.path_entry_screenshot_status = folderPickerRecord.path_entry_screenshot_status === "captured" ? "captured-ocr-failed" : "failed";
+    folderPickerRecord.path_entry_screenshot_error = error instanceof Error ? error.message : String(error);
+    await saveReportAfterStageFailure("path_entry_screenshot", folderPickerRecord, error);
+    throw error;
+  }
+  await saveReport();
+
   let openButtonClick: string;
   try {
-    openButtonClick = await clickMacOSNativePickerOpenButton(child);
+    openButtonClick = await clickMacOSNativePickerOpenButton(child, pickerPanelIdentity);
   } catch (error) {
     folderPickerRecord.open_button_click_status = "failed";
     folderPickerRecord.open_button_click_error = error instanceof Error ? error.message : String(error);
@@ -2273,13 +2613,21 @@ async function chooseVaultDirectoryMacOS(connection: DevToolsConnection, port: n
     throw error;
   }
   folderPickerRecord.open_button_click = openButtonClick;
-  folderPickerRecord.open_button_click_status = "clicked";
+  folderPickerRecord.open_button_click_status = "click-dispatched-awaiting-panel-disappearance";
   await saveReport();
   await delay(500);
   try {
-    pickerScreenshots.push(await captureDesktopScreenshot(vaultPickerScreenshotName(screenshotPrefix, "obsidian-folder-picker-after-open-click.png")));
+    const afterOpenScreenshot = await captureDesktopScreenshot(vaultPickerScreenshotName(screenshotPrefix, "obsidian-folder-picker-after-open-click.png"));
+    pickerScreenshots.push(afterOpenScreenshot);
     folderPickerRecord.picker_screenshots = pickerScreenshots.map((path) => relative(reportDirectory, path));
     folderPickerRecord.after_open_screenshot_status = "captured";
+    folderPickerRecord.after_open_screenshot_ocr = (await readNativeFolderPickerOcr(afterOpenScreenshot)).slice(0, 2_000);
+    if (!String(folderPickerRecord.after_open_screenshot_ocr).trim()) {
+      throw new Error("The macOS after-Open screenshot OCR returned no readable text, so it cannot confirm the chooser closed");
+    }
+    if (nativeFolderPickerVisibleInOcr(String(folderPickerRecord.after_open_screenshot_ocr))) {
+      throw new Error(`The macOS native folder chooser remains visible in the after-Open screenshot: ${JSON.stringify(folderPickerRecord.after_open_screenshot_ocr)}`);
+    }
   } catch (error) {
     folderPickerRecord.after_open_screenshot_status = "failed";
     folderPickerRecord.after_open_screenshot_error = error instanceof Error ? error.message : String(error);
@@ -2287,38 +2635,71 @@ async function chooseVaultDirectoryMacOS(connection: DevToolsConnection, port: n
     throw error;
   }
   await saveReport();
-  let pickerWindowsAfterClick: string;
+  let pickerWindowsAfterClick = "";
+  let closeObservation: {descriptions: string; entries: string[]; remainingNewPanelEntries: string[]; matchingPanelIdentityCount: number; consecutiveAbsentSnapshots: number; consecutiveAbsentPanelInventories: string[]};
+  let pickerEntriesAfterClick: string[] = [];
+  let remainingNewPanelEntries: string[] = [];
+  let latestPickerWindowsAfterClick = "";
   const pickerInventoryReadErrorsAfterClick: string[] = [];
+  let consecutiveAbsentPanelSnapshots = 0;
+  const consecutiveAbsentPanelInventories: string[] = [];
   try {
-    pickerWindowsAfterClick = await waitFor(
-      "macOS native folder picker to close after clicking Open",
+    closeObservation = await waitFor(
+      `the exact newly added macOS panel ${pickerPanelIdentity} to disappear after clicking Open`,
       async () => {
         try {
-          return macOSApplicationWindowDescriptions(child);
+          const descriptions = macOSApplicationWindowDescriptions(child);
+          latestPickerWindowsAfterClick = descriptions;
+          const entries = macOSReadableAccessibilityWindowEntries(descriptions);
+          pickerEntriesAfterClick = entries;
+          remainingNewPanelEntries = macOSAddedNativeOpenPanelEntries(pickerEntriesBeforeOpen, entries);
+          const matchingPanelIdentityCount = macOSNativeOpenPanelIdentityCount(entries, pickerPanelIdentity);
+          const panelAbsent = remainingNewPanelEntries.length === 0 && matchingPanelIdentityCount === 0;
+          consecutiveAbsentPanelSnapshots = panelAbsent ? consecutiveAbsentPanelSnapshots + 1 : 0;
+          if (panelAbsent) {
+            consecutiveAbsentPanelInventories.push(descriptions);
+            if (consecutiveAbsentPanelInventories.length > 3) consecutiveAbsentPanelInventories.shift();
+          } else {
+            consecutiveAbsentPanelInventories.length = 0;
+          }
+          return {descriptions, entries, remainingNewPanelEntries, matchingPanelIdentityCount, consecutiveAbsentSnapshots: consecutiveAbsentPanelSnapshots, consecutiveAbsentPanelInventories: consecutiveAbsentPanelInventories.slice()};
         } catch (error) {
           pickerInventoryReadErrorsAfterClick.push(error instanceof Error ? error.message : String(error));
-          return "";
+          consecutiveAbsentPanelSnapshots = 0;
+          return {descriptions: "", entries: [], remainingNewPanelEntries: [pickerPanelIdentity], matchingPanelIdentityCount: 1, consecutiveAbsentSnapshots: 0, consecutiveAbsentPanelInventories: []};
         }
       },
-      (descriptions) => descriptions.trim().length > 0
-        && !/accessibility error:/i.test(descriptions)
-        && !macOSNativeOpenPanelVisibleInAccessibility(descriptions),
+      (observation) => observation.remainingNewPanelEntries.length === 0
+        && observation.matchingPanelIdentityCount === 0
+        && observation.consecutiveAbsentSnapshots >= 3,
       15_000,
     );
+    if (pickerInventoryReadErrorsAfterClick.length > 0) {
+      throw new Error(`The accessibility inventory had read errors while confirming panel closure: ${pickerInventoryReadErrorsAfterClick.join(" | ")}`);
+    }
+    pickerWindowsAfterClick = closeObservation.descriptions;
+    pickerEntriesAfterClick = closeObservation.entries;
+    remainingNewPanelEntries = closeObservation.remainingNewPanelEntries;
+    folderPickerRecord.picker_windows_after_open_click = pickerWindowsAfterClick;
     folderPickerRecord.picker_window_read_errors_after_click = pickerInventoryReadErrorsAfterClick;
+    folderPickerRecord.picker_panel_identity_match_count_after_open_click = closeObservation.matchingPanelIdentityCount;
+    folderPickerRecord.picker_panel_consecutive_absent_snapshots_after_open_click = closeObservation.consecutiveAbsentSnapshots;
+    folderPickerRecord.picker_panel_consecutive_absent_inventories_after_open_click = closeObservation.consecutiveAbsentPanelInventories;
   } catch (error) {
-    folderPickerRecord.open_button_click_status = "clicked-picker-close-timeout";
+    folderPickerRecord.open_button_click_status = "close-confirmation-failed";
     folderPickerRecord.picker_close_error = error instanceof Error ? error.message : String(error);
     folderPickerRecord.picker_window_read_errors_after_click = pickerInventoryReadErrorsAfterClick;
-    try {
-      folderPickerRecord.picker_windows_after_open_click = macOSApplicationWindowDescriptions(child);
-    } catch (windowError) {
-      folderPickerRecord.picker_close_window_read_error = windowError instanceof Error ? windowError.message : String(windowError);
-    }
+    folderPickerRecord.picker_windows_after_open_click = latestPickerWindowsAfterClick;
+    folderPickerRecord.picker_entries_after_open_click = pickerEntriesAfterClick;
+    folderPickerRecord.new_native_open_panel_entries_after_open_click = remainingNewPanelEntries;
+    folderPickerRecord.picker_panel_consecutive_absent_inventories_after_open_click = consecutiveAbsentPanelInventories;
     await saveReportAfterStageFailure("picker_close", folderPickerRecord, error);
     throw error;
   }
   folderPickerRecord.picker_windows_after_open_click = pickerWindowsAfterClick;
+  folderPickerRecord.picker_entries_after_open_click = pickerEntriesAfterClick;
+  folderPickerRecord.new_native_open_panel_entries_after_open_click = remainingNewPanelEntries;
+  folderPickerRecord.picker_window_read_errors_after_click = pickerInventoryReadErrorsAfterClick;
   folderPickerRecord.picker_closed = true;
   folderPickerRecord.open_button_click_status = "confirmed-picker-closed";
   reporter.folder_picker_closed = true;
@@ -2643,9 +3024,10 @@ async function chooseVaultDirectoryWindows(
     }
     $pickerCurrent = $picker.Current
     $buttonCurrent = $selectFolder.Current
-    if ($pickerCurrent.ProcessId -ne $expectedProcessId -or $pickerCurrent.Name -ne "Open folder as vault"
-        -or $buttonCurrent.ProcessId -ne $expectedProcessId -or $buttonCurrent.Name -ne "Select Folder"
-        -or -not $buttonCurrent.IsEnabled -or $buttonCurrent.IsOffscreen) {
+    $pickerIdentityChanged = $pickerCurrent.ProcessId -ne $expectedProcessId -or $pickerCurrent.Name -ne "Open folder as vault"
+    $buttonIdentityChanged = $buttonCurrent.ProcessId -ne $expectedProcessId -or $buttonCurrent.Name -ne "Select Folder"
+    $buttonUnavailable = -not $buttonCurrent.IsEnabled -or $buttonCurrent.IsOffscreen
+    if ($pickerIdentityChanged -or $buttonIdentityChanged -or $buttonUnavailable) {
       throw "The exact Obsidian picker or Select Folder UIA target changed before activation"
     }
     if ([OpenObsidianPickerNative]::GetForegroundWindow().ToInt64() -ne $pickerHandle.ToInt64()) {
@@ -3475,7 +3857,7 @@ async function readGroupOrderVisibleState(
   scenario: GroupOrderScenario,
   fixturePaths: string[],
 ): Promise<GroupOrderVisibleState> {
-  const visibleState = await connection.evaluateJson<GroupOrderVisibleState>(`(async () => {
+  const visibleState = await connection.evaluateJsonAwaited<GroupOrderVisibleState>(`(async () => {
     const fixturePaths = ${JSON.stringify(fixturePaths)};
     const requestedPath = ${JSON.stringify(scenario.base_path)};
     const layout = ${JSON.stringify(scenario.layout)};
@@ -4986,6 +5368,9 @@ async function readGroupOrderVisibleState(
       ambiguity_reasons: ambiguityReasons,
     };
   })()`, `C07.3 full visible-state extraction for ${scenario.id}`);
+  if (!visibleState || !Array.isArray((visibleState as GroupOrderVisibleState).groups)) {
+    throw new Error(`C07.3 visible-state extraction returned no group array for ${scenario.id}: ${JSON.stringify(visibleState).slice(0, 2_000)}`);
+  }
   return visibleState;
 }
 
@@ -6054,6 +6439,14 @@ async function selectOpenObsidianVaultFromNativePicker(
   await focusOpenObsidian(child);
   if (process.platform === "linux") xdotool("windowfocus", "--sync", window.window_id);
   screenshots.push(relative(reportDirectory, await captureDesktopScreenshot(screenshot("vault-picker-home"))));
+  let macPickerEntriesBeforeOpen: string[] | null = null;
+  if (process.platform === "darwin") {
+    const descriptions = macOSApplicationWindowDescriptions(child);
+    macPickerEntriesBeforeOpen = macOSReadableAccessibilityWindowEntries(descriptions);
+    reportTarget.native_picker_accessibility_windows_before_open = descriptions;
+    reportTarget.native_picker_entries_before_open = macPickerEntriesBeforeOpen;
+    await saveReport();
+  }
 
   const openButtonInteraction = await clickOpenVaultButton(
     child,
@@ -6064,7 +6457,19 @@ async function selectOpenObsidianVaultFromNativePicker(
   );
 
   await delay(750);
-  screenshots.push(relative(reportDirectory, await captureDesktopScreenshot(screenshot("native-folder-picker"))));
+  try {
+    const pickerScreenshot = await captureDesktopScreenshot(screenshot("native-folder-picker"));
+    screenshots.push(relative(reportDirectory, pickerScreenshot));
+    openReport.native_picker_open_screenshot = relative(reportDirectory, pickerScreenshot);
+    openReport.native_picker_screenshots = screenshots.slice();
+    openReport.native_picker_open_screenshot_status = "captured";
+    await saveReport();
+  } catch (error) {
+    openReport.native_picker_open_screenshot_status = "failed";
+    openReport.native_picker_open_error = error instanceof Error ? error.message : String(error);
+    await saveReportAfterStageFailure("native_picker_open_screenshot", openReport, error);
+    throw error;
+  }
   const pickerWindowId = process.platform === "linux" ? activeWindowId() : null;
   const pickerWindowTitle = process.platform === "linux" ? activeWindowTitle() : "native platform folder picker";
   let pathEntryInteraction: string;
@@ -6109,22 +6514,85 @@ async function selectOpenObsidianVaultFromNativePicker(
       throw new Error(`The native Linux folder picker remained visible after its confirmation button click; window=${pickerWindowTitle}; click=${JSON.stringify(clicked)}`);
     }
   } else if (process.platform === "darwin") {
-    const pickerAccessibility = await waitFor(
-      "native macOS folder picker to become visible",
-      async () => {
+    const pickerBaselineEntries = macPickerEntriesBeforeOpen;
+    if (!pickerBaselineEntries) throw new Error("The macOS native picker accessibility baseline was not captured before activation");
+    let latestMacPickerInventory = "";
+    let panelObservation: {descriptions: string; entries: string[]; addedPanels: string[]} | null = null;
+    try {
+      panelObservation = await waitFor(
+        "exactly one new native macOS folder picker to become visible",
+        async () => {
+          const descriptions = macOSApplicationWindowDescriptions(child);
+          latestMacPickerInventory = descriptions;
+          const entries = macOSReadableAccessibilityWindowEntries(descriptions);
+          return {descriptions, entries, addedPanels: macOSAddedNativeOpenPanelEntries(pickerBaselineEntries, entries)};
+        },
+        (observation) => observation.addedPanels.length === 1,
+        15_000,
+      );
+    } catch (error) {
+      if (!latestMacPickerInventory) {
         try {
-          return macOSApplicationWindowDescriptions(child);
-        } catch {
-          return null;
+          latestMacPickerInventory = macOSApplicationWindowDescriptions(child);
+        } catch (inventoryError) {
+          reportTarget.native_picker_open_inventory_error = inventoryError instanceof Error ? inventoryError.message : String(inventoryError);
         }
-      },
-      (descriptions) => descriptions !== null && macOSNativePickerVisibleInAccessibility(descriptions),
-      15_000,
-    );
-    if (!pickerAccessibility) throw new Error(`The native macOS folder picker did not appear before path entry; accessibility windows=${macOSApplicationWindowDescriptions(child)}`);
+      }
+      reportTarget.native_picker_open_status = "failed";
+      reportTarget.native_picker_open_error = error instanceof Error ? error.message : String(error);
+      reportTarget.native_picker_accessibility_windows_after_open_attempt = latestMacPickerInventory;
+      await saveReportAfterStageFailure("native_picker_open", reportTarget, error);
+      throw error;
+    }
+    if (!panelObservation) throw new Error("The macOS picker visibility wait returned no panel observation");
+    const pickerAccessibility = panelObservation.descriptions;
+    const pickerPanelIdentity = panelObservation.addedPanels[0] ?? "";
+    if (!pickerPanelIdentity || panelObservation.addedPanels.length !== 1 || macOSNativeOpenPanelIdentityCount(panelObservation.entries, pickerPanelIdentity) !== 1) {
+      const error = new Error(`The macOS native folder picker identity is missing or ambiguous before path entry: ${JSON.stringify(panelObservation.addedPanels)}`);
+      reportTarget.native_picker_open_status = "failed";
+      reportTarget.native_picker_open_error = error.message;
+      reportTarget.native_picker_accessibility_windows_after_open_attempt = pickerAccessibility;
+      await saveReportAfterStageFailure("native_picker_open", reportTarget, error);
+      throw error;
+    }
+    reportTarget.native_picker_panel_identity = pickerPanelIdentity;
     reportTarget.native_picker_accessibility_windows = pickerAccessibility;
+    reportTarget.native_picker_open_status = "identity-confirmed";
     await saveReport();
-    screenshots.push(relative(reportDirectory, await captureDesktopScreenshot(screenshot("native-folder-picker-ready"))));
+    let pickerReadyScreenshot = "";
+    let pickerReadyOcr = "";
+    let latestMacVisualInventory = pickerAccessibility;
+    try {
+      pickerReadyScreenshot = await captureDesktopScreenshot(screenshot("native-folder-picker-ready"));
+      screenshots.push(relative(reportDirectory, pickerReadyScreenshot));
+      reportTarget.native_picker_ready_screenshot = relative(reportDirectory, pickerReadyScreenshot);
+      reportTarget.native_picker_screenshots = screenshots.slice();
+      reportTarget.native_picker_ready_screenshot_status = "captured";
+      await saveReport();
+      pickerReadyOcr = await readNativeFolderPickerOcr(pickerReadyScreenshot);
+      reportTarget.native_picker_screenshot_ocr = pickerReadyOcr.slice(0, 2_000);
+      const visualInventory = macOSApplicationWindowDescriptions(child);
+      latestMacVisualInventory = visualInventory;
+      const visualEntries = macOSReadableAccessibilityWindowEntries(visualInventory);
+      const visualAddedPanels = macOSAddedNativeOpenPanelEntries(pickerBaselineEntries, visualEntries);
+      const visualIdentityCount = macOSNativeOpenPanelIdentityCount(visualEntries, pickerPanelIdentity);
+      reportTarget.native_picker_accessibility_windows_at_visual_confirmation = visualInventory;
+      reportTarget.native_picker_added_panels_at_visual_confirmation = visualAddedPanels;
+      reportTarget.native_picker_panel_identity_match_count_at_visual_confirmation = visualIdentityCount;
+      if (!pickerReadyOcr.trim() || !nativeFolderPickerVisibleInOcr(pickerReadyOcr)
+          || visualAddedPanels.length !== 1 || visualAddedPanels[0] !== pickerPanelIdentity || visualIdentityCount !== 1) {
+        throw new Error(`The macOS folder picker lacks combined visible screenshot and exact current accessibility evidence before path entry; OCR=${JSON.stringify(pickerReadyOcr.slice(0, 2_000))}; added panels=${JSON.stringify(visualAddedPanels)}; accessibility=${JSON.stringify(visualInventory)}`);
+      }
+      reportTarget.native_picker_ready_screenshot_status = "visually-and-accessibly-confirmed";
+      await saveReport();
+    } catch (error) {
+      reportTarget.native_picker_ready_screenshot_status = "failed";
+      reportTarget.native_picker_ready_screenshot_error = error instanceof Error ? error.message : String(error);
+      reportTarget.native_picker_ready_screenshot_ocr = pickerReadyOcr.slice(0, 2_000);
+      reportTarget.native_picker_accessibility_windows_at_visual_confirmation = latestMacVisualInventory;
+      await saveReportAfterStageFailure("native_picker_visual_confirmation", reportTarget, error);
+      throw error;
+    }
     const pathScript = `on run argv
       tell application "System Events"
         set targetProcess to first process whose unix id is (item 1 of argv as integer)
@@ -6142,11 +6610,83 @@ async function selectOpenObsidianVaultFromNativePicker(
     screenshots.push(relative(reportDirectory, await captureDesktopScreenshot(screenshot("native-folder-path-entered"))));
     reportTarget.native_picker_screenshots = screenshots.slice();
     await saveReport();
-    folderSelectionInteraction = await clickMacOSNativePickerOpenButton(child);
-    await delay(500);
-    screenshots.push(relative(reportDirectory, await captureDesktopScreenshot(screenshot("native-folder-path-selected"))));
-    reportTarget.native_picker_screenshots = screenshots.slice();
-    await saveReport();
+    const pathEntryInventory = macOSReadableAccessibilityWindowEntries(macOSApplicationWindowDescriptions(child));
+    const pathEntryIdentityCount = macOSNativeOpenPanelIdentityCount(pathEntryInventory, pickerPanelIdentity);
+    reportTarget.native_picker_panel_identity_match_count_after_path_entry = pathEntryIdentityCount;
+    if (pathEntryIdentityCount !== 1) {
+      throw new Error(`The macOS native folder picker identity changed or became ambiguous after path entry: expected one ${pickerPanelIdentity}, found ${pathEntryIdentityCount}`);
+    }
+    folderSelectionInteraction = await clickMacOSNativePickerOpenButton(child, pickerPanelIdentity);
+    let consecutiveAbsentSnapshots = 0;
+    let latestPickerCloseInventory = "";
+    const closureSnapshotInventories: string[] = [];
+    try {
+      await delay(500);
+      const afterOpenScreenshot = await captureDesktopScreenshot(screenshot("native-folder-path-selected"));
+      screenshots.push(relative(reportDirectory, afterOpenScreenshot));
+      reportTarget.native_picker_screenshots = screenshots.slice();
+      reportTarget.native_picker_after_open_screenshot = relative(reportDirectory, afterOpenScreenshot);
+      reportTarget.native_picker_after_open_screenshot_status = "captured";
+      await saveReport();
+      try {
+        latestPickerCloseInventory = macOSApplicationWindowDescriptions(child);
+        reportTarget.native_picker_after_open_accessibility_windows = latestPickerCloseInventory;
+        macOSReadableAccessibilityWindowEntries(latestPickerCloseInventory);
+        await saveReport();
+      } catch (error) {
+        reportTarget.native_picker_after_open_inventory_error = error instanceof Error ? error.message : String(error);
+        throw error;
+      }
+      const afterOpenOcr = await readNativeFolderPickerOcr(afterOpenScreenshot);
+      reportTarget.native_picker_after_open_screenshot_ocr = afterOpenOcr.slice(0, 2_000);
+      if (!afterOpenOcr.trim()) {
+        throw new Error("The macOS after-Open screenshot OCR returned no readable text, so it cannot confirm the chooser closed");
+      }
+      if (nativeFolderPickerVisibleInOcr(afterOpenOcr)) {
+        throw new Error(`The macOS native folder chooser remains visible in the after-Open screenshot: ${JSON.stringify(afterOpenOcr.slice(0, 2_000))}`);
+      }
+      const closeObservation = await waitFor(
+        `the exact macOS picker ${pickerPanelIdentity} to remain absent across three accessibility snapshots`,
+        async () => {
+          const descriptions = macOSApplicationWindowDescriptions(child);
+          latestPickerCloseInventory = descriptions;
+          const entries = macOSReadableAccessibilityWindowEntries(descriptions);
+          const addedPanels = macOSAddedNativeOpenPanelEntries(pickerBaselineEntries, entries);
+          const matchingPanelIdentityCount = macOSNativeOpenPanelIdentityCount(entries, pickerPanelIdentity);
+          const absent = addedPanels.length === 0 && matchingPanelIdentityCount === 0;
+          consecutiveAbsentSnapshots = absent ? consecutiveAbsentSnapshots + 1 : 0;
+          if (absent) {
+            closureSnapshotInventories.push(descriptions);
+            if (closureSnapshotInventories.length > 3) closureSnapshotInventories.shift();
+          } else {
+            closureSnapshotInventories.length = 0;
+          }
+          return {descriptions, entries, addedPanels, matchingPanelIdentityCount, consecutiveAbsentSnapshots, closureSnapshotInventories: closureSnapshotInventories.slice()};
+        },
+        (observation) => observation.addedPanels.length === 0
+          && observation.matchingPanelIdentityCount === 0
+          && observation.consecutiveAbsentSnapshots >= 3,
+        15_000,
+      );
+      reportTarget.native_picker_panel_identity_match_count_after_open_click = closeObservation.matchingPanelIdentityCount;
+      reportTarget.native_picker_panel_consecutive_absent_snapshots_after_open_click = closeObservation.consecutiveAbsentSnapshots;
+      reportTarget.native_picker_closure_snapshot_inventories = closeObservation.closureSnapshotInventories;
+      reportTarget.native_picker_added_panels_after_open_click = closeObservation.addedPanels;
+      reportTarget.native_picker_accessibility_windows_after_open_click = closeObservation.descriptions;
+      reportTarget.native_picker_after_open_status = "confirmed-closed";
+      await saveReport();
+    } catch (error) {
+      reportTarget.native_picker_after_open_status = "failed";
+      reportTarget.native_picker_after_open_error = error instanceof Error ? error.message : String(error);
+      reportTarget.native_picker_after_open_latest_accessibility_windows = latestPickerCloseInventory;
+      reportTarget.native_picker_panel_consecutive_absent_snapshots_after_open_click = consecutiveAbsentSnapshots;
+      reportTarget.native_picker_closure_snapshot_inventories = closureSnapshotInventories;
+      if (!reportTarget.native_picker_after_open_screenshot_status) {
+        reportTarget.native_picker_after_open_screenshot_status = "failed";
+      }
+      await saveReportAfterStageFailure("native_picker_after_open", reportTarget, error);
+      throw error;
+    }
     pathEntryInteraction = "Used Command-Shift-G with the full absolute fixture path; the native Open button was clicked using the Open panel's accessible bounds.";
   } else {
     const pathScript = `
@@ -6246,6 +6786,15 @@ async function cancelOpenObsidianNativePicker(
   if (linuxWindowsBefore) openReport.picker_cancel_x11_windows_before = linuxWindowsBefore;
   if (process.platform === "linux") openReport.picker_cancel_x11_input_before = x11InteractionState();
   if (windowsBefore) openReport.picker_cancel_windows_before = windowsBefore;
+  let macPickerEntriesBeforeOpen: string[] | null = null;
+  let macPickerPanelIdentity: string | null = null;
+  if (process.platform === "darwin") {
+    const descriptions = macOSApplicationWindowDescriptions(child);
+    macPickerEntriesBeforeOpen = macOSReadableAccessibilityWindowEntries(descriptions);
+    openReport.picker_cancel_accessibility_windows_before_open = descriptions;
+    openReport.picker_cancel_entries_before_open = macPickerEntriesBeforeOpen;
+    await saveReport();
+  }
   const openButtonInteraction = await clickOpenVaultButton(
     child,
     window.window_id,
@@ -6271,6 +6820,8 @@ async function cancelOpenObsidianNativePicker(
   let windowsPicker: WindowsTopLevelWindow | null = null;
   let remainingWindows: WindowsTopLevelWindow[] | null = null;
   let linuxWindowsAfterEscape: X11WindowDescription[] | null = null;
+  let macPickerCloseAbsentSnapshots = 0;
+  const macPickerCloseSnapshotInventories: string[] = [];
   let appDataSnapshotBeforeCancel: SnapshotEntry[] = [];
   let appDataChangesOnPickerOpen: Array<{path: string; before?: SnapshotEntry; after?: SnapshotEntry}> = [];
   let eframePersistenceFilesBeforeCancel: Array<{path: string; bytes: number; sha256: string; content: string}> = [];
@@ -6315,15 +6866,44 @@ async function cancelOpenObsidianNativePicker(
     cancellationInteraction = `Raised X11 picker window ${picker.window_id} (${picker.title}) and sent Escape.`;
     openReport.picker_cancel_x11_windows_after_escape = linuxWindowsAfterEscape;
   } else if (process.platform === "darwin") {
-    await delay(1_000);
-    const pickerScreenshot = await captureDesktopScreenshot("openobsidian-vault-picker-cancel-open.png");
-    screenshots.push(relative(reportDirectory, pickerScreenshot));
-    pickerOpenOcr = await readNativeFolderPickerOcr(pickerScreenshot);
-    const accessibilityWindows = macOSApplicationWindowDescriptions(child);
-    pickerAccessibilityWindows = accessibilityWindows;
-    pickerWindowTitle = accessibilityWindows;
-    if (!nativeFolderPickerVisibleInOcr(pickerOpenOcr) && !macOSNativePickerVisibleInAccessibility(accessibilityWindows)) {
-      throw new Error(`The native macOS Open panel was not visible before Escape; OCR=${JSON.stringify(pickerOpenOcr.slice(0, 2_000))}; accessibility windows=${JSON.stringify(accessibilityWindows)}`);
+    const pickerBaselineEntries = macPickerEntriesBeforeOpen;
+    if (!pickerBaselineEntries) throw new Error("The macOS cancellation accessibility baseline was not captured before activation");
+    let latestMacCancellationOpenInventory = "";
+    let macCancellationOpenOcr = "";
+    try {
+      await delay(1_000);
+      const pickerScreenshot = await captureDesktopScreenshot("openobsidian-vault-picker-cancel-open.png");
+      screenshots.push(relative(reportDirectory, pickerScreenshot));
+      openReport.picker_cancel_open_screenshot_path = relative(reportDirectory, pickerScreenshot);
+      openReport.picker_cancel_screenshots = screenshots.slice();
+      openReport.picker_cancel_open_screenshot_status = "captured";
+      await saveReport();
+      macCancellationOpenOcr = await readNativeFolderPickerOcr(pickerScreenshot);
+      pickerOpenOcr = macCancellationOpenOcr;
+      openReport.picker_cancel_open_screenshot_ocr = macCancellationOpenOcr.slice(0, 2_000);
+      const accessibilityWindows = macOSApplicationWindowDescriptions(child);
+      latestMacCancellationOpenInventory = accessibilityWindows;
+      pickerAccessibilityWindows = accessibilityWindows;
+      pickerWindowTitle = accessibilityWindows;
+      const pickerEntries = macOSReadableAccessibilityWindowEntries(accessibilityWindows);
+      const addedPanels = macOSAddedNativeOpenPanelEntries(pickerBaselineEntries, pickerEntries);
+      if (!macCancellationOpenOcr.trim() || !nativeFolderPickerVisibleInOcr(macCancellationOpenOcr) || addedPanels.length !== 1) {
+        throw new Error(`The native macOS Open panel lacks nonempty screenshot OCR and exactly one new accessibility identity before Escape; OCR=${JSON.stringify(macCancellationOpenOcr.slice(0, 2_000))}; added panels=${JSON.stringify(addedPanels)}; accessibility windows=${JSON.stringify(accessibilityWindows)}`);
+      }
+      macPickerPanelIdentity = addedPanels[0] ?? null;
+      if (!macPickerPanelIdentity || macOSNativeOpenPanelIdentityCount(pickerEntries, macPickerPanelIdentity) !== 1) {
+        throw new Error(`The native macOS Open panel identity is absent or ambiguous before Escape: ${JSON.stringify(addedPanels)}`);
+      }
+      openReport.picker_cancel_panel_identity = macPickerPanelIdentity;
+      openReport.picker_cancel_accessibility_windows_before_escape = accessibilityWindows;
+      await saveReport();
+    } catch (error) {
+      openReport.picker_cancel_open_status = "failed";
+      openReport.picker_cancel_open_error = error instanceof Error ? error.message : String(error);
+      openReport.picker_cancel_open_screenshot_ocr = macCancellationOpenOcr.slice(0, 2_000);
+      openReport.picker_cancel_accessibility_windows_after_open_attempt = latestMacCancellationOpenInventory;
+      await saveReportAfterStageFailure("picker_cancel_open", openReport, error);
+      throw error;
     }
     await captureAppDataBaselineBeforeCancel();
     const script = `tell application "System Events" to key code 53`;
@@ -6376,12 +6956,89 @@ async function cancelOpenObsidianNativePicker(
   }
 
   await delay(1_000);
-  const cancelledScreenshot = await captureDesktopScreenshot("openobsidian-vault-picker-cancelled.png");
-  screenshots.push(relative(reportDirectory, cancelledScreenshot));
-  const cancelledOcr = await readScreenshotOcr(cancelledScreenshot);
-  if (process.platform === "darwin") remainingMacAccessibilityWindows = macOSApplicationWindowDescriptions(child);
-  if (process.platform === "darwin" && (nativeFolderPickerVisibleInOcr(cancelledOcr) || (remainingMacAccessibilityWindows !== null && macOSNativePickerVisibleInAccessibility(remainingMacAccessibilityWindows)))) {
-    throw new Error(`The native folder picker remained visible after Escape; OCR=${JSON.stringify(cancelledOcr.slice(0, 2_000))}; accessibility windows=${remainingMacAccessibilityWindows ?? "unavailable"}`);
+  let cancelledScreenshot: string;
+  try {
+    cancelledScreenshot = await captureDesktopScreenshot("openobsidian-vault-picker-cancelled.png");
+    screenshots.push(relative(reportDirectory, cancelledScreenshot));
+    openReport.picker_cancel_screenshot_path = relative(reportDirectory, cancelledScreenshot);
+    openReport.picker_cancel_screenshots = screenshots.slice();
+    openReport.picker_cancel_after_escape_screenshot_status = "captured";
+    await saveReport();
+  } catch (error) {
+    openReport.picker_cancel_after_escape_screenshot_status = "failed";
+    openReport.picker_cancel_after_escape_screenshot_error = error instanceof Error ? error.message : String(error);
+    await saveReportAfterStageFailure("picker_cancel_screenshot", openReport, error);
+    throw error;
+  }
+  let cancelledOcr: string;
+  try {
+    cancelledOcr = await readScreenshotOcr(cancelledScreenshot);
+    openReport.picker_cancelled_screen_ocr = cancelledOcr.slice(0, 2_000);
+    await saveReport();
+  } catch (error) {
+    openReport.picker_cancel_after_escape_ocr_status = "failed";
+    openReport.picker_cancel_after_escape_ocr_error = error instanceof Error ? error.message : String(error);
+    await saveReportAfterStageFailure("picker_cancel_ocr", openReport, error);
+    throw error;
+  }
+  if (process.platform === "darwin") {
+    if (!cancelledOcr.trim()) {
+      const error = new Error("The macOS after-Escape screenshot OCR returned no readable text, so it cannot confirm the chooser closed");
+      openReport.picker_cancel_after_escape_ocr_status = "failed";
+      openReport.picker_cancel_close_error = error.message;
+      await saveReportAfterStageFailure("picker_cancel_ocr", openReport, error);
+      throw error;
+    }
+    if (nativeFolderPickerVisibleInOcr(cancelledOcr)) {
+      const error = new Error(`The native macOS folder picker remained visible in the after-Escape screenshot; OCR=${JSON.stringify(cancelledOcr.slice(0, 2_000))}`);
+      openReport.picker_cancel_close_error = error.message;
+      await saveReportAfterStageFailure("picker_cancel_close", openReport, error);
+      throw error;
+    }
+    if (!macPickerEntriesBeforeOpen || !macPickerPanelIdentity) {
+      throw new Error("The macOS picker cancellation cannot prove closure without its pre-open inventory and exact panel identity");
+    }
+    let consecutiveAbsentSnapshots = 0;
+    let latestCancellationInventory = "";
+    try {
+      const closeObservation = await waitFor(
+        `the exact macOS cancellation panel ${macPickerPanelIdentity} to remain absent across three accessibility snapshots`,
+        async () => {
+          const descriptions = macOSApplicationWindowDescriptions(child);
+          latestCancellationInventory = descriptions;
+          const entries = macOSReadableAccessibilityWindowEntries(descriptions);
+          const addedPanels = macOSAddedNativeOpenPanelEntries(macPickerEntriesBeforeOpen ?? [], entries);
+          const identityCount = macOSNativeOpenPanelIdentityCount(entries, macPickerPanelIdentity ?? "");
+          const absent = addedPanels.length === 0 && identityCount === 0;
+          consecutiveAbsentSnapshots = absent ? consecutiveAbsentSnapshots + 1 : 0;
+          if (absent) {
+            macPickerCloseSnapshotInventories.push(descriptions);
+            if (macPickerCloseSnapshotInventories.length > 3) macPickerCloseSnapshotInventories.shift();
+          } else {
+            macPickerCloseSnapshotInventories.length = 0;
+          }
+          return {descriptions, entries, addedPanels, identityCount, consecutiveAbsentSnapshots, closureSnapshotInventories: macPickerCloseSnapshotInventories.slice()};
+        },
+        (observation) => observation.addedPanels.length === 0
+          && observation.identityCount === 0
+          && observation.consecutiveAbsentSnapshots >= 3,
+        15_000,
+      );
+      remainingMacAccessibilityWindows = closeObservation.descriptions;
+      macPickerCloseAbsentSnapshots = closeObservation.consecutiveAbsentSnapshots;
+      openReport.picker_cancel_accessibility_windows_after_escape = remainingMacAccessibilityWindows;
+      openReport.picker_cancel_added_panels_after_escape = closeObservation.addedPanels;
+      openReport.picker_cancel_panel_identity_match_count_after_escape = closeObservation.identityCount;
+      openReport.picker_cancel_consecutive_absent_snapshots_after_escape = macPickerCloseAbsentSnapshots;
+      openReport.picker_cancel_closure_snapshot_inventories_after_escape = closeObservation.closureSnapshotInventories;
+    } catch (error) {
+      openReport.picker_cancel_accessibility_windows_after_escape = latestCancellationInventory;
+      openReport.picker_cancel_close_error = error instanceof Error ? error.message : String(error);
+      openReport.picker_cancel_consecutive_absent_snapshots_after_escape = consecutiveAbsentSnapshots;
+      openReport.picker_cancel_closure_snapshot_inventories_after_escape = macPickerCloseSnapshotInventories;
+      await saveReportAfterStageFailure("picker_cancel_close", openReport, error);
+      throw error;
+    }
   }
   if (process.platform === "win32" && remainingWindows?.some((candidate) => candidate.native_window_handle === windowsPicker?.native_window_handle)) {
     throw new Error(`The native Windows folder picker remained visible after Escape; windows=${JSON.stringify(remainingWindows)}`);
@@ -6404,6 +7061,9 @@ async function cancelOpenObsidianNativePicker(
     picker_open_accessibility_windows: pickerAccessibilityWindows,
     picker_closed_verified: true,
     picker_closed_accessibility_windows: remainingMacAccessibilityWindows,
+    picker_cancel_panel_identity: macPickerPanelIdentity,
+    picker_cancel_consecutive_absent_snapshots: macPickerCloseAbsentSnapshots,
+    picker_cancel_closure_snapshot_inventories: macPickerCloseSnapshotInventories,
     picker_open_windows: windowsPicker,
     picker_closed_windows: remainingWindows,
     picker_closed_x11_windows: linuxWindowsAfterEscape,

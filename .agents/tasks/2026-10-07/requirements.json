@@ -3369,10 +3369,11 @@
       "evidence_paths": [
         ".agents/tasks/2026-10-07/evidence/r2.8.115-attempt-1-30d0ad5.json",
         ".agents/tasks/2026-10-07/evidence/r2.8.116-attempt-1-f1dc540.json",
-        ".agents/tasks/2026-10-07/evidence/r2.8.117-attempt-1-fd1d449.json"
+        ".agents/tasks/2026-10-07/evidence/r2.8.117-attempt-1-fd1d449.json",
+        ".agents/tasks/2026-10-07/evidence/r2.8.118-attempt-1-5ab14b5.json"
       ],
       "tested_source_tree": null,
-      "blocker": "R2.8.117 attempt 1 is terminal and not accepted on exact SHA fd1d449e9523b4272fe8f8de84413a976bf4c22a: all seven workflows and 20 jobs completed, with six workflows and 17 jobs passing and the three Obsidian round-trip jobs failing. Linux rejected all 14 first-open/reopen scenarios because the visible file name header was treated as an unmapped row; its 140-entry source-checkpoint matrix completed. macOS had the same header issue, unmapped formula-dependent Kanban cards/counts, and a typed-values renderer/reopen trust-screen timeout; only 135 of 140 source checkpoints were recorded. Windows stopped before C07.3 with a PowerShell ParserError. See .agents/tasks/2026-10-07/evidence/r2.8.117-attempt-1-fd1d449.json. Keep C07.3 pending until a later exact-SHA three-platform capture meets the count-to-unique-visible-path and exact empty-observation criteria; do not claim Rust parity or a full-fixture membership oracle from reference UI results.",
+      "blocker": "R2.8.118 attempt 1 is terminal and not accepted on exact SHA 5ab14b51f306deccb2377c46470435ee628ed004: six of seven workflows and 17 of 20 jobs passed, while all three platform round-trip jobs failed. Ubuntu produced no structured observations for all 14 scenarios because the async renderer result was serialized before awaiting; macOS failed to establish reliable native picker activation/identity; Windows stopped before C07.3 with a PowerShell ParserError. See .agents/tasks/2026-10-07/evidence/r2.8.118-attempt-1-5ab14b5.json. Keep C07.3 pending until a later exact-SHA three-platform capture meets the count-to-unique-visible-path and exact empty-observation criteria; do not claim Rust parity or a full-fixture membership oracle from reference UI results.",
       "gate_class": "implementation",
       "decision_id": "D03",
       "legacy_status": "implemented",
@@ -10283,12 +10284,12 @@
       "source": {
         "path": ".agents/tasks/2026-10-07/goal.md",
         "heading": "Mandatory execution workflow: GitHub CI only",
-        "clause": "Define named, reviewable milestones; keep related minor changes local and make one origin/main push only after each milestone implementation and CI-ready acceptance package are complete. Mark it achieved only after all required jobs pass for that exact SHA, and hold the remote tip steady while its CI batch is running."
+        "clause": "Define named, reviewable milestones as meaningful, bounded CI batches; keep related minor changes and focused commits local and make one origin/main push only after the full milestone scope and reviewed acceptance package are complete. Do not push for incremental feedback. Mark it achieved only after all required jobs pass for that exact SHA, and hold the remote tip steady while its full CI batch runs."
       },
       "checkpoint": "R0",
       "owner": "xtask",
       "mandatory": true,
-      "acceptance_criteria": "Related minor changes accumulate locally; each named milestone has one reviewed CI submission after implementation completion, with exact-SHA run and artifact evidence. Do not submit another milestone while any required workflow for the current SHA is pending. Accept a milestone only after every required workflow/job passes and results are reconciled for its exact SHA.",
+      "acceptance_criteria": "Related minor changes and focused commits accumulate locally; each named milestone is a coherent, bounded CI batch with one reviewed origin/main submission only after its implementation and acceptance package are complete. Do not submit minor edits for incremental feedback or another milestone while any required workflow for the current SHA is pending. Run independent checks in parallel where safe. Accept a milestone only after every required workflow/job passes and results are reconciled for its exact SHA.",
       "fixture_ids": [
         "fixture:mig-002"
       ],
@@ -10302,6 +10303,16 @@
           "kind": "rust-migration-goal",
           "version": "2026-10-07-documentation-update",
           "sha256": "89ed20b10116ecc814509f368935a284fa94f209b54a2055f71815cbd4099c87"
+        },
+        {
+          "kind": "rust-migration-goal",
+          "version": "2026-10-14-milestone-ci-batching-refinement",
+          "sha256": "5435f3de75c7fb4b9dfec6d3d87f4529fc17a9d8165af2b48280993c1673f56e"
+        },
+        {
+          "kind": "rust-migration-goal",
+          "version": "2026-10-14-single-submission-per-milestone",
+          "sha256": "ca8a8036b4e11fab01c89e4a4be9560034afeb787fe653c01d72d49046533d15"
         }
       ],
       "applicable_platforms": [
@@ -10322,7 +10333,7 @@
       "rust_owner": "xtask",
       "mapping_status": "reviewed",
       "migration_disposition": "retained",
-      "migration_acceptance": "Each named milestone has one reviewed origin/main submission after implementation completion; exact-SHA CI evidence is reconciled, no minor-change pushes are used for incremental feedback, and the next batch waits until the current required workflows are terminal. Mark the milestone achieved only after all required jobs pass.",
+      "migration_acceptance": "Each meaningful, bounded milestone has one reviewed origin/main submission after the full implementation and acceptance package are complete; incremental pushes for minor feedback are prohibited. Exact-SHA CI evidence is reconciled, independent checks run in parallel where safe, and the next batch waits until the current required workflows are terminal. Mark the milestone achieved only after all required jobs pass.",
       "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence."
     },
     {
@@ -11016,7 +11027,7 @@
       "runtime_override": "Documentation upkeep is a continuing migration requirement; this row captures the final audited completion gate."
     }
   ],
-  "reviewed_at": "2026-10-14T05:34:00Z",
+  "reviewed_at": "2026-10-14T08:22:00Z",
   "mapping_review": {
     "status": "complete",
     "reviewed_requirement_count": 212,
@@ -11026,7 +11037,7 @@
     "post_r0_2_additions": [
       "MIG-016: maintain current, accurate documentation throughout migration and audit it at cutover."
     ],
-    "goal_sha256": "91a6fe3d8a1d83843449b516cfff24effa223b648917542918d9f1a425f4cf9e",
+    "goal_sha256": "ca8a8036b4e11fab01c89e4a4be9560034afeb787fe653c01d72d49046533d15",
     "policy": "Every inherited requirement was reviewed by ID and assigned a Rust owner, migration phase, acceptance criterion and retained/superseded/external disposition. Historical status/evidence remain preserved separately. Rust acceptance remains pending unless current exact-SHA migration evidence is attached; external items remain external_pending."
   }
 }

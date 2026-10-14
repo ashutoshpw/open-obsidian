@@ -1,0 +1,190 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.8.118",
+  "attempt": 1,
+  "outcome": "failed",
+  "source_sha": "5ab14b51f306deccb2377c46470435ee628ed004",
+  "starting_sha": "fd1d449e9523b4272fe8f8de84413a976bf4c22a",
+  "repository": "ashutoshpw/open-obsidian",
+  "reconciled_at": "2026-10-14T08:06:19Z",
+  "terminal_observed_at": "2026-10-14T07:57:33Z",
+  "workflow_summary": {
+    "workflows_total": 7,
+    "workflows_success": 6,
+    "workflows_failure": 1,
+    "workflows_queued": 0,
+    "workflows_in_progress": 0,
+    "jobs_total": 20,
+    "jobs_success": 17,
+    "jobs_failure": 3,
+    "jobs_queued": 0,
+    "jobs_in_progress": 0,
+    "terminal_workflow": "Obsidian vault round-trip acceptance"
+  },
+  "workflow_runs": {
+    "OpenObsidian desktop build": {
+      "run_id": 38528980059,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38528980059",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "5ab14b51f306deccb2377c46470435ee628ed004"
+    },
+    "OpenObsidian loaded plugin workflows": {
+      "run_id": 38528979834,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38528979834",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "5ab14b51f306deccb2377c46470435ee628ed004"
+    },
+    "OpenObsidian plugin renderer matrix": {
+      "run_id": 38528979856,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38528979856",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "5ab14b51f306deccb2377c46470435ee628ed004"
+    },
+    "OpenObsidian quality": {
+      "run_id": 38528979829,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38528979829",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "5ab14b51f306deccb2377c46470435ee628ed004"
+    },
+    "Obsidian vault round-trip acceptance": {
+      "run_id": 38528979891,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38528979891",
+      "status": "completed",
+      "conclusion": "failure",
+      "head_sha": "5ab14b51f306deccb2377c46470435ee628ed004"
+    },
+    "OpenObsidian Rust CI": {
+      "run_id": 38528979839,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38528979839",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "5ab14b51f306deccb2377c46470435ee628ed004"
+    },
+    "Rust migration inventory": {
+      "run_id": 38528979883,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38528979883",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "5ab14b51f306deccb2377c46470435ee628ed004"
+    }
+  },
+  "job_ids": {
+    "inventory": 115735985251,
+    "quality": {
+      "windows-latest": 115735985202,
+      "macos-latest": 115735985431,
+      "ubuntu-latest": 115735985574
+    },
+    "desktop_build": {
+      "ubuntu-latest": 115735985769,
+      "windows-latest": 115735985969,
+      "macos-latest": 115735986132
+    },
+    "plugin_renderer": {
+      "windows-latest": 115735985201,
+      "macos-latest": 115735985475,
+      "ubuntu-latest": 115735985664
+    },
+    "loaded_plugin_workflows": {
+      "windows-latest": 115735985045,
+      "ubuntu-latest": 115735985469,
+      "macos-latest": 115735985510
+    },
+    "rust_ci": {
+      "minimum_supported_rust_1_95": 115735984792,
+      "macos-latest": 115735985037,
+      "windows-latest": 115735985057,
+      "ubuntu-latest": 115735985156
+    },
+    "obsidian_vault_roundtrip": {
+      "ubuntu-24.04": 115735985544,
+      "macos-latest": 115735985728,
+      "windows-latest": 115735985739
+    }
+  },
+  "job_conclusions": {
+    "115735985251": "success",
+    "115735985202": "success",
+    "115735985431": "success",
+    "115735985574": "success",
+    "115735985769": "success",
+    "115735985969": "success",
+    "115735986132": "success",
+    "115735985201": "success",
+    "115735985475": "success",
+    "115735985664": "success",
+    "115735985045": "success",
+    "115735985469": "success",
+    "115735985510": "success",
+    "115735984792": "success",
+    "115735985037": "success",
+    "115735985057": "success",
+    "115735985156": "success",
+    "115735985544": "failure",
+    "115735985728": "failure",
+    "115735985739": "failure"
+  },
+  "artifacts": [
+    {
+      "platform": "macOS",
+      "job_id": 115735985728,
+      "artifact_id": 11876579650,
+      "name": "obsidian-vault-roundtrip-macOS-5ab14b51f306deccb2377c46470435ee628ed004",
+      "size_in_bytes": 145213,
+      "archive_digest": "sha256:83062a59a0d35bc42005eeb2692639c19d69db88659778c73650081aa423a72f",
+      "report_sha256": "0a5611ad7be07f371e70a69609f69aad6621aa1cadb59f993c653df77a6b63e8",
+      "screenshot_sha256": "91533071be91eb378de810651f9d1e30c5cfa3ec321b38e14e7f077dcb2cb909",
+      "artifact_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38528979891/artifacts/11876579650"
+    },
+    {
+      "platform": "Windows",
+      "job_id": 115735985739,
+      "artifact_id": 11877446390,
+      "name": "obsidian-vault-roundtrip-Windows-5ab14b51f306deccb2377c46470435ee628ed004",
+      "size_in_bytes": 484105,
+      "archive_digest": "sha256:d052be9743c005427ef3c0056fc574d0e7e90c0b524a6f9b0dc214daec1dd392",
+      "report_sha256": "778bb4906d53394137874b96bcf57562390034003f863d92d96c034556ba298f",
+      "failure_screenshot_sha256": "044e020d3e6bcfa99f56e55c52e52cd3974cec225d0daad2a3ce63f10653f8ff",
+      "artifact_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38528979891/artifacts/11877446390"
+    },
+    {
+      "platform": "Linux",
+      "job_id": 115735985544,
+      "artifact_id": 11877802432,
+      "name": "obsidian-vault-roundtrip-Linux-5ab14b51f306deccb2377c46470435ee628ed004",
+      "size_in_bytes": 18952212,
+      "archive_digest": "sha256:050a4da5998d688168a9cb424d2c80d915535ec34ef40fc28576990c3c6ada25",
+      "report_sha256": "52a0cc678b46d37328d22457aafbad0518bc7db0f63600e1732868a3c35c8685",
+      "artifact_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38528979891/artifacts/11877802432"
+    }
+  ],
+  "platform_failures": {
+    "Ubuntu 24.04": {
+      "job_id": 115735985544,
+      "cause": "All 14 first-open/reopen C07.3 scenarios lacked structured visible-state observations. readGroupOrderVisibleState supplied an async IIFE to evaluateJson; JSON.stringify ran before the promise resolved, yielding an empty object, and recording then threw while reading visible.groups.map. Source-observation recording was incomplete.",
+      "artifact_id": 11877802432,
+      "report_sha256": "52a0cc678b46d37328d22457aafbad0518bc7db0f63600e1732868a3c35c8685"
+    },
+    "macOS": {
+      "job_id": 115735985728,
+      "cause": "The first-run page remained visible after the attempted Open action. The submitted capture did not prove a unique newly opened native picker or its closure; the accessibility inventory lacked separators and the recorded click status did not establish activation.",
+      "artifact_id": 11876579650,
+      "report_sha256": "0a5611ad7be07f371e70a69609f69aad6621aa1cadb59f993c653df77a6b63e8",
+      "initial_screenshot_sha256": "91533071be91eb378de810651f9d1e30c5cfa3ec321b38e14e7f077dcb2cb909"
+    },
+    "Windows": {
+      "job_id": 115735985739,
+      "cause": "select_folder stopped before C07.3 due to a PowerShell ParserError from a multiline condition whose continuation line began with -or.",
+      "artifact_id": 11877446390,
+      "report_sha256": "778bb4906d53394137874b96bcf57562390034003f863d92d96c034556ba298f",
+      "failure_screenshot_sha256": "044e020d3e6bcfa99f56e55c52e52cd3974cec225d0daad2a3ce63f10653f8ff"
+    }
+  },
+  "remote_main_head": "5ab14b51f306deccb2377c46470435ee628ed004",
+  "source_observations": "C07.3 acceptance not met; do not infer Rust parity or a full-fixture membership oracle.",
+  "local_validation": "No local tests, builds, formatter, lint, typecheck, runtime probe, or application launch ran."
+}
