@@ -74,8 +74,10 @@ pub struct BaseView {
     pub filter: Option<BaseFilter>,
     pub sort: Vec<BaseSort>,
     pub group_by: Option<String>,
+    pub group_by_descending: Option<bool>,
     pub limit: Option<usize>,
     pub formulas: BTreeMap<String, String>,
+    fatal_invalid_source: bool,
     raw: BaseRawValue,
 }
 
@@ -94,7 +96,7 @@ pub enum BaseIssueKind {
     InvalidSource,
 }
 
-/// A non-fatal issue found while parsing or evaluating a Bases definition.
+/// A compatibility or source issue found while parsing or evaluating a Bases definition.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct BaseIssue {
     pub kind: BaseIssueKind,
@@ -170,7 +172,7 @@ pub struct BaseEvaluation {
     pub issues: Vec<BaseIssue>,
 }
 
-/// One group in the order its first row appears after filtering, sorting, and limiting.
+/// One group in first-seen order, or in explicit `groupBy.direction` order.
 #[derive(Clone, Debug, PartialEq)]
 pub struct BaseGroup {
     pub key: String,
@@ -255,22 +257,26 @@ fn parse_json_base(value: Value, source_bytes: Vec<u8>) -> Result<BaseDocument, 
         ));
     }
 
-    let views = raw_views
-        .iter()
-        .enumerate()
-        .map(|(index, raw)| parse_json_view(raw, index))
-        .collect::<Result<Vec<_>, _>>()?;
+    let mut issues = Vec::new();
+    let mut views = Vec::with_capacity(raw_views.len());
+    for (index, raw) in raw_views.iter().enumerate() {
+        views.push(parse_json_view(raw, index, &mut issues)?);
+    }
 
     Ok(BaseDocument {
         source_format: BaseSourceFormat::Json,
         source_bytes,
         raw_root: BaseRawValue::Json(value),
         views,
-        issues: Vec::new(),
+        issues,
     })
 }
 
-fn parse_json_view(value: &Value, index: usize) -> Result<BaseView, BaseParseError> {
+fn parse_json_view(
+    value: &Value,
+    index: usize,
+    issues: &mut Vec<BaseIssue>,
+) -> Result<BaseView, BaseParseError> {
     let Some(raw) = value.as_object() else {
         return Err(invalid_view(index, "view must be an object"));
     };
@@ -303,6 +309,7 @@ fn parse_json_view(value: &Value, index: usize) -> Result<BaseView, BaseParseErr
             });
         }
     }
+    let (group_by, group_by_descending) = parse_json_group_by(raw.get("groupBy"), issues);
     let formulas = raw
         .get("formulas")
         .and_then(Value::as_object)
@@ -324,14 +331,65 @@ fn parse_json_view(value: &Value, index: usize) -> Result<BaseView, BaseParseErr
         name: raw.get("name").and_then(Value::as_str).map(str::to_owned),
         filter,
         sort,
-        group_by: raw
-            .get("groupBy")
-            .and_then(Value::as_str)
-            .map(str::to_owned),
+        group_by,
+        group_by_descending,
         limit,
         formulas,
+        fatal_invalid_source: false,
         raw: BaseRawValue::Json(value.clone()),
     })
+}
+
+fn parse_json_group_by(
+    value: Option<&Value>,
+    issues: &mut Vec<BaseIssue>,
+) -> (Option<String>, Option<bool>) {
+    match value {
+        None => (None, None),
+        Some(Value::String(property)) => (Some(property.clone()), None),
+        Some(Value::Object(group_by)) => {
+            let property = group_by
+                .get("property")
+                .and_then(Value::as_str)
+                .map(str::to_owned);
+            let Some(property) = property else {
+                issues.push(BaseIssue::new(
+                    BaseIssueKind::InvalidSource,
+                    "Unsupported Bases groupBy; expected a string property",
+                    None,
+                ));
+                return (None, None);
+            };
+            let Some(direction) = group_by.get("direction") else {
+                return (Some(property), None);
+            };
+            let Some(descending) = direction.as_str().and_then(parse_group_by_direction) else {
+                issues.push(BaseIssue::new(
+                    BaseIssueKind::InvalidSource,
+                    "Unsupported Bases groupBy.direction; expected ASC or DESC",
+                    Some(direction.to_string()),
+                ));
+                return (None, None);
+            };
+            (Some(property), Some(descending))
+        }
+        Some(_) => {
+            issues.push(BaseIssue::new(
+                BaseIssueKind::InvalidSource,
+                "Unsupported Bases groupBy; expected a property string or mapping",
+                None,
+            ));
+            (None, None)
+        }
+    }
+}
+
+fn parse_group_by_direction(direction: &str) -> Option<bool> {
+    match direction {
+        "ASC" => Some(false),
+        "DESC" => Some(true),
+        _ => None,
+    }
 }
 
 fn json_nonnegative_usize(value: &Value) -> Option<usize> {
@@ -463,26 +521,90 @@ fn parse_native_view(
     let sort = native_order(mapping_get(entries, "order"))
         .or_else(|| native_order(mapping_get(entries, "sort")))
         .unwrap_or_default();
-    let group_by = mapping_get(entries, "groupBy").and_then(|value| match value {
-        YamlValue::String(value) => Some(value.clone()),
-        YamlValue::Mapping(entries) => mapping_get(entries, "property")
-            .and_then(YamlValue::as_string)
-            .map(str::to_owned),
-        _ => None,
-    });
+    let name = mapping_get(entries, "name")
+        .and_then(YamlValue::as_string)
+        .map(str::to_owned);
+    let (group_by, group_by_descending, fatal_invalid_source) = parse_native_group_by(
+        mapping_get(entries, "groupBy"),
+        name.as_deref(),
+        issues,
+    );
 
     Ok(BaseView {
         view_type,
-        name: mapping_get(entries, "name")
-            .and_then(YamlValue::as_string)
-            .map(str::to_owned),
+        name,
         filter,
         sort,
         group_by,
+        group_by_descending,
         limit: mapping_get(entries, "limit").and_then(yaml_nonnegative_usize),
         formulas,
+        fatal_invalid_source,
         raw: BaseRawValue::NativeYaml(value.clone()),
     })
+}
+
+fn parse_native_group_by(
+    value: Option<&YamlValue>,
+    view_name: Option<&str>,
+    issues: &mut Vec<BaseIssue>,
+) -> (Option<String>, Option<bool>, bool) {
+    match value {
+        None => (None, None, false),
+        Some(YamlValue::String(property)) => (Some(property.clone()), None, false),
+        Some(YamlValue::Mapping(entries)) => {
+            let Some(property) = mapping_get(entries, "property")
+                .and_then(YamlValue::as_string)
+                .map(str::to_owned)
+            else {
+                issues.push(BaseIssue::new(
+                    BaseIssueKind::InvalidSource,
+                    "Unsupported Bases groupBy; expected a string property",
+                    None,
+                ));
+                return (None, None, false);
+            };
+            let Some(direction) = mapping_get(entries, "direction") else {
+                let message = view_name.map_or_else(
+                    || {
+                        "Unable to parse your base file: \"groupBy\" must be a object in an unnamed view"
+                            .to_owned()
+                    },
+                    |name| {
+                        format!(
+                            "Unable to parse your base file: \"groupBy\" must be a object in view \"{name}\""
+                        )
+                    },
+                );
+                issues.push(BaseIssue::new(
+                    BaseIssueKind::InvalidSource,
+                    message,
+                    Some(property),
+                ));
+                return (None, None, true);
+            };
+            let Some(descending) = direction.as_string().and_then(parse_group_by_direction) else {
+                issues.push(BaseIssue::new(
+                    BaseIssueKind::InvalidSource,
+                    "Unsupported Bases groupBy.direction; expected ASC or DESC",
+                    Some(match direction {
+                        YamlValue::String(direction) => direction.clone(),
+                        other => format!("{other:?}"),
+                    }),
+                ));
+                return (None, None, false);
+            };
+            (Some(property), Some(descending), false)
+        }
+        Some(_) => {
+            issues.push(BaseIssue::new(
+                BaseIssueKind::InvalidSource,
+                "Unsupported Bases groupBy; expected a property string or mapping",
+                None,
+            ));
+            (None, None, false)
+        }
+    }
 }
 
 fn combine_filters(filters: [Option<BaseFilter>; 2]) -> Option<BaseFilter> {
@@ -807,6 +929,14 @@ fn evaluate_selected_base_view(
     source_rows: &[BaseRow],
 ) -> Result<BaseEvaluation, BaseParseError> {
     let mut issues = document.issues.clone();
+    if view.fatal_invalid_source {
+        return Ok(BaseEvaluation {
+            view,
+            rows: Vec::new(),
+            groups: Vec::new(),
+            issues,
+        });
+    }
     let filtered = source_rows
         .iter()
         .filter(|row| {
@@ -845,19 +975,32 @@ fn evaluate_selected_base_view(
     }
 
     let mut groups = Vec::<BaseGroup>::new();
+    let mut group_sort_values = Vec::<Option<Value>>::new();
     let mut group_indices = BTreeMap::<String, usize>::new();
     if let Some(field) = &view.group_by {
         let field = normalize_field(field);
         for row in &rows {
-            let value = row.values.get(field).filter(|value| !value.is_null());
-            let key = value.map_or_else(String::new, js_string);
+            let value = row
+                .values
+                .get(field)
+                .filter(|value| !value.is_null())
+                .cloned();
+            let key = value.as_ref().map_or_else(
+                || "missing".to_owned(),
+                |value| format!("value:{value}"),
+            );
             let index = match group_indices.get(&key) {
                 Some(index) => *index,
                 None => {
                     let index = groups.len();
                     group_indices.insert(key.clone(), index);
+                    let group_label = value.as_ref().map_or_else(
+                        || "None".to_owned(),
+                        js_string,
+                    );
+                    group_sort_values.push(value);
                     groups.push(BaseGroup {
-                        key,
+                        key: group_label,
                         rows: Vec::new(),
                     });
                     index
@@ -865,6 +1008,19 @@ fn evaluate_selected_base_view(
             };
             groups[index].rows.push(row.clone());
         }
+    }
+    if let Some(descending) = view.group_by_descending {
+        let mut ordered_groups = groups
+            .into_iter()
+            .zip(group_sort_values)
+            .collect::<Vec<_>>();
+        ordered_groups.sort_by(|(_, left), (_, right)| {
+            compare_group_values(left.as_ref(), right.as_ref(), descending)
+        });
+        groups = ordered_groups
+            .into_iter()
+            .map(|(group, _)| group)
+            .collect();
     }
     Ok(BaseEvaluation {
         view,
@@ -1099,6 +1255,23 @@ fn compare_values(left: Option<&Value>, right: Option<&Value>) -> std::cmp::Orde
         (Some(_), Some(Value::Null)) => Ordering::Greater,
         (Some(Value::Number(left)), Some(Value::Number(right))) => compare_numbers(left, right),
         (Some(left), Some(right)) => natural_compare(&js_string(left), &js_string(right)),
+    }
+}
+
+fn compare_group_values(
+    left: Option<&Value>,
+    right: Option<&Value>,
+    descending: bool,
+) -> std::cmp::Ordering {
+    use std::cmp::Ordering;
+    match (left, right) {
+        (None, None) => Ordering::Equal,
+        (None, Some(_)) => Ordering::Greater,
+        (Some(_), None) => Ordering::Less,
+        (Some(left), Some(right)) => {
+            let order = compare_values(Some(left), Some(right));
+            if descending { order.reverse() } else { order }
+        }
     }
 }
 
@@ -1411,6 +1584,44 @@ mod tests {
                     .as_object()
                     .expect("fixture row properties must be an object")
                     .clone(),
+            })
+            .collect()
+    }
+
+    fn group_direction_rows() -> Vec<BaseRow> {
+        let row = |path: &str, team: Option<&str>| {
+            let mut properties = serde_json::Map::new();
+            if let Some(team) = team {
+                properties.insert("team".to_owned(), Value::String(team.to_owned()));
+            }
+            BaseRow {
+                path: path.to_owned(),
+                properties,
+            }
+        };
+        vec![
+            row("Ascending.base", None),
+            row("Descending.base", None),
+            row("Invalid Direction.base", None),
+            row("Notes/01-zulu-first.md", Some("Zulu")),
+            row("Notes/02-alpha-first.md", Some("Alpha")),
+            row("Notes/03-bravo-first.md", Some("Bravo")),
+            row("Notes/04-zulu-second.md", Some("Zulu")),
+            row("Notes/05-alpha-second.md", Some("Alpha")),
+            row("Notes/06-bravo-second.md", Some("Bravo")),
+            row("Omitted Direction.base", None),
+        ]
+    }
+
+    fn group_path_summary(evaluation: &BaseEvaluation) -> Vec<(String, Vec<String>)> {
+        evaluation
+            .groups
+            .iter()
+            .map(|group| {
+                (
+                    group.key.clone(),
+                    group.rows.iter().map(|row| row.path.clone()).collect(),
+                )
             })
             .collect()
     }
@@ -2350,7 +2561,7 @@ mod tests {
                 .all(|row| row.values.get("bad").is_none())
         );
         assert_eq!(result.groups.len(), 1);
-        assert_eq!(result.groups[0].key, "");
+        assert_eq!(result.groups[0].key, "None");
         assert_eq!(result.groups[0].rows.len(), 2);
         assert_eq!(result.issues.len(), 1);
     }
@@ -2434,6 +2645,383 @@ mod tests {
         );
         assert_eq!(result.groups[0].rows[0].path, "zulu.md");
         assert_eq!(result.groups[1].rows[0].path, "ada.md");
+    }
+
+    #[test]
+    fn json_group_by_direction_matches_captured_string_groups_and_keeps_missing_last() {
+        let source = br#"{
+  "version": 1,
+  "views": [
+    {"type":"table","name":"Ascending","groupBy":{"property":"team","direction":"ASC","unknownGroupBy":"keep"}},
+    {"type":"table","name":"Descending","groupBy":{"property":"team","direction":"DESC"}}
+  ],
+  "unknownRoot":{"keep":true}
+}"#;
+        let document = parse_base(source).expect("JSON group direction source must parse");
+
+        assert_eq!(document.source_bytes(), &source[..]);
+        assert_eq!(encode_base(&document).as_slice(), &source[..]);
+        assert!(raw_field_exists(document.raw_definition(), "unknownRoot"));
+        let BaseRawValue::Json(raw_view) = document.views()[0].raw_definition() else {
+            panic!("JSON view source must remain JSON");
+        };
+        assert_eq!(raw_view["groupBy"]["unknownGroupBy"], "keep");
+        assert_eq!(document.views()[0].group_by.as_deref(), Some("team"));
+        assert_eq!(document.views()[0].group_by_descending, Some(false));
+        assert_eq!(document.views()[1].group_by_descending, Some(true));
+
+        let rows = group_direction_rows();
+        let ascending = evaluate_base(&document, "Ascending", &rows)
+            .expect("ascending JSON group view must evaluate");
+        assert_eq!(
+            group_path_summary(&ascending),
+            vec![
+                (
+                    "Alpha".to_owned(),
+                    vec![
+                        "Notes/02-alpha-first.md".to_owned(),
+                        "Notes/05-alpha-second.md".to_owned()
+                    ],
+                ),
+                (
+                    "Bravo".to_owned(),
+                    vec![
+                        "Notes/03-bravo-first.md".to_owned(),
+                        "Notes/06-bravo-second.md".to_owned()
+                    ],
+                ),
+                (
+                    "Zulu".to_owned(),
+                    vec![
+                        "Notes/01-zulu-first.md".to_owned(),
+                        "Notes/04-zulu-second.md".to_owned()
+                    ],
+                ),
+                (
+                    "None".to_owned(),
+                    vec![
+                        "Ascending.base".to_owned(),
+                        "Descending.base".to_owned(),
+                        "Invalid Direction.base".to_owned(),
+                        "Omitted Direction.base".to_owned(),
+                    ],
+                ),
+            ]
+        );
+
+        let descending = evaluate_base(&document, "Descending", &rows)
+            .expect("descending JSON group view must evaluate");
+        assert_eq!(
+            group_path_summary(&descending),
+            vec![
+                (
+                    "Zulu".to_owned(),
+                    vec![
+                        "Notes/01-zulu-first.md".to_owned(),
+                        "Notes/04-zulu-second.md".to_owned()
+                    ],
+                ),
+                (
+                    "Bravo".to_owned(),
+                    vec![
+                        "Notes/03-bravo-first.md".to_owned(),
+                        "Notes/06-bravo-second.md".to_owned()
+                    ],
+                ),
+                (
+                    "Alpha".to_owned(),
+                    vec![
+                        "Notes/02-alpha-first.md".to_owned(),
+                        "Notes/05-alpha-second.md".to_owned()
+                    ],
+                ),
+                (
+                    "None".to_owned(),
+                    vec![
+                        "Ascending.base".to_owned(),
+                        "Descending.base".to_owned(),
+                        "Invalid Direction.base".to_owned(),
+                        "Omitted Direction.base".to_owned(),
+                    ],
+                ),
+            ]
+        );
+    }
+
+    #[test]
+    fn native_yaml_group_by_direction_matches_captured_string_groups_and_keeps_missing_last() {
+        let source = b"views:\n  - type: table\n    name: Ascending\n    groupBy:\n      property: team\n      direction: ASC\n      unknownGroupBy: keep\n  - type: table\n    name: Descending\n    groupBy:\n      property: team\n      direction: DESC\nunknownRoot:\n  keep: root\n";
+        let document = parse_base(source).expect("native YAML group direction source must parse");
+
+        assert_eq!(document.source_bytes(), &source[..]);
+        assert_eq!(encode_base(&document).as_slice(), &source[..]);
+        assert!(raw_field_exists(document.raw_definition(), "unknownRoot"));
+        let BaseRawValue::NativeYaml(YamlValue::Mapping(raw_view)) =
+            document.views()[0].raw_definition()
+        else {
+            panic!("native YAML view source must remain a mapping");
+        };
+        let raw_group_by = super::mapping_get(raw_view, "groupBy")
+            .and_then(super::mapping_entries)
+            .expect("raw groupBy mapping must remain available");
+        assert_eq!(
+            super::mapping_get(raw_group_by, "unknownGroupBy").and_then(YamlValue::as_string),
+            Some("keep")
+        );
+        assert_eq!(document.views()[0].group_by.as_deref(), Some("team"));
+        assert_eq!(document.views()[0].group_by_descending, Some(false));
+        assert_eq!(document.views()[1].group_by_descending, Some(true));
+
+        let rows = group_direction_rows();
+        let ascending = evaluate_base(&document, "Ascending", &rows)
+            .expect("ascending native YAML group view must evaluate");
+        assert_eq!(
+            group_path_summary(&ascending),
+            vec![
+                (
+                    "Alpha".to_owned(),
+                    vec![
+                        "Notes/02-alpha-first.md".to_owned(),
+                        "Notes/05-alpha-second.md".to_owned()
+                    ],
+                ),
+                (
+                    "Bravo".to_owned(),
+                    vec![
+                        "Notes/03-bravo-first.md".to_owned(),
+                        "Notes/06-bravo-second.md".to_owned()
+                    ],
+                ),
+                (
+                    "Zulu".to_owned(),
+                    vec![
+                        "Notes/01-zulu-first.md".to_owned(),
+                        "Notes/04-zulu-second.md".to_owned()
+                    ],
+                ),
+                (
+                    "None".to_owned(),
+                    vec![
+                        "Ascending.base".to_owned(),
+                        "Descending.base".to_owned(),
+                        "Invalid Direction.base".to_owned(),
+                        "Omitted Direction.base".to_owned(),
+                    ],
+                ),
+            ]
+        );
+
+        let descending = evaluate_base(&document, "Descending", &rows)
+            .expect("descending native YAML group view must evaluate");
+        assert_eq!(
+            group_path_summary(&descending),
+            vec![
+                (
+                    "Zulu".to_owned(),
+                    vec![
+                        "Notes/01-zulu-first.md".to_owned(),
+                        "Notes/04-zulu-second.md".to_owned()
+                    ],
+                ),
+                (
+                    "Bravo".to_owned(),
+                    vec![
+                        "Notes/03-bravo-first.md".to_owned(),
+                        "Notes/06-bravo-second.md".to_owned()
+                    ],
+                ),
+                (
+                    "Alpha".to_owned(),
+                    vec![
+                        "Notes/02-alpha-first.md".to_owned(),
+                        "Notes/05-alpha-second.md".to_owned()
+                    ],
+                ),
+                (
+                    "None".to_owned(),
+                    vec![
+                        "Ascending.base".to_owned(),
+                        "Descending.base".to_owned(),
+                        "Invalid Direction.base".to_owned(),
+                        "Omitted Direction.base".to_owned(),
+                    ],
+                ),
+            ]
+        );
+    }
+
+    #[test]
+    fn missing_group_value_does_not_collide_with_empty_string() {
+        let source = br#"{
+  "version":1,
+  "views":[{"type":"table","name":"Grouped","groupBy":{"property":"team","direction":"ASC"}}]
+}"#;
+        let document = parse_base(source).expect("group source must parse");
+        let rows = vec![
+            BaseRow {
+                path: "missing.md".to_owned(),
+                properties: serde_json::Map::new(),
+            },
+            BaseRow {
+                path: "empty.md".to_owned(),
+                properties: serde_json::json!({"team": ""})
+                    .as_object()
+                    .expect("empty team properties must be an object")
+                    .clone(),
+            },
+        ];
+
+        let result = evaluate_base(&document, "Grouped", &rows)
+            .expect("group view with missing and empty values must evaluate");
+        assert_eq!(
+            group_path_summary(&result),
+            vec![
+                ("".to_owned(), vec!["empty.md".to_owned()]),
+                ("None".to_owned(), vec!["missing.md".to_owned()]),
+            ]
+        );
+    }
+
+    #[test]
+    fn json_group_by_without_direction_is_documented_as_unprobed_first_seen_behavior() {
+        let fixture: Value =
+            serde_json::from_str(C07_BASES_FIXTURE).expect("C07 fixture must be JSON");
+        for case in fixture["unprobed_json_group_by_cases"]
+            .as_array()
+            .expect("unprobed JSON groupBy cases must be an array")
+        {
+            let case_id = case["id"].as_str().expect("case id must be a string");
+            assert_eq!(
+                case["reference_status"].as_str(),
+                Some("unprobed"),
+                "{case_id}"
+            );
+            let source = source_for_case(case);
+            let document =
+                parse_base(&source).unwrap_or_else(|error| panic!("{case_id}: {error}"));
+            assert_eq!(document.source_bytes(), source.as_slice(), "{case_id}: source bytes");
+            assert_eq!(encode_base(&document).as_slice(), source.as_slice());
+            assert!(document.issues().is_empty(), "{case_id}: parse issues");
+            assert_eq!(document.views()[0].group_by.as_deref(), Some("team"));
+            assert_eq!(document.views()[0].group_by_descending, None);
+
+            let result = evaluate_base(
+                &document,
+                case["view"].as_str().expect("view name must be a string"),
+                &fixture_rows(&case["rows"]),
+            )
+            .unwrap_or_else(|error| panic!("{case_id}: view must evaluate: {error}"));
+            assert_optional_evaluation_expectations(case_id, case, &result);
+            assert!(result.issues.is_empty(), "{case_id}: evaluation issues");
+        }
+    }
+
+    #[test]
+    fn invalid_group_by_directions_are_reported_in_json_and_native_yaml() {
+        let fixture: Value =
+            serde_json::from_str(C07_BASES_FIXTURE).expect("C07 fixture must be JSON");
+        for case in fixture["invalid_group_by_direction_cases"]
+            .as_array()
+            .expect("invalid group direction cases must be an array")
+        {
+            let case_id = case["id"].as_str().expect("case id must be a string");
+            let source = source_for_case(case);
+            let document =
+                parse_base(&source).unwrap_or_else(|error| panic!("{case_id}: {error}"));
+            assert_eq!(
+                document.source_bytes(),
+                source.as_slice(),
+                "{case_id}: source bytes"
+            );
+            assert_eq!(
+                encode_base(&document).as_slice(),
+                source.as_slice(),
+                "{case_id}: encoding"
+            );
+            assert_eq!(document.issues().len(), 1);
+            assert_eq!(document.issues()[0].kind, BaseIssueKind::InvalidSource);
+            assert_eq!(
+                document.issues()[0].message,
+                case["expected"]["issue_message"]
+                    .as_str()
+                    .expect("issue message must be a string"),
+                "{case_id}: issue message"
+            );
+
+            let result = evaluate_base(
+                &document,
+                case["view"].as_str().expect("view name must be a string"),
+                &fixture_rows(&case["rows"]),
+            )
+            .unwrap_or_else(|error| panic!("{case_id}: invalid direction view parses: {error}"));
+            assert_optional_evaluation_expectations(case_id, case, &result);
+            assert_eq!(result.issues.len(), 1);
+            assert_eq!(result.issues[0].kind, BaseIssueKind::InvalidSource);
+            assert_eq!(
+                result.issues[0].message,
+                case["expected"]["issue_message"]
+                    .as_str()
+                    .expect("issue message must be a string"),
+                "{case_id}: evaluation issue message"
+            );
+            assert_eq!(
+                issue_kind_name(result.issues[0].kind),
+                case["expected"]["issue_kind"]
+                    .as_str()
+                    .expect("issue kind must be a string"),
+                "{case_id}: issue kind"
+            );
+        }
+    }
+
+    #[test]
+    fn malformed_group_by_shapes_are_reported_in_json_and_native_yaml() {
+        let fixture: Value =
+            serde_json::from_str(C07_BASES_FIXTURE).expect("C07 fixture must be JSON");
+        for case in fixture["invalid_group_by_cases"]
+            .as_array()
+            .expect("invalid groupBy cases must be an array")
+        {
+            let case_id = case["id"].as_str().expect("case id must be a string");
+            let source = source_for_case(case);
+            let document =
+                parse_base(&source).unwrap_or_else(|error| panic!("{case_id}: {error}"));
+            assert_eq!(document.source_bytes(), source.as_slice(), "{case_id}: source bytes");
+            assert_eq!(encode_base(&document).as_slice(), source.as_slice());
+            assert_eq!(document.issues().len(), 1, "{case_id}: issue count");
+            assert_eq!(document.issues()[0].kind, BaseIssueKind::InvalidSource);
+            assert_eq!(
+                document.issues()[0].message,
+                case["expected"]["issue_message"]
+                    .as_str()
+                    .expect("issue message must be a string"),
+                "{case_id}: issue message"
+            );
+
+            let result = evaluate_base(
+                &document,
+                case["view"].as_str().expect("view name must be a string"),
+                &fixture_rows(&case["rows"]),
+            )
+            .unwrap_or_else(|error| panic!("{case_id}: malformed groupBy view parses: {error}"));
+            assert_optional_evaluation_expectations(case_id, case, &result);
+            assert_eq!(result.issues.len(), 1, "{case_id}: evaluation issue count");
+            assert_eq!(result.issues[0].kind, BaseIssueKind::InvalidSource);
+            assert_eq!(
+                result.issues[0].message,
+                case["expected"]["issue_message"]
+                    .as_str()
+                    .expect("issue message must be a string"),
+                "{case_id}: evaluation issue message"
+            );
+            assert_eq!(
+                issue_kind_name(result.issues[0].kind),
+                case["expected"]["issue_kind"]
+                    .as_str()
+                    .expect("issue kind must be a string"),
+                "{case_id}: issue kind"
+            );
+        }
     }
 
     #[test]

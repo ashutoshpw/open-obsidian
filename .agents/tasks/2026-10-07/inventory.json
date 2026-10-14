@@ -1322,12 +1322,12 @@
     },
     {
       "path": "fixtures/c07-bases.json",
-      "sha256": "a6c862ec62747626fe67d238b1683251b0cca3cdabd19a98afa6700fd846715d",
+      "sha256": "455b829322aa2bd0ebff583b7ff79f189ecc543a3fdaeec9c2e794f3723fac78",
       "rust_owner": "crates/doc",
       "mapping_status": "reviewed",
       "status": "pending",
       "migration_phase": "R2",
-      "purpose": "C07 fixtures cover supported JSON and native YAML Bases definitions, filters, formulas, properties, missing/null and mixed numeric comparison, integer-valued limits, path tie ordering, first-seen grouping after truncation, view types, nested-fence exclusion, UTF-8 byte spans, and preservation of source bytes and unknown fields; visible Bases integration remains pending.",
+      "purpose": "C07 fixtures cover supported JSON and native YAML Bases definitions, filters, formulas, properties, missing/null and mixed numeric comparison, integer-valued limits, path tie ordering, first-seen grouping, unprobed JSON omitted-direction and scalar handling, captured ASC/DESC group order with missing groups last, omitted-direction native-YAML rejection, SIDEWAYS flat rows, malformed groupBy shapes, UTF-8 byte spans, and preservation of source bytes and unknown fields; visible Bases integration remains pending.",
       "fixture_reader": "crates/doc"
     },
     {

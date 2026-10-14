@@ -6128,3 +6128,75 @@ batch after a named milestone's implementation and CI-ready acceptance package
 are complete, then hold that exact SHA through the several-hour CI batch. The
 R2.8.107 package is ready for one push. Exclude the parked Rust Bases parser and
 fixture. No local executable validation was run.
+
+## 2026-10-14 — R2.8.107 pushed; exact-SHA CI pending
+
+Pushed the single accumulated R2.8.107 milestone commit
+`fdb74ab3893b63bc9e77e7e7b12c27fd1f1821aa` to `origin/main` after confirming
+the remote started at `95d2bab0acb88b672de5bab84cac0085989c6b96`. All seven
+required workflows were found for the new exact SHA. The initial snapshot had
+2 of 20 jobs passed, 17 running, and 1 queued; no failures were observed.
+Workflow and job IDs/URLs are recorded in
+`evidence/r2.8.107-attempt-1-fdb74ab.json`. Keep `origin/main` at this SHA until
+all seven workflows are terminal, then reconcile every job and artifact. No
+local executable validation was run.
+
+## R2.8.107 CI progress — five workflows passed
+
+On exact SHA `fdb74ab3893b63bc9e77e7e7b12c27fd1f1821aa`, inventory, desktop
+build, quality, loaded-plugin workflows, and plugin-renderer matrix have passed.
+All 13 jobs in those five workflows succeeded. The four Rust CI jobs and three
+Obsidian round-trip jobs remain in progress; no failures were observed in this
+snapshot. Updated run/job status is in
+`evidence/r2.8.107-attempt-1-fdb74ab.json`. Keep `origin/main` fixed until all
+seven workflows are terminal.
+
+## R2.8.107 CI progress — Rust CI and Windows round-trip passed
+
+At 2026-10-14T00:44:33Z, the exact pushed SHA `fdb74ab3893b63bc9e77e7e7b12c27fd1f1821aa` has six of seven required workflows passed. All four Rust CI jobs (MSRV 1.95 and Ubuntu/macOS/Windows) passed; the round-trip Windows job passed. The macOS and Ubuntu round-trip jobs remain in progress, so 18/20 jobs have succeeded and the attempt remains pending. Run IDs and job URLs are recorded in `evidence/r2.8.107-attempt-1-fdb74ab.json`. Hold `origin/main` at this SHA and inspect all three platform artifacts after the remaining jobs finish. C07.2 remains pending; no local executable validation was run.
+
+## R2.8.107 CI progress — macOS round-trip passed
+
+At 2026-10-14T00:45:08Z, the exact pushed SHA `fdb74ab3893b63bc9e77e7e7b12c27fd1f1821aa` has six of seven required workflows passed. Rust CI and the Windows and macOS round-trip jobs passed; only Ubuntu round-trip remains active. Nineteen of twenty jobs succeeded and none failed. Run/job IDs are recorded in `evidence/r2.8.107-attempt-1-fdb74ab.json`. Keep `origin/main` fixed until the final job finishes and its artifact is inspected. C07.2 remains pending; no local executable validation was run.
+
+## R2.8.107 terminal — accepted on exact SHA
+
+On exact SHA `fdb74ab3893b63bc9e77e7e7b12c27fd1f1821aa`, all seven required workflows and all 20 jobs passed. Round-trip Linux, macOS, and Windows artifacts were downloaded and inspected. Each report is top-level passed, includes the R2.8.106 C07.2 section, and records complete first-open/reopen evidence: ASC Alpha/Bravo/Zulu/None; DESC Zulu/Bravo/Alpha/None; omitted-direction visible parse error with zero rows/groups; SIDEWAYS flat rows with no groups; and the exact Invalid Direction.base rewrite and reseed. Artifact IDs, digests, and findings are recorded in `evidence/r2.8.107-attempt-1-fdb74ab.json`. This establishes the pinned-app reference capture only; C07.2 remains pending until Rust parity and source preservation pass. No local executable validation was run.
+
+## R2.8.108 started — C07.2 Rust Bases parity and source preservation
+
+Defined the next milestone against the completed three-platform reference artifacts. The focused scope covers explicit JSON/native-YAML group direction, None-last ordering, invalid native-YAML omitted/SIDEWAYS outcomes, exact source-byte and unknown-field preservation, and malformed-shape fixtures. Keep C07.3/C07.4 semantics out of scope. The existing Rust diff remains local and unvalidated; no push or local executable validation was run.
+
+## Milestone push rule made explicit
+
+The goal now requires exactly one accumulated `origin/main` push per named
+milestone, after its implementation and CI-ready acceptance package are
+complete. Minor source, test, fixture, workflow, configuration, documentation,
+and evidence changes stay in the local milestone batch. Keep the submitted SHA
+fixed while the several-hour required CI batch runs, and wait for all required
+workflows to become terminal before the next push. `origin/main` remains at
+`fdb74ab3893b63bc9e77e7e7b12c27fd1f1821aa`; R2.8.108 work is local. No local
+executable validation was run.
+
+## R2.8.108 static review follow-up
+
+Parallel read-only reviews found that JSON `groupBy` with an omitted direction
+had local first-seen behavior but no explicit unprobed fixture. Added a fixture
+and Rust assertion that records this handling separately from the captured
+native-YAML omitted-direction rejection. Added an unprobed JSON scalar
+`groupBy` fail-safe fixture and assertions that evaluation returns the exact
+reported issue message. Static review confirms missing values and empty
+strings use distinct group identities; a literal string `None` can share the
+missing group's display label, an uncaptured presentation case outside this
+milestone. Refreshed the fixture inventory hash. All changes remain local; no
+executable validation was run.
+
+## R2.8.108 acceptance package ready
+
+Completed the static source/fixture review and exact-error reconciliation for
+the C07.2 Rust Bases slice. The package covers explicit JSON/native-YAML
+ASC/DESC order, missing-last groups, omitted-direction native-YAML rejection,
+SIDEWAYS flat results, source-byte and unknown-field retention, malformed
+shapes, and explicit unprobed JSON omission/scalar behavior. The fixture hash
+matches its migration inventory row. One accumulated push will submit the
+milestone for required GitHub CI; no executable validation was run locally.

@@ -2,14 +2,14 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-14T00:32:53Z",
+  "updated_at": "2026-10-14T01:01:49Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "95d2bab0acb88b672de5bab84cac0085989c6b96",
-  "current_milestone": "R2.8.107 C07.2 full-platform capture repair and exact-SHA report attribution",
-  "next_action": "Commit only the reviewed R2.8.107 probe repair, aggregate report attribution, migration tracker/evidence updates, and milestone-only push cadence clarification. Exclude crates/doc/src/bases.rs and fixtures/c07-bases.json. Push one accumulated batch to origin/main; then hold the exact SHA through all seven required workflows and reconcile every job/artifact. No local executable validation.",
-  "push_status": "R2.8.106 attempt 1 is terminal and not accepted on exact SHA 95d2bab0acb88b672de5bab84cac0085989c6b96. All seven workflows are terminal: six passed; the Obsidian vault round-trip failed on macOS, with 19/20 jobs passed. Linux and Windows completed C07.2 capture; macOS stopped earlier at New Markdown path clipboard readback. The current remote tip remains 95d2bab0acb88b672de5bab84cac0085989c6b96. The focused R2.8.107 repair and acceptance package are ready for one milestone push.",
+  "last_reconciled_head": "fdb74ab3893b63bc9e77e7e7b12c27fd1f1821aa",
+  "current_milestone": "R2.8.108 C07.2 Rust Bases parity and source preservation",
+  "next_action": "Complete R2.8.108 locally: finish static review of the Rust Bases direction and invalid-source paths, ensure fixtures match the exact three-platform captures and source-preservation requirements, and prepare the complete acceptance package. Keep all minor edits local; push one accumulated origin/main batch only after the named milestone is complete, then wait for all required CI jobs to become terminal before another push. Do not run local executable validation.",
+  "push_status": "R2.8.107 is accepted on exact SHA fdb74ab3893b63bc9e77e7e7b12c27fd1f1821aa: all seven required workflows and all 20 jobs passed. Linux/macOS/Windows round-trip reports and artifact metadata are reconciled in evidence/r2.8.107-attempt-1-fdb74ab.json. No new SHA has been pushed.",
   "blockers": [
     "R2.8.102 attempt 1 is terminal but not accepted on 636b8fbe935b4225ef724d1fa56df3a7d92c4d49. Six required workflows passed; all three Obsidian round-trip jobs failed because Obsidian rewrote the synthetic Ascending.base from quoted name/property note.team to canonical unquoted name/property team. R2.8.103 corrected that source normalization and captured matching ASC/DESC behavior, but its own terminal blocker is the omitted-direction parse error described below. Keep local Rust evaluator/fixture edits separate until reference capture is finalized.",
     "R2.8.103 attempt 1 is terminal but not accepted on exact SHA de462533be90985ba1dbb368e70231ffc1edd815. All seven required workflows and 20 jobs finished: 17 jobs passed; Linux, macOS, and Windows Obsidian round-trip jobs failed after selecting Omitted Direction.base and displaying the same groupBy parse error with no rendered groups/rows. Explicit ASC/DESC captures matched across the platforms and source hashes remained unchanged. The probe did not reach SIDEWAYS or reopen. R2.8.104 continued through all first-open cases but exposed a second source-preservation issue during workspace restoration; keep the remote SHA fixed until the focused R2.8.105 repair package is complete.",
@@ -34389,9 +34389,10 @@
       "next_action": "R2.8.106 attempt 1 is terminal and not accepted. Preserve its Linux/Windows captures and macOS failure evidence. Continue with named R2.8.107 repair: wait for watcher refresh to settle and accept a literal exact field OCR line only when the macOS clipboard is empty; ensure the aggregate report identifies its included C07.2 capture. Keep C07.2 pending until all seven workflows pass on a fresh exact SHA and Rust parity is separately proven."
     },
     "R2.8.107": {
-      "status": "in_progress",
+      "status": "complete",
       "starting_sha": "95d2bab0acb88b672de5bab84cac0085989c6b96",
-      "push_status": "not pushed; focused repair and acceptance package are ready for one accumulated milestone push",
+      "implementation_sha": "fdb74ab3893b63bc9e77e7e7b12c27fd1f1821aa",
+      "push_status": "Accepted on exact SHA fdb74ab3893b63bc9e77e7e7b12c27fd1f1821aa: seven required workflows, 20/20 jobs, and all three complete round-trip artifacts passed and were reconciled. C07.2 remains pending for independent Rust parity.",
       "scope": "Repair the macOS C06 Canvas New Markdown path verification false negative that stopped R2.8.106 attempt 1 before C07.2. Wait for watcher refresh to settle; if and only if pbpaste is empty, permit a case-preserving OCR line with whitespace-only normalization from the fresh label-anchored path crop as readback. Preserve failure on a nonempty clipboard mismatch or absent/mismatched visual value. Identify the included R2.8.106 C07.2 report section and its per-run status in aggregate reports. Exclude the parked Rust Bases parser and fixture; no local executable validation.",
       "acceptance": [
         "After macOS path entry, wait for the vault refresh to settle before capturing and verifying the field.",
@@ -34409,8 +34410,57 @@
         "OpenObsidian Rust CI",
         "Obsidian vault round-trip acceptance"
       ],
+      "attempts": [
+        {
+          "attempt": 1,
+          "source_sha": "fdb74ab3893b63bc9e77e7e7b12c27fd1f1821aa",
+          "outcome": "success",
+          "evidence": "evidence/r2.8.107-attempt-1-fdb74ab.json",
+          "workflow_runs": {
+            "desktop_build": 38490853142,
+            "inventory": 38490853171,
+            "loaded_plugins": 38490853211,
+            "quality": 38490853163,
+            "rust_ci": 38490853206,
+            "plugin_renderer": 38490853257,
+            "vault_roundtrip": 38490853293
+          }
+        }
+      ],
+      "next_action": "R2.8.107 accepted. Begin R2.8.108 C07.2 Rust parity/source preservation using the captured Linux/macOS/Windows evidence. Keep C07.2 pending until the Rust milestone passes exact-SHA CI.",
+      "artifact_ids": [
+        11862287204,
+        11861828021,
+        11861133995
+      ]
+    },
+    "R2.8.108": {
+      "status": "in_progress",
+      "starting_sha": "fdb74ab3893b63bc9e77e7e7b12c27fd1f1821aa",
+      "implementation_sha": null,
+      "scope": "Complete C07.2 Rust Bases groupBy parity and source preservation against the pinned Obsidian 1.14.4 captures on Linux, macOS, and Windows. Keep C07.3 groupOrder and C07.4 locale/numeric comparator semantics outside this milestone.",
+      "acceptance": [
+        "JSON and native YAML explicit ASC/DESC group directions are parsed and evaluated; exact .base source bytes and unknown root/view/groupBy fields survive parse/encode.",
+        "Native YAML ASC groups render Alpha, Bravo, Zulu, None; DESC groups render Zulu, Bravo, Alpha, None. Missing-property groups remain last in both directions, and member rows retain captured order.",
+        "The native YAML groupBy mapping with property but no direction produces a visible InvalidSource compatibility issue and a view result with no rows or groups, matching the captured Obsidian parse-error state.",
+        "Missing values remain distinct from empty-string property values in the Rust grouping model; missing groups display as None, consistent with the captured Bases rows.",
+        "A selected native YAML SIDEWAYS view produces a visible InvalidSource issue and the captured flat rows with no groups; it does not invent a default group order.",
+        "Malformed groupBy shapes are covered. JSON omitted-direction behavior is explicitly fixture-tested as unprobed first-seen handling; JSON scalar and malformed forms are explicitly marked unprobed and fail safe. No unprobed JSON behavior is claimed as pinned-app parity.",
+        "All required GitHub Actions workflows and jobs pass on the exact pushed milestone SHA, including three-OS Rust CI and the C07.2 fixture/reference gate. No local executable validation is used."
+      ],
+      "required_workflows": [
+        "Rust migration inventory",
+        "OpenObsidian quality",
+        "OpenObsidian desktop build",
+        "OpenObsidian plugin renderer matrix",
+        "OpenObsidian loaded plugin workflows",
+        "OpenObsidian Rust CI",
+        "Obsidian vault round-trip acceptance"
+      ],
+      "evidence": "evidence/r2.8.107-attempt-1-fdb74ab.json",
       "attempts": [],
-      "next_action": "Push the reviewed R2.8.107 batch once to origin/main, then hold that exact SHA until all seven workflows are terminal and every job/artifact is reconciled."
+      "push_status": "The implementation and acceptance package are ready for one accumulated origin/main push; no R2.8.108 changes have been pushed yet.",
+      "next_action": "Verify origin/main still matches the recorded R2.8.107 SHA, then commit and push the complete R2.8.108 batch once. Hold that exact SHA until all required GitHub Actions workflows are terminal and reconciled. Do not run local executable validation."
     }
   },
   "ci_preparation": {

@@ -74,6 +74,241 @@
       "issue_message": "Native Bases filter is outside the supported comparison subset: file.hasTag(\"open\")"
     }
   },
+  "unprobed_json_group_by_cases": [
+    {
+      "id": "json-group-by-omitted-direction-is-unprobed-and-keeps-first-seen-order",
+      "format": "json",
+      "reference_status": "unprobed",
+      "handling_policy": "retain-property-and-first-seen-order",
+      "source": {
+        "version": 1,
+        "views": [{
+          "type": "table",
+          "name": "No group direction",
+          "groupBy": {"property": "team"},
+          "unknownView": {"keep": "view-field"}
+        }],
+        "unknownRoot": {"keep": "root-field"}
+      },
+      "view": "No group direction",
+      "rows": [
+        {"path": "zulu-first.md", "properties": {"team": "Zulu"}},
+        {"path": "alpha.md", "properties": {"team": "Alpha"}},
+        {"path": "zulu-second.md", "properties": {"team": "Zulu"}},
+        {"path": "missing.md", "properties": {}}
+      ],
+      "expected": {
+        "paths": ["zulu-first.md", "alpha.md", "zulu-second.md", "missing.md"],
+        "group_names": ["Zulu", "Alpha", "None"],
+        "group_paths": {
+          "Zulu": ["zulu-first.md", "zulu-second.md"],
+          "Alpha": ["alpha.md"],
+          "None": ["missing.md"]
+        }
+      }
+    }
+  ],
+  "invalid_group_by_direction_cases": [
+    {
+      "id": "json-invalid-group-by-direction-is-unprobed-and-fails-safe",
+      "format": "json",
+      "source": {
+        "version": 1,
+        "views": [{
+          "type": "table",
+          "name": "Invalid",
+          "groupBy": {"property": "score", "direction": "SIDEWAYS"}
+        }]
+      },
+      "view": "Invalid",
+      "rows": [
+        {"path": "two-one-first.md", "properties": {"score": 2.1}},
+        {"path": "two-zero-nine.md", "properties": {"score": 2.09}},
+        {"path": "two-one-second.md", "properties": {"score": 2.1}}
+      ],
+      "reference_status": "unprobed",
+      "handling_policy": "fail-safe-no-grouping",
+      "expected": {
+        "paths": ["two-one-first.md", "two-zero-nine.md", "two-one-second.md"],
+        "group_names": [],
+        "group_paths": {},
+        "issue_kind": "invalid-source",
+        "issue_message": "Unsupported Bases groupBy.direction; expected ASC or DESC"
+      }
+    },
+    {
+      "id": "native-yaml-non-string-group-by-direction-is-unprobed-and-fails-safe",
+      "format": "yaml",
+      "source": "views:\n  - type: table\n    name: Invalid\n    groupBy:\n      property: score\n      direction: 12\n",
+      "view": "Invalid",
+      "rows": [
+        {"path": "two-one-first.md", "properties": {"score": 2.1}},
+        {"path": "two-zero-nine.md", "properties": {"score": 2.09}},
+        {"path": "two-one-second.md", "properties": {"score": 2.1}}
+      ],
+      "reference_status": "unprobed",
+      "handling_policy": "fail-safe-no-grouping",
+      "expected": {
+        "paths": ["two-one-first.md", "two-zero-nine.md", "two-one-second.md"],
+        "group_names": [],
+        "group_paths": {},
+        "issue_kind": "invalid-source",
+        "issue_message": "Unsupported Bases groupBy.direction; expected ASC or DESC"
+      }
+    },
+    {
+      "id": "native-yaml-sideways-group-by-direction-matches-captured-flat-result",
+      "format": "yaml",
+      "source": "views:\n  - type: table\n    name: C07 group direction SIDEWAYS\n    groupBy:\n      property: team\n      direction: SIDEWAYS\n",
+      "view": "C07 group direction SIDEWAYS",
+      "rows": [
+        {"path": "Notes/01-zulu-first.md", "properties": {"team": "Zulu"}},
+        {"path": "Notes/02-alpha-first.md", "properties": {"team": "Alpha"}},
+        {"path": "Notes/03-bravo-first.md", "properties": {"team": "Bravo"}},
+        {"path": "Notes/04-zulu-second.md", "properties": {"team": "Zulu"}},
+        {"path": "Notes/05-alpha-second.md", "properties": {"team": "Alpha"}},
+        {"path": "Notes/06-bravo-second.md", "properties": {"team": "Bravo"}},
+        {"path": "Ascending.base", "properties": {}},
+        {"path": "Descending.base", "properties": {}},
+        {"path": "Invalid Direction.base", "properties": {}},
+        {"path": "Omitted Direction.base", "properties": {}}
+      ],
+      "reference_status": "captured",
+      "reference": {
+        "run_source_sha": "fdb74ab3893b63bc9e77e7e7b12c27fd1f1821aa",
+        "application": "Obsidian 1.14.4",
+        "platforms": ["Linux", "macOS", "Windows"],
+        "reference_seed_sha256": "fb9d112de60508c86bdde1c2ebf989143a379ff6ce59cc89e958865cfe43afe0"
+      },
+      "expected": {
+        "paths": [
+          "Notes/01-zulu-first.md",
+          "Notes/02-alpha-first.md",
+          "Notes/03-bravo-first.md",
+          "Notes/04-zulu-second.md",
+          "Notes/05-alpha-second.md",
+          "Notes/06-bravo-second.md",
+          "Ascending.base",
+          "Descending.base",
+          "Invalid Direction.base",
+          "Omitted Direction.base"
+        ],
+        "group_names": [],
+        "group_paths": {},
+        "issue_kind": "invalid-source",
+        "issue_message": "Unsupported Bases groupBy.direction; expected ASC or DESC"
+      }
+    }
+  ],
+  "invalid_group_by_cases": [
+    {
+      "id": "json-group-by-object-without-property-is-reported",
+      "format": "json",
+      "reference_status": "unprobed",
+      "handling_policy": "fail-safe-no-grouping",
+      "source": {
+        "version": 1,
+        "views": [{
+          "type": "table",
+          "name": "Malformed",
+          "groupBy": {"direction": "ASC"}
+        }]
+      },
+      "view": "Malformed",
+      "rows": [
+        {"path": "two-one-first.md", "properties": {"score": 2.1}},
+        {"path": "two-zero-nine.md", "properties": {"score": 2.09}},
+        {"path": "two-one-second.md", "properties": {"score": 2.1}}
+      ],
+      "expected": {
+        "paths": ["two-one-first.md", "two-zero-nine.md", "two-one-second.md"],
+        "group_names": [],
+        "group_paths": {},
+        "issue_kind": "invalid-source",
+        "issue_message": "Unsupported Bases groupBy; expected a string property"
+      }
+    },
+    {
+      "id": "json-scalar-group-by-is-unprobed-and-reported",
+      "format": "json",
+      "reference_status": "unprobed",
+      "handling_policy": "fail-safe-no-grouping",
+      "source": {
+        "version": 1,
+        "views": [{
+          "type": "table",
+          "name": "Malformed",
+          "groupBy": 12
+        }]
+      },
+      "view": "Malformed",
+      "rows": [
+        {"path": "two-one-first.md", "properties": {"score": 2.1}},
+        {"path": "two-zero-nine.md", "properties": {"score": 2.09}},
+        {"path": "two-one-second.md", "properties": {"score": 2.1}}
+      ],
+      "expected": {
+        "paths": ["two-one-first.md", "two-zero-nine.md", "two-one-second.md"],
+        "group_names": [],
+        "group_paths": {},
+        "issue_kind": "invalid-source",
+        "issue_message": "Unsupported Bases groupBy; expected a property string or mapping"
+      }
+    },
+    {
+      "id": "native-yaml-group-by-sequence-is-reported",
+      "format": "yaml",
+      "reference_status": "unprobed",
+      "handling_policy": "fail-safe-no-grouping",
+      "source": "views:\n  - type: table\n    name: Malformed\n    groupBy:\n      - score\n",
+      "view": "Malformed",
+      "rows": [
+        {"path": "two-one-first.md", "properties": {"score": 2.1}},
+        {"path": "two-zero-nine.md", "properties": {"score": 2.09}},
+        {"path": "two-one-second.md", "properties": {"score": 2.1}}
+      ],
+      "expected": {
+        "paths": ["two-one-first.md", "two-zero-nine.md", "two-one-second.md"],
+        "group_names": [],
+        "group_paths": {},
+        "issue_kind": "invalid-source",
+        "issue_message": "Unsupported Bases groupBy; expected a property string or mapping"
+      }
+    },
+    {
+      "id": "native-yaml-group-by-mapping-without-direction-matches-captured-parse-error",
+      "format": "yaml",
+      "source": "views:\n  - type: table\n    name: C07 group direction omitted\n    groupBy:\n      property: team\n",
+      "view": "C07 group direction omitted",
+      "rows": [
+        {"path": "Notes/01-zulu-first.md", "properties": {"team": "Zulu"}},
+        {"path": "Notes/02-alpha-first.md", "properties": {"team": "Alpha"}},
+        {"path": "Notes/03-bravo-first.md", "properties": {"team": "Bravo"}},
+        {"path": "Notes/04-zulu-second.md", "properties": {"team": "Zulu"}},
+        {"path": "Notes/05-alpha-second.md", "properties": {"team": "Alpha"}},
+        {"path": "Notes/06-bravo-second.md", "properties": {"team": "Bravo"}},
+        {"path": "Ascending.base", "properties": {}},
+        {"path": "Descending.base", "properties": {}},
+        {"path": "Invalid Direction.base", "properties": {}},
+        {"path": "Omitted Direction.base", "properties": {}}
+      ],
+      "reference_status": "captured",
+      "reference": {
+        "run_source_sha": "fdb74ab3893b63bc9e77e7e7b12c27fd1f1821aa",
+        "application": "Obsidian 1.14.4",
+        "platforms": ["Linux", "macOS", "Windows"],
+        "reference_seed_sha256": "2eec9b86fc24dcb11d303643e05bfa30f90446767ba26e85a82dc39f8175f311",
+        "visible_parse_error": "Unable to parse your base file: \"groupBy\" must be a object in view \"C07 group direction omitted\""
+      },
+      "expected": {
+        "paths": [],
+        "group_names": [],
+        "group_paths": {},
+        "issue_kind": "invalid-source",
+        "issue_message": "Unable to parse your base file: \"groupBy\" must be a object in view \"C07 group direction omitted\""
+      }
+    }
+  ],
   "filter_operator_case": {
     "id": "json-filter-operator-subset",
     "source": {
@@ -338,7 +573,8 @@
       }
     },
     {
-      "id": "groups-preserve-first-seen-order-after-limit",
+      "id": "groups-preserve-first-seen-order-after-limit-provisional",
+      "reference_status": "pending",
       "source": {
         "version": 1,
         "views": [{
@@ -364,6 +600,128 @@
         "group_paths": {
           "Zulu": ["zulu-first.md", "zulu-second.md"],
           "Ada": ["ada.md"]
+        }
+      }
+    },
+    {
+      "id": "group-by-direction-ascending-json-projection-of-native-yaml-capture",
+      "reference_status": "projected-from-captured-native-yaml",
+      "fixture_input_format": "json",
+      "source": {
+        "version": 1,
+        "views": [{
+          "type": "table",
+          "name": "Ascending groups",
+          "groupBy": {"property": "team", "direction": "ASC"},
+          "unknownView": {"keep": "view-field"}
+        }],
+        "unknownRoot": {"keep": "root-field"}
+      },
+      "view": "Ascending groups",
+      "rows": [
+        {"path": "Notes/01-zulu-first.md", "properties": {"team": "Zulu"}},
+        {"path": "Notes/02-alpha-first.md", "properties": {"team": "Alpha"}},
+        {"path": "Notes/03-bravo-first.md", "properties": {"team": "Bravo"}},
+        {"path": "Notes/04-zulu-second.md", "properties": {"team": "Zulu"}},
+        {"path": "Notes/05-alpha-second.md", "properties": {"team": "Alpha"}},
+        {"path": "Notes/06-bravo-second.md", "properties": {"team": "Bravo"}},
+        {"path": "Ascending.base", "properties": {}},
+        {"path": "Descending.base", "properties": {}},
+        {"path": "Invalid Direction.base", "properties": {}},
+        {"path": "Omitted Direction.base", "properties": {}}
+      ],
+      "reference": {
+        "run_source_sha": "fdb74ab3893b63bc9e77e7e7b12c27fd1f1821aa",
+        "application": "Obsidian 1.14.4",
+        "source_format": "native-yaml",
+        "platforms": ["Linux", "macOS", "Windows"],
+        "reference_seed_sha256": "73c9bafae0577f7231c9d59ecbb24ce664e9bbb6462b6411a8741eeba8704fc3"
+      },
+      "expected": {
+        "paths": [
+          "Notes/01-zulu-first.md",
+          "Notes/02-alpha-first.md",
+          "Notes/03-bravo-first.md",
+          "Notes/04-zulu-second.md",
+          "Notes/05-alpha-second.md",
+          "Notes/06-bravo-second.md",
+          "Ascending.base",
+          "Descending.base",
+          "Invalid Direction.base",
+          "Omitted Direction.base"
+        ],
+        "group_names": ["Alpha", "Bravo", "Zulu", "None"],
+        "group_paths": {
+          "Alpha": ["Notes/02-alpha-first.md", "Notes/05-alpha-second.md"],
+          "Bravo": ["Notes/03-bravo-first.md", "Notes/06-bravo-second.md"],
+          "Zulu": ["Notes/01-zulu-first.md", "Notes/04-zulu-second.md"],
+          "None": [
+            "Ascending.base",
+            "Descending.base",
+            "Invalid Direction.base",
+            "Omitted Direction.base"
+          ]
+        }
+      }
+    },
+    {
+      "id": "group-by-direction-descending-json-projection-of-native-yaml-capture",
+      "reference_status": "projected-from-captured-native-yaml",
+      "fixture_input_format": "json",
+      "source": {
+        "version": 1,
+        "views": [{
+          "type": "table",
+          "name": "Descending groups",
+          "groupBy": {"property": "team", "direction": "DESC"},
+          "unknownView": {"keep": "view-field"}
+        }],
+        "unknownRoot": {"keep": "root-field"}
+      },
+      "view": "Descending groups",
+      "rows": [
+        {"path": "Notes/01-zulu-first.md", "properties": {"team": "Zulu"}},
+        {"path": "Notes/02-alpha-first.md", "properties": {"team": "Alpha"}},
+        {"path": "Notes/03-bravo-first.md", "properties": {"team": "Bravo"}},
+        {"path": "Notes/04-zulu-second.md", "properties": {"team": "Zulu"}},
+        {"path": "Notes/05-alpha-second.md", "properties": {"team": "Alpha"}},
+        {"path": "Notes/06-bravo-second.md", "properties": {"team": "Bravo"}},
+        {"path": "Ascending.base", "properties": {}},
+        {"path": "Descending.base", "properties": {}},
+        {"path": "Invalid Direction.base", "properties": {}},
+        {"path": "Omitted Direction.base", "properties": {}}
+      ],
+      "reference": {
+        "run_source_sha": "fdb74ab3893b63bc9e77e7e7b12c27fd1f1821aa",
+        "application": "Obsidian 1.14.4",
+        "source_format": "native-yaml",
+        "platforms": ["Linux", "macOS", "Windows"],
+        "reference_seed_sha256": "f118dec1b4b88ba183fa7fdbe75ec760950d35a766486e4258ba9929bfecbea5"
+      },
+      "expected": {
+        "paths": [
+          "Notes/01-zulu-first.md",
+          "Notes/02-alpha-first.md",
+          "Notes/03-bravo-first.md",
+          "Notes/04-zulu-second.md",
+          "Notes/05-alpha-second.md",
+          "Notes/06-bravo-second.md",
+          "Ascending.base",
+          "Descending.base",
+          "Invalid Direction.base",
+          "Omitted Direction.base"
+        ],
+        "group_names": ["Zulu", "Bravo", "Alpha", "None"],
+        "group_paths": {
+          "Zulu": ["Notes/01-zulu-first.md", "Notes/04-zulu-second.md"],
+          "Bravo": ["Notes/03-bravo-first.md", "Notes/06-bravo-second.md"],
+          "Alpha": ["Notes/02-alpha-first.md", "Notes/05-alpha-second.md"],
+          "None": [
+            "Ascending.base",
+            "Descending.base",
+            "Invalid Direction.base",
+            "Omitted Direction.base"
+          ]
         }
       }
     }
