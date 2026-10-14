@@ -1,0 +1,319 @@
+{
+  "milestone": "R2.8.124",
+  "attempt": 1,
+  "status": "failed / CI-terminal",
+  "captured_at": "2026-10-14T11:28:44Z",
+  "source_sha": "d609d3400d622deca105bfc0ddb11e6eef19e781",
+  "summary": {
+    "expected_workflows": 7,
+    "completed_successful_workflows": 6,
+    "failed_workflows": 1,
+    "in_progress_workflows": 0,
+    "queued_workflows": 0,
+    "expected_jobs": 20,
+    "passed_jobs": 17,
+    "failed_jobs": 3,
+    "in_progress_jobs": 0,
+    "queued_jobs": 0,
+    "remote_tip": "d609d3400d622deca105bfc0ddb11e6eef19e781"
+  },
+  "workflows": [
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 38554086056,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38554086056",
+      "head_sha": "d609d3400d622deca105bfc0ddb11e6eef19e781",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "id": 115818787511,
+          "name": "minimum supported Rust (1.95)",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38554086056/job/115818787511",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 115818787883,
+          "name": "rust (windows-latest)",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38554086056/job/115818787883",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 115818788160,
+          "name": "rust (macos-latest)",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38554086056/job/115818788160",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 115818788191,
+          "name": "rust (ubuntu-latest)",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38554086056/job/115818788191",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "Obsidian vault round-trip acceptance",
+      "run_id": 38554085901,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38554085901",
+      "head_sha": "d609d3400d622deca105bfc0ddb11e6eef19e781",
+      "status": "completed",
+      "conclusion": "failure",
+      "jobs": [
+        {
+          "id": 115818787312,
+          "name": "Obsidian 1.14.4 vault round-trip on macos-latest",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38554085901/job/115818787312",
+          "status": "completed",
+          "conclusion": "failure",
+          "failure_summary": "macOS initial picker Vision confirmation passed with unique exact Cancel/Open candidates inside the exact AX bounds, but the after-path screenshot was blank except for the desktop menu and Dock. Vision found no candidates, so the exact-panel visibility gate failed before the panel identity was re-queried or Open was clicked. The job failed at 2026-10-14T11:07:58Z; the round-trip workflow remains active while Windows and Ubuntu jobs run.",
+          "artifact": {
+            "workflow": "Obsidian vault round-trip acceptance",
+            "job_id": 115818787312,
+            "id": 11887832832,
+            "name": "obsidian-vault-roundtrip-macOS-d609d3400d622deca105bfc0ddb11e6eef19e781",
+            "size_in_bytes": 329318,
+            "digest": "sha256:d7218b4e203e7f22af8195c87132fdafa9f279a19db5951c26c800593b27db10",
+            "expires_at": "2026-11-13T11:07:58Z",
+            "report_sha256": "851558cd4002f3db49538dfad475122a345ad6d1350722e53ad2a2516ab35df3",
+            "after_path_screenshot_sha256": "0279211ab58cb41322c18d81ead10bf3d3684e779ceb1063306a81a0fb18b2d5",
+            "author_log_sha256": "dde3355cbef29740f66d0a2859256be376aa78dd40b5d257d5afdd2519ff6a25",
+            "failure_summary": "macOS initial picker Vision confirmation passed with unique exact Cancel/Open candidates inside the exact AX bounds, but the after-path screenshot was blank except for the desktop menu and Dock. Vision found no candidates, so the exact-panel visibility gate failed before the panel identity was re-queried or Open was clicked. The job failed at 2026-10-14T11:07:58Z; the round-trip workflow remains active while Windows and Ubuntu jobs run."
+          }
+        },
+        {
+          "id": 115818787658,
+          "name": "Obsidian 1.14.4 vault round-trip on windows-latest",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38554085901/job/115818787658",
+          "status": "completed",
+          "conclusion": "failure",
+          "failure_summary": "Windows exact UI Automation selection/readback passed. The formula-dependent Kanban scenario failed on first-open and reopen at the rendered-column count gate. The report records 13 unique paths, group membership counts 5/4/4/0, and count-label DOM text 5/4/4/0; all card title checks passed through the exact .bases-kanban-card surface fallback (104 title-range checks). The acceptance report does not record the count text/column node actually read by the failing assertion, so the mismatch source remains unresolved. The other 13 C07.3 scenarios and source-observation recording passed. Job failed at 2026-10-14T11:19:38Z.",
+          "artifact": {
+            "workflow": "Obsidian vault round-trip acceptance",
+            "job_id": 115818787658,
+            "id": 11888717973,
+            "name": "obsidian-vault-roundtrip-Windows-d609d3400d622deca105bfc0ddb11e6eef19e781",
+            "size_in_bytes": 20559257,
+            "digest": "sha256:90106b48c076b05d407c8502ec9b69f3d599723a13e5e9f8ff451be047eef520",
+            "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38554085901/artifacts/11888717973",
+            "expires_at": "2026-11-13T11:19:31Z",
+            "report_sha256": "c9acd6ebe1f17b874e2f8e19c6aa22192a7fca52f0c3c07c4b24edc691bea5bd",
+            "first_open_screenshot_sha256": "3665863717c572c5799eb5503fa609d3c227ace8df1fbda9984caaff7234cc20",
+            "reopen_screenshot_sha256": "3665863717c572c5799eb5503fa609d3c227ace8df1fbda9984caaff7234cc20",
+            "failure_summary": "Windows exact UI Automation selection/readback passed. The formula-dependent Kanban scenario failed on first-open and reopen at the rendered-column count gate. The report records 13 unique paths, group membership counts 5/4/4/0, and count-label DOM text 5/4/4/0; all card title checks passed through the exact .bases-kanban-card surface fallback (104 title-range checks). The acceptance report does not record the count text/column node actually read by the failing assertion, so the mismatch source remains unresolved. The other 13 C07.3 scenarios and source-observation recording passed. Job failed at 2026-10-14T11:19:38Z."
+          }
+        },
+        {
+          "id": 115818787711,
+          "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38554085901/job/115818787711",
+          "status": "completed",
+          "conclusion": "failure",
+          "failure_summary": "Linux completed all 14 C07.3 scenarios except formula-dependent Kanban; source-observation recording completed. First-open and reopen both failed the rendered-column count gate despite 13 unique paths, group member counts 5/4/4/0, DOM count-label text 5/4/4/0, and 104 successful exact-card-surface title-range checks. The report does not record the exact count node/value read by the failing assertion. Job failed at 2026-10-14T11:22:39Z.",
+          "artifact": {
+            "workflow": "Obsidian vault round-trip acceptance",
+            "job_id": 115818787711,
+            "id": 11889008320,
+            "name": "obsidian-vault-roundtrip-Linux-d609d3400d622deca105bfc0ddb11e6eef19e781",
+            "size_in_bytes": 19529399,
+            "digest": "sha256:147e3b2bbfdfd9c3023520cd6e6d28c8811db839cac2307492883de6606d71cf",
+            "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38554085901/artifacts/11889008320",
+            "expires_at": "2026-11-13T11:22:31Z",
+            "report_sha256": "6e9be7f3d0ca920460c88819a1412cd7cd4a4d454e62ab46c7ad57c4a364a50b",
+            "first_open_screenshot_sha256": "25531356ce47b7c82f85bd978e1e369a15a1c6eab97b362eada98359d5740192",
+            "reopen_screenshot_sha256": "25531356ce47b7c82f85bd978e1e369a15a1c6eab97b362eada98359d5740192",
+            "failure_summary": "Linux completed all 14 C07.3 scenarios except formula-dependent Kanban; source-observation recording completed. First-open and reopen both failed the rendered-column count gate despite 13 unique paths, group member counts 5/4/4/0, DOM count-label text 5/4/4/0, and 104 successful exact-card-surface title-range checks. The report does not record the exact count node/value read by the failing assertion. Job failed at 2026-10-14T11:22:39Z."
+          }
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 38554085859,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38554085859",
+      "head_sha": "d609d3400d622deca105bfc0ddb11e6eef19e781",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "id": 115818787228,
+          "name": "macos-latest",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38554085859/job/115818787228",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 115818787420,
+          "name": "windows-latest",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38554085859/job/115818787420",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 115818787722,
+          "name": "ubuntu-latest",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38554085859/job/115818787722",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 38554086002,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38554086002",
+      "head_sha": "d609d3400d622deca105bfc0ddb11e6eef19e781",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "id": 115818790412,
+          "name": "macos-latest",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38554086002/job/115818790412",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 115818790687,
+          "name": "windows-latest",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38554086002/job/115818790687",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 115818791279,
+          "name": "ubuntu-latest",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38554086002/job/115818791279",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 38554085991,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38554085991",
+      "head_sha": "d609d3400d622deca105bfc0ddb11e6eef19e781",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "id": 115818787063,
+          "name": "inventory",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38554085991/job/115818787063",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 38554085892,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38554085892",
+      "head_sha": "d609d3400d622deca105bfc0ddb11e6eef19e781",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "id": 115818787227,
+          "name": "ubuntu-latest",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38554085892/job/115818787227",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 115818787651,
+          "name": "windows-latest",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38554085892/job/115818787651",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 115818787824,
+          "name": "macos-latest",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38554085892/job/115818787824",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 38554085939,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38554085939",
+      "head_sha": "d609d3400d622deca105bfc0ddb11e6eef19e781",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "id": 115818787378,
+          "name": "macos-latest",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38554085939/job/115818787378",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 115818787508,
+          "name": "ubuntu-latest",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38554085939/job/115818787508",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 115818787610,
+          "name": "windows-latest",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38554085939/job/115818787610",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ],
+  "artifacts": [
+    {
+      "workflow": "Obsidian vault round-trip acceptance",
+      "job_id": 115818787312,
+      "id": 11887832832,
+      "name": "obsidian-vault-roundtrip-macOS-d609d3400d622deca105bfc0ddb11e6eef19e781",
+      "size_in_bytes": 329318,
+      "digest": "sha256:d7218b4e203e7f22af8195c87132fdafa9f279a19db5951c26c800593b27db10",
+      "expires_at": "2026-11-13T11:07:58Z",
+      "report_sha256": "851558cd4002f3db49538dfad475122a345ad6d1350722e53ad2a2516ab35df3",
+      "after_path_screenshot_sha256": "0279211ab58cb41322c18d81ead10bf3d3684e779ceb1063306a81a0fb18b2d5",
+      "author_log_sha256": "dde3355cbef29740f66d0a2859256be376aa78dd40b5d257d5afdd2519ff6a25",
+      "failure_summary": "macOS initial picker Vision confirmation passed with unique exact Cancel/Open candidates inside the exact AX bounds, but the after-path screenshot was blank except for the desktop menu and Dock. Vision found no candidates, so the exact-panel visibility gate failed before the panel identity was re-queried or Open was clicked. The job failed at 2026-10-14T11:07:58Z; the round-trip workflow remains active while Windows and Ubuntu jobs run."
+    },
+    {
+      "workflow": "Obsidian vault round-trip acceptance",
+      "job_id": 115818787658,
+      "id": 11888717973,
+      "name": "obsidian-vault-roundtrip-Windows-d609d3400d622deca105bfc0ddb11e6eef19e781",
+      "size_in_bytes": 20559257,
+      "digest": "sha256:90106b48c076b05d407c8502ec9b69f3d599723a13e5e9f8ff451be047eef520",
+      "expires_at": "2026-11-13T11:19:31Z",
+      "report_sha256": "c9acd6ebe1f17b874e2f8e19c6aa22192a7fca52f0c3c07c4b24edc691bea5bd",
+      "first_open_screenshot_sha256": "3665863717c572c5799eb5503fa609d3c227ace8df1fbda9984caaff7234cc20",
+      "reopen_screenshot_sha256": "3665863717c572c5799eb5503fa609d3c227ace8df1fbda9984caaff7234cc20",
+      "failure_summary": "Windows exact UI Automation selection/readback passed. The formula-dependent Kanban scenario failed on first-open and reopen at the rendered-column count gate. The report records 13 unique paths, group membership counts 5/4/4/0, and count-label DOM text 5/4/4/0; all card title checks passed through the exact .bases-kanban-card surface fallback. The acceptance report does not record the count text/column node actually read by the failing assertion, so the mismatch source remains unresolved. The other 13 C07.3 scenarios and source-observation recording passed. Job failed at 2026-10-14T11:19:38Z."
+    },
+    {
+      "workflow": "Obsidian vault round-trip acceptance",
+      "job_id": 115818787711,
+      "id": 11889008320,
+      "name": "obsidian-vault-roundtrip-Linux-d609d3400d622deca105bfc0ddb11e6eef19e781",
+      "size_in_bytes": 19529399,
+      "digest": "sha256:147e3b2bbfdfd9c3023520cd6e6d28c8811db839cac2307492883de6606d71cf",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38554085901/artifacts/11889008320",
+      "expires_at": "2026-11-13T11:22:31Z",
+      "report_sha256": "6e9be7f3d0ca920460c88819a1412cd7cd4a4d454e62ab46c7ad57c4a364a50b",
+      "first_open_screenshot_sha256": "25531356ce47b7c82f85bd978e1e369a15a1c6eab97b362eada98359d5740192",
+      "reopen_screenshot_sha256": "25531356ce47b7c82f85bd978e1e369a15a1c6eab97b362eada98359d5740192",
+      "failure_summary": "Linux completed all 14 C07.3 scenarios except formula-dependent Kanban; source-observation recording completed. First-open and reopen both failed the rendered-column count gate despite 13 unique paths, group member counts 5/4/4/0, DOM count-label text 5/4/4/0, and 104 successful exact-card-surface title-range checks. The report does not record the exact count node/value read by the failing assertion. Job failed at 2026-10-14T11:22:39Z."
+    }
+  ],
+  "note": "R2.8.124 is terminal/failed on exact SHA d609d3400d622deca105bfc0ddb11e6eef19e781: six of seven workflows and 17/20 jobs passed; all three round-trip platform jobs failed. macOS failed after path entry when the picker disappeared before the explicit Open click. Windows and Linux failed the formula-dependent Kanban count gate on first-open and reopen, although reports/screenshots show 13 paths and 5/4/4/0 groups/count labels and all 104 exact-card-surface title checks per observation passed. All other C07.3 scenarios and source-observation recording passed on Windows and Linux. The reports omit the exact count node/value used by the failing assertion. R2.8.125 is planned as one grouped repair for macOS picker dismissal and cross-platform Kanban count attribution. No local executable validation ran."
+}

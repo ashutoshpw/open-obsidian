@@ -3218,7 +3218,6 @@ async function chooseVaultDirectoryMacOS(connection: DevToolsConnection, port: n
       delay 0.5
       key code 36
       delay 1
-      key code 36
   end tell
   end run`;
   folderPickerRecord.path_entry_status = "pending";
@@ -6502,12 +6501,56 @@ async function readGroupOrderVisibleState(
         }
       }
       for (const group of groupRecords) {
-        const column = group.marker.column;
-        const countElement = column?.querySelector('.bases-kanban-column-count');
+        const headingElement = group.marker.element;
+        const column = headingElement?.closest('.bases-kanban-column') ?? null;
+        const headerElement = headingElement?.closest('.bases-kanban-column-header')
+          ?? column?.querySelector(':scope > .bases-kanban-column-header')
+          ?? null;
+        const countElements = column ? [...column.querySelectorAll('.bases-kanban-column-count')] : [];
+        const headerCountElements = headerElement
+          ? [...headerElement.querySelectorAll('.bases-kanban-column-count')]
+          : [];
+        const countElement = headerCountElements.length === 1 ? headerCountElements[0] : null;
         const countText = textOf(countElement);
         const declaredCount = /^\d+$/.test(countText) ? Number(countText) : null;
-        if (declaredCount === null || declaredCount !== group.member_paths.length) {
-          ambiguityReasons.push('Kanban group ' + JSON.stringify(group.heading_text) + ' card count did not match its rendered column count.');
+        const columnOrdinal = rawKanbanColumns.indexOf(column);
+        const capturedColumnOrdinal = rawKanbanColumns.indexOf(group.marker.column);
+        const columnIdentityAmbiguous = columnOrdinal < 0
+          || columnOrdinal !== capturedColumnOrdinal
+          || !column?.isConnected
+          || !headerElement?.isConnected
+          || !column.contains(headingElement);
+        const countMismatch = declaredCount === null || declaredCount !== group.member_paths.length;
+        if (columnIdentityAmbiguous || countMismatch) {
+          const columnHeaderText = textOf(headerElement);
+          const countBounds = countElement?.getBoundingClientRect();
+          const failureReasons = [];
+          if (columnIdentityAmbiguous) failureReasons.push('owning column identity was ambiguous');
+          if (countMismatch) {
+            failureReasons.push('card count expected ' + group.member_paths.length
+              + ' but observed ' + JSON.stringify(countText));
+          }
+          ambiguityReasons.push('Kanban group ' + JSON.stringify(group.heading_text)
+            + ' failed rendered-column validation: ' + failureReasons.join('; ')
+            + ' (column ordinal ' + columnOrdinal
+            + ', captured column ordinal ' + capturedColumnOrdinal
+            + ', count descendants ' + countElements.length
+            + ', header count descendants ' + headerCountElements.length
+            + ', count element ' + JSON.stringify(countElement ? {
+              tag_name: countElement.tagName.toLowerCase(),
+              class_name: countElement.getAttribute('class') || '',
+              text: textOf(countElement),
+              bounds: countBounds ? {
+                top: countBounds.top,
+                left: countBounds.left,
+                width: countBounds.width,
+                height: countBounds.height,
+              } : null,
+            } : null)
+            + ', header ' + JSON.stringify(columnHeaderText)
+            + ', column connected ' + Boolean(column?.isConnected)
+            + ', header connected ' + Boolean(headerElement?.isConnected)
+            + ', heading contained ' + Boolean(column && headingElement && column.contains(headingElement)) + ').');
         }
       }
     }

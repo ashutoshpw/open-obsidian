@@ -6943,3 +6943,53 @@ R2.8.124 now includes a narrowly gated exact-card-surface/title-range fallback: 
 R2.8.124 now contains the grouped macOS Vision, Windows UI Automation, and Linux exact-card-surface title-range repairs for the three terminal R2.8.123 round-trip failures. Independent source reviews found no blockers. The Windows selection path requires a unique exact visible target before and after the bounds-derived capture, then confirms the exact selector value and selected radio state before dismissal. The Linux fallback only accepts the exact `.bases-kanban-card` root for every title-range sample when caret hits are zero and the existing visibility, coverage, no-unrelated-hit, identity, ownership, count, exhaustive-sweep, first-open, and reopen gates remain satisfied. The macOS picker check requires unique high-confidence Cancel/Open Vision candidates fully inside the exact AX panel bounds and retains the existing identity and closure checks.
 
 The Kanban check continues to rely on the existing CSS/style visibility heuristic; it does not measure glyph contrast or pixels. The package also includes the requested goal/MIG-002 policy: small changes stay local, a complete reviewed milestone is pushed once, and it is achieved only after all required exact-SHA GitHub CI jobs pass. `goal.md` SHA-256 is `aee4720461780a393cf17e17afc9899038e5a5c76385ea338d1b77cb2d48f0a6`. R2.8.124 is implementation-complete and ready for one submission; it is not CI-passed. Keep `origin/main` at `ee8e3bdaba2c0d0d0f9b3c08d7299772dcbca2f4` until the single package push. No local executable validation ran.
+
+
+## R2.8.124 — submitted once; exact-SHA CI pending
+
+Pushed the complete reviewed R2.8.124 package once to `origin/main` at exact SHA `d609d3400d622deca105bfc0ddb11e6eef19e781`, a fast-forward from terminal failed SHA `ee8e3bdaba2c0d0d0f9b3c08d7299772dcbca2f4`. All seven required workflows appeared for this exact SHA. The initial snapshot at `2026-10-14T11:05:30Z` has the Rust migration inventory passed, five workflows in progress, one queued; 18/20 jobs are in progress, one passed, and one queued. Run/job IDs and exact-SHA statuses are in `evidence/r2.8.124-attempt-1-d609d34.json`. Keep `origin/main` at this SHA until every required workflow/job is terminal. The milestone is implementation-complete / CI-pending, not achieved. No local executable validation ran.
+
+
+## R2.8.124 — CI status update (11:07 UTC)
+
+Five of seven required workflows and 13/20 jobs have completed successfully on exact SHA `d609d3400d622deca105bfc0ddb11e6eef19e781`. The Rust CI and three-platform Obsidian round-trip workflows remain in progress; no job has failed or remains queued. Run/job statuses are refreshed in `evidence/r2.8.124-attempt-1-d609d34.json`. Keep `origin/main` pinned at this SHA until all 20 jobs are terminal. No local executable validation ran.
+
+
+## R2.8.124 — macOS round-trip failure observed (11:09 UTC)
+
+The macOS round-trip job `115818787312` failed after path entry. Initial picker Vision confirmation passed with unique exact `Cancel` and `Open` candidates inside the AX bounds, but the after-path screenshot is blank except for the desktop menu and Dock; Vision returned no candidates, so the exact-panel visibility gate failed before the panel was re-queried or the Open button clicked. The Windows and Ubuntu round-trip jobs and all four Rust CI jobs are still running. The uploaded artifact is `11887832832` (329,318 bytes; API digest `sha256:d7218b4e203e7f22af8195c87132fdafa9f279a19db5951c26c800593b27db10`, expires 2026-11-13T11:07:58Z). Report, screenshot, and log hashes are in `evidence/r2.8.124-attempt-1-d609d34.json`. Keep `origin/main` at this SHA until all required jobs are terminal. No local executable validation ran.
+
+
+## R2.8.124 — CI update and macOS repair draft (11:11 UTC)
+
+Five of seven workflows and 15/20 jobs have passed. Rust macOS and Ubuntu passed; Rust MSRV and Windows, plus Obsidian Windows and Ubuntu, remain in progress. The macOS round-trip failure is recorded with its report and screenshot hashes. A read-only reviewer identified the second Return in the Go to Folder AppleScript as the strongest explanation: it likely invokes the picker’s default Open action before the explicit accessibility-verified click. The artifact does not prove which key dismissed the panel because the harness recorded no post-entry AX inventory. A local source-only draft removes that second Return and retains the exact panel, Vision, and explicit Open-button gates. It remains uncommitted until the R2.8.124 batch is terminal; no push or local executable validation occurred.
+
+
+## R2.8.124 — CI status update (11:12 UTC)
+
+Five of seven workflows and 16/20 jobs have passed. Rust Windows, macOS, and Ubuntu passed; Rust MSRV and the Windows/Ubuntu Obsidian round-trip jobs remain in progress. The macOS round-trip job is the only failure so far. Its artifact and the proposed second-Return repair are recorded in the preceding update. Keep `origin/main` pinned at `d609d3400d622deca105bfc0ddb11e6eef19e781` until all required jobs are terminal. No local executable validation ran.
+
+
+## R2.8.124 — Rust CI passed; round-trip remains active (11:15 UTC)
+
+All four exact-SHA Rust CI jobs passed. Six of seven workflows and 17/20 jobs have passed; the macOS round-trip job failed, while Windows and Ubuntu round-trip jobs are still in progress. Their run/job statuses remain recorded in `evidence/r2.8.124-attempt-1-d609d34.json`. Keep `origin/main` pinned at `d609d3400d622deca105bfc0ddb11e6eef19e781` until the remaining jobs are terminal. No local executable validation ran.
+
+
+## R2.8.124 — Windows round-trip failure observed (11:19 UTC)
+
+The Windows round-trip job `115818787658` failed at `2026-10-14T11:19:38Z`. Exact UI Automation selection/readback passed. The other 13 C07.3 scenarios and source-observation recording passed. Formula-dependent Kanban failed at first-open and reopen on the rendered-column count gate. The report records 13 unique paths, 5/4/4/0 group memberships, and `.bases-kanban-column-count` DOM text 5/4/4/0; all card title checks passed through the exact `.bases-kanban-card` surface fallback. The report does not capture the exact count node/value read by the assertion, so the source of the mismatch remains open for focused analysis. Artifact `11888717973` (20,559,257 bytes; API digest `sha256:90106b48c076b05d407c8502ec9b69f3d599723a13e5e9f8ff451be047eef520`, expires 2026-11-13T11:19:31Z); report SHA-256 `c9acd6ebe1f17b874e2f8e19c6aa22192a7fca52f0c3c07c4b24edc691bea5bd`; first-open/reopen screenshot SHA-256 `3665863717c572c5799eb5503fa609d3c227ace8df1fbda9984caaff7234cc20`. Current exact-SHA count: six workflows/17 jobs passed, macOS and Windows round-trip jobs failed, and Ubuntu round-trip remains in progress. Keep `origin/main` at `d609d3400d622deca105bfc0ddb11e6eef19e781` until the full batch is terminal. No local executable validation ran.
+
+
+## R2.8.124 — terminal exact-SHA CI reconciliation (11:22 UTC)
+
+All seven workflows and 20 jobs are terminal on exact SHA `d609d3400d622deca105bfc0ddb11e6eef19e781`: six workflows and 17 jobs passed; the round-trip workflow failed on macOS, Windows and Linux. macOS failed after Go to Folder path entry: the after-path screenshot had no picker, so the exact-panel gate failed before post-entry AX requery or the explicit Open click. The second Return remains the strongest explanation, not a proven cause. Windows and Linux failed only the formula-dependent Kanban rendered-column count gate on first-open/reopen. Both artifacts record the 13 expected paths and group membership/count labels 5/4/4/0; all 104 exact-card-surface title-range checks per observation passed. All other 13 C07.3 scenarios and source-observation recording passed on both platforms. The reports do not record the count element/value read by the failing assertion. Windows artifact `11888717973` (API digest `sha256:90106b48c076b05d407c8502ec9b69f3d599723a13e5e9f8ff451be047eef520`, report SHA `c9acd6ebe1f17b874e2f8e19c6aa22192a7fca52f0c3c07c4b24edc691bea5bd`); Linux artifact `11889008320` (API digest `sha256:147e3b2bbfdfd9c3023520cd6e6d28c8811db839cac2307492883de6606d71cf`, report SHA `6e9be7f3d0ca920460c88819a1412cd7cd4a4d454e62ab46c7ad57c4a364a50b`). Full hashes, URLs, IDs and platform results are in `evidence/r2.8.124-attempt-1-d609d34.json`. The terminal failures are grouped into planned R2.8.125: retain the single macOS folder-entry Return and explicit AX-verified Open; resolve Kanban count evidence from the current heading-owned column/header and record the selected count node and operands on failure. The source-only changes remain uncommitted and unvalidated. Keep `origin/main` at the terminal failed R2.8.124 SHA until the complete R2.8.125 package is reviewed and submitted once. GitHub Actions remains the only executable validation.
+
+
+## R2.8.125 — grouped repair milestone planned
+
+Deliverable: one cross-platform round-trip harness repair for the terminal R2.8.124 macOS picker dismissal and Windows/Linux formula-Kanban count gate. Acceptance requires macOS to keep the same exact AX picker open through path entry and explicitly activate the enabled Open control; Windows/Linux formula Kanban to pass first-open and reopen with 13 exact paths in 5/4/4/0 groups and count evidence tied to each owning header; all 14 C07.3 scenarios/source recording and seven required exact-SHA workflows/20 jobs to pass. Keep the current count-lookup implementation provisional until independent static review; no local executable validation. Push only once after the complete package is reviewed.
+
+
+## R2.8.125 — implementation and static review complete; ready to submit
+
+The terminal R2.8.124 failures are grouped in one named repair milestone. The local source removes the second macOS Go to Folder Return, retains the exact AX/Vision gates and explicit enabled Open click, and resolves each Kanban count from the live group heading’s connected owning column/header. Count acceptance also requires one header count element and agreement between live and captured column ordinals; failure details capture the selected element text/bounds and both descendant counts. Independent static reviews found no blocker. The Windows/Linux root cause remains unproven until the next exact-SHA report; no local executable validation ran. This complete package is ready for one push to `origin/main`; hold the remote at its submitted SHA until all seven workflows and 20 jobs are terminal.
