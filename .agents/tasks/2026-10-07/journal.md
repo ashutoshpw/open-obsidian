@@ -6549,3 +6549,90 @@ are all local for one accumulated R2.8.112 milestone package. No local tests,
 builds, formatters, typechecks, or runtime validation were run. Push only after
 this complete package is assembled; then hold its exact SHA until all required
 GitHub Actions jobs are terminal.
+
+
+## R2.8.112 pushed; exact-SHA CI pending
+
+Confirmed `origin/main` matched the terminal R2.8.111 SHA
+`b917c2e615223917ea205beb9a4537fc398ee3b6`, then pushed the complete
+R2.8.112 milestone once as `dd2bfbdb81a9df95a65b53488f489c2a50757e2f`. The
+commit contains the macOS Canvas text deselection before screenshot OCR, its
+readback diagnostic, the clearer milestone-only push policy, and R2.8.111
+terminal job/artifact reconciliation.
+
+All seven required workflows were identified on the exact pushed SHA:
+inventory `38501049919`, quality `38501049920`, desktop build `38501049930`,
+plugin renderer `38501049916`, loaded plugins `38501049970`, Rust CI
+`38501049872`, and Obsidian vault round-trip `38501049927`. Initial snapshot:
+3/20 jobs passed, 16 were in progress, one was queued, and no failures were
+reported. Run/job IDs, URLs, and statuses are in
+`evidence/r2.8.112-attempt-1-dd2bfbd.json`. Hold `origin/main` at the submitted
+SHA until every required job is terminal; no local tests, builds, formatters,
+typechecks, or runtime validation were run.
+
+
+At 2026-10-14T02:27:58Z, 10/20 R2.8.112 jobs passed. Inventory, desktop
+build (3/3), plugin renderer (3/3), quality Ubuntu, and loaded-plugin
+Windows/Ubuntu passed. Quality Windows/macOS, loaded-plugin macOS, Rust 4/4,
+and round-trip 3/3 remained in progress; no failures or queued jobs were
+reported. See `evidence/r2.8.112-attempt-1-dd2bfbd.json`; keep `origin/main`
+fixed at the submitted SHA until all required jobs are terminal.
+
+
+At 2026-10-14T02:29:01Z, all five R2.8.112 companion workflows passed all
+13 jobs. Rust CI 4/4 and all three Obsidian round-trip jobs remain in progress;
+there are no failures or queued jobs. Exact-SHA artifact IDs, sizes, API
+digests, job IDs and URLs are recorded in
+`evidence/r2.8.112-attempt-1-dd2bfbd.json`. Keep `origin/main` fixed at
+`dd2bfbdb81a9df95a65b53488f489c2a50757e2f` until the Rust and round-trip
+workflows are terminal and their artifacts are reconciled.
+
+
+At 2026-10-14T02:30:44Z, 15/20 R2.8.112 jobs passed. All companion
+workflows are green; Rust Ubuntu and macOS also passed. Rust Windows is still
+running the attachment-preview test, minimum Rust 1.95 is running locked
+workspace tests, and all three Obsidian round-trip jobs remain active. No
+failures or queued jobs are reported. Exact-SHA status is in
+`evidence/r2.8.112-attempt-1-dd2bfbd.json`; keep `origin/main` fixed until
+all jobs finish.
+
+
+At 2026-10-14T02:33:57Z, the overall R2.8.112 count remains 15/20 passed,
+with five jobs active and no failures/queued jobs. The Rust Windows
+attachment-preview test passed and its workspace tests are running; MSRV
+locked workspace tests continue. All three round-trip jobs remain in the
+author/open/snapshot/reopen step. Keep `origin/main` at the exact submitted
+SHA and await terminal workflow results.
+
+
+At 2026-10-14T02:35:15Z, the R2.8.112 batch remains 15/20 passed with five
+jobs active. Rust Windows attachment-preview/workspace tests and Clippy passed;
+its dependency-layer check is running. MSRV locked tests continue. macOS and
+Windows round-trip are at step 16 and Ubuntu at step 15 of the author/open/
+snapshot/reopen acceptance phase. No failures or queued jobs. Keep the pushed
+SHA fixed.
+
+
+At 2026-10-14T02:36:41Z, 17/20 jobs passed. All companion workflows, Rust
+Ubuntu/macOS/MSRV 1.95, and the Windows round-trip passed. Rust Windows native
+preview and macOS/Ubuntu round-trip are still running; no failures or queued
+jobs. Windows round-trip artifact 11866705727 is 13,962,987 bytes with API
+digest `sha256:88d24238e3a295f8f58e5be5e8ad3278cd8c7dcbb91c09156980629a4fc0fdfb`.
+Other currently available Rust and companion artifacts are in
+`evidence/r2.8.112-attempt-1-dd2bfbd.json`. Keep the remote SHA fixed.
+
+## R2.8.112 terminal result and R2.8.113 repair scope
+
+At 2026-10-14T02:40:14Z, all seven required workflows and 20 jobs for exact SHA `dd2bfbdb81a9df95a65b53488f489c2a50757e2f` are terminal: 19 passed and one failed. Inventory, quality, desktop build, renderer, loaded-plugin workflows and all four Rust CI jobs passed. Windows and Ubuntu Obsidian round-trip passed; macOS job `115647827573` failed at C06 Canvas edit-path OCR before C07. The macOS screenshot visibly shows the exact `C06 Reference.canvas` value with selection collapsed, but Tesseract PSM 7 returned `[cos Referencecanvag` and PSM 6 returned `CIE Daferanre [cos Referencecanvag`. The exact clipboard result was not recorded, so it remains unverified. The selection-collapse correction improved the screenshot/OCR evidence but did not satisfy the exact OCR gate. Artifact, report, screenshot and crop hashes are recorded in `evidence/r2.8.112-attempt-1-dd2bfbd.json`.
+
+Windows and Ubuntu completed C06 and C07.2. Their reference capture reports document two Obsidian source rewrites; that is pinned application behavior, not Rust parity. The terminal exact-SHA result is not accepted because macOS did not complete C06/C07.
+
+The goal's CI cadence wording was clarified locally per user direction: related minor changes accumulate locally, and one reviewed `origin/main` push occurs only after a named milestone implementation package is complete. No goal edit was pushed during this run. Define R2.8.113 as the focused macOS OCR/readback repair; preserve exact visual OCR, exact clipboard verification, label-relative geometry and unique field matching. Keep all work local until the coherent repair package and CI acceptance criteria are ready, then push once and hold that SHA through its full CI batch. No local test/build/format/type/runtime validation was run.
+
+### R2.8.113 planned deliverable and acceptance
+
+**Deliverable:** make macOS Canvas field readback robust to Tesseract's C06 filename misrecognition without weakening the visible-value or clipboard gates. If full-screen Tesseract cannot locate the entered value, retain the uniquely recognized field label and configured label-relative field rectangle for a fresh screenshot crop. Use macOS Vision's accurate text-recognition request on that crop, with language correction disabled; require one exact, case-preserving recognized line. Keep exact clipboard equality mandatory. The existing empty/no-error clipboard exception continues to require Tesseract's literal exact line and is not widened to Vision-only output. Preserve all existing field geometry, label/candidate ambiguity rejection, and entry targeting.
+
+**Acceptance:** C06 Canvas edit-path and card-ID readbacks complete on macOS with exact visual text and exact clipboard contents; C06 plus the existing C07.2 reference capture complete on Ubuntu, macOS and Windows. Keep the known Obsidian source rewrite observations clearly labeled as reference-app behavior. All 20 jobs across inventory, quality, desktop build, plugin renderer, loaded-plugin workflows, Rust CI and Obsidian round-trip pass on the exact milestone SHA.
+
+**Expected CI evidence:** exact SHA, all seven run IDs/URLs and job conclusions, platform/tool versions, round-trip report and artifact digests, report SHA-256, screenshot and focused-crop hashes, label-relative crop bounds, Tesseract and Vision text/candidates/confidence/bounds, exact clipboard readback status, and C06/C07.2 phase results. Do not use local tests, builds, OCR probes or other executable validation. Static reviews found no blocking code/API issue and approve the final fallback behavior. Submit this as one accumulated milestone push only after its implementation and CI-ready evidence package are complete; keep all current edits local meanwhile.

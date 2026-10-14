@@ -1022,6 +1022,60 @@ function runTesseractTsv(imagePath: string, pageSegmentationMode = "6"): string 
   return execFileSync(tesseract, [imagePath, "stdout", "--psm", pageSegmentationMode, "tsv"], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]});
 }
 
+type MacOSVisionTextCandidate = {
+  text: string;
+  confidence: number;
+  boundingBox: {x: number; y: number; width: number; height: number};
+};
+
+async function readMacOSVisionTextCandidates(imagePath: string): Promise<MacOSVisionTextCandidate[]> {
+  const swiftPath = join(workDirectory, "openobsidian-canvas-field-vision-ocr.swift");
+  await writeFile(swiftPath, `import Foundation
+import Vision
+
+guard CommandLine.arguments.count == 2 else {
+    fatalError("Expected a PNG image path")
+}
+let imageURL = URL(fileURLWithPath: CommandLine.arguments[1])
+let request = VNRecognizeTextRequest()
+request.recognitionLevel = .accurate
+request.usesLanguageCorrection = false
+request.recognitionLanguages = ["en-US"]
+let handler = VNImageRequestHandler(url: imageURL, options: [:])
+try handler.perform([request])
+let candidates = (request.results ?? []).compactMap { observation -> [String: Any]? in
+    guard let recognized = observation.topCandidates(1).first else { return nil }
+    let bounds = observation.boundingBox
+    return [
+        "text": recognized.string,
+        "confidence": Double(recognized.confidence),
+        "boundingBox": [
+            "x": Double(bounds.origin.x),
+            "y": Double(bounds.origin.y),
+            "width": Double(bounds.width),
+            "height": Double(bounds.height)
+        ]
+    ]
+}
+let data = try JSONSerialization.data(withJSONObject: candidates, options: [.sortedKeys])
+print(String(decoding: data, as: UTF8.self))
+`);
+  const output = execFileSync("swift", [swiftPath, imagePath], {
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "ignore"],
+    timeout: 30_000,
+  }).trim();
+  const candidates = JSON.parse(output) as MacOSVisionTextCandidate[];
+  if (!Array.isArray(candidates) || candidates.some((candidate) =>
+    typeof candidate.text !== "string"
+    || !Number.isFinite(candidate.confidence)
+    || ![candidate.boundingBox?.x, candidate.boundingBox?.y, candidate.boundingBox?.width, candidate.boundingBox?.height].every(Number.isFinite)
+  )) {
+    throw new Error("macOS Vision OCR returned an invalid text-candidate payload");
+  }
+  return candidates;
+}
+
 function ocrTokenMatches(token: string, expected: string): boolean {
   if (token === expected) return true;
   if (Math.abs(token.length - expected.length) > 1) return false;
@@ -5855,7 +5909,7 @@ type CanvasInputFieldLayout = {
   labelBoundsImage: OcrWordBounds;
   fieldTextBoundsOcr: OcrWordBounds | null;
   fieldCenter: {x: number; y: number};
-  fieldPositionSource: "visible-field-text-ocr" | "label-offset-fallback";
+  fieldPositionSource: "visible-field-text-ocr" | "label-offset-fallback" | "label-anchored-readback-crop";
   fieldTextOcrSource: "full-screenshot-ocr" | "focused-raw-crop" | "label-offset-fallback";
   fieldSearchCrop: {
     rawCropPath: string;
@@ -6029,6 +6083,7 @@ async function locateCanvasTextInput(
   capture: Awaited<ReturnType<typeof captureOpenObsidianScreenshot>>,
   controlName: string,
   expectedInputValue?: string,
+  allowLabelAnchoredReadbackCrop = false,
 ): Promise<CanvasInputFieldLayout> {
   const coordinateSpace = process.platform === "darwin" ? "desktop" : "window";
   const imagePath = coordinateSpace === "desktop" ? capture.pngPath : capture.windowPngPath;
@@ -6063,6 +6118,7 @@ async function locateCanvasTextInput(
   let fieldTextOcrSource: CanvasInputFieldLayout["fieldTextOcrSource"] = "label-offset-fallback";
   let fieldSearchCrop: CanvasInputFieldLayout["fieldSearchCrop"] = null;
   let fieldSearchFailure = "";
+  let labelAnchoredReadbackCropUsed = false;
   for (const tsv of tsvCandidates) {
     // The instruction above the form repeats these labels. Bound the search below its
     // opening words so OCR cannot mistake the instruction for a field label.
@@ -6087,6 +6143,14 @@ async function locateCanvasTextInput(
       : [];
     if (coordinateSpace === "desktop" && targetFieldText && fieldTextCandidates.length !== 1) {
       fieldSearchFailure = `Could not uniquely locate the ${controlName} field text in its label-relative OCR region: candidate_count=${fieldTextCandidates.length}; candidates=${JSON.stringify(fieldTextCandidates)}; label=${JSON.stringify(locatedCandidateLabelBounds)}; screenshot=${relative(reportDirectory, imagePath)}`;
+      if (allowLabelAnchoredReadbackCrop && fieldTextCandidates.length === 0) {
+        // A fresh readback may use the unique visible label and its configured
+        // field rectangle to crop the value even when OCR cannot first decode
+        // the value. Exact OCR and clipboard checks remain mandatory below.
+        labelBoundsOcr = locatedCandidateLabelBounds;
+        labelAnchoredReadbackCropUsed = true;
+        break;
+      }
       continue;
     }
     labelBoundsOcr = locatedCandidateLabelBounds;
@@ -6159,7 +6223,11 @@ async function locateCanvasTextInput(
     labelBoundsImage,
     fieldTextBoundsOcr,
     fieldCenter: {x: centerX, y: centerY},
-    fieldPositionSource: fieldTextBoundsOcr ? "visible-field-text-ocr" : "label-offset-fallback",
+    fieldPositionSource: fieldTextBoundsOcr
+      ? "visible-field-text-ocr"
+      : labelAnchoredReadbackCropUsed
+        ? "label-anchored-readback-crop"
+        : "label-offset-fallback",
     fieldTextOcrSource: fieldTextBoundsOcr ? fieldTextOcrSource : "label-offset-fallback",
     fieldSearchCrop,
     cropBounds,
@@ -6171,8 +6239,19 @@ async function readCanvasInputScreenshotValue(
   capture: Awaited<ReturnType<typeof captureOpenObsidianScreenshot>>,
   controlName: string,
   expectedValue: string,
-): Promise<{exact: boolean; exactLine: boolean; text: string; cropPath: string; layout: CanvasInputFieldLayout}> {
-  const layout = await locateCanvasTextInput(capture, controlName, expectedValue);
+): Promise<{
+  exact: boolean;
+  exactLine: boolean;
+  text: string;
+  cropPath: string;
+  layout: CanvasInputFieldLayout;
+  visionText: string;
+  visionCandidates: MacOSVisionTextCandidate[];
+  visionAttempted: boolean;
+  visionExact: boolean;
+  visionError: string;
+}> {
+  const layout = await locateCanvasTextInput(capture, controlName, expectedValue, process.platform === "darwin");
   const cropPath = join(reportDirectory, `openobsidian-canvas-input-${controlName.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${Date.now()}-ocr.png`);
   const {left, top, width, height} = layout.cropBounds;
   const imageMagick = process.platform === "linux" ? "convert" : "magick";
@@ -6190,9 +6269,38 @@ async function readCanvasInputScreenshotValue(
     cropPath,
   ], {stdio: "ignore"});
   const text = runTesseractOcr(cropPath, ["7", "6"]);
-  const exact = canvasInputOcrMatches(text, controlName, expectedValue);
+  const tesseractExact = canvasInputOcrMatches(text, controlName, expectedValue);
+  let visionCandidates: MacOSVisionTextCandidate[] = [];
+  const visionAttempted = process.platform === "darwin" && !tesseractExact;
+  let visionError = "";
+  if (visionAttempted) {
+    try {
+      visionCandidates = await readMacOSVisionTextCandidates(cropPath);
+    } catch (error) {
+      visionError = error instanceof Error ? error.message : "unknown macOS Vision OCR error";
+    }
+  }
+  const expectedLine = expectedValue.replace(/\s+/g, " ").trim();
+  const exactVisionCandidates = visionCandidates.filter((candidate) =>
+    candidate.text.replace(/\s+/g, " ").trim() === expectedLine
+  );
+  const visionExact = exactVisionCandidates.length === 1;
+  // Keep the existing empty-clipboard fallback tied to Tesseract's literal
+  // exact-line result; Vision supplies the second exact visual readback path,
+  // but does not widen that clipboard fallback.
   const exactLine = canvasInputOcrHasExactLine(text, expectedValue);
-  return {exact, exactLine, text, cropPath, layout};
+  return {
+    exact: tesseractExact || visionExact,
+    exactLine,
+    text,
+    cropPath,
+    layout,
+    visionText: visionCandidates.map((candidate) => candidate.text).join("\n"),
+    visionCandidates,
+    visionAttempted,
+    visionExact,
+    visionError,
+  };
 }
 
 async function clickMacOSDesktopFraction(xFraction: number, yFraction: number): Promise<string> {
@@ -6493,10 +6601,11 @@ async function replaceMacOSOpenObsidianTextInputWithKeyboard(
   // clipboard returns the expected value. This ties readback to the requested
   // control instead of proving only that some focused field was copied.
   const exactVisualFieldReadback = controlName !== "Canvas text draft"
-    && visualReadback?.layout.fieldPositionSource === "visible-field-text-ocr"
+    && (visualReadback?.layout.fieldPositionSource === "visible-field-text-ocr"
+      || visualReadback?.layout.fieldPositionSource === "label-anchored-readback-crop")
     && visualReadback?.exact === true;
   if (controlName !== "Canvas text draft" && !exactVisualFieldReadback) {
-    throw new Error(`macOS ${controlName} field crop did not visually confirm the exact value in its label-relative OCR region: expected=${JSON.stringify(value)}; crop_ocr=${JSON.stringify(visualReadback?.text ?? "")}; visual_readback_error=${visualReadbackError || "none"}; click=${click}; crop=${visualReadback ? relative(reportDirectory, visualReadback.cropPath) : "unavailable"}; screenshot=${relative(reportDirectory, verification.pngPath)}`);
+    throw new Error(`macOS ${controlName} field crop did not visually confirm the exact value in its label-relative OCR region: expected=${JSON.stringify(value)}; crop_ocr=${JSON.stringify(visualReadback?.text ?? "")}; vision_ocr=${JSON.stringify(visualReadback?.visionText ?? "")}; vision_error=${visualReadback?.visionError || "none"}; field_position_source=${visualReadback?.layout.fieldPositionSource ?? "unavailable"}; clipboard_exact=${clipboardReadback === value}; clipboard_length=${clipboardReadback.length}; clipboard_error=${clipboardReadbackError || "none"}; visual_readback_error=${visualReadbackError || "none"}; click=${click}; crop=${visualReadback ? relative(reportDirectory, visualReadback.cropPath) : "unavailable"}; screenshot=${relative(reportDirectory, verification.pngPath)}`);
   }
   // egui can display the exact value even when macOS does not return its
   // selection through pbpaste. Accept that fallback only when the fresh
@@ -6506,20 +6615,24 @@ async function replaceMacOSOpenObsidianTextInputWithKeyboard(
     && clipboardReadbackError === ""
     && visualReadback?.exactLine === true;
   if (clipboardReadback !== value && !exactVisualFieldFallback) {
-    throw new Error(`macOS clipboard readback did not confirm the exact ${controlName} value: expected_length=${value.length}; actual_length=${clipboardReadback.length}; clipboard_error=${clipboardReadbackError || "none"}; crop_ocr=${JSON.stringify(visualReadback?.text ?? "")}; visual_readback_error=${visualReadbackError || "none"}; click=${click}; crop=${visualReadback ? relative(reportDirectory, visualReadback.cropPath) : "unavailable"}; screenshot=${relative(reportDirectory, verification.pngPath)}`);
+    throw new Error(`macOS clipboard readback did not confirm the exact ${controlName} value: expected_length=${value.length}; actual_length=${clipboardReadback.length}; clipboard_error=${clipboardReadbackError || "none"}; crop_ocr=${JSON.stringify(visualReadback?.text ?? "")}; vision_ocr=${JSON.stringify(visualReadback?.visionText ?? "")}; vision_error=${visualReadback?.visionError || "none"}; visual_readback_error=${visualReadbackError || "none"}; click=${click}; crop=${visualReadback ? relative(reportDirectory, visualReadback.cropPath) : "unavailable"}; screenshot=${relative(reportDirectory, verification.pngPath)}`);
   }
   return JSON.stringify({
     name: controlName,
-    action: "focused the OCR-positioned field, Cmd+A and clipboard paste, copied the selected field, then sent Right Arrow to collapse the selection before screenshot readback",
+    action: "focused the OCR-positioned field, Cmd+A and clipboard paste, copied the selected field, then sent Right Arrow to collapse the selection before screenshot readback; macOS Vision reads the label-anchored crop if Tesseract cannot locate the exact value",
     exact_readback: true,
     clipboard_exact: clipboardReadback === value,
     readback_selection_collapse_key_sent: true,
     readback_source: clipboardReadback === value
       ? "macOS clipboard after selecting and copying the focused field"
-      : "exact OCR line from a fresh field-text-anchored capture after clipboard readback was empty",
+      : "exact literal Tesseract OCR line from a fresh label-relative field crop after clipboard readback was empty",
     readback_ocr: visualReadback?.text ?? "",
     visual_ocr_exact: visualReadback?.exact ?? false,
     visual_ocr_exact_line: visualReadback?.exactLine ?? false,
+    visual_ocr_engine: visualReadback?.visionAttempted ? "Tesseract + macOS Vision" : "Tesseract",
+    vision_ocr_text: visualReadback?.visionText ?? "",
+    vision_ocr_candidates: visualReadback?.visionCandidates ?? [],
+    vision_ocr_error: visualReadback?.visionError || null,
     clipboard_readback_error: clipboardReadbackError || null,
     expected_length: value.length,
     readback_length: clipboardReadback.length,
