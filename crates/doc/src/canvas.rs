@@ -94,11 +94,7 @@ impl CanvasDocument {
     ///
     /// This document-only operation does not create notes or write to a vault.
     pub fn edit_text_node(&mut self, node_id: &str, text: &str) -> Result<(), CanvasError> {
-        let Some(nodes) = self
-            .value
-            .get_mut("nodes")
-            .and_then(Value::as_array_mut)
-        else {
+        let Some(nodes) = self.value.get_mut("nodes").and_then(Value::as_array_mut) else {
             return Err(CanvasError::NodeNotFound(node_id.to_owned()));
         };
         let matching_indices = nodes
@@ -177,9 +173,7 @@ pub enum CanvasNodeContent<'a> {
         background_style: CanvasField<'a, &'a str>,
     },
     /// A missing, malformed, or not-yet-supported `type` value.
-    Unsupported {
-        node_type: CanvasField<'a, &'a str>,
-    },
+    Unsupported { node_type: CanvasField<'a, &'a str> },
 }
 
 /// A borrowed typed view of one node; `raw` retains all standard and unknown data.
@@ -342,11 +336,9 @@ impl fmt::Display for CanvasError {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::MalformedJson(error) => write!(formatter, "invalid Canvas JSON: {error}"),
-            Self::InvalidDocumentShape => {
-                formatter.write_str(
-                    "Canvas document must be an object with optional nodes and edges arrays",
-                )
-            }
+            Self::InvalidDocumentShape => formatter.write_str(
+                "Canvas document must be an object with optional nodes and edges arrays",
+            ),
             Self::Encode(error) => write!(formatter, "could not encode Canvas JSON: {error}"),
             Self::NodeNotFound(node_id) => {
                 write!(formatter, "Canvas node does not exist: {node_id}")
@@ -488,8 +480,16 @@ mod tests {
                 .get("edges")
                 .and_then(Value::as_array)
                 .map_or(&[], Vec::as_slice);
-            assert_eq!(round_tripped.nodes(), expected_nodes, "{case_id}: nodes view");
-            assert_eq!(round_tripped.edges(), expected_edges, "{case_id}: edges view");
+            assert_eq!(
+                round_tripped.nodes(),
+                expected_nodes,
+                "{case_id}: nodes view"
+            );
+            assert_eq!(
+                round_tripped.edges(),
+                expected_edges,
+                "{case_id}: edges view"
+            );
             assert_eq!(
                 round_tripped.nodes_field().is_missing(),
                 expected.get("nodes").is_none(),
@@ -546,8 +546,14 @@ mod tests {
         assert_eq!(nodes[0].id.valid().copied(), Some("text-1"));
         assert_eq!(nodes[0].node_type.valid().copied(), Some("text"));
         assert_eq!(nodes[0].color.valid().copied(), Some("1"));
-        assert_eq!(nodes[0].x.valid().and_then(|number| number.as_i64()), Some(10));
-        assert_eq!(nodes[0].y.valid().and_then(|number| number.as_i64()), Some(20));
+        assert_eq!(
+            nodes[0].x.valid().and_then(|number| number.as_i64()),
+            Some(10)
+        );
+        assert_eq!(
+            nodes[0].y.valid().and_then(|number| number.as_i64()),
+            Some(20)
+        );
         assert_eq!(
             nodes[0].width.valid().and_then(|number| number.as_i64()),
             Some(320)
@@ -615,7 +621,11 @@ mod tests {
         assert!(nodes[1].raw.get("unknownFileMetadata").is_some());
         assert!(edges[0].raw.get("unknownEdge").is_some());
         assert_eq!(document, original, "projection must not mutate its source");
-        assert_eq!(document.as_json(), expected, "unknown JSON remains accessible");
+        assert_eq!(
+            document.as_json(),
+            expected,
+            "unknown JSON remains accessible"
+        );
     }
 
     #[test]
@@ -632,18 +642,19 @@ mod tests {
                 .as_str()
                 .expect("each projection case must have an id");
             let expected = &case["expected"];
-            let source = serde_json::to_vec(&case["document"])
-                .unwrap_or_else(|error| {
-                    panic!("{case_id}: projection document must encode: {error}")
-                });
-            let document = parse_canvas(&source)
-                .unwrap_or_else(|error| {
-                    panic!("{case_id}: projection document must parse: {error}")
-                });
+            let source = serde_json::to_vec(&case["document"]).unwrap_or_else(|error| {
+                panic!("{case_id}: projection document must encode: {error}")
+            });
+            let document = parse_canvas(&source).unwrap_or_else(|error| {
+                panic!("{case_id}: projection document must parse: {error}")
+            });
 
             match case_id {
                 "unsupported-node-type" => {
-                    let node = document.project_nodes().next().expect("one node is present");
+                    let node = document
+                        .project_nodes()
+                        .next()
+                        .expect("one node is present");
                     assert_eq!(
                         node.node_type.valid().copied(),
                         expected["node_type"].as_str(),
@@ -687,13 +698,16 @@ mod tests {
                                 "{case_id}: unsupported content node type value"
                             );
                         }
-                        other => panic!(
-                            "{case_id}: expected unsupported content, received {other:?}"
-                        ),
+                        other => {
+                            panic!("{case_id}: expected unsupported content, received {other:?}")
+                        }
                     }
                 }
                 "unsupported-malformed-node-type" => {
-                    let node = document.project_nodes().next().expect("one node is present");
+                    let node = document
+                        .project_nodes()
+                        .next()
+                        .expect("one node is present");
                     assert_eq!(
                         field_state(&node.node_type),
                         expected["node_type_state"].as_str().unwrap(),
@@ -722,9 +736,9 @@ mod tests {
                                 "{case_id}: unsupported content node type raw value"
                             );
                         }
-                        other => panic!(
-                            "{case_id}: expected unsupported content, received {other:?}"
-                        ),
+                        other => {
+                            panic!("{case_id}: expected unsupported content, received {other:?}")
+                        }
                     }
                 }
                 "malformed-node-fields" => {
@@ -793,9 +807,9 @@ mod tests {
                                 "{case_id}: missing unsupported node type has no malformed value"
                             );
                         }
-                        other => panic!(
-                            "{case_id}: expected unsupported content, received {other:?}"
-                        ),
+                        other => {
+                            panic!("{case_id}: expected unsupported content, received {other:?}")
+                        }
                     }
                 }
                 "malformed-and-missing-color" => {
@@ -828,7 +842,10 @@ mod tests {
                     );
                 }
                 "malformed-edge-fields" => {
-                    let edge = document.project_edges().next().expect("one edge is present");
+                    let edge = document
+                        .project_edges()
+                        .next()
+                        .expect("one edge is present");
                     assert_eq!(
                         field_state(&edge.from_node),
                         expected["from_node_state"].as_str().unwrap(),
@@ -906,7 +923,7 @@ mod tests {
         let omitted_nodes = parse_canvas(br#"{"edges":[]}"#)
             .expect("JSON Canvas permits the nodes array to be omitted");
         assert!(omitted_nodes.nodes_field().is_missing());
-        assert_eq!(omitted_nodes.nodes(), &[]);
+        assert!(omitted_nodes.nodes().is_empty());
         assert_eq!(
             omitted_nodes
                 .extract_text_node("missing")
@@ -920,12 +937,18 @@ mod tests {
             editable.edit_text_node("missing", "must not be inserted"),
             Err(CanvasError::NodeNotFound(_))
         ));
-        assert_eq!(editable, original, "failed edit preserves omitted nodes array");
+        assert_eq!(
+            editable, original,
+            "failed edit preserves omitted nodes array"
+        );
 
         let empty_nodes = parse_canvas(br#"{"nodes":[],"edges":[]}"#)
             .expect("an explicitly empty nodes array is valid");
         assert!(!empty_nodes.nodes_field().is_missing());
-        assert_eq!(empty_nodes.nodes_field().valid().map(|nodes| nodes.len()), Some(0));
+        assert_eq!(
+            empty_nodes.nodes_field().valid().map(|nodes| nodes.len()),
+            Some(0)
+        );
         assert!(empty_nodes.as_json().get("nodes").is_some());
     }
 
