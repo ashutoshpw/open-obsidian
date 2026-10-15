@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "id": "R2.8.135-LINUX-CANVAS-EDIT-FIELD-FOCUS-REPAIR",
+  "name": "Repair Linux Canvas path and text-card ID focus-safe entry",
+  "created_at": "2026-10-15",
+  "status": "implementation-complete / CI-pending",
+  "starting_sha": "f89049e9d99c53e8e41ea1898b114577d15a9ae8",
+  "bounded_outcome": "Repair the Linux screenshot-coordinate fallback for the Canvas path and text-card ID fields so it enters synthetic values only into the freshly focused, proven-empty target field, verifies the exact field state without focus-changing modifier chords, and reaches the C07.4 capture on all three platforms on one exact SHA.",
+  "in_scope": [
+    "Keep the Linux change confined to the existing GitHub Actions UI harness fallback for Canvas edit path and text-card ID; preserve the native accessibility-first attempt.",
+    "Make CI diagnostics report field-specific ArrowRight receipt, empty state, UTF-8 byte length, and SHA-256 for each Canvas text-edit field; never log the field text itself.",
+    "Require fresh OCR label positioning, a stable-refresh guard, a fresh target-field click/focus proof, and an empty field before typing. If a retry sees the exact requested value already present, verify it without typing again; fail closed on any other nonempty value.",
+    "For the two Canvas fields only, use xdotool typing with a modest per-character delay and without Ctrl-based selection/paste chords or clipboard operations for entry or readback.",
+    "Require the CI-gated field SHA-256 to match the requested synthetic value, a fresh exact screenshot crop anchored to the target field label, stable vault-refresh diagnostics, and successful Load Canvas text card behavior before the round-trip can proceed.",
+    "Rerun all ten C07.4 JavaScript-number and locale reference scenarios on first open and reopen for Linux, macOS, and Windows, preserving raw fixture/source snapshots and reference-only status."
+  ],
+  "out_of_scope": [
+    "Rust comparator semantics or any C07.4 parity claim.",
+    "Changes to the C07.4 fixture, expected outcomes, or reference scenario definitions.",
+    "Changes to macOS/Windows field entry, unrelated Canvas workflows, C07.5, C09.2, or product UI interaction behavior.",
+    "Any local build, test, formatter, linter, or application execution."
+  ],
+  "implementation_criteria": [
+    "Both path and ID diagnostics include empty state and a SHA-256 over the exact UTF-8 field value; ArrowRight is recorded only for the field that has focus in that frame.",
+    "Linux Canvas path/ID entry sends no Control modifier chord and no clipboard operation. It types only after a fresh focused-and-empty proof; an already-exact value is accepted for verification, while partial or unexpected text fails closed.",
+    "The harness accepts an entry only when field-state SHA-256 and the fresh target-anchored screenshot crop both match the expected synthetic value and refresh state remains stable.",
+    "The exact-path Load Canvas text-card action succeeds, the text-card ID resolves, and the existing vault byte/hash preservation gates pass."
+  ],
+  "ci_acceptance_criteria": [
+    "All seven required workflows and all 20 jobs pass on one submitted implementation SHA.",
+    "Linux, macOS, and Windows each complete all ten C07.4 scenarios on first open and reopen with complete sweeps and stable outcomes.",
+    "Round-trip reports, artifacts, checksums, field diagnostics, C07.4 locale/renderer observations, and source snapshots are reconciled; C07.4 remains reference-only until a separate Rust parity milestone passes."
+  ],
+  "required_workflows": [
+    "Rust migration inventory",
+    "OpenObsidian loaded plugin workflows",
+    "OpenObsidian quality",
+    "OpenObsidian Rust CI",
+    "Obsidian vault round-trip acceptance",
+    "OpenObsidian plugin renderer matrix",
+    "OpenObsidian desktop build"
+  ],
+  "platforms": ["Ubuntu 24.04", "macOS latest", "Windows latest"],
+  "evidence_to_collect": [
+    "Exact submitted SHA and all seven workflow run IDs/URLs/conclusions with 20 terminal job IDs/conclusions.",
+    "Three platform report and artifact digests, with all ten C07.4 scenario observations on first open and reopen.",
+    "For Linux path and ID: fresh label/click/focus/empty evidence, field SHA-256, exact screenshot crop/OCR, retry behavior, refresh snapshots, successful downstream load, and unchanged-vault hashes.",
+    "Reference locale, renderer and Number conversion details; distinguish Obsidian source rewrites from Rust preservation."
+  ],
+  "push_policy": "Keep all implementation, documentation, and evidence changes local until the complete named milestone is implemented and independently reviewed. Push the completed milestone to origin/main once, then hold main at that exact SHA until all seven required workflows and all 20 jobs are terminal and reconciled, even if CI takes several hours. Do not push or run CI for minor edits.",
+  "local_executable_validation": false,
+  "depends_on": "R2.8.134 is terminal-failed at exact SHA f89049e9d99c53e8e41ea1898b114577d15a9ae8. Its Ubuntu round-trip job failed before C07.4 when Ctrl-based replacement moved focus from path to ID. macOS and Windows captured all ten reference-only scenarios; see evidence/r2.8.134-attempt-1-f89049e.json."
+}

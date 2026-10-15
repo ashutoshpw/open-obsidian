@@ -3287,6 +3287,7 @@ dependencies = [
  "openobsidian-engine",
  "rayon",
  "serde_json",
+ "sha2",
 ]
 
 [[package]]

@@ -1164,6 +1164,8 @@ async function readCanvasTextEditFieldDiagnostic(
   arrowRightKeyEvent: boolean;
   arrowRightEventLine: number | null;
   empty: boolean | null;
+  valueBytes: number;
+  valueSha256: string;
 } | null> {
   const log = await readFile(logPath, "utf8").catch(() => "");
   const lines = log.split(/\r?\n/);
@@ -1174,6 +1176,8 @@ async function readCanvasTextEditFieldDiagnostic(
     focused: boolean;
     arrowRightKeyEvent: boolean;
     empty: boolean | null;
+    valueBytes: number;
+    valueSha256: string;
   }> = [];
   for (let index = lines.length - 1; index >= 0; index -= 1) {
     const value = lines[index] ?? "";
@@ -1183,14 +1187,18 @@ async function readCanvasTextEditFieldDiagnostic(
     const focused = value.match(/\bfocused=(true|false)/)?.[1];
     const arrowRightKeyEvent = value.match(/\barrow_right_key_event=(true|false)/)?.[1];
     const empty = value.match(/\bempty=(true|false)/)?.[1];
-    if (!enabled || !clicked || !focused || !arrowRightKeyEvent) return null;
+    const valueBytes = value.match(/\bvalue_bytes=(\d+)/)?.[1];
+    const valueSha256 = value.match(/\bvalue_sha256=([a-f0-9]{64})/)?.[1];
+    if (!enabled || !clicked || !focused || !arrowRightKeyEvent || empty === undefined || !valueBytes || !valueSha256) return null;
     observations.push({
       line: index,
       enabled: enabled === "true",
       clicked: clicked === "true",
       focused: focused === "true",
       arrowRightKeyEvent: arrowRightKeyEvent === "true",
-      empty: empty === undefined ? null : empty === "true",
+      empty: empty === "true",
+      valueBytes: Number(valueBytes),
+      valueSha256,
     });
   }
   const latest = observations[0];
@@ -15665,71 +15673,98 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
       : controlName === "Canvas edit text-card ID"
         ? "id"
         : null;
+    const expectedValueSha256 = createHash("sha256").update(value, "utf8").digest("hex");
+    const expectedValueBytes = Buffer.byteLength(value, "utf8");
     const diagnosticBeforeClick = diagnosticField
       ? await readCanvasTextEditFieldDiagnostic(logPath, diagnosticField)
       : null;
-    let prePasteTargetWidget: Awaited<ReturnType<typeof readCanvasTextEditFieldDiagnostic>> = null;
-    let refreshStableBeforePaste: boolean | null = null;
-    let pasteVisualConfirmation: Awaited<ReturnType<typeof readCanvasInputScreenshotValue>> | null = null;
-    let pasteConfirmationScreenshot: Awaited<ReturnType<typeof captureOpenObsidianScreenshot>> | null = null;
-    let pasteVisualConfirmationError = "";
-    let stagedClipboardMayBeOwned = false;
+    let preEntryTargetWidget: Awaited<ReturnType<typeof readCanvasTextEditFieldDiagnostic>> = null;
+    let refreshStableBeforeEntry: boolean | null = null;
+    let targetVisualReadback: Awaited<ReturnType<typeof readCanvasInputScreenshotValue>> | null = null;
+    let targetReadbackScreenshot: Awaited<ReturnType<typeof captureOpenObsidianScreenshot>> | null = null;
+    let targetVisualReadbackError = "";
     try {
       xdotool("windowfocus", "--sync", windowId);
       xdotool("mousemove", "--sync", "--window", windowId, String(clickX), String(clickY));
       xdotool("click", "--clearmodifiers", "1");
       if (diagnosticField) {
-        // Stage the exact synthetic value before the final focus observation. The
-        // fresh ArrowRight event proves that the OCR-positioned egui field still
-        // owns keyboard focus; after the refresh check, select-all and paste are
-        // sent synchronously with no clipboard or await between them.
-        stagedClipboardMayBeOwned = true;
-        execFileSync("xclip", ["-selection", "clipboard", "-loops", "1", "-in"], {
-          input: value,
-          stdio: ["pipe", "ignore", "ignore"],
-        });
         xdotool("key", "--clearmodifiers", "Right");
         await delay(100);
-        prePasteTargetWidget = await readCanvasTextEditFieldDiagnostic(
+        preEntryTargetWidget = await readCanvasTextEditFieldDiagnostic(
           logPath,
           diagnosticField,
           diagnosticBeforeClick?.line ?? -1,
         );
-        const refreshImmediatelyBeforePaste = await readOpenObsidianRefreshDiagnostics(logPath);
-        const refreshChanged = openObsidianRefreshActivityChanged(refreshBeforeClick, refreshImmediatelyBeforePaste)
-          || (refreshImmediatelyBeforePaste.receiverStates.at(-1)?.busy ?? false);
-        refreshStableBeforePaste = !refreshChanged;
-        if (!prePasteTargetWidget
-          || prePasteTargetWidget.line <= (diagnosticBeforeClick?.line ?? -1)
-          || prePasteTargetWidget.clickEventLine === null
-          || prePasteTargetWidget.arrowRightEventLine === null
-          || !prePasteTargetWidget.enabled
-          || !prePasteTargetWidget.focused
+        const refreshImmediatelyBeforeEntry = await readOpenObsidianRefreshDiagnostics(logPath);
+        const refreshChanged = openObsidianRefreshActivityChanged(refreshBeforeClick, refreshImmediatelyBeforeEntry)
+          || (refreshImmediatelyBeforeEntry.receiverStates.at(-1)?.busy ?? false);
+        refreshStableBeforeEntry = !refreshChanged;
+        if (!preEntryTargetWidget
+          || preEntryTargetWidget.line <= (diagnosticBeforeClick?.line ?? -1)
+          || preEntryTargetWidget.clickEventLine === null
+          || preEntryTargetWidget.arrowRightEventLine === null
+          || !preEntryTargetWidget.enabled
+          || !preEntryTargetWidget.focused
           || refreshChanged) {
-          execFileSync("xclip", ["-selection", "clipboard", "-loops", "1", "-in"], {
-            input: "",
-            stdio: ["pipe", "ignore", "ignore"],
-          });
-          stagedClipboardMayBeOwned = false;
-          lastFailure = `pre-paste target field focus was not confirmed: diagnostic=${JSON.stringify(prePasteTargetWidget)}; refresh_changed=${refreshChanged}; click=(${clickX},${clickY})`;
+          lastFailure = `pre-entry target field focus was not confirmed: diagnostic=${JSON.stringify(preEntryTargetWidget)}; refresh_changed=${refreshChanged}; click=(${clickX},${clickY})`;
           continue;
         }
-        xdotool("key", "--clearmodifiers", "ctrl+a");
-        xdotool("key", "--clearmodifiers", "ctrl+v");
-        let exactPasteVisualConfirmation = false;
-        for (let pasteProbe = 1; pasteProbe <= 3; pasteProbe += 1) {
+        const fieldAlreadyContainsExpectedValue = preEntryTargetWidget.valueSha256 === expectedValueSha256
+          && preEntryTargetWidget.valueBytes === expectedValueBytes
+          && preEntryTargetWidget.empty === false;
+        if (preEntryTargetWidget.empty !== true && !fieldAlreadyContainsExpectedValue) {
+          throw new Error(`Refusing to type into a nonempty Canvas field whose value does not match the requested synthetic value: field=${diagnosticField}; diagnostic=${JSON.stringify(preEntryTargetWidget)}`);
+        }
+        let fieldStateReadback: NonNullable<Awaited<ReturnType<typeof readCanvasTextEditFieldDiagnostic>>> = preEntryTargetWidget;
+        if (!fieldAlreadyContainsExpectedValue) {
+          execFileSync("xdotool", ["type", "--clearmodifiers", "--delay", "25", value], {stdio: "ignore"});
           try {
-            pasteConfirmationScreenshot = await captureOpenObsidianScreenshot(
+            const confirmedFieldState = await waitFor(
+              `the focused Canvas ${diagnosticField} field to contain the exact requested value`,
+              () => readCanvasTextEditFieldDiagnostic(logPath, diagnosticField, preEntryTargetWidget?.line ?? -1),
+              (diagnostic) => diagnostic !== null
+                && diagnostic.line > (preEntryTargetWidget?.line ?? -1)
+                && diagnostic.enabled
+                && diagnostic.focused
+                && diagnostic.valueSha256 === expectedValueSha256
+                && diagnostic.valueBytes === expectedValueBytes
+                && diagnostic.empty === false,
+              10_000,
+            );
+            if (!confirmedFieldState) {
+              lastFailure = `exact field-state readback returned no diagnostic after Canvas typing without Ctrl selection/paste chords: field=${diagnosticField}; before=${JSON.stringify(preEntryTargetWidget)}`;
+              continue;
+            }
+            fieldStateReadback = confirmedFieldState;
+          } catch (error) {
+            lastFailure = `exact field-state readback did not match after Canvas typing without Ctrl selection/paste chords: ${error instanceof Error ? error.message : String(error)}; field=${diagnosticField}; before=${JSON.stringify(preEntryTargetWidget)}`;
+            continue;
+          }
+        }
+        const refreshAfterEntry = await readOpenObsidianRefreshDiagnostics(logPath);
+        const refreshChangedAfterEntry = openObsidianRefreshActivityChanged(refreshBeforeClick, refreshAfterEntry)
+          || (refreshAfterEntry.receiverStates.at(-1)?.busy ?? false);
+        if (refreshChangedAfterEntry) {
+          lastFailure = `vault refresh changed the form during Canvas field entry without Ctrl selection/paste chords: field=${diagnosticField}; before=${JSON.stringify(preEntryTargetWidget)}; after=${JSON.stringify(fieldStateReadback)}`;
+          continue;
+        }
+
+        let exactTargetVisualReadback = false;
+        let targetVisualReadbackAttempts = 0;
+        for (let visualProbe = 1; visualProbe <= 3; visualProbe += 1) {
+          try {
+            targetVisualReadbackAttempts = visualProbe;
+            targetReadbackScreenshot = await captureOpenObsidianScreenshot(
               windowId,
               child,
-              `openobsidian-canvas-input-${fileSafeName}-paste-confirmation-${attempt}-${pasteProbe}`,
+              `openobsidian-canvas-input-${fileSafeName}-field-readback-${attempt}-${visualProbe}`,
             );
-            pasteVisualConfirmation = await readCanvasInputScreenshotValue(
-              pasteConfirmationScreenshot,
+            targetVisualReadback = await readCanvasInputScreenshotValue(
+              targetReadbackScreenshot,
               controlName,
               value,
             );
-            const pasteLayout = pasteVisualConfirmation.layout;
+            const pasteLayout = targetVisualReadback.layout;
             const linuxLabelOffsetCropIsValid = process.platform === "linux"
               && pasteLayout.coordinateSpace === "window"
               && pasteLayout.fieldPositionSource === "label-offset-fallback"
@@ -15747,54 +15782,81 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
             const fieldPositionIsTargetAnchored = pasteLayout.fieldPositionSource === "visible-field-text-ocr"
               || pasteLayout.fieldPositionSource === "label-anchored-readback-crop"
               || linuxLabelOffsetCropIsValid;
-            exactPasteVisualConfirmation = pasteVisualConfirmation.exact && fieldPositionIsTargetAnchored;
-            pasteVisualConfirmationError = exactPasteVisualConfirmation
+            exactTargetVisualReadback = targetVisualReadback.exact && fieldPositionIsTargetAnchored;
+            targetVisualReadbackError = exactTargetVisualReadback
               ? ""
-              : `fresh target-field crop did not confirm the exact pasted value; exact=${pasteVisualConfirmation.exact}; source=${pasteVisualConfirmation.layout.fieldPositionSource}; OCR=${JSON.stringify(pasteVisualConfirmation.text)}`;
+              : `fresh target-field crop did not confirm the exact typed value; exact=${targetVisualReadback.exact}; source=${targetVisualReadback.layout.fieldPositionSource}; OCR=${JSON.stringify(targetVisualReadback.text)}`;
           } catch (error) {
-            pasteVisualConfirmationError = error instanceof Error ? error.message : String(error);
+            targetVisualReadbackError = error instanceof Error ? error.message : String(error);
           }
-          if (exactPasteVisualConfirmation) break;
-          if (pasteProbe < 3) await delay(150);
+          if (exactTargetVisualReadback) break;
+          if (visualProbe < 3) await delay(150);
         }
-        if (!exactPasteVisualConfirmation) {
-          // Do not replace the one-request clipboard owner until a fresh crop
-          // anchored to this labeled field shows the exact pasted value.
-          execFileSync("xclip", ["-selection", "clipboard", "-loops", "1", "-in"], {
-            input: "",
-            stdio: ["pipe", "ignore", "ignore"],
+        const refreshAfterVisualReadback = await readOpenObsidianRefreshDiagnostics(logPath);
+        const refreshChangedDuringInput = openObsidianRefreshActivityChanged(refreshBeforeClick, refreshAfterVisualReadback)
+          || (refreshAfterVisualReadback.receiverStates.at(-1)?.busy ?? false);
+        if (exactTargetVisualReadback && !refreshChangedDuringInput) {
+          return JSON.stringify({
+            name: controlName,
+            action: fieldAlreadyContainsExpectedValue
+              ? "confirmed the freshly focused exact field value without typing"
+              : "confirmed a freshly focused empty field, typed without Ctrl selection/paste chords or clipboard operations, then checked field-state SHA-256 and a fresh target-anchored screenshot crop",
+            exact_readback: true,
+            clipboard_exact: null,
+            field_state_sha256_exact: true,
+            expected_value_bytes: expectedValueBytes,
+            field_value_bytes: fieldStateReadback.valueBytes,
+            expected_value_sha256: expectedValueSha256,
+            field_value_sha256: fieldStateReadback.valueSha256,
+            readback_source: "CI-gated egui field-state SHA-256 plus exact OCR from a fresh crop anchored to the same visible field label",
+            readback_ocr: targetVisualReadback?.text ?? "",
+            visual_ocr_exact: targetVisualReadback?.exact ?? false,
+            visual_ocr_is_diagnostic: false,
+            visual_readback_error: targetVisualReadbackError || null,
+            click_x: clickX,
+            click_y: clickY,
+            entry_method: fieldAlreadyContainsExpectedValue
+              ? "not used; exact requested value was already present"
+              : "xdotool type --clearmodifiers; no Ctrl selection/paste chords or clipboard operation",
+            clipboard_used: false,
+            target_widget_field: diagnosticField,
+            target_widget_pre_entry: preEntryTargetWidget,
+            target_widget_readback: fieldStateReadback,
+            refresh_stable_before_entry: refreshStableBeforeEntry,
+            refresh_stable_after_entry_and_readback: true,
+            visual_readback: {
+              exact: targetVisualReadback?.exact ?? false,
+              exact_line: targetVisualReadback?.exactLine ?? false,
+              text: targetVisualReadback?.text ?? "",
+              field_position_source: targetVisualReadback?.layout.fieldPositionSource ?? null,
+              coordinate_space: targetVisualReadback?.layout.coordinateSpace ?? null,
+              label_bounds_ocr: targetVisualReadback?.layout.labelBoundsOcr ?? null,
+              crop_bounds: targetVisualReadback?.layout.cropBounds ?? null,
+              image_dimensions: targetVisualReadback?.layout.imageDimensions ?? null,
+              field_center: targetVisualReadback?.layout.fieldCenter ?? null,
+              screenshot: targetReadbackScreenshot ? relative(reportDirectory, targetReadbackScreenshot.windowPngPath) : null,
+              crop: targetVisualReadback ? relative(reportDirectory, targetVisualReadback.cropPath) : null,
+            },
+            position_source: "fresh visible label bounds after a stable vault-refresh window",
+            ocr_label_found: labelOcrFound,
+            verification_attempts: targetVisualReadbackAttempts,
+            position_attempts: attempt,
+            before_screenshot: relative(reportDirectory, before.windowPngPath),
+            readback_screenshot: targetReadbackScreenshot ? relative(reportDirectory, targetReadbackScreenshot.windowPngPath) : null,
+            readback_crop: targetVisualReadback ? relative(reportDirectory, targetVisualReadback.cropPath) : null,
+            readback_crop_bounds: targetVisualReadback?.layout.cropBounds ?? null,
           });
-          stagedClipboardMayBeOwned = false;
-          lastFailure = `one-request clipboard paste was not confirmed in the target field before clipboard neutralization: ${pasteVisualConfirmationError || "no exact OCR result"}; source=${pasteVisualConfirmation?.layout.fieldPositionSource ?? "unavailable"}; label_bounds=${JSON.stringify(pasteVisualConfirmation?.layout.labelBoundsOcr ?? null)}; crop_bounds=${JSON.stringify(pasteVisualConfirmation?.layout.cropBounds ?? null)}; screenshot=${pasteConfirmationScreenshot ? relative(reportDirectory, pasteConfirmationScreenshot.windowPngPath) : "unavailable"}; crop=${pasteVisualConfirmation ? relative(reportDirectory, pasteVisualConfirmation.cropPath) : "unavailable"}`;
-          continue;
         }
-        // The target-anchored crop proves the paste reached this field before
-        // the staged value is removed. Exact copied-field readback below is
-        // still required before this attempt can pass.
-        execFileSync("xclip", ["-selection", "clipboard", "-loops", "1", "-in"], {
-          input: "",
-          stdio: ["pipe", "ignore", "ignore"],
-        });
-        stagedClipboardMayBeOwned = false;
+        lastFailure = `field-state or target-anchored screenshot readback did not confirm the exact value: field=${diagnosticField}; field_state_exact=${fieldStateReadback.valueSha256 === expectedValueSha256 && fieldStateReadback.valueBytes === expectedValueBytes}; visual_exact=${targetVisualReadback?.exact ?? false}; refresh_changed=${refreshChangedDuringInput}; crop_error=${targetVisualReadbackError || "none"}; source=${targetVisualReadback?.layout.fieldPositionSource ?? "unavailable"}; label_bounds=${JSON.stringify(targetVisualReadback?.layout.labelBoundsOcr ?? null)}; crop_bounds=${JSON.stringify(targetVisualReadback?.layout.cropBounds ?? null)}; screenshot=${targetReadbackScreenshot ? relative(reportDirectory, targetReadbackScreenshot.windowPngPath) : "unavailable"}; crop=${targetVisualReadback ? relative(reportDirectory, targetVisualReadback.cropPath) : "unavailable"}`;
+        continue;
       } else {
         xdotool("key", "--clearmodifiers", "ctrl+a");
         execFileSync("xdotool", ["type", "--clearmodifiers", "--delay", "1", value], {stdio: "ignore"});
       }
     } catch (error) {
       const failure = error as NodeJS.ErrnoException;
-      let clipboardNeutralizationError = "";
-      if (stagedClipboardMayBeOwned) {
-        try {
-          execFileSync("xclip", ["-selection", "clipboard", "-loops", "1", "-in"], {
-            input: "",
-            stdio: ["pipe", "ignore", "ignore"],
-          });
-          stagedClipboardMayBeOwned = false;
-        } catch (cleanupError) {
-          clipboardNeutralizationError = cleanupError instanceof Error ? cleanupError.message : String(cleanupError);
-        }
-      }
-      throw new Error(`Linux keyboard entry failed for ${controlName}: code=${failure.code ?? "unknown"}; syscall=${failure.syscall ?? "unknown"}; click=(${clickX},${clickY}); staged_clipboard_neutralization_error=${clipboardNeutralizationError || "none"}`);
+      const errorMessage = error instanceof Error ? error.message : "unknown error";
+      throw new Error(`Linux keyboard entry failed for ${controlName}: code=${failure.code ?? "unknown"}; syscall=${failure.syscall ?? "unknown"}; click=(${clickX},${clickY}); detail=${errorMessage}`);
     }
 
     let clipboardReadback = "";
@@ -15837,9 +15899,7 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
     if (clipboardReadback === value && !refreshChangedDuringInput) {
       return JSON.stringify({
         name: controlName,
-        action: diagnosticField
-          ? "focused the fresh OCR-positioned field, staged the exact value on the one-request X11 clipboard, confirmed a fresh clicked/focused ArrowRight event with stable refresh diagnostics, then Ctrl+A/Ctrl+V and exact copied-field readback"
-          : "focused the OCR-positioned field, then Ctrl+A and keyboard entry",
+        action: "focused the OCR-positioned field, then Ctrl+A and keyboard entry",
         exact_readback: true,
         clipboard_exact: true,
         readback_source: "X11 clipboard after selecting and copying the focused field; screenshot and optional field crop retained as visual evidence",
@@ -15851,25 +15911,8 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
         readback_length: clipboardReadback.length,
         click_x: clickX,
         click_y: clickY,
-        paste_method: diagnosticField ? "one-request X11 clipboard paste" : "xdotool per-character typing",
-        target_widget_field: diagnosticField,
-        target_widget_pre_paste: prePasteTargetWidget,
-        refresh_stable_before_paste: refreshStableBeforePaste,
-        paste_visual_confirmation: diagnosticField ? {
-          exact: pasteVisualConfirmation?.exact ?? false,
-          exact_line: pasteVisualConfirmation?.exactLine ?? false,
-          text: pasteVisualConfirmation?.text ?? "",
-          field_position_source: pasteVisualConfirmation?.layout.fieldPositionSource ?? null,
-          coordinate_space: pasteVisualConfirmation?.layout.coordinateSpace ?? null,
-          label_bounds_ocr: pasteVisualConfirmation?.layout.labelBoundsOcr ?? null,
-          crop_bounds: pasteVisualConfirmation?.layout.cropBounds ?? null,
-          image_dimensions: pasteVisualConfirmation?.layout.imageDimensions ?? null,
-          field_center: pasteVisualConfirmation?.layout.fieldCenter ?? null,
-          screenshot: pasteConfirmationScreenshot ? relative(reportDirectory, pasteConfirmationScreenshot.windowPngPath) : null,
-          crop: pasteVisualConfirmation ? relative(reportDirectory, pasteVisualConfirmation.cropPath) : null,
-          error: pasteVisualConfirmationError || null,
-        } : null,
-        staged_clipboard_neutralized_before_readback: Boolean(diagnosticField),
+        entry_method: "xdotool per-character typing",
+        clipboard_used: true,
         position_source: "fresh visible label bounds after a stable vault-refresh window",
         ocr_label_found: labelOcrFound,
         readback_attempts: verificationAttempts,
@@ -15880,10 +15923,13 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
         readback_crop_bounds: visualReadback?.layout.cropBounds ?? null,
       });
     }
-    lastFailure = `clipboard_length=${clipboardReadback.length}; clipboard_exact=${clipboardReadback === value}; clipboard_error=${clipboardReadbackError || "none"}; crop_ocr=${JSON.stringify(visualReadback?.text ?? "")}; visual_readback_error=${visualReadbackError || "none"}; visual_exact=${visualReadback?.exact ?? false}; paste_confirmation_exact=${pasteVisualConfirmation?.exact ?? false}; paste_confirmation_source=${pasteVisualConfirmation?.layout.fieldPositionSource ?? "unavailable"}; paste_confirmation_screenshot=${pasteConfirmationScreenshot ? relative(reportDirectory, pasteConfirmationScreenshot.windowPngPath) : "unavailable"}; paste_confirmation_crop=${pasteVisualConfirmation ? relative(reportDirectory, pasteVisualConfirmation.cropPath) : "unavailable"}; refresh_changed=${refreshChangedDuringInput}; click=(${clickX},${clickY}); verification_attempts=${Math.min(verificationAttempts, 5)}; before=${relative(reportDirectory, before.windowPngPath)}; screenshot=${relative(reportDirectory, verification.windowPngPath)}; crop=${visualReadback ? relative(reportDirectory, visualReadback.cropPath) : "unavailable"}`;
+    lastFailure = `clipboard_length=${clipboardReadback.length}; clipboard_exact=${clipboardReadback === value}; clipboard_error=${clipboardReadbackError || "none"}; crop_ocr=${JSON.stringify(visualReadback?.text ?? "")}; visual_readback_error=${visualReadbackError || "none"}; visual_exact=${visualReadback?.exact ?? false}; refresh_changed=${refreshChangedDuringInput}; click=(${clickX},${clickY}); verification_attempts=${Math.min(verificationAttempts, 5)}; before=${relative(reportDirectory, before.windowPngPath)}; screenshot=${relative(reportDirectory, verification.pngPath)}; crop=${visualReadback ? relative(reportDirectory, visualReadback.cropPath) : "unavailable"}`;
   }
 
-  throw new Error(`Linux clipboard readback and field screenshot did not confirm the exact ${controlName} value after ${maximumAttempts} fresh-position attempts: expected_length=${value.length}; ${lastFailure}`);
+  const readbackDescription = diagnosticField
+    ? "field-state or target-anchored screenshot"
+    : "field-state, screenshot, or clipboard";
+  throw new Error(`Linux ${readbackDescription} readback did not confirm the exact ${controlName} value after ${maximumAttempts} fresh-position attempts: expected_length=${value.length}; ${lastFailure}`);
 }
 
 async function replaceMacOSOpenObsidianTextInputWithKeyboard(

@@ -15,6 +15,7 @@ use openobsidian_engine::{
     VaultRenameResult, VaultSession, VaultWatcher, VaultWriteRecoveryReport, VaultWriteRequest,
     analyze_markdown_preview, plan_history_retention,
 };
+use sha2::{Digest, Sha256};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::fmt::{self, Write as _};
@@ -2122,7 +2123,7 @@ impl OpenObsidianApp {
                 && ui.input(|input| !input.raw.events.is_empty())
             {
                 let pointer = ui.input(|input| input.pointer.hover_pos());
-                let arrow_right_key_event = ui.input(|input| {
+                let arrow_right_pressed = ui.input(|input| {
                     input
                         .raw
                         .events
@@ -2138,20 +2139,33 @@ impl OpenObsidianApp {
                             )
                         })
                 });
+                let path_arrow_right_key_event = path_input.has_focus() && arrow_right_pressed;
+                let node_arrow_right_key_event = node_input.has_focus() && arrow_right_pressed;
+                let path_value_sha256 = format!(
+                    "{:x}",
+                    Sha256::digest(self.canvas_text_edit_path.as_bytes())
+                );
+                let node_value_sha256 = format!(
+                    "{:x}",
+                    Sha256::digest(self.canvas_text_edit_node_id.as_bytes())
+                );
                 eprintln!(
-                    "OpenObsidian CI canvas-text-edit-field: field=path enabled={target_fields_enabled}, rect={:?}, pointer={pointer:?}, arrow_right_key_event={arrow_right_key_event}, hovered={}, clicked={}, focused={}",
+                    "OpenObsidian CI canvas-text-edit-field: field=path enabled={target_fields_enabled}, rect={:?}, pointer={pointer:?}, arrow_right_key_event={path_arrow_right_key_event}, hovered={}, clicked={}, focused={}, empty={}, value_bytes={}, value_sha256={path_value_sha256}",
                     path_input.rect,
                     path_input.hovered(),
                     path_input.clicked(),
                     path_input.has_focus(),
+                    self.canvas_text_edit_path.is_empty(),
+                    self.canvas_text_edit_path.len(),
                 );
                 eprintln!(
-                    "OpenObsidian CI canvas-text-edit-field: field=id enabled={target_fields_enabled}, rect={:?}, pointer={pointer:?}, arrow_right_key_event={arrow_right_key_event}, hovered={}, clicked={}, focused={}, empty={}",
+                    "OpenObsidian CI canvas-text-edit-field: field=id enabled={target_fields_enabled}, rect={:?}, pointer={pointer:?}, arrow_right_key_event={node_arrow_right_key_event}, hovered={}, clicked={}, focused={}, empty={}, value_bytes={}, value_sha256={node_value_sha256}",
                     node_input.rect,
                     node_input.hovered(),
                     node_input.clicked(),
                     node_input.has_focus(),
                     self.canvas_text_edit_node_id.is_empty(),
+                    self.canvas_text_edit_node_id.len(),
                 );
             }
         });

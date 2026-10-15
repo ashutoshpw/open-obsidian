@@ -4,7 +4,9 @@
   "name": "Repair Canvas text-entry readback and capture C07.4 references",
   "created_at": "2026-10-15",
   "starting_sha": "7dfb5a47feea6796f979f8e0a778c62aeff5b407",
-  "status": "implementation-complete / independently-reviewed / ready-for-single-push",
+  "status": "terminal-failed / not achieved",
+  "submitted_sha": "f89049e9d99c53e8e41ea1898b114577d15a9ae8",
+  "submitted_at": "2026-10-15T14:03:19Z",
   "bounded_outcome": "Repair the two proven Canvas text-entry harness failures that stopped the R2.8.133 Linux/macOS round-trip jobs before C07.4, then complete the ten-scenario pinned-Obsidian JavaScript-number and locale reference sweep on Linux, macOS, and Windows. This records reference behavior only and does not claim Rust comparator parity.",
   "in_scope": [
     "For Linux Canvas edit path and text-card ID entry, retain fresh OCR label-relative positioning and refresh guards, use the existing one-request X11 clipboard paste pattern instead of per-character xdotool typing, require a fresh target-widget click/focus/ArrowRight diagnostic before paste, confirm the value in a fresh same-row crop anchored to the freshly detected label (Linux's supported label-offset fallback), then clear staged clipboard ownership before exact copied-field readback.",
@@ -51,12 +53,105 @@
     "run_id": 34748436643,
     "workflow": "OpenObsidian loaded plugin workflows",
     "head_sha": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
-    "status_observed_at": "2026-10-15T13:41:02Z",
+    "status_observed_at": "2026-10-15T14:06:22Z",
     "status": "queued",
     "created_at": "2026-09-13T08:45:13Z",
     "jobs_started": 0,
     "disposition": "Outside the terminal R2.8.133 exact-SHA batch and not part of R2.8.134 acceptance. Do not count it as an in-flight milestone batch or cancel it manually; record its resulting status if the submitted main push supersedes it through the existing same-ref workflow concurrency."
   },
+  "ci_submission": {
+    "observed_at": "2026-10-15T15:09:21Z",
+    "terminal_at": "2026-10-15T14:51:02Z",
+    "required_workflows_triggered": 7,
+    "required_jobs": 20,
+    "completed_workflows": 7,
+    "passed_workflows": 6,
+    "active_workflows": 0,
+    "completed_jobs": 20,
+    "passed_jobs": 19,
+    "failed_jobs": 1,
+    "queued_or_running_jobs": 0,
+    "runs": [
+      {
+        "name": "Rust migration inventory",
+        "run_id": 38747986301,
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38747986301"
+      },
+      {
+        "name": "OpenObsidian loaded plugin workflows",
+        "run_id": 38747986867,
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38747986867"
+      },
+      {
+        "name": "OpenObsidian quality",
+        "run_id": 38747986109,
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38747986109"
+      },
+      {
+        "name": "OpenObsidian Rust CI",
+        "run_id": 38747986108,
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38747986108"
+      },
+      {
+        "name": "Obsidian vault round-trip acceptance",
+        "run_id": 38747986616,
+        "status": "completed",
+        "conclusion": "failure",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38747986616"
+      },
+      {
+        "name": "OpenObsidian plugin renderer matrix",
+        "run_id": 38747986376,
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38747986376"
+      },
+      {
+        "name": "OpenObsidian desktop build",
+        "run_id": 38747986261,
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38747986261"
+      }
+    ],
+    "known_job_failures": [
+      {
+        "workflow": "Obsidian vault round-trip acceptance",
+        "job_id": 116466578244,
+        "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04",
+        "conclusion": "failure",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38747986616/job/116466578244",
+        "detail": "C06 Reference.canvas appeared in the Canvas edit text-card ID field while the path field still displayed its Boards/Idea.canvas hint."
+      }
+    ],
+    "job_snapshot": "All seven exact-SHA workflow runs and all 20 jobs are terminal. Six workflows and 19 jobs passed. The Ubuntu round-trip failed during Canvas edit path entry before C07.4; Windows and macOS round-trip passed.",
+    "failure_analysis": {
+      "job_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38747986616/job/116466578244",
+      "stage": "C06 Canvas edit path setup; C07.4 remained pending",
+      "accessible_query": "The field was not exposed through AT-SPI; screenshot-coordinate fallback was used.",
+      "observed_focus_failure": "The path field was focused after click and ArrowRight; pressing ControlLeft moved focus to the adjacent text-card ID field before Paste.",
+      "observed_destination": "C06 Reference.canvas appeared in the Canvas edit text-card ID field while the path field still displayed its Boards/Idea.canvas hint.",
+      "conclusion": "The Ctrl+A/Ctrl+V input path redirected focus; this is the directly evidenced failure mechanism on this SHA.",
+      "screenshot_evidence": [
+        "paste-confirmation-1-3-window.png",
+        "paste-confirmation-3-1-window.png",
+        "paste-confirmation-3-2-window.png",
+        "paste-confirmation-3-3-window.png"
+      ],
+      "diagnostic_limit": "The earlier arrow_right_key_event field was frame-global and printed identically for both widgets; it did not prove a particular widget received ArrowRight."
+    },
+    "main_sha_held": true
+  },
   "push_policy": "Keep all source and tracker implementation local until the milestone's implementation criteria are met and the complete diff has been independently reviewed. Then push once to origin/main; that starts one CI batch and marks the milestone implementation-complete / CI-pending. Treat the cross-platform C07.4 capture and other exact-SHA CI criteria as acceptance work after that push; mark the milestone achieved only after every required job passes and its evidence is reconciled. Keep origin/main at the submitted SHA until every required workflow and job is terminal; do not push another milestone while this batch is queued or running, even if CI takes several hours.",
-  "local_executable_validation": false
+  "local_executable_validation": false,
+  "milestone_achieved": false,
+  "terminal_evidence_file": "evidence/r2.8.134-attempt-1-f89049e.json"
 }
