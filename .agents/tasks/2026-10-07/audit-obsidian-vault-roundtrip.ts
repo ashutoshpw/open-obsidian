@@ -15660,15 +15660,141 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
     // messages above the form cannot move the click onto the adjacent input row.
     const clickX = Math.round(layout.fieldCenter.x * windowWidth / screenshotSize.width);
     const clickY = Math.round(layout.fieldCenter.y * windowHeight / screenshotSize.height);
+    const diagnosticField = controlName === "Canvas edit path"
+      ? "path"
+      : controlName === "Canvas edit text-card ID"
+        ? "id"
+        : null;
+    const diagnosticBeforeClick = diagnosticField
+      ? await readCanvasTextEditFieldDiagnostic(logPath, diagnosticField)
+      : null;
+    let prePasteTargetWidget: Awaited<ReturnType<typeof readCanvasTextEditFieldDiagnostic>> = null;
+    let refreshStableBeforePaste: boolean | null = null;
+    let pasteVisualConfirmation: Awaited<ReturnType<typeof readCanvasInputScreenshotValue>> | null = null;
+    let pasteConfirmationScreenshot: Awaited<ReturnType<typeof captureOpenObsidianScreenshot>> | null = null;
+    let pasteVisualConfirmationError = "";
+    let stagedClipboardMayBeOwned = false;
     try {
       xdotool("windowfocus", "--sync", windowId);
       xdotool("mousemove", "--sync", "--window", windowId, String(clickX), String(clickY));
       xdotool("click", "--clearmodifiers", "1");
-      xdotool("key", "--clearmodifiers", "ctrl+a");
-      execFileSync("xdotool", ["type", "--clearmodifiers", "--delay", "1", value], {stdio: "ignore"});
+      if (diagnosticField) {
+        // Stage the exact synthetic value before the final focus observation. The
+        // fresh ArrowRight event proves that the OCR-positioned egui field still
+        // owns keyboard focus; after the refresh check, select-all and paste are
+        // sent synchronously with no clipboard or await between them.
+        stagedClipboardMayBeOwned = true;
+        execFileSync("xclip", ["-selection", "clipboard", "-loops", "1", "-in"], {
+          input: value,
+          stdio: ["pipe", "ignore", "ignore"],
+        });
+        xdotool("key", "--clearmodifiers", "Right");
+        await delay(100);
+        prePasteTargetWidget = await readCanvasTextEditFieldDiagnostic(
+          logPath,
+          diagnosticField,
+          diagnosticBeforeClick?.line ?? -1,
+        );
+        const refreshImmediatelyBeforePaste = await readOpenObsidianRefreshDiagnostics(logPath);
+        const refreshChanged = openObsidianRefreshActivityChanged(refreshBeforeClick, refreshImmediatelyBeforePaste)
+          || (refreshImmediatelyBeforePaste.receiverStates.at(-1)?.busy ?? false);
+        refreshStableBeforePaste = !refreshChanged;
+        if (!prePasteTargetWidget
+          || prePasteTargetWidget.line <= (diagnosticBeforeClick?.line ?? -1)
+          || prePasteTargetWidget.clickEventLine === null
+          || prePasteTargetWidget.arrowRightEventLine === null
+          || !prePasteTargetWidget.enabled
+          || !prePasteTargetWidget.focused
+          || refreshChanged) {
+          execFileSync("xclip", ["-selection", "clipboard", "-loops", "1", "-in"], {
+            input: "",
+            stdio: ["pipe", "ignore", "ignore"],
+          });
+          stagedClipboardMayBeOwned = false;
+          lastFailure = `pre-paste target field focus was not confirmed: diagnostic=${JSON.stringify(prePasteTargetWidget)}; refresh_changed=${refreshChanged}; click=(${clickX},${clickY})`;
+          continue;
+        }
+        xdotool("key", "--clearmodifiers", "ctrl+a");
+        xdotool("key", "--clearmodifiers", "ctrl+v");
+        let exactPasteVisualConfirmation = false;
+        for (let pasteProbe = 1; pasteProbe <= 3; pasteProbe += 1) {
+          try {
+            pasteConfirmationScreenshot = await captureOpenObsidianScreenshot(
+              windowId,
+              child,
+              `openobsidian-canvas-input-${fileSafeName}-paste-confirmation-${attempt}-${pasteProbe}`,
+            );
+            pasteVisualConfirmation = await readCanvasInputScreenshotValue(
+              pasteConfirmationScreenshot,
+              controlName,
+              value,
+            );
+            const pasteLayout = pasteVisualConfirmation.layout;
+            const linuxLabelOffsetCropIsValid = process.platform === "linux"
+              && pasteLayout.coordinateSpace === "window"
+              && pasteLayout.fieldPositionSource === "label-offset-fallback"
+              && Boolean(pasteLayout.labelBoundsOcr.text.trim())
+              && pasteLayout.cropBounds.width > 0
+              && pasteLayout.cropBounds.height > 0
+              && pasteLayout.cropBounds.left >= 0
+              && pasteLayout.cropBounds.top >= 0
+              && pasteLayout.cropBounds.left + pasteLayout.cropBounds.width <= pasteLayout.imageDimensions.width
+              && pasteLayout.cropBounds.top + pasteLayout.cropBounds.height <= pasteLayout.imageDimensions.height
+              && pasteLayout.fieldCenter.x >= 0
+              && pasteLayout.fieldCenter.y >= 0
+              && pasteLayout.fieldCenter.x < pasteLayout.imageDimensions.width
+              && pasteLayout.fieldCenter.y < pasteLayout.imageDimensions.height;
+            const fieldPositionIsTargetAnchored = pasteLayout.fieldPositionSource === "visible-field-text-ocr"
+              || pasteLayout.fieldPositionSource === "label-anchored-readback-crop"
+              || linuxLabelOffsetCropIsValid;
+            exactPasteVisualConfirmation = pasteVisualConfirmation.exact && fieldPositionIsTargetAnchored;
+            pasteVisualConfirmationError = exactPasteVisualConfirmation
+              ? ""
+              : `fresh target-field crop did not confirm the exact pasted value; exact=${pasteVisualConfirmation.exact}; source=${pasteVisualConfirmation.layout.fieldPositionSource}; OCR=${JSON.stringify(pasteVisualConfirmation.text)}`;
+          } catch (error) {
+            pasteVisualConfirmationError = error instanceof Error ? error.message : String(error);
+          }
+          if (exactPasteVisualConfirmation) break;
+          if (pasteProbe < 3) await delay(150);
+        }
+        if (!exactPasteVisualConfirmation) {
+          // Do not replace the one-request clipboard owner until a fresh crop
+          // anchored to this labeled field shows the exact pasted value.
+          execFileSync("xclip", ["-selection", "clipboard", "-loops", "1", "-in"], {
+            input: "",
+            stdio: ["pipe", "ignore", "ignore"],
+          });
+          stagedClipboardMayBeOwned = false;
+          lastFailure = `one-request clipboard paste was not confirmed in the target field before clipboard neutralization: ${pasteVisualConfirmationError || "no exact OCR result"}; source=${pasteVisualConfirmation?.layout.fieldPositionSource ?? "unavailable"}; label_bounds=${JSON.stringify(pasteVisualConfirmation?.layout.labelBoundsOcr ?? null)}; crop_bounds=${JSON.stringify(pasteVisualConfirmation?.layout.cropBounds ?? null)}; screenshot=${pasteConfirmationScreenshot ? relative(reportDirectory, pasteConfirmationScreenshot.windowPngPath) : "unavailable"}; crop=${pasteVisualConfirmation ? relative(reportDirectory, pasteVisualConfirmation.cropPath) : "unavailable"}`;
+          continue;
+        }
+        // The target-anchored crop proves the paste reached this field before
+        // the staged value is removed. Exact copied-field readback below is
+        // still required before this attempt can pass.
+        execFileSync("xclip", ["-selection", "clipboard", "-loops", "1", "-in"], {
+          input: "",
+          stdio: ["pipe", "ignore", "ignore"],
+        });
+        stagedClipboardMayBeOwned = false;
+      } else {
+        xdotool("key", "--clearmodifiers", "ctrl+a");
+        execFileSync("xdotool", ["type", "--clearmodifiers", "--delay", "1", value], {stdio: "ignore"});
+      }
     } catch (error) {
       const failure = error as NodeJS.ErrnoException;
-      throw new Error(`Linux keyboard entry failed for ${controlName}: code=${failure.code ?? "unknown"}; syscall=${failure.syscall ?? "unknown"}; click=(${clickX},${clickY})`);
+      let clipboardNeutralizationError = "";
+      if (stagedClipboardMayBeOwned) {
+        try {
+          execFileSync("xclip", ["-selection", "clipboard", "-loops", "1", "-in"], {
+            input: "",
+            stdio: ["pipe", "ignore", "ignore"],
+          });
+          stagedClipboardMayBeOwned = false;
+        } catch (cleanupError) {
+          clipboardNeutralizationError = cleanupError instanceof Error ? cleanupError.message : String(cleanupError);
+        }
+      }
+      throw new Error(`Linux keyboard entry failed for ${controlName}: code=${failure.code ?? "unknown"}; syscall=${failure.syscall ?? "unknown"}; click=(${clickX},${clickY}); staged_clipboard_neutralization_error=${clipboardNeutralizationError || "none"}`);
     }
 
     let clipboardReadback = "";
@@ -15711,7 +15837,9 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
     if (clipboardReadback === value && !refreshChangedDuringInput) {
       return JSON.stringify({
         name: controlName,
-        action: "focused the OCR-positioned field, then Ctrl+A and keyboard entry",
+        action: diagnosticField
+          ? "focused the fresh OCR-positioned field, staged the exact value on the one-request X11 clipboard, confirmed a fresh clicked/focused ArrowRight event with stable refresh diagnostics, then Ctrl+A/Ctrl+V and exact copied-field readback"
+          : "focused the OCR-positioned field, then Ctrl+A and keyboard entry",
         exact_readback: true,
         clipboard_exact: true,
         readback_source: "X11 clipboard after selecting and copying the focused field; screenshot and optional field crop retained as visual evidence",
@@ -15723,6 +15851,25 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
         readback_length: clipboardReadback.length,
         click_x: clickX,
         click_y: clickY,
+        paste_method: diagnosticField ? "one-request X11 clipboard paste" : "xdotool per-character typing",
+        target_widget_field: diagnosticField,
+        target_widget_pre_paste: prePasteTargetWidget,
+        refresh_stable_before_paste: refreshStableBeforePaste,
+        paste_visual_confirmation: diagnosticField ? {
+          exact: pasteVisualConfirmation?.exact ?? false,
+          exact_line: pasteVisualConfirmation?.exactLine ?? false,
+          text: pasteVisualConfirmation?.text ?? "",
+          field_position_source: pasteVisualConfirmation?.layout.fieldPositionSource ?? null,
+          coordinate_space: pasteVisualConfirmation?.layout.coordinateSpace ?? null,
+          label_bounds_ocr: pasteVisualConfirmation?.layout.labelBoundsOcr ?? null,
+          crop_bounds: pasteVisualConfirmation?.layout.cropBounds ?? null,
+          image_dimensions: pasteVisualConfirmation?.layout.imageDimensions ?? null,
+          field_center: pasteVisualConfirmation?.layout.fieldCenter ?? null,
+          screenshot: pasteConfirmationScreenshot ? relative(reportDirectory, pasteConfirmationScreenshot.windowPngPath) : null,
+          crop: pasteVisualConfirmation ? relative(reportDirectory, pasteVisualConfirmation.cropPath) : null,
+          error: pasteVisualConfirmationError || null,
+        } : null,
+        staged_clipboard_neutralized_before_readback: Boolean(diagnosticField),
         position_source: "fresh visible label bounds after a stable vault-refresh window",
         ocr_label_found: labelOcrFound,
         readback_attempts: verificationAttempts,
@@ -15733,7 +15880,7 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
         readback_crop_bounds: visualReadback?.layout.cropBounds ?? null,
       });
     }
-    lastFailure = `clipboard_length=${clipboardReadback.length}; clipboard_exact=${clipboardReadback === value}; clipboard_error=${clipboardReadbackError || "none"}; crop_ocr=${JSON.stringify(visualReadback?.text ?? "")}; visual_readback_error=${visualReadbackError || "none"}; visual_exact=${visualReadback?.exact ?? false}; refresh_changed=${refreshChangedDuringInput}; click=(${clickX},${clickY}); verification_attempts=${Math.min(verificationAttempts, 5)}; before=${relative(reportDirectory, before.windowPngPath)}; screenshot=${relative(reportDirectory, verification.windowPngPath)}; crop=${visualReadback ? relative(reportDirectory, visualReadback.cropPath) : "unavailable"}`;
+    lastFailure = `clipboard_length=${clipboardReadback.length}; clipboard_exact=${clipboardReadback === value}; clipboard_error=${clipboardReadbackError || "none"}; crop_ocr=${JSON.stringify(visualReadback?.text ?? "")}; visual_readback_error=${visualReadbackError || "none"}; visual_exact=${visualReadback?.exact ?? false}; paste_confirmation_exact=${pasteVisualConfirmation?.exact ?? false}; paste_confirmation_source=${pasteVisualConfirmation?.layout.fieldPositionSource ?? "unavailable"}; paste_confirmation_screenshot=${pasteConfirmationScreenshot ? relative(reportDirectory, pasteConfirmationScreenshot.windowPngPath) : "unavailable"}; paste_confirmation_crop=${pasteVisualConfirmation ? relative(reportDirectory, pasteVisualConfirmation.cropPath) : "unavailable"}; refresh_changed=${refreshChangedDuringInput}; click=(${clickX},${clickY}); verification_attempts=${Math.min(verificationAttempts, 5)}; before=${relative(reportDirectory, before.windowPngPath)}; screenshot=${relative(reportDirectory, verification.windowPngPath)}; crop=${visualReadback ? relative(reportDirectory, visualReadback.cropPath) : "unavailable"}`;
   }
 
   throw new Error(`Linux clipboard readback and field screenshot did not confirm the exact ${controlName} value after ${maximumAttempts} fresh-position attempts: expected_length=${value.length}; ${lastFailure}`);
@@ -15935,31 +16082,228 @@ async function replaceMacOSOpenObsidianTextInputWithKeyboard(
     execFileSync("pbcopy", [], {input: value, stdio: ["pipe", "ignore", "ignore"]});
     execFileSync("osascript", ["-e", pasteScript, String(child.pid ?? -1)], {stdio: "ignore"});
   }
-  await delay(150);
-  // Clear the value used for paste before copying the field back, so the
-  // following pbpaste result can only come from the focused field selection.
-  execFileSync("pbcopy", [], {input: "", stdio: ["pipe", "ignore", "ignore"]});
-  execFileSync("osascript", ["-e", copyFieldScript, String(child.pid ?? -1)], {stdio: "ignore"});
-  await waitForOpenObsidianRefreshIdle(0, 0, false, logPath);
   let clipboardReadback = "";
   let clipboardReadbackError = "";
-  try {
-    clipboardReadback = execFileSync("pbpaste", [], {
-      encoding: "utf8",
-      stdio: ["ignore", "pipe", "ignore"],
-      timeout: 2_000,
-    });
-  } catch (error) {
-    const failure = error as NodeJS.ErrnoException;
-    clipboardReadbackError = `code=${failure.code ?? "unknown"}; syscall=${failure.syscall ?? "unknown"}`;
+  const readbackFocusAttempts: Array<Record<string, unknown>> = [];
+  let readbackTargetWidgetDiagnostic: Awaited<ReturnType<typeof readCanvasTextEditFieldDiagnostic>> = null;
+  let verification: Awaited<ReturnType<typeof captureOpenObsidianScreenshot>> | undefined;
+  if (controlName === "Canvas edit text-card ID") {
+    const maximumReadbackAttempts = 3;
+    const confirmFocusForReadbackScript = `on run argv
+      set processId to (item 1 of argv) as integer
+      tell application "System Events"
+        set targetProcess to first process whose unix id is processId
+        set frontmost of targetProcess to true
+        key code 124
+      end tell
+    end run`;
+    for (let attempt = 1; attempt <= maximumReadbackAttempts; attempt += 1) {
+      const attemptFailureTrace: Record<string, unknown> = {attempt};
+      let clipboardExact = false;
+      let refreshChangedDuringCopy: boolean | null = null;
+      let focusAfterArrow: Awaited<ReturnType<typeof readCanvasTextEditFieldDiagnostic>> = null;
+      try {
+      await waitForOpenObsidianRefreshIdle(0, 0, false, logPath);
+      attemptFailureTrace.refresh_idle_wait_completed = true;
+      const refreshBeforeCapture = await readOpenObsidianRefreshDiagnostics(logPath);
+      attemptFailureTrace.refresh_diagnostics_before_capture = refreshBeforeCapture;
+      const readbackPosition = await captureOpenObsidianScreenshot(
+        windowId,
+        child,
+        `openobsidian-canvas-input-${fileSafeName}-readback-position-${attempt}`,
+        undefined,
+        macOSCanvasLocatorCaptureOptions,
+      );
+      attemptFailureTrace.screenshot = relative(reportDirectory, readbackPosition.pngPath);
+      let fieldValueBeforeCopy: Awaited<ReturnType<typeof readCanvasInputScreenshotValue>> | undefined;
+      let localizationError = "";
+      try {
+        fieldValueBeforeCopy = await readCanvasInputScreenshotValue(readbackPosition, controlName, value, child);
+      } catch (error) {
+        localizationError = error instanceof Error ? error.message : String(error);
+      }
+      attemptFailureTrace.readback_crop = fieldValueBeforeCopy ? relative(reportDirectory, fieldValueBeforeCopy.cropPath) : null;
+      attemptFailureTrace.position_source = fieldValueBeforeCopy?.layout.fieldPositionSource ?? null;
+      attemptFailureTrace.visual_ocr = fieldValueBeforeCopy?.text ?? null;
+      const exactLocalizedValue = fieldValueBeforeCopy?.exact === true
+        && (fieldValueBeforeCopy.layout.fieldPositionSource === "visible-field-text-ocr"
+          || fieldValueBeforeCopy.layout.fieldPositionSource === "label-anchored-readback-crop");
+      const refreshBeforeClick = await readOpenObsidianRefreshDiagnostics(logPath);
+      attemptFailureTrace.refresh_diagnostics_before_click = refreshBeforeClick;
+      const refreshChangedBeforeClick = openObsidianRefreshActivityChanged(refreshBeforeCapture, refreshBeforeClick)
+        || (refreshBeforeClick.receiverStates.at(-1)?.busy ?? false);
+      attemptFailureTrace.refresh_changed_before_click = refreshChangedBeforeClick;
+      const priorFieldDiagnostic = await readCanvasTextEditFieldDiagnostic(logPath, "id");
+      attemptFailureTrace.prior_target_widget = priorFieldDiagnostic;
+      const priorFieldLine = priorFieldDiagnostic?.line ?? -1;
+      let attemptClick = "not-clicked";
+      let clipboardLength: number | null = null;
+      let refreshBeforeCopy: OpenObsidianRefreshDiagnostics | null = null;
+      let refreshImmediatelyBeforeCopy: OpenObsidianRefreshDiagnostics | null = null;
+      let refreshAfterCopy: OpenObsidianRefreshDiagnostics | null = null;
+      let attemptError = localizationError || "";
+      if (!exactLocalizedValue) {
+        attemptError ||= `fresh screenshot did not uniquely confirm the exact nonempty field value; visual=${JSON.stringify(fieldValueBeforeCopy?.text ?? "")}; source=${fieldValueBeforeCopy?.layout.fieldPositionSource ?? "unavailable"}`;
+      } else if (refreshChangedBeforeClick) {
+        attemptError = `vault refresh changed during fresh field localization; refresh_changed=${refreshChangedBeforeClick}`;
+      } else {
+        const readbackLayout = fieldValueBeforeCopy!.layout;
+        attemptClick = await clickMacOSDesktopFraction(
+          readbackLayout.fieldCenter.x / readbackLayout.imageDimensions.width,
+          readbackLayout.fieldCenter.y / readbackLayout.imageDimensions.height,
+        );
+        attemptFailureTrace.click = attemptClick;
+        await delay(120);
+        execFileSync("osascript", ["-e", confirmFocusForReadbackScript, String(child.pid ?? -1)], {stdio: "ignore"});
+        await delay(120);
+        focusAfterArrow = await readCanvasTextEditFieldDiagnostic(logPath, "id", priorFieldLine);
+        attemptFailureTrace.target_widget_focus = focusAfterArrow;
+        refreshBeforeCopy = await readOpenObsidianRefreshDiagnostics(logPath);
+        attemptFailureTrace.refresh_diagnostics_before_copy = refreshBeforeCopy;
+        const refreshChangedBeforeCopy = openObsidianRefreshActivityChanged(refreshBeforeCapture, refreshBeforeCopy)
+          || (refreshBeforeCopy.receiverStates.at(-1)?.busy ?? false);
+        attemptFailureTrace.refresh_changed_before_copy = refreshChangedBeforeCopy;
+        if (!focusAfterArrow
+          || focusAfterArrow.line <= priorFieldLine
+          || focusAfterArrow.clickEventLine === null
+          || focusAfterArrow.arrowRightEventLine === null
+          || !focusAfterArrow.enabled
+          || !focusAfterArrow.focused
+          || focusAfterArrow.empty !== false
+          || refreshChangedBeforeCopy) {
+          refreshChangedDuringCopy = refreshChangedBeforeCopy;
+          attemptError = `fresh target focus was not proven before clipboard copy; diagnostic=${JSON.stringify(focusAfterArrow)}; refresh_changed=${refreshChangedBeforeCopy}`;
+        } else {
+          // Clear the paste value so a missed Cmd+C cannot pass by returning the
+          // staged text. Recheck refresh state after clipboard setup, then copy
+          // immediately with the newly confirmed target still focused.
+          execFileSync("pbcopy", [], {input: "", stdio: ["pipe", "ignore", "ignore"]});
+          refreshImmediatelyBeforeCopy = await readOpenObsidianRefreshDiagnostics(logPath);
+          attemptFailureTrace.refresh_diagnostics_immediately_before_copy = refreshImmediatelyBeforeCopy;
+          const refreshChangedImmediatelyBeforeCopy = openObsidianRefreshActivityChanged(refreshBeforeCapture, refreshImmediatelyBeforeCopy)
+            || (refreshImmediatelyBeforeCopy.receiverStates.at(-1)?.busy ?? false);
+          attemptFailureTrace.refresh_changed_immediately_before_copy = refreshChangedImmediatelyBeforeCopy;
+          if (refreshChangedImmediatelyBeforeCopy) {
+            refreshChangedDuringCopy = true;
+            attemptError = `vault refresh changed after clipboard setup and before copy; refresh_changed=${refreshChangedImmediatelyBeforeCopy}`;
+          } else {
+            execFileSync("osascript", ["-e", copyFieldScript, String(child.pid ?? -1)], {stdio: "ignore"});
+            refreshAfterCopy = await readOpenObsidianRefreshDiagnostics(logPath);
+            attemptFailureTrace.refresh_diagnostics_after_copy = refreshAfterCopy;
+            refreshChangedDuringCopy = openObsidianRefreshActivityChanged(refreshBeforeCapture, refreshAfterCopy)
+              || (refreshAfterCopy.receiverStates.at(-1)?.busy ?? false);
+            attemptFailureTrace.refresh_changed_after_copy = refreshChangedDuringCopy;
+            if (refreshChangedDuringCopy) {
+              attemptError = `vault refresh changed while copying the target field; refresh_changed=${refreshChangedDuringCopy}`;
+            } else {
+              try {
+                const attemptClipboardReadback = execFileSync("pbpaste", [], {
+                  encoding: "utf8",
+                  stdio: ["ignore", "pipe", "ignore"],
+                  timeout: 2_000,
+                });
+                clipboardLength = attemptClipboardReadback.length;
+                clipboardExact = attemptClipboardReadback === value;
+                attemptFailureTrace.clipboard_length = clipboardLength;
+                attemptFailureTrace.clipboard_exact = clipboardExact;
+                if (clipboardExact) {
+                  clipboardReadback = attemptClipboardReadback;
+                  clipboardReadbackError = "";
+                } else {
+                  attemptError = `exact clipboard readback failed; expected_length=${value.length}; actual_length=${clipboardLength}`;
+                }
+              } catch (error) {
+                const failure = error as NodeJS.ErrnoException;
+                clipboardReadbackError = `code=${failure.code ?? "unknown"}; syscall=${failure.syscall ?? "unknown"}`;
+                attemptError = `clipboard copy failed: ${clipboardReadbackError}`;
+              }
+            }
+          }
+        }
+      }
+      Object.assign(attemptFailureTrace, {
+        attempt,
+        screenshot: relative(reportDirectory, readbackPosition.pngPath),
+        readback_crop: fieldValueBeforeCopy ? relative(reportDirectory, fieldValueBeforeCopy.cropPath) : null,
+        position_source: fieldValueBeforeCopy?.layout.fieldPositionSource ?? null,
+        visible_value_exact_before_copy: exactLocalizedValue,
+        visual_ocr: fieldValueBeforeCopy?.text ?? null,
+        vision_ocr_text: fieldValueBeforeCopy?.visionText ?? null,
+        vision_ocr_candidates: fieldValueBeforeCopy?.visionCandidates ?? [],
+        vision_ocr_error: fieldValueBeforeCopy?.visionError || null,
+        target_widget_focus: focusAfterArrow,
+        click: attemptClick,
+        refresh_diagnostics_before_capture: refreshBeforeCapture,
+        refresh_diagnostics_before_click: refreshBeforeClick,
+        refresh_diagnostics_before_copy: refreshBeforeCopy,
+        refresh_diagnostics_immediately_before_copy: refreshImmediatelyBeforeCopy,
+        refresh_diagnostics_after_copy: refreshAfterCopy,
+        refresh_changed_before_click: refreshChangedBeforeClick,
+        refresh_changed_during_copy: refreshChangedDuringCopy,
+        clipboard_length: clipboardLength,
+        clipboard_exact: clipboardExact,
+        error: attemptError || null,
+      });
+      readbackFocusAttempts.push(attemptFailureTrace);
+      } catch (error) {
+        const failure = error as NodeJS.ErrnoException;
+        const message = error instanceof Error ? error.message : String(error);
+        attemptFailureTrace.error = message;
+        attemptFailureTrace.error_code = failure.code ?? null;
+        attemptFailureTrace.error_syscall = failure.syscall ?? null;
+        attemptFailureTrace.target_widget_focus = focusAfterArrow;
+        attemptFailureTrace.refresh_changed_during_copy = refreshChangedDuringCopy;
+        readbackFocusAttempts.push(attemptFailureTrace);
+        clipboardReadbackError = `attempt ${attempt} failed: ${message}`;
+        continue;
+      }
+      if (clipboardExact && !refreshChangedDuringCopy) {
+        readbackTargetWidgetDiagnostic = focusAfterArrow;
+        await delay(100);
+        try {
+          verification = await captureOpenObsidianScreenshot(
+            windowId,
+            child,
+            `openobsidian-canvas-input-${fileSafeName}-readback`,
+            undefined,
+            macOSCanvasLocatorCaptureOptions,
+          );
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error);
+          throw new Error(`macOS ${controlName} exact clipboard readback succeeded, but final readback screenshot capture failed: ${message}; readback_focus_attempts=${JSON.stringify(readbackFocusAttempts)}`);
+        }
+        break;
+      }
+    }
+    if (clipboardReadback !== value) {
+      throw new Error(`macOS ${controlName} could not recover an exact clipboard readback after ${maximumReadbackAttempts} refresh-aware focus/copy attempts: expected_length=${value.length}; last_clipboard_error=${clipboardReadbackError || "none"}; attempts=${JSON.stringify(readbackFocusAttempts)}`);
+    }
+  } else {
+    await delay(150);
+    // Clear the value used for paste before copying the field back, so the
+    // following pbpaste result can only come from the focused field selection.
+    execFileSync("pbcopy", [], {input: "", stdio: ["pipe", "ignore", "ignore"]});
+    execFileSync("osascript", ["-e", copyFieldScript, String(child.pid ?? -1)], {stdio: "ignore"});
+    await waitForOpenObsidianRefreshIdle(0, 0, false, logPath);
+    try {
+      clipboardReadback = execFileSync("pbpaste", [], {
+        encoding: "utf8",
+        stdio: ["ignore", "pipe", "ignore"],
+        timeout: 2_000,
+      });
+    } catch (error) {
+      const failure = error as NodeJS.ErrnoException;
+      clipboardReadbackError = `code=${failure.code ?? "unknown"}; syscall=${failure.syscall ?? "unknown"}`;
+    }
+    verification = await captureOpenObsidianScreenshot(
+      windowId,
+      child,
+      `openobsidian-canvas-input-${fileSafeName}-readback`,
+      undefined,
+      macOSCanvasLocatorCaptureOptions,
+    );
   }
-  const verification = await captureOpenObsidianScreenshot(
-    windowId,
-    child,
-    `openobsidian-canvas-input-${fileSafeName}-readback`,
-    undefined,
-    macOSCanvasLocatorCaptureOptions,
-  );
+  if (!verification) throw new Error(`No fresh macOS readback screenshot was captured for ${controlName}; readback_focus_attempts=${JSON.stringify(readbackFocusAttempts)}`);
   let visualReadback: Awaited<ReturnType<typeof readCanvasInputScreenshotValue>> | undefined;
   let visualReadbackError = "";
   try {
@@ -15975,7 +16319,7 @@ async function replaceMacOSOpenObsidianTextInputWithKeyboard(
       || visualReadback?.layout.fieldPositionSource === "label-anchored-readback-crop")
     && visualReadback?.exact === true;
   if (controlName !== "Canvas text draft" && !exactVisualFieldReadback) {
-    throw new Error(`macOS ${controlName} field crop did not visually confirm the exact value in its label-relative OCR region: expected=${JSON.stringify(value)}; crop_ocr=${JSON.stringify(visualReadback?.text ?? "")}; vision_ocr=${JSON.stringify(visualReadback?.visionText ?? "")}; vision_error=${visualReadback?.visionError || "none"}; field_position_source=${visualReadback?.layout.fieldPositionSource ?? "unavailable"}; label_vision=${JSON.stringify(layout.labelVision)}; readback_label_vision=${JSON.stringify(visualReadback?.layout.labelVision ?? null)}; macos_tesseract=${JSON.stringify(layout.macOSOCRDiagnostics)}; readback_macos_tesseract=${JSON.stringify(visualReadback?.layout.macOSOCRDiagnostics ?? null)}; field_search_failure=${layout.fieldSearchFailure || "none"}; clipboard_exact=${clipboardReadback === value}; clipboard_length=${clipboardReadback.length}; clipboard_error=${clipboardReadbackError || "none"}; visual_readback_error=${visualReadbackError || "none"}; click=${click}; crop=${visualReadback ? relative(reportDirectory, visualReadback.cropPath) : "unavailable"}; screenshot=${relative(reportDirectory, verification.pngPath)}`);
+    throw new Error(`macOS ${controlName} field crop did not visually confirm the exact value in its label-relative OCR region: expected=${JSON.stringify(value)}; crop_ocr=${JSON.stringify(visualReadback?.text ?? "")}; vision_ocr=${JSON.stringify(visualReadback?.visionText ?? "")}; vision_error=${visualReadback?.visionError || "none"}; field_position_source=${visualReadback?.layout.fieldPositionSource ?? "unavailable"}; label_vision=${JSON.stringify(layout.labelVision)}; readback_label_vision=${JSON.stringify(visualReadback?.layout.labelVision ?? null)}; macos_tesseract=${JSON.stringify(layout.macOSOCRDiagnostics)}; readback_macos_tesseract=${JSON.stringify(visualReadback?.layout.macOSOCRDiagnostics ?? null)}; field_search_failure=${layout.fieldSearchFailure || "none"}; clipboard_exact=${clipboardReadback === value}; clipboard_length=${clipboardReadback.length}; clipboard_error=${clipboardReadbackError || "none"}; visual_readback_error=${visualReadbackError || "none"}; click=${click}; crop=${visualReadback ? relative(reportDirectory, visualReadback.cropPath) : "unavailable"}; screenshot=${relative(reportDirectory, verification.pngPath)}; readback_focus_attempts=${JSON.stringify(readbackFocusAttempts)}`);
   }
   // egui can display the exact value even when macOS does not return its
   // selection through pbpaste. Accept that fallback only when the fresh
@@ -15985,12 +16329,12 @@ async function replaceMacOSOpenObsidianTextInputWithKeyboard(
     && clipboardReadbackError === ""
     && visualReadback?.exactLine === true;
   if (clipboardReadback !== value && !exactVisualFieldFallback) {
-    throw new Error(`macOS clipboard readback did not confirm the exact ${controlName} value: expected_length=${value.length}; actual_length=${clipboardReadback.length}; clipboard_error=${clipboardReadbackError || "none"}; crop_ocr=${JSON.stringify(visualReadback?.text ?? "")}; vision_ocr=${JSON.stringify(visualReadback?.visionText ?? "")}; vision_error=${visualReadback?.visionError || "none"}; visual_readback_error=${visualReadbackError || "none"}; label_vision=${JSON.stringify(layout.labelVision)}; readback_label_vision=${JSON.stringify(visualReadback?.layout.labelVision ?? null)}; macos_tesseract=${JSON.stringify(layout.macOSOCRDiagnostics)}; readback_macos_tesseract=${JSON.stringify(visualReadback?.layout.macOSOCRDiagnostics ?? null)}; field_search_failure=${layout.fieldSearchFailure || "none"}; click=${click}; crop=${visualReadback ? relative(reportDirectory, visualReadback.cropPath) : "unavailable"}; screenshot=${relative(reportDirectory, verification.pngPath)}`);
+    throw new Error(`macOS clipboard readback did not confirm the exact ${controlName} value: expected_length=${value.length}; actual_length=${clipboardReadback.length}; clipboard_error=${clipboardReadbackError || "none"}; crop_ocr=${JSON.stringify(visualReadback?.text ?? "")}; vision_ocr=${JSON.stringify(visualReadback?.visionText ?? "")}; vision_error=${visualReadback?.visionError || "none"}; visual_readback_error=${visualReadbackError || "none"}; label_vision=${JSON.stringify(layout.labelVision)}; readback_label_vision=${JSON.stringify(visualReadback?.layout.labelVision ?? null)}; macos_tesseract=${JSON.stringify(layout.macOSOCRDiagnostics)}; readback_macos_tesseract=${JSON.stringify(visualReadback?.layout.macOSOCRDiagnostics ?? null)}; field_search_failure=${layout.fieldSearchFailure || "none"}; click=${click}; crop=${visualReadback ? relative(reportDirectory, visualReadback.cropPath) : "unavailable"}; screenshot=${relative(reportDirectory, verification.pngPath)}; readback_focus_attempts=${JSON.stringify(readbackFocusAttempts)}`);
   }
   return JSON.stringify({
       name: controlName,
       action: controlName === "Canvas edit text-card ID"
-        ? "proved the blank field hint in a fresh label-relative screenshot, confirmed the target egui TextEdit was enabled and focused after click and a fresh no-op key event immediately before paste, then pasted through the macOS clipboard and verified exact visual/clipboard readback"
+        ? "proved the blank field hint and pre-paste egui focus, pasted through the macOS clipboard, then waited for refresh idle and re-localized/refocused the exact nonempty value before a fresh focus/ArrowRight check and exact clipboard/visual readback"
         : "focused the OCR-positioned field, verified its initial blank state, pasted through the macOS clipboard, copied the selected field, then sent Right Arrow to collapse the selection before screenshot readback; macOS Vision reads the label-anchored crop if Tesseract cannot locate the exact value",
     exact_readback: true,
     clipboard_exact: clipboardReadback === value,
@@ -16013,6 +16357,9 @@ async function replaceMacOSOpenObsidianTextInputWithKeyboard(
     initial_field_visual_exact: initialFieldVisualReadback?.exact ?? null,
     target_widget_click: targetFieldClickDiagnostic,
     target_widget_focus: targetFieldFocusDiagnostic,
+    target_widget_readback_focus: readbackTargetWidgetDiagnostic,
+    readback_focus_attempts: readbackFocusAttempts,
+    readback_refresh_aware_retry_count: readbackFocusAttempts.length,
     position_source: layout.fieldPositionSource,
     field_text_ocr_source: layout.fieldTextOcrSource,
     field_search_crop: layout.fieldSearchCrop,

@@ -1,0 +1,138 @@
+{
+  "schema_version": 1,
+  "milestone": "C06.2 exact-SHA CI acceptance reconciliation",
+  "submission_context": "This was a later full GitHub Actions batch containing the final C06.2 implementation and fixture, not a dedicated C06.2-only push.",
+  "implementation_sha": "cca13eb6114d4e694b11973579bb94fa6d552e32",
+  "status": "passed",
+  "status_observed_at": "2026-10-15T13:41:02Z",
+  "summary": {
+    "expected_workflows": 7,
+    "observed_workflows": 7,
+    "completed_workflows": 7,
+    "successful_workflows": 7,
+    "failed_workflows": 0,
+    "in_progress_workflows": 0,
+    "queued_workflows": 0,
+    "expected_jobs": 20,
+    "observed_jobs": 20,
+    "passed_jobs": 20,
+    "failed_jobs": 0,
+    "in_progress_jobs": 0,
+    "queued_jobs": 0,
+    "remote_tip_at_batch": "cca13eb6114d4e694b11973579bb94fa6d552e32"
+  },
+  "c06_2_source_coverage": {
+    "implementation_path": "crates/doc/src/canvas.rs",
+    "fixture_path": "fixtures/c06-canvas.json",
+    "fixture_sha256": "9df19652846b38860ae8f58bdf1d25720dfa9d18c29eaf618642b4bef8525022",
+    "unchanged_from_failed_attempt_sha": "2c34aeba3d6712cc255592e6c469cc0dca2823b4",
+    "c06_2_paths_unchanged_between_trees": true,
+    "source_check": "A read-only Git diff for the implementation and fixture paths is empty between 2c34aeb and cca13eb.",
+    "acceptance_coverage": [
+      "Borrowed projections for standard text, file, link, group, and edge fields.",
+      "Absent top-level nodes/edges arrays remain absent and differ from present-empty arrays.",
+      "Missing, malformed, valid, and unsupported projected values remain distinct, including node type and color cases.",
+      "Unknown root, node, and edge fields remain available from the authoritative raw JSON without normalization or loss.",
+      "Fixture-driven Rust tests exercise the C06.2 standard, omitted-array, malformed/missing, unsupported-type, and raw-preservation cases."
+    ]
+  },
+  "workflows": [
+    {
+      "name": "Obsidian vault round-trip acceptance",
+      "run_id": 38707185912,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38707185912",
+      "head_sha": "cca13eb6114d4e694b11973579bb94fa6d552e32",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"id": 116329392099, "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04", "status": "completed", "conclusion": "success"},
+        {"id": 116329392434, "name": "Obsidian 1.14.4 vault round-trip on macos-latest", "status": "completed", "conclusion": "success"},
+        {"id": 116329392471, "name": "Obsidian 1.14.4 vault round-trip on windows-latest", "status": "completed", "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 38707128064,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38707128064",
+      "head_sha": "cca13eb6114d4e694b11973579bb94fa6d552e32",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"id": 116329193199, "name": "ubuntu-latest", "status": "completed", "conclusion": "success"},
+        {"id": 116329193387, "name": "windows-latest", "status": "completed", "conclusion": "success"},
+        {"id": 116329193551, "name": "macos-latest", "status": "completed", "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 38707128019,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38707128019",
+      "head_sha": "cca13eb6114d4e694b11973579bb94fa6d552e32",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"id": 116329193360, "name": "macos-latest", "status": "completed", "conclusion": "success"},
+        {"id": 116329193574, "name": "windows-latest", "status": "completed", "conclusion": "success"},
+        {"id": 116329193599, "name": "ubuntu-latest", "status": "completed", "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 38707128116,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38707128116",
+      "head_sha": "cca13eb6114d4e694b11973579bb94fa6d552e32",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"id": 116329193296, "name": "windows-latest", "status": "completed", "conclusion": "success"},
+        {"id": 116329193671, "name": "macos-latest", "status": "completed", "conclusion": "success"},
+        {"id": 116329193845, "name": "ubuntu-latest", "status": "completed", "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 38707128114,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38707128114",
+      "head_sha": "cca13eb6114d4e694b11973579bb94fa6d552e32",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"id": 116329193452, "name": "macos-latest", "status": "completed", "conclusion": "success"},
+        {"id": 116329193918, "name": "windows-latest", "status": "completed", "conclusion": "success"},
+        {"id": 116329193928, "name": "ubuntu-latest", "status": "completed", "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 38707128052,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38707128052",
+      "head_sha": "cca13eb6114d4e694b11973579bb94fa6d552e32",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"id": 116329193060, "name": "rust (windows-latest)", "status": "completed", "conclusion": "success"},
+        {"id": 116329193179, "name": "rust (macos-latest)", "status": "completed", "conclusion": "success"},
+        {"id": 116329193339, "name": "minimum supported Rust (1.95)", "status": "completed", "conclusion": "success"},
+        {"id": 116329193434, "name": "rust (ubuntu-latest)", "status": "completed", "conclusion": "success"}
+      ],
+      "coverage_note": "Rust CI reports workspace tests passing on Ubuntu, macOS, and Windows, plus locked workspace tests on the declared Rust 1.95 MSRV."
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 38707128029,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38707128029",
+      "head_sha": "cca13eb6114d4e694b11973579bb94fa6d552e32",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"id": 116329192935, "name": "inventory", "status": "completed", "conclusion": "success"}
+      ]
+    }
+  ],
+  "local_executable_validation": false,
+  "notes": [
+    "The earlier C06.2 attempt 3 on 2c34aeb had a failed macOS round-trip job. The C06.2 implementation and fixture paths are unchanged in the passing cca13eb tree, and Rust CI plus the complete round-trip workflow passed on cca13eb.",
+    "The inventory run is included in the required seven-workflow batch but is not used alone as C06.2 implementation evidence.",
+    "No local tests, builds, formatters, linters, typechecks, application launches, or runtime probes were used."
+  ]
+}

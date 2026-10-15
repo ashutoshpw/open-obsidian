@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "milestone_id": "R2.8.134-C06-C07.4-ROUNDTRIP-HARNESS-REPAIR",
+  "name": "Repair Canvas text-entry readback and capture C07.4 references",
+  "created_at": "2026-10-15",
+  "starting_sha": "7dfb5a47feea6796f979f8e0a778c62aeff5b407",
+  "status": "implementation-complete / independently-reviewed / ready-for-single-push",
+  "bounded_outcome": "Repair the two proven Canvas text-entry harness failures that stopped the R2.8.133 Linux/macOS round-trip jobs before C07.4, then complete the ten-scenario pinned-Obsidian JavaScript-number and locale reference sweep on Linux, macOS, and Windows. This records reference behavior only and does not claim Rust comparator parity.",
+  "in_scope": [
+    "For Linux Canvas edit path and text-card ID entry, retain fresh OCR label-relative positioning and refresh guards, use the existing one-request X11 clipboard paste pattern instead of per-character xdotool typing, require a fresh target-widget click/focus/ArrowRight diagnostic before paste, confirm the value in a fresh same-row crop anchored to the freshly detected label (Linux's supported label-offset fallback), then clear staged clipboard ownership before exact copied-field readback.",
+    "For macOS Canvas edit text-card ID readback, wait for watcher refresh to settle after paste, take a fresh screenshot, relocate the exact visible value, re-focus that exact field, require a fresh click/focus/ArrowRight diagnostic and unchanged refresh state, then copy and require exact clipboard equality. Retry the readback focus/copy sequence within a bounded attempt count and retain full refresh request/result/receiver snapshots for each attempt.",
+    "Complete first-open and reopen observations for all ten C07.4 scenarios on Linux, macOS, and Windows, recording JavaScript-number conversion, comparison outcomes, locale policy and runner settings.",
+    "Reconcile all exact-SHA workflow/job results, three platform reports, artifact IDs/digests, report hashes, and scenario-level outcomes in the migration evidence."
+  ],
+  "out_of_scope": [
+    "Rust C07.4 comparator semantics, fixtures, and expected outcomes; those remain unchanged until the reference capture is complete.",
+    "C07.3 behavior, C07.5 file-property implementation, C09.2 configuration work, unrelated UI changes, and workflow parallelization changes.",
+    "Any claim that pinned Obsidian source rewrites are acceptable Rust behavior; report them only as reference-app observations and preserve Rust source bytes independently."
+  ],
+  "implementation_criteria": [
+    "Linux paste is attempted only after fresh coordinates remain valid, the target egui input reports a fresh click and ArrowRight event with enabled/focused state, and refresh request/result counts remain stable with no busy receiver. If any predicate fails, discard the staged clipboard value, recapture, retry at most three times, and fail closed; thrown keyboard operations also trigger best-effort staged-clipboard neutralization before failing.",
+    "Linux staged clipboard ownership is not neutralized until a fresh label-derived target-field crop visibly confirms the pasted value; for Linux's label-offset fallback the report retains the current label bounds, crop bounds, coordinate space, screenshot dimensions, and field center. Exact readback must then come from selecting and copying the target field, so the original staged clipboard cannot satisfy the comparison. If final clipboard readback fails, its error includes the paste-confirmation screenshot/crop paths.",
+    "macOS readback is performed only after refresh idle, a fresh screenshot and exact-value field localization, a fresh click and ArrowRight diagnostic for the same enabled/focused/nonempty field, and an unchanged refresh state immediately before copy. A refresh race or mismatched/empty clipboard causes a bounded fresh-position retry; no visual-only acceptance is added. Exceptions from refresh, screenshot, focus, or clipboard operations retain the current partial attempt trace plus all prior attempt traces in the failure report.",
+    "All existing vault before/after snapshots, source hashes, exact-path/result gates, screenshots, C07.4 scenario contracts, and fail-closed behavior remain in force.",
+    "Do not run local tests, builds, typechecks, formatters, linters, application launches, or runtime validation. Use GitHub Actions for executable validation only."
+  ],
+  "required_workflows": [
+    "Rust migration inventory",
+    "OpenObsidian loaded plugin workflows",
+    "OpenObsidian quality",
+    "OpenObsidian Rust CI",
+    "Obsidian vault round-trip acceptance",
+    "OpenObsidian plugin renderer matrix",
+    "OpenObsidian desktop build"
+  ],
+  "required_ci_acceptance": [
+    "All seven required workflows and all 20 jobs complete successfully for one exact implementation SHA.",
+    "Linux, macOS, and Windows round-trip reports each capture all ten C07.4 scenarios on first open and reopen with stable results, complete source checkpoints, exact active view/source identity, and the existing source-integrity gates.",
+    "Each platform records JavaScript conversion behavior around 2^53, ordered results for numeric sorting/equality/relational/contains/group identity, case/diacritic/natural-text/path-tie behavior, locale choice, resolved collator settings, runner OS, and pinned Obsidian asset identity.",
+    "Linux and macOS Canvas path/text-card ID edit flows pass exact clipboard and visible readback gates with refresh/focus diagnostics and unchanged-vault snapshots.",
+    "Reconcile all workflow/job conclusions, run URLs/IDs, platform artifact IDs and digests, report SHA-256 hashes, scenario summaries, and any pinned-app source rewrites. Keep C07.4 status captured-reference-only; do not claim Rust parity."
+  ],
+  "evidence_to_collect": [
+    "Exact implementation SHA and seven workflow run IDs/URLs plus all 20 job names, IDs, and conclusions.",
+    "Linux, macOS, and Windows round-trip report/artifact hashes and all ten first-open/reopen scenario outcomes.",
+    "Canvas field screenshots/crops, Linux pre-paste click/focus/ArrowRight and exact post-paste crop evidence, macOS per-attempt refresh request/result/receiver snapshots, clipboard exactness, and before/after vault snapshots.",
+    "JavaScript number probes, ordered paths/group keys/filter results, locale and collator metadata, OS/runtime versions, pinned Obsidian asset hash, and source rewrite evidence where present.",
+    "Confirmation that no local executable validation was used."
+  ],
+  "pre_existing_unrelated_run": {
+    "run_id": 34748436643,
+    "workflow": "OpenObsidian loaded plugin workflows",
+    "head_sha": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
+    "status_observed_at": "2026-10-15T13:41:02Z",
+    "status": "queued",
+    "created_at": "2026-09-13T08:45:13Z",
+    "jobs_started": 0,
+    "disposition": "Outside the terminal R2.8.133 exact-SHA batch and not part of R2.8.134 acceptance. Do not count it as an in-flight milestone batch or cancel it manually; record its resulting status if the submitted main push supersedes it through the existing same-ref workflow concurrency."
+  },
+  "push_policy": "Keep all source and tracker implementation local until the milestone's implementation criteria are met and the complete diff has been independently reviewed. Then push once to origin/main; that starts one CI batch and marks the milestone implementation-complete / CI-pending. Treat the cross-platform C07.4 capture and other exact-SHA CI criteria as acceptance work after that push; mark the milestone achieved only after every required job passes and its evidence is reconciled. Keep origin/main at the submitted SHA until every required workflow and job is terminal; do not push another milestone while this batch is queued or running, even if CI takes several hours.",
+  "local_executable_validation": false
+}

@@ -4,8 +4,20 @@
   "name": "Repair cross-platform C07 reference-capture harness interactions",
   "created_at": "2026-10-15",
   "starting_sha": "2cc44e459d68ac15742f29264b89532fd48c2756",
-  "status": "implementation-complete / independently-reviewed; ready for one exact-SHA CI submission",
+  "status": "terminal-failed / repair-required",
   "bounded_outcome": "Repair the GitHub-only Obsidian round-trip harness across Linux, macOS, and Windows by confirming Canvas text-card ID field focus and refresh stability before input, and by recognizing only an exact fixture-declared restored C07.4 Bases view in the expected vault. Preserve all product scenarios and fail-closed evidence requirements.",
+  "submitted_sha": "7dfb5a47feea6796f979f8e0a778c62aeff5b407",
+  "submitted_at": "2026-10-15T12:55:32Z",
+  "workflow_run_ids": [
+    38738416339,
+    38738416327,
+    38738416617,
+    38738416298,
+    38738416535,
+    38738416299,
+    38738416494
+  ],
+  "current_ci_evidence": "evidence/r2.8.133-attempt-1-7dfb5a4.json",
   "in_scope": [
     "Use terminal exact-SHA CI screenshots and logs to verify the existing macOS Canvas edit text-card ID click is inside the visible field; confirm its blank hint, enabled/focused state, and refresh stability before typing. Do not add a positional offset unsupported by the artifacts.",
     "Allow the C07.4 reopen trust-state wait to recognize a restored view only when its active view type is Bases, its full active file path is one of the fixture-declared scenarios, and its canonical vault root matches the expected fixture vault.",
@@ -78,5 +90,13 @@
     "Confirmation that no local executable validation was used."
   ],
   "push_policy": "Keep implementation local until this bounded milestone is complete and independently reviewed. Push once to origin/main; hold the branch tip until every required workflow/job for that SHA is terminal. Do not submit the separate C07.5 milestone while this batch is active. Mark this milestone achieved only after exact-SHA full CI passes.",
-  "local_executable_validation": false
+  "local_executable_validation": false,
+  "terminal_attempt_result": {
+    "implementation_sha": "7dfb5a47feea6796f979f8e0a778c62aeff5b407",
+    "observed_at": "2026-10-15T13:29:57Z",
+    "summary": "All seven workflows and 20 jobs are terminal: six workflows and 18 jobs passed; Ubuntu and macOS round-trip jobs failed before C07.4, while Windows round-trip passed.",
+    "evidence_file": "evidence/r2.8.133-attempt-1-7dfb5a4.json",
+    "failure_classification": "C06 Canvas harness failures; no Linux/macOS C07.4 behavior was observed.",
+    "windows_c07_4_reference_only": "All ten scenarios completed on first open and reopen with stable results; pinned Obsidian source mutation was observed and is not Rust parity evidence."
+  }
 }
