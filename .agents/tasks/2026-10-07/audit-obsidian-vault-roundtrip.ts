@@ -690,6 +690,88 @@ const workspaceStateAllowlist = [".obsidian/workspace.json", ".obsidian/workspac
 const startedAt = new Date().toISOString();
 const macOSWindowIds = new Map<number, string>();
 
+type MacOSWindowGeometrySnapshot = {
+  windowId: string;
+  windowName: string;
+  bounds: {x: number; y: number; width: number; height: number};
+};
+
+type MacOSWindowCaptureBinding = {
+  requested: true;
+  before: MacOSWindowGeometrySnapshot | null;
+  after: MacOSWindowGeometrySnapshot | null;
+  verified: boolean;
+  windowCaptureShadowExcluded: boolean;
+  error: string | null;
+};
+
+async function readMacOSOpenObsidianWindowGeometry(processId: number): Promise<MacOSWindowGeometrySnapshot> {
+  if (!Number.isSafeInteger(processId) || processId <= 0) throw new Error(`Invalid OpenObsidian process ID: ${processId}`);
+  const script = `
+    import CoreGraphics
+    import Foundation
+
+    let targetProcessId = ${processId}
+    let windows = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]] ?? []
+    let appWindows = windows.filter { window in
+      (window[kCGWindowOwnerPID as String] as? Int) == Int(targetProcessId)
+        && (window[kCGWindowLayer as String] as? Int) == 0
+    }
+    guard appWindows.count == 1, let window = appWindows.first,
+          let windowNumber = window[kCGWindowNumber as String] as? Int,
+          let rawBounds = window[kCGWindowBounds as String] as? [String: Any],
+          let x = rawBounds["X"] as? Double,
+          let y = rawBounds["Y"] as? Double,
+          let width = rawBounds["Width"] as? Double,
+          let height = rawBounds["Height"] as? Double,
+          width > 0, height > 0 else {
+      fputs("Could not identify exactly one visible OpenObsidian window and its bounds\\n", stderr)
+      exit(1)
+    }
+    let name = window[kCGWindowName as String] as? String ?? ""
+    let geometry: [String: Any] = [
+      "window_id": windowNumber,
+      "window_name": name,
+      "bounds": ["x": x, "y": y, "width": width, "height": height]
+    ]
+    let data = try JSONSerialization.data(withJSONObject: geometry, options: [.sortedKeys])
+    print(String(decoding: data, as: UTF8.self))
+  `;
+  const output = execFileSync("swift", ["-e", script], {
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "pipe"],
+    timeout: 15_000,
+  }).trim();
+  const parsed = JSON.parse(output) as {
+    window_id?: number;
+    window_name?: string;
+    bounds?: {x?: number; y?: number; width?: number; height?: number};
+  };
+  const bounds = parsed.bounds;
+  if (!Number.isSafeInteger(parsed.window_id)
+    || !bounds
+    || ![bounds.x, bounds.y, bounds.width, bounds.height].every(Number.isFinite)
+    || !(bounds.width! > 0 && bounds.height! > 0)) {
+    throw new Error(`Invalid OpenObsidian window geometry snapshot: ${output.slice(0, 1_000)}`);
+  }
+  return {
+    windowId: String(parsed.window_id),
+    windowName: parsed.window_name ?? "",
+    bounds: {x: bounds.x!, y: bounds.y!, width: bounds.width!, height: bounds.height!},
+  };
+}
+
+function sameMacOSWindowGeometrySnapshot(
+  left: MacOSWindowGeometrySnapshot,
+  right: MacOSWindowGeometrySnapshot,
+): boolean {
+  return left.windowId === right.windowId
+    && left.bounds.x === right.bounds.x
+    && left.bounds.y === right.bounds.y
+    && left.bounds.width === right.bounds.width
+    && left.bounds.height === right.bounds.height;
+}
+
 const report: Record<string, unknown> = {
   schema_version: 1,
   milestone: "R2.8.76-C01.2-reference-app-external-note-rename-refresh",
@@ -2103,8 +2185,15 @@ async function captureX11WindowScreenshot(windowId: string, filename: string): P
   return pngPath;
 }
 
-async function captureMacOSWindowScreenshot(processId: number, filename: string): Promise<string> {
-  let windowId = macOSWindowIds.get(processId);
+async function captureMacOSWindowScreenshot(
+  processId: number,
+  filename: string,
+  options: {excludeShadow?: boolean; expectedWindowId?: string} = {},
+): Promise<string> {
+  let windowId = options.expectedWindowId ?? macOSWindowIds.get(processId);
+  if (options.expectedWindowId && !/^\d+$/.test(options.expectedWindowId)) {
+    throw new Error(`Invalid captured OpenObsidian macOS window ID: ${options.expectedWindowId}`);
+  }
   if (!windowId) {
     const script = `
       import CoreGraphics
@@ -2126,8 +2215,10 @@ async function captureMacOSWindowScreenshot(processId: number, filename: string)
     if (!windowId || !/^\d+$/.test(windowId)) throw new Error("Could not identify OpenObsidian's macOS window for screenshot capture");
     macOSWindowIds.set(processId, windowId);
   }
+  if (options.expectedWindowId) macOSWindowIds.set(processId, options.expectedWindowId);
   const pngPath = join(reportDirectory, filename);
-  execFileSync("screencapture", ["-x", `-l${windowId}`, pngPath], {stdio: "ignore"});
+  const args = ["-x", ...(options.excludeShadow ? ["-o"] : []), `-l${windowId}`, pngPath];
+  execFileSync("screencapture", args, {stdio: "ignore"});
   return pngPath;
 }
 
@@ -10397,16 +10488,61 @@ async function captureOpenObsidianScreenshot(
   child: ChildProcess,
   prefix = "openobsidian-vault",
   reportTarget: Record<string, unknown> = report.openobsidian_open as Record<string, unknown>,
-): Promise<{pngPath: string; windowPngPath: string; ocrPngPath: string; ocrText: string; windowGeometry?: string}> {
+  options: {macOSCanvasLocatorCapture?: boolean} = {},
+): Promise<{
+  pngPath: string;
+  windowPngPath: string;
+  ocrPngPath: string;
+  ocrText: string;
+  windowGeometry?: string;
+  macOSWindowCaptureBinding: MacOSWindowCaptureBinding | null;
+}> {
   await focusOpenObsidian(child);
+  const bindMacOSCanvasLocatorCapture = process.platform === "darwin" && options.macOSCanvasLocatorCapture === true;
+  let geometryBefore: MacOSWindowGeometrySnapshot | null = null;
+  let geometryAfter: MacOSWindowGeometrySnapshot | null = null;
+  let geometryCaptureError: string | null = null;
+  if (bindMacOSCanvasLocatorCapture) {
+    try {
+      geometryBefore = await readMacOSOpenObsidianWindowGeometry(child.pid ?? -1);
+      macOSWindowIds.set(child.pid ?? -1, geometryBefore.windowId);
+    } catch (error) {
+      geometryCaptureError = `pre-screenshot geometry failed: ${error instanceof Error ? error.message : String(error)}`;
+    }
+  }
   const pngPath = await captureDesktopScreenshot(`${prefix}.png`);
+  if (bindMacOSCanvasLocatorCapture) {
+    try {
+      geometryAfter = await readMacOSOpenObsidianWindowGeometry(child.pid ?? -1);
+    } catch (error) {
+      geometryCaptureError = [geometryCaptureError, `post-screenshot geometry failed: ${error instanceof Error ? error.message : String(error)}`].filter(Boolean).join("; ");
+    }
+  }
+  const captureGeometryUnchanged = Boolean(geometryBefore && geometryAfter
+    && sameMacOSWindowGeometrySnapshot(geometryBefore, geometryAfter));
+  if (bindMacOSCanvasLocatorCapture && !captureGeometryUnchanged && !geometryCaptureError) {
+    geometryCaptureError = `OpenObsidian window ID or bounds changed during desktop screenshot capture: before=${JSON.stringify(geometryBefore)}; after=${JSON.stringify(geometryAfter)}`;
+  }
+  const macOSWindowCaptureBinding: MacOSWindowCaptureBinding | null = bindMacOSCanvasLocatorCapture
+    ? {
+      requested: true,
+      before: geometryBefore,
+      after: geometryAfter,
+      verified: captureGeometryUnchanged,
+      windowCaptureShadowExcluded: true,
+      error: geometryCaptureError,
+    }
+    : null;
   const windowsCapture = process.platform === "win32"
     ? await captureWindowsWindowScreenshot(child.pid ?? -1, `${prefix}-window.png`)
     : null;
   const windowPngPath = process.platform === "linux"
     ? await captureX11WindowScreenshot(windowId, `${prefix}-window.png`)
     : process.platform === "darwin"
-      ? await captureMacOSWindowScreenshot(child.pid ?? -1, `${prefix}-window.png`)
+      ? await captureMacOSWindowScreenshot(child.pid ?? -1, `${prefix}-window.png`, {
+        excludeShadow: bindMacOSCanvasLocatorCapture,
+        expectedWindowId: geometryBefore?.windowId,
+      })
       : windowsCapture?.pngPath ?? pngPath;
   if (windowsCapture) {
     reportTarget.native_window = {
@@ -10419,7 +10555,14 @@ async function captureOpenObsidianScreenshot(
   const tesseract = process.platform === "win32" ? "tesseract.exe" : "tesseract";
   const pageSegmentationModes = process.platform === "darwin" || process.platform === "win32" ? ["11", "6"] : ["6"];
   const ocrText = pageSegmentationModes.map((mode) => execFileSync(tesseract, [ocrPngPath, "stdout", "--psm", mode], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]}).trim()).filter(Boolean).join("\n");
-  return {pngPath, windowPngPath, ocrPngPath, ocrText, ...(windowsCapture ? {windowGeometry: windowsCapture.geometry} : {})};
+  return {
+    pngPath,
+    windowPngPath,
+    ocrPngPath,
+    ocrText,
+    ...(windowsCapture ? {windowGeometry: windowsCapture.geometry} : {}),
+    macOSWindowCaptureBinding,
+  };
 }
 
 async function withSourcePaneOcr<T extends {ocrPngPath: string; windowPngPath: string}>(capture: T): Promise<T & {
@@ -13662,8 +13805,104 @@ type CanvasInputFieldLayout = {
       error: string;
     } | null;
   } | null;
+  labelVision: CanvasInputLabelVisionDiagnostics | null;
+  macOSOCRDiagnostics: CanvasInputMacOSTesserDiagnostics | null;
+  fieldSearchFailure: string;
   cropBounds: {left: number; top: number; width: number; height: number};
   coordinateSpace: "window" | "desktop";
+};
+
+type CanvasInputLabelVisionCandidateDiagnostic = {
+  text: string;
+  confidence: number;
+  boundingBox: MacOSVisionTextCandidate["boundingBox"];
+  validBounds: boolean;
+  imageBounds: OcrWordBounds | null;
+  ocrBounds: OcrWordBounds | null;
+  insideOpenObsidianWindow: boolean | null;
+  headerMatch: boolean;
+  exactLabelMatch: boolean;
+  confidenceAccepted: boolean;
+  headerCandidate: {qualifies: boolean; rejection: string | null} | null;
+  labelCandidate: {
+    exactTextMatch: boolean;
+    belowHeader: boolean | null;
+    withinHeaderHorizontalSpan: boolean | null;
+    inExpectedFormRow: boolean | null;
+    qualifies: boolean;
+    rejection: string | null;
+  } | null;
+};
+
+type CanvasInputLabelVisionDiagnostics = {
+  imagePath: string;
+  windowScreenshotPath: string;
+  imageDimensions: {width: number; height: number};
+  ocrDimensions: {width: number; height: number};
+  confidenceFloor: number;
+  headerPhrase: "Load one";
+  expectedLabel: "Canvas edit text-card ID";
+  rawHeaderMatchCount: number;
+  qualifiedHeaderCount: number;
+  selectedHeaderImageBounds: OcrWordBounds | null;
+  selectedHeaderOcrBounds: OcrWordBounds | null;
+  rawLabelMatchCount: number;
+  acceptedLabelCount: number;
+  selectedLabelImageBounds: OcrWordBounds | null;
+  selectedLabelOcrBounds: OcrWordBounds | null;
+  windowMapping: {
+    verified: boolean;
+    displayBounds: {x: number; y: number; width: number; height: number} | null;
+    displayPixelDimensions: {width: number; height: number} | null;
+    windowIdentity: string | null;
+    screenshotWindowId: string | null;
+    windowBounds: {x: number; y: number; width: number; height: number} | null;
+    accessibilityWindowBounds: {x: number; y: number; width: number; height: number} | null;
+    windowScreenshotDimensions: {width: number; height: number} | null;
+    windowCaptureShadowExcluded: boolean;
+    windowScreenshotDimensionTolerancePixels: number;
+    captureTimeGeometry?: MacOSWindowCaptureBinding | null;
+    windowBoundsImage: {left: number; top: number; width: number; height: number} | null;
+    screenshotScale: {x: number; y: number} | null;
+    error: string | null;
+  };
+  candidates: CanvasInputLabelVisionCandidateDiagnostic[];
+  error: string | null;
+};
+
+type CanvasInputMacOSTesserCandidateDiagnostic = {
+  text: string;
+  boundsOcr: OcrWordBounds;
+  boundsImage: OcrWordBounds;
+  insideOpenObsidianWindow: boolean | null;
+  accepted: boolean;
+  rejection: string | null;
+};
+
+type CanvasInputMacOSTesserPassDiagnostics = {
+  pageSegmentationMode: string;
+  rawHeaderMatchCount: number;
+  qualifiedHeaderCount: number;
+  headerCandidates: CanvasInputMacOSTesserCandidateDiagnostic[];
+  rawLabelMatchCount: number;
+  qualifiedLabelCount: number;
+  labelCandidates: CanvasInputMacOSTesserCandidateDiagnostic[];
+  rawFieldMatchCount: number;
+  qualifiedFieldCount: number;
+  fieldCandidates: CanvasInputMacOSTesserCandidateDiagnostic[];
+  error: string | null;
+};
+
+type CanvasInputMacOSTesserDiagnostics = {
+  windowMapping: CanvasInputLabelVisionDiagnostics["windowMapping"];
+  passes: CanvasInputMacOSTesserPassDiagnostics[];
+  conflictingHeaderLocations: Array<{
+    firstPageSegmentationMode: string;
+    secondPageSegmentationMode: string;
+    firstBoundsImage: OcrWordBounds;
+    secondBoundsImage: OcrWordBounds;
+  }>;
+  error: string | null;
 };
 
 function canvasInputLabelXOffset(controlName: string): number {
@@ -13712,6 +13951,559 @@ function canvasInputExpectedRegion(
   };
 }
 
+function normalizeCanvasEditTextCardIdLabel(value: string): string {
+  return value
+    .toLocaleLowerCase("en-US")
+    .replace(/[‐‑‒–—−]/g, "-")
+    .replace(/\s*-\s*/g, "-")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/^canvas edit text card id$/, "canvas edit text-card id");
+}
+
+function normalizeCanvasLoadOneHeader(value: string): string {
+  return value
+    .toLocaleLowerCase("en-US")
+    .replace(/[‐‑‒–—−]/g, "-")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+async function readMacOSCanvasEditorScreenshotWindowMapping(
+  child: ChildProcess | undefined,
+  screenshotDimensions: {width: number; height: number},
+  windowScreenshotDimensions: {width: number; height: number},
+): Promise<CanvasInputLabelVisionDiagnostics["windowMapping"]> {
+  const windowScreenshotDimensionTolerancePixels = 2;
+  const unverified = (error: string): CanvasInputLabelVisionDiagnostics["windowMapping"] => ({
+    verified: false,
+    displayBounds: null,
+    displayPixelDimensions: null,
+    windowIdentity: null,
+    screenshotWindowId: null,
+    windowBounds: null,
+    accessibilityWindowBounds: null,
+    windowScreenshotDimensions,
+    windowCaptureShadowExcluded: true,
+    windowScreenshotDimensionTolerancePixels,
+    windowBoundsImage: null,
+    screenshotScale: null,
+    error,
+  });
+  const processId = child?.pid;
+  if (!processId || !Number.isSafeInteger(processId) || processId <= 0) {
+    return unverified(`invalid OpenObsidian process ID: ${String(processId)}`);
+  }
+
+  const swiftPath = join(workDirectory, "openobsidian-canvas-editor-window-geometry.swift");
+  await writeFile(swiftPath, `import AppKit
+import CoreGraphics
+import Foundation
+
+guard CommandLine.arguments.count == 2, let processId = Int32(CommandLine.arguments[1]) else {
+    fatalError("Expected the OpenObsidian process ID")
+}
+guard NSScreen.screens.count == 1 else {
+    fatalError("Canvas label Vision requires exactly one macOS display")
+}
+guard let screenNumber = NSScreen.screens[0].deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber else {
+    fatalError("Could not read the selected macOS display number")
+}
+let displayID = CGDirectDisplayID(screenNumber.uint32Value)
+let displayBounds = CGDisplayBounds(displayID)
+let displayPixelWidth = CGDisplayPixelsWide(displayID)
+let displayPixelHeight = CGDisplayPixelsHigh(displayID)
+guard displayBounds.width > 0, displayBounds.height > 0,
+      displayPixelWidth > 0, displayPixelHeight > 0 else {
+    fatalError("Could not read valid macOS display bounds and pixel dimensions")
+}
+let windows = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]] ?? []
+let appWindows = windows.filter { window in
+    (window[kCGWindowOwnerPID as String] as? Int) == Int(processId)
+        && (window[kCGWindowLayer as String] as? Int) == 0
+}
+guard appWindows.count == 1, let window = appWindows.first else {
+    fatalError("Expected one visible OpenObsidian layer-zero window; found \\(appWindows.count)")
+}
+guard let bounds = window[kCGWindowBounds as String] as? [String: Any],
+      let x = bounds["X"] as? Double,
+      let y = bounds["Y"] as? Double,
+      let width = bounds["Width"] as? Double,
+      let height = bounds["Height"] as? Double,
+      width > 0, height > 0 else {
+    fatalError("Could not read valid Core Graphics bounds for the OpenObsidian window")
+}
+let displayName = window[kCGWindowName as String] as? String ?? ""
+let windowNumber = window[kCGWindowNumber as String] as? Int ?? -1
+let displayDictionary: [String: Any] = [
+    "x": Double(displayBounds.origin.x),
+    "y": Double(displayBounds.origin.y),
+    "width": Double(displayBounds.width),
+    "height": Double(displayBounds.height),
+    "pixel_width": displayPixelWidth,
+    "pixel_height": displayPixelHeight
+]
+let windowDictionary: [String: Any] = [
+    "identity": "CGWindow number=\\(windowNumber), name=\\(displayName)",
+    "window_number": windowNumber,
+    "x": x,
+    "y": y,
+    "width": width,
+    "height": height
+]
+let data = try JSONSerialization.data(withJSONObject: ["display": displayDictionary, "window": windowDictionary], options: [.sortedKeys])
+print(String(decoding: data, as: UTF8.self))
+`);
+
+  let output: string;
+  try {
+    output = execFileSync("swift", [swiftPath, String(processId)], {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "pipe"],
+      timeout: 15_000,
+    }).trim();
+  } catch (error) {
+    const failure = error as NodeJS.ErrnoException & {stderr?: Buffer | string; stdout?: Buffer | string};
+    return unverified(`Could not read one-display OpenObsidian window geometry: ${[failure.message, failure.stdout, failure.stderr].filter(Boolean).map(String).join("; ")}`);
+  }
+
+  let geometry: {
+    display?: {x?: number; y?: number; width?: number; height?: number; pixel_width?: number; pixel_height?: number};
+    window?: {identity?: string; window_number?: number; x?: number; y?: number; width?: number; height?: number};
+  };
+  try {
+    geometry = JSON.parse(output) as typeof geometry;
+  } catch (error) {
+    return unverified(`Could not parse Core Graphics display/window geometry: ${error instanceof Error ? error.message : String(error)}; output=${output.slice(0, 2_000)}`);
+  }
+  const display = geometry.display;
+  const window = geometry.window;
+  const displayBounds = display && [display.x, display.y, display.width, display.height].every(Number.isFinite)
+    ? {x: display.x!, y: display.y!, width: display.width!, height: display.height!}
+    : null;
+  const displayPixelDimensions = display && [display.pixel_width, display.pixel_height].every(Number.isFinite)
+    ? {width: display.pixel_width!, height: display.pixel_height!}
+    : null;
+  const screenshotWindowId = macOSWindowIds.get(processId) ?? null;
+  const coreGraphicsWindowId = Number.isSafeInteger(window?.window_number) ? String(window?.window_number) : null;
+  const windowBounds = window && [window.x, window.y, window.width, window.height].every(Number.isFinite)
+    ? {x: window.x!, y: window.y!, width: window.width!, height: window.height!}
+    : null;
+  let accessibilityWindowBounds: {x: number; y: number; width: number; height: number} | null = null;
+  let accessibilityBoundsError: string | null = null;
+  try {
+    accessibilityWindowBounds = macOSOpenObsidianWindowBounds(child!);
+  } catch (error) {
+    accessibilityBoundsError = error instanceof Error ? error.message : String(error);
+  }
+  if (!displayBounds || !displayPixelDimensions || !windowBounds || !window?.identity) {
+    return {
+      verified: false,
+      displayBounds,
+      displayPixelDimensions,
+      windowIdentity: window?.identity ?? null,
+      screenshotWindowId,
+      windowBounds,
+      accessibilityWindowBounds,
+      windowScreenshotDimensions,
+      windowCaptureShadowExcluded: true,
+      windowScreenshotDimensionTolerancePixels,
+      windowBoundsImage: null,
+      screenshotScale: null,
+      error: `Core Graphics returned incomplete display/window geometry: ${output.slice(0, 2_000)}; accessibility_window_error=${accessibilityBoundsError || "none"}`,
+    };
+  }
+  if (!accessibilityWindowBounds) {
+    return {
+      verified: false,
+      displayBounds,
+      displayPixelDimensions,
+      windowIdentity: window.identity,
+      screenshotWindowId,
+      windowBounds,
+      accessibilityWindowBounds: null,
+      windowScreenshotDimensions,
+      windowCaptureShadowExcluded: true,
+      windowScreenshotDimensionTolerancePixels,
+      windowBoundsImage: null,
+      screenshotScale: null,
+      error: `Could not independently confirm OpenObsidian window position and size through accessibility: ${accessibilityBoundsError || "unknown accessibility geometry error"}`,
+    };
+  }
+  if (!screenshotWindowId || !coreGraphicsWindowId || screenshotWindowId !== coreGraphicsWindowId) {
+    return {
+      verified: false,
+      displayBounds,
+      displayPixelDimensions,
+      windowIdentity: window.identity,
+      screenshotWindowId,
+      windowBounds,
+      accessibilityWindowBounds,
+      windowScreenshotDimensions,
+      windowCaptureShadowExcluded: true,
+      windowScreenshotDimensionTolerancePixels,
+      windowBoundsImage: null,
+      screenshotScale: null,
+      error: `The full-screen and window-only captures do not identify the same unique OpenObsidian window: cached_screenshot_window_id=${screenshotWindowId ?? "unavailable"}; core_graphics_window_id=${coreGraphicsWindowId ?? "unavailable"}; window_identity=${window.identity}`,
+    };
+  }
+  const accessibilityMatchesCoreGraphicsWindow = [
+    Math.abs(accessibilityWindowBounds.x - windowBounds.x),
+    Math.abs(accessibilityWindowBounds.y - windowBounds.y),
+    Math.abs(accessibilityWindowBounds.width - windowBounds.width),
+    Math.abs(accessibilityWindowBounds.height - windowBounds.height),
+  ].every((difference) => difference <= 1);
+  if (!accessibilityMatchesCoreGraphicsWindow) {
+    return {
+      verified: false,
+      displayBounds,
+      displayPixelDimensions,
+      windowIdentity: window.identity,
+      screenshotWindowId,
+      windowBounds,
+      accessibilityWindowBounds,
+      windowScreenshotDimensions,
+      windowCaptureShadowExcluded: true,
+      windowScreenshotDimensionTolerancePixels,
+      windowBoundsImage: null,
+      screenshotScale: null,
+      error: `Accessibility and Core Graphics report different OpenObsidian window geometry: accessibility=${JSON.stringify(accessibilityWindowBounds)}; core_graphics=${JSON.stringify(windowBounds)}`,
+    };
+  }
+  if (!(displayBounds.width > 0 && displayBounds.height > 0
+    && windowBounds.width > 0 && windowBounds.height > 0
+    && screenshotDimensions.width === displayPixelDimensions.width
+    && screenshotDimensions.height === displayPixelDimensions.height)) {
+    return {
+      verified: false,
+      displayBounds,
+      displayPixelDimensions,
+      windowIdentity: window.identity,
+      screenshotWindowId,
+      windowBounds,
+      accessibilityWindowBounds,
+      windowScreenshotDimensions,
+      windowCaptureShadowExcluded: true,
+      windowScreenshotDimensionTolerancePixels,
+      windowBoundsImage: null,
+      screenshotScale: null,
+      error: `Full-screenshot dimensions do not match the selected display pixels or bounds are invalid: screenshot=${JSON.stringify(screenshotDimensions)}; display=${JSON.stringify(displayBounds)}; display_pixels=${JSON.stringify(displayPixelDimensions)}; window=${JSON.stringify(windowBounds)}`,
+    };
+  }
+  const screenshotScale = {
+    x: screenshotDimensions.width / displayBounds.width,
+    y: screenshotDimensions.height / displayBounds.height,
+  };
+  if (!(Number.isFinite(screenshotScale.x) && screenshotScale.x > 0
+    && Number.isFinite(screenshotScale.y) && screenshotScale.y > 0
+    && Math.abs(screenshotScale.x - screenshotScale.y) <= Math.max(screenshotScale.x, screenshotScale.y) * 1e-6)) {
+    return {
+      verified: false,
+      displayBounds,
+      displayPixelDimensions,
+      windowIdentity: window.identity,
+      screenshotWindowId,
+      windowBounds,
+      accessibilityWindowBounds,
+      windowScreenshotDimensions,
+      windowCaptureShadowExcluded: true,
+      windowScreenshotDimensionTolerancePixels,
+      windowBoundsImage: null,
+      screenshotScale,
+      error: `Full-screenshot/display coordinate scales disagree: screenshot=${JSON.stringify(screenshotDimensions)}; display=${JSON.stringify(displayBounds)}; scale=${JSON.stringify(screenshotScale)}`,
+    };
+  }
+  const windowBoundsImage = {
+    left: (windowBounds.x - displayBounds.x) * screenshotScale.x,
+    top: (windowBounds.y - displayBounds.y) * screenshotScale.y,
+    width: windowBounds.width * screenshotScale.x,
+    height: windowBounds.height * screenshotScale.y,
+  };
+  const expectedWindowScreenshotDimensions = {
+    width: windowBounds.width * screenshotScale.x,
+    height: windowBounds.height * screenshotScale.y,
+  };
+  const windowScreenshotMappingMatches = Math.abs(windowScreenshotDimensions.width - expectedWindowScreenshotDimensions.width) <= windowScreenshotDimensionTolerancePixels
+    && Math.abs(windowScreenshotDimensions.height - expectedWindowScreenshotDimensions.height) <= windowScreenshotDimensionTolerancePixels;
+  const windowInsideDisplay = windowBounds.x >= displayBounds.x
+    && windowBounds.y >= displayBounds.y
+    && windowBounds.x + windowBounds.width <= displayBounds.x + displayBounds.width
+    && windowBounds.y + windowBounds.height <= displayBounds.y + displayBounds.height;
+  const windowInsideScreenshot = windowBoundsImage.left >= 0
+    && windowBoundsImage.top >= 0
+    && windowBoundsImage.width > 0
+    && windowBoundsImage.height > 0
+    && windowBoundsImage.left + windowBoundsImage.width <= screenshotDimensions.width
+    && windowBoundsImage.top + windowBoundsImage.height <= screenshotDimensions.height;
+  return {
+    verified: windowInsideDisplay && windowInsideScreenshot && windowScreenshotMappingMatches,
+    displayBounds,
+    displayPixelDimensions,
+    windowIdentity: window.identity,
+    screenshotWindowId,
+    windowBounds,
+    accessibilityWindowBounds,
+    windowScreenshotDimensions,
+    windowCaptureShadowExcluded: true,
+    windowScreenshotDimensionTolerancePixels,
+    windowBoundsImage,
+    screenshotScale,
+    error: windowInsideDisplay && windowInsideScreenshot && windowScreenshotMappingMatches
+      ? null
+      : `OpenObsidian window/screenshot mapping could not be verified: window_inside_display=${windowInsideDisplay}; window_inside_screenshot=${windowInsideScreenshot}; window_capture_mapping_matches=${windowScreenshotMappingMatches}; shadow_excluded=true; dimension_tolerance_pixels=${windowScreenshotDimensionTolerancePixels}; window_capture=${JSON.stringify(windowScreenshotDimensions)}; expected_window_pixels=${JSON.stringify(expectedWindowScreenshotDimensions)}; display=${JSON.stringify(displayBounds)}; window=${JSON.stringify(windowBounds)}; window_image=${JSON.stringify(windowBoundsImage)}; screenshot=${JSON.stringify(screenshotDimensions)}`,
+  };
+}
+
+function bindMacOSCaptureGeometryToWindowMapping(
+  mapping: CanvasInputLabelVisionDiagnostics["windowMapping"],
+  captureGeometry: MacOSWindowCaptureBinding | null,
+): CanvasInputLabelVisionDiagnostics["windowMapping"] {
+  mapping.captureTimeGeometry = captureGeometry;
+  const reject = (reason: string): void => {
+    mapping.verified = false;
+    mapping.error = [mapping.error, reason].filter(Boolean).join("; ");
+  };
+  if (!captureGeometry) {
+    reject("C06.2 capture-time OpenObsidian window geometry was not recorded");
+    return mapping;
+  }
+  if (!captureGeometry.verified || !captureGeometry.before || !captureGeometry.after) {
+    reject(`OpenObsidian window geometry could not be verified across desktop screenshot capture: ${captureGeometry.error || "missing pre/post geometry snapshots"}`);
+    return mapping;
+  }
+  if (!captureGeometry.windowCaptureShadowExcluded) {
+    reject("C06.2 window-only screenshot did not exclude its shadow");
+    return mapping;
+  }
+  const captureBoundsMatchCurrent = (bounds: CanvasInputLabelVisionDiagnostics["windowMapping"]["windowBounds"]): boolean =>
+    Boolean(bounds
+      && bounds.x === captureGeometry.before!.bounds.x
+      && bounds.y === captureGeometry.before!.bounds.y
+      && bounds.width === captureGeometry.before!.bounds.width
+      && bounds.height === captureGeometry.before!.bounds.height);
+  if (mapping.screenshotWindowId !== captureGeometry.before.windowId
+    || captureGeometry.before.windowId !== captureGeometry.after.windowId
+    || !captureBoundsMatchCurrent(mapping.windowBounds)
+    || !captureBoundsMatchCurrent(captureGeometry.after.bounds)) {
+    reject(`OpenObsidian window identity or bounds no longer match the screenshot capture interval: screenshot_window_id=${mapping.screenshotWindowId ?? "unavailable"}; captured_before=${JSON.stringify(captureGeometry.before)}; captured_after=${JSON.stringify(captureGeometry.after)}; mapped_current=${JSON.stringify(mapping.windowBounds)}`);
+  }
+  return mapping;
+}
+
+async function locateCanvasEditTextCardIdLabelWithVision(
+  imagePath: string,
+  windowImagePath: string,
+  imageDimensions: {width: number; height: number},
+  ocrDimensions: {width: number; height: number},
+  windowMapping: CanvasInputLabelVisionDiagnostics["windowMapping"],
+): Promise<{labelBoundsOcr: OcrWordBounds | null; diagnostics: CanvasInputLabelVisionDiagnostics}> {
+  const confidenceFloor = 0.8;
+  const scaleX = ocrDimensions.width / imageDimensions.width;
+  const scaleY = ocrDimensions.height / imageDimensions.height;
+  const diagnostics: CanvasInputLabelVisionDiagnostics = {
+    imagePath: relative(reportDirectory, imagePath),
+    windowScreenshotPath: relative(reportDirectory, windowImagePath),
+    imageDimensions,
+    ocrDimensions,
+    confidenceFloor,
+    headerPhrase: "Load one",
+    expectedLabel: "Canvas edit text-card ID",
+    rawHeaderMatchCount: 0,
+    qualifiedHeaderCount: 0,
+    selectedHeaderImageBounds: null,
+    selectedHeaderOcrBounds: null,
+    rawLabelMatchCount: 0,
+    acceptedLabelCount: 0,
+    selectedLabelImageBounds: null,
+    selectedLabelOcrBounds: null,
+    windowMapping,
+    candidates: [],
+    error: null,
+  };
+  if (!(imageDimensions.width > 0 && imageDimensions.height > 0
+    && ocrDimensions.width > 0 && ocrDimensions.height > 0
+    && Number.isFinite(scaleX) && scaleX > 0 && Number.isFinite(scaleY) && scaleY > 0)) {
+    diagnostics.error = `invalid screenshot coordinate mapping: image=${JSON.stringify(imageDimensions)}; ocr=${JSON.stringify(ocrDimensions)}`;
+    return {labelBoundsOcr: null, diagnostics};
+  }
+
+  if (!diagnostics.windowMapping.verified) diagnostics.error = diagnostics.windowMapping.error || "OpenObsidian window screenshot mapping was not verified";
+
+  let visionCandidates: MacOSVisionTextCandidate[];
+  try {
+    visionCandidates = await readMacOSVisionTextCandidates(imagePath);
+  } catch (error) {
+    diagnostics.error = [diagnostics.error, error instanceof Error ? error.message : "unknown macOS Vision OCR error"].filter(Boolean).join("; ");
+    return {labelBoundsOcr: null, diagnostics};
+  }
+
+  const mapCandidate = (candidate: MacOSVisionTextCandidate): {
+    validBounds: boolean;
+    imageBounds: OcrWordBounds | null;
+    ocrBounds: OcrWordBounds | null;
+    insideOpenObsidianWindow: boolean | null;
+  } => {
+    const {x, y, width, height} = candidate.boundingBox;
+    const validBounds = [x, y, width, height].every(Number.isFinite)
+      && x >= 0 && y >= 0 && width > 0 && height > 0
+      && x + width <= 1 && y + height <= 1;
+    if (!validBounds) return {validBounds, imageBounds: null, ocrBounds: null, insideOpenObsidianWindow: null};
+    const imageBounds: OcrWordBounds = {
+      text: candidate.text,
+      left: x * imageDimensions.width,
+      top: (1 - y - height) * imageDimensions.height,
+      width: width * imageDimensions.width,
+      height: height * imageDimensions.height,
+    };
+    const ocrBounds: OcrWordBounds = {
+      text: candidate.text,
+      left: imageBounds.left * scaleX,
+      top: imageBounds.top * scaleY,
+      width: imageBounds.width * scaleX,
+      height: imageBounds.height * scaleY,
+    };
+    const mappedBoundsAreInsideImage = imageBounds.left >= 0
+      && imageBounds.top >= 0
+      && imageBounds.width > 0
+      && imageBounds.height > 0
+      && imageBounds.left + imageBounds.width <= imageDimensions.width
+      && imageBounds.top + imageBounds.height <= imageDimensions.height;
+    if (!mappedBoundsAreInsideImage) return {validBounds: false, imageBounds: null, ocrBounds: null, insideOpenObsidianWindow: null};
+    const windowBounds = diagnostics.windowMapping.windowBoundsImage;
+    const insideOpenObsidianWindow = windowBounds
+      ? imageBounds.left >= windowBounds.left
+        && imageBounds.top >= windowBounds.top
+        && imageBounds.left + imageBounds.width <= windowBounds.left + windowBounds.width
+        && imageBounds.top + imageBounds.height <= windowBounds.top + windowBounds.height
+      : null;
+    return {validBounds, imageBounds, ocrBounds, insideOpenObsidianWindow};
+  };
+
+  const provisional = visionCandidates.map((candidate) => {
+    const normalizedText = normalizeCanvasLoadOneHeader(candidate.text);
+    const headerMatch = normalizedText === "load one" || normalizedText.startsWith("load one ");
+    const exactLabelMatch = normalizeCanvasEditTextCardIdLabel(candidate.text) === "canvas edit text-card id";
+    const confidenceAccepted = candidate.confidence >= confidenceFloor;
+    const mapped = mapCandidate(candidate);
+    const headerRejections = [
+      !mapped.validBounds ? "invalid-or-out-of-image-bounds" : "",
+      !confidenceAccepted ? "confidence-below-floor" : "",
+      !diagnostics.windowMapping.verified ? "OpenObsidian screenshot/window mapping is not verified" : "",
+      diagnostics.windowMapping.verified && mapped.insideOpenObsidianWindow !== true ? "header is outside the OpenObsidian window" : "",
+    ].filter(Boolean);
+    return {
+      diagnostic: {
+        text: candidate.text,
+        confidence: candidate.confidence,
+        boundingBox: candidate.boundingBox,
+        validBounds: mapped.validBounds,
+        imageBounds: mapped.imageBounds,
+        ocrBounds: mapped.ocrBounds,
+        insideOpenObsidianWindow: mapped.insideOpenObsidianWindow,
+        headerMatch,
+        exactLabelMatch,
+        confidenceAccepted,
+        headerCandidate: headerMatch
+          ? {qualifies: headerRejections.length === 0, rejection: headerRejections.length === 0 ? null : headerRejections.join(", ")}
+          : null,
+        labelCandidate: {
+          exactTextMatch: exactLabelMatch,
+          belowHeader: null,
+          withinHeaderHorizontalSpan: null,
+          inExpectedFormRow: null,
+          qualifies: false,
+          rejection: exactLabelMatch ? null : "text-is-not-an-exact-normalized-label-match",
+        },
+    } satisfies CanvasInputLabelVisionCandidateDiagnostic,
+      mapped,
+    };
+  });
+  const headerCandidates = provisional.filter((entry) => entry.diagnostic.headerMatch);
+  const eligibleHeaders = headerCandidates.filter((entry) => entry.diagnostic.headerCandidate?.qualifies === true
+    && entry.mapped.insideOpenObsidianWindow === true
+    && diagnostics.windowMapping.verified);
+  diagnostics.rawHeaderMatchCount = headerCandidates.length;
+  // A header does not count as qualified unless the raw OCR observation itself
+  // is unique. Keep the preliminary observations and their rejection reasons
+  // below so duplicate detections remain visible in the report.
+  diagnostics.qualifiedHeaderCount = headerCandidates.length === 1 ? eligibleHeaders.length : 0;
+  const uniqueHeader = headerCandidates.length === 1 && eligibleHeaders.length === 1 ? eligibleHeaders[0]! : null;
+  if (uniqueHeader?.mapped.imageBounds && uniqueHeader.mapped.ocrBounds) {
+    diagnostics.selectedHeaderImageBounds = uniqueHeader.mapped.imageBounds;
+    diagnostics.selectedHeaderOcrBounds = uniqueHeader.mapped.ocrBounds;
+  }
+  if (headerCandidates.length !== 1 || eligibleHeaders.length !== 1) {
+    for (const entry of headerCandidates) {
+      const decision = entry.diagnostic.headerCandidate;
+      if (!decision) continue;
+      decision.qualifies = false;
+      decision.rejection = [
+        decision.rejection,
+        headerCandidates.length !== 1 ? "raw Load one text match is not unique" : "",
+        eligibleHeaders.length !== 1 ? "Load one header did not pass confidence, bounds, and window gates" : "",
+      ].filter(Boolean).join(", ");
+    }
+  }
+
+  const rawLabelCandidates = provisional.filter((entry) => entry.diagnostic.exactLabelMatch);
+  diagnostics.rawLabelMatchCount = rawLabelCandidates.length;
+  const acceptedLabels: typeof provisional = [];
+  for (const entry of rawLabelCandidates) {
+    const bounds = entry.mapped.imageBounds;
+    const headerBounds = uniqueHeader?.mapped.imageBounds ?? null;
+    const belowHeader = bounds && headerBounds
+      ? bounds.top >= headerBounds.top + headerBounds.height
+      : null;
+    const rowGap = bounds && headerBounds && belowHeader
+      ? bounds.top - (headerBounds.top + headerBounds.height)
+      : null;
+    const withinHeaderHorizontalSpan = bounds && headerBounds
+      ? bounds.left >= headerBounds.left && bounds.left + bounds.width <= headerBounds.left + headerBounds.width
+      : null;
+    // The label must occupy the first form row directly below the instruction,
+    // within its horizontal span and at a gap measured relative to OCR line heights.
+    const inExpectedFormRow = bounds && headerBounds && rowGap !== null && withinHeaderHorizontalSpan !== null
+      ? rowGap <= Math.max(bounds.height, headerBounds.height) * 2.5 && withinHeaderHorizontalSpan
+      : null;
+    const rejections = [
+      !entry.mapped.validBounds ? "invalid-or-out-of-image-bounds" : "",
+      !entry.diagnostic.confidenceAccepted ? "confidence-below-floor" : "",
+      !diagnostics.windowMapping.verified ? "OpenObsidian screenshot/window mapping is not verified" : "",
+      diagnostics.windowMapping.verified && entry.mapped.insideOpenObsidianWindow !== true ? "label is outside the OpenObsidian window" : "",
+      rawLabelCandidates.length !== 1 ? "raw exact label text match is not unique" : "",
+      !uniqueHeader ? "Load one header is not uniquely detected" : "",
+      uniqueHeader && !belowHeader ? "label is not below the Load one header" : "",
+      uniqueHeader && belowHeader && !withinHeaderHorizontalSpan ? "label is outside the Load one header's horizontal form span" : "",
+      uniqueHeader && belowHeader && !inExpectedFormRow ? "label is outside the expected form row below the header" : "",
+    ].filter(Boolean);
+    const qualifies = rejections.length === 0;
+    entry.diagnostic.labelCandidate = {
+      exactTextMatch: true,
+      belowHeader,
+      withinHeaderHorizontalSpan,
+      inExpectedFormRow,
+      qualifies,
+      rejection: qualifies ? null : rejections.join(", "),
+    };
+    if (qualifies) acceptedLabels.push(entry);
+  }
+  diagnostics.candidates = provisional.map((entry) => entry.diagnostic);
+  diagnostics.acceptedLabelCount = acceptedLabels.length;
+  const selectedLabel = acceptedLabels.length === 1 ? acceptedLabels[0]! : null;
+  if (selectedLabel?.mapped.imageBounds && selectedLabel.mapped.ocrBounds) {
+    diagnostics.selectedLabelImageBounds = selectedLabel.mapped.imageBounds;
+    diagnostics.selectedLabelOcrBounds = selectedLabel.mapped.ocrBounds;
+  }
+  if (eligibleHeaders.length !== 1) {
+    diagnostics.error = `expected exactly one raw and qualified macOS Vision "Load one" header at confidence >= ${confidenceFloor}; raw_matches=${headerCandidates.length}; qualified=${eligibleHeaders.length}; window_mapping=${diagnostics.windowMapping.error || "verified"}`;
+  } else if (headerCandidates.length !== 1) {
+    diagnostics.error = `expected exactly one raw macOS Vision "Load one" header; raw_matches=${headerCandidates.length}; qualified=${eligibleHeaders.length}`;
+  } else if (acceptedLabels.length !== 1) {
+    diagnostics.error = `expected exactly one raw and accepted macOS Vision "Canvas edit text-card ID" label at confidence >= ${confidenceFloor} inside the OpenObsidian window and in the form row below the unique header; raw_matches=${rawLabelCandidates.length}; accepted=${acceptedLabels.length}; window_mapping=${diagnostics.windowMapping.error || "verified"}`;
+  }
+  return {labelBoundsOcr: diagnostics.selectedLabelOcrBounds, diagnostics};
+}
+
 async function findCanvasInputTextInFocusedRawCrop(
   imagePath: string,
   label: OcrWordBounds,
@@ -13720,6 +14512,7 @@ async function findCanvasInputTextInFocusedRawCrop(
   scaleX: number,
   scaleY: number,
   imageDimensions: {width: number; height: number},
+  windowMapping?: CanvasInputLabelVisionDiagnostics["windowMapping"],
 ): Promise<{
   candidate: OcrWordBounds | null;
   source: "focused-processed-crop-tesseract" | "focused-vision-crop" | null;
@@ -13733,6 +14526,17 @@ async function findCanvasInputTextInFocusedRawCrop(
   const cropBounds = {left, top, width: right - left, height: bottom - top};
   if (cropBounds.width <= 0 || cropBounds.height <= 0) {
     throw new Error(`The focused ${controlName} OCR crop is outside the screenshot: crop=${JSON.stringify(cropBounds)}; image=${imageDimensions.width}x${imageDimensions.height}`);
+  }
+  if (windowMapping) {
+    const windowBounds = windowMapping.windowBoundsImage;
+    const cropInsideWindow = windowMapping.verified && windowBounds !== null
+      && cropBounds.left >= windowBounds.left
+      && cropBounds.top >= windowBounds.top
+      && cropBounds.left + cropBounds.width <= windowBounds.left + windowBounds.width
+      && cropBounds.top + cropBounds.height <= windowBounds.top + windowBounds.height;
+    if (!cropInsideWindow) {
+      throw new Error(`The focused ${controlName} OCR crop is not fully contained in the verified OpenObsidian window: mapping=${JSON.stringify(windowMapping)}; crop=${JSON.stringify(cropBounds)}`);
+    }
   }
 
   const fileSafeName = controlName.toLowerCase().replace(/[^a-z0-9]+/g, "-");
@@ -13751,6 +14555,8 @@ async function findCanvasInputTextInFocusedRawCrop(
   }
 
   const attempts: NonNullable<CanvasInputFieldLayout["fieldSearchCrop"]>["attempts"] = [];
+  const strictMappingCandidates: OcrWordBounds[][] = [];
+  let strictMappingAmbiguity = false;
   const search: NonNullable<CanvasInputFieldLayout["fieldSearchCrop"]> = {
     rawCropPath: relative(reportDirectory, rawCropPath),
     ocrCropPath: relative(reportDirectory, ocrCropPath),
@@ -13780,7 +14586,47 @@ async function findCanvasInputTextInFocusedRawCrop(
       .filter(Boolean)
       .join(" ");
     attempts.push({engine: "tesseract", pageSegmentationMode, text, candidates: mappedCandidates, matchingCandidates});
-    if (matchingCandidates.length === 1) return {candidate: matchingCandidates[0]!, source: "focused-processed-crop-tesseract", search};
+    if (windowMapping) {
+      if (matchingCandidates.length > 1) strictMappingAmbiguity = true;
+      strictMappingCandidates.push(matchingCandidates);
+    } else if (matchingCandidates.length === 1) {
+      return {candidate: matchingCandidates[0]!, source: "focused-processed-crop-tesseract", search};
+    }
+  }
+  if (windowMapping) {
+    const uniqueCandidates = strictMappingCandidates.flatMap((candidates) => candidates.length === 1 ? candidates : []);
+    const conflictingCandidates = uniqueCandidates.some((candidate, index) => uniqueCandidates.slice(index + 1).some((other) => {
+      const candidateImage: OcrWordBounds = {
+        ...candidate,
+        left: candidate.left / scaleX,
+        top: candidate.top / scaleY,
+        width: candidate.width / scaleX,
+        height: candidate.height / scaleY,
+      };
+      const otherImage: OcrWordBounds = {
+        ...other,
+        left: other.left / scaleX,
+        top: other.top / scaleY,
+        width: other.width / scaleX,
+        height: other.height / scaleY,
+      };
+      return !canvasImageBoundsApproximatelySame(candidateImage, otherImage);
+    }));
+    if (!strictMappingAmbiguity && !conflictingCandidates && uniqueCandidates.length > 0) {
+      const selectedCandidate = uniqueCandidates[0]!;
+      const windowBounds = windowMapping.windowBoundsImage!;
+      const candidateImage = {
+        left: selectedCandidate.left / scaleX,
+        top: selectedCandidate.top / scaleY,
+        width: selectedCandidate.width / scaleX,
+        height: selectedCandidate.height / scaleY,
+      };
+      const insideWindow = candidateImage.left >= windowBounds.left
+        && candidateImage.top >= windowBounds.top
+        && candidateImage.left + candidateImage.width <= windowBounds.left + windowBounds.width
+        && candidateImage.top + candidateImage.height <= windowBounds.top + windowBounds.height;
+      if (insideWindow) return {candidate: selectedCandidate, source: "focused-processed-crop-tesseract", search};
+    }
   }
 
   // Vision is a narrowly-scoped fallback for the observed macOS case where
@@ -13885,11 +14731,240 @@ function canvasInputCandidateMatchesLabel(
     && candidateCenterX >= labelRight - 4 * scaleX;
 }
 
+function normalizeCanvasEditTextCardIdHint(value: string): string {
+  const normalized = value
+    .toLocaleLowerCase("en-US")
+    .replace(/[‐‑‒–—−]/g, "-")
+    .replace(/\s*-\s*/g, "-")
+    .replace(/\s+/g, " ")
+    .trim();
+  return normalized === "text card id" ? "text-card-id" : normalized;
+}
+
+function canvasOcrBoundsToMacOSCandidateDiagnostic(
+  boundsOcr: OcrWordBounds,
+  imageDimensions: {width: number; height: number},
+  ocrDimensions: {width: number; height: number},
+  windowMapping: CanvasInputLabelVisionDiagnostics["windowMapping"],
+): CanvasInputMacOSTesserCandidateDiagnostic {
+  const scaleX = ocrDimensions.width / imageDimensions.width;
+  const scaleY = ocrDimensions.height / imageDimensions.height;
+  const boundsImage: OcrWordBounds = {
+    text: boundsOcr.text,
+    left: boundsOcr.left / scaleX,
+    top: boundsOcr.top / scaleY,
+    width: boundsOcr.width / scaleX,
+    height: boundsOcr.height / scaleY,
+  };
+  const validBounds = [boundsImage.left, boundsImage.top, boundsImage.width, boundsImage.height].every(Number.isFinite)
+    && boundsImage.left >= 0 && boundsImage.top >= 0 && boundsImage.width > 0 && boundsImage.height > 0
+    && boundsImage.left + boundsImage.width <= imageDimensions.width
+    && boundsImage.top + boundsImage.height <= imageDimensions.height;
+  const windowBounds = windowMapping.windowBoundsImage;
+  const insideOpenObsidianWindow = validBounds && windowBounds
+    ? boundsImage.left >= windowBounds.left
+      && boundsImage.top >= windowBounds.top
+      && boundsImage.left + boundsImage.width <= windowBounds.left + windowBounds.width
+      && boundsImage.top + boundsImage.height <= windowBounds.top + windowBounds.height
+    : null;
+  const rejections = [
+    !validBounds ? "invalid-or-out-of-image-bounds" : "",
+    !windowMapping.verified ? "OpenObsidian screenshot/window mapping is not verified" : "",
+    windowMapping.verified && insideOpenObsidianWindow !== true ? "candidate is outside the OpenObsidian window" : "",
+  ].filter(Boolean);
+  return {
+    text: boundsOcr.text,
+    boundsOcr,
+    boundsImage,
+    insideOpenObsidianWindow,
+    accepted: rejections.length === 0,
+    rejection: rejections.length === 0 ? null : rejections.join(", "),
+  };
+}
+
+function findCanvasEditLoadOneTesseractHeaderCandidates(tsv: string): OcrWordBounds[] {
+  const wordsByLine = new Map<string, OcrWordBounds[]>();
+  for (const line of tsv.split(/\r?\n/).slice(1)) {
+    const columns = line.split("\t");
+    if (columns[0] !== "5" || columns.length < 12) continue;
+    const text = (columns[11] ?? "").trim();
+    if (!text) continue;
+    const [left, top, width, height] = columns.slice(6, 10).map(Number);
+    if (![left, top, width, height].every(Number.isFinite)) continue;
+    const lineId = columns.slice(1, 5).join(":");
+    const words = wordsByLine.get(lineId) ?? [];
+    words.push({text, left, top, width, height});
+    wordsByLine.set(lineId, words);
+  }
+
+  const candidates: OcrWordBounds[] = [];
+  for (const words of wordsByLine.values()) {
+    const normalized = words.map((word) => word.text.toLocaleLowerCase("en-US").replace(/[^a-z0-9]/g, ""));
+    for (let index = 0; index < normalized.length; index += 1) {
+      const isHeaderObservation = normalized[index] === "loadone"
+        || (normalized[index] === "load" && normalized[index + 1] === "one");
+      if (!isHeaderObservation) continue;
+      const left = Math.min(...words.map((word) => word.left));
+      const top = Math.min(...words.map((word) => word.top));
+      const right = Math.max(...words.map((word) => word.left + word.width));
+      const bottom = Math.max(...words.map((word) => word.top + word.height));
+      candidates.push({
+        text: words.map((word) => word.text).join(" "),
+        left,
+        top,
+        width: right - left,
+        height: bottom - top,
+      });
+    }
+  }
+  return candidates;
+}
+
+function findCanvasEditTextCardIdTesseractLabelCandidates(tsv: string): OcrWordBounds[] {
+  return findOcrJoinedPhraseBoundsCandidates(tsv, "Canvas edit text-card ID", 0, 1)
+    .filter((candidate) => normalizeCanvasEditTextCardIdLabel(candidate.text) === "canvas edit text-card id");
+}
+
+function findCanvasEditTextCardIdTesseractFieldCandidates(
+  tsv: string,
+  targetFieldText: string,
+): OcrWordBounds[] {
+  const expected = normalizeCanvasEditTextCardIdHint(targetFieldText);
+  return findOcrJoinedPhraseBoundsCandidates(tsv, targetFieldText, 0, 1)
+    .filter((candidate) => normalizeCanvasEditTextCardIdHint(candidate.text) === expected);
+}
+
+function canvasImageBoundsApproximatelySame(left: OcrWordBounds, right: OcrWordBounds): boolean {
+  const leftCenter = {x: left.left + left.width / 2, y: left.top + left.height / 2};
+  const rightCenter = {x: right.left + right.width / 2, y: right.top + right.height / 2};
+  const tolerance = Math.max(4, Math.max(left.height, right.height) * 0.5);
+  return Math.abs(leftCenter.x - rightCenter.x) <= tolerance
+    && Math.abs(leftCenter.y - rightCenter.y) <= tolerance
+    && Math.abs(left.width - right.width) <= Math.max(8, Math.max(left.width, right.width) * 0.2)
+    && Math.abs(left.height - right.height) <= Math.max(4, Math.max(left.height, right.height) * 0.5);
+}
+
+function evaluateCanvasEditTextCardIdTesseractLabelPass(
+  tsv: string,
+  pageSegmentationMode: string,
+  imageDimensions: {width: number; height: number},
+  ocrDimensions: {width: number; height: number},
+  windowMapping: CanvasInputLabelVisionDiagnostics["windowMapping"],
+): {
+  diagnostics: CanvasInputMacOSTesserPassDiagnostics;
+  labelBoundsOcr: OcrWordBounds | null;
+} {
+  const rawHeaders = findCanvasEditLoadOneTesseractHeaderCandidates(tsv);
+  const headerDiagnostics = rawHeaders.map((candidate) =>
+    canvasOcrBoundsToMacOSCandidateDiagnostic(candidate, imageDimensions, ocrDimensions, windowMapping));
+  const eligibleHeaders = rawHeaders.length === 1 && headerDiagnostics[0]?.accepted
+    ? [headerDiagnostics[0]]
+    : [];
+  if (rawHeaders.length !== 1) {
+    for (const candidate of headerDiagnostics) {
+      candidate.accepted = false;
+      candidate.rejection = [candidate.rejection, "raw Load one header observation is not unique"].filter(Boolean).join(", ");
+    }
+  }
+  const uniqueHeader = eligibleHeaders.length === 1 ? eligibleHeaders[0]! : null;
+  const rawLabels = findCanvasEditTextCardIdTesseractLabelCandidates(tsv);
+  const labelDiagnostics = rawLabels.map((candidate) =>
+    canvasOcrBoundsToMacOSCandidateDiagnostic(candidate, imageDimensions, ocrDimensions, windowMapping));
+  const labelBoundsOcr = rawLabels.length === 1 ? rawLabels[0]! : null;
+  const qualifiedLabels = labelDiagnostics.filter((candidate) => {
+    const bounds = candidate.boundsImage;
+    const headerBounds = uniqueHeader?.boundsImage ?? null;
+    const belowHeader = bounds && headerBounds && bounds.top >= headerBounds.top + headerBounds.height;
+    const rowGap = bounds && headerBounds && belowHeader
+      ? bounds.top - (headerBounds.top + headerBounds.height)
+      : null;
+    const withinHeaderHorizontalSpan = bounds && headerBounds
+      ? bounds.left >= headerBounds.left && bounds.left + bounds.width <= headerBounds.left + headerBounds.width
+      : false;
+    const inExpectedFormRow = bounds && headerBounds && rowGap !== null
+      ? rowGap <= Math.max(bounds.height, headerBounds.height) * 2.5 && withinHeaderHorizontalSpan
+      : false;
+    const rejections = [
+      rawLabels.length !== 1 ? "raw exact Canvas edit text-card ID observation is not unique" : "",
+      !candidate.accepted ? candidate.rejection || "candidate bounds are invalid" : "",
+      !uniqueHeader ? "Load one header is not uniquely detected inside the OpenObsidian window" : "",
+      uniqueHeader && !belowHeader ? "label is not below the Load one header" : "",
+      uniqueHeader && belowHeader && !withinHeaderHorizontalSpan ? "label is outside the header horizontal form span" : "",
+      uniqueHeader && belowHeader && !inExpectedFormRow ? "label is outside the expected form row below the header" : "",
+    ].filter(Boolean);
+    const qualifies = rejections.length === 0;
+    candidate.accepted = qualifies;
+    candidate.rejection = qualifies ? null : rejections.join(", ");
+    return qualifies;
+  });
+  const error = rawHeaders.length !== 1 || eligibleHeaders.length !== 1
+    ? `header raw=${rawHeaders.length}, qualified=${eligibleHeaders.length}`
+    : rawLabels.length !== 1 || qualifiedLabels.length !== 1
+      ? `label raw=${rawLabels.length}, qualified=${qualifiedLabels.length}`
+      : null;
+  return {
+    diagnostics: {
+      pageSegmentationMode,
+      rawHeaderMatchCount: rawHeaders.length,
+      qualifiedHeaderCount: eligibleHeaders.length,
+      headerCandidates: headerDiagnostics,
+      rawLabelMatchCount: rawLabels.length,
+      qualifiedLabelCount: qualifiedLabels.length,
+      labelCandidates: labelDiagnostics,
+      rawFieldMatchCount: 0,
+      qualifiedFieldCount: 0,
+      fieldCandidates: [],
+      error,
+    },
+    labelBoundsOcr: qualifiedLabels.length === 1 ? labelBoundsOcr : null,
+  };
+}
+
+function evaluateCanvasEditTextCardIdTesseractFieldPass(
+  tsv: string,
+  targetFieldText: string,
+  labelBoundsOcr: OcrWordBounds,
+  imageDimensions: {width: number; height: number},
+  ocrDimensions: {width: number; height: number},
+  windowMapping: CanvasInputLabelVisionDiagnostics["windowMapping"],
+): {rawCount: number; qualifiedCount: number; candidates: CanvasInputMacOSTesserCandidateDiagnostic[]; fieldBoundsOcr: OcrWordBounds | null} {
+  const scaleX = ocrDimensions.width / imageDimensions.width;
+  const scaleY = ocrDimensions.height / imageDimensions.height;
+  const allRawCandidates = findCanvasEditTextCardIdTesseractFieldCandidates(tsv, targetFieldText);
+  const labelRelativeCandidates = allRawCandidates.filter((candidate) =>
+    canvasInputCandidateMatchesLabel(candidate, labelBoundsOcr, "Canvas edit text-card ID", scaleX, scaleY));
+  const candidates = allRawCandidates.map((candidate) =>
+    canvasOcrBoundsToMacOSCandidateDiagnostic(candidate, imageDimensions, ocrDimensions, windowMapping));
+  for (let index = 0; index < candidates.length; index += 1) {
+    const candidate = candidates[index]!;
+    const isLabelRelative = canvasInputCandidateMatchesLabel(allRawCandidates[index]!, labelBoundsOcr, "Canvas edit text-card ID", scaleX, scaleY);
+    if (!isLabelRelative) {
+      candidate.accepted = false;
+      candidate.rejection = [candidate.rejection, "candidate is outside the configured label-relative field region"].filter(Boolean).join(", ");
+    } else if (labelRelativeCandidates.length !== 1) {
+      candidate.accepted = false;
+      candidate.rejection = [candidate.rejection, "raw label-relative exact field observation is not unique"].filter(Boolean).join(", ");
+    }
+  }
+  const selectedIndex = labelRelativeCandidates.length === 1
+    ? allRawCandidates.indexOf(labelRelativeCandidates[0]!)
+    : -1;
+  const selected = selectedIndex >= 0 && candidates[selectedIndex]?.accepted ? candidates[selectedIndex] : undefined;
+  const accepted = selected ? [selected] : [];
+  return {
+    rawCount: labelRelativeCandidates.length,
+    qualifiedCount: accepted.length,
+    candidates,
+    fieldBoundsOcr: accepted.length === 1 ? labelRelativeCandidates[0]! : null,
+  };
+}
+
 async function locateCanvasTextInput(
   capture: Awaited<ReturnType<typeof captureOpenObsidianScreenshot>>,
   controlName: string,
   expectedInputValue?: string,
   allowLabelAnchoredReadbackCrop = false,
+  macOSChild?: ChildProcess,
 ): Promise<CanvasInputFieldLayout> {
   const coordinateSpace = process.platform === "darwin" ? "desktop" : "window";
   const imagePath = coordinateSpace === "desktop" ? capture.pngPath : capture.windowPngPath;
@@ -13907,7 +14982,11 @@ async function locateCanvasTextInput(
     throw new Error(`Could not map the ${controlName} label from OCR pixels to the screenshot`);
   }
 
-  const tsvCandidates = [runTesseractTsv(ocrImagePath, "6"), runTesseractTsv(ocrImagePath, "11")];
+  const tesseractPasses = [
+    {pageSegmentationMode: "6", tsv: runTesseractTsv(ocrImagePath, "6")},
+    {pageSegmentationMode: "11", tsv: runTesseractTsv(ocrImagePath, "11")},
+  ];
+  const tsvCandidates = tesseractPasses.map((pass) => pass.tsv);
   const labelPhrases = controlName.includes("text-card")
     ? [
       controlName,
@@ -13923,48 +15002,207 @@ async function locateCanvasTextInput(
   let fieldTextBoundsOcr: OcrWordBounds | null = null;
   let fieldTextOcrSource: CanvasInputFieldLayout["fieldTextOcrSource"] = "label-offset-fallback";
   let fieldSearchCrop: CanvasInputFieldLayout["fieldSearchCrop"] = null;
+  let labelVision: CanvasInputLabelVisionDiagnostics | null = null;
+  let macOSOCRDiagnostics: CanvasInputMacOSTesserDiagnostics | null = null;
   let fieldSearchFailure = "";
   let labelAnchoredReadbackCropUsed = false;
-  for (const tsv of tsvCandidates) {
-    // The instruction above the form repeats these labels. Bound the search below its
-    // opening words so OCR cannot mistake the instruction for a field label.
-    const instructionBounds = findOcrPhraseBounds(tsv, "Enter a", 0)
-      ?? findOcrPhraseBounds(tsv, "Preview and confirm", 0)
-      ?? findOcrPhraseBounds(tsv, "Load one", 0);
-    if (!instructionBounds) continue;
-    const candidateFormRowMinimumTop = instructionBounds.top + instructionBounds.height;
-    let candidateLabelBounds: OcrWordBounds | null = null;
-    for (const labelPhrase of labelPhrases) {
-      candidateLabelBounds = findOcrPhraseBounds(tsv, labelPhrase, candidateFormRowMinimumTop, true);
-      candidateLabelBounds ??= findOcrJoinedPhraseBounds(tsv, labelPhrase, candidateFormRowMinimumTop, 1);
-      if (candidateLabelBounds) break;
-    }
-    if (!candidateLabelBounds) continue;
-    const locatedCandidateLabelBounds = candidateLabelBounds;
-    fieldSearchLabelBoundsOcr ??= locatedCandidateLabelBounds;
-
-    const fieldTextCandidates = coordinateSpace === "desktop" && targetFieldText
-      ? findOcrJoinedPhraseBoundsCandidates(tsv, targetFieldText, candidateFormRowMinimumTop, 1)
-        .filter((candidate) => canvasInputCandidateMatchesLabel(candidate, locatedCandidateLabelBounds, controlName, scaleX, scaleY))
-      : [];
-    if (coordinateSpace === "desktop" && targetFieldText && fieldTextCandidates.length !== 1) {
-      fieldSearchFailure = `Could not uniquely locate the ${controlName} field text in its label-relative OCR region: candidate_count=${fieldTextCandidates.length}; candidates=${JSON.stringify(fieldTextCandidates)}; label=${JSON.stringify(locatedCandidateLabelBounds)}; screenshot=${relative(reportDirectory, imagePath)}`;
-      if (allowLabelAnchoredReadbackCrop && fieldTextCandidates.length === 0) {
-        // A fresh readback may use the unique visible label and its configured
-        // field rectangle to crop the value even when OCR cannot first decode
-        // the value. Exact OCR and clipboard checks remain mandatory below.
-        labelBoundsOcr = locatedCandidateLabelBounds;
-        labelAnchoredReadbackCropUsed = true;
-        break;
-      }
-      continue;
-    }
-    labelBoundsOcr = locatedCandidateLabelBounds;
-    fieldTextBoundsOcr = fieldTextCandidates[0] ?? null;
-    if (fieldTextBoundsOcr) fieldTextOcrSource = "full-screenshot-ocr";
-    break;
+  const strictMacOSCanvasEditId = coordinateSpace === "desktop" && controlName === "Canvas edit text-card ID";
+  let strictMacOSHardFailure = false;
+  let strictMacOSWindowMapping: CanvasInputLabelVisionDiagnostics["windowMapping"] | null = null;
+  if (strictMacOSCanvasEditId && !targetFieldText) {
+    strictMacOSHardFailure = true;
+    fieldSearchFailure = "macOS Canvas edit text-card ID OCR requires a configured expected field hint";
   }
-  if (coordinateSpace === "desktop" && targetFieldText && !fieldTextBoundsOcr && fieldSearchLabelBoundsOcr) {
+  if (strictMacOSCanvasEditId && targetFieldText) {
+    const failedMapping = (error: string): CanvasInputLabelVisionDiagnostics["windowMapping"] => ({
+      verified: false,
+      displayBounds: null,
+      displayPixelDimensions: null,
+      windowIdentity: null,
+      screenshotWindowId: null,
+      windowBounds: null,
+      accessibilityWindowBounds: null,
+      windowScreenshotDimensions: null,
+      windowCaptureShadowExcluded: true,
+      windowScreenshotDimensionTolerancePixels: 2,
+      windowBoundsImage: null,
+      screenshotScale: null,
+      error,
+    });
+    try {
+      const windowScreenshotDimensions = await pngDimensions(capture.windowPngPath);
+      strictMacOSWindowMapping = await readMacOSCanvasEditorScreenshotWindowMapping(macOSChild, imageDimensions, windowScreenshotDimensions);
+    } catch (error) {
+      strictMacOSWindowMapping = failedMapping(error instanceof Error ? error.message : String(error));
+    }
+    strictMacOSWindowMapping = bindMacOSCaptureGeometryToWindowMapping(
+      strictMacOSWindowMapping,
+      capture.macOSWindowCaptureBinding,
+    );
+    macOSOCRDiagnostics = {windowMapping: strictMacOSWindowMapping, passes: [], conflictingHeaderLocations: [], error: null};
+    if (!strictMacOSWindowMapping.verified) {
+      strictMacOSHardFailure = true;
+      fieldSearchFailure = `macOS full-screenshot OCR was rejected because the OpenObsidian window mapping is not verified: ${strictMacOSWindowMapping.error || "unknown mapping error"}`;
+      macOSOCRDiagnostics.error = fieldSearchFailure;
+    } else {
+      const passResults = tesseractPasses.map((pass) => ({
+        pass,
+        ...evaluateCanvasEditTextCardIdTesseractLabelPass(
+          pass.tsv,
+          pass.pageSegmentationMode,
+          imageDimensions,
+          ocrDimensions,
+          strictMacOSWindowMapping!,
+        ),
+      }));
+      macOSOCRDiagnostics.passes = passResults.map((result) => result.diagnostics);
+      const rawHeaders = passResults.flatMap((result) => result.diagnostics.headerCandidates);
+      const rawLabels = passResults.flatMap((result) => result.diagnostics.labelCandidates);
+      const acceptedLabels = passResults.flatMap((result) => result.labelBoundsOcr
+        ? [{boundsOcr: result.labelBoundsOcr, boundsImage: result.diagnostics.labelCandidates[0]!.boundsImage}]
+        : []);
+      const ambiguousHeaders = passResults.some((result) => result.diagnostics.rawHeaderMatchCount > 1);
+      const ambiguousLabels = passResults.some((result) => result.diagnostics.rawLabelMatchCount > 1);
+      const rejectedVisibleHeader = rawHeaders.some((candidate) => candidate.insideOpenObsidianWindow !== true);
+      const rejectedVisibleLabel = rawLabels.some((candidate) => candidate.insideOpenObsidianWindow !== true);
+      const rejectedFormRowLabel = passResults.some((result) => result.diagnostics.rawHeaderMatchCount === 1
+        && result.diagnostics.qualifiedHeaderCount === 1
+        && result.diagnostics.rawLabelMatchCount === 1
+        && result.diagnostics.qualifiedLabelCount !== 1);
+      const conflictingRawLabels = rawLabels.some((candidate, index) => rawLabels.slice(index + 1)
+        .some((other) => !canvasImageBoundsApproximatelySame(candidate.boundsImage, other.boundsImage)));
+      const conflictingHeaderLocations = passResults.flatMap((leftResult, leftIndex) =>
+        passResults.slice(leftIndex + 1).flatMap((rightResult) =>
+          leftResult.diagnostics.headerCandidates.flatMap((leftCandidate) =>
+            rightResult.diagnostics.headerCandidates
+              .filter((rightCandidate) => !canvasImageBoundsApproximatelySame(leftCandidate.boundsImage, rightCandidate.boundsImage))
+              .map((rightCandidate) => ({
+                firstPageSegmentationMode: leftResult.pass.pageSegmentationMode,
+                secondPageSegmentationMode: rightResult.pass.pageSegmentationMode,
+                firstBoundsImage: leftCandidate.boundsImage,
+                secondBoundsImage: rightCandidate.boundsImage,
+              }))
+          )
+        )
+      );
+      macOSOCRDiagnostics.conflictingHeaderLocations = conflictingHeaderLocations;
+      const conflictingLabels = acceptedLabels.some((candidate, index) => acceptedLabels.slice(index + 1)
+        .some((other) => !canvasImageBoundsApproximatelySame(candidate.boundsImage, other.boundsImage)));
+      if (ambiguousHeaders || ambiguousLabels || rejectedVisibleHeader || rejectedVisibleLabel || rejectedFormRowLabel || conflictingRawLabels || conflictingLabels || conflictingHeaderLocations.length > 0) {
+        strictMacOSHardFailure = true;
+        fieldSearchFailure = `macOS Tesseract label/header observations were ambiguous or outside the expected OpenObsidian form row: raw_header_matches_by_pass=${JSON.stringify(passResults.map((result) => result.diagnostics.rawHeaderMatchCount))}; qualified_headers_by_pass=${JSON.stringify(passResults.map((result) => result.diagnostics.qualifiedHeaderCount))}; conflicting_header_locations=${JSON.stringify(conflictingHeaderLocations)}; raw_label_matches_by_pass=${JSON.stringify(passResults.map((result) => result.diagnostics.rawLabelMatchCount))}; qualified_labels_by_pass=${JSON.stringify(passResults.map((result) => result.diagnostics.qualifiedLabelCount))}; conflicting_raw_labels=${conflictingRawLabels}; conflicting_unique_labels=${conflictingLabels}; candidates=${JSON.stringify(macOSOCRDiagnostics.passes)}`;
+        macOSOCRDiagnostics.error = fieldSearchFailure;
+      } else if (acceptedLabels.length > 0) {
+        fieldSearchLabelBoundsOcr = acceptedLabels[0]!.boundsOcr;
+      }
+
+      if (!strictMacOSHardFailure && !fieldSearchLabelBoundsOcr) {
+        const visionLabel = await locateCanvasEditTextCardIdLabelWithVision(
+          imagePath,
+          capture.windowPngPath,
+          imageDimensions,
+          ocrDimensions,
+          strictMacOSWindowMapping,
+        );
+        labelVision = visionLabel.diagnostics;
+        fieldSearchLabelBoundsOcr = visionLabel.labelBoundsOcr;
+        if (!fieldSearchLabelBoundsOcr) {
+          strictMacOSHardFailure = true;
+          fieldSearchFailure = `macOS full-screenshot Vision could not establish the exact ${controlName} label: ${labelVision.error || "no unique accepted label"}`;
+          macOSOCRDiagnostics.error = fieldSearchFailure;
+        }
+      }
+
+      if (!strictMacOSHardFailure && fieldSearchLabelBoundsOcr) {
+        const fieldResults = tesseractPasses.map((pass, index) => ({
+          index,
+          ...evaluateCanvasEditTextCardIdTesseractFieldPass(
+            pass.tsv,
+            targetFieldText,
+            fieldSearchLabelBoundsOcr!,
+            imageDimensions,
+            ocrDimensions,
+            strictMacOSWindowMapping!,
+          ),
+        }));
+        for (const result of fieldResults) {
+          const passDiagnostics = macOSOCRDiagnostics.passes[result.index]!;
+          passDiagnostics.rawFieldMatchCount = result.rawCount;
+          passDiagnostics.qualifiedFieldCount = result.qualifiedCount;
+          passDiagnostics.fieldCandidates = result.candidates;
+          if (result.rawCount !== result.qualifiedCount || result.rawCount > 1) {
+            passDiagnostics.error = [passDiagnostics.error, `field raw=${result.rawCount}, qualified=${result.qualifiedCount}`].filter(Boolean).join("; ");
+          }
+        }
+        const rawFieldMatches = fieldResults.reduce((count, result) => count + result.rawCount, 0);
+        const acceptedFields = fieldResults.flatMap((result) => {
+          if (!result.fieldBoundsOcr) return [];
+          const acceptedCandidate = result.candidates.find((candidate) => candidate.accepted);
+          return acceptedCandidate
+            ? [{boundsOcr: result.fieldBoundsOcr, boundsImage: acceptedCandidate.boundsImage}]
+            : [];
+        });
+        const ambiguousFields = fieldResults.some((result) => result.rawCount > 1);
+        const rejectedVisibleField = fieldResults.some((result) => result.rawCount > 0 && result.qualifiedCount !== result.rawCount);
+        const conflictingFields = acceptedFields.some((candidate, index) => acceptedFields.slice(index + 1)
+          .some((other) => !canvasImageBoundsApproximatelySame(candidate.boundsImage, other.boundsImage)));
+        if (ambiguousFields || rejectedVisibleField || conflictingFields) {
+          strictMacOSHardFailure = true;
+          fieldSearchFailure = `macOS Tesseract field observations were ambiguous or outside the OpenObsidian field region/window: raw_field_matches_by_pass=${JSON.stringify(fieldResults.map((result) => result.rawCount))}; qualified_field_matches_by_pass=${JSON.stringify(fieldResults.map((result) => result.qualifiedCount))}; conflicting_unique_fields=${conflictingFields}; candidates=${JSON.stringify(macOSOCRDiagnostics.passes)}`;
+          macOSOCRDiagnostics.error = fieldSearchFailure;
+        } else if (acceptedFields.length > 0) {
+          fieldTextBoundsOcr = acceptedFields[0]!.boundsOcr;
+          labelBoundsOcr = fieldSearchLabelBoundsOcr;
+          fieldTextOcrSource = "full-screenshot-ocr";
+        } else {
+          fieldSearchFailure = `The unique ${controlName} label is inside the verified OpenObsidian window, but full-screenshot Tesseract found no unique label-relative field hint: raw_field_matches_by_pass=${JSON.stringify(fieldResults.map((result) => result.rawCount))}; label=${JSON.stringify(fieldSearchLabelBoundsOcr)}`;
+          if (allowLabelAnchoredReadbackCrop && rawFieldMatches === 0) {
+            labelBoundsOcr = fieldSearchLabelBoundsOcr;
+            labelAnchoredReadbackCropUsed = true;
+          }
+          macOSOCRDiagnostics.error = fieldSearchFailure;
+        }
+      }
+    }
+  } else if (!strictMacOSCanvasEditId) {
+    for (const tsv of tsvCandidates) {
+      // The instruction above the form repeats these labels. Bound the search below its
+      // opening words so OCR cannot mistake the instruction for a field label.
+      const instructionBounds = findOcrPhraseBounds(tsv, "Enter a", 0)
+        ?? findOcrPhraseBounds(tsv, "Preview and confirm", 0)
+        ?? findOcrPhraseBounds(tsv, "Load one", 0);
+      if (!instructionBounds) continue;
+      const candidateFormRowMinimumTop = instructionBounds.top + instructionBounds.height;
+      let candidateLabelBounds: OcrWordBounds | null = null;
+      for (const labelPhrase of labelPhrases) {
+        candidateLabelBounds = findOcrPhraseBounds(tsv, labelPhrase, candidateFormRowMinimumTop, true);
+        candidateLabelBounds ??= findOcrJoinedPhraseBounds(tsv, labelPhrase, candidateFormRowMinimumTop, 1);
+        if (candidateLabelBounds) break;
+      }
+      if (!candidateLabelBounds) continue;
+      const locatedCandidateLabelBounds = candidateLabelBounds;
+      fieldSearchLabelBoundsOcr ??= locatedCandidateLabelBounds;
+
+      const fieldTextCandidates = coordinateSpace === "desktop" && targetFieldText
+        ? findOcrJoinedPhraseBoundsCandidates(tsv, targetFieldText, candidateFormRowMinimumTop, 1)
+          .filter((candidate) => canvasInputCandidateMatchesLabel(candidate, locatedCandidateLabelBounds, controlName, scaleX, scaleY))
+        : [];
+      if (coordinateSpace === "desktop" && targetFieldText && fieldTextCandidates.length !== 1) {
+        fieldSearchFailure = `Could not uniquely locate the ${controlName} field text in its label-relative OCR region: candidate_count=${fieldTextCandidates.length}; candidates=${JSON.stringify(fieldTextCandidates)}; label=${JSON.stringify(locatedCandidateLabelBounds)}; screenshot=${relative(reportDirectory, imagePath)}`;
+        if (allowLabelAnchoredReadbackCrop && fieldTextCandidates.length === 0) {
+          labelBoundsOcr = locatedCandidateLabelBounds;
+          labelAnchoredReadbackCropUsed = true;
+          break;
+        }
+        continue;
+      }
+      labelBoundsOcr = locatedCandidateLabelBounds;
+      fieldTextBoundsOcr = fieldTextCandidates[0] ?? null;
+      if (fieldTextBoundsOcr) fieldTextOcrSource = "full-screenshot-ocr";
+      break;
+    }
+  }
+  if (coordinateSpace === "desktop" && !strictMacOSCanvasEditId && targetFieldText && !fieldTextBoundsOcr && fieldSearchLabelBoundsOcr && !labelAnchoredReadbackCropUsed) {
     const focusedSearch = await findCanvasInputTextInFocusedRawCrop(
       imagePath,
       fieldSearchLabelBoundsOcr,
@@ -13983,8 +15221,29 @@ async function locateCanvasTextInput(
       fieldSearchFailure = `Could not uniquely locate the ${controlName} field text in its label-relative OCR region: full_screenshot=${fieldSearchFailure || "no unique match"}; focused_crop=${JSON.stringify(fieldSearchCrop)}`;
     }
   }
+  if (strictMacOSCanvasEditId && targetFieldText && fieldSearchLabelBoundsOcr && !fieldTextBoundsOcr
+    && !labelAnchoredReadbackCropUsed && !strictMacOSHardFailure) {
+    const focusedSearch = await findCanvasInputTextInFocusedRawCrop(
+      imagePath,
+      fieldSearchLabelBoundsOcr,
+      controlName,
+      targetFieldText,
+      scaleX,
+      scaleY,
+      imageDimensions,
+      strictMacOSWindowMapping ?? undefined,
+    );
+    fieldSearchCrop = focusedSearch.search;
+    if (focusedSearch.candidate) {
+      labelBoundsOcr = fieldSearchLabelBoundsOcr;
+      fieldTextBoundsOcr = focusedSearch.candidate;
+      fieldTextOcrSource = focusedSearch.source ?? "focused-processed-crop-tesseract";
+    } else {
+      fieldSearchFailure = `Could not uniquely locate the ${controlName} field text in its label-relative OCR region: full_screenshot=${fieldSearchFailure || "no unique match"}; focused_crop=${JSON.stringify(fieldSearchCrop)}`;
+    }
+  }
   if (!labelBoundsOcr) {
-    if (fieldSearchFailure) throw new Error(fieldSearchFailure);
+    if (fieldSearchFailure) throw new Error(`${fieldSearchFailure}; label_vision=${labelVision ? JSON.stringify(labelVision) : "not-attempted"}; macos_tesseract=${macOSOCRDiagnostics ? JSON.stringify(macOSOCRDiagnostics) : "not-attempted"}; focused_field_search=${fieldSearchCrop ? JSON.stringify(fieldSearchCrop) : "not-attempted"}`);
     throw new Error(`Could not locate the visible ${controlName} label for screenshot-based input targeting: ${relative(reportDirectory, imagePath)}`);
   }
   // macOS AX often omits egui text fields even when they have a labelled_by
@@ -14020,6 +15279,17 @@ async function locateCanvasTextInput(
     || cropBounds.width <= 0 || cropBounds.height <= 0) {
     throw new Error(`The measured ${controlName} field center is outside the screenshot: center=(${centerX},${centerY}), image=${imageDimensions.width}x${imageDimensions.height}`);
   }
+  if (strictMacOSCanvasEditId && strictMacOSWindowMapping) {
+    const windowBounds = strictMacOSWindowMapping.windowBoundsImage;
+    const cropInsideWindow = strictMacOSWindowMapping.verified && windowBounds !== null
+      && cropBounds.left >= windowBounds.left
+      && cropBounds.top >= windowBounds.top
+      && cropBounds.left + cropBounds.width <= windowBounds.left + windowBounds.width
+      && cropBounds.top + cropBounds.height <= windowBounds.top + windowBounds.height;
+    if (!cropInsideWindow) {
+      throw new Error(`The ${controlName} readback crop is not fully contained in the verified OpenObsidian window: mapping=${JSON.stringify(strictMacOSWindowMapping)}; crop=${JSON.stringify(cropBounds)}`);
+    }
+  }
   return {
     imagePath,
     ocrImagePath,
@@ -14036,6 +15306,9 @@ async function locateCanvasTextInput(
         : "label-offset-fallback",
     fieldTextOcrSource: fieldTextBoundsOcr ? fieldTextOcrSource : "label-offset-fallback",
     fieldSearchCrop,
+    labelVision,
+    macOSOCRDiagnostics,
+    fieldSearchFailure,
     cropBounds,
     coordinateSpace,
   };
@@ -14045,6 +15318,7 @@ async function readCanvasInputScreenshotValue(
   capture: Awaited<ReturnType<typeof captureOpenObsidianScreenshot>>,
   controlName: string,
   expectedValue: string,
+  macOSChild?: ChildProcess,
 ): Promise<{
   exact: boolean;
   exactLine: boolean;
@@ -14057,7 +15331,7 @@ async function readCanvasInputScreenshotValue(
   visionExact: boolean;
   visionError: string;
 }> {
-  const layout = await locateCanvasTextInput(capture, controlName, expectedValue, process.platform === "darwin");
+  const layout = await locateCanvasTextInput(capture, controlName, expectedValue, process.platform === "darwin", macOSChild);
   const cropPath = join(reportDirectory, `openobsidian-canvas-input-${controlName.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${Date.now()}-ocr.png`);
   const {left, top, width, height} = layout.cropBounds;
   const imageMagick = process.platform === "linux" ? "convert" : "magick";
@@ -14283,6 +15557,9 @@ async function replaceMacOSOpenObsidianTextInputWithKeyboard(
   logPath = join(reportDirectory, "openobsidian-canvas-note-create.log"),
 ): Promise<string> {
   const fileSafeName = controlName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  const macOSCanvasLocatorCaptureOptions = controlName === "Canvas edit text-card ID"
+    ? {macOSCanvasLocatorCapture: true}
+    : {};
   const maximumPositionAttempts = controlName === "Canvas text draft" ? 1 : 3;
   const requiresBlankFieldProbe = controlName !== "Canvas text draft";
   let before: Awaited<ReturnType<typeof captureOpenObsidianScreenshot>> | undefined;
@@ -14305,8 +15582,14 @@ async function replaceMacOSOpenObsidianTextInputWithKeyboard(
     for (let attempt = 1; attempt <= maximumPositionAttempts; attempt += 1) {
       await waitForOpenObsidianRefreshIdle(0, 0, false, logPath);
       const refreshBeforeCapture = await readOpenObsidianRefreshDiagnostics(logPath);
-      const attemptBefore = await captureOpenObsidianScreenshot(windowId, child, `openobsidian-canvas-input-${fileSafeName}-before`);
-      const attemptLayout = await locateCanvasTextInput(attemptBefore, controlName);
+      const attemptBefore = await captureOpenObsidianScreenshot(
+        windowId,
+        child,
+        `openobsidian-canvas-input-${fileSafeName}-before`,
+        undefined,
+        macOSCanvasLocatorCaptureOptions,
+      );
+      const attemptLayout = await locateCanvasTextInput(attemptBefore, controlName, undefined, false, child);
       const refreshBeforeClick = await readOpenObsidianRefreshDiagnostics(logPath);
       if (openObsidianRefreshActivityChanged(refreshBeforeCapture, refreshBeforeClick)
         || (refreshBeforeClick.receiverStates.at(-1)?.busy ?? false)) {
@@ -14327,7 +15610,7 @@ async function replaceMacOSOpenObsidianTextInputWithKeyboard(
       });
       initialFieldValueLength = initialFieldValue.length;
       if (initialFieldValue !== "") {
-        lastPositionFailure = `clicked field was not blank (initial_readback_length=${initialFieldValue.length}); position_source=${attemptLayout.fieldPositionSource}; click=${attemptClick}; screenshot=${relative(reportDirectory, attemptBefore.pngPath)}`;
+        lastPositionFailure = `clicked field was not blank (initial_readback_length=${initialFieldValue.length}); position_source=${attemptLayout.fieldPositionSource}; field_center_image=${JSON.stringify(attemptLayout.fieldCenter)}; label_vision=${JSON.stringify(attemptLayout.labelVision)}; macos_tesseract=${JSON.stringify(attemptLayout.macOSOCRDiagnostics)}; field_search_failure=${attemptLayout.fieldSearchFailure || "none"}; click=${attemptClick}; screenshot=${relative(reportDirectory, attemptBefore.pngPath)}`;
         continue;
       }
       before = attemptBefore;
@@ -14340,8 +15623,14 @@ async function replaceMacOSOpenObsidianTextInputWithKeyboard(
     }
   } else {
     await waitForOpenObsidianRefreshIdle(0, 0, false, logPath);
-    before = await captureOpenObsidianScreenshot(windowId, child, `openobsidian-canvas-input-${fileSafeName}-before`);
-    layout = await locateCanvasTextInput(before, controlName);
+    before = await captureOpenObsidianScreenshot(
+      windowId,
+      child,
+      `openobsidian-canvas-input-${fileSafeName}-before`,
+      undefined,
+      macOSCanvasLocatorCaptureOptions,
+    );
+    layout = await locateCanvasTextInput(before, controlName, undefined, false, child);
     click = await clickMacOSDesktopFraction(
       layout.fieldCenter.x / layout.imageDimensions.width,
       layout.fieldCenter.y / layout.imageDimensions.height,
@@ -14399,11 +15688,13 @@ async function replaceMacOSOpenObsidianTextInputWithKeyboard(
     windowId,
     child,
     `openobsidian-canvas-input-${fileSafeName}-readback`,
+    undefined,
+    macOSCanvasLocatorCaptureOptions,
   );
   let visualReadback: Awaited<ReturnType<typeof readCanvasInputScreenshotValue>> | undefined;
   let visualReadbackError = "";
   try {
-    visualReadback = await readCanvasInputScreenshotValue(verification, controlName, value);
+    visualReadback = await readCanvasInputScreenshotValue(verification, controlName, value, child);
   } catch (error) {
     visualReadbackError = error instanceof Error ? error.message : "unknown screenshot OCR error";
   }
@@ -14415,7 +15706,7 @@ async function replaceMacOSOpenObsidianTextInputWithKeyboard(
       || visualReadback?.layout.fieldPositionSource === "label-anchored-readback-crop")
     && visualReadback?.exact === true;
   if (controlName !== "Canvas text draft" && !exactVisualFieldReadback) {
-    throw new Error(`macOS ${controlName} field crop did not visually confirm the exact value in its label-relative OCR region: expected=${JSON.stringify(value)}; crop_ocr=${JSON.stringify(visualReadback?.text ?? "")}; vision_ocr=${JSON.stringify(visualReadback?.visionText ?? "")}; vision_error=${visualReadback?.visionError || "none"}; field_position_source=${visualReadback?.layout.fieldPositionSource ?? "unavailable"}; clipboard_exact=${clipboardReadback === value}; clipboard_length=${clipboardReadback.length}; clipboard_error=${clipboardReadbackError || "none"}; visual_readback_error=${visualReadbackError || "none"}; click=${click}; crop=${visualReadback ? relative(reportDirectory, visualReadback.cropPath) : "unavailable"}; screenshot=${relative(reportDirectory, verification.pngPath)}`);
+    throw new Error(`macOS ${controlName} field crop did not visually confirm the exact value in its label-relative OCR region: expected=${JSON.stringify(value)}; crop_ocr=${JSON.stringify(visualReadback?.text ?? "")}; vision_ocr=${JSON.stringify(visualReadback?.visionText ?? "")}; vision_error=${visualReadback?.visionError || "none"}; field_position_source=${visualReadback?.layout.fieldPositionSource ?? "unavailable"}; label_vision=${JSON.stringify(layout.labelVision)}; readback_label_vision=${JSON.stringify(visualReadback?.layout.labelVision ?? null)}; macos_tesseract=${JSON.stringify(layout.macOSOCRDiagnostics)}; readback_macos_tesseract=${JSON.stringify(visualReadback?.layout.macOSOCRDiagnostics ?? null)}; field_search_failure=${layout.fieldSearchFailure || "none"}; clipboard_exact=${clipboardReadback === value}; clipboard_length=${clipboardReadback.length}; clipboard_error=${clipboardReadbackError || "none"}; visual_readback_error=${visualReadbackError || "none"}; click=${click}; crop=${visualReadback ? relative(reportDirectory, visualReadback.cropPath) : "unavailable"}; screenshot=${relative(reportDirectory, verification.pngPath)}`);
   }
   // egui can display the exact value even when macOS does not return its
   // selection through pbpaste. Accept that fallback only when the fresh
@@ -14425,7 +15716,7 @@ async function replaceMacOSOpenObsidianTextInputWithKeyboard(
     && clipboardReadbackError === ""
     && visualReadback?.exactLine === true;
   if (clipboardReadback !== value && !exactVisualFieldFallback) {
-    throw new Error(`macOS clipboard readback did not confirm the exact ${controlName} value: expected_length=${value.length}; actual_length=${clipboardReadback.length}; clipboard_error=${clipboardReadbackError || "none"}; crop_ocr=${JSON.stringify(visualReadback?.text ?? "")}; vision_ocr=${JSON.stringify(visualReadback?.visionText ?? "")}; vision_error=${visualReadback?.visionError || "none"}; visual_readback_error=${visualReadbackError || "none"}; click=${click}; crop=${visualReadback ? relative(reportDirectory, visualReadback.cropPath) : "unavailable"}; screenshot=${relative(reportDirectory, verification.pngPath)}`);
+    throw new Error(`macOS clipboard readback did not confirm the exact ${controlName} value: expected_length=${value.length}; actual_length=${clipboardReadback.length}; clipboard_error=${clipboardReadbackError || "none"}; crop_ocr=${JSON.stringify(visualReadback?.text ?? "")}; vision_ocr=${JSON.stringify(visualReadback?.visionText ?? "")}; vision_error=${visualReadback?.visionError || "none"}; visual_readback_error=${visualReadbackError || "none"}; label_vision=${JSON.stringify(layout.labelVision)}; readback_label_vision=${JSON.stringify(visualReadback?.layout.labelVision ?? null)}; macos_tesseract=${JSON.stringify(layout.macOSOCRDiagnostics)}; readback_macos_tesseract=${JSON.stringify(visualReadback?.layout.macOSOCRDiagnostics ?? null)}; field_search_failure=${layout.fieldSearchFailure || "none"}; click=${click}; crop=${visualReadback ? relative(reportDirectory, visualReadback.cropPath) : "unavailable"}; screenshot=${relative(reportDirectory, verification.pngPath)}`);
   }
   return JSON.stringify({
     name: controlName,
@@ -14450,6 +15741,9 @@ async function replaceMacOSOpenObsidianTextInputWithKeyboard(
     position_source: layout.fieldPositionSource,
     field_text_ocr_source: layout.fieldTextOcrSource,
     field_search_crop: layout.fieldSearchCrop,
+    label_vision: layout.labelVision,
+    macos_tesseract: layout.macOSOCRDiagnostics,
+    field_search_failure: layout.fieldSearchFailure || null,
     label_bounds_ocr: layout.labelBoundsOcr,
     field_text_bounds_ocr: layout.fieldTextBoundsOcr,
     field_center_image: layout.fieldCenter,
@@ -14462,6 +15756,9 @@ async function replaceMacOSOpenObsidianTextInputWithKeyboard(
     readback_crop_bounds: visualReadback?.layout.cropBounds ?? null,
     readback_field_text_ocr_source: visualReadback?.layout.fieldTextOcrSource ?? null,
     readback_field_search_crop: visualReadback?.layout.fieldSearchCrop ?? null,
+    readback_label_vision: visualReadback?.layout.labelVision ?? null,
+    readback_macos_tesseract: visualReadback?.layout.macOSOCRDiagnostics ?? null,
+    readback_field_search_failure: visualReadback?.layout.fieldSearchFailure || null,
     readback_label_bounds_ocr: visualReadback?.layout.labelBoundsOcr ?? null,
     readback_field_text_bounds_ocr: visualReadback?.layout.fieldTextBoundsOcr ?? null,
     readback_screenshot_dimensions: visualReadback?.layout.imageDimensions ?? null,

@@ -1,0 +1,260 @@
+{
+  "schema_version": 1,
+  "milestone": "C06.2 omitted-array Canvas fixture repair",
+  "attempt": 3,
+  "implementation_sha": "2c34aeba3d6712cc255592e6c469cc0dca2823b4",
+  "previous_origin_main_sha": "7d08e514d6b6a8b95c58945f5ec77610db57f30b",
+  "status": "failed",
+  "status_observed_at": "2026-10-15T02:19:10Z",
+  "summary": {
+    "expected_workflows": 7,
+    "observed_workflows": 7,
+    "completed_workflows": 7,
+    "successful_workflows": 6,
+    "failed_workflows": 1,
+    "in_progress_workflows": 0,
+    "queued_workflows": 0,
+    "expected_jobs": 20,
+    "observed_jobs": 20,
+    "passed_jobs": 19,
+    "failed_jobs": 1,
+    "in_progress_jobs": 0,
+    "queued_jobs": 0,
+    "unobserved_required_workflows": [],
+    "remote_tip": "2c34aeba3d6712cc255592e6c469cc0dca2823b4"
+  },
+  "workflows": [
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 38668733383,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38668733383",
+      "head_sha": "2c34aeba3d6712cc255592e6c469cc0dca2823b4",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "id": 116206550960,
+          "name": "windows-latest",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 116206551212,
+          "name": "macos-latest",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 116206551296,
+          "name": "ubuntu-latest",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "event": "push"
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 38668732345,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38668732345",
+      "head_sha": "2c34aeba3d6712cc255592e6c469cc0dca2823b4",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "id": 116206547721,
+          "name": "ubuntu-latest",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 116206548001,
+          "name": "windows-latest",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 116206548145,
+          "name": "macos-latest",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "event": "push"
+    },
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 38668732351,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38668732351",
+      "head_sha": "2c34aeba3d6712cc255592e6c469cc0dca2823b4",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "id": 116206547238,
+          "name": "minimum supported Rust (1.95)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 116206547535,
+          "name": "rust (macos-latest)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 116206547576,
+          "name": "rust (windows-latest)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 116206547639,
+          "name": "rust (ubuntu-latest)",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "event": "push"
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 38668732379,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38668732379",
+      "head_sha": "2c34aeba3d6712cc255592e6c469cc0dca2823b4",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "id": 116206547853,
+          "name": "inventory",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "event": "push"
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 38668732383,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38668732383",
+      "head_sha": "2c34aeba3d6712cc255592e6c469cc0dca2823b4",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "id": 116206547627,
+          "name": "ubuntu-latest",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 116206547933,
+          "name": "windows-latest",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 116206547996,
+          "name": "macos-latest",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "event": "push"
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 38668732503,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38668732503",
+      "head_sha": "2c34aeba3d6712cc255592e6c469cc0dca2823b4",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "id": 116206548527,
+          "name": "ubuntu-latest",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 116206548711,
+          "name": "windows-latest",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 116206548810,
+          "name": "macos-latest",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "event": "push"
+    },
+    {
+      "name": "Obsidian vault round-trip acceptance",
+      "run_id": 38668962701,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38668962701",
+      "head_sha": "2c34aeba3d6712cc255592e6c469cc0dca2823b4",
+      "event": "workflow_dispatch",
+      "status": "completed",
+      "conclusion": "failure",
+      "dispatch_note": "Push path filters excluded this fixture/progress-only repair. Dispatched the required acceptance workflow on main while main was pinned to the milestone SHA.",
+      "jobs": [
+        {
+          "id": 116207287492,
+          "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 116207287672,
+          "name": "Obsidian 1.14.4 vault round-trip on macos-latest",
+          "status": "completed",
+          "conclusion": "failure"
+        },
+        {
+          "id": 116207287756,
+          "name": "Obsidian 1.14.4 vault round-trip on windows-latest",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ],
+  "artifact_reconciliation": {
+    "status": "reconciled; Linux and Windows reports passed, macOS report failed closed before edit-field input",
+    "artifacts": [
+      {
+        "platform": "Linux",
+        "artifact_id": 11943851284,
+        "name": "obsidian-vault-roundtrip-Linux-2c34aeba3d6712cc255592e6c469cc0dca2823b4",
+        "archive_sha256": "714543ff6cc07289b5e9a9693630959d27f9970476a9c0b2dd5d53d96e27a7f8",
+        "report_sha256": "322aac6239eb74c03aeb585c2c3f3508b1f9074ece08f36bd2a3c0b3e0beac8a",
+        "report_source_sha": "2c34aeba3d6712cc255592e6c469cc0dca2823b4",
+        "report_status": "passed"
+      },
+      {
+        "platform": "macOS",
+        "artifact_id": 11944060567,
+        "name": "obsidian-vault-roundtrip-macOS-2c34aeba3d6712cc255592e6c469cc0dca2823b4",
+        "archive_sha256": "92b3cf2e55b3e77709c021f3a158b4a3780317a8c261d476da0b56dd4425faba",
+        "report_sha256": "effae2dec6e649a3a6502d0885b4794b327442e6baef1d4adadddf63ded27eae",
+        "report_source_sha": "2c34aeba3d6712cc255592e6c469cc0dca2823b4",
+        "report_status": "failed",
+        "failure": "Could not uniquely resolve the labeled Canvas edit text-card ID field; matching_fields=0; OCR fallback could not locate the visible label."
+      },
+      {
+        "platform": "Windows",
+        "artifact_id": 11944615056,
+        "name": "obsidian-vault-roundtrip-Windows-2c34aeba3d6712cc255592e6c469cc0dca2823b4",
+        "archive_sha256": "5c9155ee45e67884e37a36c2881c9055cd7d5f53f76be1f0b38e7aac1445a751",
+        "report_sha256": "011ce1b7f06cf6bbbcc547a575c02832eb70a2ccf588607ea348e9dd45b5f2c2",
+        "report_source_sha": "2c34aeba3d6712cc255592e6c469cc0dca2823b4",
+        "report_status": "passed"
+      }
+    ]
+  },
+  "local_executable_validation": false
+}

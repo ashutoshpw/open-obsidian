@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
-  "status": "C06.2 attempt 2 is terminal-failed on exact SHA 7d08e514d6b6a8b95c58945f5ec77610db57f30b: six workflows and 16/20 jobs passed; Rust CI failed all four jobs on the inherited omitted-array Canvas fixture classification. All three round-trip jobs passed. The reviewed fixture correction is ready as one C06.2 repair milestone; no local executable validation.",
-  "updated_at": "2026-10-15T01:59:32Z",
+  "status": "C06.2 attempt 3 is terminal on exact SHA 2c34aeba3d6712cc255592e6c469cc0dca2823b4: all seven workflows and 20 jobs finished; 19 jobs passed, and macOS round-trip failed closed before Canvas text-card ID input because AX and full-screen OCR did not resolve the visible label. The editor and placeholder are visible in the artifact. Linux and Windows round-trip passed; exact-SHA artifact/report digests are reconciled. C06.2-R1 macOS screenshot OCR locator repair is implementation-complete locally and has a fresh independent read-only review with no actionable findings. It adds fail-closed Tesseract/Vision uniqueness, window mapping, capture-time geometry stability, and locator-only shadow exclusion. No local executable validation.",
+  "updated_at": "2026-10-15T03:06:37Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "7d08e514d6b6a8b95c58945f5ec77610db57f30b",
-  "current_milestone": "C06.2 repair: align the inherited missing-edges fixture with accepted omitted arrays; implementation-complete and independently reviewed, ready for one exact-SHA CI submission.",
-  "next_action": "Stage and review only the C06.2 fixture correction, its inventory hash, terminal attempt-2 evidence, and C06.2 progress record. Keep goal/requirements cadence edits and C07.5/C09.2 work local. Push the complete repair milestone once to origin/main, then wait for all seven required workflows/20 jobs on its exact SHA. Do not run local tests or executable validation.",
-  "push_status": "C06.2 attempt 2 was pushed once to origin/main at 7d08e514d6b6a8b95c58945f5ec77610db57f30b. All seven workflows and 20 jobs are terminal: six workflows/16 jobs passed, Rust CI failed all four jobs on the Canvas fixture expectation, and all three round-trip jobs passed. Evidence is in evidence/c06.2-attempt-2-7d08e51.json. The reviewed fixture correction is ready for one repair push.",
+  "last_reconciled_head": "2c34aeba3d6712cc255592e6c469cc0dca2823b4",
+  "current_milestone": "C06.2-R1 macOS screenshot OCR locator repair for Canvas edit text-card ID; implementation-complete and independently reviewed locally, ready for one exact-SHA CI submission.",
+  "next_action": "Prepare an isolated C06.2-R1 milestone containing only its reviewed macOS OCR locator repair and associated milestone evidence updates; push once to origin/main, then hold the submitted SHA until all seven required workflows/20 jobs are terminal and exact-SHA evidence is reconciled. Preserve unrelated C07.5/C09.2 work. Do not run local executable validation.",
+  "push_status": "No push since terminal C06.2 attempt 3 at 2c34aeba3d6712cc255592e6c469cc0dca2823b4. origin/main remains at that SHA; its seven-workflow batch is terminal with 19/20 jobs passing and one macOS round-trip failure. No CI batch is in flight. C06.2-R1 implementation and independent read-only review are complete; the next push is one full milestone batch, followed by a wait for all seven workflows/20 jobs.",
   "blockers": [
     "C07.3 pinned Obsidian reference behavior remains incomplete and Rust parity is not established. R2.8.119 failed all three platform round-trip jobs on exact SHA 2a18016de043ea8ec82529feabb4912d439efa2; see evidence/r2.8.119-attempt-1-2a18016.json. Do not claim Rust C07.3 parity or a full-fixture membership oracle from reference UI results.",
     "R2.8.120 failed its terminal exact-SHA CI batch on 985af8aa18be53c285221b2ed21d4062e69b9f3d. Linux C07.3 table row diagnostics reject visible rows despite each uniquely matching an already captured fixture path; formula Kanban extraction records no card memberships although the screenshot shows the 5/4/4/0 cards. macOS display metrics failed before first-run picker interaction, and Windows stopped after picker closure when the host HWND changed. See evidence/r2.8.120-attempt-1-985af8a.json; keep C07.3 pending.",
@@ -41616,24 +41616,27 @@
   },
   "current_requirement_count": 221,
   "current_ci_attempt": {
-    "status": "CI-passed; all seven workflows and all 20 jobs succeeded",
-    "implementation_sha": "0a9cb9c00835881a7629c96721974dfa9461cc50",
-    "evidence_file": ".agents/tasks/2026-10-07/evidence/r2.8.129-attempt-1-0a9cb9c.json",
-    "milestone": "R2.8.129 C07.3 grouped viewport and stable group-ownership repair",
-    "attempt": 1,
-    "submitted_at": "2026-10-14T23:25:53Z",
-    "observed_at": "2026-10-15T00:08:44Z",
+    "status": "CI-failed; all seven workflows and 20 jobs are terminal; six workflows and 19 jobs passed, with one macOS Obsidian round-trip job failed before Canvas text-card ID input.",
+    "implementation_sha": "2c34aeba3d6712cc255592e6c469cc0dca2823b4",
+    "evidence_file": ".agents/tasks/2026-10-07/evidence/c06.2-attempt-3-2c34aeb.json",
+    "milestone": "C06.2 omitted-array Canvas fixture repair",
+    "attempt": 3,
+    "observed_at": "2026-10-15T02:19:10Z",
     "workflow_count": 7,
+    "completed_workflows": 7,
+    "successful_workflows": 6,
+    "in_progress_workflows": 0,
+    "failed_workflows": 1,
     "job_count": 20,
-    "passed_jobs": 20,
+    "passed_jobs": 19,
     "in_progress_jobs": 0,
     "queued_jobs": 0,
-    "failed_jobs": 0
+    "failed_jobs": 1
   },
   "planned_next_milestone": {
     "milestone": "C06.2",
     "name": "Lossless typed read projection for standard Canvas nodes and edges",
-    "status": "implementation-complete; attempt 2 terminal-failed on exact SHA 7d08e514d6b6a8b95c58945f5ec77610db57f30b; the independently reviewed omitted-array fixture correction is ready for one C06.2 repair submission.",
+    "status": "Attempt 3 is terminal-failed on exact SHA 2c34aeba3d6712cc255592e6c469cc0dca2823b4: all seven workflows/20 jobs finished, with 19 jobs passed and one macOS round-trip failure. A separate C06.2-R1 macOS locator repair is planned.",
     "deliverable": "Borrowed typed views for standard Canvas node and edge fields in crates/doc; accept optional top-level nodes/edges arrays, distinguish omitted from empty, preserve non-standard raw fields, and represent missing, malformed, and unsupported values distinctly.",
     "acceptance": [
       "Fixture-backed coverage projects text, file, link, group, and edge fields from fixture:c06-canvas.",
@@ -41658,7 +41661,7 @@
       "Windows latest"
     ],
     "expected_evidence": "Exact-SHA CI job records and fixture-backed reports for standard typed projection, omitted-array preservation, malformed/missing distinction, and preservation of unknown/non-standard JSON.",
-    "depends_on": "R2.8.129 passed exact-SHA CI at 0a9cb9c00835881a7629c96721974dfa9461cc50; C06.2 is an independent Canvas document projection milestone. Keep C07.5 and C09.2 changes excluded from its submission."
+    "depends_on": "R2.8.129 passed exact-SHA CI at 0a9cb9c00835881a7629c96721974dfa9461cc50; C06.2 is an independent Canvas document projection milestone. Attempt 3 at 2c34aeba3d6712cc255592e6c469cc0dca2823b4 is terminal-failed; see evidence/c06.2-attempt-3-2c34aeb.json. Keep C07.5 and C09.2 changes excluded from the repair submission."
   },
   "planned_independent_milestone": {
     "milestone": "unassigned until C07.5/C07.4 sequencing is settled",
@@ -41722,24 +41725,51 @@
     "evidence": "Exact-SHA three-OS round-trip reports, artifacts and hashes; source-preservation checkpoint records; all workflow/job URLs and conclusions.",
     "depends_on": "R2.8.129 C07.3 passed exact-SHA CI at 0a9cb9c00835881a7629c96721974dfa9461cc50. Submit C07.4 only as a separate complete milestone after C06.2 CI is terminal; use one push per milestone and wait for every required job."
   },
+  "current_repair_milestone": {
+    "id": "C06.2-R1",
+    "name": "macOS screenshot OCR locator repair for Canvas edit text-card ID",
+    "status": "implementation-complete / independently reviewed; ready for one milestone CI submission",
+    "scope": "Repair only screenshot-based macOS localization of the visible Canvas edit text-card ID label across Tesseract-first and Vision fallback paths when accessibility omits the egui field. Keep unrelated C07.5/C09.2 and other worktree changes out of the milestone.",
+    "acceptance": [
+      "On a fresh macOS screenshot, both Tesseract and Vision paths may locate only the exact Canvas edit text-card ID label, allowing the existing normalized whitespace/hyphen variants, with valid image bounds and a verified mapping to the actual OpenObsidian window.",
+      "Apply uniqueness, confidence, valid-bounds, app-window, and expected form-row gates to every macOS OCR route; require a unique Load one editor instruction/header and a unique exact-label observation before using any field position. Require the Tesseract PSM passes to agree on header and label locations; retain conflicts in diagnostics and fail closed. Fail closed when window bounds/capture mapping are unavailable or candidates are missing, ambiguous, low-confidence, or invalid.",
+      "Bind full-desktop screenshot coordinates to the captured OpenObsidian window by recording the unique window ID and bounds before and after capture, requiring the identity and all bounds to remain unchanged, and requiring the later CG/accessibility/window-only mapping to match those captured bounds. Use shadow exclusion only for this locator's window screenshot; retain prior capture behavior elsewhere.",
+      "Preserve the blank-field probe, exact unique target selection, exact clipboard and visible readback, refresh checks, and before/after vault snapshot protections.",
+      "Record the fresh screenshot, actual OpenObsidian window/display bounds and coordinate mapping, before/after capture-time window identity and bounds, measured window-capture dimensions, all Tesseract/Vision candidate strings/confidences/bounds, header and candidate geometry, acceptance/rejection reasons, and retry/refresh state in the CI report.",
+      "The macOS round-trip reaches and verifies exact text-card ID input, then completes C06 and required source-preservation checks on Linux, macOS, and Windows.",
+      "All seven required GitHub Actions workflows and all 20 jobs pass on one exact submitted SHA; reconcile exact-SHA report/artifact IDs and hashes before acceptance."
+    ],
+    "required_workflows": [
+      "OpenObsidian Rust CI",
+      "Obsidian vault round-trip acceptance",
+      "Rust migration inventory",
+      "OpenObsidian loaded plugin workflows",
+      "OpenObsidian desktop build",
+      "OpenObsidian quality",
+      "OpenObsidian plugin renderer matrix"
+    ],
+    "platforms": ["Ubuntu 24.04", "macOS latest", "Windows latest"],
+    "expected_evidence_path_template": "evidence/c06.2-macos-locator-attempt-<n>-<sha>.json",
+    "depends_on": "C06.2 attempt 3 is terminal-failed and reconciled on 2c34aeba3d6712cc255592e6c469cc0dca2823b4. Independent root-cause review found a visible field and placeholder in the artifact but no AX match and a full-screen OCR label miss."
+  },
   "current_ci_batch": {
-    "milestone": "C06.2 lossless typed projection; attempt 2 terminal-failed",
-    "sha": "7d08e514d6b6a8b95c58945f5ec77610db57f30b",
-    "run_id": 38663486997,
-    "run_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38663486997",
-    "status": "CI-failed; 6/7 workflows and 16/20 jobs passed; all four Rust CI jobs failed on the Canvas omitted-array fixture expectation; all jobs terminal and grouped repair may proceed.",
+    "milestone": "C06.2 omitted-array Canvas fixture repair; attempt 3",
+    "sha": "2c34aeba3d6712cc255592e6c469cc0dca2823b4",
+    "run_id": 38668732351,
+    "run_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38668732351",
+    "status": "Failed; all seven workflows and 20 jobs are terminal. Six workflows succeeded; the Obsidian round-trip workflow failed on macOS. Nineteen jobs passed and one failed.",
     "workflows_terminal": 7,
     "jobs_terminal": 20,
-    "jobs_passed": 16,
-    "jobs_failed": 4,
+    "jobs_passed": 19,
+    "jobs_failed": 1,
     "pending": [],
-    "evidence": "evidence/c06.2-attempt-2-7d08e51.json"
+    "evidence": "evidence/c06.2-attempt-3-2c34aeb.json"
   },
   "parallel_local_milestones": [
     {
       "id": "C06.2",
       "name": "Lossless typed read projection for standard Canvas nodes and edges",
-      "status": "C06.2 attempt 2 at 7d08e514d6b6a8b95c58945f5ec77610db57f30b is terminal-failed (6/7 workflows and 16/20 jobs passed; four Rust CI jobs failed on one inherited fixture expectation; all three round-trip jobs passed). The reviewed fixture correction is implementation-complete and ready for one repair push; C06.2 is not CI-passed.",
+      "status": "C06.2 repair attempt 3 is terminal on 2c34aeba3d6712cc255592e6c469cc0dca2823b4: 19/20 jobs passed, with one fail-closed macOS round-trip field-label failure; exact-SHA artifacts/reports are reconciled. Keep the milestone pending until a reviewed repair passes the full required batch.",
       "deliverable": "Borrowed typed views for standard Canvas node and edge fields in crates/doc; accept optional top-level nodes/edges arrays, distinguish omitted from empty, preserve non-standard raw fields, and represent missing, malformed, and unsupported values distinctly.",
       "acceptance": [
         "Fixture-backed coverage projects text, file, link, group, and edge fields from fixture:c06-canvas.",
@@ -41763,15 +41793,41 @@
   ],
   "current_static_reviews": {
     "C06.2": {
-      "status": "Fresh independent read-only review approved the C06.2 omitted-array fixture correction against the committed parser contract and CI failure; no source-level blocker was found.",
+      "status": "Fresh independent read-only review of the final C06.2 fixture-driven projection cases found no blocker or compile-plausibility issue; metadata follow-ups applied locally.",
       "findings": [
         "JSON Canvas 1.0 permits omitted nodes and edges arrays; parsing preserves omission in the authoritative JSON and distinguishes it from explicit empty arrays.",
         "The typed projection covers standard JSON Canvas 1.0 node/edge JSON shapes; unknown node types, malformed fields, and non-standard fields remain available in raw JSON. Unknown-field preservation is attributed to parent C06 rather than the public spec.",
         "Omitted nodes return an empty read view; extract/edit against missing nodes fail without inserting an array or mutating the document. Fixtures cover omitted nodes/edges, unsupported string and malformed/missing node types, malformed/missing node and edge fields, valid/malformed/missing color, and raw malformed values.",
         "The nested Unsupported.node_type state/value is asserted for unknown, malformed, and missing types; valid node color and malformed/missing color states are fixture-backed.",
         "C06.2 is a child decomposition like C07.2-C07.9; mapping review counts remain 212 total and 16 goal-level MIG rows. The current goal SHA is recorded in mapping_review and MIG-002; the GitHub CI inventory gate now checks count/hash consistency.",
-        "No local tests, builds, formatters, validators, or runtime probes were run.",
-        "The fixture now treats {\"nodes\":[]} as a valid Canvas document and expects node_not_found for the requested text node; inventory digest matches the fixture."
+        "No local tests, builds, formatters, validators, or runtime probes were run."
+      ]
+    },
+    "C06.2-R1": {
+      "status": "Fresh independent read-only review of the final implementation found no actionable findings; ready for one milestone CI submission. No executable validation was run.",
+      "findings": [
+        "Vision requires exactly one raw and qualified header and exact label, confidence at least 0.8, valid bounds, app-window containment, and expected form-row geometry. Tesseract applies unique raw/qualified candidate checks on both PSM passes, compares header and label locations across passes, retains conflicts in diagnostics, and fails closed on ambiguity or disagreement.",
+        "Screenshot coordinates are bound to the unique OpenObsidian CG window ID and bounds measured immediately before and after the full desktop capture; the later CG/accessibility and window-only capture mapping must match that capture interval. Missing or changed geometry fails closed. Shadow exclusion is opt-in for the Canvas edit text-card ID locator only.",
+        "The existing blank-field probe, exact visual/clipboard readback, and vault snapshot gates remain intact; no executable validation was run."
+      ]
+    },
+    "C07.5": {
+      "status": "read-only current-code review; stage coverage and pre-settling snapshots confirmed; reference semantics and milestone sequencing remain pending",
+      "findings": [
+        "Keep file.* values withheld and evaluation incomplete until pinned reference evidence establishes runtime forms and semantics.",
+        "Stage watched metadata covers all applicable fixture paths at initial, edited, refresh, and reopen stages (23/23/24/24), including .hidden-note.md and .hidden-dir/Nested.md with their expected phases.",
+        "Vault and isolated app-data baseline snapshots are taken before the settling gate; baseline_capture_started_at records the start of baseline capture and the observation interval includes settling.",
+        "The settling-failure follow-up retains both before snapshots with limits, usage, cap hits, and errors; writes a bounded diagnostic before returning; marks read-only evidence incomplete; and prevents the row sweep or stage acceptance from succeeding. A separate read-only review found no actionable gap.",
+        "Keep C07.5 capture/inventory/API in its own milestone, separate from C09.2 and unsubmitted until the C07.3 helper contract is accepted."
+      ]
+    },
+    "C09.2": {
+      "status": "Read-only review confirms the invalid baseFontSize reporting and JSON no-follow race fixes; C09.2 remains blocked from independent submission by its dependency on the unsubmitted C07.5 no-follow API and Unix libc dependency.",
+      "findings": [
+        "Missing or null baseFontSize remains unset. Zero, negative, and nonnumeric non-null values retain an invalid marker that the native UI reports while preserving the default scale; fixtures cover zero, negative, string, and null, and UI cases assert reporting without writes.",
+        "Configuration JSON now reads through VaultRoot::open_regular_file_nofollow instead of checking a resolved path and reopening it, closing the symlink TOCTOU race. Existing symlink exclusion coverage remains; the fixture inventory digest is 97cb2e0317461085add44c4449f34ec7a1c7901a8b9ab44e0631b823e5b73740.",
+        "native-appearance.md documents the parsed mode aliases themeMode, colorScheme, and theme. Keep the C09.2 appearance/UI/configuration/docs/fixture changes separate from C07.5.",
+        "C09.2 still depends on the unsubmitted C07.5 VaultRoot::open_regular_file_nofollow API and its Unix libc dependency; submit it only after that dependency is accepted. Broader C09 remains pending. No local executable validation occurred."
       ]
     }
   }
