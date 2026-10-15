@@ -11193,7 +11193,7 @@
     "post_r0_2_additions": [
       "MIG-016: maintain current, accurate documentation throughout migration and audit it at cutover."
     ],
-    "goal_sha256": "8138db57ed0f24c3730cf6c753bc87112f13515845f5629c6cce1334fe56158c",
+    "goal_sha256": "cf887040faa6070f27ba13c005a2014092e2b0dcfca406968d4fc89e2b3bfb30",
     "policy": "Every inherited requirement was reviewed by ID and assigned a Rust owner, migration phase, acceptance criterion and retained/superseded/external disposition. Historical status/evidence remain preserved separately. Rust acceptance remains pending unless current exact-SHA migration evidence is attached; external items remain external_pending."
   }
 }

@@ -19,7 +19,7 @@
     "Local tests, builds, formatters, linters, type checks, application launches, or runtime probes."
   ],
   "implementation_criteria": [
-    "The goal.md cadence heading states one full CI batch per completed milestone and no per-change pushes; the body retains the exact-SHA hold until all required jobs are terminal, even if CI takes several hours.",
+    "The goal.md cadence heading says one push per completed milestone, never per minor change; the body retains the exact-SHA hold until all required jobs are terminal, even if CI takes several hours.",
     "The inventory fingerprint exactly matches SHA-256 computed from goal.md; no unrelated requirement rows or historical evidence are rewritten.",
     "diagnosticField is defined at a scope shared by all retry attempts and the final failure message; terminal failure reports the attempted Canvas path or ID field without raising a second ReferenceError.",
     "The macOS resolver records per-attempt log/request baselines, confirms an unchanged selected authored note, fresh enabled button bounds, and clicked=true for that exact note before accepting the action.",
@@ -61,5 +61,5 @@
   "push_policy": "Keep all implementation, documentation, and evidence changes local until this complete named milestone is implemented and independently reviewed. Push it to origin/main once, then hold main at that exact SHA until all seven required workflows and all 20 jobs are terminal and reconciled, even if CI takes several hours. Do not push or run CI for minor edits.",
   "local_executable_validation": false,
   "depends_on": "R2.8.135 is terminal-failed at exact SHA 4f92e8bc87e7212b01035bdecd176de734212c8a; see evidence/r2.8.135-attempt-1-4f92e8b.json.",
-  "updated_at": "2026-10-15T16:10:20Z"
+  "updated_at": "2026-10-15T16:53:06Z"
 }

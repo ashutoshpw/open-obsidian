@@ -2,7 +2,7 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "R2.8.135 terminal-failed on exact SHA 4f92e8bc87e7212b01035bdecd176de734212c8a (17/20 jobs passed, three failed). R2.8.136 implementation is complete and independently reviewed locally; its one milestone push is pending availability of the managed-environment network-policy status capability. C07.4 and Rust parity remain pending.",
-  "updated_at": "2026-10-15T15:55:33Z",
+  "updated_at": "2026-10-15T16:55:19Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
@@ -42708,6 +42708,14 @@
         "Configuration JSON now reads through VaultRoot::open_regular_file_nofollow instead of checking a resolved path and reopening it, closing the symlink TOCTOU race. Existing symlink exclusion coverage remains; the fixture inventory digest is 97cb2e0317461085add44c4449f34ec7a1c7901a8b9ab44e0631b823e5b73740.",
         "native-appearance.md documents the parsed mode aliases themeMode, colorScheme, and theme. Keep the C09.2 appearance/UI/configuration/docs/fixture changes separate from C07.5.",
         "C09.2 still depends on the unsubmitted C07.5 VaultRoot::open_regular_file_nofollow API and its Unix libc dependency; submit it only after that dependency is accepted. Broader C09 remains pending. No local executable validation occurred."
+      ]
+    },
+    "R2.8.136-goal-sync": {
+      "status": "Independent read-only review passed after the user-requested cadence wording sync; remains part of R2.8.136 and does not create another CI batch.",
+      "findings": [
+        "The goal says to keep minor changes local, push once after a named milestone is implemented and reviewed, and wait for exact-SHA CI before marking it achieved.",
+        "The goal SHA-256 matches requirements.json.mapping_review.goal_sha256 and the journal entry: cf887040faa6070f27ba13c005a2014092e2b0dcfca406968d4fc89e2b3bfb30.",
+        "The R2.8.136 plan wording and acceptance match the goal; this clean candidate contains no C06.3 code, fixture, or plan. No tests, validation, network calls, or pushes were run."
       ]
     }
   },

@@ -7574,3 +7574,7 @@ At 2026-10-15T16:07:54Z, replaced retry-refresh minimum waits with explicit rema
 ## R2.8.136 implementation review complete — 2026-10-15T16:10:20Z
 
 Independent source review confirmed the refresh/log baseline ordering, capped resolver subprocess and wait budgets, late-result rejection, and timeout wording. A separate tracker audit confirmed the cadence heading matches the plan and state and that the current `goal.md` hash matches `requirements.json.mapping_review.goal_sha256`. R2.8.136 is now marked implementation-complete-awaiting-push; the milestone remains local. I did not push because the managed-environment network-policy status capability is unavailable here (`cloud_environment.environment_status` is not exposed and `/etc/codex/network-policy.json` is absent). No tests or other local executable validation were run.
+
+## R2.8.136 cadence wording synchronized — 2026-10-15T16:53:06Z
+
+Applied the requested explicit rule that minor changes stay local and one push follows only after a named milestone's full implementation and review. The exact-SHA CI hold remains required until every job is terminal, including multi-hour runs. Updated `requirements.json.mapping_review.goal_sha256` to `cf887040faa6070f27ba13c005a2014092e2b0dcfca406968d4fc89e2b3bfb30` and aligned the R2.8.136 plan's wording criterion. This is a documentation/tracker refinement inside R2.8.136, not a separate push milestone. No local executable validation or push was run.
