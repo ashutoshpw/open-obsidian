@@ -912,7 +912,8 @@
     },
     {
       "path": "tests/plugin-loaded-workflows.test.ts",
-      "sha256": "d86c282ed41a57682de95f6f6dd254e937cceea49158b242e0cd809768a0302b",
+      "sha256": "855d4fac1c287a7536ada1de70221e1ae231cca3227bdde848be25edfab9f5d1",
+      "baseline_sha256": "d86c282ed41a57682de95f6f6dd254e937cceea49158b242e0cd809768a0302b",
       "rust_owner": "crates/plugins",
       "mapping_status": "reviewed",
       "status": "pending",
@@ -2378,7 +2379,7 @@
     },
     {
       "path": ".github/workflows/quality.yml",
-      "sha256": "acb1c13f085d8f580e927a7a71b34745b91c99003da07c2699de53920d33fb57",
+      "sha256": "baebcd1291bb16a34eb8581de1f7e5ee0aae68bdc48e064d78df22c281b25cc2",
       "rust_owner": "xtask",
       "mapping_status": "reviewed",
       "status": "pending",

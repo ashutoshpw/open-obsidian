@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "milestone": "R1.2.3-R1.2.2-INVENTORY-FINGERPRINT-REPAIR",
+  "status": "implementation-complete; R1.2.2 is terminal and reconciled; independent package review passed; ready for one submission",
+  "recorded_at": "2026-10-15T07:53:30Z",
+  "depends_on": {
+    "milestone": "R1.2.2-QUALITY-GATE-REPAIR",
+    "sha": "39b238a4ed01dd1af37a5172fe04a47bf96bb390",
+    "status": "terminal-failed and reconciled: six of seven workflows and 19 of 20 jobs passed; only the inventory workflow failed on these two fingerprints; all three platform round-trip jobs passed",
+    "evidence": "evidence/r1.2.2-quality-gate-repair-attempt-1-39b238a.json"
+  },
+  "bounded_outcome": "Reconcile the inventory fingerprints for the two existing tracked files changed by R1.2.2, then obtain a clean full exact-SHA CI batch for that repair milestone.",
+  "scope": [
+    "Update only the two existing inventory rows for tests/plugin-loaded-workflows.test.ts and .github/workflows/quality.yml in .agents/tasks/2026-10-07/inventory.json; do not add or remove paths.",
+    "Use the source fingerprints 855d4fac1c287a7536ada1de70221e1ae231cca3227bdde848be25edfab9f5d1 and baebcd1291bb16a34eb8581de1f7e5ee0aae68bdc48e064d78df22c281b25cc2 respectively; preserve each historical baseline_sha256 value and do not add inventory paths.",
+    "The plugin test entry currently has no explicit baseline_sha256 field. Before replacing its sha256 value, set baseline_sha256 to d86c282ed41a57682de95f6f6dd254e937cceea49158b242e0cd809768a0302b, verified by hashing that file at baseline_commit d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79. Preserve the quality workflow's existing baseline_sha256 unchanged. This retains the historical hash explicitly while keeping the repair limited to the same two inventory paths.",
+    "Exclude all C06.2, C07.5, C09.2, Rust source, fixture, goal/requirements metadata, and other unrelated local work. R1.2.2 is terminal; its only failure was the inventory mismatch for these two paths."
+  ],
+  "acceptance": [
+    "The inventory workflow accepts the updated fingerprints and exact tracked path set.",
+    "All seven required workflows and all 20 jobs pass for the repair's exact implementation SHA.",
+    "Exact-SHA run/job IDs, conclusions, artifact IDs, archive digests, report hashes when obtainable, and API limitations are reconciled before the milestone is marked achieved.",
+    "No local executable validation is used."
+  ],
+  "required_ci": {
+    "workflows": [
+      "OpenObsidian Rust CI",
+      "Obsidian vault round-trip acceptance",
+      "Rust migration inventory",
+      "OpenObsidian loaded plugin workflows",
+      "OpenObsidian desktop build",
+      "OpenObsidian quality",
+      "OpenObsidian plugin renderer matrix"
+    ],
+    "platforms": ["Ubuntu 24.04", "macOS latest", "Windows latest"],
+    "expected_jobs": 20
+  },
+  "submission_gate": "R1.2.2 is terminal and reconciled, and an independent review passed. Verify the exact two-path scope, current fingerprints, and preserved baseline fingerprints, then submit this named milestone once to origin/main. Keep origin/main at the repair SHA until all 20 required jobs are terminal.",
+  "local_executable_validation": false,
+  "scope_amendment": {
+    "recorded_at": "2026-10-15T08:24:00Z",
+    "reason": "Read-only review found the plugin test inventory row has no baseline_sha256 field; retain its exact baseline-commit fingerprint before updating the current hash.",
+    "implementation_status": "implemented locally; R1.2.2 is terminal and reconciled; independent package review passed"
+  },
+  "implementation": {
+    "completed_at": "2026-10-15T08:34:26Z",
+    "status": "two existing inventory rows updated; no path added or removed",
+    "files": [
+      {
+        "path": "tests/plugin-loaded-workflows.test.ts",
+        "sha256": "855d4fac1c287a7536ada1de70221e1ae231cca3227bdde848be25edfab9f5d1",
+        "baseline_sha256": "d86c282ed41a57682de95f6f6dd254e937cceea49158b242e0cd809768a0302b"
+      },
+      {
+        "path": ".github/workflows/quality.yml",
+        "sha256": "baebcd1291bb16a34eb8581de1f7e5ee0aae68bdc48e064d78df22c281b25cc2",
+        "baseline_sha256": "87197aaf1cfee74e304872cde7352f6a5e4371fb0997ceab7025cfb2788cb55d"
+      }
+    ],
+    "local_executable_validation": false,
+    "review_status": "passed",
+    "reviewed_at": "2026-10-15T08:37:42Z",
+    "review_summary": "Independent read-only review confirmed the two existing inventory rows match their current source fingerprints, both baseline fingerprints are preserved, R1.2.2 evidence is terminal/reconciled, and state.json/journal.md plus goal/requirements changes must stay out of this submission."
+  }
+}
