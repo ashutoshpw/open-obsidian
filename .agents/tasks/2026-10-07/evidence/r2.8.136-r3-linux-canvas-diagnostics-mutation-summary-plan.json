@@ -2,7 +2,7 @@
   "schema_version": 1,
   "milestone": "R2.8.136-R3-LINUX-CANVAS-DIAGNOSTICS-AND-MUTATION-SUMMARY-REPAIR",
   "name": "Refresh Linux Canvas diagnostics and report source mutations truthfully",
-  "status": "implementation complete; independent source review passed; ready for one milestone push; CI not dispatched",
+  "status": "CI terminal-failed on exact SHA 3f428b6d9e2fe2bf3789c0a02cd7d7690234ec91: all 7 workflows and 20 jobs are terminal (5 workflows and 18 jobs passed; 2 jobs failed). Inventory and Ubuntu round-trip failed; Windows and macOS round-trip passed. Final outcomes and artifacts are reconciled in evidence/r2.8.136-r3-attempt-1-3f428b6.json.",
   "recorded_at": "2026-10-15T20:12:50Z",
   "implementation_completed_at": "2026-10-15T20:23:05Z",
   "planning_base_sha": "1ddae8fc44ab1d74c924abbb300240f0e591a888",
@@ -105,10 +105,80 @@
     ]
   },
   "origin_main_sha_at_planning": "1ddae8fc44ab1d74c924abbb300240f0e591a888",
-  "ci_dispatched": false,
-  "ci_run_ids": [],
-  "submitted_sha": null,
-  "submitted_at": null,
-  "ci_snapshot": null,
-  "ci_evidence_file": null
+  "origin_main_sha_at_submission": "3f428b6d9e2fe2bf3789c0a02cd7d7690234ec91",
+  "ci_dispatched": true,
+  "ci_run_ids": [
+    38801683645,
+    38801683598,
+    38801683546,
+    38801683713,
+    38801683974,
+    38801683969,
+    38801683964
+  ],
+  "submitted_sha": "3f428b6d9e2fe2bf3789c0a02cd7d7690234ec91",
+  "submitted_at": "2026-10-15T20:24:28Z",
+  "ci_snapshot": {
+    "observed_at": "2026-10-15T20:39:14Z",
+    "workflow_counts": {
+      "observed": 7,
+      "terminal": 6,
+      "passed": 5,
+      "failed": 1,
+      "queued": 0,
+      "in_progress": 1
+    },
+    "job_counts": {
+      "observed": 20,
+      "terminal": 19,
+      "passed": 17,
+      "failed": 2,
+      "queued": 0,
+      "in_progress": 1
+    },
+    "failed_jobs": [
+      "Migration inventory job 116652031664: state.json milestones was submitted as a list instead of a keyed object.",
+      "Ubuntu round-trip job 116652031807: target Canvas path field lost focus on diagnostic motions outside its rectangle; pre-paste guard aborted before any paste."
+    ],
+    "active_jobs": [
+      116652031855
+    ],
+    "completed_windows_roundtrip_job": 116652031466,
+    "origin_main_sha_held": "3f428b6d9e2fe2bf3789c0a02cd7d7690234ec91"
+  },
+  "ci_evidence_file": "r2.8.136-r3-attempt-1-3f428b6.json",
+  "final_reconciliation": {
+    "evidence": "evidence/r2.8.136-r3-attempt-1-3f428b6.json",
+    "submitted_sha": "3f428b6d9e2fe2bf3789c0a02cd7d7690234ec91",
+    "workflows": {
+      "terminal": 7,
+      "passed": 5,
+      "failed": 2
+    },
+    "jobs": {
+      "terminal": 20,
+      "passed": 18,
+      "failed": 2
+    },
+    "failed_jobs": [
+      116652031664,
+      116652031807
+    ],
+    "round_trip_jobs": {
+      "windows": {
+        "job_id": 116652031466,
+        "conclusion": "success"
+      },
+      "macos": {
+        "job_id": 116652031855,
+        "conclusion": "success"
+      },
+      "ubuntu": {
+        "job_id": 116652031807,
+        "conclusion": "failure"
+      }
+    },
+    "interpretation": "The 20:39 ci_snapshot above is historical, not current. No required job remains active; the complete final job list and platform artifacts are recorded in the attempt evidence."
+  },
+  "last_updated_at": "2026-10-15T21:36:39Z"
 }

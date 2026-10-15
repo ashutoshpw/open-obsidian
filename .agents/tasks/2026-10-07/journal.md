@@ -7672,3 +7672,60 @@ Confirmed `origin/main` and worktree HEAD both equal `1ddae8fc44ab1d74c924abbb30
 Implemented the reviewed R2.8.136-R3 milestone locally on exact baseline `1ddae8fc44ab1d74c924abbb300240f0e591a888`. The Linux Canvas path branch now emits two recorded, non-clicking pointer motions at (5,5) and (6,5) after each clipboard stage, then retains the existing fresh same-frame field/sibling checks before Ctrl+V. Ctrl+V dispatch failures now preserve the pre-paste target/sibling state, refresh diagnostics, motion receipt, and earlier paste stages. The C07 report now derives explicit C07.2, C07.3, and C07.4 mutation states plus a tri-state aggregate: confirmed mutations remain true through later failures; false requires complete unchanged source observations; inconclusive or unrun sections remain unknown. The console prints all four states. Reference-capture reporting still makes no Rust parity or source-preservation claim.
 
 Independent read-only review by `linux_repair_audit` and `c063_scope_review` passed. The source reviewer identified a missing failure receipt around the Ctrl+V command; `dispatchCtrlV` was added and re-reviewed, closing the gap without changing any input guards. The milestone plan, `state.json`, and journal are aligned as implementation-complete and ready for one push. The goal's exact-SHA, one-push-per-milestone cadence and `requirements.json` fingerprint remain synchronized (`b8de564dd62a6a3d6ad4c7670800b4da562325458e0d791e8b11452cd7af3867`). `origin/main` remains at the starting SHA. No local tests, builds, formatting, linting, type checks, runtime probes, or application launches were run; CI has not been dispatched.
+
+## R3 CI progress snapshot; R3.1 remains local — 2026-10-15T21:08:44Z
+
+Reconciled a read-only GitHub Actions snapshot for exact SHA `3f428b6d9e2fe2bf3789c0a02cd7d7690234ec91`: 6/7 workflows and 19/20 jobs are terminal; 5 workflows and 17 jobs passed; inventory and Ubuntu round-trip failed; macOS round-trip job `116652031855` remains active in the author/open/snapshot/reopen step. `origin/main` remains at the submitted SHA. Linux and Windows artifact digests and failure details remain in [the R3 attempt evidence](evidence/r2.8.136-r3-attempt-1-3f428b6.json); no macOS artifact is available yet. Updated the keyed milestone tracker and reconciled R3.1 review bookkeeping. The R3.1 state-schema and Linux focus repair stays local until the full R3 batch is terminal and all three round-trip reports are reconciled. No tests, builds, local validation, reruns, cancellations, commits, or pushes occurred.
+
+## C07.4 Rust implementation remains gated on complete reference evidence — 2026-10-15T21:12:05Z
+
+Read-only preparation located the comparator and grouping behavior in `crates/doc/src/bases.rs` and the YAML-number-to-JSON conversion in `crates/engine/src/bases.rs`. Current Rust code intentionally preserves exact integers above 2^53, while the pinned Obsidian `Number`/locale behavior is still unproven; the new numeric reference fixture also has no expected outcomes yet. Do not change comparator semantics until all three platforms have complete first-open/reopen C07.4 reports and the actual numeric, grouping, text, path-tie, locale, and source-mutation observations are reconciled. Windows R3 reports ten scenarios passing but rewrote all ten `.base` fixtures; Ubuntu R3 failed before C07.4; macOS R3 remains active. This dependency is tracked in `state.json` and documented here so the next comparator milestone cannot begin on incomplete evidence. No source semantics changed and no local tests or validators ran.
+
+## Documentation scope found for a later grouped migration milestone — 2026-10-15T21:16:12Z
+
+A read-only audit of the active worktree at submitted base `3f428b6d9e2fe2bf3789c0a02cd7d7690234ec91` found README.md and the tracked Rust Markdown-preview and legacy-plugin architecture notes accurate. Later, group updates to `scripts/README.md` and root `release-handoff.md` (which still direct readers to local Bun checks), clarify retained Electron/Bun entries in `THIRD_PARTY_NOTICES.md`, mark `src/shared/ui/README.md` as a legacy contract map, and add an authority/supersession pointer to the earlier Electron-era task docs while preserving their historical decisions. These changes need to align with delivered Rust build, package, support and security behavior; keep them separate from the current R3.1 tracker/Linux repair and do not start a standalone CI batch for the audit. No docs were edited and no local validation ran.
+
+## Windows R3 C07.4 artifact semantics reconciled — 2026-10-15T21:16:12Z
+
+Downloaded and inspected Windows artifact `12005591517` from run `38801683546`. Independent SHA-256 checks match the previously recorded archive (`d7023362…8ea5c4f`) and report (`1f47fca5…27e116f2`) digests. Its ten C07.4 scenarios are stable on first open/reopen. Visible results show `9007199254740993`, `9007199254740992.0`, and `9.007199254740993e15` alias to `9007199254740992`; `9007199254740994` remains distinct. Equality, relational filtering, array containment, sort order and numeric group identity reflect those aliases. Text orders are recorded in `c07_4_reference_observations.Windows` in the attempt evidence. Obsidian rewrote 9/10 `.base` files by first-open shutdown and all ten after reopen, canonicalizing JSON into YAML; markdown stayed unchanged and the report makes no Rust parity claim. The top-level artifact milestone label is stale; nested C07.4 metadata, run ID and exact source SHA identify the capture. Keep this Windows-only result provisional until Linux and macOS reports are complete and all mutation/source details are reconciled. The full artifact remains linked by ID and digests; no repo source or fixture was changed and no local tests or validators ran.
+
+## R3 macOS job remains active — 2026-10-15T21:20:57Z
+
+Re-polled the same macOS round-trip job `116652031855` in [run 38801683546](https://github.com/ashutoshpw/open-obsidian/actions/runs/38801683546). It remains in step 16, “Author, open, snapshot, and reopen the same vault,” with artifact upload pending; the step has been active for about 54 minutes under the workflow's 90-minute timeout. Batch counts are unchanged at 6/7 workflows and 19/20 jobs terminal (17 passed, two failed, one active). `origin/main` and worktree HEAD remain the exact submitted R3 SHA. Updated only the local status snapshot; no push, rerun, cancellation, or local validation.
+
+
+## R3 exact-SHA CI terminal and reconciled; R3.1 review resumes — 2026-10-15T21:28:37Z
+
+The full batch on exact SHA `3f428b6d9e2fe2bf3789c0a02cd7d7690234ec91` is terminal: all seven workflows and 20 jobs finished; five workflows and 18 jobs passed; two jobs failed (migration inventory and Ubuntu round-trip). `origin/main` remains at the submitted SHA. The Rust CI, desktop build, quality, plugin renderer, loaded plugin, Windows round-trip and macOS round-trip checks passed.
+
+- Inventory job [116652031664](https://github.com/ashutoshpw/open-obsidian/actions/runs/38801683598/job/116652031664) failed because submitted `state.json.milestones` was an array while the validator requires a keyed object. R3.1 repairs this schema.
+- Ubuntu round-trip job [116652031807](https://github.com/ashutoshpw/open-obsidian/actions/runs/38801683546/job/116652031807) failed when pointer motion outside the target field transferred focus to its sibling; the pre-paste guard correctly prevented paste. R3.1 keeps two distinct diagnostic motions inside the freshly validated target bounds.
+- macOS job [116652031855](https://github.com/ashutoshpw/open-obsidian/actions/runs/38801683546/job/116652031855) passed after 59m36s. Artifact `12007373306` archive SHA-256: `596f14ccde256b5d254e3b5e46a1be21f689d448f29b46261ffba6d827cb2f18`; report SHA-256: `d71c1a25f197af09d37a51e20f438235625e391a9e8e41007d95257314f63848`. The report has a complete 28-checkpoint matrix and ten stable C07.4 scenarios. macOS and Windows visible outcomes agree on all ten scenarios at first open and reopen. Obsidian rewrote 9/10 `.base` files by first-open shutdown and all ten after reopen; Markdown stayed unchanged. This is reference-only and makes no Rust parity claim.
+- Linux C07.4 remains unobserved because its round-trip failed before reference capture. Preserve the gate that Rust comparator semantics are not implemented/frozen until Linux C07.4 and mutation evidence are reconciled.
+
+Updated the attempt evidence, CI tracker, and this journal with terminal run/job counts and the macOS artifact digest. The R3.1 source repairs remain local. The requested goal cadence wording also remains local; before the R3.1 push, include its current goal SHA in `requirements.json.mapping_review.goal_sha256` and the corresponding requirement history, finalize the reviewed R3.1 scope, and submit the complete milestone once. No local tests, builds, formatters, validators, or app launches ran.
+
+
+## R3.1 cadence amendment and goal fingerprint synchronized — 2026-10-15T21:32:38Z
+
+Updated [goal.md](goal.md) to make the CI submission unit explicit: accumulate related minor work and local commits into a bounded, reviewed milestone; push once at its completed boundary; wait for every required job to finish and reconcile before the next batch. Updated requirements.json MIG-002 and mapping_review.goal_sha256 to the exact goal hash 817e6a89482d6419329bf1e50cbc8c47211a4e61eb871b8a2184a2b29912ba17. Expanded the R3.1 plan to include this coupled inventory-fingerprint repair; prior reviews are retained as historical because they predate the amendment. Two renewed independent reviews are pending. No CI was dispatched, no push occurred, and no local tests or validators ran.
+
+
+## R3 terminal status references reconciled — 2026-10-15T21:34:38Z
+
+Reconciled duplicate state records to the final R3 attempt evidence: all seven workflows and 20 jobs are terminal on 3f428b6d9e2fe2bf3789c0a02cd7d7690234ec91; Windows and macOS round-trip passed, while inventory and Ubuntu round-trip failed. The prior R3 plan retains its 20:39 status sample as historical and now points to the final outcome. Updated the following comparator milestone to say Linux C07.4 is missing while Windows and macOS are complete. Clarified that old R3.1 approvals cover only the original source repair; cadence/fingerprint review remains pending two renewed approvals. No change to source behavior, CI dispatch, or remote refs.
+
+
+## R3.1 plan and current-phase status aligned — 2026-10-15T21:35:28Z
+
+Refreshed state.json's current R2 action and R3 blocker to state that all 7 workflows and 20 jobs are terminal and reconciled; the 20:39 active-macOS sample remains historical. The R3.1 plan now explicitly covers all 229 keyed tracker entries: 227 canonical records plus R3 and R3.1. The amended scope still awaits two renewed independent reviews and whole-milestone review. No CI was dispatched, no push occurred, and no local tests or validators ran.
+
+
+## Amended R3.1 scope approved; final diff review remains — 2026-10-15T21:36:39Z
+
+Recorded renewed independent approvals from r3_repair_scope and macos_c074_review. Both confirmed the bounded combined repair, exact goal-hash binding, terminal R3 evidence, corrected status references, and 229 keyed tracker entries. No CI was dispatched and no push occurred. The final whole-milestone diff review is the remaining submission gate; no local tests or validators ran.
+
+
+## R3.1 final whole-milestone review complete — 2026-10-15T21:37:11Z
+
+Reviewed all eight changed/added files as one bounded deliverable after two independent approvals. The diff contains only the keyed tracker/Linux Canvas repair, goal cadence and matching MIG-002 fingerprint, and related state/evidence/plan/journal updates. The goal SHA matches both the mapping review and MIG-002 reference. No local project tests, validators, builds, or formatters ran. The milestone is ready for one push to origin/main; no CI has been dispatched yet.

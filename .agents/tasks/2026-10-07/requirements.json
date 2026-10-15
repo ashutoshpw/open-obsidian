@@ -10294,12 +10294,12 @@
       "source": {
         "path": ".agents/tasks/2026-10-07/goal.md",
         "heading": "Mandatory execution workflow: GitHub CI only",
-        "clause": "Push to origin/main only once for each completed, named milestone; never push every minor edit or commit to get CI feedback. Before implementation, record its stable ID, bounded scope, measurable criteria, required CI workflows/platforms, and evidence plan. Accumulate related code, tests, documentation, and fixes locally. A minor task, fix, file change, cleanup, or commit is never a push boundary; do not split coherent deliverables into artificial micro-milestones or combine unrelated work. Once all implementation criteria are met and the complete milestone is reviewed, push it exactly once. This starts its CI batch and records implementation-complete / CI-pending, not passed. Record achieved / CI-passed only after every required check passes on the exact SHA and evidence is reconciled. Keep evidence-only and status-only changes local. Since cross-platform CI may take several hours, keep origin/main at the submitted SHA until all required checks are terminal; do not push a second milestone while they are pending."
+        "clause": "**One full CI batch per completed milestone; never push for every minor change.** Accumulate related implementation, test, workflow, and documentation work\u2014including minor fixes and any number of local commits\u2014into one named, bounded, independently reviewable deliverable. A task, fix, file change, cleanup, or commit is not a push boundary: do not push every small change, create artificial micro-milestones, or push for early CI feedback. Keep the milestone small enough to review and diagnose, but complete enough to justify the several-hour cross-platform CI cycle. Once its implementation criteria are complete and the accumulated changes have been reviewed as a whole, push the milestone to `origin/main` exactly once at one SHA. That starts one full CI batch and marks the milestone `implementation-complete / CI-pending`; it becomes `achieved / CI-passed` only after every required check passes on that exact SHA and its evidence is reconciled. Keep `origin/main` at the submitted SHA until every required job is terminal and the batch is reconciled before submitting the next milestone. Do not overlap full milestone CI batches or dispatch duplicate batches for minor changes. Evidence-only and status-only changes stay local for the next substantive milestone."
       },
       "checkpoint": "R0",
       "owner": "xtask",
       "mandatory": true,
-      "acceptance_criteria": "Treat each origin/main push as one full cross-platform CI submission, potentially taking several hours. Keep related minor edits, fixes, documentation updates, and local commits together within one named coherent milestone; do not trigger CI for individual changes, relabel minor work as a milestone, create artificial micro-milestones, or bundle unrelated deliverables. Define its stable ID, bounded measurable implementation criteria, required workflows/platforms, and evidence before implementation. Push the accumulated milestone to origin/main exactly once, only after its implementation criteria are met and the whole deliverable is reviewed; record implementation-complete / CI-pending. Keep origin/main at the submitted exact SHA until every required workflow/job is terminal and evidence is reconciled. Record achieved / CI-passed only after every required exact-SHA job passes; do not dispatch CI for per-edit feedback.",
+      "acceptance_criteria": "Accumulate related implementation, tests, workflow, and documentation work, including minor fixes and any number of local commits, into one named, bounded, independently reviewable milestone. A task, fix, file change, cleanup, or commit is not a push boundary; do not create artificial micro-milestones or push for early CI feedback. Keep the milestone small enough to review and diagnose, but complete enough to justify the several-hour cross-platform CI cycle. Push origin/main exactly once only after all implementation criteria are complete and the accumulated deliverable has been reviewed. Run one full CI batch on that exact SHA, record implementation-complete / CI-pending, and keep origin/main at that SHA until every required job is terminal and evidence is reconciled. Record achieved / CI-passed only after all required exact-SHA checks pass. Do not overlap milestone CI batches or dispatch duplicate batches for minor changes.",
       "fixture_ids": [
         "fixture:mig-002"
       ],
@@ -10423,6 +10423,11 @@
           "kind": "rust-migration-goal",
           "version": "2026-10-15-one-push-after-complete-milestone-review",
           "sha256": "76c9f76ba8b3409518cb2de9de3b1952ab43ae600c4f18653b69d534759f7e7f"
+        },
+        {
+          "kind": "rust-migration-goal",
+          "version": "2026-10-15-bounded-milestone-ci-batch",
+          "sha256": "817e6a89482d6419329bf1e50cbc8c47211a4e61eb871b8a2184a2b29912ba17"
         }
       ],
       "applicable_platforms": [
@@ -11193,7 +11198,7 @@
     "post_r0_2_additions": [
       "MIG-016: maintain current, accurate documentation throughout migration and audit it at cutover."
     ],
-    "goal_sha256": "b8de564dd62a6a3d6ad4c7670800b4da562325458e0d791e8b11452cd7af3867",
+    "goal_sha256": "817e6a89482d6419329bf1e50cbc8c47211a4e61eb871b8a2184a2b29912ba17",
     "policy": "Every inherited requirement was reviewed by ID and assigned a Rust owner, migration phase, acceptance criterion and retained/superseded/external disposition. Historical status/evidence remain preserved separately. Rust acceptance remains pending unless current exact-SHA migration evidence is attached; external items remain external_pending."
   }
 }

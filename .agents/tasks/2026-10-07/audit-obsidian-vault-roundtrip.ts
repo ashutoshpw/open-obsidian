@@ -16491,29 +16491,86 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
           if (firstCharacter === undefined) throw new Error("Missing first Canvas input character for " + diagnosticField);
           const expectedHash = (text: string) => createHash("sha256").update(text, "utf8").digest("hex");
           let lastObservedLine = Math.max(preEntryTargetWidget.line, preEntrySiblingWidget.line);
+          const motionTargetGeometry = preEntryTargetWidget;
+          const motionSiblingGeometry = preEntrySiblingWidget;
+          const candidateDiagnosticMotionPoints = [
+            {x: clickX + 1, y: clickY},
+            {x: clickX + 2, y: clickY},
+            {x: clickX - 1, y: clickY},
+            {x: clickX - 2, y: clickY},
+          ];
+          const pointInsideRect = (
+            point: {x: number; y: number},
+            rect: {left: number; top: number; right: number; bottom: number},
+            pixelsPerPoint: number,
+          ): boolean => point.x >= rect.left * pixelsPerPoint
+            && point.x <= rect.right * pixelsPerPoint
+            && point.y >= rect.top * pixelsPerPoint
+            && point.y <= rect.bottom * pixelsPerPoint;
+          const motionPointChecks = candidateDiagnosticMotionPoints.map((point) => ({
+            ...point,
+            differs_from_click_pointer: point.x !== clickX || point.y !== clickY,
+            inside_target: pointInsideRect(point, motionTargetGeometry.rect, motionTargetGeometry.pixelsPerPoint),
+            inside_sibling: pointInsideRect(point, motionSiblingGeometry.rect, motionSiblingGeometry.pixelsPerPoint),
+          }));
+          const safeDiagnosticMotionPoints = motionPointChecks
+            .filter((point) => point.differs_from_click_pointer && point.inside_target && !point.inside_sibling)
+            .map(({x, y}) => ({x, y}));
+          const safeMotionPointsAreDistinct = new Set(safeDiagnosticMotionPoints.map((point) => `${point.x},${point.y}`)).size
+            === safeDiagnosticMotionPoints.length;
+          if (!safeMotionPointsAreDistinct || safeDiagnosticMotionPoints.length < 3) {
+            throw new Error(
+              "Refusing Linux Canvas diagnostic motions without three safe in-field points"
+                + "; click_pointer=" + JSON.stringify({x: clickX, y: clickY})
+                + "; motion_point_checks=" + JSON.stringify(motionPointChecks)
+                + "; target=" + JSON.stringify(motionTargetGeometry)
+                + "; sibling=" + JSON.stringify(motionSiblingGeometry),
+            );
+          }
+          let currentPointer = {x: clickX, y: clickY};
 
           const movePointerForFreshDiagnostics = (stage: string): Record<string, unknown> => {
+            const motionsForStage = safeDiagnosticMotionPoints
+              .filter((point) => point.x !== currentPointer.x || point.y !== currentPointer.y)
+              .slice(0, 2);
+            if (motionsForStage.length !== 2) {
+              throw new Error(
+                "Refusing Linux Canvas diagnostic motion stage without two points distinct from the current pointer"
+                  + "; stage=" + stage
+                  + "; current_pointer=" + JSON.stringify(currentPointer)
+                  + "; safe_candidates=" + JSON.stringify(safeDiagnosticMotionPoints),
+              );
+            }
             const motionRecord: Record<string, unknown> = {
               stage,
               window_id: windowId,
-              motions: [
-                {x: 5, y: 5, status: "pending"},
-                {x: 6, y: 5, status: "pending"},
-              ],
+              point_source: "validated target-field click position plus or minus one and two window-relative pixels",
+              click_pointer: {x: clickX, y: clickY},
+              current_pointer_before_stage: {...currentPointer},
+              target_rect: motionTargetGeometry.rect,
+              sibling_rect: motionSiblingGeometry.rect,
+              pixels_per_point: motionTargetGeometry.pixelsPerPoint,
+              motions: motionsForStage.map((point) => ({...point, status: "pending"})),
               status: "running",
             };
             diagnosticMotionStages.push(motionRecord);
             const motions = motionRecord.motions as Array<Record<string, unknown>>;
             for (const motion of motions) {
               try {
+                const x = Number(motion.x);
+                const y = Number(motion.y);
+                if (x === currentPointer.x && y === currentPointer.y) {
+                  throw new Error(`pointer motion would repeat the current position (${x},${y})`);
+                }
                 xdotool("mousemove", "--sync", "--window", windowId, String(motion.x), String(motion.y));
                 motion.status = "sent";
+                currentPointer = {x, y};
               } catch (error) {
                 motion.status = "failed";
                 motion.error = error instanceof Error ? error.message : String(error);
                 motionRecord.status = "failed";
                 throw new Error(
-                  "Could not refresh Linux Canvas diagnostics with neutral pointer motion " + stage
+                  "Could not refresh Linux Canvas diagnostics with in-field pointer motion " + stage
                     + "; diagnostic_pointer_motions=" + JSON.stringify(diagnosticMotionStages),
                 );
               }

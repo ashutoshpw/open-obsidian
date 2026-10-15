@@ -1,0 +1,147 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.8.136-R3.1-MILESTONE-MAP-AND-LINUX-CANVAS-FOCUS-REPAIR",
+  "name": "Restore keyed milestone state, preserve Linux Canvas focus, and synchronize milestone cadence",
+  "status": "R3 attempt 1 is terminal and reconciled. Two independent reviewers approved the amended R3.1 scope; the final whole-milestone review is complete. Ready for one submission to origin/main; CI not yet dispatched.",
+  "recorded_at": "2026-10-15 21:31:54 UTC",
+  "planning_base_sha": "3f428b6d9e2fe2bf3789c0a02cd7d7690234ec91",
+  "implementation_start_sha": "3f428b6d9e2fe2bf3789c0a02cd7d7690234ec91",
+  "canonical_mapping_source": {
+    "sha": "1ddae8fc44ab1d74c924abbb300240f0e591a888",
+    "path": ".agents/tasks/2026-10-07/state.json",
+    "record": "The keyed milestones object immediately before the R3 submission; its insertion order supplies the original 227 milestone keys."
+  },
+  "bounded_outcome": "Restore the keyed state.json milestone map expected by CI inventory, keep Linux Canvas path diagnostics focused without weakening fail-closed guards, and make the written one-push-per-complete-milestone cadence consistent with requirements.json and its exact goal fingerprint.",
+  "scope": [
+    "Restore the root state.json milestones shape that caused the R3 inventory workflow to fail.",
+    "Use the keyed milestones object from canonical mapping source SHA 1ddae8fc44ab1d74c924abbb300240f0e591a888. Restore its 227 stable keys in original order paired with the first 227 submitted milestone records, preserving each record's current values; map the appended R3 record under its explicit id.",
+    "Repair the Linux Canvas path-field diagnostic refresh: replace the (5,5)/(6,5) pointer motions, which the Ubuntu report shows moved outside the focused field and transferred focus to its sibling, with two non-clicking window-relative motions selected separately for each clipboard stage from safe candidates derived around validated clickX/clickY. Candidate bounds are checked against the target and sibling rectangles after converting point bounds by pixelsPerPoint; each selected move must differ from the pointer position immediately before it and from the other move.",
+    "Derive the in-field motion coordinates from the validated click position/target rectangle, keep pointer button state untouched, then retain fresh same-frame target/sibling, focus, hash, response-ID, refresh, OCR, and no-save guards before any paste.",
+    "Preserve R3 attempt 1 exact workflow/job and artifact evidence; update the tracker, plan, state, and journal with terminal outcomes before the single follow-up submission.",
+    "Clarify goal.md push cadence so related minor implementation, test, workflow, and documentation changes plus any local commits accumulate within one bounded milestone; push origin/main exactly once after the complete milestone is reviewed, then wait for its full exact-SHA CI batch to become terminal and reconciled before the next submission.",
+    "Synchronize requirements.json with the updated goal bytes: set mapping_review.goal_sha256, update MIG-002 source clause and acceptance criteria to the bounded milestone cadence, and append a dated reference_versions entry without changing requirement counts or unrelated mappings.",
+    "Add the R3.1 repair milestone record under its explicit stable ID in the keyed state.json map, preserving the 227 canonical historical keys, the R3 submission record, and the R3.1 record (229 milestone keys total)."
+  ],
+  "out_of_scope": [
+    "Changing validate_inventory.py or weakening its R0.1 completion gate.",
+    "Changing Rust application behavior, macOS or Windows input paths, Canvas schema, C07.4 scenario semantics, or unrelated workflows.",
+    "Relaxing any existing target geometry, sibling ownership/value/hash, focus, refresh, source snapshot, OCR, or no-save-on-failure checks.",
+    "Running local tests, builds, formatters, lint, validators, type checks, runtime probes, or application launches.",
+    "Pushing or dispatching another CI batch while any required job from R3 attempt 1 remains active.",
+    "Changing requirements outside MIG-002, requirement counts, historical requirement dispositions, or any product/runtime behavior as part of the cadence clarification.",
+    "Submitting a separate goal-only or tracker-only CI batch; the goal fingerprint synchronization is included in this single bounded R3.1 submission."
+  ],
+  "implementation_criteria": [
+    "state.json.milestones is a JSON object keyed by stable milestone IDs, including R0.1 and the R3 milestone ID.",
+    "All historical milestone records remain associated with their original keys and retain their recorded values.",
+    "Linux path-entry diagnostic motions are distinct and stay within the freshly validated target rectangle; the intended target remains focused and the sibling remains unfocused with unchanged value/hash before each paste.",
+    "Generate candidate points around clickX/clickY in window-relative coordinates; compare them with target.rect and sibling.rect after multiplying point bounds by pixelsPerPoint, require at least three safe candidates, select two per clipboard stage that differ from the immediately preceding pointer position and each other, and update tracked pointer position after each successful move. Fail closed before motion if either stage cannot produce a safe pair.",
+    "All fresh same-frame, response-ID, refresh, OCR, and fail-closed no-save checks remain intact; no paste is sent when target focus is not proven.",
+    "R3 attempt 1 terminal outcomes and evidence are recorded against exact workflow/job IDs; no unrelated source change is included.",
+    "goal.md explicitly accumulates related minor work and any local commits into a bounded, reviewed milestone; it sets one exact-SHA push after milestone completion, prohibits per-change pushes/artificial micro-milestones, and holds the next push until all required jobs are terminal and evidence is reconciled.",
+    "requirements.json mapping_review.goal_sha256 equals the SHA-256 of the current goal.md bytes; MIG-002 source clause and acceptance criteria express the same cadence; a dated MIG-002 reference version records that exact goal hash; requirement counts and all unrelated rows remain unchanged.",
+    "state.json.milestones preserves the 227 canonical keys and explicitly maps both R3 and R3.1 under their stable IDs, for 229 keyed records total; the R3.1 record reflects local implementation completion with CI pending and links its plan and R3 predecessor evidence."
+  ],
+  "ci_acceptance_criteria": [
+    "All seven required GitHub Actions workflows and all 20 required jobs pass on one exact submitted SHA.",
+    "The Rust migration inventory workflow reads the keyed milestones object and passes its R0.1 gate.",
+    "Ubuntu completes the first-character sentinel and remainder path-entry sequence with the target still focused, then passes all ten C07.4 scenarios on first open and reopen.",
+    "macOS and Windows round-trip jobs pass their existing authoring, reopen, Canvas, and ten C07.4 first-open/reopen acceptance scenarios.",
+    "All round-trip artifacts, archive/report hashes, exact-SHA workflow/job outcomes, and source checkpoint limitations are reconciled.",
+    "No local tests, builds, formatting, linting, validators, type checks, runtime probes, or application launches are used for acceptance.",
+    "Rust migration inventory passes both the keyed state.json R0.1 gate and the requirements.json mapping_review.goal_sha256 equality check on the exact submitted SHA.",
+    "The keyed inventory preserves the canonical 227 milestone records, the R3 record, and the explicit R3.1 record; the inventory validator accepts the R0.1 gate and exact goal hash on the submitted SHA."
+  ],
+  "required_workflows": [
+    "OpenObsidian Rust CI",
+    "Rust migration inventory",
+    "Obsidian vault round-trip acceptance",
+    "OpenObsidian desktop build",
+    "OpenObsidian quality",
+    "OpenObsidian plugin renderer matrix",
+    "OpenObsidian loaded plugin workflows"
+  ],
+  "expected_jobs": 20,
+  "push_policy": "R3 attempt 1 is terminal and reconciled, two renewed independent reviews approved the amended combined scope, and the whole-milestone review is complete. Push this bounded R3.1 milestone exactly once to origin/main. Keep origin/main at the submitted SHA until all seven required workflows and 20 jobs are terminal; reconcile every result before submitting any next milestone. Do not overlap batches, push status-only changes, or submit per-change CI.",
+  "local_executable_validation": false,
+  "ci_dispatched": false,
+  "submitted_sha": null,
+  "ci_evidence_file": null,
+  "last_updated_at": "2026-10-15T21:37:11Z",
+  "historical_plan_reviews_previous_scope": [
+    {
+      "reviewer": "linux_repair_audit",
+      "result": "approved",
+      "finding": "Canonical source provenance and ordered key-to-record preservation are explicit; scope and wait-before-push gate are bounded."
+    },
+    {
+      "reviewer": "c063_scope_review",
+      "result": "approved",
+      "finding": "Read-only comparison confirmed 227 historical keys/records plus the explicit R3 ID and preservation of the R2 terminal CI outcome; no blocker remains."
+    },
+    {
+      "reviewer": "linux_repair_audit",
+      "result": "approved after expanded Linux focus implementation review",
+      "finding": "Initial plan review identified the off-field (5,5)/(6,5) motions; follow-up implementation review approved the safe in-field candidates, fresh per-stage pointer tracking, and intact fail-closed guards."
+    },
+    {
+      "reviewer": "c063_scope_review",
+      "result": "approved after expanded Linux focus implementation review",
+      "finding": "Initial plan review confirmed the pre-paste fail-closed behavior and no paste dispatch; follow-up implementation review approved the scoped repair and preserved the full-batch CI submission gate."
+    },
+    {
+      "reviewer": "linux_repair_audit",
+      "result": "approved",
+      "finding": "Both points differ from the current clickX/clickY pointer and each other, are checked in window-relative coordinates against target/sibling bounds scaled by pixelsPerPoint, and fail closed before motion."
+    },
+    {
+      "reviewer": "c063_scope_review",
+      "result": "approved",
+      "finding": "Confirmed explicit no-op prevention, coordinate conversion, target/sibling bounds checks, canonical mapping, and the full-batch push gate."
+    },
+    {
+      "reviewer": "linux_repair_audit",
+      "result": "approved",
+      "finding": "Four bounded candidates are checked against target/sibling rectangles; each stage selects two safe points distinct from currentPointer and updates after each successful move. Existing fail-closed paste guards remain intact."
+    },
+    {
+      "reviewer": "c063_scope_review",
+      "result": "approved",
+      "finding": "Static review confirmed safe in-field candidate bounds, fresh per-stage pointer positions, no-op prevention, intact fail-closed guards, and alignment with the full-batch submission gate."
+    }
+  ],
+  "historical_review_scope_note": "All prior approvals apply to the original keyed-map/Linux-focus repair scope only; they do not approve the added goal cadence and requirements fingerprint changes.",
+  "plan_reviews": [
+    {
+      "reviewer": "r3_repair_scope",
+      "result": "approved after final tracker reconciliation",
+      "finding": "Confirmed the R3.1 package is coherent and bounded; goal hash matches mapping_review and MIG-002, requirement counts and unrelated rows are unchanged, 229 keyed records include 227 canonical plus R3 and R3.1, and terminal exact-SHA R3 evidence is reconciled."
+    },
+    {
+      "reviewer": "macos_c074_review",
+      "result": "approved after final tracker reconciliation",
+      "finding": "Confirmed stale current R3 status references are corrected; the R3 plan labels its 20:39 sample historical and links final exact-SHA reconciliation; 229 keyed records are explicit; goal and requirements hashes match; no residual scope blocker."
+    }
+  ],
+  "amended_scope_review_gate": {
+    "required_independent_reviewers": 2,
+    "status": "approved",
+    "reviewers": [
+      "r3_repair_scope",
+      "macos_c074_review"
+    ],
+    "review_focus": [
+      "R3 terminal evidence reconciliation",
+      "bounded combined scope",
+      "goal and requirements hash consistency",
+      "inventory acceptance",
+      "one-push-per-milestone cadence",
+      "no unrelated changes"
+    ]
+  },
+  "final_whole_milestone_review": {
+    "status": "complete",
+    "reviewed_at": "2026-10-15T21:37:11Z",
+    "reviewed_scope": "All eight changed/added files in the bounded R3.1 milestone; only the Linux Canvas audit harness, goal cadence, MIG-002 goal fingerprint binding, tracker/state, and exact-SHA evidence/plans/journal are included. No unrelated product files or local executable checks."
+  }
+}
