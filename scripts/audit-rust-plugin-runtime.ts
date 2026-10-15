@@ -35,6 +35,7 @@ type ProbeResult = {
   integrity: "passed" | "failed";
   runtime?: Record<string, unknown>;
   report?: Record<string, unknown>;
+  process?: {exitCode: number | null; outerTimedOut: boolean; stdoutTail: string; stderrTail: string};
   detail?: string;
 };
 
@@ -47,12 +48,18 @@ function spawnProbe(args: string[]): Promise<{code: number | null; stdout: strin
   const commandArgs = process.platform === "linux" ? ["-a", "--server-args=-screen 0 1280x720x24", binaryPath, ...args] : args;
   const environment = {...process.env};
   if (process.platform === "linux") environment.GDK_BACKEND = "x11";
-  const child = spawn(command, commandArgs, {cwd: root, env: environment, stdio: ["ignore", "pipe", "pipe"]});
+  const child = spawn(command, commandArgs, {
+    cwd: root,
+    env: environment,
+    stdio: ["ignore", "pipe", "pipe"],
+    detached: process.platform === "linux",
+  });
   return new Promise((resolveOutcome) => {
     let stdout = "";
     let stderr = "";
     let timedOut = false;
     let settled = false;
+    let killSettleTimer: ReturnType<typeof setTimeout> | null = null;
     const finish = (outcome: {code: number | null; stdout: string; stderr: string; timedOut: boolean}): void => {
       if (settled) return;
       settled = true;
@@ -60,16 +67,34 @@ function spawnProbe(args: string[]): Promise<{code: number | null; stdout: strin
     };
     const timer = setTimeout(() => {
       timedOut = true;
-      child.kill();
+      if (process.platform === "linux" && child.pid !== undefined) {
+        try { process.kill(-child.pid, "SIGKILL"); }
+        catch { child.kill("SIGKILL"); }
+      } else {
+        child.kill("SIGKILL");
+      }
+      killSettleTimer = setTimeout(() => {
+        child.stdout.destroy();
+        child.stderr.destroy();
+        child.unref();
+        finish({code: null, stdout, stderr, timedOut: true});
+      }, 2_000);
     }, timeoutMs);
     child.stdout.on("data", (chunk) => { stdout = `${stdout}${chunk.toString()}`.slice(-outputLimit); });
     child.stderr.on("data", (chunk) => { stderr = `${stderr}${chunk.toString()}`.slice(-outputLimit); });
     child.on("error", (error) => {
+      const message = String(error);
+      if (timedOut) {
+        stderr = `${stderr}\n${message}`.slice(-outputLimit);
+        return;
+      }
       clearTimeout(timer);
-      finish({code: null, stdout, stderr: `${stderr}\n${String(error)}`, timedOut: false});
+      if (killSettleTimer !== null) clearTimeout(killSettleTimer);
+      finish({code: null, stdout, stderr: `${stderr}\n${message}`.slice(-outputLimit), timedOut: false});
     });
     child.on("close", (code) => {
       clearTimeout(timer);
+      if (killSettleTimer !== null) clearTimeout(killSettleTimer);
       finish({code, stdout, stderr, timedOut});
     });
   });
@@ -83,6 +108,39 @@ function parseProbeOutput(output: string): Record<string, unknown> | null {
 function checkReport(pluginId: string, report: Record<string, unknown>): string[] {
   const problems: string[] = [];
   if (report.status !== "passed") problems.push("WebView or capability probe did not pass");
+  const diagnostics = asRecord(report.probeDiagnostics);
+  if (diagnostics?.status !== "passed" || diagnostics.failure !== null) problems.push("bounded probe diagnostics report a failure or are missing");
+  const hostDiagnostics = asRecord(diagnostics?.host);
+  const ipcDiagnostics = asRecord(hostDiagnostics?.ipc);
+  const hostLastStage = asRecord(hostDiagnostics?.lastStage);
+  const stageEvents = Array.isArray(diagnostics?.stageEvents)
+    ? diagnostics.stageEvents.map(asRecord).filter((event): event is Record<string, unknown> => event !== null)
+    : [];
+  if (typeof diagnostics?.elapsedMs !== "number" || diagnostics.elapsedMs < 0 || diagnostics.elapsedMs > 30_000 || stageEvents.length === 0 || !ipcDiagnostics) {
+    problems.push("bounded stage or host IPC diagnostics are missing");
+  }
+  if (!Array.isArray(diagnostics?.stageTimeouts) || diagnostics.stageTimeouts.length !== 0) {
+    problems.push("a bounded async stage timed out or timeout diagnostics are missing");
+  }
+  if (!Array.isArray(diagnostics?.progressSendFailures) || diagnostics.progressSendFailures.length !== 0) {
+    problems.push("stage progress IPC send failed or its diagnostics are missing");
+  }
+  if (typeof ipcDiagnostics?.receivedMessages !== "number" || ipcDiagnostics.receivedMessages < 2 || ipcDiagnostics.receivedMessages > 128) {
+    problems.push("host did not receive both authenticated progress and report IPC");
+  }
+  if (hostLastStage?.stage !== "report-post" || hostLastStage.phase !== "start") {
+    problems.push("host did not observe the bounded report-post progress stage");
+  }
+  if (ipcDiagnostics?.budgetExhausted !== false || typeof ipcDiagnostics?.receivedBytes !== "number" || ipcDiagnostics.receivedBytes < 0 || ipcDiagnostics.receivedBytes > 1_048_576) {
+    problems.push("host IPC message/byte budget was exhausted or its bounded byte counter is missing");
+  }
+  for (const counter of ["budgetExceededMessages", "oversizedMessages", "sendFailures", "malformedMessages", "tokenMismatches", "unknownMessages", "invalidProgress"]) {
+    if (ipcDiagnostics?.[counter] !== 0) problems.push(`host IPC diagnostic ${counter} is nonzero or missing`);
+  }
+  const hasCompletedStage = (stage: string): boolean => stageEvents.some((event) => event.stage === stage && event.phase === "complete");
+  if (!hasCompletedStage("capability-probe") || !hasCompletedStage("plugin-load")) {
+    problems.push("capability or plugin-load stage completion is missing");
+  }
   const artifact = asRecord(report.artifact);
   const plugin = asRecord(report.plugin);
   const capabilityProbe = asRecord(report.capabilityProbe);
@@ -91,6 +149,7 @@ function checkReport(pluginId: string, report: Record<string, unknown>): string[
   const editor = asRecord(report.editorWorkflow);
   const stylesheet = asRecord(report.stylesheet);
   const runtime = asRecord(report.runtime);
+  if (editor?.timedOut === true || editor?.status === "timed-out") problems.push("an editor callback timed out");
   if (artifact?.id !== pluginId || typeof artifact.sha256 !== "string" || typeof artifact.manifestId !== "string" || typeof artifact.manifestSha256 !== "string") problems.push("artifact identity and pinned bundle/manifest hashes are missing from runtime report");
   if (plugin?.status !== "loaded") problems.push(`unchanged ${pluginId} bundle did not complete onload`);
   if (capabilityProbe?.passed !== true) problems.push("filesystem/process/network/credential denial probe did not pass");
@@ -100,6 +159,9 @@ function checkReport(pluginId: string, report: Record<string, unknown>): string[
   if (typeof dom?.bodyChildren !== "number" || typeof dom.pluginRootChildren !== "number") problems.push("browser DOM execution metrics are missing");
   if (pluginId === "PC05" && !(typeof editor?.completedCallbacks === "number" && editor.completedCallbacks > 0)) {
     problems.push("Advanced Tables did not complete an editor callback against the DOM-backed editor fixture");
+  }
+  if (pluginId === "PC05" && !hasCompletedStage("editor-callback")) {
+    problems.push("PC05 editor callback completion is missing from bounded stage diagnostics");
   }
   if (pluginId === "PC08") {
     const themeFixture = asRecord(report.themeSettingsFixture);
@@ -162,8 +224,21 @@ async function auditArtifact(pluginId: string, temporaryRoot: string): Promise<P
 
   const outcome = await spawnProbe(args);
   const report = parseProbeOutput(outcome.stdout);
+  const process = {
+    exitCode: outcome.code,
+    outerTimedOut: outcome.timedOut,
+    stdoutTail: outcome.stdout.slice(-1200),
+    stderrTail: outcome.stderr.slice(-1200),
+  };
   if (!report) {
-    return {pluginId, version, status: "failed", integrity: "passed", detail: `probe produced no JSON report (exit=${String(outcome.code)}, timeout=${outcome.timedOut}): ${(outcome.stderr || outcome.stdout).slice(-800)}`};
+    return {
+      pluginId,
+      version,
+      status: "failed",
+      integrity: "passed",
+      process,
+      detail: `probe produced no JSON report (exit=${String(outcome.code)}, outerTimedOut=${outcome.timedOut}): ${(outcome.stderr || outcome.stdout).slice(-800)}`,
+    };
   }
   const reportedArtifact = asRecord(report.artifact);
   const actualHash = string(bundleAsset.sha256);
@@ -177,6 +252,7 @@ async function auditArtifact(pluginId: string, temporaryRoot: string): Promise<P
   if (reportedArtifact?.manifestSha256 !== manifestHash) problems.push("runtime-reported plugin manifest hash differs from the pinned manifest");
   if (expectedManifestId && reportedArtifact?.manifestId !== expectedManifestId) problems.push("runtime-reported plugin manifest id differs from its pinned release manifest");
   if (stylesheetHash && reportStylesheet?.sha256 !== stylesheetHash) problems.push("runtime-reported stylesheet hash differs from the pinned manifest");
+  if (outcome.timedOut) problems.push("outer probe watchdog timed out the process");
   if (outcome.code !== 0) problems.push(`probe process exited ${String(outcome.code)}`);
   const runtime = asRecord(report.runtime) ?? undefined;
   return {
@@ -186,6 +262,7 @@ async function auditArtifact(pluginId: string, temporaryRoot: string): Promise<P
     integrity: "passed",
     runtime: runtime ?? undefined,
     report,
+    process,
     ...(problems.length ? {detail: problems.join("; ")} : {}),
   };
 }

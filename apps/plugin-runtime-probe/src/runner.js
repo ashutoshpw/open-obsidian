@@ -5,6 +5,15 @@
   const nativeJsonStringify = JSON.stringify.bind(JSON);
   const nativeFetch = typeof window.fetch === "function" ? window.fetch.bind(window) : null;
   const ipcPostMessage = window.ipc?.postMessage?.bind(window.ipc);
+  const nativeSetTimeout = window.setTimeout.bind(window);
+  const nativeClearTimeout = window.clearTimeout.bind(window);
+  const probeStartedAt = performance.now();
+  const asyncDeadlineAt = probeStartedAt + 27_000;
+  const stageEvents = [];
+  const stageTimeouts = [];
+  const stageSendFailures = [];
+  let lastStage = null;
+  let probeFailure = null;
   const root = document.getElementById("openobsidian-plugin-root");
   if (typeof config.themeSettingsCss === "string") {
     const themeSettingsStyle = document.createElement("style");
@@ -32,7 +41,91 @@
     completedCallbacks: 0,
     changed: false,
     errors: [],
+    timedOut: false,
   };
+
+  const allowedStages = new Set([
+    "runner-bootstrap", "capability-probe", "bundle-evaluation", "plugin-constructor", "plugin-load",
+    "startup-settle", "settings-render", "style-settings-expand", "view-open", "editor-callback",
+    "report-build", "report-post",
+  ]);
+
+  function progress(stage, phase, details = {}) {
+    if (!allowedStages.has(stage) || !["start", "complete", "failed"].includes(phase)) return;
+    const elapsedMs = Math.max(0, Math.min(30_000, Math.round(performance.now() - probeStartedAt)));
+    const entry = {stage, phase, elapsedMs};
+    for (const key of ["callbackIndex", "registeredCallbacks", "invokedCallbacks", "completedCallbacks"]) {
+      const value = details[key];
+      if (Number.isInteger(value) && value >= 0 && value <= 8) entry[key] = value;
+    }
+    lastStage = entry;
+    if (stageEvents.length === 48) stageEvents.shift();
+    stageEvents.push(entry);
+    if (typeof ipcPostMessage === "function") {
+      try {
+        ipcPostMessage(nativeJsonStringify({token: config.sessionToken, type: "progress", ...entry}));
+      } catch (error) {
+        if (stageSendFailures.length < 8) stageSendFailures.push(String(error?.message ?? error).slice(0, 160));
+      }
+    }
+  }
+
+  function stageTimeoutError(stage, elapsedMs) {
+    const error = new Error(`${stage} exceeded the bounded probe wait after ${elapsedMs} ms`);
+    error.code = "probe_stage_timeout";
+    error.stage = stage;
+    error.elapsedMs = elapsedMs;
+    return error;
+  }
+
+  async function awaitStage(stage, operation, details = {}, onComplete = null) {
+    const currentDetails = () => typeof details === "function" ? details() : details;
+    progress(stage, "start", currentDetails());
+    const remainingMs = Math.floor(asyncDeadlineAt - performance.now());
+    if (remainingMs <= 0) {
+      const error = stageTimeoutError(stage, Math.max(0, Math.round(performance.now() - probeStartedAt)));
+      probeFailure = {code: error.code, stage, elapsedMs: error.elapsedMs, message: error.message};
+      editorWorkflow.timedOut ||= stage === "editor-callback";
+      if (stageTimeouts.length < 8) stageTimeouts.push({stage, elapsedMs: error.elapsedMs});
+      progress(stage, "failed", currentDetails());
+      throw error;
+    }
+    let timer = null;
+    const work = Promise.resolve().then(operation);
+    const timeout = new Promise((_, reject) => {
+      timer = nativeSetTimeout(() => {
+        reject(stageTimeoutError(stage, Math.max(0, Math.round(performance.now() - probeStartedAt))));
+      }, remainingMs);
+    });
+    try {
+      const result = await Promise.race([work, timeout]);
+      if (typeof onComplete === "function") onComplete(result);
+      progress(stage, "complete", currentDetails());
+      return result;
+    } catch (error) {
+      progress(stage, "failed", currentDetails());
+      if (error?.code === "probe_stage_timeout") {
+        probeFailure = {code: error.code, stage, elapsedMs: error.elapsedMs, message: String(error.message).slice(0, 240)};
+        editorWorkflow.timedOut ||= stage === "editor-callback";
+        if (stageTimeouts.length < 8) stageTimeouts.push({stage, elapsedMs: error.elapsedMs});
+      }
+      throw error;
+    } finally {
+      if (timer !== null) nativeClearTimeout(timer);
+    }
+  }
+
+  function probeDiagnostics(status) {
+    return {
+      status,
+      elapsedMs: Math.max(0, Math.min(30_000, Math.round(performance.now() - probeStartedAt))),
+      lastStage,
+      stageEvents: stageEvents.slice(),
+      stageTimeouts: stageTimeouts.slice(),
+      progressSendFailures: stageSendFailures.slice(),
+      failure: probeFailure,
+    };
+  }
 
   document.addEventListener("securitypolicyviolation", (event) => {
     cspViolations.push({directive: event.effectiveDirective, blockedURI: event.blockedURI});
@@ -579,68 +672,123 @@
     const commands = registrations.commands.filter((command) => typeof command.editorCallback === "function");
     editorWorkflow.registeredCallbacks = commands.length;
     const initialValue = String(config.editorText?.value ?? "");
-    for (const command of commands.slice(0, 8)) {
+    for (const [callbackIndex, command] of commands.slice(0, 8).entries()) {
       state.value = initialValue;
       state.cursor = {line: 0, ch: 0};
       syncEditorDom();
       const before = state.value;
       editorWorkflow.invokedCallbacks += 1;
       try {
-        await command.editorCallback.call(command.owner ?? plugin, makeEditor(), app.workspace.getActiveViewOfType());
-        editorWorkflow.completedCallbacks += 1;
-        editorWorkflow.changed ||= before !== state.value;
+        await awaitStage("editor-callback", () => command.editorCallback.call(
+          command.owner ?? plugin,
+          makeEditor(),
+          app.workspace.getActiveViewOfType(),
+        ), () => ({
+          callbackIndex,
+          registeredCallbacks: Math.min(commands.length, 8),
+          invokedCallbacks: editorWorkflow.invokedCallbacks,
+          completedCallbacks: editorWorkflow.completedCallbacks,
+        }), () => {
+          editorWorkflow.completedCallbacks += 1;
+          editorWorkflow.changed ||= before !== state.value;
+        });
       } catch (error) {
         editorWorkflow.errors.push(String(error?.message ?? error).slice(0, 180));
+        if (error?.code === "probe_stage_timeout") {
+          editorWorkflow.timedOut = true;
+          editorWorkflow.status = "timed-out";
+          throw error;
+        }
       }
     }
     editorWorkflow.finalValue = state.value;
-    editorWorkflow.status = editorWorkflow.completedCallbacks > 0 ? "exercised" : "no-editor-callback-completed";
+    editorWorkflow.status = editorWorkflow.timedOut
+      ? "timed-out"
+      : editorWorkflow.completedCallbacks > 0 ? "exercised" : "no-editor-callback-completed";
   }
 
   async function finish() {
-    const capabilityProbe = await verifyCapabilityDenials();
     installObsidianDomExtensions();
     root.append(safeElement("pre", {id: "openobsidian-editor-probe", cls: "cm-content", text: state.value}));
+    progress("runner-bootstrap", "complete");
+    const testedCapabilities = ["filesystem.direct", "process.spawn", "network.request", "credentials.read"];
+    let capabilityProbe = {
+      passed: false,
+      tested: testedCapabilities,
+      scope: "direct CommonJS module and common browser request probes; not an isolation certification",
+      nativeNetworkBlockedByCsp: false,
+      cspViolations,
+    };
+    let capabilityError = null;
+    try {
+      capabilityProbe = await awaitStage("capability-probe", () => verifyCapabilityDenials());
+    } catch (error) {
+      capabilityError = String(error?.message ?? error).slice(0, 240);
+    }
     const manifest = config.pluginManifest;
     const module = {exports: {}};
     let plugin = null;
     let pluginStatus = "failed";
-    let pluginError = null;
-    try {
-      const pluginFactory = new nativeFunction("module", "exports", "require", `"use strict";\n${bundleSource}\n//# sourceURL=openobsidian-unchanged-plugin.js`);
-      pluginFactory(module, module.exports, safeRequire);
-      const PluginClass = module.exports?.default ?? module.exports;
-      if (typeof PluginClass !== "function") throw new Error("unchanged bundle did not export a plugin constructor");
-      plugin = new PluginClass(app, manifest);
-      if (typeof plugin.load === "function") await plugin.load();
-      else if (typeof plugin.onload === "function") await plugin.onload();
-      // Some legacy plugins start asyncOnload work without returning its promise.
-      // Style Settings schedules CSS parsing 100 ms after onload.
-      const startupSettleMs = config.pluginId === "PC08" ? 300 : 50;
-      await new Promise((resolve) => setTimeout(resolve, startupSettleMs));
-      pluginStatus = "loaded";
-      for (const {tab} of registrations.settingTabs.slice(0, 3)) {
-        try { if (typeof tab?.display === "function") { await tab.display(); apiCalls.push("displaySettingTab"); } }
-        catch (error) { apiCalls.push(`settingTabError:${String(error?.message ?? error).slice(0, 90)}`); }
-      }
-      if (config.pluginId === "PC08") {
-        for (const heading of Array.from(root.querySelectorAll(".style-settings-heading.is-collapsed")).slice(0, 8)) {
-          heading.click();
+    let pluginError = capabilityError;
+    if (!probeFailure) {
+      try {
+        progress("bundle-evaluation", "start");
+        const pluginFactory = new nativeFunction("module", "exports", "require", `"use strict";\n${bundleSource}\n//# sourceURL=openobsidian-unchanged-plugin.js`);
+        pluginFactory(module, module.exports, safeRequire);
+        progress("bundle-evaluation", "complete");
+        const PluginClass = module.exports?.default ?? module.exports;
+        if (typeof PluginClass !== "function") throw new Error("unchanged bundle did not export a plugin constructor");
+        progress("plugin-constructor", "start");
+        plugin = new PluginClass(app, manifest);
+        progress("plugin-constructor", "complete");
+        if (typeof plugin.load === "function") {
+          await awaitStage("plugin-load", () => plugin.load());
+        } else if (typeof plugin.onload === "function") {
+          await awaitStage("plugin-load", () => plugin.onload());
         }
+        // Some legacy plugins start asyncOnload work without returning its promise.
+        // Style Settings schedules CSS parsing 100 ms after onload.
+        const startupSettleMs = config.pluginId === "PC08" ? 300 : 50;
+        await awaitStage("startup-settle", () => new Promise((resolve) => nativeSetTimeout(resolve, startupSettleMs)));
+        pluginStatus = "loaded";
+        for (const [index, {tab}] of registrations.settingTabs.slice(0, 3).entries()) {
+          try {
+            if (typeof tab?.display === "function") {
+              await awaitStage("settings-render", () => tab.display(), {callbackIndex: index});
+              apiCalls.push("displaySettingTab");
+            }
+          } catch (error) {
+            if (error?.code === "probe_stage_timeout") throw error;
+            apiCalls.push(`settingTabError:${String(error?.message ?? error).slice(0, 90)}`);
+          }
+        }
+        if (config.pluginId === "PC08") {
+          progress("style-settings-expand", "start");
+          for (const heading of Array.from(root.querySelectorAll(".style-settings-heading.is-collapsed")).slice(0, 8)) {
+            heading.click();
+          }
+          progress("style-settings-expand", "complete");
+        }
+        for (const [index, view] of registrations.views.slice(0, 2).entries()) {
+          try {
+            await awaitStage("view-open", () => {
+              const leaf = {app, containerEl: root, titleEl: root, file: app.workspace.getActiveFile()};
+              const instance = typeof view.creator === "function" ? view.creator(leaf) : null;
+              return instance && typeof instance.onOpen === "function" ? instance.onOpen() : undefined;
+            }, {callbackIndex: index});
+            apiCalls.push("openRegisteredView");
+          } catch (error) {
+            if (error?.code === "probe_stage_timeout") throw error;
+            apiCalls.push(`viewError:${String(error?.message ?? error).slice(0, 90)}`);
+          }
+        }
+        if (config.pluginId === "PC05") await runEditorCallbacks(plugin);
+      } catch (error) {
+        pluginError = String(error?.message ?? error).slice(0, 600);
       }
-      for (const view of registrations.views.slice(0, 2)) {
-        try {
-          const leaf = {app, containerEl: root, titleEl: root, file: app.workspace.getActiveFile()};
-          const instance = typeof view.creator === "function" ? view.creator(leaf) : null;
-          if (instance && typeof instance.onOpen === "function") await instance.onOpen();
-          apiCalls.push("openRegisteredView");
-        } catch (error) { apiCalls.push(`viewError:${String(error?.message ?? error).slice(0, 90)}`); }
-      }
-      if (config.pluginId === "PC05") await runEditorCallbacks(plugin);
-    } catch (error) {
-      pluginError = String(error?.message ?? error).slice(0, 600);
     }
 
+    progress("report-build", "start");
     let stylesheetRuleCount = 0;
     for (const sheet of Array.from(document.styleSheets)) {
       try { stylesheetRuleCount += sheet.cssRules.length; } catch {}
@@ -658,8 +806,9 @@
         checked: "checked" in control ? Boolean(control.checked) : null,
       })),
     }));
+    const editorAcceptancePassed = config.pluginId !== "PC05" || editorWorkflow.completedCallbacks > 0;
     const report = {
-      status: capabilityProbe.passed && pluginStatus === "loaded" ? "passed" : "failed",
+      status: !probeFailure && capabilityProbe.passed && pluginStatus === "loaded" && editorAcceptancePassed ? "passed" : "failed",
       artifact: {id: config.pluginId, manifestId: manifest.id, version: config.pluginVersion, sha256: config.artifactSha256, manifestSha256: config.manifestSha256, bytes: new TextEncoder().encode(bundleSource).byteLength},
       stylesheet: {sha256: config.stylesheetSha256, ruleCount: stylesheetRuleCount},
       themeSettingsFixture: config.themeSettingsFixture,
@@ -674,15 +823,38 @@
       capabilityDenials,
       asynchronousErrors,
       consoleErrors,
+      probeDiagnostics: null,
       policy: {csp: "default-src 'none'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; connect-src 'none'; frame-ancestors 'none'", navigation: "localhost probe document only", newWindows: "denied", downloads: "denied", permissions: "denied", nodeIntegration: false, ipc: "report-channel-only"},
     };
-    if (typeof ipcPostMessage === "function") ipcPostMessage(nativeJsonStringify({token: config.sessionToken, report}));
+    progress("report-build", "complete");
+    progress("report-post", "start");
+    report.probeDiagnostics = probeDiagnostics(report.status === "passed" ? "passed" : "failed");
+    if (typeof ipcPostMessage === "function") {
+      try {
+        ipcPostMessage(nativeJsonStringify({token: config.sessionToken, type: "report", report}));
+      } catch (error) {
+        if (stageSendFailures.length < 8) stageSendFailures.push(String(error?.message ?? error).slice(0, 160));
+      }
+    }
   }
 
+  progress("runner-bootstrap", "start");
   installDeniedCapabilities();
   void finish().catch((error) => {
     if (typeof ipcPostMessage === "function") {
-      ipcPostMessage(nativeJsonStringify({token: config.sessionToken, report: {status: "failed", error: String(error?.message ?? error).slice(0, 600)}}));
+      probeFailure = probeFailure ?? {code: "runner_unhandled_error", stage: lastStage?.stage ?? null, message: String(error?.message ?? error).slice(0, 240)};
+      progress("report-post", "start");
+      const report = {
+        status: "failed",
+        error: String(error?.message ?? error).slice(0, 600),
+        artifact: {id: config.pluginId, manifestId: config.pluginManifest?.id, version: config.pluginVersion, sha256: config.artifactSha256, manifestSha256: config.manifestSha256},
+        runtime: {...config.runtime, userAgent: navigator.userAgent, platform: navigator.platform, legacyCompatibilityState: config.legacyCompatibilityState},
+        capabilityProbe: {passed: false, tested: ["filesystem.direct", "process.spawn", "network.request", "credentials.read"], nativeNetworkBlockedByCsp: false},
+        capabilityDenials,
+        editorWorkflow,
+        probeDiagnostics: probeDiagnostics("failed"),
+      };
+      try { ipcPostMessage(nativeJsonStringify({token: config.sessionToken, type: "report", report})); } catch {}
     }
   });
 })();

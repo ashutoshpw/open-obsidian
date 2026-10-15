@@ -9,6 +9,7 @@ use std::{
     path::{Path, PathBuf},
     sync::{
         Arc,
+        Mutex,
         atomic::{AtomicBool, Ordering},
     },
     time::{Duration, Instant, SystemTime, UNIX_EPOCH},
@@ -36,6 +37,10 @@ const HTML: &str = r#"<!doctype html>
 const CSP: &str = "default-src 'none'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src data: blob:; font-src 'none'; connect-src 'none'; frame-src 'none'; frame-ancestors 'none'; child-src 'none'; object-src 'none'; form-action 'none'; base-uri 'none'";
 const INTERNAL_SCHEME: &str = "openobsidian-plugin";
 const RUNNER_JS: &str = include_str!("runner.js");
+const MAX_IPC_MESSAGE_BYTES: usize = 256 * 1024;
+const MAX_IPC_MESSAGES: u32 = 128;
+const MAX_IPC_TOTAL_BYTES: usize = 1024 * 1024;
+const MAX_PROGRESS_ELAPSED_MS: u64 = 30_000;
 
 #[derive(Clone)]
 struct RuntimeAssets {
@@ -60,16 +65,44 @@ struct Arguments {
 
 #[derive(Debug)]
 enum ProbeEvent {
-    Report(String),
+    IpcMessage(String),
+}
+
+#[derive(Clone, Default)]
+struct IpcDiagnostics {
+    received_messages: u32,
+    received_bytes: usize,
+    budget_exceeded_messages: u32,
+    budget_exhausted: bool,
+    oversized_messages: u32,
+    send_failures: u32,
+    malformed_messages: u32,
+    token_mismatches: u32,
+    unknown_messages: u32,
+    invalid_progress: u32,
+}
+
+#[derive(Clone)]
+struct ProbeProgress {
+    stage: String,
+    phase: String,
+    elapsed_ms: u64,
+    callback_index: Option<u64>,
+    invoked_callbacks: Option<u64>,
+    completed_callbacks: Option<u64>,
 }
 
 struct ProbeApp {
     proxy: EventLoopProxy<ProbeEvent>,
     assets: RuntimeAssets,
+    ipc_diagnostics: Arc<Mutex<IpcDiagnostics>>,
     window: Option<Window>,
     _webview: Option<WebView>,
     session_token: String,
+    probe_context: Value,
+    started_at: Instant,
     deadline: Instant,
+    last_progress: Option<ProbeProgress>,
     result: Option<Value>,
 }
 
@@ -86,13 +119,18 @@ impl ApplicationHandler<ProbeEvent> for ProbeApp {
         ) {
             Ok(window) => window,
             Err(error) => {
-                self.finish_error(event_loop, format!("window creation failed: {error}"));
+                self.finish_error(
+                    event_loop,
+                    "window_creation_failed",
+                    format!("window creation failed: {error}"),
+                );
                 return;
             }
         };
 
         let assets = self.assets.clone();
         let ipc_proxy = self.proxy.clone();
+        let ipc_diagnostics = Arc::clone(&self.ipc_diagnostics);
         let builder = WebViewBuilder::new()
             .with_custom_protocol(INTERNAL_SCHEME.to_owned(), move |_webview_id, request| {
                 serve_request(request, &assets)
@@ -100,8 +138,43 @@ impl ApplicationHandler<ProbeEvent> for ProbeApp {
             .with_url(format!("{INTERNAL_SCHEME}://localhost/index.html"))
             .with_ipc_handler(move |request| {
                 let body = request.body();
-                if body.len() <= 256 * 1024 {
-                    let _ = ipc_proxy.send_event(ProbeEvent::Report(body.clone()));
+                let mut diagnostics = ipc_diagnostics
+                    .lock()
+                    .unwrap_or_else(|poisoned| poisoned.into_inner());
+                diagnostics.received_messages = diagnostics.received_messages.saturating_add(1);
+                if diagnostics.budget_exhausted {
+                    diagnostics.budget_exceeded_messages =
+                        diagnostics.budget_exceeded_messages.saturating_add(1);
+                    return;
+                }
+                if diagnostics.received_messages > MAX_IPC_MESSAGES {
+                    diagnostics.budget_exhausted = true;
+                    diagnostics.budget_exceeded_messages =
+                        diagnostics.budget_exceeded_messages.saturating_add(1);
+                    return;
+                }
+                let remaining_bytes = MAX_IPC_TOTAL_BYTES.saturating_sub(diagnostics.received_bytes);
+                if body.len() > remaining_bytes {
+                    diagnostics.received_bytes = MAX_IPC_TOTAL_BYTES;
+                    diagnostics.budget_exhausted = true;
+                    diagnostics.budget_exceeded_messages =
+                        diagnostics.budget_exceeded_messages.saturating_add(1);
+                    return;
+                }
+                diagnostics.received_bytes += body.len();
+                if body.len() > MAX_IPC_MESSAGE_BYTES {
+                    diagnostics.oversized_messages = diagnostics.oversized_messages.saturating_add(1);
+                    return;
+                }
+                drop(diagnostics);
+                if ipc_proxy
+                    .send_event(ProbeEvent::IpcMessage(body.clone()))
+                    .is_err()
+                {
+                    let mut diagnostics = ipc_diagnostics
+                        .lock()
+                        .unwrap_or_else(|poisoned| poisoned.into_inner());
+                    diagnostics.send_failures = diagnostics.send_failures.saturating_add(1);
                 }
             })
             .with_navigation_handler(|url| is_internal_document(&url))
@@ -121,22 +194,135 @@ impl ApplicationHandler<ProbeEvent> for ProbeApp {
                 self._webview = Some(webview);
             }
             Err(error) => {
-                self.finish_error(event_loop, format!("webview creation failed: {error}"))
+                self.finish_error(
+                    event_loop,
+                    "webview_creation_failed",
+                    format!("webview creation failed: {error}"),
+                )
             }
         }
     }
 
     fn user_event(&mut self, event_loop: &ActiveEventLoop, event: ProbeEvent) {
+        if Instant::now() >= self.deadline {
+            self.finish_error(
+                event_loop,
+                "webview_probe_timeout",
+                "WebView probe timed out before IPC event handling completed".to_owned(),
+            );
+            return;
+        }
+        let budget_exhausted = self
+            .ipc_diagnostics
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .budget_exhausted;
+        if budget_exhausted {
+            self.finish_error(
+                event_loop,
+                "ipc_message_budget_exceeded",
+                "WebView probe exceeded its bounded IPC message budget".to_owned(),
+            );
+            return;
+        }
         match event {
-            ProbeEvent::Report(message) => {
+            ProbeEvent::IpcMessage(message) => {
                 let Ok(value) = serde_json::from_str::<Value>(&message) else {
+                    self.record_ipc_failure(|diagnostics| {
+                        diagnostics.malformed_messages =
+                            diagnostics.malformed_messages.saturating_add(1);
+                    });
                     return;
                 };
                 if value["token"].as_str() != Some(self.session_token.as_str()) {
+                    self.record_ipc_failure(|diagnostics| {
+                        diagnostics.token_mismatches =
+                            diagnostics.token_mismatches.saturating_add(1);
+                    });
                     return;
                 }
-                self.result = Some(value["report"].clone());
-                event_loop.exit();
+                match value["type"].as_str() {
+                    Some("progress") => {
+                        if let Some(progress) = parse_progress(&value) {
+                            self.last_progress = Some(progress);
+                        } else {
+                            self.record_ipc_failure(|diagnostics| {
+                                diagnostics.invalid_progress =
+                                    diagnostics.invalid_progress.saturating_add(1);
+                            });
+                        }
+                    }
+                    Some("report") => {
+                        if !value["report"].is_object() {
+                            self.record_ipc_failure(|diagnostics| {
+                                diagnostics.malformed_messages =
+                                    diagnostics.malformed_messages.saturating_add(1);
+                            });
+                            return;
+                        }
+                        if Instant::now() >= self.deadline {
+                            self.finish_error(
+                                event_loop,
+                                "webview_probe_timeout",
+                                "WebView report arrived after the probe deadline".to_owned(),
+                            );
+                            return;
+                        }
+                        let report_post_started = self.last_progress.as_ref().is_some_and(|progress| {
+                            progress.stage == "report-post" && progress.phase == "start"
+                        });
+                        if !report_post_started {
+                            self.finish_error(
+                                event_loop,
+                                "missing_report_post_progress",
+                                "WebView final report arrived without host-observed report IPC progress".to_owned(),
+                            );
+                            return;
+                        }
+                        let mut report = value["report"].clone();
+                        if let Some(report_object) = report.as_object_mut() {
+                            let diagnostics = report_object
+                                .entry("probeDiagnostics".to_owned())
+                                .or_insert_with(|| json!({}));
+                            if let Some(diagnostics) = diagnostics.as_object_mut() {
+                                diagnostics.insert(
+                                    "host".to_owned(),
+                                    host_diagnostics(
+                                        self.started_at,
+                                        &self.last_progress,
+                                        &self.ipc_diagnostics,
+                                    ),
+                                );
+                            }
+                        }
+                        if Instant::now() >= self.deadline {
+                            self.finish_error(
+                                event_loop,
+                                "webview_probe_timeout",
+                                "WebView report processing exceeded the probe deadline".to_owned(),
+                            );
+                            return;
+                        }
+                        let budget_exhausted = self
+                            .ipc_diagnostics
+                            .lock()
+                            .unwrap_or_else(|poisoned| poisoned.into_inner())
+                            .budget_exhausted;
+                        if budget_exhausted {
+                            self.finish_error(
+                                event_loop,
+                                "ipc_message_budget_exceeded",
+                                "WebView probe exceeded its bounded IPC message budget".to_owned(),
+                            );
+                            return;
+                        }
+                        self.result = Some(report);
+                        event_loop.exit();
+                    }
+                    _ => self.record_ipc_failure(|diagnostics| {
+                        diagnostics.unknown_messages = diagnostics.unknown_messages.saturating_add(1);
+                    }),
+                }
             }
         }
     }
@@ -148,7 +334,11 @@ impl ApplicationHandler<ProbeEvent> for ProbeApp {
         event: WindowEvent,
     ) {
         if matches!(event, WindowEvent::CloseRequested) {
-            self.finish_error(event_loop, "probe window closed before report".to_owned());
+            self.finish_error(
+                event_loop,
+                "window_closed_before_report",
+                "probe window closed before report".to_owned(),
+            );
         }
     }
 
@@ -159,7 +349,11 @@ impl ApplicationHandler<ProbeEvent> for ProbeApp {
         }
 
         if Instant::now() >= self.deadline && self.result.is_none() {
-            self.finish_error(event_loop, "WebView probe timed out".to_owned());
+            self.finish_error(
+                event_loop,
+                "webview_probe_timeout",
+                "WebView probe timed out".to_owned(),
+            );
         }
         #[cfg(target_os = "linux")]
         event_loop.set_control_flow(ControlFlow::WaitUntil(
@@ -171,8 +365,34 @@ impl ApplicationHandler<ProbeEvent> for ProbeApp {
 }
 
 impl ProbeApp {
-    fn finish_error(&mut self, event_loop: &ActiveEventLoop, error: String) {
-        self.result = Some(json!({"status":"failed","error":error}));
+    fn record_ipc_failure(&self, update: impl FnOnce(&mut IpcDiagnostics)) {
+        let mut diagnostics = self
+            .ipc_diagnostics
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        update(&mut diagnostics);
+    }
+
+    fn finish_error(&mut self, event_loop: &ActiveEventLoop, code: &str, error: String) {
+        self.result = Some(json!({
+            "status":"failed",
+            "error":error,
+            "expectedArtifact": {
+                "pluginId":self.probe_context["pluginId"].clone(),
+                "pluginVersion":self.probe_context["pluginVersion"].clone(),
+                "bundleSha256":self.probe_context["expectedBundleSha256"].clone(),
+                "manifestSha256":self.probe_context["expectedManifestSha256"].clone(),
+            },
+            "expectedRuntime":self.probe_context["runtime"].clone(),
+            "probeDiagnostics": {
+                "status":"failed",
+                "failureCode":code,
+                "elapsedMs":self.started_at.elapsed().as_millis(),
+                "lastStage":progress_value(&self.last_progress),
+                "identity":self.probe_context,
+                "host":ipc_diagnostics_value(&self.ipc_diagnostics),
+            }
+        }));
         event_loop.exit();
     }
 }
@@ -264,6 +484,20 @@ fn run() -> Result<Value, String> {
         .zip(theme_settings_path.as_ref())
         .map(|(sha256, path)| json!({"path":path,"sha256":sha256}));
     let session_token = create_session_token(&bundle_sha256);
+    let webview_engine_version = wry::webview_version().ok();
+    let probe_context = json!({
+        "pluginId": &arguments.plugin_id,
+        "pluginVersion": &arguments.plugin_version,
+        "expectedBundleSha256": &bundle_sha256,
+        "expectedManifestSha256": &manifest_sha256,
+        "runtime": {
+            "host": "wry",
+            "wryVersion": "0.57.0",
+            "webviewEngineVersion": &webview_engine_version,
+            "os": env::consts::OS,
+            "architecture": env::consts::ARCH,
+        },
+    });
     let config = json!({
         "pluginId": arguments.plugin_id,
         "pluginVersion": arguments.plugin_version,
@@ -276,7 +510,7 @@ fn run() -> Result<Value, String> {
         "runtime": {
             "host": "wry",
             "wryVersion": "0.57.0",
-            "webviewEngineVersion": wry::webview_version().ok(),
+            "webviewEngineVersion": webview_engine_version,
             "os": env::consts::OS,
             "architecture": env::consts::ARCH,
         },
@@ -306,13 +540,18 @@ fn run() -> Result<Value, String> {
         .build()
         .map_err(|error| format!("event loop creation failed: {error}"))?;
     let proxy = event_loop.create_proxy();
+    let started_at = Instant::now();
     let mut application = ProbeApp {
         proxy,
         assets,
+        ipc_diagnostics: Arc::new(Mutex::new(IpcDiagnostics::default())),
         window: None,
         _webview: None,
         session_token,
-        deadline: Instant::now() + Duration::from_secs(30),
+        probe_context,
+        started_at,
+        deadline: started_at + Duration::from_secs(30),
+        last_progress: None,
         result: None,
     };
     event_loop
@@ -321,6 +560,151 @@ fn run() -> Result<Value, String> {
     application
         .result
         .ok_or_else(|| "WebView exited without a probe report".to_owned())
+}
+
+fn parse_progress(value: &Value) -> Option<ProbeProgress> {
+    let stage = value["stage"].as_str()?;
+    if !matches!(
+        stage,
+        "runner-bootstrap"
+            | "capability-probe"
+            | "bundle-evaluation"
+            | "plugin-constructor"
+            | "plugin-load"
+            | "startup-settle"
+            | "settings-render"
+            | "style-settings-expand"
+            | "view-open"
+            | "editor-callback"
+            | "report-build"
+            | "report-post"
+    ) {
+        return None;
+    }
+    let phase = value["phase"].as_str()?;
+    if !matches!(phase, "start" | "complete" | "failed") {
+        return None;
+    }
+    let elapsed_ms = value["elapsedMs"].as_u64()?;
+    if elapsed_ms > MAX_PROGRESS_ELAPSED_MS {
+        return None;
+    }
+    let callback_index = bounded_optional_u64(value, "callbackIndex", 7)?;
+    Some(ProbeProgress {
+        stage: stage.to_owned(),
+        phase: phase.to_owned(),
+        elapsed_ms,
+        callback_index,
+        invoked_callbacks: bounded_optional_u64(value, "invokedCallbacks", 8)?,
+        completed_callbacks: bounded_optional_u64(value, "completedCallbacks", 8)?,
+    })
+}
+
+fn bounded_optional_u64(value: &Value, key: &str, maximum: u64) -> Option<Option<u64>> {
+    match value.get(key) {
+        None => Some(None),
+        Some(_) => value[key].as_u64().filter(|number| *number <= maximum).map(Some),
+    }
+}
+
+fn progress_value(progress: &Option<ProbeProgress>) -> Value {
+    match progress {
+        Some(progress) => json!({
+            "stage":progress.stage,
+            "phase":progress.phase,
+            "elapsedMs":progress.elapsed_ms,
+            "callbackIndex":progress.callback_index,
+            "invokedCallbacks":progress.invoked_callbacks,
+            "completedCallbacks":progress.completed_callbacks,
+        }),
+        None => Value::Null,
+    }
+}
+
+fn ipc_diagnostics_value(diagnostics: &Arc<Mutex<IpcDiagnostics>>) -> Value {
+    let diagnostics = diagnostics
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner())
+        .clone();
+    json!({
+        "receivedMessages":diagnostics.received_messages,
+        "receivedBytes":diagnostics.received_bytes,
+        "budgetExceededMessages":diagnostics.budget_exceeded_messages,
+        "budgetExhausted":diagnostics.budget_exhausted,
+        "oversizedMessages":diagnostics.oversized_messages,
+        "sendFailures":diagnostics.send_failures,
+        "malformedMessages":diagnostics.malformed_messages,
+        "tokenMismatches":diagnostics.token_mismatches,
+        "unknownMessages":diagnostics.unknown_messages,
+        "invalidProgress":diagnostics.invalid_progress,
+    })
+}
+
+fn host_diagnostics(
+    started_at: Instant,
+    last_progress: &Option<ProbeProgress>,
+    diagnostics: &Arc<Mutex<IpcDiagnostics>>,
+) -> Value {
+    json!({
+        "hostElapsedMs":started_at.elapsed().as_millis(),
+        "lastStage":progress_value(last_progress),
+        "ipc":ipc_diagnostics_value(diagnostics),
+    })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parses_only_bounded_allowlisted_progress() {
+        let progress = parse_progress(&json!({
+            "stage":"editor-callback",
+            "phase":"start",
+            "elapsedMs":1200,
+            "callbackIndex":7,
+            "invokedCallbacks":8,
+            "completedCallbacks":6,
+        }))
+        .expect("bounded editor callback progress is accepted");
+
+        assert_eq!(progress.stage, "editor-callback");
+        assert_eq!(progress.phase, "start");
+        assert_eq!(progress.elapsed_ms, 1200);
+        assert_eq!(progress.callback_index, Some(7));
+        assert_eq!(progress.invoked_callbacks, Some(8));
+        assert_eq!(progress.completed_callbacks, Some(6));
+    }
+
+    #[test]
+    fn rejects_unrecognized_or_out_of_range_progress() {
+        assert!(parse_progress(&json!({
+            "stage":"plugin-invented-stage",
+            "phase":"start",
+            "elapsedMs":10,
+        }))
+        .is_none());
+        assert!(parse_progress(&json!({
+            "stage":"plugin-load",
+            "phase":"running",
+            "elapsedMs":10,
+        }))
+        .is_none());
+        assert!(parse_progress(&json!({
+            "stage":"editor-callback",
+            "phase":"start",
+            "elapsedMs":30_001,
+            "callbackIndex":0,
+        }))
+        .is_none());
+        assert!(parse_progress(&json!({
+            "stage":"editor-callback",
+            "phase":"start",
+            "elapsedMs":10,
+            "callbackIndex":8,
+        }))
+        .is_none());
+    }
 }
 
 fn parse_arguments() -> Result<Arguments, String> {
