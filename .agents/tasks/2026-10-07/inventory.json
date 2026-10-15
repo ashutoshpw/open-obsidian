@@ -1302,7 +1302,7 @@
     },
     {
       "path": "fixtures/c06-text-card-vault.json",
-      "sha256": "e562c3c50ea37a15fcad7f66d7121edfdd6adac24a00f982b97788c07ff64ef3",
+      "sha256": "5dd85e48b6fbfaa4400e67c7e6246e72ed0771c6d9feb1daff5fcbc431def8b9",
       "rust_owner": "crates/engine",
       "mapping_status": "reviewed",
       "status": "pending",

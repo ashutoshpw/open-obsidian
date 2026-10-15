@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
-  "status": "R2.8.129 passed exact-SHA GitHub CI (7/7 workflows, 20/20 jobs); C06.2 implementation is complete and reviewed locally, ready for its single milestone submission.",
-  "updated_at": "2026-10-15T00:08:44Z",
+  "status": "C06.2 attempt 2 is terminal-failed on exact SHA 7d08e514d6b6a8b95c58945f5ec77610db57f30b: six workflows and 16/20 jobs passed; Rust CI failed all four jobs on the inherited omitted-array Canvas fixture classification. All three round-trip jobs passed. The reviewed fixture correction is ready as one C06.2 repair milestone; no local executable validation.",
+  "updated_at": "2026-10-15T01:59:32Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "0a9cb9c00835881a7629c96721974dfa9461cc50",
-  "current_milestone": "C06.2 Lossless typed read projection for standard Canvas nodes and edges; implementation-complete and reviewed, ready for one exact-SHA CI submission.",
-  "next_action": "Stage and review only the C06.2 milestone plus its required migration evidence/status records; keep C07.5/C09.2 drafts local. Commit and push the complete C06.2 milestone once to origin/main, then wait for all seven required workflows and 20 jobs on its exact SHA. Do not run local tests or executable validation.",
-  "push_status": "R2.8.129 was pushed once and passed all required CI at 0a9cb9c00835881a7629c96721974dfa9461cc50; live origin/main was independently confirmed at this SHA at 2026-10-15T00:07:01Z. C06.2 remains unpushed.",
+  "last_reconciled_head": "7d08e514d6b6a8b95c58945f5ec77610db57f30b",
+  "current_milestone": "C06.2 repair: align the inherited missing-edges fixture with accepted omitted arrays; implementation-complete and independently reviewed, ready for one exact-SHA CI submission.",
+  "next_action": "Stage and review only the C06.2 fixture correction, its inventory hash, terminal attempt-2 evidence, and C06.2 progress record. Keep goal/requirements cadence edits and C07.5/C09.2 work local. Push the complete repair milestone once to origin/main, then wait for all seven required workflows/20 jobs on its exact SHA. Do not run local tests or executable validation.",
+  "push_status": "C06.2 attempt 2 was pushed once to origin/main at 7d08e514d6b6a8b95c58945f5ec77610db57f30b. All seven workflows and 20 jobs are terminal: six workflows/16 jobs passed, Rust CI failed all four jobs on the Canvas fixture expectation, and all three round-trip jobs passed. Evidence is in evidence/c06.2-attempt-2-7d08e51.json. The reviewed fixture correction is ready for one repair push.",
   "blockers": [
     "C07.3 pinned Obsidian reference behavior remains incomplete and Rust parity is not established. R2.8.119 failed all three platform round-trip jobs on exact SHA 2a18016de043ea8ec82529feabb4912d439efa2; see evidence/r2.8.119-attempt-1-2a18016.json. Do not claim Rust C07.3 parity or a full-fixture membership oracle from reference UI results.",
     "R2.8.120 failed its terminal exact-SHA CI batch on 985af8aa18be53c285221b2ed21d4062e69b9f3d. Linux C07.3 table row diagnostics reject visible rows despite each uniquely matching an already captured fixture path; formula Kanban extraction records no card memberships although the screenshot shows the 5/4/4/0 cards. macOS display metrics failed before first-run picker interaction, and Windows stopped after picker closure when the host HWND changed. See evidence/r2.8.120-attempt-1-985af8a.json; keep C07.3 pending.",
@@ -61,7 +61,7 @@
         "plugin-renderer"
       ],
       "implementation_sha": "15ee500b04be9acef86a1b5fbf3d1e0ccb5bf7b7",
-      "next_action": "R2.8.129 passed exact-SHA CI at 0a9cb9c00835881a7629c96721974dfa9461cc50. Submit the reviewed C06.2 Canvas projection as the next separate milestone; keep origin/main fixed until its seven-workflow, 20-job CI batch is terminal.",
+      "next_action": "C06.2 attempt 2 is terminal-failed at 7d08e514d6b6a8b95c58945f5ec77610db57f30b. Submit the independently reviewed omitted-array fixture correction as one repair milestone; keep C07.5/C09.2 and goal/requirements cadence edits out. Wait for all seven workflows/20 jobs on the repair SHA.",
       "implementation_sha_note": "15ee500b04be9acef86a1b5fbf3d1e0ccb5bf7b7 is the last accepted R2 Rust implementation milestone (R2.8.114); R2.8.115–R2.8.121 are reference-capture/harness work, and R2.8.119, R2.8.120 and R2.8.121 failed."
     },
     "R3": {
@@ -395,7 +395,8 @@
     "2026-10-14T18:54:02Z: Clarified goal.md milestone terminology: implementation completion and review happen before the single CI-triggering milestone push; CI-passed/achieved is reserved for required exact-SHA jobs after that push. Updated the C07.3 harness to assign groups using one selected-root DOM-order stream so container-level headings can own rows in child tables, and made truncated accepted-edge evidence block acceptance. Independent read-only review found no new ownership/order source issue; runtime behavior still requires CI. No executable validation, commit, or push occurred.",
     "Reconciled terminal attempt-3 GitHub Actions status for 1ded8e1ac2237c7b61ca38b46e1d1d777d0225c5: all 7 workflows and 20 jobs completed, 17 passed and all 3 platform Obsidian round-trip jobs failed. Recorded job conclusions, artifact IDs/digests and per-platform report hashes in evidence/r2.8.127-attempt-3-1ded8e1.json. No push occurred. Planned R2.8.128 to constrain identity/ownership to the selected result root and make scenario-level acceptance reflect final first-open/reopen disposition gates.",
     "Pushed R2.8.128 once to origin/main at dc24dba8a5e27dfa6294b673e9e394d26d6fefa7; all seven workflows/20 jobs are terminal with 17 passed and three Obsidian round-trip failures. Reconciled run 38647641287 and artifacts in evidence/r2.8.128-dc24dba-ci.json. Kept the next repair local; no local executable validation or push.",
-    "2026-10-15T00:08:44Z: Reconciled R2.8.129 exact-SHA CI and all three round-trip artifacts: 7/7 workflows and 20/20 jobs succeeded at 0a9cb9c00835881a7629c96721974dfa9461cc50; macOS archive digest and report SHA-256 were verified. Promoted C06.2 to the next reviewed, unsubmitted milestone. No local executable validation, commit, or push occurred."
+    "2026-10-15T00:08:44Z: Reconciled R2.8.129 exact-SHA CI and all three round-trip artifacts: 7/7 workflows and 20/20 jobs succeeded at 0a9cb9c00835881a7629c96721974dfa9461cc50; macOS archive digest and report SHA-256 were verified. Promoted C06.2 to the next reviewed, unsubmitted milestone. No local executable validation, commit, or push occurred.",
+    "C06.2 attempt 2 terminal-failed on exact SHA 7d08e514d6b6a8b95c58945f5ec77610db57f30b: 6/7 workflows and 16/20 jobs passed; Rust CI failed all four jobs on the inherited omitted-array fixture expectation, while all three Obsidian round-trip jobs and five other workflows passed. Full exact-SHA evidence is in evidence/c06.2-attempt-2-7d08e51.json. The independently reviewed fixture correction is ready as one repair milestone; no local executable validation occurred."
   ],
   "ci_results": [
     {
@@ -41632,7 +41633,7 @@
   "planned_next_milestone": {
     "milestone": "C06.2",
     "name": "Lossless typed read projection for standard Canvas nodes and edges",
-    "status": "implementation-complete; reviewed and ready for one milestone submission; not yet CI-passed",
+    "status": "implementation-complete; attempt 2 terminal-failed on exact SHA 7d08e514d6b6a8b95c58945f5ec77610db57f30b; the independently reviewed omitted-array fixture correction is ready for one C06.2 repair submission.",
     "deliverable": "Borrowed typed views for standard Canvas node and edge fields in crates/doc; accept optional top-level nodes/edges arrays, distinguish omitted from empty, preserve non-standard raw fields, and represent missing, malformed, and unsupported values distinctly.",
     "acceptance": [
       "Fixture-backed coverage projects text, file, link, group, and edge fields from fixture:c06-canvas.",
@@ -41722,23 +41723,23 @@
     "depends_on": "R2.8.129 C07.3 passed exact-SHA CI at 0a9cb9c00835881a7629c96721974dfa9461cc50. Submit C07.4 only as a separate complete milestone after C06.2 CI is terminal; use one push per milestone and wait for every required job."
   },
   "current_ci_batch": {
-    "milestone": "R2.8.129 C07.3 grouped viewport and stable group-ownership repair",
-    "sha": "0a9cb9c00835881a7629c96721974dfa9461cc50",
-    "run_id": 38654025293,
-    "run_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38654025293",
-    "status": "CI-passed; 7/7 workflows and 20/20 jobs succeeded on the exact SHA",
+    "milestone": "C06.2 lossless typed projection; attempt 2 terminal-failed",
+    "sha": "7d08e514d6b6a8b95c58945f5ec77610db57f30b",
+    "run_id": 38663486997,
+    "run_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38663486997",
+    "status": "CI-failed; 6/7 workflows and 16/20 jobs passed; all four Rust CI jobs failed on the Canvas omitted-array fixture expectation; all jobs terminal and grouped repair may proceed.",
     "workflows_terminal": 7,
     "jobs_terminal": 20,
-    "jobs_passed": 20,
-    "jobs_failed": 0,
+    "jobs_passed": 16,
+    "jobs_failed": 4,
     "pending": [],
-    "evidence": "evidence/r2.8.129-attempt-1-0a9cb9c.json"
+    "evidence": "evidence/c06.2-attempt-2-7d08e51.json"
   },
   "parallel_local_milestones": [
     {
       "id": "C06.2",
       "name": "Lossless typed read projection for standard Canvas nodes and edges",
-      "status": "Implementation complete and independently reviewed with no blocker. R2.8.129 predecessor CI passed; C06.2 is ready for one separate milestone push and its own exact-SHA CI batch. C06.2 is not yet CI-passed.",
+      "status": "C06.2 attempt 2 at 7d08e514d6b6a8b95c58945f5ec77610db57f30b is terminal-failed (6/7 workflows and 16/20 jobs passed; four Rust CI jobs failed on one inherited fixture expectation; all three round-trip jobs passed). The reviewed fixture correction is implementation-complete and ready for one repair push; C06.2 is not CI-passed.",
       "deliverable": "Borrowed typed views for standard Canvas node and edge fields in crates/doc; accept optional top-level nodes/edges arrays, distinguish omitted from empty, preserve non-standard raw fields, and represent missing, malformed, and unsupported values distinctly.",
       "acceptance": [
         "Fixture-backed coverage projects text, file, link, group, and edge fields from fixture:c06-canvas.",
@@ -41762,14 +41763,15 @@
   ],
   "current_static_reviews": {
     "C06.2": {
-      "status": "Fresh independent read-only review of the final C06.2 fixture-driven projection cases found no blocker or compile-plausibility issue; metadata follow-ups applied locally.",
+      "status": "Fresh independent read-only review approved the C06.2 omitted-array fixture correction against the committed parser contract and CI failure; no source-level blocker was found.",
       "findings": [
         "JSON Canvas 1.0 permits omitted nodes and edges arrays; parsing preserves omission in the authoritative JSON and distinguishes it from explicit empty arrays.",
         "The typed projection covers standard JSON Canvas 1.0 node/edge JSON shapes; unknown node types, malformed fields, and non-standard fields remain available in raw JSON. Unknown-field preservation is attributed to parent C06 rather than the public spec.",
         "Omitted nodes return an empty read view; extract/edit against missing nodes fail without inserting an array or mutating the document. Fixtures cover omitted nodes/edges, unsupported string and malformed/missing node types, malformed/missing node and edge fields, valid/malformed/missing color, and raw malformed values.",
         "The nested Unsupported.node_type state/value is asserted for unknown, malformed, and missing types; valid node color and malformed/missing color states are fixture-backed.",
         "C06.2 is a child decomposition like C07.2-C07.9; mapping review counts remain 212 total and 16 goal-level MIG rows. The current goal SHA is recorded in mapping_review and MIG-002; the GitHub CI inventory gate now checks count/hash consistency.",
-        "No local tests, builds, formatters, validators, or runtime probes were run."
+        "No local tests, builds, formatters, validators, or runtime probes were run.",
+        "The fixture now treats {\"nodes\":[]} as a valid Canvas document and expects node_not_found for the requested text node; inventory digest matches the fixture."
       ]
     }
   }

@@ -251,6 +251,13 @@
   ],
   "invalid_edits": [
     {
+      "id": "canvas-missing-edges-array",
+      "canvas_path": "Board.canvas",
+      "node_id": "text-1",
+      "error": "node_not_found",
+      "before": {"nodes": []}
+    },
+    {
       "id": "missing-node-id",
       "canvas_path": "Board.canvas",
       "node_id": "absent",
@@ -295,12 +302,6 @@
       "canvas_path": "Board.canvas",
       "source": "{\"nodes\":[",
       "error": "malformed_json"
-    },
-    {
-      "id": "canvas-missing-edges-array",
-      "canvas_path": "Board.canvas",
-      "source": "{\"nodes\":[]}",
-      "error": "invalid_document_shape"
     }
   ],
   "unsafe_paths": [
