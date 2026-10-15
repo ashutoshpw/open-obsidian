@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
-  "status": "R2.8.136 is terminal-failed on exact SHA 8a8dfc68759dc95a78589ba7573df970aea1440c; all seven workflows and 20 jobs are terminal, with six workflows and 18 jobs passed and the macOS/Ubuntu round-trip jobs failed. R2.8.136-R1 implementation and independent source/plan reviews are complete and ready for its one milestone push; no R1 CI has been dispatched. C07.4 remains incomplete on Linux/macOS and reference-only on Windows, with no Rust parity or source-preservation claim.",
-  "updated_at": "2026-10-15T17:57:26Z",
+  "status": "R2.8.136-R1 is terminal-failed on exact SHA 3347ad1324e5f92327156bd8afc83011e5019591 (7/7 workflows and 20/20 jobs terminal; 6 workflows and 19 jobs passed, with the Ubuntu round-trip job failed). R2.8.136-R2 Linux Canvas path repair is implementation-complete and independently reviewed, ready for one milestone push. C07.4 remains incomplete/reference-only; no Rust parity or source-preservation claim.",
+  "updated_at": "2026-10-15T19:11:06Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "8a8dfc68759dc95a78589ba7573df970aea1440c",
-  "current_milestone": "R2.8.136-R1-C06-C07.4-ROUNDTRIP-REPAIR is implementation-complete and independently reviewed locally on starting SHA 8a8dfc68759dc95a78589ba7573df970aea1440c; ready for one push to start its exact-SHA CI batch. CI has not been dispatched for R1. C07.4 remains incomplete on Linux/macOS and reference-only on Windows.",
-  "next_action": "Commit and push R2.8.136-R1-C06-C07.4-ROUNDTRIP-REPAIR once to origin/main from exact base 8a8dfc68759dc95a78589ba7573df970aea1440c. Then hold origin/main at the submitted SHA until all seven workflows and 20 jobs are terminal and reconcile every job and artifact. Do not push minor changes. Keep C06.3 R2.8.137 and history-budget R2.8.138 separate; run validation only in GitHub Actions.",
-  "push_status": "origin/main remains held at 8a8dfc68759dc95a78589ba7573df970aea1440c after the terminal R2.8.136 batch. No R2.8.136-R1 code or tracker implementation has been pushed; push once only after that complete repair milestone is implemented and independently reviewed.",
+  "last_reconciled_head": "3347ad1324e5f92327156bd8afc83011e5019591",
+  "current_milestone": "R2.8.136-R2-LINUX-CANVAS-FIRST-CHARACTER-FOCUS-REPAIR is implementation-complete and independently reviewed locally on starting SHA 3347ad1324e5f92327156bd8afc83011e5019591; ready for one push to origin/main. No CI has been dispatched for R2. C07.4 remains incomplete on Linux and reference-only on macOS/Windows.",
+  "next_action": "Commit and push R2.8.136-R2-LINUX-CANVAS-FIRST-CHARACTER-FOCUS-REPAIR once to origin/main from exact base 3347ad1324e5f92327156bd8afc83011e5019591. Then hold origin/main at the submitted SHA until all seven required workflows and 20 jobs are terminal and all evidence is reconciled, even if CI takes several hours. Do not push minor changes or start another full CI batch while this one runs. Keep later C06.3 and history-budget milestones separate; run validation only in GitHub Actions.",
+  "push_status": "origin/main remains held at the reconciled R1 SHA 3347ad1324e5f92327156bd8afc83011e5019591. R2 Linux Canvas path-focus repair and its tracker evidence are local, implementation-complete, and independently reviewed; submit once as a complete milestone, then hold its exact SHA until the full CI batch is terminal and reconciled.",
   "blockers": [
     "C07.3 pinned Obsidian reference capture passed all 14 scenarios on first open and reopen across Linux, macOS, and Windows at exact SHA 0a9cb9c00835881a7629c96721974dfa9461cc50; see evidence/r2.8.129-attempt-1-0a9cb9c.json. Rust parity remains pending. Separate mixed-worktree C07.3 edits remain local and are excluded from the C07.4 candidate; review and submit them separately. Do not claim a full-fixture membership oracle from reference UI results.",
     "R2.8.120 failed its terminal exact-SHA CI batch on 985af8aa18be53c285221b2ed21d4062e69b9f3d. Linux C07.3 table row diagnostics reject visible rows despite each uniquely matching an already captured fixture path; formula Kanban extraction records no card memberships although the screenshot shows the 5/4/4/0 cards. macOS display metrics failed before first-run picker interaction, and Windows stopped after picker closure when the host HWND changed. See evidence/r2.8.120-attempt-1-985af8a.json; keep C07.3 pending.",
@@ -25,7 +25,8 @@
     "R2.8.128 exact-SHA CI is terminal-failed on dc24dba8a5e27dfa6294b673e9e394d26d6fefa7: 17/20 jobs passed; all three Linux, Windows, and macOS Obsidian round-trip jobs failed. All seven workflows are terminal. Artifact IDs and report hashes are recorded in evidence/r2.8.128-dc24dba-ci.json. All platforms hit the freshSweepUniquePaths temporal-dead-zone; Windows and macOS also fail five viewport/ownership scenarios. Keep Rust parity pending and stage only the next complete C07.3 repair milestone.",
     "R2.8.134 is terminal-failed on exact SHA f89049e9d99c53e8e41ea1898b114577d15a9ae8. Ubuntu Ctrl-based Canvas path replacement moved focus to the adjacent ID field and C07.4 did not run on Linux; macOS and Windows completed all ten reference-only scenarios on first open and reopen. Full run/job/artifact evidence is in evidence/r2.8.134-attempt-1-f89049e.json. R2.8.135 groups the focus-safe Linux repair; C07.4 and Rust parity remain pending.",
     "R2.8.135 terminal-failed on exact SHA 4f92e8bc87e7212b01035bdecd176de734212c8a: inventory goal SHA mismatch; Ubuntu Canvas fallback diagnosticField scope error; macOS attachment-resolution click interrupted by watcher refresh. See evidence/r2.8.135-attempt-1-4f92e8b.json. C07.4 remains pending on Linux/macOS; no Rust parity.",
-    "R2.8.136 is terminal-failed on exact SHA 8a8dfc68759dc95a78589ba7573df970aea1440c: all 7 workflows/20 jobs terminal, 6 workflows/18 jobs passed. macOS Vision OCR timed out before picker opening (job 116557282721); Ubuntu typed into the sibling Canvas ID field and had one 13 px stale-layout click (job 116557283380). See evidence/r2.8.136-attempt-1-8a8dfc6.json. C07.4 is absent on Linux/macOS; Windows passed reference capture but recorded source mutations. No Rust parity or source-preservation claim."
+    "R2.8.136 is terminal-failed on exact SHA 8a8dfc68759dc95a78589ba7573df970aea1440c: all 7 workflows/20 jobs terminal, 6 workflows/18 jobs passed. macOS Vision OCR timed out before picker opening (job 116557282721); Ubuntu typed into the sibling Canvas ID field and had one 13 px stale-layout click (job 116557283380). See evidence/r2.8.136-attempt-1-8a8dfc6.json. C07.4 is absent on Linux/macOS; Windows passed reference capture but recorded source mutations. No Rust parity or source-preservation claim.",
+    "R2.8.136-R1 is terminal-failed on exact SHA 3347ad1324e5f92327156bd8afc83011e5019591: all seven workflows and 20 jobs are terminal; 19 jobs passed and Ubuntu round-trip job 116583570741 failed when the first uppercase C reached the sibling Canvas ID field. See evidence/r2.8.136-r1-attempt-1-3347ad1.json. C07.4 remains incomplete on Linux; the R2 Linux path-focus repair is staged locally."
   ],
   "phases": {
     "R0": {
@@ -399,7 +400,8 @@
     "Reconciled terminal attempt-3 GitHub Actions status for 1ded8e1ac2237c7b61ca38b46e1d1d777d0225c5: all 7 workflows and 20 jobs completed, 17 passed and all 3 platform Obsidian round-trip jobs failed. Recorded job conclusions, artifact IDs/digests and per-platform report hashes in evidence/r2.8.127-attempt-3-1ded8e1.json. No push occurred. Planned R2.8.128 to constrain identity/ownership to the selected result root and make scenario-level acceptance reflect final first-open/reopen disposition gates.",
     "Pushed R2.8.128 once to origin/main at dc24dba8a5e27dfa6294b673e9e394d26d6fefa7; all seven workflows/20 jobs are terminal with 17 passed and three Obsidian round-trip failures. Reconciled run 38647641287 and artifacts in evidence/r2.8.128-dc24dba-ci.json. Kept the next repair local; no local executable validation or push.",
     "2026-10-15T00:08:44Z: Reconciled R2.8.129 exact-SHA CI and all three round-trip artifacts: 7/7 workflows and 20/20 jobs succeeded at 0a9cb9c00835881a7629c96721974dfa9461cc50; macOS archive digest and report SHA-256 were verified. Promoted C06.2 to the next reviewed, unsubmitted milestone. No local executable validation, commit, or push occurred.",
-    "C06.2 attempt 2 terminal-failed on exact SHA 7d08e514d6b6a8b95c58945f5ec77610db57f30b: 6/7 workflows and 16/20 jobs passed; Rust CI failed all four jobs on the inherited omitted-array fixture expectation, while all three Obsidian round-trip jobs and five other workflows passed. Full exact-SHA evidence is in evidence/c06.2-attempt-2-7d08e51.json. The independently reviewed fixture correction is ready as one repair milestone; no local executable validation occurred."
+    "C06.2 attempt 2 terminal-failed on exact SHA 7d08e514d6b6a8b95c58945f5ec77610db57f30b: 6/7 workflows and 16/20 jobs passed; Rust CI failed all four jobs on the inherited omitted-array fixture expectation, while all three Obsidian round-trip jobs and five other workflows passed. Full exact-SHA evidence is in evidence/c06.2-attempt-2-7d08e51.json. The independently reviewed fixture correction is ready as one repair milestone; no local executable validation occurred.",
+    "2026-10-15T19:11:06Z: Reconciled R2.8.136-R1 exact-SHA CI on 3347ad1324e5f92327156bd8afc83011e5019591 (batch completed at 18:56:41Z): 7/7 workflows and 20/20 jobs terminal, 6 workflows/19 jobs passed, Ubuntu round-trip failed. Archived all run/job/artifact digests in evidence/r2.8.136-r1-attempt-1-3347ad1.json. R2 Linux Canvas first-character focus repair is implemented and independently reviewed on the same baseline; no local executable validation or new push yet."
   ],
   "ci_results": [
     {
@@ -26395,6 +26397,223 @@
           "conclusion": "success"
         }
       ]
+    },
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 38781784035,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38781784035",
+      "head_sha": "3347ad1324e5f92327156bd8afc83011e5019591",
+      "status": "completed",
+      "conclusion": "success",
+      "observed_at": "2026-10-15T18:56:41Z",
+      "jobs": [
+        {
+          "id": 116583570518,
+          "name": "minimum supported Rust (1.95)",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38781784035/job/116583570518",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 116583570648,
+          "name": "rust (macos-latest)",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38781784035/job/116583570648",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 116583570725,
+          "name": "rust (windows-latest)",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38781784035/job/116583570725",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 116583570763,
+          "name": "rust (ubuntu-latest)",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38781784035/job/116583570763",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 38781784073,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38781784073",
+      "head_sha": "3347ad1324e5f92327156bd8afc83011e5019591",
+      "status": "completed",
+      "conclusion": "success",
+      "observed_at": "2026-10-15T18:56:41Z",
+      "jobs": [
+        {
+          "id": 116583569039,
+          "name": "inventory",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38781784073/job/116583569039",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "Obsidian vault round-trip acceptance",
+      "run_id": 38781784077,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38781784077",
+      "head_sha": "3347ad1324e5f92327156bd8afc83011e5019591",
+      "status": "completed",
+      "conclusion": "failure",
+      "observed_at": "2026-10-15T18:56:41Z",
+      "jobs": [
+        {
+          "id": 116583570549,
+          "name": "Obsidian 1.14.4 vault round-trip on windows-latest",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38781784077/job/116583570549",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 116583570608,
+          "name": "Obsidian 1.14.4 vault round-trip on macos-latest",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38781784077/job/116583570608",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 116583570741,
+          "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38781784077/job/116583570741",
+          "status": "completed",
+          "conclusion": "failure"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 38781784107,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38781784107",
+      "head_sha": "3347ad1324e5f92327156bd8afc83011e5019591",
+      "status": "completed",
+      "conclusion": "success",
+      "observed_at": "2026-10-15T18:56:41Z",
+      "jobs": [
+        {
+          "id": 116583569790,
+          "name": "windows-latest",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38781784107/job/116583569790",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 116583570106,
+          "name": "ubuntu-latest",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38781784107/job/116583570106",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 116583570274,
+          "name": "macos-latest",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38781784107/job/116583570274",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 38781784126,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38781784126",
+      "head_sha": "3347ad1324e5f92327156bd8afc83011e5019591",
+      "status": "completed",
+      "conclusion": "success",
+      "observed_at": "2026-10-15T18:56:41Z",
+      "jobs": [
+        {
+          "id": 116583570371,
+          "name": "macos-latest",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38781784126/job/116583570371",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 116583570902,
+          "name": "windows-latest",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38781784126/job/116583570902",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 116583570909,
+          "name": "ubuntu-latest",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38781784126/job/116583570909",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 38781784154,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38781784154",
+      "head_sha": "3347ad1324e5f92327156bd8afc83011e5019591",
+      "status": "completed",
+      "conclusion": "success",
+      "observed_at": "2026-10-15T18:56:41Z",
+      "jobs": [
+        {
+          "id": 116583570312,
+          "name": "ubuntu-latest",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38781784154/job/116583570312",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 116583570691,
+          "name": "macos-latest",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38781784154/job/116583570691",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 116583570879,
+          "name": "windows-latest",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38781784154/job/116583570879",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 38781784171,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38781784171",
+      "head_sha": "3347ad1324e5f92327156bd8afc83011e5019591",
+      "status": "completed",
+      "conclusion": "success",
+      "observed_at": "2026-10-15T18:56:41Z",
+      "jobs": [
+        {
+          "id": 116583570792,
+          "name": "ubuntu-latest",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38781784171/job/116583570792",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 116583570861,
+          "name": "windows-latest",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38781784171/job/116583570861",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 116583571062,
+          "name": "macos-latest",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38781784171/job/116583571062",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
     }
   ],
   "milestones": {
@@ -42293,7 +42512,7 @@
     "R2.8.136-R1-C06-C07.4-ROUNDTRIP-REPAIR": {
       "id": "R2.8.136-R1-C06-C07.4-ROUNDTRIP-REPAIR",
       "name": "Repair macOS Vision picker startup and Linux Canvas path-field focus identity",
-      "status": "implementation-complete; source and plan reviews passed; tracker reconciled; ready for one milestone push; no CI has been dispatched",
+      "status": "terminal-failed; one milestone push submitted; all 7 workflows and 20 jobs are terminal, with 6 workflows and 19 jobs passed; the Ubuntu round-trip job failed",
       "starting_sha": "8a8dfc68759dc95a78589ba7573df970aea1440c",
       "plan": "evidence/r2.8.136-r1-roundtrip-repair-plan.json",
       "local_executable_validation": false,
@@ -42303,7 +42522,51 @@
         "The Linux report proves the exact requested Canvas path was entered in and read back from the path field, not the sibling ID field, before downstream C07.4 capture.",
         "The macOS report proves bounded Vision helper execution and exact first-run picker confirmation before downstream C07.4 capture.",
         "All platform artifacts, report hashes, exact-SHA workflow/job results, and reference-source checkpoints are reconciled; C07.4 remains reference-only, with no Rust-parity or source-preservation claim from reference observations."
-      ]
+      ],
+      "submitted_sha": "3347ad1324e5f92327156bd8afc83011e5019591",
+      "submitted_at": "2026-10-15T17:58:41Z",
+      "workflow_run_ids": [
+        38781784035,
+        38781784073,
+        38781784077,
+        38781784107,
+        38781784126,
+        38781784154,
+        38781784171
+      ],
+      "evidence": "evidence/r2.8.136-r1-attempt-1-3347ad1.json",
+      "completed_at": "2026-10-15T18:56:41Z",
+      "workflow_counts": {
+        "observed": 7,
+        "terminal": 7,
+        "passed": 6,
+        "failed": 1,
+        "queued": 0,
+        "in_progress": 0
+      },
+      "job_counts": {
+        "observed": 20,
+        "terminal": 20,
+        "passed": 19,
+        "failed": 1,
+        "queued": 0,
+        "in_progress": 0
+      },
+      "failed_job_ids": [
+        116583570741
+      ],
+      "origin_main_sha_at_reconciliation": "3347ad1324e5f92327156bd8afc83011e5019591"
+    },
+    "R2.8.136-R2-LINUX-CANVAS-FIRST-CHARACTER-FOCUS-REPAIR": {
+      "id": "R2.8.136-R2-LINUX-CANVAS-FIRST-CHARACTER-FOCUS-REPAIR",
+      "name": "Keep Linux Canvas path input in the selected field",
+      "status": "implementation-complete; independent source and plan reviews passed; ready for one milestone push; no CI has been dispatched",
+      "starting_sha": "3347ad1324e5f92327156bd8afc83011e5019591",
+      "plan": "evidence/r2.8.136-r2-linux-canvas-first-character-focus-plan.json",
+      "local_executable_validation": false,
+      "source_review": "Passed read-only independent review by linux_repair_audit; no concrete blockers found.",
+      "plan_review": "Passed after revisions; exact-SHA milestone cadence and CI gates match goal.md.",
+      "ci_dispatched": false
     }
   },
   "ci_preparation": {
@@ -42369,13 +42632,14 @@
   },
   "current_requirement_count": 221,
   "current_ci_attempt": {
-    "status": "terminal-failed; 7/7 workflows and 20/20 jobs terminal; 6 workflows and 18 jobs passed; macOS and Ubuntu round-trip jobs failed.",
-    "implementation_sha": "8a8dfc68759dc95a78589ba7573df970aea1440c",
-    "evidence_file": "evidence/r2.8.136-attempt-1-8a8dfc6.json",
-    "plan_file": "evidence/r2.8.136-roundtrip-failure-repair-plan.json",
-    "milestone": "R2.8.136-C06-C07.4-ROUNDTRIP-FAILURE-REPAIR",
+    "status": "terminal-failed; one milestone push submitted; all 7 workflows and 20 jobs are terminal, with 6 workflows and 19 jobs passed; the Ubuntu round-trip job failed",
+    "implementation_sha": "3347ad1324e5f92327156bd8afc83011e5019591",
+    "evidence_file": "evidence/r2.8.136-r1-attempt-1-3347ad1.json",
+    "plan_file": "evidence/r2.8.136-r1-roundtrip-repair-plan.json",
+    "milestone": "R2.8.136-R1-C06-C07.4-ROUNDTRIP-REPAIR",
     "attempt": 1,
-    "observed_at": "2026-10-15T17:22:49Z",
+    "observed_at": "2026-10-15T18:56:41Z",
+    "submitted_at": "2026-10-15T17:58:41Z",
     "workflow_count": 7,
     "completed_workflows": 7,
     "successful_workflows": 6,
@@ -42383,45 +42647,52 @@
     "queued_workflows": 0,
     "failed_workflows": 1,
     "job_count": 20,
-    "passed_jobs": 18,
+    "passed_jobs": 19,
     "in_progress_jobs": 0,
     "queued_jobs": 0,
-    "failed_jobs": 2,
+    "failed_jobs": 1,
     "failed_job_ids": [
-      116557282721,
-      116557283380
+      116583570741
     ]
   },
   "planned_next_milestone": {
-    "milestone": "R2.8.136-R1-C06-C07.4-ROUNDTRIP-REPAIR",
-    "name": "Repair macOS Vision picker startup and Linux Canvas path-field focus identity",
-    "status": "implementation-complete; independent source and plan reviews passed; tracker reconciled; ready for one milestone push; no CI has been dispatched",
-    "plan": "evidence/r2.8.136-r1-roundtrip-repair-plan.json",
-    "starting_sha": "8a8dfc68759dc95a78589ba7573df970aea1440c",
-    "deliverable": "Repair the terminal macOS first-run Vision OCR timeout and Linux Canvas path-field focus/identity failure so the pinned Obsidian reference round-trip reaches and completes C07.4 on all three CI platforms.",
+    "milestone": "R2.8.136-R2-LINUX-CANVAS-FIRST-CHARACTER-FOCUS-REPAIR",
+    "name": "Keep Linux Canvas path input in the selected field",
+    "status": "implementation-complete; independent source and plan reviews passed; ready for one milestone push; no CI has been dispatched",
+    "plan": "evidence/r2.8.136-r2-linux-canvas-first-character-focus-plan.json",
+    "starting_sha": "3347ad1324e5f92327156bd8afc83011e5019591",
+    "deliverable": "Repair the Linux round-trip harness's first-character focus transfer when entering the exact Canvas path, preserving fail-closed field identity, no-save-on-failure, and all other platform/scenario behavior.",
     "acceptance": [
-      "All seven required GitHub Actions workflows and all 20 jobs pass on one exact submitted SHA.",
-      "Ubuntu, macOS, and Windows each complete all ten C07.4 scenarios on first open and reopen, with complete scenario and source-checkpoint reports.",
-      "The Linux report proves the exact requested Canvas path was entered in and read back from the path field, not the sibling ID field, before downstream C07.4 capture.",
-      "The macOS report proves bounded Vision helper execution and exact first-run picker confirmation before downstream C07.4 capture.",
-      "All platform artifacts, report hashes, exact-SHA workflow/job results, and reference-source checkpoints are reconciled; C07.4 remains reference-only, with no Rust-parity or source-preservation claim from reference observations."
+      "All seven required GitHub Actions workflows and all 20 jobs pass on one exact implementation SHA across Ubuntu 24.04, macOS latest, and Windows latest.",
+      "Ubuntu completes all ten C07.4 scenarios on first open and reopen; its report proves the path field received the first-character paste, that the sibling ID field remained unchanged, that the remainder paste happened only after sentinel validation, and that exact final path readback succeeded.",
+      "Ubuntu proves the first-character clipboard was staged only after target/sibling checks, then records a fresh same-frame blank-target/focused-path/unchanged-sibling/idle-refresh guard immediately before the first Ctrl+V and an exact one-character sentinel readback afterward.",
+      "macOS and Windows round-trip jobs still pass all existing authoring, reopen, Canvas, and C07.4 reference capture gates with their existing report semantics.",
+      "Ubuntu confirms the Linux Canvas text-card-ID field still passes its existing per-character field/sibling readback guards; macOS and Windows input behavior remains unchanged.",
+      "All three platform artifacts, archive/report digests, exact-SHA workflow/job outcomes, and source checkpoints are reconciled. C07.4 remains reference-only; report any reference source mutation and make no Rust parity or source-preservation claim.",
+      "No local tests, builds, formatting, linting, validators, type checks, runtime probes, or application launches are used for acceptance.",
+      "The Ubuntu report records the post-clipboard-staging, pre-remainder-paste same-frame diagnostics and proves refresh stability, target focus, sibling unfocused state, and unchanged sibling value/hash immediately before Ctrl+V.",
+      "After final field-hash readback, the Ubuntu report includes a fresh target-anchored screenshot crop and exact OCR readback of the requested Canvas path before Save or downstream C07.4 capture."
     ],
     "required_workflows": [
-      "Rust migration inventory",
-      "OpenObsidian loaded plugin workflows",
-      "OpenObsidian quality",
       "OpenObsidian Rust CI",
+      "Rust migration inventory",
       "Obsidian vault round-trip acceptance",
+      "OpenObsidian desktop build",
+      "OpenObsidian quality",
       "OpenObsidian plugin renderer matrix",
-      "OpenObsidian desktop build"
+      "OpenObsidian loaded plugin workflows"
     ],
     "platforms": [
       "Ubuntu 24.04",
       "macOS latest",
       "Windows latest"
     ],
-    "expected_evidence": "Exact submitted SHA; all seven workflow and 20 job outcomes; three platform round-trip artifact IDs/digests/report hashes; C07.4 first-open/reopen totals; macOS Vision helper cache/startup/timeout diagnostics; Linux field geometry/focus/event-recipient/readback diagnostics; before/after source snapshots and limitations.",
-    "depends_on": "R2.8.136 terminal-failed on exact SHA 8a8dfc68759dc95a78589ba7573df970aea1440c; see evidence/r2.8.136-attempt-1-8a8dfc6.json."
+    "expected_evidence": "Implementation starting SHA; exact submitted SHA; all seven workflow and 20 job URLs/conclusions; Ubuntu per-stage same-frame target/sibling values and hashes around first-character and remainder pastes; all three artifact IDs and archive/report hashes; C07.4 reference-only and source-mutation limitations. Immediate pre-remainder-paste refresh/focus/sibling diagnostics; final target-anchored screenshot crop and exact OCR path readback.",
+    "depends_on": [
+      "R2.8.136-R1 is terminal-failed on exact SHA 3347ad1324e5f92327156bd8afc83011e5019591; all seven workflows and 20 jobs are terminal and reconciled in evidence/r2.8.136-r1-attempt-1-3347ad1.json.",
+      "The Linux failure was isolated to the first uppercase C being emitted as ShiftLeft plus C after target focus was confirmed; all geometry, response-ID, pointer, and pre-entry sibling guards had passed. The repair must not relax those guards.",
+      "No workflow/job from the R1 batch remains active. Do not push or trigger another batch until this named repair milestone is fully implemented, independently reviewed, and its complete submission set is ready."
+    ]
   },
   "planned_independent_milestone": {
     "milestone": "unassigned until C07.5/C07.4 sequencing is settled",
@@ -42471,20 +42742,30 @@
     "depends_on": "All three C07.4 platform reference reports must complete on exact-SHA CI before Rust comparator semantics change."
   },
   "current_repair_milestone": {
-    "id": "R2.8.136-R1-C06-C07.4-ROUNDTRIP-REPAIR",
-    "name": "Repair macOS Vision picker startup and Linux Canvas path-field focus identity",
-    "status": "implementation-complete; independent source and plan reviews passed; tracker reconciled; ready for one milestone push; no CI has been dispatched",
-    "plan": "evidence/r2.8.136-r1-roundtrip-repair-plan.json",
-    "starting_sha": "8a8dfc68759dc95a78589ba7573df970aea1440c",
-    "depends_on": "R2.8.136 terminal-failed on exact SHA 8a8dfc68759dc95a78589ba7573df970aea1440c.",
-    "local_executable_validation": false
+    "id": "R2.8.136-R2-LINUX-CANVAS-FIRST-CHARACTER-FOCUS-REPAIR",
+    "name": "Keep Linux Canvas path input in the selected field",
+    "status": "implementation-complete; independent source and plan reviews passed; ready for one milestone push; no CI has been dispatched",
+    "plan": "evidence/r2.8.136-r2-linux-canvas-first-character-focus-plan.json",
+    "starting_sha": "3347ad1324e5f92327156bd8afc83011e5019591",
+    "depends_on": "R2.8.136-R1 is terminal-failed on exact SHA 3347ad1324e5f92327156bd8afc83011e5019591; see evidence/r2.8.136-r1-attempt-1-3347ad1.json.",
+    "local_executable_validation": false,
+    "required_workflows": [
+      "OpenObsidian Rust CI",
+      "Rust migration inventory",
+      "Obsidian vault round-trip acceptance",
+      "OpenObsidian desktop build",
+      "OpenObsidian quality",
+      "OpenObsidian plugin renderer matrix",
+      "OpenObsidian loaded plugin workflows"
+    ],
+    "expected_jobs": 20
   },
   "current_ci_batch": {
-    "milestone": "R2.8.136-C06-C07.4-ROUNDTRIP-FAILURE-REPAIR; attempt 1",
-    "sha": "8a8dfc68759dc95a78589ba7573df970aea1440c",
-    "started_at": "2026-10-15T17:03:31Z",
-    "completed_at": "2026-10-15T17:22:49Z",
-    "status": "terminal-failed; all seven workflows and 20 jobs terminal; six workflows and 18 jobs passed; macOS and Ubuntu round-trip jobs failed.",
+    "milestone": "R2.8.136-R1-C06-C07.4-ROUNDTRIP-REPAIR; attempt 1",
+    "sha": "3347ad1324e5f92327156bd8afc83011e5019591",
+    "started_at": "2026-10-15T17:58:41Z",
+    "completed_at": "2026-10-15T18:56:41Z",
+    "status": "terminal-failed; one milestone push submitted; all 7 workflows and 20 jobs are terminal, with 6 workflows and 19 jobs passed; the Ubuntu round-trip job failed",
     "workflows_expected": 7,
     "workflows_observed": 7,
     "workflows_terminal": 7,
@@ -42495,205 +42776,206 @@
     "jobs_expected": 20,
     "jobs_observed": 20,
     "jobs_terminal": 20,
-    "jobs_passed": 18,
-    "jobs_failed": 2,
+    "jobs_passed": 19,
+    "jobs_failed": 1,
     "jobs_in_progress": 0,
     "jobs_queued": 0,
     "pending": [],
     "failed": [
-      116557282721,
-      116557283380
+      116583570741
     ],
     "run_ids": [
-      38774141983,
-      38774142284,
-      38774142116,
-      38774142225,
-      38774142291,
-      38774142272,
-      38774142212
+      38781784035,
+      38781784073,
+      38781784077,
+      38781784107,
+      38781784126,
+      38781784154,
+      38781784171
     ],
-    "evidence": "evidence/r2.8.136-attempt-1-8a8dfc6.json",
+    "evidence": "evidence/r2.8.136-r1-attempt-1-3347ad1.json",
+    "origin_main_sha_at_reconciliation": "3347ad1324e5f92327156bd8afc83011e5019591",
+    "main_sha_held": true,
     "jobs": [
       {
-        "workflow": "OpenObsidian plugin renderer matrix",
-        "run_id": 38774141983,
-        "job_id": 116557281395,
-        "name": "windows-latest",
-        "status": "completed",
-        "conclusion": "success",
-        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38774141983/job/116557281395"
-      },
-      {
-        "workflow": "OpenObsidian plugin renderer matrix",
-        "run_id": 38774141983,
-        "job_id": 116557282056,
-        "name": "ubuntu-latest",
-        "status": "completed",
-        "conclusion": "success",
-        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38774141983/job/116557282056"
-      },
-      {
-        "workflow": "OpenObsidian plugin renderer matrix",
-        "run_id": 38774141983,
-        "job_id": 116557282121,
-        "name": "macos-latest",
-        "status": "completed",
-        "conclusion": "success",
-        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38774141983/job/116557282121"
-      },
-      {
-        "workflow": "Rust migration inventory",
-        "run_id": 38774142284,
-        "job_id": 116557282195,
-        "name": "inventory",
-        "status": "completed",
-        "conclusion": "success",
-        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38774142284/job/116557282195"
-      },
-      {
-        "workflow": "OpenObsidian quality",
-        "run_id": 38774142116,
-        "job_id": 116557284099,
-        "name": "macos-latest",
-        "status": "completed",
-        "conclusion": "success",
-        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38774142116/job/116557284099"
-      },
-      {
-        "workflow": "OpenObsidian quality",
-        "run_id": 38774142116,
-        "job_id": 116557284368,
-        "name": "ubuntu-latest",
-        "status": "completed",
-        "conclusion": "success",
-        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38774142116/job/116557284368"
-      },
-      {
-        "workflow": "OpenObsidian quality",
-        "run_id": 38774142116,
-        "job_id": 116557284674,
-        "name": "windows-latest",
-        "status": "completed",
-        "conclusion": "success",
-        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38774142116/job/116557284674"
-      },
-      {
-        "workflow": "OpenObsidian loaded plugin workflows",
-        "run_id": 38774142225,
-        "job_id": 116557291663,
-        "name": "windows-latest",
-        "status": "completed",
-        "conclusion": "success",
-        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38774142225/job/116557291663"
-      },
-      {
-        "workflow": "OpenObsidian loaded plugin workflows",
-        "run_id": 38774142225,
-        "job_id": 116557292135,
-        "name": "macos-latest",
-        "status": "completed",
-        "conclusion": "success",
-        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38774142225/job/116557292135"
-      },
-      {
-        "workflow": "OpenObsidian loaded plugin workflows",
-        "run_id": 38774142225,
-        "job_id": 116557292316,
-        "name": "ubuntu-latest",
-        "status": "completed",
-        "conclusion": "success",
-        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38774142225/job/116557292316"
-      },
-      {
-        "workflow": "OpenObsidian desktop build",
-        "run_id": 38774142291,
-        "job_id": 116557282829,
-        "name": "ubuntu-latest",
-        "status": "completed",
-        "conclusion": "success",
-        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38774142291/job/116557282829"
-      },
-      {
-        "workflow": "OpenObsidian desktop build",
-        "run_id": 38774142291,
-        "job_id": 116557283352,
-        "name": "macos-latest",
-        "status": "completed",
-        "conclusion": "success",
-        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38774142291/job/116557283352"
-      },
-      {
-        "workflow": "OpenObsidian desktop build",
-        "run_id": 38774142291,
-        "job_id": 116557283448,
-        "name": "windows-latest",
-        "status": "completed",
-        "conclusion": "success",
-        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38774142291/job/116557283448"
-      },
-      {
         "workflow": "OpenObsidian Rust CI",
-        "run_id": 38774142272,
-        "job_id": 116557282253,
+        "run_id": 38781784035,
+        "job_id": 116583570518,
         "name": "minimum supported Rust (1.95)",
         "status": "completed",
         "conclusion": "success",
-        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38774142272/job/116557282253"
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38781784035/job/116583570518"
       },
       {
         "workflow": "OpenObsidian Rust CI",
-        "run_id": 38774142272,
-        "job_id": 116557282666,
-        "name": "rust (ubuntu-latest)",
-        "status": "completed",
-        "conclusion": "success",
-        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38774142272/job/116557282666"
-      },
-      {
-        "workflow": "OpenObsidian Rust CI",
-        "run_id": 38774142272,
-        "job_id": 116557282740,
-        "name": "rust (windows-latest)",
-        "status": "completed",
-        "conclusion": "success",
-        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38774142272/job/116557282740"
-      },
-      {
-        "workflow": "OpenObsidian Rust CI",
-        "run_id": 38774142272,
-        "job_id": 116557282883,
+        "run_id": 38781784035,
+        "job_id": 116583570648,
         "name": "rust (macos-latest)",
         "status": "completed",
         "conclusion": "success",
-        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38774142272/job/116557282883"
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38781784035/job/116583570648"
       },
       {
-        "workflow": "Obsidian vault round-trip acceptance",
-        "run_id": 38774142212,
-        "job_id": 116557282721,
-        "name": "Obsidian 1.14.4 vault round-trip on macos-latest",
+        "workflow": "OpenObsidian Rust CI",
+        "run_id": 38781784035,
+        "job_id": 116583570725,
+        "name": "rust (windows-latest)",
         "status": "completed",
-        "conclusion": "failure",
-        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38774142212/job/116557282721"
+        "conclusion": "success",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38781784035/job/116583570725"
+      },
+      {
+        "workflow": "OpenObsidian Rust CI",
+        "run_id": 38781784035,
+        "job_id": 116583570763,
+        "name": "rust (ubuntu-latest)",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38781784035/job/116583570763"
+      },
+      {
+        "workflow": "Rust migration inventory",
+        "run_id": 38781784073,
+        "job_id": 116583569039,
+        "name": "inventory",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38781784073/job/116583569039"
       },
       {
         "workflow": "Obsidian vault round-trip acceptance",
-        "run_id": 38774142212,
-        "job_id": 116557283085,
+        "run_id": 38781784077,
+        "job_id": 116583570549,
         "name": "Obsidian 1.14.4 vault round-trip on windows-latest",
         "status": "completed",
         "conclusion": "success",
-        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38774142212/job/116557283085"
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38781784077/job/116583570549"
       },
       {
         "workflow": "Obsidian vault round-trip acceptance",
-        "run_id": 38774142212,
-        "job_id": 116557283380,
+        "run_id": 38781784077,
+        "job_id": 116583570608,
+        "name": "Obsidian 1.14.4 vault round-trip on macos-latest",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38781784077/job/116583570608"
+      },
+      {
+        "workflow": "Obsidian vault round-trip acceptance",
+        "run_id": 38781784077,
+        "job_id": 116583570741,
         "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04",
         "status": "completed",
         "conclusion": "failure",
-        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38774142212/job/116557283380"
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38781784077/job/116583570741"
+      },
+      {
+        "workflow": "OpenObsidian desktop build",
+        "run_id": 38781784107,
+        "job_id": 116583569790,
+        "name": "windows-latest",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38781784107/job/116583569790"
+      },
+      {
+        "workflow": "OpenObsidian desktop build",
+        "run_id": 38781784107,
+        "job_id": 116583570106,
+        "name": "ubuntu-latest",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38781784107/job/116583570106"
+      },
+      {
+        "workflow": "OpenObsidian desktop build",
+        "run_id": 38781784107,
+        "job_id": 116583570274,
+        "name": "macos-latest",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38781784107/job/116583570274"
+      },
+      {
+        "workflow": "OpenObsidian quality",
+        "run_id": 38781784126,
+        "job_id": 116583570371,
+        "name": "macos-latest",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38781784126/job/116583570371"
+      },
+      {
+        "workflow": "OpenObsidian quality",
+        "run_id": 38781784126,
+        "job_id": 116583570902,
+        "name": "windows-latest",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38781784126/job/116583570902"
+      },
+      {
+        "workflow": "OpenObsidian quality",
+        "run_id": 38781784126,
+        "job_id": 116583570909,
+        "name": "ubuntu-latest",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38781784126/job/116583570909"
+      },
+      {
+        "workflow": "OpenObsidian plugin renderer matrix",
+        "run_id": 38781784154,
+        "job_id": 116583570312,
+        "name": "ubuntu-latest",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38781784154/job/116583570312"
+      },
+      {
+        "workflow": "OpenObsidian plugin renderer matrix",
+        "run_id": 38781784154,
+        "job_id": 116583570691,
+        "name": "macos-latest",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38781784154/job/116583570691"
+      },
+      {
+        "workflow": "OpenObsidian plugin renderer matrix",
+        "run_id": 38781784154,
+        "job_id": 116583570879,
+        "name": "windows-latest",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38781784154/job/116583570879"
+      },
+      {
+        "workflow": "OpenObsidian loaded plugin workflows",
+        "run_id": 38781784171,
+        "job_id": 116583570792,
+        "name": "ubuntu-latest",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38781784171/job/116583570792"
+      },
+      {
+        "workflow": "OpenObsidian loaded plugin workflows",
+        "run_id": 38781784171,
+        "job_id": 116583570861,
+        "name": "windows-latest",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38781784171/job/116583570861"
+      },
+      {
+        "workflow": "OpenObsidian loaded plugin workflows",
+        "run_id": 38781784171,
+        "job_id": 116583571062,
+        "name": "macos-latest",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38781784171/job/116583571062"
       }
     ]
   },
@@ -42771,71 +43053,272 @@
         "The goal SHA-256 matches requirements.json.mapping_review.goal_sha256 and the journal entry: cf887040faa6070f27ba13c005a2014092e2b0dcfca406968d4fc89e2b3bfb30.",
         "The R2.8.136 plan wording and acceptance match the goal; this clean candidate contains no C06.3 code, fixture, or plan. No tests, validation, network calls, or pushes were run."
       ]
+    },
+    "R2.8.136-R2-LINUX-CANVAS-FIRST-CHARACTER-FOCUS-REPAIR": {
+      "status": "Independent read-only source and plan reviews passed after revisions; ready for one exact-SHA milestone submission. No executable validation was run.",
+      "findings": [
+        "Clipboard sentinel input is scoped to the Linux Canvas path field. Existing Linux text-card-ID per-character typing and macOS/Windows paths remain unchanged.",
+        "Both paste stages use fresh same-frame target/sibling/focus/refresh guards; exact field hashes and final target-anchored screenshot OCR are required. Input failures stop without retry or Save.",
+        "The milestone plan covers the full seven-workflow/20-job CI batch, required platforms, exact-SHA evidence, and milestone-only push cadence."
+      ]
     }
   },
   "planned_repair_milestone": {
-    "milestone": "R2.8.136-R1-C06-C07.4-ROUNDTRIP-REPAIR",
-    "name": "Repair macOS Vision picker startup and Linux Canvas path-field focus identity",
-    "status": "implementation-complete; independent source and plan reviews passed; tracker reconciled; ready for one milestone push; no CI has been dispatched",
-    "plan": "evidence/r2.8.136-r1-roundtrip-repair-plan.json",
-    "starting_sha": "8a8dfc68759dc95a78589ba7573df970aea1440c",
-    "deliverable": "Repair the terminal macOS first-run Vision OCR timeout and Linux Canvas path-field focus/identity failure so the pinned Obsidian reference round-trip reaches and completes C07.4 on all three CI platforms.",
+    "milestone": "R2.8.136-R2-LINUX-CANVAS-FIRST-CHARACTER-FOCUS-REPAIR",
+    "name": "Keep Linux Canvas path input in the selected field",
+    "status": "implementation-complete; independent source and plan reviews passed; ready for one milestone push; no CI has been dispatched",
+    "plan": "evidence/r2.8.136-r2-linux-canvas-first-character-focus-plan.json",
+    "starting_sha": "3347ad1324e5f92327156bd8afc83011e5019591",
+    "deliverable": "Repair the Linux round-trip harness's first-character focus transfer when entering the exact Canvas path, preserving fail-closed field identity, no-save-on-failure, and all other platform/scenario behavior.",
     "acceptance": [
-      "All seven required GitHub Actions workflows and all 20 jobs pass on one exact submitted SHA.",
-      "Ubuntu, macOS, and Windows each complete all ten C07.4 scenarios on first open and reopen, with complete scenario and source-checkpoint reports.",
-      "The Linux report proves the exact requested Canvas path was entered in and read back from the path field, not the sibling ID field, before downstream C07.4 capture.",
-      "The macOS report proves bounded Vision helper execution and exact first-run picker confirmation before downstream C07.4 capture.",
-      "All platform artifacts, report hashes, exact-SHA workflow/job results, and reference-source checkpoints are reconciled; C07.4 remains reference-only, with no Rust-parity or source-preservation claim from reference observations."
+      "All seven required GitHub Actions workflows and all 20 jobs pass on one exact implementation SHA across Ubuntu 24.04, macOS latest, and Windows latest.",
+      "Ubuntu completes all ten C07.4 scenarios on first open and reopen; its report proves the path field received the first-character paste, that the sibling ID field remained unchanged, that the remainder paste happened only after sentinel validation, and that exact final path readback succeeded.",
+      "Ubuntu proves the first-character clipboard was staged only after target/sibling checks, then records a fresh same-frame blank-target/focused-path/unchanged-sibling/idle-refresh guard immediately before the first Ctrl+V and an exact one-character sentinel readback afterward.",
+      "macOS and Windows round-trip jobs still pass all existing authoring, reopen, Canvas, and C07.4 reference capture gates with their existing report semantics.",
+      "Ubuntu confirms the Linux Canvas text-card-ID field still passes its existing per-character field/sibling readback guards; macOS and Windows input behavior remains unchanged.",
+      "All three platform artifacts, archive/report digests, exact-SHA workflow/job outcomes, and source checkpoints are reconciled. C07.4 remains reference-only; report any reference source mutation and make no Rust parity or source-preservation claim.",
+      "No local tests, builds, formatting, linting, validators, type checks, runtime probes, or application launches are used for acceptance.",
+      "The Ubuntu report records the post-clipboard-staging, pre-remainder-paste same-frame diagnostics and proves refresh stability, target focus, sibling unfocused state, and unchanged sibling value/hash immediately before Ctrl+V.",
+      "After final field-hash readback, the Ubuntu report includes a fresh target-anchored screenshot crop and exact OCR readback of the requested Canvas path before Save or downstream C07.4 capture."
     ],
     "required_workflows": [
-      "Rust migration inventory",
-      "OpenObsidian loaded plugin workflows",
-      "OpenObsidian quality",
       "OpenObsidian Rust CI",
+      "Rust migration inventory",
       "Obsidian vault round-trip acceptance",
+      "OpenObsidian desktop build",
+      "OpenObsidian quality",
       "OpenObsidian plugin renderer matrix",
-      "OpenObsidian desktop build"
+      "OpenObsidian loaded plugin workflows"
     ],
     "platforms": [
       "Ubuntu 24.04",
       "macOS latest",
       "Windows latest"
     ],
-    "expected_evidence": "Exact submitted SHA; all seven workflow and 20 job outcomes; three platform round-trip artifact IDs/digests/report hashes; C07.4 first-open/reopen totals; macOS Vision helper cache/startup/timeout diagnostics; Linux field geometry/focus/event-recipient/readback diagnostics; before/after source snapshots and limitations.",
-    "depends_on": "R2.8.136 terminal-failed on exact SHA 8a8dfc68759dc95a78589ba7573df970aea1440c; see evidence/r2.8.136-attempt-1-8a8dfc6.json."
+    "expected_evidence": "Implementation starting SHA; exact submitted SHA; all seven workflow and 20 job URLs/conclusions; Ubuntu per-stage same-frame target/sibling values and hashes around first-character and remainder pastes; all three artifact IDs and archive/report hashes; C07.4 reference-only and source-mutation limitations. Immediate pre-remainder-paste refresh/focus/sibling diagnostics; final target-anchored screenshot crop and exact OCR path readback.",
+    "depends_on": [
+      "R2.8.136-R1 is terminal-failed on exact SHA 3347ad1324e5f92327156bd8afc83011e5019591; all seven workflows and 20 jobs are terminal and reconciled in evidence/r2.8.136-r1-attempt-1-3347ad1.json.",
+      "The Linux failure was isolated to the first uppercase C being emitted as ShiftLeft plus C after target focus was confirmed; all geometry, response-ID, pointer, and pre-entry sibling guards had passed. The repair must not relax those guards.",
+      "No workflow/job from the R1 batch remains active. Do not push or trigger another batch until this named repair milestone is fully implemented, independently reviewed, and its complete submission set is ready."
+    ]
   },
   "active_ci_batch": {
-    "milestone": "R2.8.136-C06-C07.4-ROUNDTRIP-FAILURE-REPAIR; attempt 1",
-    "sha": "8a8dfc68759dc95a78589ba7573df970aea1440c",
-    "started_at": "2026-10-15T17:03:31Z",
-    "status": "terminal-failed; all seven workflows and 20 jobs terminal; 6 workflows and 18 jobs passed; 1 workflow and 2 jobs failed; no queued or in-progress jobs.",
-    "required_workflows": 7,
-    "required_jobs": 20,
-    "run_ids": [
-      38774141983,
-      38774142284,
-      38774142116,
-      38774142225,
-      38774142291,
-      38774142272,
-      38774142212
-    ],
-    "status_snapshot_at": "2026-10-15T17:22:49Z",
-    "completed_workflows": 7,
-    "passed_workflows": 6,
-    "failed_workflows": 1,
+    "milestone": "R2.8.136-R1-C06-C07.4-ROUNDTRIP-REPAIR; attempt 1",
+    "sha": "3347ad1324e5f92327156bd8afc83011e5019591",
+    "started_at": "2026-10-15T17:58:41Z",
+    "completed_at": "2026-10-15T18:56:41Z",
+    "status": "terminal-failed; one milestone push submitted; all 7 workflows and 20 jobs are terminal, with 6 workflows and 19 jobs passed; the Ubuntu round-trip job failed",
+    "workflows_expected": 7,
+    "workflows_observed": 7,
+    "workflows_terminal": 7,
+    "workflows_passed": 6,
+    "workflows_failed": 1,
     "workflows_in_progress": 0,
     "workflows_queued": 0,
-    "completed_jobs": 20,
-    "jobs_passed": 18,
-    "jobs_failed": 2,
+    "jobs_expected": 20,
+    "jobs_observed": 20,
+    "jobs_terminal": 20,
+    "jobs_passed": 19,
+    "jobs_failed": 1,
     "jobs_in_progress": 0,
     "jobs_queued": 0,
-    "main_sha_held": true,
-    "failed_job_ids": [
-      116557282721,
-      116557283380
+    "pending": [],
+    "failed": [
+      116583570741
     ],
-    "evidence": "evidence/r2.8.136-attempt-1-8a8dfc6.json"
+    "run_ids": [
+      38781784035,
+      38781784073,
+      38781784077,
+      38781784107,
+      38781784126,
+      38781784154,
+      38781784171
+    ],
+    "evidence": "evidence/r2.8.136-r1-attempt-1-3347ad1.json",
+    "origin_main_sha_at_reconciliation": "3347ad1324e5f92327156bd8afc83011e5019591",
+    "main_sha_held": true,
+    "jobs": [
+      {
+        "workflow": "OpenObsidian Rust CI",
+        "run_id": 38781784035,
+        "job_id": 116583570518,
+        "name": "minimum supported Rust (1.95)",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38781784035/job/116583570518"
+      },
+      {
+        "workflow": "OpenObsidian Rust CI",
+        "run_id": 38781784035,
+        "job_id": 116583570648,
+        "name": "rust (macos-latest)",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38781784035/job/116583570648"
+      },
+      {
+        "workflow": "OpenObsidian Rust CI",
+        "run_id": 38781784035,
+        "job_id": 116583570725,
+        "name": "rust (windows-latest)",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38781784035/job/116583570725"
+      },
+      {
+        "workflow": "OpenObsidian Rust CI",
+        "run_id": 38781784035,
+        "job_id": 116583570763,
+        "name": "rust (ubuntu-latest)",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38781784035/job/116583570763"
+      },
+      {
+        "workflow": "Rust migration inventory",
+        "run_id": 38781784073,
+        "job_id": 116583569039,
+        "name": "inventory",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38781784073/job/116583569039"
+      },
+      {
+        "workflow": "Obsidian vault round-trip acceptance",
+        "run_id": 38781784077,
+        "job_id": 116583570549,
+        "name": "Obsidian 1.14.4 vault round-trip on windows-latest",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38781784077/job/116583570549"
+      },
+      {
+        "workflow": "Obsidian vault round-trip acceptance",
+        "run_id": 38781784077,
+        "job_id": 116583570608,
+        "name": "Obsidian 1.14.4 vault round-trip on macos-latest",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38781784077/job/116583570608"
+      },
+      {
+        "workflow": "Obsidian vault round-trip acceptance",
+        "run_id": 38781784077,
+        "job_id": 116583570741,
+        "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04",
+        "status": "completed",
+        "conclusion": "failure",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38781784077/job/116583570741"
+      },
+      {
+        "workflow": "OpenObsidian desktop build",
+        "run_id": 38781784107,
+        "job_id": 116583569790,
+        "name": "windows-latest",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38781784107/job/116583569790"
+      },
+      {
+        "workflow": "OpenObsidian desktop build",
+        "run_id": 38781784107,
+        "job_id": 116583570106,
+        "name": "ubuntu-latest",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38781784107/job/116583570106"
+      },
+      {
+        "workflow": "OpenObsidian desktop build",
+        "run_id": 38781784107,
+        "job_id": 116583570274,
+        "name": "macos-latest",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38781784107/job/116583570274"
+      },
+      {
+        "workflow": "OpenObsidian quality",
+        "run_id": 38781784126,
+        "job_id": 116583570371,
+        "name": "macos-latest",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38781784126/job/116583570371"
+      },
+      {
+        "workflow": "OpenObsidian quality",
+        "run_id": 38781784126,
+        "job_id": 116583570902,
+        "name": "windows-latest",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38781784126/job/116583570902"
+      },
+      {
+        "workflow": "OpenObsidian quality",
+        "run_id": 38781784126,
+        "job_id": 116583570909,
+        "name": "ubuntu-latest",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38781784126/job/116583570909"
+      },
+      {
+        "workflow": "OpenObsidian plugin renderer matrix",
+        "run_id": 38781784154,
+        "job_id": 116583570312,
+        "name": "ubuntu-latest",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38781784154/job/116583570312"
+      },
+      {
+        "workflow": "OpenObsidian plugin renderer matrix",
+        "run_id": 38781784154,
+        "job_id": 116583570691,
+        "name": "macos-latest",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38781784154/job/116583570691"
+      },
+      {
+        "workflow": "OpenObsidian plugin renderer matrix",
+        "run_id": 38781784154,
+        "job_id": 116583570879,
+        "name": "windows-latest",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38781784154/job/116583570879"
+      },
+      {
+        "workflow": "OpenObsidian loaded plugin workflows",
+        "run_id": 38781784171,
+        "job_id": 116583570792,
+        "name": "ubuntu-latest",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38781784171/job/116583570792"
+      },
+      {
+        "workflow": "OpenObsidian loaded plugin workflows",
+        "run_id": 38781784171,
+        "job_id": 116583570861,
+        "name": "windows-latest",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38781784171/job/116583570861"
+      },
+      {
+        "workflow": "OpenObsidian loaded plugin workflows",
+        "run_id": 38781784171,
+        "job_id": 116583571062,
+        "name": "macos-latest",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38781784171/job/116583571062"
+      }
+    ]
   }
 }

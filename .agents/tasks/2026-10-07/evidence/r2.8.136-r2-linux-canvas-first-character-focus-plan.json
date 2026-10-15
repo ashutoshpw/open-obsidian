@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.8.136-R2-LINUX-CANVAS-FIRST-CHARACTER-FOCUS-REPAIR",
+  "name": "Keep Linux Canvas path input in the selected field",
+  "status": "implementation-complete; independent source and plan reviews passed; ready for one milestone push; no CI has been dispatched",
+  "recorded_at": "2026-10-15T19:11:06Z",
+  "planning_base_sha": "3347ad1324e5f92327156bd8afc83011e5019591",
+  "implementation_start_sha": "3347ad1324e5f92327156bd8afc83011e5019591",
+  "implementation_start_sha_policy": "Confirmed origin/main still equals the reconciled R1 SHA 3347ad1324e5f92327156bd8afc83011e5019591 before source edits; implementation is isolated in a clean worktree based on that SHA.",
+  "depends_on": [
+    "R2.8.136-R1 is terminal-failed on exact SHA 3347ad1324e5f92327156bd8afc83011e5019591; all seven workflows and 20 jobs are terminal and reconciled in evidence/r2.8.136-r1-attempt-1-3347ad1.json.",
+    "The Linux failure was isolated to the first uppercase C being emitted as ShiftLeft plus C after target focus was confirmed; all geometry, response-ID, pointer, and pre-entry sibling guards had passed. The repair must not relax those guards.",
+    "No workflow/job from the R1 batch remains active. Do not push or trigger another batch until this named repair milestone is fully implemented, independently reviewed, and its complete submission set is ready."
+  ],
+  "bounded_outcome": "Repair the Linux round-trip harness's first-character focus transfer when entering the exact Canvas path, preserving fail-closed field identity, no-save-on-failure, and all other platform/scenario behavior.",
+  "scope": [
+    "Change only the Linux Canvas path text-entry branch in .agents/tasks/2026-10-07/audit-obsidian-vault-roundtrip.ts, unless the completed review identifies a directly necessary report/schema update.",
+    "Retain the existing fresh same-frame target/sibling diagnostics, unique response IDs, target geometry and click checks, ArrowRight focus check, refresh-stability check, and pre-entry sibling value/hash comparison.",
+    "For a nonempty requested value, place its actual first Unicode character on the X clipboard with the existing xclip dependency. After staging it, require fresh same-frame target/sibling diagnostics immediately before Ctrl+V: the path field must still be focused and blank, the sibling must be unfocused and unchanged, and refresh must remain idle/stable. After the paste, wait for fresh same-frame target/sibling diagnostics and require the exact one-character target bytes/hash, target focus, sibling unfocused, and sibling value/hash unchanged before proceeding.",
+    "Only after the first-character sentinel passes, place the remaining text on the clipboard and paste it once into the same target. Skip this second paste for a one-character value. Then require fresh same-frame diagnostics, exact full target bytes/hash, target focus, and unchanged/unfocused sibling.",
+    "Record the input method, paste stage, observed focus and value hashes, and failure reason. If either paste fails any guard or fresh diagnostics do not arrive, abort the attempt immediately without retrying or activating Save; preserve the existing report and before/after snapshot behavior.",
+    "Keep macOS Vision picker execution, Windows accessibility handling, C07.4 scenario data, pinned Obsidian, all other platform paths, and reference-only interpretation unchanged.",
+    "Synchronize the requested goal cadence clarification and requirements.json goal fingerprint inside this milestone; do not create a separate push or CI batch for this documentation update."
+  ],
+  "out_of_scope": [
+    "Changing application Canvas behavior, Rust application code, C06.3 document mutation work, C07.3 membership behavior, or C07.4 expected reference semantics.",
+    "Changing macOS or Windows input behavior or retrying after input begins.",
+    "Removing or weakening fail-closed target/sibling checks, source snapshots, or exact-path readback.",
+    "Claiming Rust parity, exact source preservation, or successful C07.4 behavior on Linux based only on harness instrumentation.",
+    "Changing Linux Canvas text-card-ID entry; it retains the existing per-character xdotool behavior and guards."
+  ],
+  "implementation_criteria": [
+    "Only Linux Canvas path input uses the xclip clipboard sentinel; the first requested Unicode character is pasted with Ctrl+V and does not synthesize ShiftLeft plus a character key.",
+    "After staging the first character, fresh same-frame diagnostics immediately before Ctrl+V prove the path target remains blank and focused, the sibling remains unfocused and unchanged, and refresh remains idle/stable.",
+    "After the sentinel paste, fresh same-frame target/sibling diagnostics prove exact one-character target bytes/hash, target focus, and unchanged/unfocused sibling before any remainder is staged.",
+    "After staging the remainder, fresh same-frame diagnostics immediately before Ctrl+V prove the exact sentinel prefix remains in the focused target, the sibling remains unfocused and byte/hash-identical to its pre-entry value, and refresh remains idle/stable.",
+    "The remainder is pasted once only after sentinel acceptance; fresh same-frame diagnostics then prove exact full target bytes/hash, target focus, and unchanged/unfocused sibling.",
+    "After exact final path-field bytes/hash and focus checks pass, a fresh screenshot crop anchored to the target field must yield exact OCR of the requested Canvas path before Save or downstream round-trip steps.",
+    "Any missing/ambiguous/stale diagnostic, focus loss, sibling focus/value change, mismatch, refresh change, or clipboard/paste error aborts without retrying input or activating Save.",
+    "The Linux text-card-ID per-character input branch and macOS/Windows input paths retain their pre-milestone behavior.",
+    "Success diagnostics record both paste stages, focus and target/sibling value hashes; failure diagnostics retain the failed stage, reason, latest field pair, refresh data, and any completed paste stages.",
+    "The goal batches related minor tasks and local commits under one named milestone; push to origin/main exactly once after full implementation and review, then hold its exact SHA until all required CI jobs are terminal and evidence is reconciled, even if CI takes several hours."
+  ],
+  "ci_acceptance_criteria": [
+    "All seven required GitHub Actions workflows and all 20 jobs pass on one exact implementation SHA across Ubuntu 24.04, macOS latest, and Windows latest.",
+    "Ubuntu completes all ten C07.4 scenarios on first open and reopen; its report proves the path field received the first-character paste, that the sibling ID field remained unchanged, that the remainder paste happened only after sentinel validation, and that exact final path readback succeeded.",
+    "Ubuntu proves the first-character clipboard was staged only after target/sibling checks, then records a fresh same-frame blank-target/focused-path/unchanged-sibling/idle-refresh guard immediately before the first Ctrl+V and an exact one-character sentinel readback afterward.",
+    "macOS and Windows round-trip jobs still pass all existing authoring, reopen, Canvas, and C07.4 reference capture gates with their existing report semantics.",
+    "Ubuntu confirms the Linux Canvas text-card-ID field still passes its existing per-character field/sibling readback guards; macOS and Windows input behavior remains unchanged.",
+    "All three platform artifacts, archive/report digests, exact-SHA workflow/job outcomes, and source checkpoints are reconciled. C07.4 remains reference-only; report any reference source mutation and make no Rust parity or source-preservation claim.",
+    "No local tests, builds, formatting, linting, validators, type checks, runtime probes, or application launches are used for acceptance.",
+    "The Ubuntu report records the post-clipboard-staging, pre-remainder-paste same-frame diagnostics and proves refresh stability, target focus, sibling unfocused state, and unchanged sibling value/hash immediately before Ctrl+V.",
+    "After final field-hash readback, the Ubuntu report includes a fresh target-anchored screenshot crop and exact OCR readback of the requested Canvas path before Save or downstream C07.4 capture."
+  ],
+  "required_workflows": [
+    "OpenObsidian Rust CI",
+    "Rust migration inventory",
+    "Obsidian vault round-trip acceptance",
+    "OpenObsidian desktop build",
+    "OpenObsidian quality",
+    "OpenObsidian plugin renderer matrix",
+    "OpenObsidian loaded plugin workflows"
+  ],
+  "expected_jobs": 20,
+  "required_platforms": [
+    "Ubuntu 24.04",
+    "macOS latest",
+    "Windows latest"
+  ],
+  "expected_evidence": "Implementation starting SHA; exact submitted SHA; all seven workflow and 20 job URLs/conclusions; Ubuntu per-stage same-frame target/sibling values and hashes around first-character and remainder pastes; all three artifact IDs and archive/report hashes; C07.4 reference-only and source-mutation limitations. Immediate pre-remainder-paste refresh/focus/sibling diagnostics; final target-anchored screenshot crop and exact OCR path readback.",
+  "push_policy": "Batch all related minor tasks, edits, and optional local commits under this one named milestone; do not push or trigger full CI per minor change. Push to origin/main exactly once only after this milestone is fully implemented and reviewed. The push starts one complete CI batch; hold origin/main at its exact submitted SHA until every required workflow/job is terminal and its evidence is reconciled, even when the cross-platform suite takes several hours. Do not overlap milestone batches or dispatch duplicate full batches for incremental edits.",
+  "local_executable_validation": false,
+  "independent_review": {
+    "status": "passed after implementation revisions",
+    "reviewer": "linux_repair_audit",
+    "findings_resolved": [
+      "Retained exact OCR from a fresh target-anchored screenshot crop after final field-hash readback.",
+      "Added fresh same-frame refresh/focus/sibling checks after staging clipboard remainder and immediately before Ctrl+V.",
+      "Confirmed milestone-only push policy matches goal.md.",
+      "Limited the clipboard sentinel to Linux Canvas path input and retained the existing Linux text-card-ID per-character path."
+    ],
+    "source_implementation_started_after_review": true,
+    "source_review": "Approved after read-only review: the clipboard sentinel is limited to Linux Canvas path input; Linux text-card-ID typing and macOS/Windows paths remain unchanged. Both paste stages have fresh same-frame target/sibling/focus/refresh guards, exact hash checks, final screenshot OCR, and fail-closed handling without retry or Save. No concrete blockers were found.",
+    "plan_review": "Plan review passed after adding fresh same-frame post-staging guards and exact target-anchored OCR requirements. The exact-SHA push cadence and CI gate match goal.md.",
+    "ci_dispatched": false,
+    "review_reconciled_at": "2026-10-15T19:11:06Z"
+  }
+}

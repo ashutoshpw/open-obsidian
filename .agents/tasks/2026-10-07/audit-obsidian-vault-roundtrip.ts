@@ -16385,7 +16385,207 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
         let fieldStateReadback: NonNullable<Awaited<ReturnType<typeof readCanvasTextEditFieldDiagnostic>>> = preEntryTargetWidget;
         let siblingFieldStateReadback = preEntrySiblingWidget;
         targetAndSiblingWidgetReadback = {target: preEntryTargetWidget, sibling: preEntrySiblingWidget};
-        if (!fieldAlreadyContainsExpectedValue) {
+        const pasteStageDiagnostics: Array<Record<string, unknown>> = [];
+        let clipboardUsedForEntry = false;
+        const usesClipboardSentinel = diagnosticField === "path";
+        const entryMethod = fieldAlreadyContainsExpectedValue
+          ? "not used; exact requested value was already present"
+          : usesClipboardSentinel
+            ? "xclip clipboard paste via Ctrl+V; first-character sentinel, then one remainder paste when nonempty"
+            : "xdotool type --clearmodifiers; no Ctrl selection/paste chords or clipboard operation";
+        if (!fieldAlreadyContainsExpectedValue && usesClipboardSentinel) {
+          const characters = Array.from(value);
+          if (characters.length === 0) {
+            throw new Error("Refusing to paste an empty requested value into Canvas field " + diagnosticField);
+          }
+          const firstCharacter = characters[0];
+          if (firstCharacter === undefined) throw new Error("Missing first Canvas input character for " + diagnosticField);
+          const expectedHash = (text: string) => createHash("sha256").update(text, "utf8").digest("hex");
+          let lastObservedLine = Math.max(preEntryTargetWidget.line, preEntrySiblingWidget.line);
+
+          const checkFreshFieldPair = async (stage: string, afterLine: number) => {
+            let pair: Awaited<ReturnType<typeof readCanvasFieldPair>> = null;
+            try {
+              pair = await waitFor(
+                "fresh same-frame Canvas target and sibling diagnostics " + stage,
+                () => readCanvasFieldPair(afterLine),
+                (candidate) => candidate !== null
+                  && candidate.target.line > afterLine
+                  && candidate.sibling.line > afterLine
+                  && candidate.target.frameNr === candidate.sibling.frameNr
+                  && Math.abs(candidate.target.line - candidate.sibling.line) <= 8,
+                10_000,
+              );
+            } catch (error) {
+              const detail = error instanceof Error ? error.message : String(error);
+              throw new Error(
+                "Canvas diagnostics did not arrive " + stage
+                  + "; input_method=xclip clipboard plus Ctrl+V"
+                  + "; completed_paste_stages=" + JSON.stringify(pasteStageDiagnostics)
+                  + "; detail=" + detail,
+              );
+            }
+            if (!pair) {
+              throw new Error(
+                "Canvas diagnostics did not arrive " + stage
+                  + "; after_line=" + afterLine
+                  + "; completed_paste_stages=" + JSON.stringify(pasteStageDiagnostics),
+              );
+            }
+            return pair;
+          };
+
+          const assertPasteState = async (stage: string, expectedText: string, afterLine: number) => {
+            const pair = await checkFreshFieldPair(stage, afterLine);
+            const refresh = await readOpenObsidianRefreshDiagnostics(logPath);
+            const refreshChanged = openObsidianRefreshActivityChanged(refreshBeforeClick, refresh)
+              || (refresh.receiverStates.at(-1)?.busy ?? false);
+            const expectedSha256 = expectedHash(expectedText);
+            const expectedBytes = Buffer.byteLength(expectedText, "utf8");
+            const siblingUnchanged = pair.sibling.valueBytes === preEntrySiblingWidget.valueBytes
+              && pair.sibling.valueSha256 === preEntrySiblingWidget.valueSha256;
+            const responseIdsStable = pair.target.responseId === preEntryTargetWidget.responseId
+              && pair.sibling.responseId === preEntrySiblingWidget.responseId
+              && pair.target.responseId !== pair.sibling.responseId;
+            const targetValueExact = pair.target.valueBytes === expectedBytes
+              && pair.target.valueSha256 === expectedSha256
+              && pair.target.empty === (expectedText.length === 0);
+            if (refreshChanged
+              || !pair.target.enabled
+              || !pair.target.focused
+              || !pair.sibling.enabled
+              || pair.sibling.focused
+              || pair.sibling.arrowRightKeyEvent
+              || !siblingUnchanged
+              || !responseIdsStable
+              || !targetValueExact) {
+              throw new Error(
+                "Canvas paste guard failed " + stage
+                  + "; input_method=xclip clipboard plus Ctrl+V"
+                  + "; expected_prefix_bytes=" + expectedBytes
+                  + "; expected_prefix_sha256=" + expectedSha256
+                  + "; refresh_stable=" + !refreshChanged
+                  + "; sibling_unchanged=" + siblingUnchanged
+                  + "; response_ids_stable=" + responseIdsStable
+                  + "; target=" + JSON.stringify(pair.target)
+                  + "; sibling=" + JSON.stringify(pair.sibling)
+                  + "; refresh=" + JSON.stringify(refresh)
+                  + "; completed_paste_stages=" + JSON.stringify(pasteStageDiagnostics),
+              );
+            }
+            return {pair, refresh, expectedBytes, expectedSha256};
+          };
+
+          const stageClipboard = (stage: string, text: string) => {
+            try {
+              execFileSync("xclip", ["-selection", "clipboard"], {
+                input: text,
+                stdio: ["pipe", "ignore", "ignore"],
+                timeout: 5_000,
+              });
+              clipboardUsedForEntry = true;
+            } catch (error) {
+              const detail = error instanceof Error ? error.message : String(error);
+              throw new Error("Could not stage Canvas " + stage + " clipboard text: " + detail + "; input_method=xclip clipboard plus Ctrl+V; completed_paste_stages=" + JSON.stringify(pasteStageDiagnostics));
+            }
+          };
+
+          const firstCharacterBytes = Buffer.byteLength(firstCharacter, "utf8");
+          stageClipboard("first-character sentinel", firstCharacter);
+          const firstBeforePaste = await assertPasteState(
+            "immediately before first-character Ctrl+V after clipboard staging",
+            "",
+            lastObservedLine,
+          );
+          const firstPasteLine = Math.max(firstBeforePaste.pair.target.line, firstBeforePaste.pair.sibling.line);
+          xdotool("key", "--clearmodifiers", "ctrl+v");
+          const firstAfterPaste = await assertPasteState(
+            "after first-character sentinel paste",
+            firstCharacter,
+            firstPasteLine,
+          );
+          lastObservedLine = Math.max(firstAfterPaste.pair.target.line, firstAfterPaste.pair.sibling.line);
+          fieldStateReadback = firstAfterPaste.pair.target;
+          siblingFieldStateReadback = firstAfterPaste.pair.sibling;
+          targetAndSiblingWidgetReadback = firstAfterPaste.pair;
+          pasteStageDiagnostics.push({
+            stage: "first_character_sentinel",
+            input_method: "xclip clipboard plus Ctrl+V",
+            clipboard_utf8_bytes: firstCharacterBytes,
+            expected_prefix_bytes: firstAfterPaste.expectedBytes,
+            expected_prefix_sha256: firstAfterPaste.expectedSha256,
+            before_paste: {
+              target: firstBeforePaste.pair.target,
+              sibling: firstBeforePaste.pair.sibling,
+              refresh_diagnostics: firstBeforePaste.refresh,
+              refresh_stable: true,
+            },
+            after_paste: {
+              target: firstAfterPaste.pair.target,
+              sibling: firstAfterPaste.pair.sibling,
+              refresh_diagnostics: firstAfterPaste.refresh,
+              refresh_stable: true,
+            },
+          });
+
+          const remainder = characters.slice(1).join("");
+          if (remainder.length > 0) {
+            stageClipboard("remainder", remainder);
+            const remainderBeforePaste = await assertPasteState(
+              "immediately before remainder Ctrl+V after clipboard staging",
+              firstCharacter,
+              lastObservedLine,
+            );
+            const remainderPasteLine = Math.max(
+              remainderBeforePaste.pair.target.line,
+              remainderBeforePaste.pair.sibling.line,
+            );
+            xdotool("key", "--clearmodifiers", "ctrl+v");
+            const remainderAfterPaste = await assertPasteState(
+              "after remainder paste",
+              value,
+              remainderPasteLine,
+            );
+            lastObservedLine = Math.max(
+              remainderAfterPaste.pair.target.line,
+              remainderAfterPaste.pair.sibling.line,
+            );
+            fieldStateReadback = remainderAfterPaste.pair.target;
+            siblingFieldStateReadback = remainderAfterPaste.pair.sibling;
+            targetAndSiblingWidgetReadback = remainderAfterPaste.pair;
+            pasteStageDiagnostics.push({
+              stage: "remainder",
+              input_method: "xclip clipboard plus Ctrl+V",
+              clipboard_utf8_bytes: Buffer.byteLength(remainder, "utf8"),
+              expected_prefix_bytes: remainderAfterPaste.expectedBytes,
+              expected_prefix_sha256: remainderAfterPaste.expectedSha256,
+              before_paste: {
+                target: remainderBeforePaste.pair.target,
+                sibling: remainderBeforePaste.pair.sibling,
+                refresh_diagnostics: remainderBeforePaste.refresh,
+                refresh_stable: true,
+              },
+              after_paste: {
+                target: remainderAfterPaste.pair.target,
+                sibling: remainderAfterPaste.pair.sibling,
+                refresh_diagnostics: remainderAfterPaste.refresh,
+                refresh_stable: true,
+              },
+            });
+          }
+
+          if (fieldStateReadback.valueSha256 !== expectedValueSha256
+            || fieldStateReadback.valueBytes !== expectedValueBytes) {
+            throw new Error(
+              "Canvas target field did not reach the exact requested value after sentinel/remainder paste"
+                + "; expected_bytes=" + expectedValueBytes
+                + "; expected_sha256=" + expectedValueSha256
+                + "; actual=" + JSON.stringify(fieldStateReadback)
+                + "; sibling=" + JSON.stringify(siblingFieldStateReadback)
+                + "; completed_paste_stages=" + JSON.stringify(pasteStageDiagnostics),
+            );
+          }
+        } else if (!fieldAlreadyContainsExpectedValue) {
           const characters = Array.from(value);
           if (characters.length === 0) {
             throw new Error(`Refusing to type an empty requested value into Canvas field ${diagnosticField}`);
@@ -16448,7 +16648,18 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
         const refreshChangedAfterEntry = openObsidianRefreshActivityChanged(refreshBeforeClick, refreshAfterEntry)
           || (refreshAfterEntry.receiverStates.at(-1)?.busy ?? false);
         if (refreshChangedAfterEntry) {
-          lastFailure = `vault refresh changed the form during Canvas field entry without Ctrl selection/paste chords: field=${diagnosticField}; before=${JSON.stringify(preEntryTargetWidget)}; after=${JSON.stringify(fieldStateReadback)}`;
+          if (diagnosticField === "path") {
+            throw new Error(
+              "Vault refresh changed the form during Canvas field entry; field=" + diagnosticField
+                + "; before=" + JSON.stringify(preEntryTargetWidget)
+                + "; after=" + JSON.stringify(fieldStateReadback)
+                + "; refresh=" + JSON.stringify(refreshAfterEntry)
+                + "; paste_stages=" + JSON.stringify(pasteStageDiagnostics),
+            );
+          }
+          lastFailure = "vault refresh changed the form during Canvas field entry without Ctrl selection/paste chords: field="
+            + diagnosticField + "; before=" + JSON.stringify(preEntryTargetWidget)
+            + "; after=" + JSON.stringify(fieldStateReadback);
           continue;
         }
 
@@ -16503,7 +16714,9 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
             name: controlName,
             action: fieldAlreadyContainsExpectedValue
               ? "confirmed the freshly focused exact field value without typing"
-              : "matched the screenshot click to fresh app-reported target/sibling geometry, confirmed target focus, checked the first character and full value hashes while the sibling stayed unchanged, then verified a fresh target-anchored screenshot crop without Ctrl selection/paste chords or clipboard operations",
+              : diagnosticField === "path"
+                ? "matched target/sibling geometry, pasted and checked the first-character sentinel, rechecked focus/refresh/sibling state before one remainder paste, then verified exact hashes and fresh target-anchored OCR"
+                : "matched target/sibling geometry, typed each character with per-character field and sibling checks, then verified exact hashes and fresh target-anchored OCR",
             exact_readback: true,
             clipboard_exact: null,
             field_state_sha256_exact: true,
@@ -16518,10 +16731,9 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
             visual_readback_error: targetVisualReadbackError || null,
             click_x: clickX,
             click_y: clickY,
-            entry_method: fieldAlreadyContainsExpectedValue
-              ? "not used; exact requested value was already present"
-              : "xdotool type --clearmodifiers; no Ctrl selection/paste chords or clipboard operation",
-            clipboard_used: false,
+            entry_method: entryMethod,
+            clipboard_used: clipboardUsedForEntry,
+            paste_stage_diagnostics: diagnosticField === "path" ? pasteStageDiagnostics : undefined,
             target_widget_field: diagnosticField,
             target_and_sibling_geometry_before_click: targetAndSiblingGeometryBeforeClick,
             click_geometry_validation: clickGeometryValidation,
@@ -16559,7 +16771,8 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
             readback_crop_bounds: targetVisualReadback?.layout.cropBounds ?? null,
           });
         }
-        lastFailure = `field-state or target-anchored screenshot readback did not confirm the exact value: field=${diagnosticField}; field_state_exact=${fieldStateReadback.valueSha256 === expectedValueSha256 && fieldStateReadback.valueBytes === expectedValueBytes}; visual_exact=${targetVisualReadback?.exact ?? false}; refresh_changed=${refreshChangedDuringInput}; crop_error=${targetVisualReadbackError || "none"}; source=${targetVisualReadback?.layout.fieldPositionSource ?? "unavailable"}; label_bounds=${JSON.stringify(targetVisualReadback?.layout.labelBoundsOcr ?? null)}; crop_bounds=${JSON.stringify(targetVisualReadback?.layout.cropBounds ?? null)}; screenshot=${targetReadbackScreenshot ? relative(reportDirectory, targetReadbackScreenshot.windowPngPath) : "unavailable"}; crop=${targetVisualReadback ? relative(reportDirectory, targetVisualReadback.cropPath) : "unavailable"}`;
+        lastFailure = `field-state or target-anchored screenshot readback did not confirm the exact value: field=${diagnosticField}; field_state_exact=${fieldStateReadback.valueSha256 === expectedValueSha256 && fieldStateReadback.valueBytes === expectedValueBytes}; visual_exact=${targetVisualReadback?.exact ?? false}; refresh_changed=${refreshChangedDuringInput}; crop_error=${targetVisualReadbackError || "none"}; source=${targetVisualReadback?.layout.fieldPositionSource ?? "unavailable"}; label_bounds=${JSON.stringify(targetVisualReadback?.layout.labelBoundsOcr ?? null)}; crop_bounds=${JSON.stringify(targetVisualReadback?.layout.cropBounds ?? null)}; screenshot=${targetReadbackScreenshot ? relative(reportDirectory, targetReadbackScreenshot.windowPngPath) : "unavailable"}; crop=${targetVisualReadback ? relative(reportDirectory, targetVisualReadback.cropPath) : "unavailable"}; paste_stages=${JSON.stringify(pasteStageDiagnostics)}`;
+        if (diagnosticField === "path" && !fieldAlreadyContainsExpectedValue) throw new Error(lastFailure);
         continue;
       } else {
         xdotool("key", "--clearmodifiers", "ctrl+a");
@@ -16568,7 +16781,8 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
     } catch (error) {
       const failure = error as NodeJS.ErrnoException;
       const errorMessage = error instanceof Error ? error.message : "unknown error";
-      throw new Error(`Linux keyboard entry failed for ${controlName}: code=${failure.code ?? "unknown"}; syscall=${failure.syscall ?? "unknown"}; click=(${clickX},${clickY}); detail=${errorMessage}`);
+      const failureLabel = diagnosticField === "path" ? "Linux Canvas field input failed" : "Linux keyboard entry failed";
+      throw new Error(failureLabel + " for " + controlName + ": code=" + (failure.code ?? "unknown") + "; syscall=" + (failure.syscall ?? "unknown") + "; click=(" + clickX + "," + clickY + "); detail=" + errorMessage);
     }
 
     let clipboardReadback = "";
