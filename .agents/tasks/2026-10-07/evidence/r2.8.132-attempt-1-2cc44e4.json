@@ -1,0 +1,153 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.8.132 C07.4 reference capture and grouped-container evidence",
+  "attempt": 1,
+  "tested_sha": "2cc44e459d68ac15742f29264b89532fd48c2756",
+  "status": "terminal-failed",
+  "reconciled_at": "2026-10-15T12:42:52Z",
+  "workflow_counts": {
+    "expected": 7,
+    "observed": 7,
+    "terminal": 7,
+    "passed": 6,
+    "failed": 1,
+    "in_progress": 0
+  },
+  "job_counts": {
+    "expected": 20,
+    "observed": 20,
+    "terminal": 20,
+    "passed": 17,
+    "failed": 3,
+    "in_progress": 0,
+    "queued": 0
+  },
+  "workflows": [
+    {
+      "name": "Rust migration inventory",
+      "run_id": 38730088091,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38730088091",
+      "conclusion": "success",
+      "jobs": [{"name": "inventory", "job_id": 116405443768, "conclusion": "success"}]
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 38730088197,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38730088197",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "ubuntu-latest", "job_id": 116405444360, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 116405444608, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 116405444626, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 38730087874,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38730087874",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "macos-latest", "job_id": 116405443110, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 116405443471, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 116405443497, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 38730088166,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38730088166",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "minimum supported Rust (1.95)", "job_id": 116405444473, "conclusion": "success"},
+        {"name": "rust (macos-latest)", "job_id": 116405444546, "conclusion": "success"},
+        {"name": "rust (windows-latest)", "job_id": 116405444627, "conclusion": "success"},
+        {"name": "rust (ubuntu-latest)", "job_id": 116405444685, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "Obsidian vault round-trip acceptance",
+      "run_id": 38730087971,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38730087971",
+      "conclusion": "failure",
+      "jobs": [
+        {
+          "name": "Obsidian 1.14.4 vault round-trip on windows-latest",
+          "job_id": 116405443701,
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38730087971/job/116405443701",
+          "conclusion": "failure",
+          "artifact_id": 11971156893,
+          "artifact_sha256": "8c12b94b4b8f8f92ccdac8552ff74c74f610cc22b556271244d4a55065d53df3",
+          "report_sha256": "b39b9f819e64e3b36e79c9baaa14d5acb062c92f3557d1229304aad3457c944a",
+          "failure_stage": "C07.4 reopen trust-state wait",
+          "classification": "Harness predicate expected the initial Bases scenario while Obsidian restored the last fixture scenario (Bases/10 Equal key path tie.base); exact active path/view/root identity was needed. First-open scenarios completed."
+        },
+        {
+          "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04",
+          "job_id": 116405443987,
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38730087971/job/116405443987",
+          "conclusion": "failure",
+          "artifact_id": 11970967336,
+          "artifact_sha256": "51d3ede1f9c51341411c23b1c3d0624bac9c17e7ad0f38ad730c5ae137f90520",
+          "report_sha256": "aced013806ec9eea7a8b9e85cebaf679d5235fd95b64cbc00709613d5c2b9464",
+          "failure_stage": "C07.4 reopen trust-state wait",
+          "classification": "Harness predicate expected the initial Bases scenario while Obsidian restored the last fixture scenario (Bases/10 Equal key path tie.base); exact active path/view/root identity was needed. First-open scenarios completed."
+        },
+        {
+          "name": "Obsidian 1.14.4 vault round-trip on macos-latest",
+          "job_id": 116405444199,
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38730087971/job/116405444199",
+          "conclusion": "failure",
+          "artifact_id": 11971220715,
+          "artifact_sha256": "655e1ebf0c03fd14130a1902f8ecd080eaeeee2e0abcfa8bf6539262465efa9f",
+          "report_sha256": "4910f348a6d112cf916f88500bdca4262aaa997f8c3b1966cb9630719e65440a",
+          "failure_stage": "Canvas edit text-card ID field input before application write",
+          "classification": "The full-screen Quartz click at (653,164) landed inside the visible field (approximately x=616..776, y=154..173), but the target widget's focus was not directly proven; a vault refresh began during selection/copy and ended before paste, and the field retained its placeholder. No app or vault write was reached; this is a focus/refresh race, not a position error."
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 38730087840,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38730087840",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "ubuntu-latest", "job_id": 116405443295, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 116405443811, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 116405443826, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 38730087839,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38730087839",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 116405443429, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 116405443700, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 116405443799, "conclusion": "success"}
+      ]
+    }
+  ],
+  "runner_details": {
+    "setup": "Pinned Obsidian install and native preview builds succeeded on all three round-trip jobs.",
+    "macos_canvas_input_failure_evidence": {
+      "before_screenshot": {
+        "path": "openobsidian-canvas-input-canvas-edit-text-card-id-before.png",
+        "sha256": "ec02a38b1f51f1fe07b3bfbd1f81b140f17b7a10886bf6a82b8e68ed307f4810"
+      },
+      "readback_screenshot": {
+        "path": "openobsidian-canvas-input-canvas-edit-text-card-id-readback.png",
+        "sha256": "c70aaddd9e32630b993df9593d4e6b334a918256498423904d825abebd7b609c"
+      },
+      "egui_log": {
+        "path": "openobsidian-canvas-text-edit.log",
+        "sha256": "a7dab5fd0d1823d6377250c04fd27faea3f978563f7c9770dda3970d50fbb85d"
+      },
+      "click_quartz_screen_pixels": {"x": 653, "y": 164},
+      "visible_blank_field_approximate_screen_bounds": {"left": 616, "top": 154, "right": 776, "bottom": 173},
+      "timeline": "The field remained at its blank text-card-id hint. The log records the mouse event, Cmd+A/Cmd+C, vault refresh start and finish, then Paste(text-1); the diagnostics did not report the target TextEdit's focus because that widget was not instrumented on the failed SHA."
+    },
+    "local_executable_validation": false,
+    "interpretation": "This failed batch does not establish a Rust product regression. Linux and Windows artifacts show C07.4 first-open scenarios completed, but the reopen wait expected Bases/01 Numeric sort ASC.base while Obsidian restored Bases/10 Equal key path tie.base. The macOS artifact shows a click inside the visible blank ID field but no focus proof, with a watcher refresh between selection/copy and paste. Preserve C07.4 as pending until a later exact-SHA full batch passes. Artifact API metadata was rechecked, including the Linux archive digest."
+  }
+}

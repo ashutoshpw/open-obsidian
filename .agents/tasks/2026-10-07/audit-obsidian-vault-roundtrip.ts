@@ -1151,6 +1151,62 @@ async function readOpenObsidianRefreshDiagnostics(
   return diagnostics;
 }
 
+async function readCanvasTextEditFieldDiagnostic(
+  logPath: string,
+  field: "path" | "id",
+  afterLine = -1,
+): Promise<{
+  line: number;
+  enabled: boolean;
+  clicked: boolean;
+  clickEventLine: number | null;
+  focused: boolean;
+  arrowRightKeyEvent: boolean;
+  arrowRightEventLine: number | null;
+  empty: boolean | null;
+} | null> {
+  const log = await readFile(logPath, "utf8").catch(() => "");
+  const lines = log.split(/\r?\n/);
+  const observations: Array<{
+    line: number;
+    enabled: boolean;
+    clicked: boolean;
+    focused: boolean;
+    arrowRightKeyEvent: boolean;
+    empty: boolean | null;
+  }> = [];
+  for (let index = lines.length - 1; index >= 0; index -= 1) {
+    const value = lines[index] ?? "";
+    if (!value.includes(`OpenObsidian CI canvas-text-edit-field: field=${field} `)) continue;
+    const enabled = value.match(/\benabled=(true|false)/)?.[1];
+    const clicked = value.match(/\bclicked=(true|false)/)?.[1];
+    const focused = value.match(/\bfocused=(true|false)/)?.[1];
+    const arrowRightKeyEvent = value.match(/\barrow_right_key_event=(true|false)/)?.[1];
+    const empty = value.match(/\bempty=(true|false)/)?.[1];
+    if (!enabled || !clicked || !focused || !arrowRightKeyEvent) return null;
+    observations.push({
+      line: index,
+      enabled: enabled === "true",
+      clicked: clicked === "true",
+      focused: focused === "true",
+      arrowRightKeyEvent: arrowRightKeyEvent === "true",
+      empty: empty === undefined ? null : empty === "true",
+    });
+  }
+  const latest = observations[0];
+  if (!latest) return null;
+  const freshObservations = observations.filter((observation) => observation.line > afterLine);
+  const clickEventLine = freshObservations.find((observation) => observation.clicked)?.line ?? null;
+  const arrowRightEventLine = freshObservations.find((observation) => observation.arrowRightKeyEvent)?.line ?? null;
+  return {
+    ...latest,
+    clicked: clickEventLine !== null,
+    clickEventLine,
+    arrowRightKeyEvent: arrowRightEventLine !== null,
+    arrowRightEventLine,
+  };
+}
+
 async function waitForOpenObsidianRefreshIdle(
   previousRequestCount: number,
   expectedEntries: number,
@@ -4432,21 +4488,60 @@ async function chooseRestrictedMode(
   reporter: Record<string, unknown> = report.obsidian_authoring as Record<string, unknown>,
   vaultName = "C01.2 Roundtrip Fixture",
   expectedEditorText = noteMarker,
+  expectedRestoredBases?: {activeBasePaths: readonly string[]; vaultRoot: string},
 ): Promise<void> {
-  const readTrustState = async () => await connection.evaluateJson<{body: string; buttons: string[]; editor: string}>(`(() => {
+  const expectedCanonicalVaultPath = expectedRestoredBases
+    ? await realpath(expectedRestoredBases.vaultRoot)
+    : null;
+  const normalizeVaultPath = (value: string) => process.platform === "win32" ? value.toLowerCase() : value;
+  const readTrustState = async () => {
+    const state = await connection.evaluateJson<{
+      body: string;
+      buttons: string[];
+      editor: string;
+      active_file_path: string | null;
+      active_view_type: string | null;
+      active_vault_path: string | null;
+    }>(`(() => {
     const buttons = [...document.querySelectorAll('button,[role="button"]')];
+    const view = window.app?.workspace?.activeLeaf?.view;
+    const vaultPath = window.app?.vault?.adapter?.basePath;
     return {
       body: document.body?.innerText ?? '',
       buttons: buttons.map((button) => (button.innerText || button.textContent || '').trim()).filter(Boolean),
       editor: [...document.querySelectorAll('[contenteditable="true"]')].map((element) => element.innerText ?? '').join('\\n'),
+      active_file_path: typeof view?.file?.path === 'string' ? view.file.path : null,
+      active_view_type: typeof view?.getViewType === 'function' ? view.getViewType() : null,
+      active_vault_path: typeof vaultPath === 'string' && vaultPath.length > 0 ? vaultPath : null,
     };
   })()`);
+    let active_vault_canonical_path: string | null = null;
+    if (state.active_vault_path) {
+      try {
+        active_vault_canonical_path = await realpath(state.active_vault_path);
+      } catch {
+        active_vault_canonical_path = null;
+      }
+    }
+    return {...state, active_vault_canonical_path};
+  };
+  const isExpectedRestoredBases = (value: Awaited<ReturnType<typeof readTrustState>>) => Boolean(
+    expectedRestoredBases
+      && expectedCanonicalVaultPath
+      && value.active_view_type === "bases"
+      && value.active_file_path !== null
+      && expectedRestoredBases.activeBasePaths.includes(value.active_file_path)
+      && value.active_vault_canonical_path !== null
+      && normalizeVaultPath(value.active_vault_canonical_path) === normalizeVaultPath(expectedCanonicalVaultPath),
+  );
   const state = await waitFor(
     "the reopened fixture vault trust decision",
     readTrustState,
     (value) => value.buttons.includes("Browse vault in Restricted Mode")
       || (!value.body.includes("Do you trust the author of this vault?")
-        && (value.editor.includes(expectedEditorText) || value.body.includes(vaultName))),
+        && (expectedRestoredBases
+          ? isExpectedRestoredBases(value)
+          : value.editor.includes(expectedEditorText) || value.body.includes(vaultName))),
     30_000,
   );
   const restrictedModeLabel = "Browse vault in Restricted Mode";
@@ -4456,6 +4551,14 @@ async function chooseRestrictedMode(
       throw new Error("Obsidian displayed the vault trust prompt without its Restricted Mode button");
     }
     reporter.restricted_mode_selected = false;
+    if (expectedRestoredBases) {
+      reporter.restored_bases_view = {
+        active_file_path: state.active_file_path,
+        active_view_type: state.active_view_type,
+        active_vault_path: state.active_vault_path,
+        active_vault_canonical_path: state.active_vault_canonical_path,
+      };
+    }
     return;
   }
 
@@ -4464,7 +4567,24 @@ async function chooseRestrictedMode(
       .find((button) => (button.innerText || button.textContent || '').trim() === '${restrictedModeLabel}')?.click())()`,
     returnByValue: true,
   });
-  const body = await waitForRenderer(connection, "document.body?.innerText ?? ''", (value) => !value.includes("Do you trust the author of this vault?") && value.includes(vaultName), `Obsidian to browse ${vaultName} in Restricted Mode`, 30_000);
+  let body: string;
+  if (expectedRestoredBases) {
+    const restored = await waitFor(
+      `Obsidian to restore an exact Bases view in ${vaultName} in Restricted Mode`,
+      readTrustState,
+      (value) => !value.body.includes("Do you trust the author of this vault?") && isExpectedRestoredBases(value),
+      30_000,
+    );
+    body = restored.body;
+    reporter.restored_bases_view = {
+      active_file_path: restored.active_file_path,
+      active_view_type: restored.active_view_type,
+      active_vault_path: restored.active_vault_path,
+      active_vault_canonical_path: restored.active_vault_canonical_path,
+    };
+  } else {
+    body = await waitForRenderer(connection, "document.body?.innerText ?? ''", (value) => !value.includes("Do you trust the author of this vault?") && value.includes(vaultName), `Obsidian to browse ${vaultName} in Restricted Mode`, 30_000);
+  }
   reporter.restricted_mode_selected = true;
   reporter.restricted_mode_text = body.slice(0, 2_000);
 }
@@ -15637,6 +15757,21 @@ async function replaceMacOSOpenObsidianTextInputWithKeyboard(
   let click = "";
   let lastPositionFailure = "no field-position attempt completed";
   let initialFieldValueLength: number | null = null;
+  let initialFieldVisualReadback: Awaited<ReturnType<typeof readCanvasInputScreenshotValue>> | undefined;
+  let targetFieldClickDiagnostic: Awaited<ReturnType<typeof readCanvasTextEditFieldDiagnostic>> = null;
+  let targetFieldFocusDiagnostic: Awaited<ReturnType<typeof readCanvasTextEditFieldDiagnostic>> = null;
+  let pasteAlreadySent = false;
+  const pasteScript = `on run argv
+    set processId to (item 1 of argv) as integer
+    tell application "System Events"
+      set targetProcess to first process whose unix id is processId
+      set frontmost of targetProcess to true
+      keystroke "a" using {command down}
+      keystroke "v" using {command down}
+      delay 0.1
+      key code 124
+    end tell
+  end run`;
   if (requiresBlankFieldProbe) {
     const probeScript = `on run argv
       set processId to (item 1 of argv) as integer
@@ -15660,17 +15795,91 @@ async function replaceMacOSOpenObsidianTextInputWithKeyboard(
         macOSCanvasLocatorCaptureOptions,
       );
       const attemptLayout = await locateCanvasTextInput(attemptBefore, controlName, undefined, false, child);
+      if (controlName === "Canvas edit text-card ID") {
+        const expectedHint = canvasInputHintValues[controlName];
+        if (!expectedHint) throw new Error(`No blank-field hint is configured for ${controlName}`);
+        try {
+          initialFieldVisualReadback = await readCanvasInputScreenshotValue(attemptBefore, controlName, expectedHint, child);
+        } catch (error) {
+          lastPositionFailure = `could not prove the visible blank-field hint before attempt ${attempt}: ${error instanceof Error ? error.message : String(error)}`;
+          continue;
+        }
+        if (!initialFieldVisualReadback.exact) {
+          lastPositionFailure = `fresh label-relative screenshot did not show the exact blank-field hint before attempt ${attempt}: crop=${JSON.stringify(initialFieldVisualReadback.text)}; vision=${JSON.stringify(initialFieldVisualReadback.visionText)}; source=${initialFieldVisualReadback.layout.fieldPositionSource}; screenshot=${relative(reportDirectory, attemptBefore.pngPath)}`;
+          continue;
+        }
+      }
       const refreshBeforeClick = await readOpenObsidianRefreshDiagnostics(logPath);
       if (openObsidianRefreshActivityChanged(refreshBeforeCapture, refreshBeforeClick)
         || (refreshBeforeClick.receiverStates.at(-1)?.busy ?? false)) {
         lastPositionFailure = `vault refresh changed the form layout before positioning attempt ${attempt}`;
         continue;
       }
+      const focusDiagnosticBeforeClick = controlName === "Canvas edit text-card ID"
+        ? await readCanvasTextEditFieldDiagnostic(logPath, "id")
+        : null;
       const attemptClick = await clickMacOSDesktopFraction(
         attemptLayout.fieldCenter.x / attemptLayout.imageDimensions.width,
         attemptLayout.fieldCenter.y / attemptLayout.imageDimensions.height,
       );
       await delay(120);
+      if (controlName === "Canvas edit text-card ID") {
+        const focusAfterClick = await readCanvasTextEditFieldDiagnostic(
+          logPath,
+          "id",
+          focusDiagnosticBeforeClick?.line ?? -1,
+        );
+        const refreshAfterClick = await readOpenObsidianRefreshDiagnostics(logPath);
+        const refreshChangedDuringFocus = openObsidianRefreshActivityChanged(refreshBeforeClick, refreshAfterClick)
+          || (refreshAfterClick.receiverStates.at(-1)?.busy ?? false);
+        const priorDiagnosticLine = focusDiagnosticBeforeClick?.line ?? -1;
+        targetFieldClickDiagnostic = focusAfterClick;
+        if (!focusAfterClick
+          || focusAfterClick.line <= priorDiagnosticLine
+          || focusAfterClick.clickEventLine === null
+          || !focusAfterClick.enabled
+          || !focusAfterClick.focused
+          || focusAfterClick.empty !== true
+          || refreshChangedDuringFocus) {
+          lastPositionFailure = `target TextEdit focus was not confirmed after attempt ${attempt}: diagnostic=${JSON.stringify(focusAfterClick)}; refresh_changed=${refreshChangedDuringFocus}; screenshot=${relative(reportDirectory, attemptBefore.pngPath)}; click=${attemptClick}`;
+          if (refreshChangedDuringFocus) await waitForOpenObsidianRefreshIdle(0, 0, false, logPath);
+          continue;
+        }
+        execFileSync("pbcopy", [], {input: value, stdio: ["pipe", "ignore", "ignore"]});
+        const confirmFocusBeforePasteScript = `on run argv
+          set processId to (item 1 of argv) as integer
+          tell application "System Events"
+            set targetProcess to first process whose unix id is processId
+            set frontmost of targetProcess to true
+            key code 124
+          end tell
+        end run`;
+        execFileSync("osascript", ["-e", confirmFocusBeforePasteScript, String(child.pid ?? -1)], {stdio: "ignore"});
+        await delay(120);
+        const focusBeforePaste = await readCanvasTextEditFieldDiagnostic(logPath, "id", focusAfterClick.line);
+        const refreshBeforePaste = await readOpenObsidianRefreshDiagnostics(logPath);
+        const refreshChangedBeforePaste = openObsidianRefreshActivityChanged(refreshBeforeClick, refreshBeforePaste)
+          || (refreshBeforePaste.receiverStates.at(-1)?.busy ?? false);
+        if (!focusBeforePaste
+          || focusBeforePaste.line <= focusAfterClick.line
+          || focusBeforePaste.arrowRightEventLine === null
+          || !focusBeforePaste.enabled
+          || !focusBeforePaste.focused
+          || focusBeforePaste.empty !== true
+          || refreshChangedBeforePaste) {
+          lastPositionFailure = `target TextEdit focus was not freshly confirmed immediately before paste after attempt ${attempt}: diagnostic=${JSON.stringify(focusBeforePaste)}; refresh_changed=${refreshChangedBeforePaste}; screenshot=${relative(reportDirectory, attemptBefore.pngPath)}; click=${attemptClick}`;
+          if (refreshChangedBeforePaste) await waitForOpenObsidianRefreshIdle(0, 0, false, logPath);
+          continue;
+        }
+        targetFieldFocusDiagnostic = focusBeforePaste;
+        initialFieldValueLength = 0;
+        before = attemptBefore;
+        layout = attemptLayout;
+        click = attemptClick;
+        execFileSync("osascript", ["-e", pasteScript, String(child.pid ?? -1)], {stdio: "ignore"});
+        pasteAlreadySent = true;
+        break;
+      }
       execFileSync("pbcopy", [], {input: "", stdio: ["pipe", "ignore", "ignore"]});
       execFileSync("osascript", ["-e", probeScript, String(child.pid ?? -1)], {stdio: "ignore"});
       const initialFieldValue = execFileSync("pbpaste", [], {
@@ -15689,7 +15898,7 @@ async function replaceMacOSOpenObsidianTextInputWithKeyboard(
       break;
     }
     if (!before || !layout) {
-      throw new Error(`macOS could not establish a blank ${controlName} field before typing after ${maximumPositionAttempts} fresh-position attempts: ${lastPositionFailure}`);
+      throw new Error(`macOS could not establish a blank and focused ${controlName} field before typing after ${maximumPositionAttempts} fresh-position attempts: ${lastPositionFailure}`);
     }
   } else {
     await waitForOpenObsidianRefreshIdle(0, 0, false, logPath);
@@ -15708,18 +15917,6 @@ async function replaceMacOSOpenObsidianTextInputWithKeyboard(
     await delay(120);
   }
   if (!before || !layout) throw new Error(`Could not position the macOS ${controlName} input`);
-  const pasteScript = `on run argv
-    set processId to (item 1 of argv) as integer
-    tell application "System Events"
-      set targetProcess to first process whose unix id is processId
-      set frontmost of targetProcess to true
-      keystroke "a" using {command down}
-      delay 0.1
-      keystroke "v" using {command down}
-      delay 0.1
-      key code 124
-    end tell
-  end run`;
   const copyFieldScript = `on run argv
     set processId to (item 1 of argv) as integer
     tell application "System Events"
@@ -15734,8 +15931,10 @@ async function replaceMacOSOpenObsidianTextInputWithKeyboard(
       delay 0.1
     end tell
   end run`;
-  execFileSync("pbcopy", [], {input: value, stdio: ["pipe", "ignore", "ignore"]});
-  execFileSync("osascript", ["-e", pasteScript, String(child.pid ?? -1)], {stdio: "ignore"});
+  if (!pasteAlreadySent) {
+    execFileSync("pbcopy", [], {input: value, stdio: ["pipe", "ignore", "ignore"]});
+    execFileSync("osascript", ["-e", pasteScript, String(child.pid ?? -1)], {stdio: "ignore"});
+  }
   await delay(150);
   // Clear the value used for paste before copying the field back, so the
   // following pbpaste result can only come from the focused field selection.
@@ -15789,8 +15988,10 @@ async function replaceMacOSOpenObsidianTextInputWithKeyboard(
     throw new Error(`macOS clipboard readback did not confirm the exact ${controlName} value: expected_length=${value.length}; actual_length=${clipboardReadback.length}; clipboard_error=${clipboardReadbackError || "none"}; crop_ocr=${JSON.stringify(visualReadback?.text ?? "")}; vision_ocr=${JSON.stringify(visualReadback?.visionText ?? "")}; vision_error=${visualReadback?.visionError || "none"}; visual_readback_error=${visualReadbackError || "none"}; label_vision=${JSON.stringify(layout.labelVision)}; readback_label_vision=${JSON.stringify(visualReadback?.layout.labelVision ?? null)}; macos_tesseract=${JSON.stringify(layout.macOSOCRDiagnostics)}; readback_macos_tesseract=${JSON.stringify(visualReadback?.layout.macOSOCRDiagnostics ?? null)}; field_search_failure=${layout.fieldSearchFailure || "none"}; click=${click}; crop=${visualReadback ? relative(reportDirectory, visualReadback.cropPath) : "unavailable"}; screenshot=${relative(reportDirectory, verification.pngPath)}`);
   }
   return JSON.stringify({
-    name: controlName,
-    action: "focused the OCR-positioned field, Cmd+A and clipboard paste, copied the selected field, then sent Right Arrow to collapse the selection before screenshot readback; macOS Vision reads the label-anchored crop if Tesseract cannot locate the exact value",
+      name: controlName,
+      action: controlName === "Canvas edit text-card ID"
+        ? "proved the blank field hint in a fresh label-relative screenshot, confirmed the target egui TextEdit was enabled and focused after click and a fresh no-op key event immediately before paste, then pasted through the macOS clipboard and verified exact visual/clipboard readback"
+        : "focused the OCR-positioned field, verified its initial blank state, pasted through the macOS clipboard, copied the selected field, then sent Right Arrow to collapse the selection before screenshot readback; macOS Vision reads the label-anchored crop if Tesseract cannot locate the exact value",
     exact_readback: true,
     clipboard_exact: clipboardReadback === value,
     readback_selection_collapse_key_sent: true,
@@ -15808,6 +16009,10 @@ async function replaceMacOSOpenObsidianTextInputWithKeyboard(
     expected_length: value.length,
     readback_length: clipboardReadback.length,
     initial_field_value_length: initialFieldValueLength,
+    initial_field_visual_ocr: initialFieldVisualReadback?.text ?? null,
+    initial_field_visual_exact: initialFieldVisualReadback?.exact ?? null,
+    target_widget_click: targetFieldClickDiagnostic,
+    target_widget_focus: targetFieldFocusDiagnostic,
     position_source: layout.fieldPositionSource,
     field_text_ocr_source: layout.fieldTextOcrSource,
     field_search_crop: layout.fieldSearchCrop,
@@ -19902,7 +20107,16 @@ async function runBasesNumberReferenceProbe(): Promise<void> {
     reopenConnection = reopened.connection;
     reopenSession.browser_version = reopened.browserVersion;
     reopenSession.first_target = {title: reopened.target.title ?? "", url: reopened.target.url ?? ""};
-    await chooseRestrictedMode(reopenConnection, reopenSession, numberReferenceVaultName, basename(fixture.scenarios[0]?.base_path ?? "C07.4"));
+    await chooseRestrictedMode(
+      reopenConnection,
+      reopenSession,
+      numberReferenceVaultName,
+      basename(fixture.scenarios[0]?.base_path ?? "C07.4"),
+      {
+        activeBasePaths: fixture.scenarios.map((scenario) => scenario.base_path),
+        vaultRoot: numberReferenceVaultRoot,
+      },
+    );
     await captureC074SourceCheckpoint("reopen-after-startup", fixtureSetup);
     reopenSession.workspace_view_immediately_after_startup = await reopenConnection.evaluateJson<{
       active_file_path: string | null;

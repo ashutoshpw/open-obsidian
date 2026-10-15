@@ -2099,25 +2099,61 @@ impl OpenObsidianApp {
         let mut inputs_changed = false;
         ui.horizontal_wrapped(|ui| {
             let path_label = ui.label("Canvas edit path");
-            inputs_changed |= ui
+            let path_input = ui
                 .add_enabled(
                     target_fields_enabled,
                     eframe::egui::TextEdit::singleline(&mut self.canvas_text_edit_path)
                         .hint_text("Boards/Idea.canvas")
                         .desired_width(230.0),
                 )
-                .labelled_by(path_label.id)
-                .changed();
+                .labelled_by(path_label.id);
+            inputs_changed |= path_input.changed();
             let node_label = ui.label("Canvas edit text-card ID");
-            inputs_changed |= ui
+            let node_input = ui
                 .add_enabled(
                     target_fields_enabled,
                     eframe::egui::TextEdit::singleline(&mut self.canvas_text_edit_node_id)
                         .hint_text("text-card-id")
                         .desired_width(160.0),
                 )
-                .labelled_by(node_label.id)
-                .changed();
+                .labelled_by(node_label.id);
+            inputs_changed |= node_input.changed();
+            if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some()
+                && ui.input(|input| !input.raw.events.is_empty())
+            {
+                let pointer = ui.input(|input| input.pointer.hover_pos());
+                let arrow_right_key_event = ui.input(|input| {
+                    input
+                        .raw
+                        .events
+                        .iter()
+                        .any(|event| {
+                            matches!(
+                                event,
+                                eframe::egui::Event::Key {
+                                    key: eframe::egui::Key::ArrowRight,
+                                    pressed: true,
+                                    ..
+                                }
+                            )
+                        })
+                });
+                eprintln!(
+                    "OpenObsidian CI canvas-text-edit-field: field=path enabled={target_fields_enabled}, rect={:?}, pointer={pointer:?}, arrow_right_key_event={arrow_right_key_event}, hovered={}, clicked={}, focused={}",
+                    path_input.rect,
+                    path_input.hovered(),
+                    path_input.clicked(),
+                    path_input.has_focus(),
+                );
+                eprintln!(
+                    "OpenObsidian CI canvas-text-edit-field: field=id enabled={target_fields_enabled}, rect={:?}, pointer={pointer:?}, arrow_right_key_event={arrow_right_key_event}, hovered={}, clicked={}, focused={}, empty={}",
+                    node_input.rect,
+                    node_input.hovered(),
+                    node_input.clicked(),
+                    node_input.has_focus(),
+                    self.canvas_text_edit_node_id.is_empty(),
+                );
+            }
         });
         if inputs_changed {
             self.canvas_text_edit_preview = None;

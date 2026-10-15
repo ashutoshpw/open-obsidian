@@ -10291,12 +10291,12 @@
       "source": {
         "path": ".agents/tasks/2026-10-07/goal.md",
         "heading": "Mandatory execution workflow: GitHub CI only",
-        "clause": "Treat every origin/main push as a request for a costly full CI batch that may take several hours, not as feedback on an individual edit. Keep minor changes and commits local; push exactly once after the named milestone implementation is complete, reviewed, and its bounded acceptance criteria, required workflows/platforms, and evidence plan are recorded. Keep the remote at that exact SHA until all required jobs are terminal and evidence is reconciled."
+        "clause": "Push to origin/main only once for each completed, named milestone; never push every minor edit or commit to get CI feedback. Before implementation, record its stable ID, bounded scope, measurable criteria, required CI workflows/platforms, and evidence plan. Accumulate related code, tests, documentation, and fixes locally. A minor task, fix, file change, cleanup, or commit is never a push boundary; do not split coherent deliverables into artificial micro-milestones or combine unrelated work. Once all implementation criteria are met and the complete milestone is reviewed, push it exactly once. This starts its CI batch and records implementation-complete / CI-pending, not passed. Record achieved / CI-passed only after every required check passes on the exact SHA and evidence is reconciled. Keep evidence-only and status-only changes local. Since cross-platform CI may take several hours, keep origin/main at the submitted SHA until all required checks are terminal; do not push a second milestone while they are pending."
       },
       "checkpoint": "R0",
       "owner": "xtask",
       "mandatory": true,
-      "acceptance_criteria": "Treat each origin/main push as one full cross-platform CI submission, potentially taking several hours. Keep related minor edits, fixes, documentation updates, and local commits together within one named coherent milestone; do not trigger CI for individual changes, relabel minor work as a milestone, create artificial micro-milestones, or bundle unrelated deliverables. Define bounded measurable implementation criteria, required workflows/platforms, and evidence before implementation. Push the accumulated milestone to origin/main exactly once after its complete implementation and review; record implementation-complete / CI-pending. Keep origin/main at the submitted exact SHA until every required workflow/job is terminal and evidence is reconciled. Record achieved / CI-passed only after every required exact-SHA job passes; do not dispatch CI for per-edit feedback.",
+      "acceptance_criteria": "Treat each origin/main push as one full cross-platform CI submission, potentially taking several hours. Keep related minor edits, fixes, documentation updates, and local commits together within one named coherent milestone; do not trigger CI for individual changes, relabel minor work as a milestone, create artificial micro-milestones, or bundle unrelated deliverables. Define its stable ID, bounded measurable implementation criteria, required workflows/platforms, and evidence before implementation. Push the accumulated milestone to origin/main exactly once, only after its implementation criteria are met and the whole deliverable is reviewed; record implementation-complete / CI-pending. Keep origin/main at the submitted exact SHA until every required workflow/job is terminal and evidence is reconciled. Record achieved / CI-passed only after every required exact-SHA job passes; do not dispatch CI for per-edit feedback.",
       "fixture_ids": [
         "fixture:mig-002"
       ],
@@ -10415,6 +10415,11 @@
           "kind": "rust-migration-goal",
           "version": "2026-10-15-explicit-multihour-milestone-push-gate",
           "sha256": "ce6004e3344e27503d9070d0858076b8626a2ce30e02ce72f2d4cebbd326e6a3"
+        },
+        {
+          "kind": "rust-migration-goal",
+          "version": "2026-10-15-one-push-after-complete-milestone-review",
+          "sha256": "76c9f76ba8b3409518cb2de9de3b1952ab43ae600c4f18653b69d534759f7e7f"
         }
       ],
       "applicable_platforms": [
@@ -10435,7 +10440,7 @@
       "rust_owner": "xtask",
       "mapping_status": "reviewed",
       "migration_disposition": "retained",
-      "migration_acceptance": "Keep individual edits, focused fixes, documentation updates, and local commits together without per-change CI pushes; related small work may accumulate across edits, commits, or sessions within one named milestone. A minor task, fix, commit, file change, or cleanup is not itself a milestone and must not be relabeled to obtain CI. Push origin/main exactly once after a bounded, coherent milestone meets its written implementation criteria and the complete deliverable has been reviewed; this records implementation-complete / CI-pending. Allow only one full milestone batch in flight and keep the remote at its submitted exact SHA until every required workflow/job is terminal and evidence is reconciled, even if CI takes several hours. Record achieved / CI-passed only after every required exact-SHA job passes. Do not dispatch CI for per-edit feedback; use safe parallel execution within each milestone batch.",
+      "migration_acceptance": "Keep individual edits, focused fixes, documentation updates, and optional local commits together without per-change CI pushes; related small work may accumulate across edits, commits, or sessions within one named milestone. A minor task, fix, commit, file change, or cleanup is not itself a milestone and must not be relabeled to obtain CI. Push origin/main exactly once after a bounded, coherent milestone meets its written implementation criteria and the complete deliverable has been reviewed; this records implementation-complete / CI-pending. Allow only one full milestone batch in flight and keep the remote at its submitted exact SHA until every required workflow/job is terminal and evidence is reconciled, even if CI takes several hours. Record achieved / CI-passed only after every required exact-SHA job passes. Do not dispatch CI for per-edit feedback; use safe parallel execution within each milestone batch.",
       "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence."
     },
     {
@@ -11172,7 +11177,7 @@
       "migration_acceptance": "Implement milestone C06.2 in crates/doc as a lossless typed read projection for standard Canvas node/edge fields. Accept omitted nodes/edges arrays and preserve their absence; expose unknown and malformed field data explicitly; retain non-standard fields in raw JSON without projecting them as JSON Canvas 1.0 fields. GitHub-CI fixture cases must cover standard node/edge projections, omitted versus present-empty arrays, an unsupported node type, malformed and missing projected fields, and raw unknown-field preservation. This slice does not claim whole-C06 write, UI, or reference-app completion."
     }
   ],
-  "reviewed_at": "2026-10-14T23:46:43+00:00",
+  "reviewed_at": "2026-10-15T12:42:52+00:00",
   "mapping_review": {
     "status": "complete",
     "reviewed_requirement_count": 212,
@@ -11182,7 +11187,7 @@
     "post_r0_2_additions": [
       "MIG-016: maintain current, accurate documentation throughout migration and audit it at cutover."
     ],
-    "goal_sha256": "ce6004e3344e27503d9070d0858076b8626a2ce30e02ce72f2d4cebbd326e6a3",
+    "goal_sha256": "76c9f76ba8b3409518cb2de9de3b1952ab43ae600c4f18653b69d534759f7e7f",
     "policy": "Every inherited requirement was reviewed by ID and assigned a Rust owner, migration phase, acceptance criterion and retained/superseded/external disposition. Historical status/evidence remain preserved separately. Rust acceptance remains pending unless current exact-SHA migration evidence is attached; external items remain external_pending."
   }
 }

@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
-  "status": "R2.8.130/C07.4 attempt 1 is terminal-failed on 38e119bc328626851aaf0f6f769cf9f53bc576cf; the R2.8.131 grouped-root evidence repair is implementation-complete and independently reviewed, ready for one milestone submission. C07.4 remains pending until exact-SHA CI passes; no Rust parity is claimed.",
-  "updated_at": "2026-10-15T11:45:23Z",
+  "status": "R2.8.132 is terminal-failed on exact SHA 2cc44e459d68ac15742f29264b89532fd48c2756; R2.8.133 is implementation-complete, independently reviewed, and ready for one origin/main push. C07.4 remains pending until exact-SHA CI passes; no Rust parity is claimed.",
+  "updated_at": "2026-10-15T12:53:04Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "38e119bc328626851aaf0f6f769cf9f53bc576cf",
-  "current_milestone": "R2.8.131-C07.4-GROUPED-ROOT-COUNT-EVIDENCE-REPAIR is implementation-complete and independently reviewed, ready for one push. C07.4 remains pending until all required exact-SHA CI passes; no Rust parity is claimed.",
-  "next_action": "Submit the complete R2.8.131 repair once to origin/main. Then keep origin/main fixed until all seven required workflows and 20 jobs are terminal; reconcile all reports/artifacts before marking C07.4 achieved / CI-passed. Run executable validation only in GitHub Actions.",
-  "push_status": "C07.4 attempt 1 was pushed once at 38e119bc328626851aaf0f6f769cf9f53bc576cf and is terminal-failed: six of seven workflows and 17 of 20 jobs passed; all three round-trip jobs failed at the same C07.4 evidence predicate. R2.8.131 is now reviewed and ready for one repair push; it has not yet been submitted.",
+  "last_reconciled_head": "2cc44e459d68ac15742f29264b89532fd48c2756",
+  "current_milestone": "R2.8.133-C07-ROUNDTRIP-HARNESS-REPAIR is implementation-complete and independently reviewed in the isolated worktree, ready for one push. The repair retains the exact C07.4 restored Bases identity and places its fresh ArrowRight/focus and refresh gate after clipboard setup, immediately before paste. C07.4 remains pending until all required exact-SHA CI passes; no Rust parity is claimed.",
+  "next_action": "Recheck origin/main is still 2cc44e459d68ac15742f29264b89532fd48c2756 and no CI batch is active; then submit the reviewed R2.8.133 milestone once. Keep the submitted SHA fixed until all seven workflows and 20 jobs are terminal, reconcile reports/artifacts, and only then decide C07.4 acceptance. Run executable validation only in GitHub Actions.",
+  "push_status": "R2.8.132 was pushed once at 2cc44e459d68ac15742f29264b89532fd48c2756; all seven required workflows and 20 jobs for that SHA are terminal, with 17 passed and the three platform round-trip jobs failed. No run for that exact SHA is queued or in progress. One unrelated loaded-plugin workflow on old SHA d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79 remains globally queued with no jobs started. R2.8.133 is implementation-complete, independently reviewed, and ready for one push; it remains unsubmitted.",
   "blockers": [
     "C07.3 pinned Obsidian reference capture passed all 14 scenarios on first open and reopen across Linux, macOS, and Windows at exact SHA 0a9cb9c00835881a7629c96721974dfa9461cc50; see evidence/r2.8.129-attempt-1-0a9cb9c.json. Rust parity remains pending. Separate mixed-worktree C07.3 edits remain local and are excluded from the C07.4 candidate; review and submit them separately. Do not claim a full-fixture membership oracle from reference UI results.",
     "R2.8.120 failed its terminal exact-SHA CI batch on 985af8aa18be53c285221b2ed21d4062e69b9f3d. Linux C07.3 table row diagnostics reject visible rows despite each uniquely matching an already captured fixture path; formula Kanban extraction records no card memberships although the screenshot shows the 5/4/4/0 cards. macOS display metrics failed before first-run picker interaction, and Windows stopped after picker closure when the host HWND changed. See evidence/r2.8.120-attempt-1-985af8a.json; keep C07.3 pending.",
@@ -41616,13 +41616,13 @@
   },
   "current_requirement_count": 221,
   "current_ci_attempt": {
-    "status": "terminal-failed on exact SHA 38e119bc328626851aaf0f6f769cf9f53bc576cf: 7/7 workflows terminal, 6 passed and 1 failed; 20/20 jobs terminal, 17 passed and 3 failed (all platform round-trip jobs).",
-    "implementation_sha": "38e119bc328626851aaf0f6f769cf9f53bc576cf",
-    "evidence_file": "evidence/r2.8.130-c07.4-attempt-1-38e119b.json",
-    "plan_file": ".agents/tasks/2026-10-07/evidence/r2.8.130-c07.4-reference-capture-plan.json",
-    "milestone": "R2.8.130-C07.4-JAVASCRIPT-NUMBER-REFERENCE-CAPTURE",
+    "status": "terminal-failed on exact SHA 2cc44e459d68ac15742f29264b89532fd48c2756: 7/7 workflows terminal, 6 passed and 1 failed; 20/20 jobs terminal, 17 passed and 3 failed (all platform round-trip jobs).",
+    "implementation_sha": "2cc44e459d68ac15742f29264b89532fd48c2756",
+    "evidence_file": "evidence/r2.8.132-attempt-1-2cc44e4.json",
+    "plan_file": ".agents/tasks/2026-10-07/evidence/r2.8.133-c07-roundtrip-harness-repair-plan.json",
+    "milestone": "R2.8.132 C07.4 reference capture and grouped-container evidence",
     "attempt": 1,
-    "observed_at": "2026-10-15T11:37:10Z",
+    "observed_at": "2026-10-15T12:42:52Z",
     "workflow_count": 7,
     "completed_workflows": 7,
     "successful_workflows": 6,
@@ -41638,7 +41638,7 @@
   "planned_next_milestone": {
     "milestone": "C06.2",
     "name": "Lossless typed read projection for standard Canvas nodes and edges",
-    "status": "Attempt 3 is terminal-failed on exact SHA 2c34aeba3d6712cc255592e6c469cc0dca2823b4: all seven workflows/20 jobs finished, with 19 jobs passed and one macOS round-trip failure. A separate C06.2-R1 macOS locator repair is planned.",
+    "status": "Queued behind R2.8.133 and its full exact-SHA CI batch. Attempt 3 is terminal-failed on exact SHA 2c34aeba3d6712cc255592e6c469cc0dca2823b4: all seven workflows/20 jobs finished, with 19 jobs passed and one macOS round-trip failure. A separate C06.2-R1 macOS locator repair is planned; do not submit it while another milestone batch is active.",
     "deliverable": "Borrowed typed views for standard Canvas node and edge fields in crates/doc; accept optional top-level nodes/edges arrays, distinguish omitted from empty, preserve non-standard raw fields, and represent missing, malformed, and unsupported values distinctly.",
     "acceptance": [
       "Fixture-backed coverage projects text, file, link, group, and edge fields from fixture:c06-canvas.",
@@ -41709,7 +41709,7 @@
     "milestone": "R2.8.130",
     "name": "C07.4 JavaScript-number behavior reference capture",
     "plan": "evidence/r2.8.130-c07.4-reference-capture-plan.json",
-    "status": "Terminal-failed on exact SHA 38e119bc328626851aaf0f6f769cf9f53bc576cf: 6/7 workflows and 17/20 jobs passed; three platform round-trip jobs failed at the same C07.4 grouped-root count-evidence predicate. Evidence: evidence/r2.8.130-c07.4-attempt-1-38e119b.json. C07.4 remains pending.",
+    "status": "Attempt 1 on 38e119bc328626851aaf0f6f769cf9f53bc576cf failed the grouped-root count predicate; the grouped evidence repair was subsequently pushed as R2.8.132 at 2cc44e459d68ac15742f29264b89532fd48c2756 and its terminal failure is in evidence/r2.8.132-attempt-1-2cc44e4.json. The R2.8.133 harness repair is now current. C07.4 remains pending.",
     "deliverable": "Capture numeric sort, relational/equality filters, array contains, and identity around 2^53 in pinned Obsidian 1.14.4, with source hashes and exact first-open/reopen ordered row reports on all three platforms. Do not change Rust semantics before reference outcomes are recorded.",
     "acceptance": [
       "Characterize values at, below, and above 2^53 and distinct JSON integer/float spellings that JavaScript parses to the same Number; capture sorting, comparison filters, equality, array contains, locale/case/diacritic/numeric-text/path tie-break behavior separately.",
@@ -41756,18 +41756,18 @@
     "depends_on": "C06.2 attempt 3 is terminal-failed and reconciled on 2c34aeba3d6712cc255592e6c469cc0dca2823b4. Independent root-cause review found a visible field and placeholder in the artifact but no AX match and a full-screen OCR label miss."
   },
   "current_ci_batch": {
-    "milestone": "R2.8.130-C07.4-JAVASCRIPT-NUMBER-REFERENCE-CAPTURE; attempt 1",
-    "sha": "38e119bc328626851aaf0f6f769cf9f53bc576cf",
+    "milestone": "R2.8.132-C07.4 grouped-container evidence repair; attempt 1",
+    "sha": "2cc44e459d68ac15742f29264b89532fd48c2756",
     "run_ids": [
-      38722412054,
-      38722412059,
-      38722412139,
-      38722412062,
-      38722412240,
-      38722412108,
-      38722412070
+      38730088091,
+      38730088197,
+      38730087874,
+      38730088166,
+      38730087971,
+      38730087840,
+      38730087839
     ],
-    "status": "terminal-failed on exact SHA 38e119bc328626851aaf0f6f769cf9f53bc576cf; six of seven workflows and 17 of 20 jobs passed; the three platform round-trip jobs failed at the same C07.4 grouped-table count-evidence predicate.",
+    "status": "terminal-failed on exact SHA 2cc44e459d68ac15742f29264b89532fd48c2756; six of seven workflows and 17 of 20 jobs passed. The three round-trip failures are reconciled: Linux/Windows reopen waited for the initial scenario while Obsidian restored Bases/10 Equal key path tie.base; macOS entered the visible blank field without confirmed TextEdit focus and crossed a watcher refresh before paste.",
     "workflows_expected": 7,
     "workflows_observed": 7,
     "workflows_terminal": 7,
@@ -41783,11 +41783,11 @@
     "jobs_queued": 0,
     "pending": [],
     "failed": [
-      116379942197,
-      116379942709,
-      116379942846
+      116405443701,
+      116405443987,
+      116405444199
     ],
-    "evidence": "evidence/r2.8.130-c07.4-attempt-1-38e119b.json"
+    "evidence": "evidence/r2.8.132-attempt-1-2cc44e4.json"
   },
   "parallel_local_milestones": [
     {
@@ -41856,14 +41856,14 @@
     }
   },
   "planned_repair_milestone": {
-    "id": "R2.8.131-C07.4-GROUPED-ROOT-COUNT-EVIDENCE-REPAIR",
-    "name": "Accept grouped result containers and enforce complete numeric-group fixture membership",
-    "plan": "evidence/r2.8.131-c07.4-grouped-root-count-evidence-repair-plan.json",
-    "status": "Implementation-complete and independently reviewed; ready for one exact-SHA CI submission. No active batch; not yet pushed.",
-    "depends_on_sha": "38e119bc328626851aaf0f6f769cf9f53bc576cf",
-    "failed_attempt_evidence": "evidence/r2.8.130-c07.4-attempt-1-38e119b.json",
-    "implementation_summary": "For count evidence, selected table shells still require exactly one visible table and selected table containers require a positive safe-integer descendant count. For numeric-group-identity, require every fixture-declared Notes/Numbers path exactly once; preserve all other C07.4 evidence gates.",
-    "independent_review": "Three read-only reviewers found no remaining plan, source-scope, evidence, or submission blocker after the fixture-membership gate was added. The earlier 7-row plan/source gap was fixed and reviewed before submission.",
+    "id": "R2.8.133-C07-ROUNDTRIP-HARNESS-REPAIR",
+    "name": "Repair cross-platform C07 reference-capture harness interactions",
+    "plan": "evidence/r2.8.133-c07-roundtrip-harness-repair-plan.json",
+    "status": "Implementation-complete and independently reviewed; ready for one exact-SHA push. Terminal R2.8.132 failure is reconciled. The source adds a post-clipboard immediate pre-paste ArrowRight/focus/refresh gate and an exact C07.4 restored-view predicate.",
+    "depends_on_sha": "2cc44e459d68ac15742f29264b89532fd48c2756",
+    "failed_attempt_evidence": "evidence/r2.8.132-attempt-1-2cc44e4.json",
+    "implementation_summary": "Keep the visible same-row Canvas ID target (no unsupported offset), prove enabled/clicked/focused/empty state from a fresh CI diagnostic, re-prove enabled/focused/empty while the no-op ArrowRight event is processed immediately before paste, and reject focus/refresh races. For reopened C07.4, require the exact fixture-declared active Bases path and canonical vault root before treating the vault as restored.",
+    "independent_review": "Three independent read-only reviews covered current CI evidence, exact source gates, plan/evidence alignment, scope, goal hash and tracker mapping. Latest source and workflow reviews found no blocker after the pre-paste gate and separate click-diagnostic report field were reconciled.",
     "local_executable_validation": false
   },
   "active_ci_batch": null

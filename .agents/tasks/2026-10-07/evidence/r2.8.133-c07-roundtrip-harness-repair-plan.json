@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "milestone_id": "R2.8.133-C07-ROUNDTRIP-HARNESS-REPAIR",
+  "name": "Repair cross-platform C07 reference-capture harness interactions",
+  "created_at": "2026-10-15",
+  "starting_sha": "2cc44e459d68ac15742f29264b89532fd48c2756",
+  "status": "implementation-complete / independently-reviewed; ready for one exact-SHA CI submission",
+  "bounded_outcome": "Repair the GitHub-only Obsidian round-trip harness across Linux, macOS, and Windows by confirming Canvas text-card ID field focus and refresh stability before input, and by recognizing only an exact fixture-declared restored C07.4 Bases view in the expected vault. Preserve all product scenarios and fail-closed evidence requirements.",
+  "in_scope": [
+    "Use terminal exact-SHA CI screenshots and logs to verify the existing macOS Canvas edit text-card ID click is inside the visible field; confirm its blank hint, enabled/focused state, and refresh stability before typing. Do not add a positional offset unsupported by the artifacts.",
+    "Allow the C07.4 reopen trust-state wait to recognize a restored view only when its active view type is Bases, its full active file path is one of the fixture-declared scenarios, and its canonical vault root matches the expected fixture vault.",
+    "Update the migration goal to require named milestone pushes and one full exact-SHA CI batch at a time.",
+    "Record the failed batch, all workflow/job outcomes, and the repair acceptance plan in migration evidence."
+  ],
+  "out_of_scope": [
+    "Rust product behavior or Rust parity claims.",
+    "C07.5 file-property capture implementation and its fixture/workflow changes; those remain isolated in a separate worktree and milestone.",
+    "C09.2 configuration work and unrelated migration changes.",
+    "Changes to C07.4 numeric semantics, fixtures, expected outcomes, or evidence acceptance criteria beyond the reopen wait needed to continue the capture."
+  ],
+  "implementation_criteria": [
+    "Canvas ID targeting remains at the unique label-relative same-row field position. A fresh screenshot must show the exact blank hint; CI-only egui diagnostics must prove the target field was enabled, clicked, focused, and empty. After placing the requested value on the system clipboard, retain a fresh no-op ArrowRight pressed-event observation and confirm the latest widget state remains enabled/focused/empty. Check refresh counts and receiver-busy state after clipboard setup; if a refresh started, completed, or remains busy, do not paste. When the gate passes, invoke paste immediately without another clipboard operation or await, and send Cmd+A/Cmd+V without an intervening delay. If focus or refresh stability is not proven, take a fresh screenshot and retry within the bounded attempt count, then fail closed. Preserve exact clipboard/visual readback and no-write gates.",
+    "C07.4 reopen accepts a no-prompt state only when the active view type is Bases, its full active file path matches one of the fixture-declared scenario paths, and its canonical active vault root matches the expected fixture vault. If a trust prompt is visible, explicitly select Restricted Mode and wait for that same exact restored-view predicate.",
+    "Existing C07.3, C07.4 scenario definitions, Canvas operations, vault snapshot gates, and source-integrity acceptance remain unchanged outside these harness corrections.",
+    "No local tests, builds, typechecks, formatters, validators, application launches, or runtime probes are run."
+  ],
+  "failed_batch": {
+    "sha": "2cc44e459d68ac15742f29264b89532fd48c2756",
+    "roundtrip_run_id": 38730087971,
+    "roundtrip_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38730087971",
+    "result": "terminal-failed; 6 of 7 workflows and 17 of 20 jobs passed; all three round-trip jobs failed in reference-harness capture paths",
+    "artifacts": [
+      {
+        "os": "ubuntu-24.04",
+        "job_id": 116405443987,
+        "artifact_id": 11970967336,
+        "archive_sha256": "51d3ede1f9c51341411c23b1c3d0624bac9c17e7ad0f38ad730c5ae137f90520",
+        "report_sha256": "aced013806ec9eea7a8b9e85cebaf679d5235fd95b64cbc00709613d5c2b9464",
+        "classification": "C07.4 reopen harness expected Bases/01 Numeric sort ASC.base while Obsidian restored Bases/10 Equal key path tie.base; exact active path/view/root identity was needed. First-open scenarios completed."
+      },
+      {
+        "os": "macos-latest",
+        "job_id": 116405444199,
+        "artifact_id": 11971220715,
+        "archive_sha256": "655e1ebf0c03fd14130a1902f8ecd080eaeeee2e0abcfa8bf6539262465efa9f",
+        "report_sha256": "4910f348a6d112cf916f88500bdca4262aaa997f8c3b1966cb9630719e65440a",
+        "classification": "The full-screen click at Quartz (653,164) mapped inside the visible blank ID field, but focus was not directly proven; refresh activity occurred between selection/copy and paste, and the field retained its placeholder before any app or vault write. Harness focus/refresh race, not a position error."
+      },
+      {
+        "os": "windows-latest",
+        "job_id": 116405443701,
+        "artifact_id": 11971156893,
+        "archive_sha256": "8c12b94b4b8f8f92ccdac8552ff74c74f610cc22b556271244d4a55065d53df3",
+        "report_sha256": "b39b9f819e64e3b36e79c9baaa14d5acb062c92f3557d1229304aad3457c944a",
+        "classification": "C07.4 reopen harness expected Bases/01 Numeric sort ASC.base while Obsidian restored Bases/10 Equal key path tie.base; exact active path/view/root identity was needed. First-open scenarios completed."
+      }
+    ]
+  },
+  "required_workflows": [
+    "Rust migration inventory",
+    "OpenObsidian loaded plugin workflows",
+    "OpenObsidian quality",
+    "OpenObsidian Rust CI",
+    "Obsidian vault round-trip acceptance",
+    "OpenObsidian plugin renderer matrix",
+    "OpenObsidian desktop build"
+  ],
+  "required_ci_acceptance": [
+    "All seven required workflows and all 20 jobs are triggered for one implementation SHA.",
+    "All required jobs pass on that exact SHA, including round-trip capture on Ubuntu, macOS, and Windows.",
+    "C07.4 first-open and reopen captures complete with their existing report contracts and source checkpoints; reopen identity is proven by exact active path, Bases view type, and canonical fixture-vault root.",
+    "Canvas edit and note-creation flows complete with a CI-recorded immediate pre-paste focus/ArrowRight-event check, exact field readbacks, and unchanged-vault gates."
+  ],
+  "evidence_to_collect": [
+    "Exact submitted SHA, seven workflow run IDs/URLs, and all 20 job conclusions.",
+    "Three platform round-trip reports, artifact links, report/artifact hashes, and C07.4 first-open/reopen statuses.",
+    "Canvas text-card ID screenshot hint, retained fresh ArrowRight press observation, latest enabled/focused/empty widget diagnostics, refresh timeline sampled after clipboard setup immediately before paste, exact readback, and before/after vault snapshot outcome.",
+    "Confirmation that no local executable validation was used."
+  ],
+  "push_policy": "Keep implementation local until this bounded milestone is complete and independently reviewed. Push once to origin/main; hold the branch tip until every required workflow/job for that SHA is terminal. Do not submit the separate C07.5 milestone while this batch is active. Mark this milestone achieved only after exact-SHA full CI passes.",
+  "local_executable_validation": false
+}
