@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "id": "R2.8.136-C06-C07.4-ROUNDTRIP-FAILURE-REPAIR",
+  "name": "Repair Linux Canvas fallback scope and macOS attachment-resolution click race",
+  "created_at": "2026-10-15",
+  "status": "implementation-complete-awaiting-push",
+  "starting_sha": "4f92e8bc87e7212b01035bdecd176de734212c8a",
+  "bounded_outcome": "Repair the three failures from the terminal R2.8.135 exact-SHA batch, keep the inventory's goal fingerprint current, and complete the C07.4 reference capture on Linux, macOS, and Windows without claiming Rust parity.",
+  "in_scope": [
+    "Clarify the goal.md cadence heading so one complete, reviewed named milestone is the only push/CI batch boundary, then update requirements.json.mapping_review.goal_sha256 to the resulting goal.md SHA-256 so the GitHub migration inventory gate matches the migration instructions.",
+    "Fix the Linux Canvas keyboard-fallback diagnosticField scope error so retries and terminal errors both report valid field-specific diagnostics; retain the current focus, empty-field, exact SHA-256, screenshot crop, refresh, and no-Ctrl/no-clipboard guarantees.",
+    "Repair the macOS Resolve link status interaction for the external-attachment-removal gate: wait for a quiet, successful refresh snapshot; use fresh enabled bounds for the selected authored note; require a fresh clicked=true receipt; and retry at most three times only when a watcher refresh interrupts the click before receipt. Never accept pre-attempt link-resolution output as current evidence.",
+    "Complete the full existing C07.4 first-open and reopen capture on all three platforms, preserving the fixture and source snapshots and keeping the result reference-only."
+  ],
+  "out_of_scope": [
+    "Rust JavaScript-number, locale-collation, grouping, or filter implementation and any Rust parity claim.",
+    "Changes to the C07.4 fixtures, scenario definitions, pinned Obsidian version, or expected reference semantics.",
+    "Changes to unrelated plugin, renderer, desktop, vault-product, C07.5, or C09.2 behavior.",
+    "Local tests, builds, formatters, linters, type checks, application launches, or runtime probes."
+  ],
+  "implementation_criteria": [
+    "The goal.md cadence heading states one full CI batch per completed milestone and no per-change pushes; the body retains the exact-SHA hold until all required jobs are terminal, even if CI takes several hours.",
+    "The inventory fingerprint exactly matches SHA-256 computed from goal.md; no unrelated requirement rows or historical evidence are rewritten.",
+    "diagnosticField is defined at a scope shared by all retry attempts and the final failure message; terminal failure reports the attempted Canvas path or ID field without raising a second ReferenceError.",
+    "The macOS resolver records per-attempt log/request baselines, confirms an unchanged selected authored note, fresh enabled button bounds, and clicked=true for that exact note before accepting the action.",
+    "The macOS resolver captures the unresolved-result log baseline before dispatching the click so asynchronous output cannot arrive before the freshness boundary is recorded.",
+    "The quiet refresh snapshot requires a successful consumed result for the expected Markdown entry count after the latest request; absence of a request or result cannot be treated as quiet. Selected-path diagnostics must match the complete selected field through the following response_rect delimiter, not a path substring.",
+    "A watcher refresh that starts before click receipt causes the macOS helper to wait for a stable successful refresh snapshot and retry with fresh bounds, with a three-attempt cap and diagnostic failure on exhaustion. The helper fails closed on stale output, changed selection, failed refresh, or missing click receipt.",
+    "Every macOS focus, window, bounds, click-dispatch, refresh-wait, and click-receipt failure includes the attempt history and the cause; elapsed-deadline errors report the attempts actually reached. Blocking macOS subprocesses and the fresh-bounds wait are capped by the remaining 45-second deadline, pointer-script preparation time is deducted from its subprocess budget, and polling rejects results read after a wait deadline while clipping delays to the remaining budget.",
+    "All current Canvas entry safety checks and exact reference-only limitations remain intact."
+  ],
+  "ci_acceptance_criteria": [
+    "All seven required workflows and all 20 jobs pass on one submitted implementation SHA.",
+    "The inventory workflow accepts the current goal fingerprint and all existing migration mapping counts.",
+    "Linux, macOS, and Windows each complete all ten C07.4 scenarios on first open and reopen with complete scenario and source-checkpoint reports.",
+    "The Linux round-trip completes Canvas path and ID entry, exact field-state and screenshot readback, and downstream Load Canvas behavior.",
+    "The macOS external-attachment-removal flow records the fresh successful unresolved-link click/result and final screenshot, with no stale resolved image.",
+    "Platform reports, artifacts, checksums, locale/renderer observations, and source snapshots are reconciled; C07.4 remains reference-only with rust_parity_claimed=false."
+  ],
+  "required_workflows": [
+    "Rust migration inventory",
+    "OpenObsidian loaded plugin workflows",
+    "OpenObsidian quality",
+    "OpenObsidian Rust CI",
+    "Obsidian vault round-trip acceptance",
+    "OpenObsidian plugin renderer matrix",
+    "OpenObsidian desktop build"
+  ],
+  "platforms": [
+    "Ubuntu 24.04",
+    "macOS latest",
+    "Windows latest"
+  ],
+  "evidence_to_collect": [
+    "Exact submitted SHA and every required workflow run ID/URL/conclusion and terminal job ID/conclusion.",
+    "Three round-trip artifact IDs, API archive digests, sizes, expiry, extracted report paths, report SHA-256 values, and C07.4 scenario acceptance totals.",
+    "Linux focus, empty-state, field hash, exact crop/OCR, refresh, retry, load, and vault-preservation diagnostics.",
+    "macOS per-attempt log baselines, selected-note and button geometry evidence, click receipts, refresh snapshots, unresolved summary/reference/embed diagnostics, and screenshot evidence.",
+    "Inventory goal digest and migration mapping count evidence; no Rust parity claim."
+  ],
+  "push_policy": "Keep all implementation, documentation, and evidence changes local until this complete named milestone is implemented and independently reviewed. Push it to origin/main once, then hold main at that exact SHA until all seven required workflows and all 20 jobs are terminal and reconciled, even if CI takes several hours. Do not push or run CI for minor edits.",
+  "local_executable_validation": false,
+  "depends_on": "R2.8.135 is terminal-failed at exact SHA 4f92e8bc87e7212b01035bdecd176de734212c8a; see evidence/r2.8.135-attempt-1-4f92e8b.json.",
+  "updated_at": "2026-10-15T16:10:20Z"
+}

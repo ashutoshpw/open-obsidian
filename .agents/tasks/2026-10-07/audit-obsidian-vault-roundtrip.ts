@@ -1110,8 +1110,10 @@ async function waitFor<T>(label: string, read: () => Promise<T>, predicate: (val
   let last: T | undefined;
   while (Date.now() < deadline) {
     last = await read();
+    if (Date.now() >= deadline) break;
     if (predicate(last)) return last;
-    await delay(500);
+    const remainingMs = deadline - Date.now();
+    if (remainingMs > 0) await delay(Math.min(500, remainingMs));
   }
   const serializedLast = JSON.stringify(last);
   throw new Error(`Timed out waiting for ${label}; last value=${(serializedLast ?? String(last)).slice(0, 2_000)}`);
@@ -1245,6 +1247,44 @@ async function waitForOpenObsidianRefreshIdle(
     },
     (diagnostics) => diagnostics.settled_for_ms >= 750,
     30_000,
+  );
+}
+
+async function waitForOpenObsidianRefreshSnapshotQuiet(
+  expectedEntries: number,
+  timeoutMs = 30_000,
+  logPath = join(reportDirectory, "openobsidian.log"),
+): Promise<OpenObsidianRefreshDiagnostics & {settled_for_ms: number}> {
+  let settledSince: number | null = null;
+  let previousSnapshot = "";
+  return await waitFor(
+    "OpenObsidian refresh requests and results to remain stable before resolving a link",
+    async () => {
+      const diagnostics = await readOpenObsidianRefreshDiagnostics(logPath);
+      const latestRequest = diagnostics.requests.at(-1);
+      const latestResult = diagnostics.consumedResults.at(-1);
+      const receiverBusy = diagnostics.receiverStates.at(-1)?.busy ?? false;
+      const latestRequestConsumed = Boolean(latestRequest && latestResult && latestResult.line > latestRequest.line);
+      const latestResultMatches = latestResult?.succeeded === true && latestResult.entries === expectedEntries;
+      const ready = !receiverBusy && latestRequestConsumed && latestResultMatches;
+      const snapshot = JSON.stringify({
+        requestCount: diagnostics.requests.length,
+        latestRequest,
+        resultCount: diagnostics.consumedResults.length,
+        latestResult,
+        receiverBusy,
+      });
+      if (!ready) {
+        settledSince = null;
+        previousSnapshot = "";
+      } else if (snapshot !== previousSnapshot) {
+        settledSince = Date.now();
+        previousSnapshot = snapshot;
+      }
+      return {...diagnostics, settled_for_ms: settledSince === null ? 0 : Date.now() - settledSince};
+    },
+    (diagnostics) => diagnostics.settled_for_ms >= 750,
+    timeoutMs,
   );
 }
 
@@ -9865,11 +9905,14 @@ async function authorFixtureThroughObsidian(child: ChildProcess): Promise<{conne
   return {connection, browserVersion, notePath};
 }
 
-async function focusOpenObsidian(child: ChildProcess): Promise<void> {
+async function focusOpenObsidian(child: ChildProcess, timeoutMs?: number): Promise<void> {
   if (process.platform === "linux") return;
   if (process.platform === "darwin") {
     const script = `tell application "System Events" to set frontmost of first process whose unix id is ${child.pid ?? -1} to true`;
-    execFileSync("osascript", ["-e", script], {stdio: "ignore"});
+    execFileSync("osascript", ["-e", script], {
+      stdio: "ignore",
+      ...(timeoutMs === undefined ? {} : {timeout: Math.max(1, timeoutMs)}),
+    });
     return;
   }
   const script = `
@@ -9890,7 +9933,10 @@ async function focusOpenObsidian(child: ChildProcess): Promise<void> {
       [OpenObsidianWindow]::SetForegroundWindow($application.MainWindowHandle) | Out-Null
     }
   `;
-  execFileSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", script], {stdio: "ignore"});
+  execFileSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", script], {
+    stdio: "ignore",
+    ...(timeoutMs === undefined ? {} : {timeout: Math.max(1, timeoutMs)}),
+  });
 }
 
 async function clickOpenVaultButton(
@@ -10961,7 +11007,7 @@ async function readSourcePaneOcr(windowImagePath: string, ocrImagePath: string):
   };
 }
 
-function macOSOpenObsidianWindowBounds(child: ChildProcess): {x: number; y: number; width: number; height: number} {
+function macOSOpenObsidianWindowBounds(child: ChildProcess, timeoutMs?: number): {x: number; y: number; width: number; height: number} {
   const script = `on run argv
     tell application "System Events"
       set targetProcess to first process whose unix id is (item 1 of argv as integer)
@@ -10970,7 +11016,11 @@ function macOSOpenObsidianWindowBounds(child: ChildProcess): {x: number; y: numb
       return (item 1 of windowPosition as integer) & "," & (item 2 of windowPosition as integer) & "," & (item 1 of windowSize as integer) & "," & (item 2 of windowSize as integer)
     end tell
   end run`;
-  const value = execFileSync("osascript", ["-e", script, String(child.pid ?? -1)], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]}).trim();
+  const value = execFileSync("osascript", ["-e", script, String(child.pid ?? -1)], {
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "ignore"],
+    ...(timeoutMs === undefined ? {} : {timeout: Math.max(1, timeoutMs)}),
+  }).trim();
   const bounds = value.match(/-?\d+/g)?.map(Number) ?? [];
   if (bounds.length < 4 || bounds[2] <= 0 || bounds[3] <= 0) throw new Error(`Could not read OpenObsidian's visible macOS window bounds: ${value}`);
   return {x: bounds[0] ?? 0, y: bounds[1] ?? 0, width: bounds[2] ?? 0, height: bounds[3] ?? 0};
@@ -11624,6 +11674,7 @@ async function readOpenObsidianCiButtonBounds(
   expectedSelectedPath?: string,
   diagnosticLogPath = join(reportDirectory, "openobsidian.log"),
   afterLineCount?: number,
+  timeoutMs = 5_000,
 ): Promise<{diagnostic: string; left: number; top: number; right: number; bottom: number; pixelsPerPoint: number}> {
   const relevantLines = (lines: string[]) => lines
     .filter((line) => line.trim().length > 0)
@@ -11634,14 +11685,14 @@ async function readOpenObsidianCiButtonBounds(
     (lines) => relevantLines(lines).some((line) => line.startsWith(diagnosticPrefix)
       && line.includes("enabled=true")
       && line.includes("pixels_per_point=")
-      && (expectedSelectedPath === undefined || line.includes(`selected=${expectedSelectedPath}`))),
-    5_000,
+      && (expectedSelectedPath === undefined || line.includes(`selected=${expectedSelectedPath}, response_rect=`))),
+    timeoutMs,
   );
   const diagnostic = [...relevantLines(diagnosticLines)].reverse().find((line) => (
     line.startsWith(diagnosticPrefix)
     && line.includes("enabled=true")
     && line.includes("pixels_per_point=")
-    && (expectedSelectedPath === undefined || line.includes(`selected=${expectedSelectedPath}`))
+    && (expectedSelectedPath === undefined || line.includes(`selected=${expectedSelectedPath}, response_rect=`))
   ));
   const geometry = diagnostic?.match(/response_rect=\[\[(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\]\s+-\s+\[(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\]\], pixels_per_point=(\d+(?:\.\d+)?)/);
   if (!diagnostic || !geometry) {
@@ -11820,22 +11871,201 @@ async function clickMacOsCanvasNoteReviewOrConfirmFromCiGeometry(
   return `CoreGraphics clicked ${controlName} at screen point (${x}, ${y}) from egui response geometry; window=${JSON.stringify(window)}; ${bounds.diagnostic}`;
 }
 
-async function clickMacOsResolveButtonFromCiGeometry(child: ChildProcess, authoredNotePath: string): Promise<string> {
-  await focusOpenObsidian(child);
-  const window = macOSOpenObsidianWindowBounds(child);
-  // Move the pointer once so egui emits fresh bounds for the newly selected note.
+async function clickMacOsResolveButtonFromCiGeometry(
+  child: ChildProcess,
+  authoredNotePath: string,
+  expectedEntries: number,
+): Promise<string> {
+  const maxAttempts = 3;
+  const deadline = Date.now() + 45_000;
+  const attemptHistory: string[] = [];
   const macOSRunnerTitlebarHeightPoints = 32;
-  await postMacOsPointerEvent(window.x + 5, window.y + macOSRunnerTitlebarHeightPoints + 5, false);
   const diagnosticPrefix = "OpenObsidian CI resolve-link-status input:";
-  const bounds = await readOpenObsidianCiButtonBounds("Resolve link status", diagnosticPrefix, authoredNotePath);
-  const x = Math.round(window.x + (bounds.left + bounds.right) / 2);
-  // egui coordinates start below the macOS title bar; AppKit/CGEvent coordinates are screen points.
-  const y = Math.round(window.y + macOSRunnerTitlebarHeightPoints + (bounds.top + bounds.bottom) / 2);
-  await postMacOsPointerEvent(x, y, true);
-  return `CoreGraphics clicked Resolve link status at screen point (${x}, ${y}) from egui response geometry; window=${JSON.stringify(window)}; ${bounds.diagnostic}`;
+  const diagnosticLogPath = join(reportDirectory, "openobsidian.log");
+  const readLogLines = async () => (await readFile(diagnosticLogPath, "utf8").catch(() => "")).split(/\r?\n/);
+  const nextLogLineIndex = (lines: string[]) => lines.length - (lines.at(-1) === "" ? 1 : 0);
+  const errorText = (error: unknown) => error instanceof Error ? error.message : String(error);
+  const remainingBudgetMs = (action: string) => {
+    const remaining = deadline - Date.now();
+    if (remaining <= 0) throw new Error(`45-second click deadline expired before ${action}`);
+    return remaining;
+  };
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    const remainingMs = deadline - Date.now();
+    if (remainingMs <= 0) {
+      attemptHistory.push(`deadline expired before attempt ${attempt}`);
+      break;
+    }
+    let quietBeforeAttempt: OpenObsidianRefreshDiagnostics & {settled_for_ms: number};
+    try {
+      quietBeforeAttempt = await waitForOpenObsidianRefreshSnapshotQuiet(
+        expectedEntries,
+        Math.min(remainingMs, 15_000),
+        diagnosticLogPath,
+      );
+    } catch (error) {
+      attemptHistory.push(`attempt ${attempt}: refresh snapshot did not settle: ${errorText(error)}`);
+      throw new Error(`Could not obtain a quiet refresh snapshot before resolving ${authoredNotePath}; attempts=${JSON.stringify(attemptHistory)}`);
+    }
+    let window: ReturnType<typeof macOSOpenObsidianWindowBounds>;
+    let boundsAfterLineCount: number;
+    try {
+      await focusOpenObsidian(child, remainingBudgetMs("app focus"));
+      window = macOSOpenObsidianWindowBounds(child, remainingBudgetMs("window capture"));
+      const boundsBaseline = await readLogLines();
+      boundsAfterLineCount = boundsBaseline.filter((line) => line.trim().length > 0).length;
+      await postMacOsPointerEvent(
+        window.x + 5,
+        window.y + macOSRunnerTitlebarHeightPoints + 5,
+        false,
+        remainingBudgetMs("fresh button-bounds request"),
+      );
+    } catch (error) {
+      attemptHistory.push(`attempt ${attempt}: could not focus the app, capture its window, or request fresh button bounds: ${errorText(error)}`);
+      throw new Error(`Could not prepare the macOS Resolve link status click for ${authoredNotePath}; attempts=${JSON.stringify(attemptHistory)}`);
+    }
+
+    let bounds: Awaited<ReturnType<typeof readOpenObsidianCiButtonBounds>>;
+    try {
+      bounds = await readOpenObsidianCiButtonBounds(
+        "Resolve link status",
+        diagnosticPrefix,
+        authoredNotePath,
+        diagnosticLogPath,
+        boundsAfterLineCount,
+        Math.min(5_000, remainingBudgetMs("fresh button-bounds wait")),
+      );
+    } catch (error) {
+      const refresh = await readOpenObsidianRefreshDiagnostics(diagnosticLogPath);
+      const refreshStarted = refresh.requests.length > quietBeforeAttempt.requests.length
+        || (refresh.receiverStates.at(-1)?.busy ?? false);
+      if (!refreshStarted || attempt === maxAttempts) {
+        attemptHistory.push(`attempt ${attempt}: fresh bounds unavailable: ${errorText(error)}; requests=${refresh.requests.length}; busy=${refresh.receiverStates.at(-1)?.busy ?? false}`);
+        throw new Error(`Could not obtain fresh macOS Resolve link status bounds for ${authoredNotePath}; attempts=${JSON.stringify(attemptHistory)}`);
+      }
+      attemptHistory.push(`attempt ${attempt}: refresh started while locating button; requests=${refresh.requests.length}; busy=${refresh.receiverStates.at(-1)?.busy ?? false}`);
+      try {
+        await waitForOpenObsidianRefreshSnapshotQuiet(
+          expectedEntries,
+          remainingBudgetMs("refresh snapshot before retry"),
+          diagnosticLogPath,
+        );
+      } catch (settleError) {
+        attemptHistory.push(`attempt ${attempt}: refresh snapshot did not settle after bounds interruption: ${errorText(settleError)}`);
+        throw new Error(`Could not retry macOS Resolve link status for ${authoredNotePath}; attempts=${JSON.stringify(attemptHistory)}`);
+      }
+      continue;
+    }
+
+    // Capture the log boundary before the final refresh check. Requests before
+    // this boundary are caught by that check; requests after it remain visible
+    // to the click-receipt wait below.
+    const clickBaseline = await readLogLines();
+    const clickAfterLine = nextLogLineIndex(clickBaseline);
+    const refreshBeforeClick = await readOpenObsidianRefreshDiagnostics(diagnosticLogPath);
+    const refreshChangedDuringPositioning = refreshBeforeClick.requests.length !== quietBeforeAttempt.requests.length
+      || (refreshBeforeClick.receiverStates.at(-1)?.busy ?? false);
+    if (refreshChangedDuringPositioning) {
+      attemptHistory.push(`attempt ${attempt}: refresh changed after bounds capture and before click; requests=${refreshBeforeClick.requests.length}; busy=${refreshBeforeClick.receiverStates.at(-1)?.busy ?? false}`);
+      if (attempt === maxAttempts) break;
+      try {
+        await waitForOpenObsidianRefreshSnapshotQuiet(
+          expectedEntries,
+          remainingBudgetMs("refresh snapshot before retry"),
+          diagnosticLogPath,
+        );
+      } catch (error) {
+        attemptHistory.push(`attempt ${attempt}: refresh snapshot did not settle before retry: ${errorText(error)}`);
+        throw new Error(`Could not retry macOS Resolve link status for ${authoredNotePath}; attempts=${JSON.stringify(attemptHistory)}`);
+      }
+      continue;
+    }
+
+    const x = Math.round(window.x + (bounds.left + bounds.right) / 2);
+    // egui coordinates start below the macOS title bar; AppKit/CGEvent coordinates are screen points.
+    const y = Math.round(window.y + macOSRunnerTitlebarHeightPoints + (bounds.top + bounds.bottom) / 2);
+    try {
+      await postMacOsPointerEvent(x, y, true, remainingBudgetMs("Resolve click dispatch"));
+    } catch (error) {
+      attemptHistory.push(`attempt ${attempt}: could not dispatch click at (${x}, ${y}): ${errorText(error)}`);
+      throw new Error(`Could not dispatch the macOS Resolve link status click for ${authoredNotePath}; attempts=${JSON.stringify(attemptHistory)}`);
+    }
+
+    const remainingForReceipt = deadline - Date.now();
+    if (remainingForReceipt <= 0) {
+      attemptHistory.push(`attempt ${attempt}: deadline expired after click dispatch before receipt wait`);
+      break;
+    }
+    let clickOutcome: {
+      clickReceiptLine: number | null;
+      requestsAfterClick: OpenObsidianRefreshDiagnostics["requests"];
+      receiverBusy: boolean;
+    };
+    try {
+      clickOutcome = await waitFor(
+        "OpenObsidian to acknowledge the Resolve link status click or report a refresh interrupting it",
+        async () => {
+          const lines = await readLogLines();
+          let clickReceiptLine: number | null = null;
+          for (let line = clickAfterLine; line < lines.length; line += 1) {
+            const value = lines[line] ?? "";
+            if (value.startsWith(diagnosticPrefix)
+              && value.includes(`selected=${authoredNotePath}, response_rect=`)
+              && value.includes("enabled=true")
+              && value.includes("clicked=true")) {
+              clickReceiptLine = line;
+            }
+          }
+          const refresh = await readOpenObsidianRefreshDiagnostics(diagnosticLogPath);
+          return {
+            clickReceiptLine,
+            requestsAfterClick: refresh.requests.filter((request) => request.line >= clickAfterLine),
+            receiverBusy: refresh.receiverStates.at(-1)?.busy ?? false,
+          };
+        },
+        (outcome) => outcome.clickReceiptLine !== null
+          || outcome.requestsAfterClick.length > 0
+          || outcome.receiverBusy,
+        Math.min(remainingForReceipt, 7_500),
+      );
+    } catch (error) {
+      const refresh = await readOpenObsidianRefreshDiagnostics(diagnosticLogPath);
+      attemptHistory.push(`attempt ${attempt}: click or refresh receipt wait did not produce an on-time accepted result: ${errorText(error)}; requests=${refresh.requests.length}; busy=${refresh.receiverStates.at(-1)?.busy ?? false}`);
+      throw new Error(`Could not confirm the macOS Resolve link status click or a watcher interruption for ${authoredNotePath}; attempts=${JSON.stringify(attemptHistory)}`);
+    }
+    if (Date.now() >= deadline) {
+      attemptHistory.push(`attempt ${attempt}: click or refresh receipt was not confirmed within the 45-second deadline`);
+      throw new Error(`Could not confirm the macOS Resolve link status click within 45 seconds for ${authoredNotePath}; attempts=${JSON.stringify(attemptHistory)}`);
+    }
+
+    const refreshPreemptedClick = clickOutcome.requestsAfterClick.some((request) => (
+      clickOutcome.clickReceiptLine === null || request.line < clickOutcome.clickReceiptLine
+    ));
+    if (clickOutcome.clickReceiptLine !== null && !refreshPreemptedClick) {
+      attemptHistory.push(`attempt ${attempt}: clicked=true receipt at log line ${clickOutcome.clickReceiptLine}`);
+      return `CoreGraphics clicked Resolve link status at screen point (${x}, ${y}) from fresh egui response geometry; confirmed clicked=true for ${authoredNotePath} at log line ${clickOutcome.clickReceiptLine}; window=${JSON.stringify(window)}; attempts=${JSON.stringify(attemptHistory)}; ${bounds.diagnostic}`;
+    }
+
+    attemptHistory.push(`attempt ${attempt}: watcher refresh interrupted click before receipt; requests=${JSON.stringify(clickOutcome.requestsAfterClick)}; busy=${clickOutcome.receiverBusy}`);
+    if (attempt === maxAttempts) break;
+    try {
+      await waitForOpenObsidianRefreshSnapshotQuiet(
+        expectedEntries,
+        remainingBudgetMs("refresh snapshot before retry"),
+        diagnosticLogPath,
+      );
+    } catch (error) {
+      attemptHistory.push(`attempt ${attempt}: refresh snapshot did not settle after click interruption: ${errorText(error)}`);
+      throw new Error(`Could not retry macOS Resolve link status for ${authoredNotePath}; attempts=${JSON.stringify(attemptHistory)}`);
+    }
+  }
+
+  throw new Error(`Could not confirm a fresh macOS Resolve link status click for ${authoredNotePath} after at most ${maxAttempts} attempts within 45 seconds; attempts=${JSON.stringify(attemptHistory)}`);
 }
 
-async function postMacOsPointerEvent(x: number, y: number, click: boolean): Promise<void> {
+async function postMacOsPointerEvent(x: number, y: number, click: boolean, timeoutMs?: number): Promise<void> {
+  const startedAt = Date.now();
   const swiftPath = join(workDirectory, "openobsidian-native-control-click.swift");
   const eventTypes = click ? "[CGEventType.mouseMoved, .leftMouseDown, .leftMouseUp]" : "[CGEventType.mouseMoved]";
   await writeFile(swiftPath, `import AppKit
@@ -11856,7 +12086,14 @@ for type in ${eventTypes} {
     if type == .leftMouseDown { Thread.sleep(forTimeInterval: 0.08) }
 }
 `);
-  execFileSync("swift", [swiftPath, String(x), String(y)], {stdio: "ignore"});
+  const remainingTimeoutMs = timeoutMs === undefined ? undefined : timeoutMs - (Date.now() - startedAt);
+  if (remainingTimeoutMs !== undefined && remainingTimeoutMs <= 0) {
+    throw new Error("The macOS pointer-event deadline expired while preparing its script");
+  }
+  execFileSync("swift", [swiftPath, String(x), String(y)], {
+    stdio: "ignore",
+    ...(remainingTimeoutMs === undefined ? {} : {timeout: remainingTimeoutMs}),
+  });
 }
 
 async function selectReferenceNoteForEmbedResolution(
@@ -12588,18 +12825,27 @@ async function runReferenceImageEmbedResolution(
   const invokeResolveLinkStatus = async (): Promise<string> => process.platform === "linux"
     ? await clickLinuxResolveButtonFromCiGeometry(window.window_id, authoredNotePath)
     : process.platform === "darwin"
-      ? await clickMacOsResolveButtonFromCiGeometry(child, authoredNotePath)
+      ? await clickMacOsResolveButtonFromCiGeometry(child, authoredNotePath, countMarkdownFiles(vaultBaseline))
       : await invokeNativeAccessibleControl(child, window.window_id, "Resolve link status", authoredNotePath);
+  const resolutionLogBaseline = (await readFile(join(reportDirectory, "openobsidian.log"), "utf8").catch(() => ""))
+    .split(/\r?\n/)
+    .filter((line) => line.trim().length > 0)
+    .length;
   resolutionReport.resolve_link_status_action = await invokeResolveLinkStatus();
   const expectedSummary = `OpenObsidian CI link resolution: source=${authoredNotePath}, total=1, resolved=1, unresolved=0, ambiguous=0, external=0, embed_roots=1, truncated=false`;
   const expectedReference = `OpenObsidian CI link reference: source=${authoredNotePath}, kind=Embed, raw=${JSON.stringify(noteEmbed)}, status=Resolved, target=${attachmentPath}`;
   const expectedEmbedPrefix = `OpenObsidian CI note embed: source=${authoredNotePath}, index=0, raw=${JSON.stringify(noteEmbed)}, status=Resolved, target=${attachmentPath}, disposition=image, revision_sha256=${attachmentEntry.sha256}, `;
   let diagnostics = await waitFor(
     "OpenObsidian to resolve the authored image embed against the exact vault attachment",
-    async () => (await readFile(join(reportDirectory, "openobsidian.log"), "utf8").catch(() => "")).split(/\r?\n/),
-    (lines) => lines.includes(expectedSummary)
-      && lines.includes(expectedReference)
-    && lines.some((line) => line.startsWith(expectedEmbedPrefix)),
+    async () => (await readFile(join(reportDirectory, "openobsidian.log"), "utf8").catch(() => ""))
+      .split(/\r?\n/)
+      .filter((line) => line.trim().length > 0),
+    (lines) => {
+      const freshLines = lines.slice(resolutionLogBaseline);
+      return freshLines.includes(expectedSummary)
+        && freshLines.includes(expectedReference)
+        && freshLines.some((line) => line.startsWith(expectedEmbedPrefix));
+    },
     30_000,
   );
 
@@ -12886,10 +13132,14 @@ async function runReferenceImageAttachmentRemoval(
     throw new Error(`OpenObsidian retained stale resolved-image output after refresh: ${JSON.stringify(refreshed.ocrText.slice(0, 2_000))}`);
   }
 
+  const resolutionLogBaseline = (await readFile(join(reportDirectory, "openobsidian.log"), "utf8").catch(() => ""))
+    .split(/\r?\n/)
+    .filter((line) => line.trim().length > 0)
+    .length;
   const resolveAction = process.platform === "linux"
     ? await clickLinuxResolveButtonFromCiGeometry(window.window_id, authoredNotePath)
     : process.platform === "darwin"
-      ? await clickMacOsResolveButtonFromCiGeometry(child, authoredNotePath)
+      ? await clickMacOsResolveButtonFromCiGeometry(child, authoredNotePath, expectedMarkdownCount)
       : await invokeNativeAccessibleControl(child, window.window_id, "Resolve link status", authoredNotePath);
   removalReport.resolve_link_status_action = resolveAction;
   const expectedSummary = `OpenObsidian CI link resolution: source=${authoredNotePath}, total=1, resolved=0, unresolved=1, ambiguous=0, external=0, embed_roots=1, truncated=false`;
@@ -12897,8 +13147,13 @@ async function runReferenceImageAttachmentRemoval(
   const expectedEmbed = `OpenObsidian CI note embed: source=${authoredNotePath}, index=0, raw=${JSON.stringify(noteEmbed)}, status=Unresolved, target=<none>, disposition=not_rendered`;
   let diagnostics = await waitFor(
     "OpenObsidian to report the externally removed authored attachment as unresolved",
-    async () => (await readFile(join(reportDirectory, "openobsidian.log"), "utf8").catch(() => "")).split(/\r?\n/),
-    (lines) => lines.includes(expectedSummary) && lines.includes(expectedReference) && lines.includes(expectedEmbed),
+    async () => (await readFile(join(reportDirectory, "openobsidian.log"), "utf8").catch(() => ""))
+      .split(/\r?\n/)
+      .filter((line) => line.trim().length > 0),
+    (lines) => {
+      const freshLines = lines.slice(resolutionLogBaseline);
+      return freshLines.includes(expectedSummary) && freshLines.includes(expectedReference) && freshLines.includes(expectedEmbed);
+    },
     30_000,
   );
   await delay(2_000);
@@ -12923,11 +13178,13 @@ async function runReferenceImageAttachmentRemoval(
     removalReport.resolve_link_status_retry_action = process.platform === "linux"
       ? await clickLinuxResolveButtonFromCiGeometry(window.window_id, authoredNotePath)
       : process.platform === "darwin"
-        ? await clickMacOsResolveButtonFromCiGeometry(child, authoredNotePath)
+        ? await clickMacOsResolveButtonFromCiGeometry(child, authoredNotePath, expectedMarkdownCount)
         : await invokeNativeAccessibleControl(child, window.window_id, "Resolve link status", authoredNotePath);
     diagnostics = await waitFor(
       "OpenObsidian to restore the unresolved image-embed result after vault reconciliation",
-      async () => (await readFile(join(reportDirectory, "openobsidian.log"), "utf8").catch(() => "")).split(/\r?\n/),
+      async () => (await readFile(join(reportDirectory, "openobsidian.log"), "utf8").catch(() => ""))
+        .split(/\r?\n/)
+        .filter((line) => line.trim().length > 0),
       (lines) => {
         const retryLines = lines.slice(previousLogLineCount);
         return retryLines.includes(expectedSummary)
@@ -15634,6 +15891,11 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
   const fileSafeName = controlName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
   const maximumAttempts = 3;
   let lastFailure = "no field-position attempt completed";
+  const diagnosticField = controlName === "Canvas edit path"
+    ? "path"
+    : controlName === "Canvas edit text-card ID"
+      ? "id"
+      : null;
   for (let attempt = 1; attempt <= maximumAttempts; attempt += 1) {
     await waitForOpenObsidianRefreshIdle(0, 0, false, logPath);
     const refreshBeforeCapture = await readOpenObsidianRefreshDiagnostics(logPath);
@@ -15668,11 +15930,6 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
     // messages above the form cannot move the click onto the adjacent input row.
     const clickX = Math.round(layout.fieldCenter.x * windowWidth / screenshotSize.width);
     const clickY = Math.round(layout.fieldCenter.y * windowHeight / screenshotSize.height);
-    const diagnosticField = controlName === "Canvas edit path"
-      ? "path"
-      : controlName === "Canvas edit text-card ID"
-        ? "id"
-        : null;
     const expectedValueSha256 = createHash("sha256").update(value, "utf8").digest("hex");
     const expectedValueBytes = Buffer.byteLength(value, "utf8");
     const diagnosticBeforeClick = diagnosticField

@@ -1,0 +1,337 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.8.135-LINUX-CANVAS-EDIT-FIELD-FOCUS-REPAIR",
+  "attempt": 1,
+  "submitted_sha": "4f92e8bc87e7212b01035bdecd176de734212c8a",
+  "started_at": "2026-10-15T15:19:51Z",
+  "status": "terminal-failed; all seven required workflows and 20 jobs are terminal: five workflows and 17 jobs passed; inventory and round-trip workflows failed.",
+  "required_workflows": 7,
+  "required_jobs": 20,
+  "workflow_counts": {
+    "observed": 7,
+    "terminal": 7,
+    "passed": 5,
+    "failed": 2,
+    "queued": 0,
+    "in_progress": 0
+  },
+  "job_counts": {
+    "observed": 20,
+    "terminal": 20,
+    "passed": 17,
+    "failed": 3,
+    "queued": 0,
+    "in_progress": 0
+  },
+  "workflows": [
+    {
+      "name": "Rust migration inventory",
+      "run_id": 38759355168,
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38759355168",
+      "jobs": [
+        {
+          "job_id": 116506203785,
+          "name": "inventory",
+          "status": "completed",
+          "conclusion": "failure",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38759355168/job/116506203785"
+        }
+      ],
+      "failure": "Mapping review must record the current Rust migration goal SHA-256; requirements.json still held the previous goal digest."
+    },
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 38759355154,
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38759355154",
+      "jobs": [
+        {
+          "job_id": 116506203535,
+          "name": "minimum supported Rust (1.95)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38759355154/job/116506203535"
+        },
+        {
+          "job_id": 116506204014,
+          "name": "rust (ubuntu-latest)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38759355154/job/116506204014"
+        },
+        {
+          "job_id": 116506204110,
+          "name": "rust (windows-latest)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38759355154/job/116506204110"
+        },
+        {
+          "job_id": 116506204135,
+          "name": "rust (macos-latest)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38759355154/job/116506204135"
+        }
+      ]
+    },
+    {
+      "name": "Obsidian vault round-trip acceptance",
+      "run_id": 38759355139,
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38759355139",
+      "jobs": [
+        {
+          "job_id": 116506205756,
+          "name": "Obsidian 1.14.4 vault round-trip on macos-latest",
+          "status": "completed",
+          "conclusion": "failure",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38759355139/job/116506205756"
+        },
+        {
+          "job_id": 116506206488,
+          "name": "Obsidian 1.14.4 vault round-trip on windows-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38759355139/job/116506206488"
+        },
+        {
+          "job_id": 116506206519,
+          "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04",
+          "status": "completed",
+          "conclusion": "failure",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38759355139/job/116506206519"
+        }
+      ],
+      "failure": "macOS timed out after attachment removal before C07.4; Ubuntu failed in the Canvas path fallback before C07.4."
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 38759355135,
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38759355135",
+      "jobs": [
+        {
+          "job_id": 116506203871,
+          "name": "macos-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38759355135/job/116506203871"
+        },
+        {
+          "job_id": 116506204264,
+          "name": "windows-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38759355135/job/116506204264"
+        },
+        {
+          "job_id": 116506204444,
+          "name": "ubuntu-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38759355135/job/116506204444"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 38759355229,
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38759355229",
+      "jobs": [
+        {
+          "job_id": 116506264188,
+          "name": "windows-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38759355229/job/116506264188"
+        },
+        {
+          "job_id": 116506264430,
+          "name": "macos-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38759355229/job/116506264430"
+        },
+        {
+          "job_id": 116506264494,
+          "name": "ubuntu-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38759355229/job/116506264494"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 38759355160,
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38759355160",
+      "jobs": [
+        {
+          "job_id": 116506204668,
+          "name": "ubuntu-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38759355160/job/116506204668"
+        },
+        {
+          "job_id": 116506204946,
+          "name": "macos-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38759355160/job/116506204946"
+        },
+        {
+          "job_id": 116506205229,
+          "name": "windows-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38759355160/job/116506205229"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 38759355296,
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38759355296",
+      "jobs": [
+        {
+          "job_id": 116506205142,
+          "name": "ubuntu-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38759355296/job/116506205142"
+        },
+        {
+          "job_id": 116506205766,
+          "name": "macos-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38759355296/job/116506205766"
+        },
+        {
+          "job_id": 116506205964,
+          "name": "windows-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38759355296/job/116506205964"
+        }
+      ]
+    }
+  ],
+  "artifacts": [
+    {
+      "platform": "Ubuntu 24.04",
+      "artifact_id": 11984264726,
+      "name": "obsidian-vault-roundtrip-Linux-4f92e8bc87e7212b01035bdecd176de734212c8a",
+      "size_bytes": 9038317,
+      "archive_digest": "sha256:982cc2f47a22ecd37b819563bbb9df7c4ef8e282df8faa4537342c9f3fd83531",
+      "created_at": "2026-10-15T15:28:27Z",
+      "expires_at": "2026-11-14T15:28:24Z",
+      "report_path": "/tmp/r2.8.135-attempt-1-artifacts/obsidian-vault-roundtrip-Linux-4f92e8bc87e7212b01035bdecd176de734212c8a/obsidian-vault-roundtrip-report.json",
+      "report_sha256": "541954e10fb6e0aea30e88faa8f9dec7ca635233b2a10612a2ef244cf392961e",
+      "c07_4": {
+        "status": "pending",
+        "first_open_observations": 0,
+        "reopen_observations": 0,
+        "fixture_sha256": "4002a7bbf61b36467f7ce409e9c1694e117a896ced41a44260244f95915f0ed4",
+        "rust_parity_claimed": false
+      },
+      "failure": "Canvas path fallback threw diagnosticField is not defined before C07.4."
+    },
+    {
+      "platform": "macOS latest",
+      "artifact_id": 11984584465,
+      "name": "obsidian-vault-roundtrip-macOS-4f92e8bc87e7212b01035bdecd176de734212c8a",
+      "size_bytes": 6804676,
+      "archive_digest": "sha256:28f0aeebc95a6a9f19127b78da50585f6e59b1d06fc943be0442eada70efb677",
+      "created_at": "2026-10-15T15:28:01Z",
+      "expires_at": "2026-11-14T15:27:59Z",
+      "report_path": "/tmp/r2.8.135-attempt-1-artifacts/obsidian-vault-roundtrip-macOS-4f92e8bc87e7212b01035bdecd176de734212c8a/obsidian-vault-roundtrip-report.json",
+      "report_sha256": "db5185a2ae70cf5894af5976459202330c64081c3c1d5877783ac1982aca1992",
+      "c07_4": {
+        "status": "pending",
+        "first_open_observations": 0,
+        "reopen_observations": 0,
+        "fixture_sha256": "4002a7bbf61b36467f7ce409e9c1694e117a896ced41a44260244f95915f0ed4",
+        "rust_parity_claimed": false
+      },
+      "failure": "Attachment removal watcher refresh interrupted the Resolve click before a fresh clicked=true receipt; the external-attachment unresolved result was not observed before timeout."
+    },
+    {
+      "platform": "Windows latest",
+      "artifact_id": 11986211720,
+      "name": "obsidian-vault-roundtrip-Windows-4f92e8bc87e7212b01035bdecd176de734212c8a",
+      "size_bytes": 23227607,
+      "archive_digest": "sha256:82bdbc55c1ac58e41bba0a3003e5f4553890cecb22759f9b28abf0d210efbed8",
+      "created_at": "2026-10-15T15:37:33Z",
+      "expires_at": "2026-11-14T15:37:31Z",
+      "report_path": "/tmp/r2.8.135-attempt-1-artifacts/obsidian-vault-roundtrip-Windows-4f92e8bc87e7212b01035bdecd176de734212c8a/obsidian-vault-roundtrip-report.json",
+      "report_sha256": "b7e5645feea236fe9ff58933b6ec9b2d5804f34f5b0ca62c677b58db569191c4",
+      "c07_4": {
+        "status": "captured-reference-only",
+        "first_open_status": "completed",
+        "reopen_status": "completed",
+        "scenarios_passed": 10,
+        "scenario_count": 10,
+        "first_open_observations": 10,
+        "reopen_observations": 10,
+        "source_checkpoint_count": 28,
+        "source_checkpoint_matrix_complete": true,
+        "fixture_sha256": "4002a7bbf61b36467f7ce409e9c1694e117a896ced41a44260244f95915f0ed4",
+        "rust_parity_claimed": false
+      }
+    }
+  ],
+  "note": "Terminal exact-SHA reconciliation. Keep origin/main at this SHA until a complete, independently reviewed named milestone is ready; do not push for minor edits.",
+  "terminal_at": "2026-10-15T15:38:13Z",
+  "observed_at": "2026-10-15T15:55:33Z",
+  "c07_4_reference_capture": {
+    "status": "pending overall; only Windows completed the capture",
+    "fixture_sha256": "4002a7bbf61b36467f7ce409e9c1694e117a896ced41a44260244f95915f0ed4",
+    "windows": {
+      "status": "captured-reference-only",
+      "first_open_scenarios_passed": 10,
+      "reopen_scenarios_passed": 10,
+      "source_checkpoint_count": 28,
+      "source_checkpoint_matrix_complete": true
+    },
+    "ubuntu": {
+      "status": "pending",
+      "scenario_observations": 0,
+      "blocked_before_c07_4": "Linux Canvas path fallback scope error"
+    },
+    "macos": {
+      "status": "pending",
+      "scenario_observations": 0,
+      "blocked_before_c07_4": "External attachment resolution timed out after watcher refresh interrupted click"
+    },
+    "rust_parity_claimed": false
+  },
+  "failure_summary": {
+    "inventory": {
+      "job_id": 116506203785,
+      "cause": "requirements.json mapping_review.goal_sha256 was stale; current goal.md SHA-256 is 356a9eb598c6d0af77502d6da15f788ca5cdfe50c9baaf0c503ea784da41e8cd"
+    },
+    "linux": {
+      "job_id": 116506206519,
+      "cause": "Canvas fallback referenced diagnosticField outside its retry-loop scope, raising ReferenceError before C07.4"
+    },
+    "macos": {
+      "job_id": 116506205756,
+      "cause": "Watcher refresh disabled Resolve between mouse-down and mouse-up; clicked=false and no fresh link-resolution result followed before timeout"
+    }
+  },
+  "main_sha_held": true
+}
