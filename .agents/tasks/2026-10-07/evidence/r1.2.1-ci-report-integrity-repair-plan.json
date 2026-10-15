@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
   "milestone": "R1.2.1-CI-REPORT-INTEGRITY-REPAIR",
-  "status": "implementation complete / reviewed / CI-pending",
-  "recorded_at": "2026-10-15T06:30:00Z",
+  "status": "terminal-failed; 6/7 workflows and 17/20 jobs passed; exact-SHA run, job, and artifact archive metadata reconciled",
+  "recorded_at": "2026-10-15T07:39:11Z",
   "depends_on": {
     "milestone": "R1.2-PC05-CI-DIAGNOSTICS-REPAIR",
     "sha": "2324436ed95d7c31070a1e69155b264e212a6446",
@@ -40,6 +40,8 @@
     "expected_jobs": 20
   },
   "review_and_push_policy": "Implement the complete bounded repair locally, review it statically, reconcile related inventory hashes, then push this milestone exactly once to origin/main. Hold origin/main at that submitted SHA until every required workflow/job is terminal and every artifact/report is reconciled. No per-edit push, workflow_dispatch, local test, build, typecheck, formatter, validator, or runtime probe.",
+  "terminal_ci_evidence": "evidence/r1.2.1-ci-report-integrity-repair-attempt-1-36d3aa1.json",
+  "ci_outcome": "Six workflows and 17 jobs passed. All three quality jobs failed at the stale installer assertion. All jobs are terminal; do not mark the milestone achieved / CI-passed.",
   "implementation_review": {
     "status": "complete; all three independent read-only reviews passed",
     "required_reviews": [

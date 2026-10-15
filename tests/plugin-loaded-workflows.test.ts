@@ -75,7 +75,7 @@ test("loaded-plugin workflow fixture keeps pinned scope and lifecycle boundaries
   expect(workflow).toContain("bun run audit:plugin-loaded-workflows");
   expect(workflow).toContain("actions/upload-artifact@v4");
   expect(workflow).toContain("require.resolve('electron/package.json')");
-  expect(workflow).toContain('node "$electron_package_dir/install.js"');
+  expect(workflow).toContain(`node -e "const {execFileSync}=require('node:child_process');const {dirname,join}=require('node:path');execFileSync(process.execPath,[join(dirname(require.resolve('electron/package.json')),'install.js')],{stdio:'inherit'});"`);
   expect(workflow).toContain('test -f "$sandbox_helper"');
   expect(workflow).toContain('sudo chmod 4755 "$sandbox_helper"');
   expect(rendererWorker).toContain("deniedPaths");

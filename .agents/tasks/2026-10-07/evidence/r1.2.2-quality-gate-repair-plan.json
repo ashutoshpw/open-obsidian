@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "milestone": "R1.2.2-QUALITY-GATE-REPAIR",
+  "status": "implementation complete / independently reviewed / ready for one push; CI-pending",
+  "recorded_at": "2026-10-15T07:39:11Z",
+  "depends_on": {
+    "milestone": "R1.2.1-CI-REPORT-INTEGRITY-REPAIR",
+    "sha": "36d3aa1a4f72bded0a62f36be3b6980a6c68cf80",
+    "status": "terminal-failed; 7/7 workflows and 20/20 jobs terminal, with quality failing on all three OSes",
+    "evidence": "evidence/r1.2.1-ci-report-integrity-repair-attempt-1-36d3aa1.json"
+  },
+  "bounded_outcome": "Repair the quality suite's stale Electron installer assertion and isolate scheduled/manual quality runs from push-triggered milestone CI so unrelated event types cannot cancel required validation.",
+  "scope": [
+    "Update tests/plugin-loaded-workflows.test.ts to assert the cross-platform node -e / execFileSync invocation that resolves Electron's install.js, matching .github/workflows/plugin-loaded-workflows.yml; retain the Linux sandbox-helper assertions.",
+    "Add github.event_name to the quality workflow concurrency group so push, schedule, pull_request and workflow_dispatch runs do not cancel each other, while preserving cancellation among superseded runs for the same event/ref.",
+    "Keep all product behavior and unrelated migration work out of this repair; do not change plugin audit behavior or weaken any quality assertions."
+  ],
+  "acceptance": [
+    "The quality test checks the installer behavior actually declared in the loaded-plugin workflow and passes on Ubuntu, macOS and Windows.",
+    "A weekly scheduled quality run cannot cancel a push-triggered quality run for the same ref; same-event concurrency behavior remains scoped to that event.",
+    "All seven required workflows and all 20 jobs pass for the exact submitted SHA; manually dispatch the path-filtered Obsidian vault round-trip workflow on that same SHA if it does not trigger automatically.",
+    "Record exact-SHA run/job IDs and URLs, conclusions, and any required report/artifact hashes; no local executable validation is used."
+  ],
+  "required_ci": {
+    "workflows": [
+      "OpenObsidian Rust CI",
+      "Obsidian vault round-trip acceptance",
+      "Rust migration inventory",
+      "OpenObsidian loaded plugin workflows",
+      "OpenObsidian desktop build",
+      "OpenObsidian quality",
+      "OpenObsidian plugin renderer matrix"
+    ],
+    "platforms": ["Ubuntu 24.04", "macOS latest", "Windows latest"],
+    "expected_jobs": 20
+  },
+  "implementation_review": {
+    "status": "complete; independent read-only review found no blocker",
+    "findings": [
+      "The updated test assertion matches the loaded-plugin workflow's bash node -e/execFileSync command and retains the Linux sandbox-helper assertions.",
+      "The quality concurrency group now includes github.event_name, preserving cancellation within the same workflow/event/ref while isolating different events."
+    ],
+    "local_executable_validation": false
+  },
+  "review_and_push_policy": "R1.2.1 is terminal and its run/job/artifact archive metadata is reconciled in evidence/r1.2.1-ci-report-integrity-repair-attempt-1-36d3aa1.json. The bounded R1.2.2 implementation passed static review and is ready for one push to origin/main. Hold origin/main at the submitted SHA until all seven required workflows and 20 jobs are terminal; no local tests, builds, typechecks, formatters, validators or runtime probes.",
+  "local_executable_validation": false
+}
