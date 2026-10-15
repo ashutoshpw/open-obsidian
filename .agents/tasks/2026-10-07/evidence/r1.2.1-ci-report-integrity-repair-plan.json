@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "milestone": "R1.2.1-CI-REPORT-INTEGRITY-REPAIR",
+  "status": "implementation complete / reviewed / CI-pending",
+  "recorded_at": "2026-10-15T06:30:00Z",
+  "depends_on": {
+    "milestone": "R1.2-PC05-CI-DIAGNOSTICS-REPAIR",
+    "sha": "2324436ed95d7c31070a1e69155b264e212a6446",
+    "status": "terminal-failed; all 7 workflows and 20 jobs reconciled",
+    "evidence": "r1.2-pc05-diagnostics-repair-attempt-1-2324436.json"
+  },
+  "bounded_outcome": "Repair the TypeScript report validator failures and close the observed Rust feasibility-report format gap so the full CI batch produces and validates machine-readable evidence on all supported runners.",
+  "scope": [
+    "Fix the report validator's type narrowing and duplicate targetIds declaration without weakening any schema, exact-ID, lifecycle, denial-recovery, integrity, or no-promotion checks.",
+    "Keep loaded-plugin reports as one valid JSON document and renderer reports as exactly 28 valid JSON Lines records, with progress or summary text outside their payloads.",
+    "Make the Rust plugin feasibility report one valid JSON array containing exactly the PC05 and PC08 result rows; send the human summary to stderr so it cannot contaminate the uploaded .json artifact.",
+    "Add a GitHub CI validator gate for the Rust feasibility report that checks exact plugin IDs/versions against the pinned manifest, successful non-timeout process completion, both wrapper and embedded report pass statuses, matching wrapper/embedded runtime identity and runner OS, bounded stage/IPC diagnostics and per-event stage limits, execution of the unchanged bundle in Wry, pinned bundle/manifest/stylesheet hashes and artifact identity, loaded plugin status, PC05 editor callback and PC08 settings/control acceptance, the required capability denial IDs including native network CSP denial, and feasibility-only certification. Do not certify compatibility or promote any plugin based on this probe.",
+    "Reconcile only inventory fingerprints and tracked paths changed by this milestone. Exclude local C06.2, C07.5, C09.2 and other unrelated work."
+  ],
+  "acceptance": [
+    "The quality workflow typechecks successfully on its required OS jobs.",
+    "Loaded-plugin jobs on Ubuntu, macOS and Windows validate the expected 21 artifact rows and 4 combinations; partial lifecycle reports remain partial and no plugin is promoted.",
+    "Renderer jobs on Ubuntu, macOS and Windows validate exactly 28 JSONL records and exact fixture IDs, with no progress or summary text in the report payload.",
+    "Rust CI emits a parseable single JSON array with exact rows PC05 0.23.2 and PC08 1.0.9; the CI gate independently checks versions against the fixture, successful non-timeout process completion, wrapper and embedded pass status, bounded stage/IPC diagnostics including the 48-event cap and allowed per-event stage/time values, unchanged-bundle Wry execution, exact pinned bundle/manifest/stylesheet identity and hashes, matching Wry runtime identity for the runner OS, loaded plugin status, PC05 editor callback and PC08 settings/control acceptance, tested and required denied capability IDs plus native network CSP denial, and feasibility-only certification with compatibility still pending.",
+    "The migration inventory accepts the exact submitted path set and hashes.",
+    "All seven required workflows and all 20 jobs pass on the exact submitted SHA; report payload hashes, GitHub archive digests, run/job IDs, URLs and limitations are recorded.",
+    "No compatibility disposition is promoted from feasibility or reference-capture results."
+  ],
+  "required_ci": {
+    "workflows": [
+      "OpenObsidian Rust CI",
+      "Obsidian vault round-trip acceptance",
+      "Rust migration inventory",
+      "OpenObsidian loaded plugin workflows",
+      "OpenObsidian desktop build",
+      "OpenObsidian quality",
+      "OpenObsidian plugin renderer matrix"
+    ],
+    "platforms": ["Ubuntu 24.04", "macOS latest", "Windows latest"],
+    "expected_jobs": 20
+  },
+  "review_and_push_policy": "Implement the complete bounded repair locally, review it statically, reconcile related inventory hashes, then push this milestone exactly once to origin/main. Hold origin/main at that submitted SHA until every required workflow/job is terminal and every artifact/report is reconciled. No per-edit push, workflow_dispatch, local test, build, typecheck, formatter, validator, or runtime probe.",
+  "implementation_review": {
+    "status": "complete; all three independent read-only reviews passed",
+    "required_reviews": [
+      "Independent read-only TypeScript review of narrowing and schema checks.",
+      "Independent read-only review that Rust audit output remains behavior-equivalent and the report validator checks only the evidence contract.",
+      "Inventory path-set/hash review for every changed scanned file."
+    ],
+    "review_results": [
+      "TypeScript review confirmed assertion-based narrowing and the report schema checks match the producer and fixtures; no type or contract mismatch was found.",
+      "Rust producer review confirmed JSON-array output and stderr summary preserve pass/fail behavior; the independent gate covers process completion, runtime identity, bounded diagnostics, pinned assets, PC05/PC08 evidence, capability denials, and feasibility-only status.",
+      "Inventory review confirmed the only changed scanned paths are the two scripts and both SHA-256 rows match; rust.yml is excluded and unrelated scanned C06/C07 fixture work remains out of scope."
+    ],
+    "local_executable_validation": false
+  }
+}

@@ -280,9 +280,9 @@ async function main(): Promise<number> {
   } finally {
     rmSync(temporaryRoot, {recursive: true, force: true});
   }
-  for (const result of results) console.log(JSON.stringify(result));
+  console.log(JSON.stringify(results));
   const passed = results.length === selectedIds.length && results.every((result) => result.status === "passed");
-  console.log(`RUST WEBVIEW PLUGIN FEASIBILITY: ${passed ? "passed" : "failed"}; ${results.filter((result) => result.status === "passed").length}/${results.length} unchanged artifacts; certification remains feasibility-only`);
+  console.error(`RUST WEBVIEW PLUGIN FEASIBILITY: ${passed ? "passed" : "failed"}; ${results.filter((result) => result.status === "passed").length}/${results.length} unchanged artifacts; certification remains feasibility-only`);
   return passed ? 0 : 1;
 }
 

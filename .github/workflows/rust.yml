@@ -77,6 +77,9 @@ jobs:
       - name: Run unchanged plugin Wry feasibility probes
         run: bun scripts/audit-rust-plugin-runtime.ts > rust-plugin-runtime-${{ runner.os }}.json
 
+      - name: Validate Wry feasibility report
+        run: bun scripts/validate-plugin-audit-report.ts rust-runtime-json rust-plugin-runtime-${{ runner.os }}.json
+
       - name: Upload Wry compatibility evidence
         if: always()
         uses: actions/upload-artifact@v4

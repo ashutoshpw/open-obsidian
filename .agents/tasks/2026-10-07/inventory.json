@@ -2005,7 +2005,7 @@
     },
     {
       "path": "scripts/audit-rust-plugin-runtime.ts",
-      "sha256": "63aff1d283854e2132dd8b485f69613d02d772c1b0db05391479c6a66d14fe36",
+      "sha256": "29e84de3f4fe990e46978139e51e6d9db1cca9ac6ba152c1b537960b7e68b064",
       "rust_owner": "xtask",
       "mapping_status": "reviewed",
       "status": "pending",
@@ -2239,7 +2239,7 @@
     },
     {
       "path": "scripts/validate-plugin-audit-report.ts",
-      "sha256": "c8836ee81ad0e2831f015c8683acab3cb7a0c905b8b63055448a5181ae6f677a",
+      "sha256": "94bcafd3542f99d2d1268915f78697415289f2988204a337be7f5e53fe0e1ae3",
       "rust_owner": "xtask",
       "mapping_status": "reviewed",
       "status": "pending",

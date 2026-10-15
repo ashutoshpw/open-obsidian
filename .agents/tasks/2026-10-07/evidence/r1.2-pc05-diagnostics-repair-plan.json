@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "milestone": "R1.2-PC05-CI-DIAGNOSTICS-REPAIR",
-  "status": "implementation-complete / CI-pending",
+  "status": "terminal-failed / follow-up repair required",
   "recorded_at": "2026-10-15T05:37:59Z",
   "based_on_sha": "c15da767700cf159e0716756400c349edec6e005",
   "prior_batch": {
@@ -52,5 +52,21 @@
     "local_executable_validation": false
   },
   "push_policy": "Keep all incremental edits local. Push this complete reviewed milestone once to origin/main, then hold the remote at that exact SHA until every required workflow and job is terminal; do not start another CI batch while this one runs, even if it takes several hours.",
-  "planning_note": "The grouped scope was documented after some local draft edits already existed. Subsequent work has stayed within this bounded repair scope. No repair push or local executable validation has occurred."
+  "submitted_sha": "2324436ed95d7c31070a1e69155b264e212a6446",
+  "terminal_ci_result": {
+    "evidence": "r1.2-pc05-diagnostics-repair-attempt-1-2324436.json",
+    "workflows_terminal": 7,
+    "workflows_passed": 4,
+    "workflows_failed": 3,
+    "jobs_terminal": 20,
+    "jobs_passed": 11,
+    "jobs_failed": 9,
+    "failures": [
+      "OpenObsidian quality: validator TypeScript narrowing/scope errors on all three OS jobs.",
+      "OpenObsidian loaded plugin workflows: validator parse error from duplicate targetIds on all three OS jobs.",
+      "OpenObsidian plugin renderer matrix: validator parse error from duplicate targetIds on all three OS jobs."
+    ],
+    "artifact_issue": "The Rust plugin runtime artifacts are named .json but contain two JSON rows followed by a plain-text summary. The Rust CI jobs pass, but the output is not a valid single JSON document and needs a CI format gate in the follow-up repair."
+  },
+  "planning_note": "The grouped implementation was pushed once to origin/main at submitted_sha. Its full seven-workflow/20-job batch is terminal; four workflows and 11 jobs passed, while three workflows and nine jobs failed on validator source errors. Reconcile the report-format issue and keep all repairs local until one bounded follow-up milestone is reviewed. No local executable validation has occurred."
 }

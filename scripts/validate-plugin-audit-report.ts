@@ -1,3 +1,4 @@
+import {createHash} from "node:crypto";
 import {readFileSync} from "node:fs";
 import {resolve} from "node:path";
 import {asArray, asRecord} from "./json.js";
@@ -253,7 +254,8 @@ function validateLoadedCombinationRow(
   const expectedCombination = expectedDefinitions.get(row.id as string);
   requireCondition(expectedTargets !== undefined, `${label}.id is not defined by the workflow fixture`);
   requireCondition(expectedCombination !== undefined, `${label}.id has no fixture definition`);
-  requireExactIds(`${label}.target_ids`, row.target_ids, expectedTargets);
+  const targetIds = row.target_ids as string[];
+  requireExactIds(`${label}.target_ids`, targetIds, expectedTargets);
   requireCondition(row.scenario_id === expectedCombination.scenarioId, `${label}.scenario_id differs from its workflow fixture`);
   validateCombinationDependencies(row.dependencies, expectedCombination.definition, label);
   validatePluginResult(row.result, `${label}.result`);
@@ -358,7 +360,6 @@ function validatePassedCombinationRow(value: unknown, index: number, recoveryPro
     && checks.persisted_state_deterministic === true, `${label} recovery summary does not confirm all required checks`);
   requireCondition(writerPolicy?.disabled_by_default === true, `${label} recovery result does not disable automatic writers`);
 
-  const targetIds = row.target_ids as string[];
   const persistence = asRecord(rawRecovery.persistence);
   const persisted = asRecord(persistence?.persisted_data_by_plugin);
   const saved = asRecord(persistence?.saved_data_by_plugin);
@@ -507,6 +508,7 @@ function validateLoadedJson(contents: string): void {
   requireCondition(primaryCombination !== null && equalJson(primaryCombination, primaryRow), "loaded-plugin primary combination does not match its combinations row");
   const checks = asRecord(report.checks);
   requireBooleanRecord(checks, "loaded-plugin report checks");
+  requireCondition(checks !== null, "loaded-plugin report checks must be an object");
   requireCondition(checks.all_bounded_traces_complete === (report.status === "passed"), "loaded-plugin status does not agree with all_bounded_traces_complete");
   requireCondition(checks.no_plugin_promoted === true, "loaded-plugin report must not promote a plugin");
   if (report.status === "passed") {
@@ -556,6 +558,7 @@ function validateRendererJsonl(contents: string): number {
       throw new Error(`renderer JSONL line ${index + 1} is not valid JSON: ${error instanceof Error ? error.message : String(error)}`);
     }
     const row = asRecord(parsed);
+    requireCondition(row !== null, `renderer JSONL row ${index + 1} must be a JSON object`);
     validateRendererRow(row, index);
     artifactIds.push(row.artifactId);
   });
@@ -563,13 +566,186 @@ function validateRendererJsonl(contents: string): number {
   return lines.length;
 }
 
+function validateRustProbeDiagnostics(report: Record<string, unknown>, label: string): Record<string, unknown>[] {
+  const diagnostics = asRecord(report.probeDiagnostics);
+  requireCondition(diagnostics !== null && diagnostics.status === "passed" && diagnostics.failure === null, `${label} bounded probe diagnostics did not pass`);
+  requireCondition(typeof diagnostics.elapsedMs === "number"
+    && Number.isFinite(diagnostics.elapsedMs)
+    && diagnostics.elapsedMs >= 0
+    && diagnostics.elapsedMs <= 30_000, `${label} bounded probe elapsed time is missing or out of range`);
+  requireCondition(Array.isArray(diagnostics.stageEvents), `${label} bounded stage events are missing`);
+  const stageEventsWithNulls = diagnostics.stageEvents.map(asRecord);
+  requireCondition(stageEventsWithNulls.length > 0
+    && stageEventsWithNulls.length <= 48
+    && stageEventsWithNulls.every((event) => event !== null), `${label} bounded stage events are empty, oversized, or malformed`);
+  const stageEvents = stageEventsWithNulls.filter((event): event is Record<string, unknown> => event !== null);
+  const allowedStages = [
+    "runner-bootstrap", "capability-probe", "bundle-evaluation", "plugin-constructor", "plugin-load", "startup-settle",
+    "settings-render", "style-settings-expand", "view-open", "editor-callback", "report-build", "report-post",
+  ];
+  for (const [eventIndex, event] of stageEvents.entries()) {
+    requireCondition(allowedStages.includes(String(event.stage))
+      && ["start", "complete", "failed"].includes(String(event.phase))
+      && typeof event.elapsedMs === "number"
+      && Number.isInteger(event.elapsedMs)
+      && event.elapsedMs >= 0
+      && event.elapsedMs <= 30_000, `${label} stage event ${eventIndex + 1} is outside the bounded stage contract`);
+  }
+  requireCondition(Array.isArray(diagnostics.stageTimeouts) && diagnostics.stageTimeouts.length === 0, `${label} has timed-out or missing bounded stages`);
+  requireCondition(Array.isArray(diagnostics.progressSendFailures) && diagnostics.progressSendFailures.length === 0, `${label} has failed or missing stage progress IPC`);
+
+  const host = asRecord(diagnostics.host);
+  const ipc = asRecord(host?.ipc);
+  const hostLastStage = asRecord(host?.lastStage);
+  requireCondition(ipc !== null, `${label} host IPC diagnostics are missing`);
+  requireCondition(typeof ipc.receivedMessages === "number" && ipc.receivedMessages >= 2 && ipc.receivedMessages <= 128, `${label} host did not receive bounded progress and report IPC`);
+  requireCondition(hostLastStage?.stage === "report-post" && hostLastStage.phase === "start", `${label} host did not observe the bounded report-post stage`);
+  requireCondition(ipc.budgetExhausted === false
+    && typeof ipc.receivedBytes === "number"
+    && ipc.receivedBytes >= 0
+    && ipc.receivedBytes <= 1_048_576, `${label} host IPC budget was exhausted or its bounded byte count is missing`);
+  for (const counter of ["budgetExceededMessages", "oversizedMessages", "sendFailures", "malformedMessages", "tokenMismatches", "unknownMessages", "invalidProgress"]) {
+    requireCondition(ipc[counter] === 0, `${label} host IPC diagnostic ${counter} is nonzero or missing`);
+  }
+  const hasCompletedStage = (stage: string): boolean => stageEvents.some((event) => event.stage === stage && event.phase === "complete");
+  requireCondition(hasCompletedStage("capability-probe") && hasCompletedStage("plugin-load"), `${label} capability or plugin-load stage completion is missing`);
+  return stageEvents;
+}
+
+function expectedPc08Theme(): {path: string; sha256: string; controls: string[]} {
+  const fixture = readExpectedJson("fixtures/plugin-loaded-workflows.json", "loaded-plugin workflow");
+  const scenario = asRecord(asRecord(fixture.scenarios)?.PC08);
+  const workflow = asRecord(scenario?.style_settings_workflow);
+  const path = workflow?.theme_path;
+  const controls = asArray(workflow?.expected_controls);
+  requireCondition(nonEmptyString(path) && controls.length > 0 && controls.every(nonEmptyString), "PC08 workflow fixture must define a theme path and expected controls");
+  const files = asArray(scenario?.files).map(asRecord);
+  requireCondition(files.every((file) => file !== null), "PC08 workflow fixture contains malformed files");
+  const theme = files.find((file) => file?.path === path);
+  requireCondition(theme !== undefined && theme !== null && typeof theme.content === "string", "PC08 workflow fixture theme CSS is missing");
+  const sha256 = createHash("sha256").update(theme.content, "utf8").digest("hex");
+  return {path, sha256, controls: controls as string[]};
+}
+
+function validateRustRuntimeJson(contents: string): number {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(contents) as unknown;
+  } catch (error) {
+    throw new Error(`Rust plugin runtime report is not valid JSON: ${error instanceof Error ? error.message : String(error)}`);
+  }
+  const rows = asArray(parsed);
+  requireCondition(rows.length === 2, `Rust plugin runtime report must contain exactly two result rows (received ${rows.length})`);
+  const ids = rows.map((value) => asRecord(value)?.pluginId);
+  requireExactIds("Rust plugin runtime plugin IDs", ids, ["PC05", "PC08"]);
+  const expectedVersions: Record<string, string> = {PC05: "0.23.2", PC08: "1.0.9"};
+  const expectedOs = process.platform === "win32" ? "windows" : process.platform === "darwin" ? "macos" : "linux";
+  const manifest = readExpectedJson("fixtures/compatibility-manifest.json", "compatibility manifest");
+  for (const [index, value] of rows.entries()) {
+    const label = `Rust plugin runtime row ${index + 1}`;
+    const row = asRecord(value);
+    requireCondition(row !== null, `${label} must be an object`);
+    const pluginId = row.pluginId as string;
+    requireCondition(row.version === expectedVersions[pluginId], `${label} has an unexpected plugin version`);
+    requireCondition(row.status === "passed" && row.integrity === "passed", `${label} did not pass runtime and integrity checks`);
+    const process = asRecord(row.process);
+    requireCondition(process !== null && process.exitCode === 0 && process.outerTimedOut === false, `${label} probe process failed or exceeded its outer timeout`);
+    const runtime = asRecord(row.runtime);
+    requireCondition(runtime !== null && runtime.host === "wry" && runtime.os === expectedOs, `${label} runtime identity does not match this runner`);
+    requireCondition(runtime.legacyCompatibilityState === "Pending", `${label} must not promote compatibility`);
+    requireCondition(nonEmptyString(runtime.userAgent) && nonEmptyString(runtime.webviewEngineVersion), `${label} WebView runtime identity is incomplete`);
+    const report = asRecord(row.report);
+    requireCondition(report !== null && report.status === "passed", `${label} embedded runtime report did not pass`);
+    requireCondition(report.execution === "unchanged-bundle-in-wry-webview", `${label} did not execute the unchanged plugin bundle in Wry`);
+    requireCondition(equalJson(runtime, report.runtime), `${label} wrapper and embedded runtime identities differ`);
+    const stageEvents = validateRustProbeDiagnostics(report, label);
+    const expectedArtifact = asArray(manifest.artifacts).map(asRecord).find((artifact) => artifact?.id === pluginId);
+    requireCondition(expectedArtifact !== undefined && expectedArtifact !== null, `${label} plugin is missing from the pinned compatibility manifest`);
+    requireCondition(expectedArtifact.tag === expectedVersions[pluginId], `${label} version differs from the pinned compatibility manifest`);
+    const expectedAssets = asArray(expectedArtifact.release_assets).map(asRecord);
+    requireCondition(expectedAssets.every((asset) => asset !== null), `${label} pinned compatibility assets are malformed`);
+    const pinnedAsset = (name: string): Record<string, unknown> | null => expectedAssets.find((asset) => asset?.name === name) ?? null;
+    const expectedBundle = pinnedAsset("main.js");
+    const expectedPluginManifest = pinnedAsset("manifest.json");
+    const expectedStylesheet = pinnedAsset("styles.css");
+    const expectedManifestDefinition = asRecord(expectedPluginManifest?.manifest);
+    requireCondition(expectedBundle !== null && expectedPluginManifest !== null && expectedStylesheet !== null
+      && expectedManifestDefinition !== null
+      && expectedManifestDefinition.version === expectedVersions[pluginId]
+      && validSha256(expectedBundle.sha256)
+      && validSha256(expectedPluginManifest.sha256)
+      && validSha256(expectedStylesheet.sha256)
+      && Number.isSafeInteger(expectedBundle.bytes)
+      && (expectedBundle.bytes as number) >= 0
+      && nonEmptyString(expectedManifestDefinition.id), `${label} pinned bundle, manifest, or stylesheet evidence is incomplete`);
+    const artifact = asRecord(report?.artifact);
+    requireCondition(artifact !== null
+      && artifact.id === pluginId
+      && artifact.version === expectedVersions[pluginId]
+      && artifact.manifestId === expectedManifestDefinition.id
+      && artifact.sha256 === expectedBundle.sha256
+      && artifact.manifestSha256 === expectedPluginManifest.sha256
+      && artifact.bytes === expectedBundle.bytes, `${label} embedded artifact identity or pinned bundle/manifest hashes do not match the compatibility manifest`);
+    const stylesheet = asRecord(report?.stylesheet);
+    requireCondition(stylesheet !== null && stylesheet.sha256 === expectedStylesheet.sha256, `${label} embedded stylesheet hash does not match the compatibility manifest`);
+    const capabilityProbe = asRecord(report?.capabilityProbe);
+    requireCondition(report?.certification === "feasibility-only", `${label} has an unexpected certification level`);
+    requireCondition(capabilityProbe !== null
+      && capabilityProbe.passed === true
+      && capabilityProbe.nativeNetworkBlockedByCsp === true, `${label} capability or native network CSP denial probe did not pass`);
+    requireExactIds(`${label} capability probe IDs`, asArray(capabilityProbe.tested), ["filesystem.direct", "process.spawn", "network.request", "credentials.read"]);
+    requireStringArray(report.capabilityDenials, `${label} capability denial IDs`);
+    const capabilityDenialIds = asArray(report.capabilityDenials);
+    const allowedDenialIds = ["filesystem.direct", "process.spawn", "network.request", "credentials.read", "module.import"];
+    requireCondition(capabilityDenialIds.every((id) => nonEmptyString(id) && allowedDenialIds.includes(id)), `${label} capability denial IDs contain an empty or unknown value`);
+    requireCondition(new Set(capabilityDenialIds).size === capabilityDenialIds.length, `${label} capability denial IDs contain duplicates`);
+    for (const requiredDenial of ["filesystem.direct", "process.spawn", "network.request", "credentials.read"]) {
+      requireCondition(capabilityDenialIds.includes(requiredDenial), `${label} is missing the required ${requiredDenial} denial evidence`);
+    }
+    const plugin = asRecord(report?.plugin);
+    requireCondition(plugin?.status === "loaded", `${label} plugin did not complete its WebView load`);
+    const editor = asRecord(report.editorWorkflow);
+    requireCondition(editor?.timedOut !== true && editor?.status !== "timed-out", `${label} editor callback timed out`);
+    const dom = asRecord(report.dom);
+    requireCondition(dom !== null && typeof dom.bodyChildren === "number" && typeof dom.pluginRootChildren === "number", `${label} browser DOM execution metrics are missing`);
+    if (pluginId === "PC05") {
+      requireCondition(editor !== null
+        && editor.timedOut !== true
+        && editor.status !== "timed-out"
+        && typeof editor.completedCallbacks === "number"
+        && editor.completedCallbacks > 0
+        && stageEvents.some((event) => event.stage === "editor-callback" && event.phase === "complete"), `${label} did not complete the PC05 editor callback acceptance`);
+    }
+    if (pluginId === "PC08") {
+      const expectedTheme = expectedPc08Theme();
+      const theme = asRecord(report.themeSettingsFixture);
+      const api = asRecord(report.api);
+      const stylesheet = asRecord(report.stylesheet);
+      const styleSettingIds = Array.isArray(dom.styleSettingIds) ? dom.styleSettingIds : [];
+      requireCondition(api !== null && typeof api.settingTabs === "number" && api.settingTabs > 0, `${label} did not register the Style Settings API`);
+      requireCondition(typeof dom.settingControls === "number" && dom.settingControls > 0, `${label} did not render Style Settings controls`);
+      requireCondition(stylesheet !== null && typeof stylesheet.ruleCount === "number" && stylesheet.ruleCount > 0, `${label} Style Settings stylesheet did not load`);
+      requireCondition(theme !== null && theme.path === expectedTheme.path && theme.sha256 === expectedTheme.sha256, `${label} theme fixture identity/hash differs from the PC08 workflow fixture`);
+      for (const controlId of expectedTheme.controls) {
+        requireCondition(styleSettingIds.includes(controlId), `${label} did not render expected Style Settings control ${controlId}`);
+      }
+    }
+  }
+  return rows.length;
+}
+
 function main(): number {
   const [format, reportPath] = process.argv.slice(2);
-  requireCondition(Boolean(reportPath), "usage: bun scripts/validate-plugin-audit-report.ts <loaded-json|renderer-jsonl> <report-path>");
+  requireCondition(Boolean(reportPath), "usage: bun scripts/validate-plugin-audit-report.ts <loaded-json|renderer-jsonl|rust-runtime-json> <report-path>");
   const contents = readFileSync(resolve(root, reportPath), "utf8");
   if (format === "loaded-json") {
     validateLoadedJson(contents);
     console.log("PLUGIN AUDIT REPORT CHECK: loaded-plugin evidence is valid JSON");
+    return 0;
+  }
+  if (format === "rust-runtime-json") {
+    const rows = validateRustRuntimeJson(contents);
+    console.log(`PLUGIN AUDIT REPORT CHECK: Rust feasibility evidence is valid JSON; ${rows} rows; no compatibility promotion`);
     return 0;
   }
   requireCondition(format === "renderer-jsonl", `unsupported report format: ${format ?? "<missing>"}`);
