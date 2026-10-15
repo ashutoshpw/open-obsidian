@@ -86,7 +86,7 @@ Keep models independent of UI/platform code. All writes, AI actions and plugin r
 
 ## Mandatory execution workflow: GitHub CI only
 
-### Push and CI cadence: one push per completed milestone, never per minor change
+### Push and CI cadence: submit once per implementation-complete milestone, never per minor change
 
 > **Do not push to `origin/main` just to get CI feedback on each minor change.** Keep incremental edits and any local commits unpushed while implementing a named, bounded milestone. Once its full scope is implemented and reviewed, push the milestone exactly once to start its CI batch. If no milestone has reached this implementation-complete gate, do not push or trigger CI for partial-work feedback. A task, minor fix, file change, cleanup, or commit is never a push boundary; do not split a coherent deliverable into artificial micro-milestones or combine unrelated work. The push marks the implementation `implementation-complete / CI-pending`; it is not yet an achieved milestone. Mark it `achieved / CI-passed` only after every required check passes on that exact SHA and its evidence is reconciled. A phase may contain several milestones. Evidence-only and status-only changes stay local for the next substantive milestone. Cross-platform CI may take several hours, so keep `origin/main` at the submitted SHA until every required check is terminal; do not push the next milestone while the current batch is pending.
 

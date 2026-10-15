@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.8.136-R1-C06-C07.4-ROUNDTRIP-REPAIR",
+  "name": "Repair macOS Vision picker startup and Linux Canvas path-field focus identity",
+  "created_at": "2026-10-15T17:39:59Z",
+  "updated_at": "2026-10-15T17:57:26Z",
+  "status": "implementation-complete; independent source and plan reviews passed after the reported corrections; ready for one milestone push; no CI has been dispatched",
+  "starting_sha": "8a8dfc68759dc95a78589ba7573df970aea1440c",
+  "requirement_ids": [
+    "C06",
+    "C07.4"
+  ],
+  "bounded_outcome": "Repair the terminal macOS first-run Vision OCR timeout and Linux Canvas path-field focus/identity failure so the pinned Obsidian reference round-trip reaches and completes C07.4 on all three CI platforms.",
+  "scope": [
+    "Keep the migration goal's push-cadence heading explicit that CI submission occurs once per implementation-complete milestone, and update its recorded SHA-256 in requirements.json. This wording synchronization is part of this named milestone and does not create a separate push or CI batch.",
+    "macOS: replace repeated cold spawnSync swift OCR invocation with a bounded, reusable/cached compiled Swift Vision helper. Retain exact picker/window identity and Open/Cancel safeguards. Record helper build/cache hit, invocation duration, exit/timeout, OCR candidates, screenshot stage, and picker-open outcome.",
+    "Linux: instrument and repair Canvas path-field targeting with fresh screenshot and app-reported geometry. Record both response IDs and rectangles, pointer position, pixels-per-point, click receipt, focused widget before typing, and each field's value hash after entry. Before dispatching a click, compare its screenshot-derived position with the current app-reported path and sibling-ID rectangles and reject stale coordinates, including the observed 13 px layout shift. Retry only after refreshing the screenshot and both field observations; fail closed unless the exact requested path is read back from the path field and the sibling ID remains unchanged.",
+    "Preserve first-run authoring, exact field identity, no-write snapshots, and round-trip safety gates while restoring downstream C07.4 reference capture on Linux and macOS. Keep the Windows capture reference-only.",
+    "Keep the pinned Obsidian version, C07.4 scenario definitions, and expected reference semantics unchanged."
+  ],
+  "out_of_scope": [
+    "C06.3 Canvas standard-field mutation and R2.8.138 protected-history-budget work.",
+    "Rust implementation of JavaScript-number or locale comparison semantics and any Rust parity claim.",
+    "Changing C07.4 fixtures, scenario definitions, pinned Obsidian version, or expected reference behavior.",
+    "Unrelated plugin, renderer, desktop, vault-product, C07.5, or C09.2 changes.",
+    "Local tests, builds, formatting, linting, validators, type checks, application launches, and runtime probes."
+  ],
+  "implementation_criteria": [
+    "The migration goal explicitly says to submit once per implementation-complete milestone, never per minor change, and requirements.json.mapping_review.goal_sha256 matches the updated goal file.",
+    "The macOS Vision helper is compiled once per job/process and reused; helper startup/invocation is bounded, and diagnostics distinguish compilation/cache setup from OCR execution and timeout.",
+    "Picker confirmation still identifies the expected first-run control and native panel; Open and Cancel safeguards are unchanged and no OCR timeout is treated as a successful click.",
+    "Before each Linux click, a fresh pointer observation records both Canvas fields' response IDs, rectangles, pointer, and pixels-per-point. The screenshot-derived click must map inside the current target rectangle and outside the sibling rectangle; otherwise no click is dispatched and the screenshot/observations are refreshed.",
+    "Linux records which widget owns focus and receives each key event; every target/sibling diagnostic pair must have the same egui frame number. After each typed character, the target prefix/value must match by hash while the sibling ID remains unchanged. A sibling mutation stops the attempt immediately.",
+    "Retries are bounded and use newly captured screenshots and fresh field observations; ambiguous focus, sibling-field input, stale geometry, missing readback, or timeout fails closed with per-attempt diagnostics.",
+    "No vault writes are introduced by the reference harness; before/after snapshots remain attached and any reference-app mutation is reported without promoting source preservation or Rust parity."
+  ],
+  "ci_acceptance_criteria": [
+    "All seven required GitHub Actions workflows and all 20 jobs pass on one exact submitted SHA.",
+    "Ubuntu, macOS, and Windows each complete all ten C07.4 scenarios on first open and reopen, with complete scenario and source-checkpoint reports.",
+    "The Linux report proves the exact requested Canvas path was entered in and read back from the path field, not the sibling ID field, before downstream C07.4 capture.",
+    "The macOS report proves bounded Vision helper execution and exact first-run picker confirmation before downstream C07.4 capture.",
+    "All platform artifacts, report hashes, exact-SHA workflow/job results, and reference-source checkpoints are reconciled; C07.4 remains reference-only, with no Rust-parity or source-preservation claim from reference observations."
+  ],
+  "required_workflows": [
+    "Rust migration inventory",
+    "OpenObsidian loaded plugin workflows",
+    "OpenObsidian quality",
+    "OpenObsidian Rust CI",
+    "Obsidian vault round-trip acceptance",
+    "OpenObsidian plugin renderer matrix",
+    "OpenObsidian desktop build"
+  ],
+  "expected_jobs": 20,
+  "required_platforms": [
+    "Ubuntu 24.04",
+    "macOS latest",
+    "Windows latest"
+  ],
+  "independent_review": {
+    "status": "passed after fixes",
+    "source_review": "The initial read-only review found that path/sibling observations needed a shared egui frame number and that input must be checked after each character. Both safeguards were added; follow-up review found no concrete blocker.",
+    "plan_review": "The read-only plan review confirmed scope and acceptance alignment and identified stale tracker status text; the tracker now consistently records implementation completion and review readiness before submission.",
+    "ci_dispatched": false
+  },
+  "expected_evidence": "Exact submitted SHA; all seven workflow and 20 job outcomes; three platform round-trip artifact IDs/digests/report hashes; C07.4 first-open/reopen totals; macOS Vision helper cache/startup/timeout diagnostics; Linux same-frame field IDs, rectangles, pointer/scale, per-character focus/value/sibling checks, exact screenshot readback, and before/after source snapshots with limitations.",
+  "push_policy": "Keep all code, documentation, and evidence changes local until this complete named milestone is implemented and independently reviewed. Push it to origin/main once. Then hold origin/main at that exact SHA until every required workflow/job is terminal and evidence is reconciled, even if CI takes several hours. Do not push or trigger CI for minor edits. Keep C06.3 and R2.8.138 local and separate.",
+  "local_executable_validation": false,
+  "depends_on": "R2.8.136 is terminal-failed on exact SHA 8a8dfc68759dc95a78589ba7573df970aea1440c; see evidence/r2.8.136-attempt-1-8a8dfc6.json."
+}

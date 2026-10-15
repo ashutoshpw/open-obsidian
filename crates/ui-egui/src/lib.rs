@@ -2104,6 +2104,7 @@ impl OpenObsidianApp {
                 .add_enabled(
                     target_fields_enabled,
                     eframe::egui::TextEdit::singleline(&mut self.canvas_text_edit_path)
+                        .id_salt("canvas-text-edit-path")
                         .hint_text("Boards/Idea.canvas")
                         .desired_width(230.0),
                 )
@@ -2114,6 +2115,7 @@ impl OpenObsidianApp {
                 .add_enabled(
                     target_fields_enabled,
                     eframe::egui::TextEdit::singleline(&mut self.canvas_text_edit_node_id)
+                        .id_salt("canvas-text-edit-node-id")
                         .hint_text("text-card-id")
                         .desired_width(160.0),
                 )
@@ -2149,9 +2151,12 @@ impl OpenObsidianApp {
                     "{:x}",
                     Sha256::digest(self.canvas_text_edit_node_id.as_bytes())
                 );
+                let frame_nr = ui.ctx().cumulative_frame_nr();
                 eprintln!(
-                    "OpenObsidian CI canvas-text-edit-field: field=path enabled={target_fields_enabled}, rect={:?}, pointer={pointer:?}, arrow_right_key_event={path_arrow_right_key_event}, hovered={}, clicked={}, focused={}, empty={}, value_bytes={}, value_sha256={path_value_sha256}",
+                    "OpenObsidian CI canvas-text-edit-field: field=path enabled={target_fields_enabled}, frame_nr={frame_nr}, response_id={:?}, rect={:?}, pixels_per_point={:.2}, pointer={pointer:?}, arrow_right_key_event={path_arrow_right_key_event}, hovered={}, clicked={}, focused={}, empty={}, value_bytes={}, value_sha256={path_value_sha256}",
+                    path_input.id,
                     path_input.rect,
+                    ui.ctx().pixels_per_point(),
                     path_input.hovered(),
                     path_input.clicked(),
                     path_input.has_focus(),
@@ -2159,8 +2164,10 @@ impl OpenObsidianApp {
                     self.canvas_text_edit_path.len(),
                 );
                 eprintln!(
-                    "OpenObsidian CI canvas-text-edit-field: field=id enabled={target_fields_enabled}, rect={:?}, pointer={pointer:?}, arrow_right_key_event={node_arrow_right_key_event}, hovered={}, clicked={}, focused={}, empty={}, value_bytes={}, value_sha256={node_value_sha256}",
+                    "OpenObsidian CI canvas-text-edit-field: field=id enabled={target_fields_enabled}, frame_nr={frame_nr}, response_id={:?}, rect={:?}, pixels_per_point={:.2}, pointer={pointer:?}, arrow_right_key_event={node_arrow_right_key_event}, hovered={}, clicked={}, focused={}, empty={}, value_bytes={}, value_sha256={node_value_sha256}",
+                    node_input.id,
                     node_input.rect,
+                    ui.ctx().pixels_per_point(),
                     node_input.hovered(),
                     node_input.clicked(),
                     node_input.has_focus(),

@@ -1160,6 +1160,11 @@ async function readCanvasTextEditFieldDiagnostic(
 ): Promise<{
   line: number;
   enabled: boolean;
+  frameNr: number;
+  responseId: string;
+  rect: {left: number; top: number; right: number; bottom: number};
+  pixelsPerPoint: number;
+  pointer: {x: number; y: number} | null;
   clicked: boolean;
   clickEventLine: number | null;
   focused: boolean;
@@ -1174,6 +1179,11 @@ async function readCanvasTextEditFieldDiagnostic(
   const observations: Array<{
     line: number;
     enabled: boolean;
+    frameNr: number;
+    responseId: string;
+    rect: {left: number; top: number; right: number; bottom: number};
+    pixelsPerPoint: number;
+    pointer: {x: number; y: number} | null;
     clicked: boolean;
     focused: boolean;
     arrowRightKeyEvent: boolean;
@@ -1185,6 +1195,12 @@ async function readCanvasTextEditFieldDiagnostic(
     const value = lines[index] ?? "";
     if (!value.includes(`OpenObsidian CI canvas-text-edit-field: field=${field} `)) continue;
     const enabled = value.match(/\benabled=(true|false)/)?.[1];
+    const frameNr = value.match(/\bframe_nr=(\d+)/)?.[1];
+    const responseId = value.match(/\bresponse_id=(.*?),\s*rect=/)?.[1]?.trim();
+    const geometry = value.match(/\brect=\[\[\s*(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s*\]\s*-\s*\[\s*(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s*\]\],\s*pixels_per_point=(\d+(?:\.\d+)?)/);
+    const pointerMatch = value.match(/\bpointer=Some\(\[\s*(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s*\]\)/);
+    const pointerIsNone = /\bpointer=None\b/.test(value);
+    if (!frameNr || !responseId || !geometry || (!pointerMatch && !pointerIsNone)) return null;
     const clicked = value.match(/\bclicked=(true|false)/)?.[1];
     const focused = value.match(/\bfocused=(true|false)/)?.[1];
     const arrowRightKeyEvent = value.match(/\barrow_right_key_event=(true|false)/)?.[1];
@@ -1192,9 +1208,24 @@ async function readCanvasTextEditFieldDiagnostic(
     const valueBytes = value.match(/\bvalue_bytes=(\d+)/)?.[1];
     const valueSha256 = value.match(/\bvalue_sha256=([a-f0-9]{64})/)?.[1];
     if (!enabled || !clicked || !focused || !arrowRightKeyEvent || empty === undefined || !valueBytes || !valueSha256) return null;
+    const rect = {
+      left: Number(geometry[1]),
+      top: Number(geometry[2]),
+      right: Number(geometry[3]),
+      bottom: Number(geometry[4]),
+    };
+    const pixelsPerPoint = Number(geometry[5]);
+    if (!(pixelsPerPoint > 0 && rect.right > rect.left && rect.bottom > rect.top)) return null;
     observations.push({
       line: index,
       enabled: enabled === "true",
+      frameNr: Number(frameNr),
+      responseId,
+      rect,
+      pixelsPerPoint,
+      pointer: pointerMatch
+        ? {x: Number(pointerMatch[1]), y: Number(pointerMatch[2])}
+        : null,
       clicked: clicked === "true",
       focused: focused === "true",
       arrowRightKeyEvent: arrowRightKeyEvent === "true",
@@ -2493,9 +2524,7 @@ type MacOSVisionTextCandidate = {
   boundingBox: {x: number; y: number; width: number; height: number};
 };
 
-async function readMacOSVisionTextCandidates(imagePath: string): Promise<MacOSVisionTextCandidate[]> {
-  const swiftPath = join(workDirectory, "openobsidian-canvas-field-vision-ocr.swift");
-  await writeFile(swiftPath, `import Foundation
+const MACOS_VISION_OCR_SOURCE = `import Foundation
 import Vision
 
 guard CommandLine.arguments.count == 2 else {
@@ -2524,13 +2553,244 @@ let candidates = (request.results ?? []).compactMap { observation -> [String: An
 }
 let data = try JSONSerialization.data(withJSONObject: candidates, options: [.sortedKeys])
 print(String(decoding: data, as: UTF8.self))
-`);
-  const output = execFileSync("swift", [swiftPath, imagePath], {
+`;
+const MACOS_VISION_OCR_COMPILE_TIMEOUT_MS = 120_000;
+const MACOS_VISION_OCR_EXECUTION_TIMEOUT_MS = 30_000;
+const MACOS_VISION_OCR_DIAGNOSTIC_TEXT_LIMIT = 1_200;
+const MACOS_VISION_OCR_MAX_BUFFER_BYTES = 2 * 1024 * 1024;
+const MACOS_VISION_OCR_MAX_RECORDED_STAGES = 512;
+let macOSVisionOcrExecutablePromise: Promise<string> | undefined;
+const macOSVisionOcrReport: {
+  helper: Record<string, unknown>;
+  stage_diagnostics: Array<Record<string, unknown>>;
+  omitted_stage_diagnostics: number;
+} = {
+  helper: {
+    status: "not-started",
+    compile_timeout_ms: MACOS_VISION_OCR_COMPILE_TIMEOUT_MS,
+    invocation_timeout_ms: MACOS_VISION_OCR_EXECUTION_TIMEOUT_MS,
+    cache_hits: 0,
+    cached_promise_reuses: 0,
+  },
+  stage_diagnostics: [],
+  omitted_stage_diagnostics: 0,
+};
+
+function publishMacOSVisionOcrReport(): void {
+  report.macos_vision_ocr = macOSVisionOcrReport;
+}
+
+function recordMacOSVisionOcrStage(diagnostic: Record<string, unknown>): void {
+  if (macOSVisionOcrReport.stage_diagnostics.length < MACOS_VISION_OCR_MAX_RECORDED_STAGES) {
+    macOSVisionOcrReport.stage_diagnostics.push(diagnostic);
+  } else {
+    macOSVisionOcrReport.omitted_stage_diagnostics += 1;
+  }
+  publishMacOSVisionOcrReport();
+}
+
+function macOSVisionOcrBoundedText(value: unknown): string {
+  if (value === undefined || value === null) return "";
+  const text = Buffer.isBuffer(value) ? value.toString("utf8") : String(value);
+  return text.length > MACOS_VISION_OCR_DIAGNOSTIC_TEXT_LIMIT
+    ? `${text.slice(0, MACOS_VISION_OCR_DIAGNOSTIC_TEXT_LIMIT)}…[truncated ${text.length - MACOS_VISION_OCR_DIAGNOSTIC_TEXT_LIMIT} chars]`
+    : text;
+}
+
+function macOSVisionOcrStageError(
+  stage: string,
+  startedAt: number,
+  timeoutMs: number | null,
+  error: unknown,
+  extra: Record<string, unknown> = {},
+): Error {
+  const failure = error as NodeJS.ErrnoException & {
+    stderr?: Buffer | string;
+    stdout?: Buffer | string;
+    status?: number | null;
+    signal?: NodeJS.Signals | null;
+  };
+  const details = {
+    ...extra,
+    stage,
+    outcome: "failed",
+    elapsed_ms: Math.max(0, Date.now() - startedAt),
+    timeout_ms: timeoutMs,
+    error: macOSVisionOcrBoundedText(error instanceof Error ? error.message : error),
+    code: failure.code ?? null,
+    status: failure.status ?? null,
+    signal: failure.signal ?? null,
+    stdout: macOSVisionOcrBoundedText(extra.stdout ?? failure.stdout),
+    stderr: macOSVisionOcrBoundedText(extra.stderr ?? failure.stderr),
+  };
+  recordMacOSVisionOcrStage(details);
+  return new Error(`macOS Vision OCR failed: ${JSON.stringify(details)}`);
+}
+
+function runMacOSVisionOcrCommand(
+  stage: string,
+  executable: string,
+  args: string[],
+  timeoutMs: number,
+  extra: Record<string, unknown> = {},
+): string {
+  const startedAt = Date.now();
+  const result = spawnSync(executable, args, {
     encoding: "utf8",
-    stdio: ["ignore", "pipe", "ignore"],
-    timeout: 30_000,
-  }).trim();
-  const candidates = JSON.parse(output) as MacOSVisionTextCandidate[];
+    stdio: ["ignore", "pipe", "pipe"],
+    timeout: timeoutMs,
+    killSignal: "SIGKILL",
+    maxBuffer: MACOS_VISION_OCR_MAX_BUFFER_BYTES,
+  });
+  const failure = result.error as (NodeJS.ErrnoException & {code?: string}) | undefined;
+  const succeeded = !failure && result.status === 0 && result.signal === null;
+  const output = typeof result.stdout === "string" ? result.stdout : result.stdout?.toString("utf8") ?? "";
+  const diagnostic: Record<string, unknown> = {
+    ...extra,
+    stage,
+    outcome: succeeded ? "succeeded" : "failed",
+    elapsed_ms: Math.max(0, Date.now() - startedAt),
+    timeout_ms: timeoutMs,
+    error: failure ? macOSVisionOcrBoundedText(failure.message) : null,
+    code: failure?.code ?? null,
+    status: result.status,
+    signal: result.signal,
+    stdout: macOSVisionOcrBoundedText(result.stdout),
+    stderr: macOSVisionOcrBoundedText(result.stderr),
+    executable,
+  };
+  recordMacOSVisionOcrStage(diagnostic);
+  if (!succeeded) throw new Error(`macOS Vision OCR failed: ${JSON.stringify(diagnostic)}`);
+  return output;
+}
+
+function macOSVisionOcrExecutable(): Promise<string> {
+  if (macOSVisionOcrExecutablePromise) {
+    const helperStatus = String(macOSVisionOcrReport.helper.status ?? "unknown");
+    const reuseCounter = helperStatus === "compiled" ? "cache_hits" : "cached_promise_reuses";
+    macOSVisionOcrReport.helper[reuseCounter] = Number(macOSVisionOcrReport.helper[reuseCounter] ?? 0) + 1;
+    const cacheOutcome = helperStatus === "compiled" ? "succeeded" : helperStatus === "failed" ? "failed" : "pending";
+    recordMacOSVisionOcrStage({
+      stage: "helper-cache-reuse",
+      outcome: cacheOutcome,
+      elapsed_ms: 0,
+      timeout_ms: null,
+      error: helperStatus === "failed" ? "The cached helper compilation did not succeed" : null,
+      code: null,
+      status: helperStatus === "compiled" ? 0 : null,
+      signal: null,
+      stdout: "",
+      stderr: "",
+      cache_status: helperStatus,
+    });
+    return macOSVisionOcrExecutablePromise;
+  }
+
+  const swiftPath = join(workDirectory, "openobsidian-canvas-field-vision-ocr.swift");
+  const executablePath = join(workDirectory, "openobsidian-canvas-field-vision-ocr");
+  macOSVisionOcrReport.helper = {
+    ...macOSVisionOcrReport.helper,
+    status: "compiling",
+    source_path: swiftPath,
+    executable_path: executablePath,
+  };
+  recordMacOSVisionOcrStage({
+    stage: "helper-cache-miss",
+    outcome: "started",
+    elapsed_ms: 0,
+    timeout_ms: null,
+    error: null,
+    code: null,
+    status: null,
+    signal: null,
+    stdout: "",
+    stderr: "",
+  });
+
+  let compileStartedAt: number | undefined;
+  macOSVisionOcrExecutablePromise = (async () => {
+    try {
+      const writeStartedAt = Date.now();
+      try {
+        await writeFile(swiftPath, MACOS_VISION_OCR_SOURCE);
+      } catch (error) {
+        throw macOSVisionOcrStageError("write-source", writeStartedAt, null, error, {source_path: swiftPath});
+      }
+      recordMacOSVisionOcrStage({
+        stage: "write-source",
+        outcome: "succeeded",
+        elapsed_ms: Math.max(0, Date.now() - writeStartedAt),
+        timeout_ms: null,
+        error: null,
+        code: null,
+        status: 0,
+        signal: null,
+        stdout: "",
+        stderr: "",
+        source_path: swiftPath,
+      });
+      compileStartedAt = Date.now();
+      runMacOSVisionOcrCommand(
+        "compile-helper",
+        "swiftc",
+        [swiftPath, "-framework", "Vision", "-o", executablePath],
+        MACOS_VISION_OCR_COMPILE_TIMEOUT_MS,
+        {source_path: swiftPath, executable_path: executablePath},
+      );
+      macOSVisionOcrReport.helper = {
+        ...macOSVisionOcrReport.helper,
+        status: "compiled",
+        compile_elapsed_ms: Math.max(0, Date.now() - compileStartedAt),
+      };
+      publishMacOSVisionOcrReport();
+      return executablePath;
+    } catch (error) {
+      macOSVisionOcrReport.helper = {
+        ...macOSVisionOcrReport.helper,
+        status: "failed",
+        ...(compileStartedAt === undefined ? {} : {compile_elapsed_ms: Math.max(0, Date.now() - compileStartedAt)}),
+        error: macOSVisionOcrBoundedText(error instanceof Error ? error.message : error),
+      };
+      publishMacOSVisionOcrReport();
+      throw error;
+    }
+  })();
+  return macOSVisionOcrExecutablePromise;
+}
+
+async function readMacOSVisionTextCandidates(imagePath: string): Promise<MacOSVisionTextCandidate[]> {
+  const executablePath = await macOSVisionOcrExecutable();
+  const output = runMacOSVisionOcrCommand(
+    "recognize-image",
+    executablePath,
+    [imagePath],
+    MACOS_VISION_OCR_EXECUTION_TIMEOUT_MS,
+    {image_path: imagePath},
+  ).trim();
+  let candidates: MacOSVisionTextCandidate[];
+  const parseStartedAt = Date.now();
+  try {
+    candidates = JSON.parse(output) as MacOSVisionTextCandidate[];
+  } catch (error) {
+    throw macOSVisionOcrStageError("parse-output", parseStartedAt, null, error, {
+      image_path: imagePath,
+      stdout: output,
+    });
+  }
+  recordMacOSVisionOcrStage({
+    stage: "parse-output",
+    outcome: "succeeded",
+    elapsed_ms: Math.max(0, Date.now() - parseStartedAt),
+    timeout_ms: null,
+    error: null,
+    code: null,
+    status: 0,
+    signal: null,
+    stdout: `parsed ${Array.isArray(candidates) ? candidates.length : "non-array"} candidates`,
+    stderr: "",
+    image_path: imagePath,
+  });
+  const validateStartedAt = Date.now();
   if (!Array.isArray(candidates) || candidates.some((candidate) =>
     typeof candidate.text !== "string"
     || !Number.isFinite(candidate.confidence)
@@ -2538,8 +2798,35 @@ print(String(decoding: data, as: UTF8.self))
     || candidate.confidence > 1
     || ![candidate.boundingBox?.x, candidate.boundingBox?.y, candidate.boundingBox?.width, candidate.boundingBox?.height].every(Number.isFinite)
   )) {
+    recordMacOSVisionOcrStage({
+      stage: "validate-candidates",
+      outcome: "failed",
+      elapsed_ms: Math.max(0, Date.now() - validateStartedAt),
+      timeout_ms: null,
+      error: "macOS Vision OCR returned an invalid text-candidate payload",
+      code: null,
+      status: null,
+      signal: null,
+      stdout: macOSVisionOcrBoundedText(output),
+      stderr: "",
+      image_path: imagePath,
+    });
     throw new Error("macOS Vision OCR returned an invalid text-candidate payload");
   }
+  recordMacOSVisionOcrStage({
+    stage: "validate-candidates",
+    outcome: "succeeded",
+    elapsed_ms: Math.max(0, Date.now() - validateStartedAt),
+    timeout_ms: null,
+    error: null,
+    code: null,
+    status: 0,
+    signal: null,
+    stdout: `validated ${candidates.length} text candidates`,
+    stderr: "",
+    image_path: imagePath,
+    candidate_count: candidates.length,
+  });
   return candidates;
 }
 
@@ -15896,6 +16183,19 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
     : controlName === "Canvas edit text-card ID"
       ? "id"
       : null;
+  const siblingDiagnosticField = diagnosticField === "path"
+    ? "id"
+    : diagnosticField === "id"
+      ? "path"
+      : null;
+  const readCanvasFieldPair = async (afterLine: number) => {
+    if (!diagnosticField || !siblingDiagnosticField) return null;
+    const [target, sibling] = await Promise.all([
+      readCanvasTextEditFieldDiagnostic(logPath, diagnosticField, afterLine),
+      readCanvasTextEditFieldDiagnostic(logPath, siblingDiagnosticField, afterLine),
+    ]);
+    return target && sibling ? {target, sibling} : null;
+  };
   for (let attempt = 1; attempt <= maximumAttempts; attempt += 1) {
     await waitForOpenObsidianRefreshIdle(0, 0, false, logPath);
     const refreshBeforeCapture = await readOpenObsidianRefreshDiagnostics(logPath);
@@ -15932,38 +16232,148 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
     const clickY = Math.round(layout.fieldCenter.y * windowHeight / screenshotSize.height);
     const expectedValueSha256 = createHash("sha256").update(value, "utf8").digest("hex");
     const expectedValueBytes = Buffer.byteLength(value, "utf8");
-    const diagnosticBeforeClick = diagnosticField
-      ? await readCanvasTextEditFieldDiagnostic(logPath, diagnosticField)
-      : null;
+    const beforeClickFieldPair = diagnosticField ? await readCanvasFieldPair(-1) : null;
+    const diagnosticBeforeClick = beforeClickFieldPair?.target ?? null;
+    const siblingBeforeClick = beforeClickFieldPair?.sibling ?? null;
+    const geometryBaselineLine = Math.max(diagnosticBeforeClick?.line ?? -1, siblingBeforeClick?.line ?? -1);
     let preEntryTargetWidget: Awaited<ReturnType<typeof readCanvasTextEditFieldDiagnostic>> = null;
+    let preEntrySiblingWidget: Awaited<ReturnType<typeof readCanvasTextEditFieldDiagnostic>> = null;
+    let targetAndSiblingGeometryBeforeClick: {target: NonNullable<Awaited<ReturnType<typeof readCanvasTextEditFieldDiagnostic>>>; sibling: NonNullable<Awaited<ReturnType<typeof readCanvasTextEditFieldDiagnostic>>>} | null = null;
+    let targetAndSiblingWidgetReadback: {target: NonNullable<Awaited<ReturnType<typeof readCanvasTextEditFieldDiagnostic>>>; sibling: NonNullable<Awaited<ReturnType<typeof readCanvasTextEditFieldDiagnostic>>>} | null = null;
+    let clickGeometryValidation: Record<string, unknown> | null = null;
     let refreshStableBeforeEntry: boolean | null = null;
     let targetVisualReadback: Awaited<ReturnType<typeof readCanvasInputScreenshotValue>> | null = null;
     let targetReadbackScreenshot: Awaited<ReturnType<typeof captureOpenObsidianScreenshot>> | null = null;
     let targetVisualReadbackError = "";
     try {
       xdotool("windowfocus", "--sync", windowId);
+      // Move through a neutral app corner first so the target move creates a fresh
+      // egui pointer event even when a retry reuses the prior click coordinates.
+      xdotool("mousemove", "--sync", "--window", windowId, "5", "5");
       xdotool("mousemove", "--sync", "--window", windowId, String(clickX), String(clickY));
+      if (diagnosticField) {
+        let freshGeometry: Awaited<ReturnType<typeof readCanvasFieldPair>> = null;
+        try {
+          freshGeometry = await waitFor(
+            `fresh Canvas path and sibling-ID geometry after pointer positioning for attempt ${attempt}`,
+            () => readCanvasFieldPair(geometryBaselineLine),
+            (pair) => pair !== null
+              && pair.target.line > geometryBaselineLine
+              && pair.sibling.line > geometryBaselineLine
+              && pair.target.frameNr === pair.sibling.frameNr
+              && Math.abs(pair.target.line - pair.sibling.line) <= 8
+              && pair.target.pointer !== null
+              && pair.sibling.pointer !== null
+              && Math.abs(pair.target.pointer.x - pair.sibling.pointer.x) <= 0.5
+              && Math.abs(pair.target.pointer.y - pair.sibling.pointer.y) <= 0.5,
+            5_000,
+          );
+        } catch (error) {
+          lastFailure = `fresh app-reported Canvas field geometry was not available before attempt ${attempt}: ${error instanceof Error ? error.message : String(error)}`;
+          continue;
+        }
+        if (!freshGeometry) {
+          lastFailure = `fresh app-reported Canvas field geometry was unavailable before attempt ${attempt}`;
+          continue;
+        }
+        targetAndSiblingGeometryBeforeClick = freshGeometry;
+        const targetGeometry = freshGeometry.target;
+        const siblingGeometry = freshGeometry.sibling;
+        const targetPointer = targetGeometry.pointer;
+        const siblingPointer = siblingGeometry.pointer;
+        if (!targetPointer || !siblingPointer) {
+          lastFailure = `Canvas field pointer geometry was missing before attempt ${attempt}: target=${JSON.stringify(targetGeometry)}; sibling=${JSON.stringify(siblingGeometry)}`;
+          continue;
+        }
+        const pixelsPerPoint = targetGeometry.pixelsPerPoint;
+        const pointerMatchesClick = Math.abs(targetPointer.x * pixelsPerPoint - clickX) <= 1.5
+          && Math.abs(targetPointer.y * pixelsPerPoint - clickY) <= 1.5
+          && Math.abs(siblingPointer.x * siblingGeometry.pixelsPerPoint - clickX) <= 1.5
+          && Math.abs(siblingPointer.y * siblingGeometry.pixelsPerPoint - clickY) <= 1.5;
+        const clickInsideTarget = clickX >= targetGeometry.rect.left * pixelsPerPoint
+          && clickX <= targetGeometry.rect.right * pixelsPerPoint
+          && clickY >= targetGeometry.rect.top * pixelsPerPoint
+          && clickY <= targetGeometry.rect.bottom * pixelsPerPoint;
+        const clickInsideSibling = clickX >= siblingGeometry.rect.left * siblingGeometry.pixelsPerPoint
+          && clickX <= siblingGeometry.rect.right * siblingGeometry.pixelsPerPoint
+          && clickY >= siblingGeometry.rect.top * siblingGeometry.pixelsPerPoint
+          && clickY <= siblingGeometry.rect.bottom * siblingGeometry.pixelsPerPoint;
+        const responseIdsAreDistinct = targetGeometry.responseId !== siblingGeometry.responseId;
+        const responseIdsAreStable = (!diagnosticBeforeClick || targetGeometry.responseId === diagnosticBeforeClick.responseId)
+          && (!siblingBeforeClick || siblingGeometry.responseId === siblingBeforeClick.responseId);
+        const scaleIsConsistent = Math.abs(targetGeometry.pixelsPerPoint - siblingGeometry.pixelsPerPoint) <= 0.01;
+        clickGeometryValidation = {
+          screenshot: relative(reportDirectory, before.windowPngPath),
+          click_x: clickX,
+          click_y: clickY,
+          pointer_matches_click: pointerMatchesClick,
+          click_inside_target_rect: clickInsideTarget,
+          click_inside_sibling_rect: clickInsideSibling,
+          response_ids_distinct: responseIdsAreDistinct,
+          response_ids_stable: responseIdsAreStable,
+          scale_consistent: scaleIsConsistent,
+          pixels_per_point: pixelsPerPoint,
+          target_observation_line: targetGeometry.line,
+          sibling_observation_line: siblingGeometry.line,
+        };
+        if (!targetGeometry.enabled
+          || !siblingGeometry.enabled
+          || !responseIdsAreDistinct
+          || !responseIdsAreStable
+          || !scaleIsConsistent
+          || !pointerMatchesClick
+          || !clickInsideTarget
+          || clickInsideSibling) {
+          lastFailure = `stale or ambiguous Canvas click geometry rejected before dispatch on attempt ${attempt}: click=(${clickX},${clickY}); pointer_matches=${pointerMatchesClick}; inside_target=${clickInsideTarget}; inside_sibling=${clickInsideSibling}; distinct_ids=${responseIdsAreDistinct}; stable_ids=${responseIdsAreStable}; scale_consistent=${scaleIsConsistent}; target=${JSON.stringify(targetGeometry)}; sibling=${JSON.stringify(siblingGeometry)}; screenshot=${relative(reportDirectory, before.windowPngPath)}`;
+          continue;
+        }
+        const refreshBeforeDispatch = await readOpenObsidianRefreshDiagnostics(logPath);
+        const refreshChangedBeforeDispatch = openObsidianRefreshActivityChanged(refreshBeforeClick, refreshBeforeDispatch)
+          || (refreshBeforeDispatch.receiverStates.at(-1)?.busy ?? false);
+        if (refreshChangedBeforeDispatch) {
+          lastFailure = `vault refresh changed the Canvas layout after geometry capture and before click dispatch on attempt ${attempt}: target=${JSON.stringify(targetGeometry)}; sibling=${JSON.stringify(siblingGeometry)}`;
+          continue;
+        }
+      }
+
       xdotool("click", "--clearmodifiers", "1");
       if (diagnosticField) {
         xdotool("key", "--clearmodifiers", "Right");
         await delay(100);
-        preEntryTargetWidget = await readCanvasTextEditFieldDiagnostic(
-          logPath,
-          diagnosticField,
-          diagnosticBeforeClick?.line ?? -1,
+        const focusAndSiblingAfterClick = await waitFor(
+          `fresh Canvas target and sibling focus diagnostics after attempt ${attempt} click`,
+          () => readCanvasFieldPair(geometryBaselineLine),
+          (pair) => pair !== null
+            && pair.target.line > geometryBaselineLine
+            && pair.sibling.line > geometryBaselineLine
+            && pair.target.frameNr === pair.sibling.frameNr
+            && Math.abs(pair.target.line - pair.sibling.line) <= 8,
+          5_000,
         );
+        preEntryTargetWidget = focusAndSiblingAfterClick?.target ?? null;
+        preEntrySiblingWidget = focusAndSiblingAfterClick?.sibling ?? null;
         const refreshImmediatelyBeforeEntry = await readOpenObsidianRefreshDiagnostics(logPath);
         const refreshChanged = openObsidianRefreshActivityChanged(refreshBeforeClick, refreshImmediatelyBeforeEntry)
           || (refreshImmediatelyBeforeEntry.receiverStates.at(-1)?.busy ?? false);
         refreshStableBeforeEntry = !refreshChanged;
         if (!preEntryTargetWidget
-          || preEntryTargetWidget.line <= (diagnosticBeforeClick?.line ?? -1)
+          || !preEntrySiblingWidget
+          || preEntryTargetWidget.line <= geometryBaselineLine
+          || preEntrySiblingWidget.line <= geometryBaselineLine
           || preEntryTargetWidget.clickEventLine === null
           || preEntryTargetWidget.arrowRightEventLine === null
           || !preEntryTargetWidget.enabled
           || !preEntryTargetWidget.focused
+          || preEntrySiblingWidget.clicked
+          || preEntrySiblingWidget.focused
+          || preEntrySiblingWidget.arrowRightKeyEvent
+          || !preEntrySiblingWidget.enabled
+          || preEntryTargetWidget.responseId === preEntrySiblingWidget.responseId
+          || !targetAndSiblingGeometryBeforeClick
+          || preEntrySiblingWidget.valueBytes !== targetAndSiblingGeometryBeforeClick.sibling.valueBytes
+          || preEntrySiblingWidget.valueSha256 !== targetAndSiblingGeometryBeforeClick.sibling.valueSha256
           || refreshChanged) {
-          lastFailure = `pre-entry target field focus was not confirmed: diagnostic=${JSON.stringify(preEntryTargetWidget)}; refresh_changed=${refreshChanged}; click=(${clickX},${clickY})`;
+          lastFailure = `pre-entry Canvas target ownership was not confirmed: target=${JSON.stringify(preEntryTargetWidget)}; sibling=${JSON.stringify(preEntrySiblingWidget)}; sibling_unchanged=${Boolean(preEntrySiblingWidget && targetAndSiblingGeometryBeforeClick && preEntrySiblingWidget.valueBytes === targetAndSiblingGeometryBeforeClick.sibling.valueBytes && preEntrySiblingWidget.valueSha256 === targetAndSiblingGeometryBeforeClick.sibling.valueSha256)}; refresh_changed=${refreshChanged}; click=(${clickX},${clickY})`;
           continue;
         }
         const fieldAlreadyContainsExpectedValue = preEntryTargetWidget.valueSha256 === expectedValueSha256
@@ -15973,29 +16383,65 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
           throw new Error(`Refusing to type into a nonempty Canvas field whose value does not match the requested synthetic value: field=${diagnosticField}; diagnostic=${JSON.stringify(preEntryTargetWidget)}`);
         }
         let fieldStateReadback: NonNullable<Awaited<ReturnType<typeof readCanvasTextEditFieldDiagnostic>>> = preEntryTargetWidget;
+        let siblingFieldStateReadback = preEntrySiblingWidget;
+        targetAndSiblingWidgetReadback = {target: preEntryTargetWidget, sibling: preEntrySiblingWidget};
         if (!fieldAlreadyContainsExpectedValue) {
-          execFileSync("xdotool", ["type", "--clearmodifiers", "--delay", "25", value], {stdio: "ignore"});
-          try {
-            const confirmedFieldState = await waitFor(
-              `the focused Canvas ${diagnosticField} field to contain the exact requested value`,
-              () => readCanvasTextEditFieldDiagnostic(logPath, diagnosticField, preEntryTargetWidget?.line ?? -1),
-              (diagnostic) => diagnostic !== null
-                && diagnostic.line > (preEntryTargetWidget?.line ?? -1)
-                && diagnostic.enabled
-                && diagnostic.focused
-                && diagnostic.valueSha256 === expectedValueSha256
-                && diagnostic.valueBytes === expectedValueBytes
-                && diagnostic.empty === false,
+          const characters = Array.from(value);
+          if (characters.length === 0) {
+            throw new Error(`Refusing to type an empty requested value into Canvas field ${diagnosticField}`);
+          }
+          const firstCharacter = characters[0];
+          if (firstCharacter === undefined) throw new Error(`Missing first Canvas input character for ${diagnosticField}`);
+          let expectedPrefix = "";
+          const inputChunks = characters.map((text, index) => {
+            expectedPrefix += text;
+            return {
+              text,
+              expectedPrefix,
+              stage: index === 0 ? "first character" : `character ${index + 1}/${characters.length}`,
+            };
+          });
+          let lastObservedLine = Math.max(preEntryTargetWidget.line, preEntrySiblingWidget.line);
+          for (let chunkIndex = 0; chunkIndex < inputChunks.length; chunkIndex += 1) {
+            const chunk = inputChunks[chunkIndex];
+            if (!chunk) throw new Error(`Missing Canvas input chunk at index ${chunkIndex}`);
+            execFileSync("xdotool", ["type", "--clearmodifiers", "--delay", "25", chunk.text], {stdio: "ignore"});
+            const fieldPairAfterCharacter = await waitFor(
+              `fresh Canvas target and sibling value diagnostics after ${chunk.stage}`,
+              () => readCanvasFieldPair(lastObservedLine),
+              (pair) => pair !== null
+                && pair.target.line > lastObservedLine
+                && pair.sibling.line > lastObservedLine
+                && pair.target.frameNr === pair.sibling.frameNr
+                && Math.abs(pair.target.line - pair.sibling.line) <= 8,
               10_000,
             );
-            if (!confirmedFieldState) {
-              lastFailure = `exact field-state readback returned no diagnostic after Canvas typing without Ctrl selection/paste chords: field=${diagnosticField}; before=${JSON.stringify(preEntryTargetWidget)}`;
-              continue;
+            if (!fieldPairAfterCharacter) {
+              throw new Error(`Canvas field diagnostics did not advance after ${chunk.stage}: target_before=${JSON.stringify(fieldStateReadback)}; sibling_before=${JSON.stringify(siblingFieldStateReadback)}`);
             }
-            fieldStateReadback = confirmedFieldState;
-          } catch (error) {
-            lastFailure = `exact field-state readback did not match after Canvas typing without Ctrl selection/paste chords: ${error instanceof Error ? error.message : String(error)}; field=${diagnosticField}; before=${JSON.stringify(preEntryTargetWidget)}`;
-            continue;
+            const expectedPrefixSha256 = createHash("sha256").update(chunk.expectedPrefix, "utf8").digest("hex");
+            const expectedPrefixBytes = Buffer.byteLength(chunk.expectedPrefix, "utf8");
+            const siblingUnchanged = fieldPairAfterCharacter.sibling.valueBytes === preEntrySiblingWidget.valueBytes
+              && fieldPairAfterCharacter.sibling.valueSha256 === preEntrySiblingWidget.valueSha256;
+            if (!siblingUnchanged) {
+              throw new Error(`Canvas sibling field changed after typing the ${chunk.stage}; stopping immediately without retry: target=${JSON.stringify(fieldPairAfterCharacter.target)}; sibling_before=${JSON.stringify(preEntrySiblingWidget)}; sibling_after=${JSON.stringify(fieldPairAfterCharacter.sibling)}`);
+            }
+            if (!fieldPairAfterCharacter.target.enabled
+              || !fieldPairAfterCharacter.target.focused
+              || fieldPairAfterCharacter.sibling.focused
+              || fieldPairAfterCharacter.sibling.arrowRightKeyEvent
+              || fieldPairAfterCharacter.target.valueSha256 !== expectedPrefixSha256
+              || fieldPairAfterCharacter.target.valueBytes !== expectedPrefixBytes
+              || fieldPairAfterCharacter.target.empty !== false) {
+              throw new Error(`Canvas target field did not receive the exact value after the ${chunk.stage}: expected_prefix_bytes=${expectedPrefixBytes}; expected_prefix_sha256=${expectedPrefixSha256}; target=${JSON.stringify(fieldPairAfterCharacter.target)}; sibling=${JSON.stringify(fieldPairAfterCharacter.sibling)}`);
+            }
+            targetAndSiblingWidgetReadback = fieldPairAfterCharacter;
+            fieldStateReadback = fieldPairAfterCharacter.target;
+            siblingFieldStateReadback = fieldPairAfterCharacter.sibling;
+            lastObservedLine = Math.max(fieldPairAfterCharacter.target.line, fieldPairAfterCharacter.sibling.line);
+          }
+          if (fieldStateReadback.valueSha256 !== expectedValueSha256 || fieldStateReadback.valueBytes !== expectedValueBytes) {
+            throw new Error(`Canvas target field did not reach the exact requested value: expected_bytes=${expectedValueBytes}; expected_sha256=${expectedValueSha256}; actual=${JSON.stringify(fieldStateReadback)}`);
           }
         }
         const refreshAfterEntry = await readOpenObsidianRefreshDiagnostics(logPath);
@@ -16057,7 +16503,7 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
             name: controlName,
             action: fieldAlreadyContainsExpectedValue
               ? "confirmed the freshly focused exact field value without typing"
-              : "confirmed a freshly focused empty field, typed without Ctrl selection/paste chords or clipboard operations, then checked field-state SHA-256 and a fresh target-anchored screenshot crop",
+              : "matched the screenshot click to fresh app-reported target/sibling geometry, confirmed target focus, checked the first character and full value hashes while the sibling stayed unchanged, then verified a fresh target-anchored screenshot crop without Ctrl selection/paste chords or clipboard operations",
             exact_readback: true,
             clipboard_exact: null,
             field_state_sha256_exact: true,
@@ -16077,8 +16523,17 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
               : "xdotool type --clearmodifiers; no Ctrl selection/paste chords or clipboard operation",
             clipboard_used: false,
             target_widget_field: diagnosticField,
+            target_and_sibling_geometry_before_click: targetAndSiblingGeometryBeforeClick,
+            click_geometry_validation: clickGeometryValidation,
             target_widget_pre_entry: preEntryTargetWidget,
+            sibling_widget_pre_entry: preEntrySiblingWidget,
             target_widget_readback: fieldStateReadback,
+            sibling_widget_readback: siblingFieldStateReadback,
+            target_and_sibling_widget_readback: targetAndSiblingWidgetReadback,
+            sibling_value_unchanged: Boolean(preEntrySiblingWidget
+              && siblingFieldStateReadback
+              && preEntrySiblingWidget.valueBytes === siblingFieldStateReadback.valueBytes
+              && preEntrySiblingWidget.valueSha256 === siblingFieldStateReadback.valueSha256),
             refresh_stable_before_entry: refreshStableBeforeEntry,
             refresh_stable_after_entry_and_readback: true,
             visual_readback: {
