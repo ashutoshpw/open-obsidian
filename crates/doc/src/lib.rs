@@ -15,7 +15,10 @@ pub use bases::{
     BaseView, BaseViewType, EmbeddedBaseDefinition, EvaluatedBaseRow, encode_base, evaluate_base,
     evaluate_base_by_view_index, parse_base, parse_embedded_bases,
 };
-pub use canvas::{CanvasDocument, CanvasError, encode_canvas, parse_canvas};
+pub use canvas::{
+    CanvasDocument, CanvasEdgeProjection, CanvasError, CanvasField, CanvasNodeContent,
+    CanvasNodeProjection, encode_canvas, parse_canvas,
+};
 pub use configuration::{
     AppSettings, AppearanceMode, AppearanceSettings, DailyNoteSettings, TemplateSettings,
     parse_app_settings, parse_appearance_settings, parse_daily_note_settings,

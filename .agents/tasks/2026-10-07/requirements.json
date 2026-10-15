@@ -10289,12 +10289,12 @@
       "source": {
         "path": ".agents/tasks/2026-10-07/goal.md",
         "heading": "Mandatory execution workflow: GitHub CI only",
-        "clause": "Treat each origin/main push as one costly submission to the multi-hour required CI suite. Define a coherent, measurable named milestone with acceptance criteria, required workflows/platforms, and expected evidence before implementation. Size it as a bounded batch that justifies a full CI run without combining unrelated work. Keep minor edits, isolated fixes, documentation changes, and focused commits local until they belong to that milestone. After the complete implementation and review are ready, push exactly once and record implementation-complete / CI-pending; keep origin/main pinned at that exact SHA until every required workflow/job is terminal. Mark achieved / CI-passed only when all required exact-SHA jobs pass and evidence is reconciled. Group related repairs into a named milestone and use safe parallel checks within the batch."
+        "clause": "Treat each origin/main push as one costly submission to the multi-hour required CI suite. Define a coherent, measurable named milestone with acceptance criteria, required workflows/platforms, and expected evidence before implementation. Size it as a bounded batch that justifies a full CI run without combining unrelated work. Keep minor edits, isolated fixes, documentation changes, and focused commits local until they belong to that milestone. After the complete implementation and review are ready, push exactly once and record implementation-complete / CI-pending; allow at most one milestone CI batch in flight and keep origin/main pinned at its exact SHA until every required workflow/job is terminal, even when the batch takes several hours. Mark achieved / CI-passed only when all required exact-SHA jobs pass and evidence is reconciled. Group related repairs into a named milestone and use safe parallel checks within the batch."
       },
       "checkpoint": "R0",
       "owner": "xtask",
       "mandatory": true,
-      "acceptance_criteria": "Minor work and focused commits accumulate locally without individual CI pushes. Push origin/main once per complete, coherent named milestone or repair after its deliverable and review are complete; do not create a small milestone merely to obtain CI or combine unrelated work. Keep the remote at the submitted exact SHA until all required workflows/jobs are terminal. Record implementation-complete / CI-pending at submission and achieved / CI-passed only after every required exact-SHA workflow/job passes and its evidence is reconciled. Use safe parallel CI execution to make efficient use of the multi-hour runner batch.",
+      "acceptance_criteria": "Minor work and focused commits accumulate locally without individual CI pushes. Push origin/main once per complete, coherent named milestone or repair after its deliverable and review are complete; do not create a small milestone merely to obtain CI or combine unrelated work. Allow at most one milestone CI batch in flight, and keep the remote at the submitted exact SHA until all required workflows/jobs are terminal. Record implementation-complete / CI-pending at submission and achieved / CI-passed only after every required exact-SHA workflow/job passes and its evidence is reconciled. Use safe parallel CI execution to make efficient use of the multi-hour runner batch.",
       "fixture_ids": [
         "fixture:mig-002"
       ],
@@ -10353,6 +10353,16 @@
           "kind": "rust-migration-goal",
           "version": "2026-10-14-multi-hour-milestone-submission-boundary",
           "sha256": "7aa9d5132ebacfbe03e84da8f8c3c414ee28dbd790516bdeba3ddb670d7f710e"
+        },
+        {
+          "kind": "rust-migration-goal",
+          "version": "2026-10-15-one-active-milestone-ci-batch",
+          "sha256": "6057e4c93f70f85d90a4a41debe85ef5fde5d34306ff2e47a057515f48f034af"
+        },
+        {
+          "kind": "rust-migration-goal",
+          "version": "2026-10-15-no-per-change-ci-pushes",
+          "sha256": "14266f25ce94228a9b54e677809242971d99b89c3066ec3f8b310e877ac9ff85"
         }
       ],
       "applicable_platforms": [
@@ -10373,7 +10383,7 @@
       "rust_owner": "xtask",
       "mapping_status": "reviewed",
       "migration_disposition": "retained",
-      "migration_acceptance": "Minor work and focused commits accumulate locally without individual CI pushes. Push origin/main once per complete, coherent named milestone or repair after its deliverable and review are complete; do not create a small milestone merely to obtain CI or combine unrelated work. Keep the remote at the submitted exact SHA until all required workflows/jobs are terminal. Record implementation-complete / CI-pending at submission and achieved / CI-passed only after every required exact-SHA workflow/job passes and its evidence is reconciled. Use safe parallel CI execution to make efficient use of the multi-hour runner batch.",
+      "migration_acceptance": "Minor work and focused commits accumulate locally without individual CI pushes. Push origin/main once per complete, coherent named milestone or repair after its deliverable and review are complete; do not create a small milestone merely to obtain CI or combine unrelated work. Allow at most one milestone CI batch in flight, and keep the remote at the submitted exact SHA until all required workflows/jobs are terminal. Record implementation-complete / CI-pending at submission and achieved / CI-passed only after every required exact-SHA workflow/job passes and its evidence is reconciled. Use safe parallel CI execution to make efficient use of the multi-hour runner batch.",
       "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence."
     },
     {
@@ -11065,9 +11075,52 @@
       "migration_disposition": "retained",
       "migration_acceptance": "Update affected documentation as each phase lands and run the final documentation consistency audit in GitHub CI before cutover.",
       "runtime_override": "Documentation upkeep is a continuing migration requirement; this row captures the final audited completion gate."
+    },
+    {
+      "id": "C06.2",
+      "parent_id": "C06",
+      "source": {
+        "path": "https://jsoncanvas.org/spec/1.0/",
+        "heading": "JSON Canvas Spec 1.0",
+        "clause": "Defines standard node and edge fields and permits the top-level nodes and edges arrays to be omitted. Preservation of unknown fields follows parent project requirement C06, not an additional claim from this specification."
+      },
+      "checkpoint": "R2 Canvas document layer",
+      "owner": "vault-filesystem",
+      "mandatory": true,
+      "acceptance_criteria": "Expose borrowed typed projections for text, file, link, and group nodes and edges, including required identifiers, integer geometry, endpoints, and optional standard fields. Distinguish absent top-level arrays from present-empty arrays, and distinguish missing, well-typed, and malformed fields. Accept omitted nodes/edges arrays as JSON Canvas 1.0 permits. Unknown node types and unknown fields remain available in the authoritative JSON without normalization or loss.",
+      "fixture_ids": [
+        "fixture:c06-canvas"
+      ],
+      "reference_versions": [
+        {
+          "kind": "public-spec",
+          "version": "JSON Canvas 1.0 (2024-03-11)",
+          "url": "https://jsoncanvas.org/spec/1.0/"
+        }
+      ],
+      "applicable_platforms": [
+        "macOS",
+        "Windows",
+        "Linux"
+      ],
+      "status": "pending",
+      "evidence_paths": [],
+      "tested_source_tree": null,
+      "blocker": null,
+      "gate_class": "implementation",
+      "decision_id": "D03",
+      "legacy_status": "not-started",
+      "legacy_evidence_paths": [],
+      "legacy_checkpoint": null,
+      "migration_phase": "R2",
+      "rust_owner": "crates/doc",
+      "mapping_status": "reviewed",
+      "runtime_override": "A typed projection is read-only and never replaces the lossless backing JSON.",
+      "migration_disposition": "new",
+      "migration_acceptance": "Implement milestone C06.2 in crates/doc as a lossless typed read projection for standard Canvas node/edge fields. Accept omitted nodes/edges arrays and preserve their absence; expose unknown and malformed field data explicitly; retain non-standard fields in raw JSON without projecting them as JSON Canvas 1.0 fields. GitHub-CI fixture cases must cover standard node/edge projections, omitted versus present-empty arrays, an unsupported node type, malformed and missing projected fields, and raw unknown-field preservation. This slice does not claim whole-C06 write, UI, or reference-app completion."
     }
   ],
-  "reviewed_at": "2026-10-14T09:27:07Z",
+  "reviewed_at": "2026-10-14T23:46:43+00:00",
   "mapping_review": {
     "status": "complete",
     "reviewed_requirement_count": 212,
@@ -11077,7 +11130,7 @@
     "post_r0_2_additions": [
       "MIG-016: maintain current, accurate documentation throughout migration and audit it at cutover."
     ],
-    "goal_sha256": "1185a710634269472513fec045fc07eeb1d1697c28a06f374740c707ff5935ce",
+    "goal_sha256": "14266f25ce94228a9b54e677809242971d99b89c3066ec3f8b310e877ac9ff85",
     "policy": "Every inherited requirement was reviewed by ID and assigned a Rust owner, migration phase, acceptance criterion and retained/superseded/external disposition. Historical status/evidence remain preserved separately. Rust acceptance remains pending unless current exact-SHA migration evidence is attached; external items remain external_pending."
   }
 }

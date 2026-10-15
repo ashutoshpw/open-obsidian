@@ -1,0 +1,404 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.8.129 C07.3 grouped viewport and stable group-ownership repair",
+  "attempt": 1,
+  "implementation_sha": "0a9cb9c00835881a7629c96721974dfa9461cc50",
+  "previous_origin_main_sha": "dc24dba8a5e27dfa6294b673e9e394d26d6fefa7",
+  "status": "CI-passed",
+  "pushed_at": "2026-10-14T23:25:53Z",
+  "status_observed_at": "2026-10-15T00:08:44Z",
+  "run": {
+    "id": 38654025293,
+    "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38654025293",
+    "head_sha": "0a9cb9c00835881a7629c96721974dfa9461cc50",
+    "status": "completed",
+    "conclusion": "success",
+    "completed_at": "2026-10-15T00:05:53Z"
+  },
+  "summary": {
+    "expected_workflows": 7,
+    "observed_workflows": 7,
+    "completed_workflows": 7,
+    "successful_workflows": 7,
+    "failed_workflows": 0,
+    "in_progress_workflows": 0,
+    "queued_workflows": 0,
+    "expected_jobs": 20,
+    "observed_jobs": 20,
+    "passed_jobs": 20,
+    "failed_jobs": 0,
+    "in_progress_jobs": 0,
+    "queued_jobs": 0,
+    "remote_tip": "0a9cb9c00835881a7629c96721974dfa9461cc50"
+  },
+  "workflows": [
+    {
+      "name": "Obsidian vault round-trip acceptance",
+      "run_id": 38654025293,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38654025293",
+      "head_sha": "0a9cb9c00835881a7629c96721974dfa9461cc50",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-10-14T23:25:53Z",
+      "updated_at": "2026-10-15T00:05:53Z",
+      "jobs": [
+        {
+          "id": 116159387644,
+          "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38654025293/job/116159387644",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-10-14T23:25:56Z",
+          "completed_at": "2026-10-14T23:42:58Z"
+        },
+        {
+          "id": 116159387882,
+          "name": "Obsidian 1.14.4 vault round-trip on macos-latest",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38654025293/job/116159387882",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-10-14T23:26:02Z",
+          "completed_at": "2026-10-15T00:05:53Z"
+        },
+        {
+          "id": 116159388017,
+          "name": "Obsidian 1.14.4 vault round-trip on windows-latest",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38654025293/job/116159388017",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-10-14T23:25:57Z",
+          "completed_at": "2026-10-14T23:42:15Z"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 38654025305,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38654025305",
+      "head_sha": "0a9cb9c00835881a7629c96721974dfa9461cc50",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-10-14T23:25:53Z",
+      "updated_at": "2026-10-14T23:38:19Z",
+      "jobs": [
+        {
+          "id": 116159387469,
+          "name": "minimum supported Rust (1.95)",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38654025305/job/116159387469",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-10-14T23:25:56Z",
+          "completed_at": "2026-10-14T23:38:19Z"
+        },
+        {
+          "id": 116159387701,
+          "name": "rust (ubuntu-latest)",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38654025305/job/116159387701",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-10-14T23:25:56Z",
+          "completed_at": "2026-10-14T23:38:19Z"
+        },
+        {
+          "id": 116159387709,
+          "name": "rust (windows-latest)",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38654025305/job/116159387709",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-10-14T23:25:55Z",
+          "completed_at": "2026-10-14T23:38:19Z"
+        },
+        {
+          "id": 116159387942,
+          "name": "rust (macos-latest)",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38654025305/job/116159387942",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-10-14T23:26:02Z",
+          "completed_at": "2026-10-14T23:38:19Z"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 38654025317,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38654025317",
+      "head_sha": "0a9cb9c00835881a7629c96721974dfa9461cc50",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-10-14T23:25:53Z",
+      "updated_at": "2026-10-14T23:38:19Z",
+      "jobs": [
+        {
+          "id": 116159387639,
+          "name": "ubuntu-latest",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38654025317/job/116159387639",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-10-14T23:25:56Z",
+          "completed_at": "2026-10-14T23:38:19Z"
+        },
+        {
+          "id": 116159388083,
+          "name": "macos-latest",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38654025317/job/116159388083",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-10-14T23:25:54Z",
+          "completed_at": "2026-10-14T23:38:19Z"
+        },
+        {
+          "id": 116159388159,
+          "name": "windows-latest",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38654025317/job/116159388159",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-10-14T23:25:56Z",
+          "completed_at": "2026-10-14T23:38:19Z"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 38654025244,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38654025244",
+      "head_sha": "0a9cb9c00835881a7629c96721974dfa9461cc50",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-10-14T23:25:53Z",
+      "updated_at": "2026-10-14T23:38:19Z",
+      "jobs": [
+        {
+          "id": 116159387537,
+          "name": "windows-latest",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38654025244/job/116159387537",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-10-14T23:25:56Z",
+          "completed_at": "2026-10-14T23:38:19Z"
+        },
+        {
+          "id": 116159387789,
+          "name": "macos-latest",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38654025244/job/116159387789",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-10-14T23:26:01Z",
+          "completed_at": "2026-10-14T23:38:19Z"
+        },
+        {
+          "id": 116159387970,
+          "name": "ubuntu-latest",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38654025244/job/116159387970",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-10-14T23:25:56Z",
+          "completed_at": "2026-10-14T23:38:19Z"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 38654025209,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38654025209",
+      "head_sha": "0a9cb9c00835881a7629c96721974dfa9461cc50",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-10-14T23:25:53Z",
+      "updated_at": "2026-10-14T23:38:19Z",
+      "jobs": [
+        {
+          "id": 116159387673,
+          "name": "macos-latest",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38654025209/job/116159387673",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-10-14T23:26:02Z",
+          "completed_at": "2026-10-14T23:38:19Z"
+        },
+        {
+          "id": 116159388115,
+          "name": "ubuntu-latest",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38654025209/job/116159388115",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-10-14T23:25:56Z",
+          "completed_at": "2026-10-14T23:38:19Z"
+        },
+        {
+          "id": 116159388153,
+          "name": "windows-latest",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38654025209/job/116159388153",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-10-14T23:25:56Z",
+          "completed_at": "2026-10-14T23:38:19Z"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 38654025231,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38654025231",
+      "head_sha": "0a9cb9c00835881a7629c96721974dfa9461cc50",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-10-14T23:25:53Z",
+      "updated_at": "2026-10-14T23:38:19Z",
+      "jobs": [
+        {
+          "id": 116159387733,
+          "name": "macos-latest",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38654025231/job/116159387733",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-10-14T23:26:01Z",
+          "completed_at": "2026-10-14T23:38:19Z"
+        },
+        {
+          "id": 116159387884,
+          "name": "ubuntu-latest",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38654025231/job/116159387884",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-10-14T23:25:56Z",
+          "completed_at": "2026-10-14T23:38:19Z"
+        },
+        {
+          "id": 116159388013,
+          "name": "windows-latest",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38654025231/job/116159388013",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-10-14T23:25:56Z",
+          "completed_at": "2026-10-14T23:38:19Z"
+        }
+      ]
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 38654025208,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38654025208",
+      "head_sha": "0a9cb9c00835881a7629c96721974dfa9461cc50",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-10-14T23:25:53Z",
+      "updated_at": "2026-10-14T23:38:19Z",
+      "jobs": [
+        {
+          "id": 116159387096,
+          "name": "inventory",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38654025208/job/116159387096",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-10-14T23:25:56Z",
+          "completed_at": "2026-10-14T23:38:19Z"
+        }
+      ]
+    }
+  ],
+  "artifacts_pending": false,
+  "note": "All seven required workflows and all 20 jobs completed successfully for the exact implementation SHA; live origin/main was independently confirmed at that SHA. Linux, macOS, and Windows C07.3 reports each pass all 14 reference scenarios on first open and reopen, have no incomplete scenarios, preserve the reference source, and make no Rust parity claim. Artifact digests and report SHA-256 values are recorded above. All three reports have a legacy top-level milestone label (R2.8.76), although their source SHA and workflow run ID match this batch. The macOS report also records C07.2 reference behavior: omitted direction produces a stable parse error, so no default is inferred; Obsidian rewrites Invalid Direction.base from 122 to 62 bytes after shutdown/restore in both sessions. This mutation is reference-app behavior, not Rust evidence.",
+  "artifacts": [
+    {
+      "id": 11936249316,
+      "name": "obsidian-vault-roundtrip-Linux-0a9cb9c00835881a7629c96721974dfa9461cc50",
+      "platform": "Linux",
+      "archive_download_url": "https://api.github.com/repos/ashutoshpw/open-obsidian/actions/artifacts/11936249316/zip",
+      "size_in_bytes": 21024224,
+      "created_at": "2026-10-14T23:42:54Z",
+      "expires_at": "2026-11-13T23:42:49Z",
+      "digest": "sha256:07e2c38be25e28d5be9bce36e348628070e23a721adcc96e6cd3e223eee34237",
+      "report_sha256": "6aadb91f99f97fd228a47f232f2ceaa5152517ba0e9b08ba5bbf7f0863615d5a"
+    },
+    {
+      "id": 11937315272,
+      "name": "obsidian-vault-roundtrip-Windows-0a9cb9c00835881a7629c96721974dfa9461cc50",
+      "platform": "Windows",
+      "archive_download_url": "https://api.github.com/repos/ashutoshpw/open-obsidian/actions/artifacts/11937315272/zip",
+      "size_in_bytes": 21962452,
+      "created_at": "2026-10-14T23:42:10Z",
+      "expires_at": "2026-11-13T23:42:07Z",
+      "digest": "sha256:6240f64c384604d884ecdb7b163a242e19ce8e53a3f8a6deefd7aa8650ad94f3",
+      "report_sha256": "9bf67cd78c7bd32a90436527fa7dabe26756f36d253e987157c416913a54f788"
+    },
+    {
+      "id": 11937338116,
+      "name": "obsidian-vault-roundtrip-macOS-0a9cb9c00835881a7629c96721974dfa9461cc50",
+      "platform": "macOS",
+      "archive_download_url": "https://api.github.com/repos/ashutoshpw/open-obsidian/actions/artifacts/11937338116/zip",
+      "size_in_bytes": 30238011,
+      "digest": "sha256:aa4b48c6d21a307002ea875247ae23fa2ebc9b5dce09220f533e5ce2b3c27bba",
+      "report_sha256": "09ead3740ed2f61ca7f808c1f1f8ad5ec57467b443b7943742905fd6ba76fb8a"
+    }
+  ],
+  "reports": [
+    {
+      "platform": "Linux",
+      "artifact_id": 11936249316,
+      "report_file": "obsidian-vault-roundtrip-report.json",
+      "report_sha256": "6aadb91f99f97fd228a47f232f2ceaa5152517ba0e9b08ba5bbf7f0863615d5a",
+      "status": "passed",
+      "source_sha": "0a9cb9c00835881a7629c96721974dfa9461cc50",
+      "workflow_run_id": 38654025293,
+      "scenario_count": 14,
+      "first_open_scenarios_accepted": 14,
+      "reopen_scenarios_stable": 14,
+      "incomplete_scenarios": [],
+      "capture_status": "captured-reference-only",
+      "rust_parity_claimed": false
+    },
+    {
+      "platform": "Windows",
+      "artifact_id": 11937315272,
+      "report_file": "obsidian-vault-roundtrip-report.json",
+      "report_sha256": "9bf67cd78c7bd32a90436527fa7dabe26756f36d253e987157c416913a54f788",
+      "status": "passed",
+      "source_sha": "0a9cb9c00835881a7629c96721974dfa9461cc50",
+      "workflow_run_id": 38654025293,
+      "scenario_count": 14,
+      "first_open_scenarios_accepted": 14,
+      "reopen_scenarios_stable": 14,
+      "incomplete_scenarios": [],
+      "capture_status": "captured-reference-only",
+      "rust_parity_claimed": false
+    },
+    {
+      "platform": "macOS",
+      "artifact_id": 11937338116,
+      "report_file": "obsidian-vault-roundtrip-report.json",
+      "report_sha256": "09ead3740ed2f61ca7f808c1f1f8ad5ec57467b443b7943742905fd6ba76fb8a",
+      "status": "passed",
+      "source_sha": "0a9cb9c00835881a7629c96721974dfa9461cc50",
+      "workflow_run_id": 38654025293,
+      "scenario_count": 14,
+      "first_open_scenarios_accepted": 14,
+      "reopen_scenarios_stable": 14,
+      "incomplete_scenarios": [],
+      "capture_status": "captured-reference-only",
+      "source_preservation_passed": true,
+      "source_hashes_match_seed_after_reopen": true,
+      "rust_parity_claimed": false,
+      "c07_2_direction_capture": {
+        "capture_status": "captured-reference-mutation",
+        "omitted_direction_parse_error_stable_across_reopen": true,
+        "no_default_inferred": true,
+        "invalid_direction_source_rewrite_observed": true,
+        "source_file": "Invalid Direction.base",
+        "source_rewrite_bytes": {
+          "before": 122,
+          "after": 62
+        }
+      }
+    }
+  ],
+  "terminal_audit": {
+    "observed_at": "2026-10-15T00:08:44Z",
+    "origin_main_sha": "0a9cb9c00835881a7629c96721974dfa9461cc50",
+    "expected_workflows": 7,
+    "completed_successful_workflows": 7,
+    "expected_jobs": 20,
+    "completed_successful_jobs": 20,
+    "failed_or_pending_jobs": 0
+  }
+}

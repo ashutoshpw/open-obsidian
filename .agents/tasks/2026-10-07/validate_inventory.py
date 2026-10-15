@@ -9,7 +9,8 @@ root = Path(__file__).resolve().parents[3]
 task = Path(__file__).resolve().parent
 legacy_path = root / ".agents/tasks/2026-09-09/01-init/requirements.json"
 legacy = json.loads(legacy_path.read_text())["rows"]
-requirements = json.loads((task / "requirements.json").read_text())["rows"]
+requirement_manifest = json.loads((task / "requirements.json").read_text())
+requirements = requirement_manifest["rows"]
 inventory = json.loads((task / "inventory.json").read_text())
 state = json.loads((task / "state.json").read_text())
 errors = []
@@ -28,15 +29,30 @@ valid_owners = {
 valid_dispositions = {"retained", "superseded", "release_external"}
 expected_new = {f"MIG-{index:03d}" for index in range(1, 17)}
 expected_decomposed = {f"C07.{index}" for index in range(2, 10)}
+expected_canvas = {"C06.2"}
 new_rows = [row for row in requirements if row["id"] not in legacy_by_id]
 goal_rows = [row for row in new_rows if row["id"].startswith("MIG-")]
 decomposed_rows = [row for row in new_rows if row["id"].startswith("C07.")]
+canvas_rows = [row for row in new_rows if row["id"].startswith("C06.")]
 if {row["id"] for row in goal_rows} != expected_new:
     errors.append("Goal-specific acceptance rows must cover MIG-001 through MIG-016")
 if {row["id"] for row in decomposed_rows} != expected_decomposed:
     errors.append("C07 decomposition must include child requirements C07.2 through C07.9")
-if {row["id"] for row in new_rows} != expected_new | expected_decomposed:
+if {row["id"] for row in canvas_rows} != expected_canvas:
+    errors.append("C06 decomposition must include the typed Canvas projection requirement C06.2")
+if {row["id"] for row in new_rows} != expected_new | expected_decomposed | expected_canvas:
     errors.append("Migration requirements contain an unrecognized new requirement ID")
+
+mapping_review = requirement_manifest["mapping_review"]
+expected_reviewed_count = len(legacy_by_id) + len(goal_rows)
+if mapping_review.get("reviewed_requirement_count") != expected_reviewed_count:
+    errors.append("Mapping review count must include inherited requirements and goal-level MIG rows")
+if mapping_review.get("new_migration_requirement_count") != len(goal_rows):
+    errors.append("New migration requirement count must match goal-level MIG rows")
+goal_sha256 = hashlib.sha256((task / "goal.md").read_bytes()).hexdigest()
+if mapping_review.get("goal_sha256") != goal_sha256:
+    errors.append("Mapping review must record the current Rust migration goal SHA-256")
+
 if state.get("milestones", {}).get("R0.1", {}).get("status") != "complete":
     errors.append("R0.1 must have passed GitHub CI before R0.2")
 
@@ -72,6 +88,15 @@ for row in decomposed_rows:
     parent = legacy_by_id.get(row.get("parent_id"))
     if row.get("parent_id") != "C07" or parent is None or row.get("source", {}).get("path") != parent.get("source", {}).get("path") or row.get("source", {}).get("heading") != parent.get("source", {}).get("heading"):
         errors.append(f"{row['id']}: decomposed requirement must retain C07 parentage and legacy source")
+for row in canvas_rows:
+    if (
+        row.get("parent_id") != "C06"
+        or row.get("source", {}).get("path") != "https://jsoncanvas.org/spec/1.0/"
+        or row.get("source", {}).get("heading") != "JSON Canvas Spec 1.0"
+        or (row.get("migration_phase"), row.get("rust_owner")) != ("R2", "crates/doc")
+        or row.get("mapping_status") != "reviewed"
+    ):
+        errors.append(f"{row['id']}: Canvas requirement must retain C06 parentage and the reviewed JSON Canvas 1.0 document-layer mapping")
 
 directories = ("src", "tests", "fixtures", "config", "scripts", ".github/workflows")
 actual = {

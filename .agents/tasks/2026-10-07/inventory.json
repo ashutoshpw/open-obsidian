@@ -1282,12 +1282,12 @@
     },
     {
       "path": "fixtures/c06-canvas.json",
-      "sha256": "5e87a3385b19fb37b52e403365f8cb411ce68e22a052074a4e81953108445705",
+      "sha256": "9df19652846b38860ae8f58bdf1d25720dfa9d18c29eaf618642b4bef8525022",
       "rust_owner": "crates/doc",
       "mapping_status": "reviewed",
       "status": "pending",
       "migration_phase": "R2",
-      "purpose": "C06 Canvas envelope codec cases cover known node/edge shapes and unknown fields; pinned Obsidian reopen evidence remains pending.",
+      "purpose": "C06 Canvas fixture covers standard node/edge projections, valid/malformed/missing color states, unknown and malformed node types, malformed/missing projected fields, raw unknown fields, missing/empty documents, and omitted optional nodes/edges arrays; reference-app reopen acceptance remains pending.",
       "fixture_reader": "crates/doc"
     },
     {

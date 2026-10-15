@@ -76,6 +76,111 @@
     {
       "id": "empty-document",
       "document": {"nodes": [], "edges": []}
+    },
+    {
+      "id": "nodes-array-omitted",
+      "document": {"edges": []}
+    },
+    {
+      "id": "edges-array-omitted",
+      "document": {"nodes": []}
+    },
+    {
+      "id": "both-arrays-omitted",
+      "document": {}
+    }
+  ],
+  "projection_cases": [
+    {
+      "id": "unsupported-node-type",
+      "document": {
+        "nodes": [
+          {
+            "id": "future-1",
+            "type": "future-node",
+            "x": "not-a-number",
+            "y": 1.5,
+            "future": {"keep": true}
+          }
+        ],
+        "edges": []
+      },
+      "expected": {
+        "node_type": "future-node",
+        "node_type_state": "valid",
+        "content": "unsupported",
+        "x_state": "malformed",
+        "y_state": "malformed",
+        "future_field_preserved": true
+      }
+    },
+    {
+      "id": "unsupported-malformed-node-type",
+      "document": {
+        "nodes": [
+          {
+            "id": "malformed-type-1",
+            "type": 17
+          }
+        ],
+        "edges": []
+      },
+      "expected": {
+        "node_type_state": "malformed",
+        "node_type_raw": 17,
+        "content": "unsupported"
+      }
+    },
+    {
+      "id": "malformed-node-fields",
+      "document": {
+        "nodes": [
+          {"id": 7, "type": "text", "text": false},
+          {}
+        ],
+        "edges": []
+      },
+      "expected": {
+        "id_state": "malformed",
+        "id_raw": 7,
+        "content": "text",
+        "text_state": "malformed",
+        "text_raw": false,
+        "missing_id_state": "missing",
+        "missing_type_state": "missing",
+        "missing_content": "unsupported"
+      }
+    },
+    {
+      "id": "malformed-and-missing-color",
+      "document": {
+        "nodes": [
+          {"id": "color-malformed", "type": "text", "text": "malformed color", "color": false},
+          {"id": "color-missing", "type": "text", "text": "missing color"}
+        ],
+        "edges": []
+      },
+      "expected": {
+        "malformed_color_state": "malformed",
+        "malformed_color_raw": false,
+        "missing_color_state": "missing"
+      }
+    },
+    {
+      "id": "malformed-edge-fields",
+      "document": {
+        "nodes": [],
+        "edges": [
+          {"id": "edge-1", "fromNode": [], "toNode": "node-1"}
+        ]
+      },
+      "expected": {
+        "from_node_state": "malformed",
+        "from_node_raw": [],
+        "to_node_state": "valid",
+        "to_node": "node-1",
+        "from_side_state": "missing"
+      }
     }
   ],
   "invalid_cases": [
@@ -90,18 +195,8 @@
       "error": "invalid_shape"
     },
     {
-      "id": "nodes-array-is-missing",
-      "source": "{\"edges\":[]}",
-      "error": "invalid_shape"
-    },
-    {
       "id": "nodes-is-not-an-array",
       "source": "{\"nodes\":{},\"edges\":[]}",
-      "error": "invalid_shape"
-    },
-    {
-      "id": "edges-array-is-missing",
-      "source": "{\"nodes\":[]}",
       "error": "invalid_shape"
     },
     {
