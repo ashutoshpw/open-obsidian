@@ -9,6 +9,7 @@ on:
       - ".agents/tasks/2026-10-07/prepare-obsidian-reference.ts"
       - ".agents/tasks/2026-10-07/obsidian-reference-pin.json"
       - "fixtures/c07-group-order-reference.json"
+      - "fixtures/c07-number-reference.json"
       - "apps/openobsidian/**"
       - "assets/openobsidian-icon.png"
       - "crates/**"

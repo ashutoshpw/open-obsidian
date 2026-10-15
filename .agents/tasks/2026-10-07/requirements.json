@@ -3346,7 +3346,8 @@
       "acceptance_criteria": "Parse groupOrder from JSON and native YAML as an ordered list of typed group values, including null and an empty list. When present, emit only listed groups in declared order, retain distinct supported typed values rather than merging their string renderings, preserve explicitly listed empty groups, and include rows with a missing grouped value only when null is listed; preserve row order within groups and source bytes/unknown fields. When absent, retain all groups and use C07.2 groupBy.direction or first-seen ordering. Characterize groupOrder without groupBy; duplicate declarations; missing versus explicit-null labels; and string, number, boolean, array, object, and null identity/labels against pinned Obsidian. Malformed shapes and unsupported entries must surface visible issues and match the reference fallback rather than silently becoming absent. Keep numeric group identity coordinated with C07.4 JavaScript-number semantics. Include a shared Kanban fixture where one formula depends on another, groupBy uses the derived formula, and groupOrder lists its output values; compare group headings and row membership against pinned Obsidian 1.14.4 on first open and reopen. Verify typed equality, duplicate behavior, empty-group behavior, visibility, and groupOrder precedence against pinned Obsidian 1.14.4 on first open and reopen. Record any pinned-app .base or note source rewrite with original and post-open bytes/hashes as reference behavior; independently require the Rust parser and encoder to preserve exact .base and note source bytes. Cover fixtures on Linux, macOS, and Windows in GitHub CI.",
       "fixture_ids": [
         "fixture:c07-bases",
-        "fixture:c07-group-order-reference"
+        "fixture:c07-group-order-reference",
+        "fixture:c07-number-reference"
       ],
       "reference_versions": [
         {
@@ -3409,7 +3410,8 @@
       "mandatory": true,
       "acceptance_criteria": "First characterize and implement pinned Obsidian 1.14.4 JavaScript number conversion, identity, sorting, relational/equality filters, and contains behavior around and above 2^53; reconcile existing exact-integer fixture expectations with the reference. Then characterize locale collation for case/diacritic pairs, numeric text, and row-path tie-breaks. Record a deliberate locale policy (one pinned locale or each runner's default) and platform settings, and compare reference and Rust outcomes on Linux, macOS, and Windows through GitHub CI. Coordinate numeric group identity with C07.3; neither requirement may lock in Rust's exact integer equality without reference evidence. Do not claim the C07 parent complete while either behavior remains unverified.",
       "fixture_ids": [
-        "fixture:c07-bases"
+        "fixture:c07-bases",
+        "fixture:c07-number-reference"
       ],
       "reference_versions": [
         {

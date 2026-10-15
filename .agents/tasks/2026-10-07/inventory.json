@@ -1342,6 +1342,16 @@
       "fixture_reader": ".agents/tasks/2026-10-07/audit-obsidian-vault-roundtrip.ts"
     },
     {
+      "path": "fixtures/c07-number-reference.json",
+      "sha256": "4002a7bbf61b36467f7ce409e9c1694e117a896ced41a44260244f95915f0ed4",
+      "rust_owner": "crates/doc",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R2",
+      "purpose": "C07.4 pinned Obsidian 1.14.4 reference inputs for exact numeric lexemes around 2^53, renderer Number and metadata identity probes, Bases sorting/filtering/array contains/numeric grouping, locale-sensitive case/diacritic/natural-text ordering, and equal-key path ties with reverse lexical seed order. Reference characterization only; does not assert outcomes or Rust parity.",
+      "fixture_reader": ".agents/tasks/2026-10-07/audit-obsidian-vault-roundtrip.ts"
+    },
+    {
       "path": "fixtures/c07-embedded-base-evaluation.json",
       "sha256": "befa8038835b14a7d54a17c18cedda8b8edafc83e367864f75b2114797f90c13",
       "rust_owner": "crates/doc",

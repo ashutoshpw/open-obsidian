@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.8.130-C07.4-JAVASCRIPT-NUMBER-REFERENCE-CAPTURE",
+  "status": "implementation complete; ready for one milestone push; CI not submitted",
+  "recorded_at": "2026-10-15",
+  "bounded_outcome": "Capture pinned Obsidian 1.14.4 behavior for JavaScript number conversion, identity, ordering, filtering, array containment, and locale-sensitive text/path tie cases before changing Rust comparator semantics.",
+  "scope": [
+    "Add one dedicated compact synthetic fixture:c07-number-reference with numeric values below, at, and above 2^53; distinct integer, decimal, and exponent source lexemes that may map to the same JavaScript Number; array values; and case, diacritic, natural numeric-text, and path-tie cases. Keep the existing fixture:c07-bases expectations unchanged until reference evidence is available.",
+    "Add C07.4-only report fields and capture helpers to the round-trip harness. Preserve the accepted C07.3 path at R2.8.129: do not edit the C07.3 fixture, helper implementations, scenario inventory, path selectors, output shape, groupOrder semantics, shared DevTools behavior, or its acceptance gates. A C07.4 observation may reuse an unchanged shared helper only where its strict path/count/group mapping applies; C07.4 results remain in a separate report section.",
+    "Preserve every numeric lexeme from exact UTF-8 source bytes. Store `.base` sources as raw strings and never parse then reserialize them. Record source path, SHA-256, token text, and byte offsets independently from renderer probes. In the Obsidian renderer report Number(token) as a decimal string plus finite/safe-integer flags and explicit equality/relational identity-pair outcomes; separately record the visible Bases filter, sort, array-contains, and numeric-group observations. Renderer Number probes alone do not prove Bases evaluation behavior.",
+    "Capture ascending and descending numeric sort; numeric equality and relational filters around 2^53; array contains with integer/float/exponent-equivalent values; and numeric grouping identity as distinct operations. Each operation must reference exact source lexemes and its active `.base` path/hash.",
+    "Capture case, diacritic, natural numeric-text, and equal-key fixture-path tie behavior separately. Seed the equal-key files in reverse lexical path order and record Obsidian's actual vault file enumeration before interpreting the UI order, so stable input order and path tie-breaking are distinguishable. Use the runner's default locale as the explicit policy; do not force or mutate the locale. In the Obsidian renderer and at each capture stage record navigator.language(s), Intl.Collator().resolvedOptions(), requested collator options, user agent/CDP browser version, runner OS/image/version/architecture, pinned app version, and app asset hash. Treat results as platform-specific observations; do not infer cross-platform equivalence from locale metadata.",
+    "Use one compact C07.4 vault with multiple `.base` targets in one first-open and one reopen session on each operating system. These scenarios filter and group by scalar note properties and expect at most one result row per note path. For each target, record exact requested/active `.base`, active `bases` view, settled stable state, selected-root scoped result-count evidence, ordered row occurrences with group keys and DOM ordinals, a separately derived unique-path set, unmapped/ambiguous row counts, source byte/hash checkpoints, and screenshots. Reconcile the displayed count to all captured row occurrences; a duplicate path within one fresh-sweep position, incomplete sweep, ambiguous ownership, or unmapped row fails closed. Sightings of the same path at different scroll positions are retained as sweep samples of one row. This fixture makes no claim about repeated-row semantics. Record any pinned-app source rewrite as raw before/after bytes and hashes, reseed exact bytes before reopen, and report the reseed as harness behavior.",
+    "Add the new fixture path to the round-trip workflow path filter, add its reviewed digest and purpose to inventory.json, and link its fixture ID in C07.4 traceability.",
+    "Keep Rust parser/evaluator/comparator changes, existing C07.3 groupOrder semantics or repairs, C07.5 file-property capture/parser/evaluator work, C09.2 appearance changes, and unrelated progress metadata out of the C07.4 implementation submission."
+  ],
+  "acceptance": [
+    "The report records pinned Obsidian 1.14.4 and asset SHA, implementation source SHA, runner OS/image/version/architecture, renderer user agent and CDP browser version, the runner-default locale policy, renderer navigator.language(s), requested collator options, and Intl.Collator resolved options at first open and reopen.",
+    "For every numeric target, the report proves exact active `.base` selection and `bases` view type, settled state, one result count scoped to the selected result root, complete ordered row occurrences, a separately derived unique-path set, zero duplicate path samples within any single fresh-sweep position, and no unmapped or ambiguous rows. The fixture expects at most one row per note path and makes no claim about repeated-row semantics. The result count must equal row occurrences; missing, duplicate, ambiguous, partial, or count-mismatched observations fail closed. For every note number token and array member, retain the exact metadataCache value type/value, its Number(token) conversion comparison, exact integer match where applicable, and actual metadata-value equality/relational results for the declared identity pairs; require every expected source property to be present and numeric before accepting the capture.",
+    "Observations separately cover values below, at, and above 2^53; exact raw source token spellings and byte spans; renderer Number conversion/identity pairs serialized without JSON-number precision loss; visible Bases ascending/descending sort; equality/relational filters; array contains; and numeric grouping headings, row occurrences, and group membership.",
+    "Text observations separately cover case, diacritic, natural numeric-text, and stable equal-key path tie behavior. Compare first-open and reopen within each platform; do not infer one runner locale or platform's outcome for another and do not treat Intl.Collator metadata as proof that Bases uses the same comparator.",
+    "First-open and reopen reports include screenshots, exact active `.base` source bytes/hashes, raw numeric lexeme/token offsets, fixture/seed manifests, source checkpoints, stable observation samples, and raw before/after bytes/hashes for any Obsidian rewrite. No Rust parity or semantic acceptance is claimed by this capture milestone.",
+    "All seven required GitHub Actions workflows and all 20 jobs pass on one exact implementation SHA; the three OS round-trip reports and every required artifact ID, archive digest, payload hash, and run/job URL are reconciled before the milestone becomes achieved / CI-passed."
+  ],
+  "required_workflows": [
+    "OpenObsidian Rust CI",
+    "Obsidian vault round-trip acceptance",
+    "Rust migration inventory",
+    "OpenObsidian loaded plugin workflows",
+    "OpenObsidian desktop build",
+    "OpenObsidian quality",
+    "OpenObsidian plugin renderer matrix"
+  ],
+  "required_platforms": [
+    "Ubuntu 24.04",
+    "macOS latest",
+    "Windows latest"
+  ],
+  "expected_evidence": [
+    "Exact-SHA workflow/job URLs, IDs, conclusions, and platform records.",
+    "Three platform round-trip report payloads with report SHA-256, artifact archive IDs/digests, source fixture hashes, exact active .base bytes, first-open/reopen ordered rows, screenshots, and any rewrite payloads/hashes.",
+    "Locale/runtime identity evidence sufficient to interpret platform-specific text comparison results."
+  ],
+  "dependencies": {
+    "c07_3_reference_capture_sha": "0a9cb9c00835881a7629c96721974dfa9461cc50",
+    "c06_2_projection_sha": "cca13eb6114d4e694b11973579bb94fa6d552e32",
+    "origin_main_at_planning": "cca13eb6114d4e694b11973579bb94fa6d552e32",
+    "active_ci_batch": null,
+    "worktree_isolation": "The main worktree contains unsubmitted C07.3/C07.5/C09.2 edits in shared audit and workflow files. Implement R2.8.130 from a clean worktree based on origin/main and preserve the existing dirty tree untouched."
+  },
+  "submission_gate": "No push or dispatch for individual edits. Finish the complete bounded capture, fixture inventory/traceability updates, goal/requirement/state linkage, and a read-only whole-milestone review first. Then push once to origin/main to start one exact-SHA batch. Keep origin/main fixed until all seven workflows/20 jobs are terminal and every report/artifact is reconciled.",
+  "local_executable_validation": false
+}

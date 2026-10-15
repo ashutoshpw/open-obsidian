@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "id": "fixture:c07-number-reference",
+  "description": "Synthetic, reference-only Obsidian 1.14.4 inputs for C07.4 JavaScript number and locale-sensitive Bases comparison capture. Equal-key tie files are created in reverse lexical-path order; the harness records Obsidian's vault file order before interpreting the visible sort. Expected outcomes are intentionally omitted until the pinned app is observed.",
+  "notes": [
+    {"path":"Notes/Numbers/00-below-safe-range.md","source":"---\nprobe: numeric\nmetric: 9007199254740990\n---\nSynthetic C07.4 number immediately below 2^53.\n"},
+    {"path":"Notes/Numbers/01-max-safe-integer.md","source":"---\nprobe: numeric\nmetric: 9007199254740991\n---\nSynthetic C07.4 Number.MAX_SAFE_INTEGER.\n"},
+    {"path":"Notes/Numbers/02-at-2-to-53.md","source":"---\nprobe: numeric\nmetric: 9007199254740992\n---\nSynthetic C07.4 value at 2^53.\n"},
+    {"path":"Notes/Numbers/03-above-odd-integer.md","source":"---\nprobe: numeric\nmetric: 9007199254740993\n---\nSynthetic C07.4 odd integer above 2^53.\n"},
+    {"path":"Notes/Numbers/04-above-decimal-spelling.md","source":"---\nprobe: numeric\nmetric: 9007199254740992.0\n---\nSynthetic C07.4 decimal spelling near 2^53.\n"},
+    {"path":"Notes/Numbers/05-above-exponent-spelling.md","source":"---\nprobe: numeric\nmetric: 9.007199254740993e15\n---\nSynthetic C07.4 exponent spelling near 2^53.\n"},
+    {"path":"Notes/Numbers/06-next-representable.md","source":"---\nprobe: numeric\nmetric: 9007199254740994\n---\nSynthetic C07.4 next representable integer after the 2^53 boundary.\n"},
+    {"path":"Notes/Arrays/00-boundary-integer.md","source":"---\nprobe: array\nvalues:\n  - 9007199254740992\n---\nSynthetic C07.4 integer array member at 2^53.\n"},
+    {"path":"Notes/Arrays/01-above-odd-integer.md","source":"---\nprobe: array\nvalues:\n  - 9007199254740993\n---\nSynthetic C07.4 odd integer array member above 2^53.\n"},
+    {"path":"Notes/Arrays/02-above-decimal-spelling.md","source":"---\nprobe: array\nvalues:\n  - 9007199254740992.0\n---\nSynthetic C07.4 decimal array member near 2^53.\n"},
+    {"path":"Notes/Arrays/03-above-exponent-spelling.md","source":"---\nprobe: array\nvalues:\n  - 9.007199254740993e15\n---\nSynthetic C07.4 exponent array member near 2^53.\n"},
+    {"path":"Notes/Text/Case/01-lower.md","source":"---\nprobe: text-case\nsort_value: alpha\n---\nSynthetic C07.4 lowercase case pair.\n"},
+    {"path":"Notes/Text/Case/02-title.md","source":"---\nprobe: text-case\nsort_value: Alpha\n---\nSynthetic C07.4 title-case pair.\n"},
+    {"path":"Notes/Text/Case/03-upper.md","source":"---\nprobe: text-case\nsort_value: ALPHA\n---\nSynthetic C07.4 uppercase case pair.\n"},
+    {"path":"Notes/Text/Diacritics/01-plain.md","source":"---\nprobe: text-diacritic\nsort_value: cafe\n---\nSynthetic C07.4 unaccented text.\n"},
+    {"path":"Notes/Text/Diacritics/02-acute.md","source":"---\nprobe: text-diacritic\nsort_value: café\n---\nSynthetic C07.4 acute-accent text.\n"},
+    {"path":"Notes/Text/Diacritics/03-grave.md","source":"---\nprobe: text-diacritic\nsort_value: càfe\n---\nSynthetic C07.4 grave-accent text.\n"},
+    {"path":"Notes/Text/Diacritics/04-decomposed-acute.md","source":"---\nprobe: text-diacritic\nsort_value: café\n---\nSynthetic C07.4 decomposed acute-accent text.\n"},
+    {"path":"Notes/Text/Numeric/01-item-2.md","source":"---\nprobe: text-natural\nsort_value: Item 2\n---\nSynthetic C07.4 natural-number text value 2.\n"},
+    {"path":"Notes/Text/Numeric/02-item-02.md","source":"---\nprobe: text-natural\nsort_value: Item 02\n---\nSynthetic C07.4 zero-padded natural-number text value 02.\n"},
+    {"path":"Notes/Text/Numeric/03-item-10.md","source":"---\nprobe: text-natural\nsort_value: Item 10\n---\nSynthetic C07.4 natural-number text value 10.\n"},
+    {"path":"Notes/Text/Ties/z-last.md","source":"---\nprobe: text-path-tie\nsort_value: same key\n---\nSynthetic C07.4 equal-key path tie, first-created candidate.\n"},
+    {"path":"Notes/Text/Ties/a-first.md","source":"---\nprobe: text-path-tie\nsort_value: same key\n---\nSynthetic C07.4 equal-key path tie, second-created candidate.\n"}
+  ],
+  "numeric_tokens": [
+    {"id":"note-below-safe-range","source_path":"Notes/Numbers/00-below-safe-range.md","context":"frontmatter.metric","token":"9007199254740990"},
+    {"id":"note-max-safe-integer","source_path":"Notes/Numbers/01-max-safe-integer.md","context":"frontmatter.metric","token":"9007199254740991"},
+    {"id":"note-at-boundary","source_path":"Notes/Numbers/02-at-2-to-53.md","context":"frontmatter.metric","token":"9007199254740992"},
+    {"id":"note-above-odd-integer","source_path":"Notes/Numbers/03-above-odd-integer.md","context":"frontmatter.metric","token":"9007199254740993"},
+    {"id":"note-above-decimal-spelling","source_path":"Notes/Numbers/04-above-decimal-spelling.md","context":"frontmatter.metric","token":"9007199254740992.0"},
+    {"id":"note-above-exponent-spelling","source_path":"Notes/Numbers/05-above-exponent-spelling.md","context":"frontmatter.metric","token":"9.007199254740993e15"},
+    {"id":"note-next-representable","source_path":"Notes/Numbers/06-next-representable.md","context":"frontmatter.metric","token":"9007199254740994"},
+    {"id":"array-boundary-integer","source_path":"Notes/Arrays/00-boundary-integer.md","context":"frontmatter.values[0]","token":"9007199254740992"},
+    {"id":"array-above-odd-integer","source_path":"Notes/Arrays/01-above-odd-integer.md","context":"frontmatter.values[0]","token":"9007199254740993"},
+    {"id":"array-above-decimal-spelling","source_path":"Notes/Arrays/02-above-decimal-spelling.md","context":"frontmatter.values[0]","token":"9007199254740992.0"},
+    {"id":"array-above-exponent-spelling","source_path":"Notes/Arrays/03-above-exponent-spelling.md","context":"frontmatter.values[0]","token":"9.007199254740993e15"},
+    {"id":"query-equality-above-odd","source_path":"Bases/03 Numeric equality.base","context":"view.filters.note.metric","token":"9007199254740993"},
+    {"id":"query-relational-boundary","source_path":"Bases/04 Numeric relational.base","context":"view.filters.note.metric","token":"9007199254740992"},
+    {"id":"query-array-contains-above-odd","source_path":"Bases/05 Array contains.base","context":"view.filters.note.values.contains","token":"9007199254740993"}
+  ],
+  "number_identity_pairs": [
+    {"id":"odd-integer-versus-boundary","left_token_id":"note-above-odd-integer","right_token_id":"note-at-boundary"},
+    {"id":"decimal-spelling-versus-boundary","left_token_id":"note-above-decimal-spelling","right_token_id":"note-at-boundary"},
+    {"id":"exponent-spelling-versus-boundary","left_token_id":"note-above-exponent-spelling","right_token_id":"note-at-boundary"},
+    {"id":"array-odd-versus-boundary","left_token_id":"array-above-odd-integer","right_token_id":"array-boundary-integer"}
+  ],
+  "text_comparisons": [
+    {"id":"case-lower-versus-title","category":"case","left":"alpha","right":"Alpha"},
+    {"id":"case-title-versus-upper","category":"case","left":"Alpha","right":"ALPHA"},
+    {"id":"diacritic-plain-versus-acute","category":"diacritic","left":"cafe","right":"café"},
+    {"id":"diacritic-plain-versus-grave","category":"diacritic","left":"cafe","right":"càfe"},
+    {"id":"diacritic-precomposed-versus-decomposed","category":"diacritic","left":"café","right":"café"},
+    {"id":"natural-number-2-versus-10","category":"numeric-text","left":"Item 2","right":"Item 10"},
+    {"id":"natural-number-2-versus-02","category":"numeric-text","left":"Item 2","right":"Item 02"}
+  ],
+  "scenarios": [
+    {"id":"numeric-sort-ascending","base_path":"Bases/01 Numeric sort ASC.base","operation":"sort","coverage":["numeric-conversion","numeric-identity","ascending-sort"],"group_by_property":null,"source":"{\n  \"views\": [{\n    \"type\": \"table\",\n    \"name\": \"C07.4 numeric ascending\",\n    \"filters\": \"file.ext == 'md' && note.probe == 'numeric'\",\n    \"order\": [\"file.name\", \"note.metric\"],\n    \"sort\": [{\"property\": \"note.metric\", \"direction\": \"ASC\"}]\n  }]\n}\n"},
+    {"id":"numeric-sort-descending","base_path":"Bases/02 Numeric sort DESC.base","operation":"sort","coverage":["numeric-conversion","numeric-identity","descending-sort"],"group_by_property":null,"source":"{\n  \"views\": [{\n    \"type\": \"table\",\n    \"name\": \"C07.4 numeric descending\",\n    \"filters\": \"file.ext == 'md' && note.probe == 'numeric'\",\n    \"order\": [\"file.name\", \"note.metric\"],\n    \"sort\": [{\"property\": \"note.metric\", \"direction\": \"DESC\"}]\n  }]\n}\n"},
+    {"id":"numeric-equality-filter","base_path":"Bases/03 Numeric equality.base","operation":"equality-filter","coverage":["numeric-equality","numeric-aliasing"],"group_by_property":null,"source":"{\n  \"views\": [{\n    \"type\": \"table\",\n    \"name\": \"C07.4 numeric equality\",\n    \"filters\": \"file.ext == 'md' && note.probe == 'numeric' && note.metric == 9007199254740993\",\n    \"order\": [\"file.name\", \"note.metric\"]\n  }]\n}\n"},
+    {"id":"numeric-relational-filter","base_path":"Bases/04 Numeric relational.base","operation":"relational-filter","coverage":["numeric-relational","greater-than-at-boundary"],"group_by_property":null,"source":"{\n  \"views\": [{\n    \"type\": \"table\",\n    \"name\": \"C07.4 numeric relational\",\n    \"filters\": \"file.ext == 'md' && note.probe == 'numeric' && note.metric > 9007199254740992\",\n    \"order\": [\"file.name\", \"note.metric\"]\n  }]\n}\n"},
+    {"id":"numeric-array-contains","base_path":"Bases/05 Array contains.base","operation":"array-contains-filter","coverage":["array-contains","numeric-aliasing"],"group_by_property":null,"source":"{\n  \"views\": [{\n    \"type\": \"table\",\n    \"name\": \"C07.4 numeric array contains\",\n    \"filters\": \"file.ext == 'md' && note.probe == 'array' && note.values.contains(9007199254740993)\",\n    \"order\": [\"file.name\", \"note.values\"]\n  }]\n}\n"},
+    {"id":"numeric-group-identity","base_path":"Bases/06 Numeric group identity.base","operation":"group-identity","coverage":["numeric-group-identity","typed-group-membership"],"group_by_property":"note.metric","source":"{\n  \"views\": [{\n    \"type\": \"table\",\n    \"name\": \"C07.4 numeric group identity\",\n    \"filters\": \"file.ext == 'md' && note.probe == 'numeric'\",\n    \"order\": [\"file.name\", \"note.metric\"],\n    \"groupBy\": {\"property\": \"note.metric\", \"direction\": \"ASC\"}\n  }]\n}\n"},
+    {"id":"text-case-collation","base_path":"Bases/07 Case collation.base","operation":"text-sort","coverage":["case-collation"],"group_by_property":null,"source":"{\n  \"views\": [{\n    \"type\": \"table\",\n    \"name\": \"C07.4 case collation\",\n    \"filters\": \"file.ext == 'md' && note.probe == 'text-case'\",\n    \"order\": [\"file.name\", \"note.sort_value\"],\n    \"sort\": [{\"property\": \"note.sort_value\", \"direction\": \"ASC\"}]\n  }]\n}\n"},
+    {"id":"text-diacritic-collation","base_path":"Bases/08 Diacritic collation.base","operation":"text-sort","coverage":["diacritic-collation","unicode-normalization"],"group_by_property":null,"source":"{\n  \"views\": [{\n    \"type\": \"table\",\n    \"name\": \"C07.4 diacritic collation\",\n    \"filters\": \"file.ext == 'md' && note.probe == 'text-diacritic'\",\n    \"order\": [\"file.name\", \"note.sort_value\"],\n    \"sort\": [{\"property\": \"note.sort_value\", \"direction\": \"ASC\"}]\n  }]\n}\n"},
+    {"id":"text-natural-numeric-collation","base_path":"Bases/09 Natural numeric text.base","operation":"text-sort","coverage":["numeric-text-collation"],"group_by_property":null,"source":"{\n  \"views\": [{\n    \"type\": \"table\",\n    \"name\": \"C07.4 natural numeric text\",\n    \"filters\": \"file.ext == 'md' && note.probe == 'text-natural'\",\n    \"order\": [\"file.name\", \"note.sort_value\"],\n    \"sort\": [{\"property\": \"note.sort_value\", \"direction\": \"ASC\"}]\n  }]\n}\n"},
+    {"id":"text-equal-key-path-tie","base_path":"Bases/10 Equal key path tie.base","operation":"text-path-tie","coverage":["equal-key-path-tie","path-order"],"group_by_property":null,"source":"{\n  \"views\": [{\n    \"type\": \"table\",\n    \"name\": \"C07.4 equal-key path tie\",\n    \"filters\": \"file.ext == 'md' && note.probe == 'text-path-tie'\",\n    \"order\": [\"file.name\", \"note.sort_value\"],\n    \"sort\": [{\"property\": \"note.sort_value\", \"direction\": \"ASC\"}]\n  }]\n}\n"}
+  ]
+}

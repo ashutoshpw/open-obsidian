@@ -126,6 +126,50 @@ type GroupOrderScenario = {
   source: string | Record<string, unknown>;
 };
 
+type C074NumberReferenceScenario = {
+  id: string;
+  base_path: string;
+  operation: "sort" | "equality-filter" | "relational-filter" | "array-contains-filter" | "group-identity" | "text-sort" | "text-path-tie";
+  coverage: string[];
+  group_by_property: string | null;
+  source: string;
+};
+
+type C074NumberReferenceFixture = {
+  schema_version: number;
+  id: string;
+  description: string;
+  notes: Array<{path: string; source: string}>;
+  numeric_tokens: Array<{id: string; source_path: string; context: string; token: string}>;
+  number_identity_pairs: Array<{id: string; left_token_id: string; right_token_id: string}>;
+  text_comparisons: Array<{id: string; category: string; left: string; right: string}>;
+  scenarios: C074NumberReferenceScenario[];
+};
+
+type C074NumberTokenSpan = {
+  id: string;
+  source_path: string;
+  source_sha256: string;
+  context: string;
+  token: string;
+  byte_offset: number;
+  byte_length: number;
+};
+
+type C074SourceObservation = {
+  stage: string;
+  observed_at: string;
+  source_hashes: Record<string, GroupOrderSourceHash | null>;
+  source_path_set: string[];
+  unexpected_source_paths: string[];
+  changed_sources_from_seed: Array<{
+    path: string;
+    seed: GroupOrderSourceHash | null;
+    observed: GroupOrderSourceHash | null;
+    observed_bytes_base64?: string;
+  }>;
+};
+
 type GroupOrderFixture = {
   schema_version: number;
   id: string;
@@ -508,6 +552,11 @@ const groupOrderVaultRoot = join(workDirectory, groupOrderVaultName);
 const groupOrderScenarioFixturePath = join(process.cwd(), "fixtures", "c07-group-order-reference.json");
 // Intentional fixture changes must update this reviewed digest and the exact scenario ID inventory below.
 const groupOrderScenarioFixtureSha256 = "1ecc2863c78a115fa48d4d2c4eef1bba90c13a494404ab2a10c862da97c518de";
+const numberReferenceVaultName = "C07 JavaScript Number Reference Fixture";
+const numberReferenceVaultRoot = join(workDirectory, numberReferenceVaultName);
+const numberReferenceFixturePath = join(process.cwd(), "fixtures", "c07-number-reference.json");
+// Intentional fixture changes must update this reviewed digest and the exact C07.4 scenario inventory below.
+const numberReferenceFixtureSha256 = "4002a7bbf61b36467f7ce409e9c1694e117a896ced41a44260244f95915f0ed4";
 const obsidianBinary = resolve(requiredEnv("OBSIDIAN_BINARY"));
 const openObsidianBinary = resolve(requiredEnv("OPENOBSIDIAN_BINARY"));
 const obsidianVersion = requiredEnv("OBSIDIAN_RELEASE_VERSION");
@@ -781,6 +830,9 @@ const report: Record<string, unknown> = {
   }, {
     milestone: "R2.8.121-C07.3-cross-platform-capture-repair",
     report_path: "bases_group_order_reference",
+  }, {
+    milestone: "R2.8.130-C07.4-JAVASCRIPT-NUMBER-REFERENCE-CAPTURE",
+    report_path: "bases_number_reference",
   }],
   status: "pending",
   started_at: startedAt,
@@ -843,6 +895,23 @@ const report: Record<string, unknown> = {
     rust_parity_claimed: false,
     scenarios: [],
   },
+  bases_number_reference: {
+    status: "pending",
+    milestone: "R2.8.130-C07.4-JAVASCRIPT-NUMBER-REFERENCE-CAPTURE",
+    source_sha: sourceSha,
+    capture_scope: "Capture pinned Obsidian 1.14.4 behavior for JavaScript number conversion/identity, numeric sorting and filters, array contains, numeric group identity, and locale-sensitive text/path ordering. This is reference characterization only and makes no Rust parity claim.",
+    application: "Pinned Obsidian Desktop 1.14.4",
+    fixture_id: "fixture:c07-number-reference",
+    fixture_source_path: "fixtures/c07-number-reference.json",
+    fixture_source_sha256: numberReferenceFixtureSha256,
+    locale_policy: "Use the runner's default locale without forcing or mutating locale settings. Record renderer locale and collator configuration on each OS; compare first-open/reopen within that OS and do not infer cross-platform equivalence.",
+    source_lexeme_expectation: "Record exact source token strings and byte offsets from raw UTF-8 note and .base bytes. Keep raw lexemes separate from renderer Number conversions and from visible Bases outcomes; never parse and reserialize .base source strings.",
+    rust_parity_claimed: false,
+    scenario_acceptance: {},
+    first_open: {status: "pending", observations: {}},
+    reopen: {status: "pending", observations: {}},
+    source_checkpoints: [],
+  },
   vault_snapshots: {},
   openobsidian_app_data: {},
   workspace_state_allowlist: workspaceStateAllowlist,
@@ -852,6 +921,7 @@ const report: Record<string, unknown> = {
     "The Canvas check uses a dedicated reference-compatible fixture and fresh Obsidian profile, edits one native text card with no write before explicit save, verifies the saved JSON differs only at that selected card's text while preserving sibling nodes and edges, creates one Markdown note afterward with the edited text-card bytes, exposes the edited text and referenced block content, and checks the edited Canvas and note after first-open and reopened-vault sessions. The codec's rich unknown-field fixture remains covered by Rust tests and is not opened by Obsidian. This does not certify every Canvas workflow or cross-platform behavior beyond the recorded runner.",
     "The C07 reference probe opens synthetic Bases files with explicit ASC and DESC, omitted direction, and an unsupported direction. For ASC and DESC it captures every rendered group and file row from all Bases table roots on first open and reopen, including the null-value group containing the .base files, without judging observed ordering against preset expectations. For the tested omitted-direction native-YAML mapping, it captures the settled exact-file parse rejection (`groupBy` must be a object) and records no group or row order; it does not infer a default. The unsupported direction remains a capture-only observation. Before each shutdown, the probe explicitly restores ASC. It retains the original source hash baseline and reports Obsidian's exact 62-byte Invalid Direction.base rewrite if it occurs at any post-open source-hash checkpoint; the generated file is reseeded between sessions so the reopened view is captured from the original fixture, with that harness action reported. This reference-app mutation is not evidence that Rust preserves the source. Interpretation and Rust fixture reconciliation belong to the follow-up parity milestone.",
     "The separate C07.3 reference probe uses a generated synthetic vault and captures JSON-compatible and native-YAML .base scenarios for groupOrder precedence, listed and unlisted groups, explicit empty groups, empty lists, duplicates, null versus missing values, typed scalar/array/object values and rendered-label collisions, groupOrder without groupBy, malformed shapes, JSON 1e999 and YAML !!binary boundary candidates, YAML tag rejection, and a dependent-formula Kanban view. Each scenario runs in its own copy of the complete synthetic vault and its own Obsidian profile so every view has the same file membership and rewrites cannot contaminate other scenarios. It records whether candidate rejection occurs on a non-Bases error surface or within a loaded Bases view. Unless a candidate visibly demonstrates app-level rejection after Bases loads, that behavior remains unprobed and Rust C07.3 parity stays blocked. For each scenario it captures the exact active .base, ordered group-heading array and every member path/order, visible errors/notices, stable state samples, and screenshots on first open and reopen. At every checkpoint it records source path sets, byte counts, hashes, and exact raw artifacts for changed/new source files. After first-open shutdown it restores the recorded seeds, reports that harness reseed, and begins the same scenario's reopen from identical bytes. Reference-app rewrites remain reference observations; they are never Rust source-preservation evidence. An incomplete or ambiguous UI extraction fails closed. These observations characterize Obsidian only and do not establish Rust parity.",
+    "The separate C07.4 reference probe uses a dedicated synthetic fixture and vault to capture exact numeric source lexemes around 2^53, Obsidian-renderer Number conversions/identity pairs, visible Bases numeric ASC/DESC sorting, equality and relational filters, array contains, numeric group identities, case/diacritic/natural-number text ordering, and equal-key path ties. C07.4 .base sources are kept as raw strings and are never parse-reserialized. Every target is captured with its exact active .base and loaded Bases view on first open and reopen; the selected-root result count, ordered row occurrences, group memberships, unique path set, unmapped candidates, screenshots, and source byte/hash checkpoints are recorded. The runner-default locale policy and renderer navigator/collator/browser/app/platform identities are captured per OS; locale metadata does not stand in for observed Bases ordering. Changed source bytes are recorded raw and the seeded fixture is restored before reopen. No Rust comparator change or parity claim is included.",
     "This run does not certify all product C01 flows or general plugin/theme compatibility.",
   ],
 };
@@ -18807,6 +18877,1151 @@ async function runBasesGroupOrderReferenceProbe(): Promise<void> {
     throw error;
   }
 }
+async function createC074NumberReferenceFixture(): Promise<{
+  fixture: C074NumberReferenceFixture;
+  fixtureBytes: Buffer;
+  scenarioFixture: GroupOrderScenarioFixture;
+  sourceFiles: Record<string, Buffer>;
+  sourceHashes: Record<string, GroupOrderSourceHash>;
+  tokenSpans: C074NumberTokenSpan[];
+}> {
+  const fixtureBytes = await readFile(numberReferenceFixturePath);
+  const fixtureSha256 = createHash("sha256").update(fixtureBytes).digest("hex");
+  if (fixtureSha256 !== numberReferenceFixtureSha256) {
+    throw new Error(`C07.4 fixture source changed from its reviewed digest: expected=${numberReferenceFixtureSha256}; observed=${fixtureSha256}`);
+  }
+  const value = JSON.parse(fixtureBytes.toString("utf8")) as unknown;
+  if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("C07.4 number-reference fixture must be a JSON object");
+  const fixture = value as C074NumberReferenceFixture;
+  if (fixture.schema_version !== 1 || fixture.id !== "fixture:c07-number-reference"
+      || typeof fixture.description !== "string" || !Array.isArray(fixture.notes)
+      || !Array.isArray(fixture.numeric_tokens) || !Array.isArray(fixture.number_identity_pairs)
+      || !Array.isArray(fixture.text_comparisons) || !Array.isArray(fixture.scenarios)) {
+    throw new Error("C07.4 number-reference fixture has an invalid identity or top-level shape");
+  }
+  const expectedScenarioIds = [
+    "numeric-sort-ascending", "numeric-sort-descending", "numeric-equality-filter", "numeric-relational-filter",
+    "numeric-array-contains", "numeric-group-identity", "text-case-collation", "text-diacritic-collation",
+    "text-natural-numeric-collation", "text-equal-key-path-tie",
+  ];
+  const scenarioIds = fixture.scenarios.map((scenario) => scenario?.id);
+  if (scenarioIds.length !== expectedScenarioIds.length
+      || scenarioIds.some((id, index) => id !== expectedScenarioIds[index])) {
+    throw new Error(`C07.4 scenario inventory changed: expected=${expectedScenarioIds.join(",")}; observed=${scenarioIds.join(",")}`);
+  }
+  const expectedNumericTokenIds = [
+    "note-below-safe-range", "note-max-safe-integer", "note-at-boundary", "note-above-odd-integer",
+    "note-above-decimal-spelling", "note-above-exponent-spelling", "note-next-representable",
+    "array-boundary-integer", "array-above-odd-integer", "array-above-decimal-spelling", "array-above-exponent-spelling",
+    "query-equality-above-odd", "query-relational-boundary", "query-array-contains-above-odd",
+  ];
+  const expectedIdentityPairIds = [
+    "odd-integer-versus-boundary", "decimal-spelling-versus-boundary",
+    "exponent-spelling-versus-boundary", "array-odd-versus-boundary",
+  ];
+  const expectedTextComparisonIds = [
+    "case-lower-versus-title", "case-title-versus-upper", "diacritic-plain-versus-acute",
+    "diacritic-plain-versus-grave", "diacritic-precomposed-versus-decomposed",
+    "natural-number-2-versus-10", "natural-number-2-versus-02",
+  ];
+  if (fixture.notes.length !== 23
+      || !isDeepStrictEqual(fixture.numeric_tokens.map((entry) => entry.id), expectedNumericTokenIds)
+      || !isDeepStrictEqual(fixture.number_identity_pairs.map((entry) => entry.id), expectedIdentityPairIds)
+      || !isDeepStrictEqual(fixture.text_comparisons.map((entry) => entry.id), expectedTextComparisonIds)) {
+    throw new Error("C07.4 fixture is missing numeric or locale-sensitive reference cases");
+  }
+  const sourceFiles: Record<string, Buffer> = {};
+  for (const note of fixture.notes) {
+    if (!note || typeof note.path !== "string" || !note.path.startsWith("Notes/")
+        || !note.path.endsWith(".md") || typeof note.source !== "string") {
+      throw new Error("C07.4 fixture notes must have safe Notes/*.md paths and exact string sources");
+    }
+    resolveContainedPath(numberReferenceVaultRoot, note.path);
+    if (sourceFiles[note.path]) throw new Error(`C07.4 duplicate source path: ${note.path}`);
+    sourceFiles[note.path] = Buffer.from(note.source, "utf8");
+  }
+  const tokenIds = new Set<string>();
+  const tokenSpans: C074NumberTokenSpan[] = [];
+  const tokenCharacter = (byte: number | undefined): boolean => byte !== undefined
+    && ((byte >= 0x30 && byte <= 0x39) || (byte >= 0x41 && byte <= 0x5a) || (byte >= 0x61 && byte <= 0x7a)
+      || byte === 0x2e || byte === 0x5f || byte === 0x2b || byte === 0x2d);
+  for (const entry of fixture.numeric_tokens) {
+    if (!entry || typeof entry.id !== "string" || !/^[a-z0-9][a-z0-9-]*$/.test(entry.id)
+        || tokenIds.has(entry.id) || typeof entry.source_path !== "string"
+        || typeof entry.context !== "string" || typeof entry.token !== "string"
+        || !/^\d+(?:\.\d+)?(?:e[+-]?\d+)?$/i.test(entry.token)) {
+      throw new Error("C07.4 numeric token inventory has a malformed or duplicate entry");
+    }
+    tokenIds.add(entry.id);
+    const sourceBytes = sourceFiles[entry.source_path];
+    if (!sourceBytes && !entry.source_path.startsWith("Bases/")) {
+      throw new Error(`C07.4 numeric token ${entry.id} references an unknown source path ${entry.source_path}`);
+    }
+    let bytes = sourceBytes;
+    if (!bytes) {
+      const scenario = fixture.scenarios.find((candidate) => candidate.base_path === entry.source_path);
+      if (!scenario) throw new Error(`C07.4 numeric token ${entry.id} references an unknown .base path ${entry.source_path}`);
+      bytes = Buffer.from(scenario.source, "utf8");
+    }
+    const tokenBytes = Buffer.from(entry.token, "utf8");
+    const offsets: number[] = [];
+    let offset = 0;
+    while ((offset = bytes.indexOf(tokenBytes, offset)) >= 0) {
+      const before = offset > 0 ? bytes[offset - 1] : undefined;
+      const afterOffset = offset + tokenBytes.length;
+      const after = afterOffset < bytes.length ? bytes[afterOffset] : undefined;
+      if (!tokenCharacter(before) && !tokenCharacter(after)) offsets.push(offset);
+      offset = afterOffset;
+    }
+    if (offsets.length !== 1) {
+      throw new Error(`C07.4 numeric token ${entry.id} must occur exactly once in ${entry.source_path}; observed offsets=${JSON.stringify(offsets)}`);
+    }
+    let contextPrefix: string;
+    let contextSuffix: string;
+    const noteSource = entry.source_path.startsWith("Notes/");
+    if (entry.context === "frontmatter.metric") {
+      contextPrefix = "metric: ";
+      contextSuffix = "\n";
+    } else if (entry.context === "frontmatter.values[0]") {
+      contextPrefix = "  - ";
+      contextSuffix = "\n";
+    } else if (entry.context === "view.filters.note.metric") {
+      const scenario = fixture.scenarios.find((candidate) => candidate.base_path === entry.source_path);
+      const expectedOperator = scenario?.operation === "equality-filter" ? "=="
+        : scenario?.operation === "relational-filter" ? ">" : null;
+      if (!expectedOperator) throw new Error(`C07.4 token ${entry.id} has an invalid numeric-filter context`);
+      contextPrefix = `note.metric ${expectedOperator} `;
+      contextSuffix = `"`;
+    } else if (entry.context === "view.filters.note.values.contains") {
+      const scenario = fixture.scenarios.find((candidate) => candidate.base_path === entry.source_path);
+      if (scenario?.operation !== "array-contains-filter") {
+        throw new Error(`C07.4 token ${entry.id} has an invalid array-contains context`);
+      }
+      contextPrefix = "note.values.contains(";
+      contextSuffix = ")";
+    } else {
+      throw new Error(`C07.4 numeric token ${entry.id} has an unsupported source context: ${entry.context}`);
+    }
+    const contextPrefixBytes = Buffer.from(contextPrefix, "utf8");
+    const contextSuffixBytes = Buffer.from(contextSuffix, "utf8");
+    const contextStart = offsets[0] - contextPrefixBytes.length;
+    if (contextStart < 0 || !bytes.subarray(contextStart, offsets[0]).equals(contextPrefixBytes)
+        || !bytes.subarray(offsets[0] + tokenBytes.length, offsets[0] + tokenBytes.length + contextSuffixBytes.length).equals(contextSuffixBytes)) {
+      throw new Error(`C07.4 token ${entry.id} is not located in its declared source context ${entry.context}`);
+    }
+    if (noteSource) {
+      const lineStart = bytes.lastIndexOf(0x0a, contextStart - 1) + 1;
+      const firstLineBreak = bytes.indexOf(0x0a);
+      const openingLine = (firstLineBreak < 0 ? bytes : bytes.subarray(0, firstLineBreak)).toString("utf8").replace(/\r$/, "").replace(/^\uFEFF/, "");
+      const frontmatterClose = firstLineBreak < 0 ? -1 : bytes.indexOf(Buffer.from("\n---"), firstLineBreak + 1);
+      if (lineStart !== contextStart || openingLine !== "---" || frontmatterClose < 0
+          || offsets[0] <= firstLineBreak || offsets[0] >= frontmatterClose) {
+        throw new Error(`C07.4 token ${entry.id} is not inside its declared YAML frontmatter property`);
+      }
+      if (entry.context === "frontmatter.values[0]") {
+        const previousLineBreak = bytes.lastIndexOf(0x0a, contextStart - 2);
+        const previousLineStart = previousLineBreak + 1;
+        const previousLine = bytes.subarray(previousLineStart, contextStart).toString("utf8");
+        if (previousLine !== "values:\n") {
+          throw new Error(`C07.4 token ${entry.id} is not the first item of the declared values frontmatter property`);
+        }
+      }
+    } else {
+      const scenario = fixture.scenarios.find((candidate) => candidate.base_path === entry.source_path);
+      const definition = scenario ? JSON.parse(scenario.source) as Record<string, unknown> : null;
+      const views = definition?.views;
+      const firstView = Array.isArray(views) ? views[0] as Record<string, unknown> | undefined : undefined;
+      if (typeof firstView?.filters !== "string") {
+        throw new Error(`C07.4 token ${entry.id} has no string-valued filters property`);
+      }
+      const countFilterKeys = (value: unknown): number => {
+        if (Array.isArray(value)) return value.reduce((count, child) => count + countFilterKeys(child), 0);
+        if (!value || typeof value !== "object") return 0;
+        return Object.entries(value).reduce((count, [key, child]) => count + Number(key === "filters") + countFilterKeys(child), 0);
+      };
+      if (countFilterKeys(definition) !== 1) {
+        throw new Error(`C07.4 token ${entry.id} complete .base definition must have exactly one parsed filters property`);
+      }
+      const rawFilterString = Buffer.from(JSON.stringify(firstView.filters), "utf8");
+      const rawFilterStart = bytes.indexOf(rawFilterString);
+      if (rawFilterStart < 0 || bytes.indexOf(rawFilterString, rawFilterStart + rawFilterString.length) >= 0) {
+        throw new Error(`C07.4 token ${entry.id} cannot be bound to one exact raw filters string`);
+      }
+      const rawFiltersKey = Buffer.from('"filters"', "utf8");
+      const rawFiltersKeyStarts: number[] = [];
+      for (let keyStart = 0; keyStart < bytes.length; keyStart += 1) {
+        if (bytes[keyStart] !== 0x22) continue;
+        let keyEnd = keyStart + 1;
+        while (keyEnd < bytes.length) {
+          if (bytes[keyEnd] === 0x5c) {
+            keyEnd += 2;
+            continue;
+          }
+          if (bytes[keyEnd] === 0x22) {
+            keyEnd += 1;
+            break;
+          }
+          keyEnd += 1;
+        }
+        let previous = keyStart - 1;
+        while (previous >= 0 && [0x20, 0x09, 0x0a, 0x0d].includes(bytes[previous])) previous -= 1;
+        let following = keyEnd;
+        while (following < bytes.length && [0x20, 0x09, 0x0a, 0x0d].includes(bytes[following])) following += 1;
+        const objectKeyPosition = (bytes[previous] === 0x7b || bytes[previous] === 0x2c) && bytes[following] === 0x3a;
+        if (objectKeyPosition && JSON.parse(bytes.subarray(keyStart, keyEnd).toString("utf8")) === "filters") {
+          rawFiltersKeyStarts.push(keyStart);
+        }
+        keyStart = keyEnd - 1;
+      }
+      if (rawFiltersKeyStarts.length !== 1) {
+        throw new Error(`C07.4 token ${entry.id} must have exactly one raw object key decoded as filters`);
+      }
+      const rawFiltersKeyStart = rawFiltersKeyStarts[0];
+      if (!bytes.subarray(rawFiltersKeyStart, rawFiltersKeyStart + rawFiltersKey.length).equals(rawFiltersKey)) {
+        throw new Error(`C07.4 token ${entry.id} filters key must use its exact unescaped source spelling`);
+      }
+      let rawFiltersObjectPosition = rawFiltersKeyStart - 1;
+      while (rawFiltersObjectPosition >= 0 && [0x20, 0x09, 0x0a, 0x0d].includes(bytes[rawFiltersObjectPosition])) {
+        rawFiltersObjectPosition -= 1;
+      }
+      let rawFiltersColon = rawFiltersKeyStart + rawFiltersKey.length;
+      while (rawFiltersColon < bytes.length && [0x20, 0x09, 0x0a, 0x0d].includes(bytes[rawFiltersColon])) {
+        rawFiltersColon += 1;
+      }
+      if (bytes[rawFiltersObjectPosition] !== 0x7b && bytes[rawFiltersObjectPosition] !== 0x2c) {
+        throw new Error(`C07.4 token ${entry.id} raw filters key is not in a JSON object-key position`);
+      }
+      if (bytes[rawFiltersColon] !== 0x3a) {
+        throw new Error(`C07.4 token ${entry.id} raw filters key is not followed by its property colon`);
+      }
+      let rawFiltersValueStart = rawFiltersColon + 1;
+      while (rawFiltersValueStart >= 0 && rawFiltersValueStart < bytes.length
+          && [0x20, 0x09, 0x0a, 0x0d].includes(bytes[rawFiltersValueStart])) {
+        rawFiltersValueStart += 1;
+      }
+      if (rawFiltersKeyStart >= rawFilterStart || rawFiltersColon < 0 || rawFiltersValueStart !== rawFilterStart) {
+        throw new Error(`C07.4 token ${entry.id} cannot bind its raw filter string to the JSON filters property`);
+      }
+      const rawFilterContentStart = rawFilterStart + 1;
+      const rawFilterContentEnd = rawFilterStart + rawFilterString.length - 1;
+      if (offsets[0] < rawFilterContentStart || offsets[0] + tokenBytes.length > rawFilterContentEnd) {
+        throw new Error(`C07.4 token ${entry.id} is outside its declared raw filters property`);
+      }
+    }
+    tokenSpans.push({
+      id: entry.id,
+      source_path: entry.source_path,
+      source_sha256: createHash("sha256").update(bytes).digest("hex"),
+      context: entry.context,
+      token: entry.token,
+      byte_offset: offsets[0],
+      byte_length: tokenBytes.length,
+    });
+  }
+  for (const pair of fixture.number_identity_pairs) {
+    if (!pair || typeof pair.id !== "string" || !tokenIds.has(pair.left_token_id) || !tokenIds.has(pair.right_token_id)) {
+      throw new Error("C07.4 number-identity pair references an unknown numeric token");
+    }
+  }
+  for (const comparison of fixture.text_comparisons) {
+    if (!comparison || typeof comparison.id !== "string" || typeof comparison.category !== "string"
+        || typeof comparison.left !== "string" || typeof comparison.right !== "string") {
+      throw new Error("C07.4 text comparison matrix has a malformed entry");
+    }
+  }
+  for (const scenario of fixture.scenarios) {
+    if (!scenario || typeof scenario.base_path !== "string" || !scenario.base_path.startsWith("Bases/")
+        || !scenario.base_path.endsWith(".base") || typeof scenario.source !== "string"
+        || !Array.isArray(scenario.coverage) || !scenario.coverage.every((item) => typeof item === "string")) {
+      throw new Error("C07.4 scenarios must have safe .base paths, raw source strings, and coverage labels");
+    }
+    resolveContainedPath(numberReferenceVaultRoot, scenario.base_path);
+    if (sourceFiles[scenario.base_path]) throw new Error(`C07.4 duplicate source path: ${scenario.base_path}`);
+    const baseDefinition = JSON.parse(scenario.source) as Record<string, unknown>;
+    const views = baseDefinition.views;
+    if (!Array.isArray(views) || views.length !== 1 || !views[0] || typeof views[0] !== "object" || Array.isArray(views[0])) {
+      throw new Error(`C07.4 ${scenario.id} must contain exactly one JSON-compatible Bases view`);
+    }
+    const view = views[0] as Record<string, unknown>;
+    if (view.type !== "table" || typeof view.name !== "string" || typeof view.filters !== "string") {
+      throw new Error(`C07.4 ${scenario.id} must be a named table view with an explicit filter`);
+    }
+    if (scenario.group_by_property) {
+      const groupBy = view.groupBy as Record<string, unknown> | undefined;
+      if (!groupBy || groupBy.property !== scenario.group_by_property || !["ASC", "DESC"].includes(String(groupBy.direction))) {
+        throw new Error(`C07.4 ${scenario.id} does not contain its declared numeric groupBy property`);
+      }
+    } else if (view.groupBy !== undefined) {
+      throw new Error(`C07.4 ${scenario.id} unexpectedly declares groupBy`);
+    }
+    sourceFiles[scenario.base_path] = Buffer.from(scenario.source, "utf8");
+  }
+  const configFiles: Record<string, Buffer> = {
+    ".obsidian/app.json": await readFile(join(vaultRoot, ".obsidian", "app.json")),
+    ".obsidian/appearance.json": await readFile(join(vaultRoot, ".obsidian", "appearance.json")),
+    ".obsidian/community-plugins.json": await readFile(join(vaultRoot, ".obsidian", "community-plugins.json")),
+    ".obsidian/core-plugins.json": await readFile(join(vaultRoot, ".obsidian", "core-plugins.json")),
+  };
+  await rm(numberReferenceVaultRoot, {recursive: true, force: true});
+  await mkdir(numberReferenceVaultRoot, {recursive: true});
+  for (const [path, bytes] of Object.entries({...sourceFiles, ...configFiles})) {
+    const destination = resolveContainedPath(numberReferenceVaultRoot, path);
+    await mkdir(dirname(destination), {recursive: true});
+    await writeFile(await assertNoSymlinkPathComponents(numberReferenceVaultRoot, path), bytes);
+  }
+  const sourceHashes = Object.fromEntries(Object.entries(sourceFiles).map(([path, bytes]) => [path, {
+    bytes: bytes.length,
+    sha256: createHash("sha256").update(bytes).digest("hex"),
+  }]));
+  const fixturePaths = Object.keys(sourceFiles).sort();
+  const seedArtifacts: Record<string, string> = {};
+  for (const [path, bytes] of Object.entries(sourceFiles)) {
+    const pathToken = Buffer.from(path, "utf8").toString("hex");
+    const artifactPath = `c07-number-reference-seeds/${pathToken}.seed`;
+    await mkdir(dirname(join(reportDirectory, artifactPath)), {recursive: true});
+    await writeFile(join(reportDirectory, artifactPath), bytes);
+    seedArtifacts[path] = artifactPath;
+  }
+  await writeFile(join(reportDirectory, "c07-number-reference-fixture.json"), fixtureBytes);
+  const basesReport = report.bases_number_reference as Record<string, unknown>;
+  basesReport.fixture_source_sha256 = fixtureSha256;
+  basesReport.fixture_source_bytes = fixtureBytes.length;
+  basesReport.vault_name = numberReferenceVaultName;
+  basesReport.vault_path = numberReferenceVaultRoot;
+  basesReport.source_hashes_before_open = sourceHashes;
+  basesReport.seed_artifacts = seedArtifacts;
+  basesReport.fixture_paths_to_observe = fixturePaths;
+  basesReport.numeric_token_byte_spans = tokenSpans;
+  basesReport.scenarios = fixture.scenarios.map((scenario) => ({
+    id: scenario.id,
+    base_path: scenario.base_path,
+    operation: scenario.operation,
+    group_by_property: scenario.group_by_property,
+    coverage: scenario.coverage,
+    source_sha256: sourceHashes[scenario.base_path]?.sha256 ?? null,
+    first_open_observation: null,
+    reopen_observation: null,
+  }));
+  return {
+    fixture,
+    fixtureBytes,
+    scenarioFixture: {
+      vault_root: numberReferenceVaultRoot,
+      source_files: sourceFiles,
+      source_hashes: sourceHashes,
+      fixture_paths: fixturePaths,
+      seed_artifacts: seedArtifacts,
+    },
+    sourceFiles,
+    sourceHashes,
+    tokenSpans,
+  };
+}
+
+async function readC074RendererDiagnostics(
+  connection: DevToolsConnection,
+  fixture: C074NumberReferenceFixture,
+  browserVersion: string,
+): Promise<Record<string, unknown>> {
+  const renderer = await connection.evaluateJson<Record<string, unknown>>(`(() => {
+    const numericTokens = ${JSON.stringify(fixture.numeric_tokens)};
+    const identityPairs = ${JSON.stringify(fixture.number_identity_pairs)};
+    const textComparisons = ${JSON.stringify(fixture.text_comparisons)};
+    const tokenById = new Map(numericTokens.map((entry) => [entry.id, entry.token]));
+    const describeNumber = (token) => {
+      const value = Number(token);
+      return {
+        token,
+        value_string: String(value),
+        finite: Number.isFinite(value),
+        safe_integer: Number.isSafeInteger(value),
+      };
+    };
+    const numberProbes = numericTokens.map((entry) => ({id: entry.id, ...describeNumber(entry.token)}));
+    const relation = (left, right) => left < right ? "less" : left > right ? "greater" : left === right ? "equal" : "unordered";
+    const numberIdentityProbes = identityPairs.map((pair) => {
+      const leftToken = tokenById.get(pair.left_token_id);
+      const rightToken = tokenById.get(pair.right_token_id);
+      const left = Number(leftToken);
+      const right = Number(rightToken);
+      return {
+        id: pair.id,
+        left_token_id: pair.left_token_id,
+        right_token_id: pair.right_token_id,
+        left_value_string: String(left),
+        right_value_string: String(right),
+        strict_equal: left === right,
+        comparison: relation(left, right),
+      };
+    });
+    const requestedOptions = {numeric: true, sensitivity: "base"};
+    const defaultCollator = new Intl.Collator();
+    const requestedCollator = new Intl.Collator(undefined, requestedOptions);
+    const compare = (collator, left, right) => {
+      const result = collator.compare(left, right);
+      return result < 0 ? "less" : result > 0 ? "greater" : "equal";
+    };
+    const textComparisonProbes = textComparisons.map((entry) => ({
+      id: entry.id,
+      category: entry.category,
+      left: entry.left,
+      right: entry.right,
+      default_collator_relation: compare(defaultCollator, entry.left, entry.right),
+      requested_collator_relation: compare(requestedCollator, entry.left, entry.right),
+    }));
+    const describeProperty = (value) => {
+      if (value === undefined) return {type: "missing", value_string: null, safe_integer: null};
+      if (value === null) return {type: "null", value_string: null, safe_integer: null};
+      if (typeof value === "number") return {type: "number", value_string: String(value), safe_integer: Number.isSafeInteger(value)};
+      if (typeof value === "bigint") return {type: "bigint", value_string: String(value), safe_integer: null};
+      if (typeof value === "string") return {type: "string", value_string: value, safe_integer: null};
+      if (typeof value === "boolean") return {type: "boolean", value_string: String(value), safe_integer: null};
+      if (Array.isArray(value)) return {type: "array", value_string: null, safe_integer: null, items: value.map(describeProperty)};
+      return {type: typeof value, value_string: null, safe_integer: null};
+    };
+    const app = window.app;
+    const probeNotes = ${JSON.stringify(fixture.notes.filter((note) => note.path.includes("Numbers/") || note.path.includes("Arrays/"))).replaceAll("`", "\\`")};
+    const frontmatterProperties = probeNotes.map((entry) => {
+      const file = app?.vault?.getAbstractFileByPath?.(entry.path);
+      const frontmatter = file ? app?.metadataCache?.getFileCache?.(file)?.frontmatter : undefined;
+      return {
+        path: entry.path,
+        frontmatter_available: Boolean(frontmatter && typeof frontmatter === "object"),
+        probe: describeProperty(frontmatter?.probe),
+        metric: describeProperty(frontmatter?.metric),
+        values: describeProperty(frontmatter?.values),
+      };
+    });
+    const getActualNumberTokenValue = (entry) => {
+      const file = app?.vault?.getAbstractFileByPath?.(entry.source_path);
+      const frontmatter = file ? app?.metadataCache?.getFileCache?.(file)?.frontmatter : undefined;
+      if (entry.context === "frontmatter.metric") return frontmatter?.metric;
+      const arrayIndex = /^frontmatter\\.values\\[(\\d+)\\]$/.exec(entry.context)?.[1];
+      if (arrayIndex !== undefined && Array.isArray(frontmatter?.values)) return frontmatter.values[Number(arrayIndex)];
+      return undefined;
+    };
+    const actualTokenValues = new Map();
+    const actualNumberTokenObservations = numericTokens
+      .filter((entry) => entry.source_path.startsWith("Notes/"))
+      .map((entry) => {
+        const actual = getActualNumberTokenValue(entry);
+        actualTokenValues.set(entry.id, actual);
+        const numericConversion = Number(entry.token);
+        let exactIntegerSourceMatch = null;
+        if (/^\\d+$/.test(entry.token) && (typeof actual === "number" || typeof actual === "bigint") && Number.isInteger(Number(actual))) {
+          try { exactIntegerSourceMatch = BigInt(actual) === BigInt(entry.token); } catch {}
+        }
+        return {
+          id: entry.id,
+          source_path: entry.source_path,
+          source_context: entry.context,
+          source_token: entry.token,
+          renderer_number_probe: describeNumber(entry.token),
+          actual_frontmatter_value: describeProperty(actual),
+          actual_to_number_conversion_string: typeof actual === "number" || typeof actual === "bigint" ? String(Number(actual)) : null,
+          actual_matches_renderer_number_conversion: (typeof actual === "number" || typeof actual === "bigint")
+            ? Number(actual) === numericConversion
+            : null,
+          exact_integer_source_match: exactIntegerSourceMatch,
+        };
+      });
+    const actualNumberIdentityProbes = identityPairs.map((pair) => {
+      const leftEntry = numericTokens.find((entry) => entry.id === pair.left_token_id);
+      const rightEntry = numericTokens.find((entry) => entry.id === pair.right_token_id);
+      const left = actualTokenValues.get(pair.left_token_id);
+      const right = actualTokenValues.get(pair.right_token_id);
+      const leftNumeric = typeof left === "number" || typeof left === "bigint";
+      const rightNumeric = typeof right === "number" || typeof right === "bigint";
+      return {
+        id: pair.id,
+        left_token_id: pair.left_token_id,
+        right_token_id: pair.right_token_id,
+        left_source_path: leftEntry?.source_path ?? null,
+        right_source_path: rightEntry?.source_path ?? null,
+        left_actual_value: describeProperty(left),
+        right_actual_value: describeProperty(right),
+        strict_equal: left === right,
+        same_after_renderer_number_conversion: leftNumeric && rightNumeric ? Number(left) === Number(right) : null,
+        comparison: leftNumeric && rightNumeric ? relation(left, right) : "non-numeric-or-missing",
+      };
+    });
+    const tiePaths = new Set(["Notes/Text/Ties/a-first.md", "Notes/Text/Ties/z-last.md"]);
+    const vaultFileTieOrder = app?.vault?.getFiles?.().map((file) => file.path).filter((path) => tiePaths.has(path)) ?? [];
+    return {
+      user_agent: navigator.userAgent,
+      navigator_language: navigator.language || null,
+      navigator_languages: Array.isArray(navigator.languages) ? [...navigator.languages] : [],
+      default_collator_resolved_options: defaultCollator.resolvedOptions(),
+      requested_collator_options: requestedOptions,
+      requested_collator_resolved_options: requestedCollator.resolvedOptions(),
+      number_probes: numberProbes,
+      number_identity_probes: numberIdentityProbes,
+      actual_number_token_observations: actualNumberTokenObservations,
+      actual_number_identity_probes: actualNumberIdentityProbes,
+      text_comparison_probes: textComparisonProbes,
+      frontmatter_properties: frontmatterProperties,
+      vault_file_tie_seed_order: vaultFileTieOrder,
+    };
+  })()`, "C07.4 renderer numeric, text, locale, and frontmatter diagnostics");
+  return {
+    captured_at: new Date().toISOString(),
+    runner_locale_environment: {
+      LANG: process.env.LANG ?? null,
+      LC_ALL: process.env.LC_ALL ?? null,
+      LC_COLLATE: process.env.LC_COLLATE ?? null,
+      LANGUAGE: process.env.LANGUAGE ?? null,
+      TZ: process.env.TZ ?? null,
+    },
+    runner_os: process.env.RUNNER_OS ?? "unknown",
+    runner_image: process.env.ImageOS ?? process.env.OBSIDIAN_RUNNER_IMAGE ?? "unknown",
+    runner_image_version: process.env.ImageVersion ?? "unknown",
+    runner_architecture: process.arch,
+    obsidian_version: obsidianVersion,
+    obsidian_asset_sha256: obsidianSha256,
+    cdp_browser_version: browserVersion,
+    renderer,
+  };
+}
+
+function c074RowOccurrences(observation: GroupOrderScenarioObservation): Array<Record<string, unknown>> {
+  return [...observation.visible_fixture_path_links]
+    .sort((left, right) => left.result_order_ordinal - right.result_order_ordinal)
+    .map((link) => ({
+      path: link.path,
+      group_heading: link.group_heading,
+      group_keys: link.group_keys,
+      column_ordinal: link.column_ordinal,
+      dom_result_order_ordinal: link.result_order_ordinal,
+      fresh_sweep_observation_count: link.fresh_sweep_observation_count,
+    }));
+}
+
+function c074ComparableObservation(observation: Record<string, unknown>): Record<string, unknown> {
+  const diagnostics = observation.renderer_diagnostics as Record<string, unknown>;
+  const renderer = diagnostics.renderer as Record<string, unknown>;
+  return {
+    requested_path: observation.requested_path,
+    selected_path: observation.selected_path,
+    active_view_type: observation.active_view_type,
+    result_count: observation.result_count,
+    ordered_row_occurrences: observation.ordered_row_occurrences,
+    ordered_group_headings: observation.ordered_group_headings,
+    groups: observation.groups,
+    unique_paths: observation.unique_paths,
+    renderer: {
+      user_agent: renderer.user_agent,
+      navigator_language: renderer.navigator_language,
+      navigator_languages: renderer.navigator_languages,
+      default_collator_resolved_options: renderer.default_collator_resolved_options,
+      requested_collator_options: renderer.requested_collator_options,
+      requested_collator_resolved_options: renderer.requested_collator_resolved_options,
+      number_probes: renderer.number_probes,
+      number_identity_probes: renderer.number_identity_probes,
+      actual_number_token_observations: renderer.actual_number_token_observations,
+      actual_number_identity_probes: renderer.actual_number_identity_probes,
+      text_comparison_probes: renderer.text_comparison_probes,
+      frontmatter_properties: renderer.frontmatter_properties,
+      vault_file_tie_seed_order: renderer.vault_file_tie_seed_order,
+    },
+    runner: {
+      runner_os: diagnostics.runner_os,
+      runner_image: diagnostics.runner_image,
+      runner_image_version: diagnostics.runner_image_version,
+      runner_architecture: diagnostics.runner_architecture,
+      obsidian_version: diagnostics.obsidian_version,
+      obsidian_asset_sha256: diagnostics.obsidian_asset_sha256,
+      cdp_browser_version: diagnostics.cdp_browser_version,
+    },
+  };
+}
+
+async function captureC074SourceCheckpoint(
+  stage: string,
+  setup: {sourceFiles: Record<string, Buffer>; sourceHashes: Record<string, GroupOrderSourceHash>},
+): Promise<C074SourceObservation> {
+  const basesReport = report.bases_number_reference as Record<string, unknown>;
+  const snapshot = await snapshotTree(numberReferenceVaultRoot);
+  const observedPaths = snapshot.filter((entry) => entry.kind === "file" && /\.(?:md|base)$/i.test(entry.path)).map((entry) => entry.path).sort();
+  const expectedPaths = Object.keys(setup.sourceFiles).sort();
+  const expectedSet = new Set(expectedPaths);
+  const sourceHashes: Record<string, GroupOrderSourceHash | null> = {};
+  const changedSources: C074SourceObservation["changed_sources_from_seed"] = [];
+  for (const path of expectedPaths) {
+    let observedBytes: Buffer | null = null;
+    try {
+      observedBytes = await readFile(resolveContainedPath(numberReferenceVaultRoot, path));
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+    }
+    const observed = observedBytes ? {
+      bytes: observedBytes.length,
+      sha256: createHash("sha256").update(observedBytes).digest("hex"),
+    } : null;
+    sourceHashes[path] = observed;
+    const seed = setup.sourceHashes[path] ?? null;
+    if (!isDeepStrictEqual(seed, observed)) {
+      changedSources.push({
+        path,
+        seed,
+        observed,
+        ...(observedBytes ? {observed_bytes_base64: observedBytes.toString("base64")} : {}),
+      });
+    }
+  }
+  const unexpectedSourcePaths = observedPaths.filter((path) => !expectedSet.has(path));
+  for (const path of unexpectedSourcePaths) {
+    const bytes = await readFile(resolveContainedPath(numberReferenceVaultRoot, path));
+    const observed = {bytes: bytes.length, sha256: createHash("sha256").update(bytes).digest("hex")};
+    sourceHashes[path] = observed;
+    changedSources.push({path, seed: null, observed, observed_bytes_base64: bytes.toString("base64")});
+  }
+  const checkpoint: C074SourceObservation = {
+    stage,
+    observed_at: new Date().toISOString(),
+    source_hashes: sourceHashes,
+    source_path_set: observedPaths,
+    unexpected_source_paths: unexpectedSourcePaths,
+    changed_sources_from_seed: changedSources,
+  };
+  const checkpoints = basesReport.source_checkpoints as C074SourceObservation[];
+  checkpoints.push(checkpoint);
+  await saveReport();
+  return checkpoint;
+}
+
+async function reseedC074SourceFiles(
+  setup: {sourceFiles: Record<string, Buffer>; sourceHashes: Record<string, GroupOrderSourceHash>},
+  observed: C074SourceObservation,
+): Promise<{
+  performed_after: string;
+  method: string;
+  restored_paths: string[];
+  source_hashes_after_reseed: C074SourceObservation;
+}> {
+  if (observed.unexpected_source_paths.length > 0) {
+    throw new Error(`C07.4 Obsidian capture created or exposed unexpected Markdown/.base sources: ${JSON.stringify(observed.unexpected_source_paths)}`);
+  }
+  const restoredPaths: string[] = [];
+  for (const [path, bytes] of Object.entries(setup.sourceFiles)) {
+    const current = observed.source_hashes[path];
+    const expected = setup.sourceHashes[path];
+    if (!isDeepStrictEqual(current, expected)) restoredPaths.push(path);
+    if (!isDeepStrictEqual(current, expected)) {
+      const destination = resolveContainedPath(numberReferenceVaultRoot, path);
+      await mkdir(dirname(destination), {recursive: true});
+      await writeFile(await assertNoSymlinkPathComponents(numberReferenceVaultRoot, path), bytes);
+    }
+  }
+  return {
+    performed_after: observed.stage,
+    method: "harness restored exact seed bytes before the reopen session",
+    restored_paths: restoredPaths,
+    source_hashes_after_reseed: await captureC074SourceCheckpoint("before-reopen-after-reseed", setup),
+  };
+}
+
+async function captureC074Scenario(
+  connection: DevToolsConnection,
+  browserVersion: string,
+  fixture: C074NumberReferenceFixture,
+  scenario: C074NumberReferenceScenario,
+  fixturePaths: string[],
+  scenarioFixture: GroupOrderScenarioFixture,
+  stage: "first-open" | "reopen",
+): Promise<Record<string, unknown>> {
+  const expandedSidebar = await connection.evaluateJson<boolean>(`(() => {
+    const leftSplit = window.app?.workspace?.leftSplit;
+    if (leftSplit?.collapsed && typeof leftSplit.expand === 'function') leftSplit.expand();
+    return !leftSplit || !leftSplit.collapsed;
+  })()`, "C07.4 reveal vault tree before selecting the next target");
+  if (!expandedSidebar) throw new Error(`C07.4 ${stage} could not expand Obsidian's vault tree before selecting ${scenario.base_path}`);
+  await delay(300);
+  const basePath = resolveContainedPath(scenarioFixture.vault_root, scenario.base_path);
+  const sourceBytesBeforeCapture = await readFile(basePath);
+  const groupOrderScenario: GroupOrderScenario = {
+    id: scenario.id,
+    base_path: scenario.base_path,
+    source_format: "json",
+    layout: "table",
+    ...(scenario.group_by_property ? {group_by_property: scenario.group_by_property} : {}),
+    coverage: scenario.coverage,
+    source: scenario.source,
+  };
+  const observation = await captureGroupOrderScenario(connection, groupOrderScenario, fixturePaths, scenarioFixture, stage);
+  const sourceBytesAfterCapture = await readFile(basePath);
+  if (observation.screenshot) {
+    const existingName = observation.screenshot;
+    const c074Name = existingName.replace("obsidian-group-order-", "obsidian-c07-number-");
+    await rename(join(reportDirectory, existingName), join(reportDirectory, c074Name));
+    observation.screenshot = c074Name;
+  }
+  const occurrences = c074RowOccurrences(observation);
+  const occurrencePaths = occurrences.map((entry) => String(entry.path));
+  const uniquePaths = [...new Set(occurrencePaths)].sort();
+  const visiblePaths = observation.visible_fixture_path_links.map((entry) => entry.path);
+  const resultCountMatchesOccurrences = observation.result_count !== null && observation.result_count === occurrences.length;
+  const observedDomOrdinals = observation.visible_fixture_path_links.map((entry) => entry.result_order_ordinal).sort((left, right) => left - right);
+  const domOrdinalsComplete = isDeepStrictEqual(observedDomOrdinals, observation.visible_fixture_path_links.map((_entry, index) => index));
+  const resultCountEvidence = observation.result_count_evidence;
+  const selectedRootCountEvidence = resultCountEvidence.length === 1
+    && (resultCountEvidence[0].scope === "selected-table-shell" || resultCountEvidence[0].scope === "selected-table-container")
+    && resultCountEvidence[0].selected_result_root.contained_visible_table_count === 1;
+  const freshSweepDuplicatePathSamples = observation.visibility_sampling.fresh_sweep_duplicate_path_samples;
+  const freshSweepComplete = observation.visibility_sampling.fresh_sweep_coverage_complete === true
+    && freshSweepDuplicatePathSamples === 0
+    && observation.visibility_sampling.fresh_sweep_ordering_ambiguous === false
+    && observation.visibility_sampling.fresh_sweep_group_ownership_ambiguous === false
+    && observation.visibility_sampling.fresh_sweep_group_ownership_complete === true;
+  const groupedMembershipComplete = scenario.group_by_property === null
+    || occurrences.every((entry) => Array.isArray(entry.group_keys) && entry.group_keys.length === 1
+      && typeof entry.group_heading === "string" && entry.group_heading.length > 0);
+  const visibleRowsMatchMappedOccurrences = isDeepStrictEqual(visiblePaths, occurrencePaths);
+  const rendererDiagnostics = await readC074RendererDiagnostics(connection, fixture, browserVersion);
+  const renderer = rendererDiagnostics.renderer as Record<string, unknown>;
+  const expectedFrontmatterPaths = fixture.notes
+    .filter((note) => note.path.includes("Numbers/") || note.path.includes("Arrays/"))
+    .map((note) => note.path);
+  const frontmatterProperties = renderer.frontmatter_properties as Array<Record<string, unknown>>;
+  const frontmatterByPath = new Map(frontmatterProperties.map((entry) => [entry.path, entry]));
+  const numberProbes = renderer.number_probes as Array<Record<string, unknown>>;
+  const numberIdentityProbes = renderer.number_identity_probes as Array<Record<string, unknown>>;
+  const textComparisonProbes = renderer.text_comparison_probes as Array<Record<string, unknown>>;
+  const actualTokenObservations = renderer.actual_number_token_observations as Array<Record<string, unknown>>;
+  const actualIdentityProbes = renderer.actual_number_identity_probes as Array<Record<string, unknown>>;
+  const numberProbesComplete = fixture.numeric_tokens.length === numberProbes.length
+    && isDeepStrictEqual(numberProbes.map((entry) => entry.id), fixture.numeric_tokens.map((entry) => entry.id))
+    && numberProbes.every((entry, index) => entry.token === fixture.numeric_tokens[index].token
+      && typeof entry.value_string === "string" && typeof entry.finite === "boolean" && typeof entry.safe_integer === "boolean");
+  const numberIdentityProbesComplete = fixture.number_identity_pairs.length === numberIdentityProbes.length
+    && isDeepStrictEqual(numberIdentityProbes.map((entry) => entry.id), fixture.number_identity_pairs.map((entry) => entry.id))
+    && numberIdentityProbes.every((entry, index) => entry.left_token_id === fixture.number_identity_pairs[index].left_token_id
+      && entry.right_token_id === fixture.number_identity_pairs[index].right_token_id
+      && typeof entry.left_value_string === "string"
+      && typeof entry.right_value_string === "string" && typeof entry.strict_equal === "boolean"
+      && ["less", "greater", "equal", "unordered"].includes(String(entry.comparison)));
+  const textComparisonProbesComplete = fixture.text_comparisons.length === textComparisonProbes.length
+    && isDeepStrictEqual(textComparisonProbes.map((entry) => entry.id), fixture.text_comparisons.map((entry) => entry.id))
+    && textComparisonProbes.every((entry, index) => entry.category === fixture.text_comparisons[index].category
+      && entry.left === fixture.text_comparisons[index].left && entry.right === fixture.text_comparisons[index].right
+      && ["less", "greater", "equal"].includes(String(entry.default_collator_relation))
+      && ["less", "greater", "equal"].includes(String(entry.requested_collator_relation)));
+  const actualFrontmatterTokensComplete = fixture.numeric_tokens.filter((entry) => entry.source_path.startsWith("Notes/")).length === actualTokenObservations.length
+    && isDeepStrictEqual(actualTokenObservations.map((entry) => entry.id), fixture.numeric_tokens.filter((entry) => entry.source_path.startsWith("Notes/")).map((entry) => entry.id))
+    && actualTokenObservations.every((entry, index) => {
+      const expectedToken = fixture.numeric_tokens.filter((token) => token.source_path.startsWith("Notes/"))[index];
+      const actual = entry.actual_frontmatter_value as Record<string, unknown> | undefined;
+      return entry.source_token === expectedToken.token && entry.source_path === expectedToken.source_path
+        && entry.source_context === expectedToken.context
+        && (actual?.type === "number" || actual?.type === "bigint")
+        && typeof entry.actual_matches_renderer_number_conversion === "boolean"
+        && (typeof entry.renderer_number_probe === "object" && entry.renderer_number_probe !== null)
+        && (typeof entry.exact_integer_source_match === "boolean" || entry.exact_integer_source_match === null);
+    });
+  const actualIdentityProbesComplete = fixture.number_identity_pairs.length === actualIdentityProbes.length
+    && actualIdentityProbes.every((entry) => {
+      const left = entry.left_actual_value as Record<string, unknown> | undefined;
+      const right = entry.right_actual_value as Record<string, unknown> | undefined;
+      return (left?.type === "number" || left?.type === "bigint")
+        && (right?.type === "number" || right?.type === "bigint")
+        && typeof entry.strict_equal === "boolean"
+        && typeof entry.same_after_renderer_number_conversion === "boolean"
+        && ["less", "greater", "equal", "unordered"].includes(String(entry.comparison));
+    });
+  const frontmatterPropertiesComplete = expectedFrontmatterPaths.length === frontmatterProperties.length
+    && expectedFrontmatterPaths.every((path) => {
+      const entry = frontmatterByPath.get(path);
+      if (!entry?.frontmatter_available) return false;
+      if (path.includes("Numbers/")) {
+        return ["number", "bigint"].includes(String((entry.metric as Record<string, unknown> | undefined)?.type));
+      }
+      const values = entry.values as Record<string, unknown> | undefined;
+      const items = (values?.items as Array<Record<string, unknown>> | undefined) ?? [];
+      const expectedItemCount = fixture.numeric_tokens.filter((token) => token.source_path === path).length;
+      return values?.type === "array"
+        && expectedItemCount > 0
+        && items.length === expectedItemCount
+        && items.every((item) => item.type === "number" || item.type === "bigint");
+    })
+    && actualFrontmatterTokensComplete
+    && actualIdentityProbesComplete;
+  const rendererMetadata = renderer as Record<string, unknown>;
+  const diagnosticsMetadataComplete = typeof rendererMetadata.user_agent === "string" && rendererMetadata.user_agent.length > 0
+    && typeof rendererMetadata.navigator_language === "string"
+    && Array.isArray(rendererMetadata.navigator_languages) && rendererMetadata.navigator_languages.length > 0
+    && typeof rendererMetadata.default_collator_resolved_options === "object" && rendererMetadata.default_collator_resolved_options !== null
+    && typeof (rendererMetadata.default_collator_resolved_options as Record<string, unknown>).locale === "string"
+    && typeof rendererMetadata.requested_collator_options === "object" && rendererMetadata.requested_collator_options !== null
+    && (rendererMetadata.requested_collator_options as Record<string, unknown>).numeric === true
+    && (rendererMetadata.requested_collator_options as Record<string, unknown>).sensitivity === "base"
+    && typeof rendererMetadata.requested_collator_resolved_options === "object" && rendererMetadata.requested_collator_resolved_options !== null
+    && typeof (rendererMetadata.requested_collator_resolved_options as Record<string, unknown>).locale === "string"
+    && (rendererMetadata.requested_collator_resolved_options as Record<string, unknown>).numeric === true
+    && (rendererMetadata.requested_collator_resolved_options as Record<string, unknown>).sensitivity === "base";
+  const runnerMetadata = rendererDiagnostics as Record<string, unknown>;
+  const runnerLocaleEnvironment = runnerMetadata.runner_locale_environment as Record<string, unknown> | undefined;
+  const runnerMetadataComplete = typeof runnerMetadata.runner_os === "string" && runnerMetadata.runner_os.length > 0
+    && typeof runnerMetadata.runner_image === "string" && runnerMetadata.runner_image.length > 0 && runnerMetadata.runner_image !== "unknown"
+    && typeof runnerMetadata.runner_image_version === "string" && runnerMetadata.runner_image_version.length > 0 && runnerMetadata.runner_image_version !== "unknown"
+    && typeof runnerMetadata.runner_architecture === "string" && runnerMetadata.runner_architecture.length > 0
+    && typeof runnerMetadata.obsidian_version === "string" && runnerMetadata.obsidian_version.length > 0
+    && /^[0-9a-f]{64}$/.test(String(runnerMetadata.obsidian_asset_sha256))
+    && typeof runnerMetadata.cdp_browser_version === "string" && runnerMetadata.cdp_browser_version.length > 0
+    && Boolean(runnerLocaleEnvironment)
+    && ["LANG", "LC_ALL", "LC_COLLATE", "LANGUAGE", "TZ"].every((key) => runnerLocaleEnvironment?.[key] === null || typeof runnerLocaleEnvironment?.[key] === "string");
+  const rendererDiagnosticsComplete = numberProbesComplete && numberIdentityProbesComplete
+    && textComparisonProbesComplete && diagnosticsMetadataComplete && runnerMetadataComplete;
+  const tieSeedOrder = renderer.vault_file_tie_seed_order as string[];
+  const pathTieSeedOrderDisambiguates = scenario.id !== "text-equal-key-path-tie"
+    || isDeepStrictEqual(tieSeedOrder, ["Notes/Text/Ties/z-last.md", "Notes/Text/Ties/a-first.md"]);
+  const complete = observation.requested_file_path === scenario.base_path
+    && observation.selection_succeeded
+    && observation.active_file_path === scenario.base_path
+    && observation.active_view_type === "bases"
+    && observation.state_settled
+    && observation.extraction_ambiguous === false
+    && typeof observation.screenshot === "string"
+    && observation.screenshot.length > 0
+    && observation.screenshot_error === undefined
+    && observation.screenshot_dimensions !== null
+    && observation.screenshot_dimensions.width > 0
+    && observation.screenshot_dimensions.height > 0
+    && observation.probe_error === undefined
+    && observation.probe_retry_error === undefined
+    && selectedRootCountEvidence
+    && resultCountMatchesOccurrences
+    && domOrdinalsComplete
+    && freshSweepComplete
+    && groupedMembershipComplete
+    && visibleRowsMatchMappedOccurrences
+    && observation.unmapped_visible_path_candidates.length === 0
+    && observation.unmapped_visible_row_candidates.length === 0
+    && observation.visible_error_texts.length === 0
+    && frontmatterPropertiesComplete
+    && rendererDiagnosticsComplete
+    && pathTieSeedOrderDisambiguates;
+  const result = {
+    stage,
+    scenario_id: scenario.id,
+    operation: scenario.operation,
+    target_base_path: scenario.base_path,
+    target_base_sha256: scenarioFixture.source_hashes[scenario.base_path]?.sha256 ?? null,
+    target_source_before_capture: {
+      bytes: sourceBytesBeforeCapture.length,
+      sha256: createHash("sha256").update(sourceBytesBeforeCapture).digest("hex"),
+      raw_bytes_base64: sourceBytesBeforeCapture.toString("base64"),
+    },
+    target_source_after_capture: {
+      bytes: sourceBytesAfterCapture.length,
+      sha256: createHash("sha256").update(sourceBytesAfterCapture).digest("hex"),
+      raw_bytes_base64: sourceBytesAfterCapture.toString("base64"),
+    },
+    requested_path: observation.requested_file_path,
+    selected_path: observation.active_file_path,
+    active_view_type: observation.active_view_type,
+    selection_succeeded: observation.selection_succeeded,
+    state_settled: observation.state_settled,
+    result_count: observation.result_count,
+    result_count_evidence: observation.result_count_evidence,
+    selected_root_count_evidence_valid: selectedRootCountEvidence,
+    ordered_row_occurrences: occurrences,
+    dom_ordinals_complete: domOrdinalsComplete,
+    fresh_sweep_complete: freshSweepComplete,
+    grouped_membership_complete: groupedMembershipComplete,
+    ordered_group_headings: observation.ordered_group_headings,
+    groups: observation.groups.map((group) => ({heading: group.heading_text, paths_in_order: group.member_paths})),
+    unique_paths: uniquePaths,
+    visible_fixture_path_links: observation.visible_fixture_path_links,
+    fresh_sweep_result_membership: observation.visibility_sampling.fresh_sweep_result_membership,
+    fresh_sweep_duplicate_path_samples: freshSweepDuplicatePathSamples,
+    unmapped_path_candidates: observation.unmapped_visible_path_candidates,
+    unmapped_row_candidates: observation.unmapped_visible_row_candidates,
+    unmapped_path_candidate_count: observation.unmapped_visible_path_candidates.length,
+    unmapped_row_candidate_count: observation.unmapped_visible_row_candidates.length,
+    extraction_ambiguous: observation.extraction_ambiguous,
+    ambiguity_count: observation.ambiguity_reasons.length,
+    ambiguity_reasons: observation.ambiguity_reasons,
+    duplicate_path_occurrence_count_in_mapped_rows: occurrences.length - uniquePaths.length,
+    visible_error_texts: observation.visible_error_texts,
+    notices: observation.notices,
+    error_surface_classification: observation.error_surface_classification,
+    state_samples: observation.state_samples,
+    screenshot: observation.screenshot,
+    screenshot_dimensions: observation.screenshot_dimensions,
+    screenshot_error: observation.screenshot_error ?? null,
+    probe_error: observation.probe_error ?? null,
+    target_selection_mode: observation.target_selection_mode,
+    viewport_preparation: observation.viewport_preparation,
+    renderer_diagnostics: rendererDiagnostics,
+    frontmatter_properties_complete: frontmatterPropertiesComplete,
+    renderer_diagnostics_complete: rendererDiagnosticsComplete,
+    number_probes_complete: numberProbesComplete,
+    number_identity_probes_complete: numberIdentityProbesComplete,
+    text_comparison_probes_complete: textComparisonProbesComplete,
+    renderer_metadata_complete: diagnosticsMetadataComplete,
+    runner_metadata_complete: runnerMetadataComplete,
+    path_tie_seed_order: tieSeedOrder,
+    path_tie_seed_order_disambiguates: pathTieSeedOrderDisambiguates,
+    row_occurrence_count: occurrences.length,
+    row_occurrence_count_matches_result_count: resultCountMatchesOccurrences,
+    visible_path_links_match_ordered_row_occurrences: visibleRowsMatchMappedOccurrences,
+    complete,
+  };
+  if (!complete) {
+    throw new Error(`C07.4 ${stage} ${scenario.id} failed exact selected-view, result-count, or row-mapping acceptance: ${JSON.stringify(result).slice(0, 12_000)}`);
+  }
+  return result;
+}
+
+async function runBasesNumberReferenceProbe(): Promise<void> {
+  const profilesRoot = join(workDirectory, "number-reference-obsidian-profiles");
+  const profileDirectory = join(profilesRoot, "c07-number-reference");
+  const basesReport = report.bases_number_reference as Record<string, unknown>;
+  const snapshots = report.vault_snapshots as Record<string, unknown>;
+  let firstProcess: ChildProcess | undefined;
+  let firstConnection: DevToolsConnection | undefined;
+  let reopenProcess: ChildProcess | undefined;
+  let reopenConnection: DevToolsConnection | undefined;
+  basesReport.status = "running";
+  basesReport.capture_status = "running";
+  try {
+    await rm(profilesRoot, {recursive: true, force: true});
+    await mkdir(profilesRoot, {recursive: true});
+    const fixtureSetup = await createC074NumberReferenceFixture();
+    const fixture = fixtureSetup.fixture;
+    const scenarioFixture = fixtureSetup.scenarioFixture;
+    const firstObservations: Record<string, Record<string, unknown>> = {};
+    const reopenedObservations: Record<string, Record<string, unknown>> = {};
+    const scenarioReport = fixture.scenarios.map((scenario) => ({
+      id: scenario.id,
+      operation: scenario.operation,
+      base_path: scenario.base_path,
+      base_source_sha256: fixtureSetup.sourceHashes[scenario.base_path]?.sha256 ?? null,
+      group_by_property: scenario.group_by_property,
+      coverage: scenario.coverage,
+      first_open_observation: null as Record<string, unknown> | null,
+      reopen_observation: null as Record<string, unknown> | null,
+      comparison: null as Record<string, unknown> | null,
+    }));
+    const firstSession: Record<string, unknown> = {
+      status: "pending",
+      profile_id: "c07-number-reference",
+      vault_name: numberReferenceVaultName,
+      vault_path: numberReferenceVaultRoot,
+      devtools_port: 9230,
+      browser_version: null,
+      observations: firstObservations,
+    };
+    const reopenSession: Record<string, unknown> = {
+      status: "pending",
+      profile_id: "c07-number-reference",
+      vault_name: numberReferenceVaultName,
+      vault_path: numberReferenceVaultRoot,
+      devtools_port: 9231,
+      browser_version: null,
+      workspace_view_immediately_after_startup: null,
+      observations: reopenedObservations,
+    };
+    basesReport.scenarios = scenarioReport;
+    basesReport.first_open = firstSession;
+    basesReport.reopen = reopenSession;
+    basesReport.source_hashes_before_open = fixtureSetup.sourceHashes;
+    basesReport.source_hashes_before_reopen = fixtureSetup.sourceHashes;
+    basesReport.source_checkpoints = [];
+    basesReport.locale_policy = "runner-default locale; locale variables are observed but not changed";
+    snapshots.c07_number_reference_seed = await snapshotTree(numberReferenceVaultRoot);
+    await captureC074SourceCheckpoint("before-first-open", fixtureSetup);
+    await saveReport();
+
+    firstProcess = await createObsidianProfile(profileDirectory, 9230, "obsidian-c07-number-first-open.log");
+    const first = await connectObsidian(9230);
+    firstConnection = first.connection;
+    firstSession.browser_version = first.browserVersion;
+    firstSession.first_target = {title: first.target.title ?? "", url: first.target.url ?? ""};
+    const firstRunBody = await waitForRenderer(
+      firstConnection,
+      "document.body?.innerText ?? ''",
+      (body) => body.includes("Open folder as vault"),
+      "Obsidian's first-run vault screen for C07.4",
+    );
+    firstSession.first_run_text = firstRunBody.slice(0, 2_000);
+    await captureC074SourceCheckpoint("first-open-after-startup", fixtureSetup);
+    firstConnection = await chooseVaultDirectory(firstConnection, 9230, firstProcess, {
+      targetRoot: numberReferenceVaultRoot,
+      reporter: firstSession,
+      screenshotPrefix: "obsidian-c07-number-first-open",
+    });
+    await chooseRestrictedMode(firstConnection, firstSession, numberReferenceVaultName, basename(fixture.scenarios[0]?.base_path ?? "C07.4"));
+    await captureC074SourceCheckpoint("first-open-after-vault-selection", fixtureSetup);
+
+    for (const scenario of fixture.scenarios) {
+      const observation = await captureC074Scenario(
+        firstConnection,
+        first.browserVersion,
+        fixture,
+        scenario,
+        scenarioFixture.fixture_paths,
+        scenarioFixture,
+        "first-open",
+      );
+      firstObservations[scenario.id] = observation;
+      const entry = scenarioReport.find((candidate) => candidate.id === scenario.id)!;
+      entry.first_open_observation = observation;
+      await captureC074SourceCheckpoint(`first-open-after-capture:${scenario.id}`, fixtureSetup);
+      await saveReport();
+    }
+    await stopProcess(firstProcess, firstConnection);
+    firstProcess = undefined;
+    firstConnection = undefined;
+    firstSession.status = "completed";
+    const firstAfterShutdown = await captureC074SourceCheckpoint("first-open-after-shutdown", fixtureSetup);
+    snapshots.c07_number_reference_after_first_close = await snapshotTree(numberReferenceVaultRoot);
+    await saveReport();
+
+    const reseed = await reseedC074SourceFiles(fixtureSetup, firstAfterShutdown);
+    basesReport.reseed_before_reopen = reseed;
+    basesReport.source_hashes_after_reseed = reseed.source_hashes_after_reseed.source_hashes;
+    basesReport.reopen_seed_hashes_match = isDeepStrictEqual(fixtureSetup.sourceHashes, reseed.source_hashes_after_reseed.source_hashes);
+    if (basesReport.reopen_seed_hashes_match !== true) {
+      throw new Error("C07.4 reseed did not restore the exact original Markdown and .base seed bytes before reopen");
+    }
+    await saveReport();
+
+    reopenProcess = await createObsidianProfile(profileDirectory, 9231, "obsidian-c07-number-reopen.log");
+    const reopened = await connectObsidian(9231);
+    reopenConnection = reopened.connection;
+    reopenSession.browser_version = reopened.browserVersion;
+    reopenSession.first_target = {title: reopened.target.title ?? "", url: reopened.target.url ?? ""};
+    await chooseRestrictedMode(reopenConnection, reopenSession, numberReferenceVaultName, basename(fixture.scenarios[0]?.base_path ?? "C07.4"));
+    await captureC074SourceCheckpoint("reopen-after-startup", fixtureSetup);
+    reopenSession.workspace_view_immediately_after_startup = await reopenConnection.evaluateJson<{
+      active_file_path: string | null;
+      active_view_type: string | null;
+      title: string;
+      body: string;
+    }>(`(() => {
+      const view = window.app?.workspace?.activeLeaf?.view;
+      const root = document.querySelector('.workspace-leaf.mod-active') ?? document.body;
+      return {
+        active_file_path: view?.file?.path ?? null,
+        active_view_type: view?.getViewType?.() ?? null,
+        title: document.title,
+        body: (root?.innerText ?? '').slice(0, 4_000),
+      };
+    })()`, "C07.4 workspace view immediately after vault restore");
+    await captureC074SourceCheckpoint("reopen-after-vault-restore", fixtureSetup);
+
+    for (const scenario of fixture.scenarios) {
+      const observation = await captureC074Scenario(
+        reopenConnection,
+        reopened.browserVersion,
+        fixture,
+        scenario,
+        scenarioFixture.fixture_paths,
+        scenarioFixture,
+        "reopen",
+      );
+      reopenedObservations[scenario.id] = observation;
+      const entry = scenarioReport.find((candidate) => candidate.id === scenario.id)!;
+      entry.reopen_observation = observation;
+      await captureC074SourceCheckpoint(`reopen-after-capture:${scenario.id}`, fixtureSetup);
+      await saveReport();
+    }
+    await stopProcess(reopenProcess, reopenConnection);
+    reopenProcess = undefined;
+    reopenConnection = undefined;
+    reopenSession.status = "completed";
+    const reopenAfterShutdown = await captureC074SourceCheckpoint("reopen-after-shutdown", fixtureSetup);
+    snapshots.c07_number_reference_after_reopen_close = await snapshotTree(numberReferenceVaultRoot);
+    basesReport.reference_source_mutation_observed = (basesReport.source_checkpoints as C074SourceObservation[])
+      .some((checkpoint) => checkpoint.changed_sources_from_seed.length > 0);
+    basesReport.reopen_source_hashes_match_seed = isDeepStrictEqual(fixtureSetup.sourceHashes, reopenAfterShutdown.source_hashes);
+    basesReport.reopen_source_mutation_observed = reopenAfterShutdown.changed_sources_from_seed.length > 0;
+
+    const scenarioAcceptance: Record<string, boolean> = {};
+    const comparisonFailures: Array<{scenario_id: string; first_open: unknown; reopen: unknown}> = [];
+    for (const scenario of fixture.scenarios) {
+      const entry = scenarioReport.find((candidate) => candidate.id === scenario.id)!;
+      const firstObservation = firstObservations[scenario.id];
+      const reopenObservation = reopenedObservations[scenario.id];
+      const firstComplete = firstObservation?.complete === true;
+      const reopenComplete = reopenObservation?.complete === true;
+      const comparable = firstComplete && reopenComplete
+        && isDeepStrictEqual(c074ComparableObservation(firstObservation), c074ComparableObservation(reopenObservation));
+      entry.comparison = {
+        first_open_complete: firstComplete,
+        reopen_complete: reopenComplete,
+        stable_across_reopen: comparable,
+        first_open_projection: firstComplete ? c074ComparableObservation(firstObservation) : null,
+        reopen_projection: reopenComplete ? c074ComparableObservation(reopenObservation) : null,
+      };
+      scenarioAcceptance[scenario.id] = firstComplete && reopenComplete && comparable;
+      if (!scenarioAcceptance[scenario.id]) {
+        comparisonFailures.push({scenario_id: scenario.id, first_open: entry.first_open_observation, reopen: entry.reopen_observation});
+      }
+    }
+    basesReport.scenario_acceptance = scenarioAcceptance;
+    basesReport.first_open_reopen_comparison_passed = Object.values(scenarioAcceptance).every(Boolean);
+    const sourceCheckpoints = basesReport.source_checkpoints as C074SourceObservation[];
+    const expectedSourcePaths = [...scenarioFixture.fixture_paths].sort();
+    const expectedSourceCheckpointStages = [
+      "before-first-open",
+      "first-open-after-startup",
+      "first-open-after-vault-selection",
+      ...fixture.scenarios.map((scenario) => `first-open-after-capture:${scenario.id}`),
+      "first-open-after-shutdown",
+      "before-reopen-after-reseed",
+      "reopen-after-startup",
+      "reopen-after-vault-restore",
+      ...fixture.scenarios.map((scenario) => `reopen-after-capture:${scenario.id}`),
+      "reopen-after-shutdown",
+    ];
+    basesReport.source_checkpoint_count = sourceCheckpoints.length;
+    basesReport.expected_source_checkpoint_stages = expectedSourceCheckpointStages;
+    basesReport.source_checkpoint_matrix_complete = sourceCheckpoints.length === expectedSourceCheckpointStages.length
+      && isDeepStrictEqual(sourceCheckpoints.map((checkpoint) => checkpoint.stage), expectedSourceCheckpointStages)
+      && sourceCheckpoints.every((checkpoint) => checkpoint.unexpected_source_paths.length === 0
+        && isDeepStrictEqual(checkpoint.source_path_set, expectedSourcePaths)
+        && isDeepStrictEqual(Object.keys(checkpoint.source_hashes).sort(), expectedSourcePaths)
+        && expectedSourcePaths.every((path) => {
+          const sourceHash = checkpoint.source_hashes[path];
+          return sourceHash !== null && sourceHash !== undefined
+            && Number.isSafeInteger(sourceHash.bytes) && sourceHash.bytes >= 0
+            && /^[0-9a-f]{64}$/.test(sourceHash.sha256);
+        }));
+    basesReport.capture_status = basesReport.first_open_reopen_comparison_passed === true
+      && basesReport.source_checkpoint_matrix_complete === true
+      && basesReport.reopen_seed_hashes_match === true
+      ? "completed"
+      : "incomplete";
+    if (basesReport.capture_status !== "completed") {
+      throw new Error(`C07.4 number-reference first-open/reopen acceptance failed: ${JSON.stringify({scenario_acceptance: scenarioAcceptance, source_checkpoint_matrix_complete: basesReport.source_checkpoint_matrix_complete, reopen_source_hashes_match_seed: basesReport.reopen_source_hashes_match_seed, comparison_failures: comparisonFailures.map((failure) => ({scenario_id: failure.scenario_id, first_open_complete: (failure.first_open as Record<string, unknown> | undefined)?.complete, reopen_complete: (failure.reopen as Record<string, unknown> | undefined)?.complete}))}).slice(0, 12_000)}`);
+    }
+    basesReport.status = "captured-reference-only";
+    basesReport.rust_parity_claimed = false;
+    const priorSummary = (report.reference_capture_summary as Record<string, unknown> | undefined) ?? {};
+    report.reference_capture_summary = {
+      ...priorSummary,
+      status: "completed",
+      c07_2_capture_status: (report.bases_group_direction_reference as Record<string, unknown>).status,
+      c07_3_group_order_capture_status: (report.bases_group_order_reference as Record<string, unknown>).status,
+      c07_4_number_reference_capture_status: basesReport.status,
+      rust_parity_claimed: false,
+      c07_4_reference_source_mutation_observed: basesReport.reference_source_mutation_observed,
+      interpretation: "Pinned-app C07.2, C07.3, and C07.4 observations were captured on this runner. Exact Obsidian source rewrites are recorded as reference behavior and do not establish Rust source preservation or comparator parity.",
+    };
+    await saveReport();
+  } catch (error) {
+    basesReport.status = "failed";
+    basesReport.capture_status = "incomplete";
+    basesReport.error = error instanceof Error ? error.message : String(error);
+    await saveReport();
+    throw error;
+  } finally {
+    await stopProcess(firstProcess, firstConnection).catch(() => undefined);
+    await stopProcess(reopenProcess, reopenConnection).catch(() => undefined);
+  }
+}
+
 async function run(): Promise<void> {
   await mkdir(reportDirectory, {recursive: true});
   await mkdir(workDirectory, {recursive: true});
@@ -18870,6 +20085,7 @@ async function run(): Promise<void> {
     await runCanvasReferenceProbe();
     await runBasesDirectionReferenceProbe();
     await runBasesGroupOrderReferenceProbe();
+    await runBasesNumberReferenceProbe();
 
     report.status = "passed";
     report.completed_at = new Date().toISOString();
