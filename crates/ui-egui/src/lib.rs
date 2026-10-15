@@ -23,6 +23,7 @@ use std::path::Path;
 use std::rc::Rc;
 use std::sync::{
     Arc,
+    OnceLock,
     atomic::{AtomicU16, Ordering},
     mpsc::{self, Receiver, TryRecvError},
 };
@@ -381,6 +382,9 @@ impl eframe::App for OpenObsidianApp {
 
 impl OpenObsidianApp {
     fn show_ui(&mut self, ui: &mut eframe::egui::Ui) {
+        if std::env::var_os("OPENOBSIDIAN_CI_CANVAS_FOCUS_SNAPSHOT_REQUEST_FILE").is_some() {
+            ui.ctx().request_repaint_after(Duration::from_millis(100));
+        }
         self.poll_vault_refresh_task(ui);
         self.poll_vault_change_hints(ui);
         self.log_ci_open_vault_availability();
@@ -2165,6 +2169,67 @@ impl OpenObsidianApp {
                 );
                 eprintln!(
                     "OpenObsidian CI canvas-text-edit-field: field=id enabled={target_fields_enabled}, frame_nr={frame_nr}, response_id={:?}, rect={:?}, pixels_per_point={:.2}, pointer={pointer:?}, arrow_right_key_event={node_arrow_right_key_event}, hovered={}, clicked={}, focused={}, empty={}, value_bytes={}, value_sha256={node_value_sha256}",
+                    node_input.id,
+                    node_input.rect,
+                    ui.ctx().pixels_per_point(),
+                    node_input.hovered(),
+                    node_input.clicked(),
+                    node_input.has_focus(),
+                    self.canvas_text_edit_node_id.is_empty(),
+                    self.canvas_text_edit_node_id.len(),
+                );
+            }
+            let snapshot_request = if ui.input(|input| input.raw.events.is_empty()) {
+                std::env::var_os("OPENOBSIDIAN_CI_CANVAS_FOCUS_SNAPSHOT_REQUEST_FILE")
+                    .and_then(|request_file| {
+                        let request_file = Path::new(&request_file);
+                        let request_id = std::fs::read_to_string(request_file).ok()?;
+                        let request_id = request_id.trim().to_owned();
+                        if request_id.is_empty() || std::fs::remove_file(request_file).is_err() {
+                            return None;
+                        }
+                        Some(request_id)
+                    })
+            } else {
+                None
+            };
+            if let Some(request_id) = snapshot_request {
+                static SNAPSHOT_MONOTONIC_START: OnceLock<Instant> = OnceLock::new();
+                let monotonic_ms = SNAPSHOT_MONOTONIC_START
+                    .get_or_init(Instant::now)
+                    .elapsed()
+                    .as_millis();
+                let pointer = ui.input(|input| input.pointer.hover_pos());
+                let pointer_button_primary = ui.input(|input| {
+                    input
+                        .pointer
+                        .button_down(eframe::egui::PointerButton::Primary)
+                });
+                let frame_nr = ui.ctx().cumulative_frame_nr();
+                eprintln!(
+                    "OpenObsidian CI canvas-text-edit-focus-snapshot: request_id={request_id}, frame_nr={frame_nr}, monotonic_ms={monotonic_ms}, raw_events=[], pointer_button_primary={pointer_button_primary}, pointer={pointer:?}"
+                );
+                let path_value_sha256 = format!(
+                    "{:x}",
+                    Sha256::digest(self.canvas_text_edit_path.as_bytes())
+                );
+                let node_value_sha256 = format!(
+                    "{:x}",
+                    Sha256::digest(self.canvas_text_edit_node_id.as_bytes())
+                );
+                eprintln!(
+                    "OpenObsidian CI canvas-text-edit-field: request_id={request_id}, field=path enabled={target_fields_enabled}, frame_nr={frame_nr}, response_id={:?}, rect={:?}, pixels_per_point={:.2}, pointer={pointer:?}, arrow_right_key_event=false, hovered={}, clicked={}, focused={}, empty={}, value_bytes={}, value_sha256={path_value_sha256}",
+                    path_input.id,
+                    path_input.rect,
+                    ui.ctx().pixels_per_point(),
+                    path_input.hovered(),
+                    path_input.clicked(),
+                    path_input.has_focus(),
+                    self.canvas_text_edit_path.is_empty(),
+                    self.canvas_text_edit_path.len(),
+                );
+                eprintln!(
+                    "OpenObsidian CI canvas-text-edit-field: request_id={request_id}, field=id enabled={target_fields_enabled}, frame_nr={frame_nr}, response_id={:?}, rect={:?}, pixels_per_point={:.2}, pointer={pointer:?}, arrow_right_key_event=false, hovered={}, clicked={}, focused={}, empty={}, value_bytes={}, value_sha256={node_value_sha256}",
                     node_input.id,
                     node_input.rect,
                     ui.ctx().pixels_per_point(),

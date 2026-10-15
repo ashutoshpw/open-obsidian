@@ -2,7 +2,7 @@
   "schema_version": 1,
   "milestone": "R2.8.136-R3.1-MILESTONE-MAP-AND-LINUX-CANVAS-FOCUS-REPAIR",
   "name": "Restore keyed milestone state, preserve Linux Canvas focus, and synchronize milestone cadence",
-  "status": "R3 attempt 1 is terminal and reconciled. Two independent reviewers approved the amended R3.1 scope; the final whole-milestone review is complete. Ready for one submission to origin/main; CI not yet dispatched.",
+  "status": "terminal-failed on exact SHA 4ab6cf6fd3602fa9e15bc0d58e9b2ecc8a3bb349: 7/7 workflows and 20/20 jobs terminal; 6 workflows and 18 jobs passed; Ubuntu and macOS round-trip jobs failed.",
   "recorded_at": "2026-10-15 21:31:54 UTC",
   "planning_base_sha": "3f428b6d9e2fe2bf3789c0a02cd7d7690234ec91",
   "implementation_start_sha": "3f428b6d9e2fe2bf3789c0a02cd7d7690234ec91",
@@ -64,10 +64,10 @@
   "expected_jobs": 20,
   "push_policy": "R3 attempt 1 is terminal and reconciled, two renewed independent reviews approved the amended combined scope, and the whole-milestone review is complete. Push this bounded R3.1 milestone exactly once to origin/main. Keep origin/main at the submitted SHA until all seven required workflows and 20 jobs are terminal; reconcile every result before submitting any next milestone. Do not overlap batches, push status-only changes, or submit per-change CI.",
   "local_executable_validation": false,
-  "ci_dispatched": false,
-  "submitted_sha": null,
-  "ci_evidence_file": null,
-  "last_updated_at": "2026-10-15T21:37:11Z",
+  "ci_dispatched": true,
+  "submitted_sha": "4ab6cf6fd3602fa9e15bc0d58e9b2ecc8a3bb349",
+  "ci_evidence_file": "evidence/r2.8.136-r3-1-attempt-1-4ab6cf6.json",
+  "last_updated_at": "2026-10-15T22:27:21Z",
   "historical_plan_reviews_previous_scope": [
     {
       "reviewer": "linux_repair_audit",
@@ -143,5 +143,80 @@
     "status": "complete",
     "reviewed_at": "2026-10-15T21:37:11Z",
     "reviewed_scope": "All eight changed/added files in the bounded R3.1 milestone; only the Linux Canvas audit harness, goal cadence, MIG-002 goal fingerprint binding, tracker/state, and exact-SHA evidence/plans/journal are included. No unrelated product files or local executable checks."
+  },
+  "submitted_at": "2026-10-15T21:37:35Z",
+  "ci_run_ids": [
+    38811296521,
+    38811296519,
+    38811296624,
+    38811296656,
+    38811296568,
+    38811296805,
+    38811297064
+  ],
+  "ci_snapshot": {
+    "observed_at": "2026-10-15T22:27:21Z",
+    "workflow_counts": {
+      "observed": 7,
+      "terminal": 7,
+      "passed": 6,
+      "failed": 1,
+      "queued": 0,
+      "in_progress": 0
+    },
+    "job_counts": {
+      "observed": 20,
+      "terminal": 20,
+      "passed": 18,
+      "failed": 2,
+      "cancelled": 0,
+      "queued": 0,
+      "in_progress": 0
+    },
+    "origin_main_sha": "4ab6cf6fd3602fa9e15bc0d58e9b2ecc8a3bb349",
+    "pending_workflows": [],
+    "active_job_ids": [],
+    "failed_job_ids": [
+      116684889568,
+      116684889663
+    ]
+  },
+  "terminal_reconciliation": {
+    "workflow_counts": {
+      "observed": 7,
+      "terminal": 7,
+      "passed": 6,
+      "failed": 1,
+      "queued": 0,
+      "in_progress": 0
+    },
+    "job_counts": {
+      "observed": 20,
+      "terminal": 20,
+      "passed": 18,
+      "failed": 2,
+      "cancelled": 0,
+      "queued": 0,
+      "in_progress": 0
+    },
+    "origin_main_sha": "4ab6cf6fd3602fa9e15bc0d58e9b2ecc8a3bb349",
+    "run_ids": [
+      38811297064,
+      38811296805,
+      38811296656,
+      38811296624,
+      38811296521,
+      38811296568,
+      38811296519
+    ],
+    "failed_job_ids": [
+      116684889568,
+      116684889663
+    ],
+    "failure_evidence": {
+      "ubuntu": "Focus handoff followed clipboard staging/first pointer movement; pre-paste guard stopped before paste.",
+      "macos": "C07.4 reopened tie-order precondition false because unchanged tie-note files were not recreated; selected view/count/row mapping passed."
+    },
+    "evidence_file": "evidence/r2.8.136-r3-1-attempt-1-4ab6cf6.json"
   }
 }

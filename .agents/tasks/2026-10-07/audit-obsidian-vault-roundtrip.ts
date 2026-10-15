@@ -542,6 +542,7 @@ type GroupOrderScenarioObservation = GroupOrderVisibleState & {
 
 const reportDirectory = resolve(requiredEnv("OBSIDIAN_REPORT_DIRECTORY"));
 const workDirectory = resolve(requiredEnv("OBSIDIAN_ROUNDTRIP_WORK_DIRECTORY"));
+const linuxCanvasFocusSnapshotRequestFile = join(workDirectory, "openobsidian-canvas-focus-snapshot.request");
 const vaultRoot = join(workDirectory, "C01.2 Roundtrip Fixture");
 const canvasVaultName = "C06 Canvas Reference Fixture";
 const canvasVaultRoot = join(workDirectory, canvasVaultName);
@@ -1244,10 +1245,12 @@ async function readCanvasTextEditFieldDiagnostic(
   logPath: string,
   field: "path" | "id",
   afterLine = -1,
+  requestId?: string,
 ): Promise<{
   line: number;
   enabled: boolean;
   frameNr: number;
+  requestId: string | null;
   responseId: string;
   rect: {left: number; top: number; right: number; bottom: number};
   pixelsPerPoint: number;
@@ -1255,6 +1258,7 @@ async function readCanvasTextEditFieldDiagnostic(
   clicked: boolean;
   clickEventLine: number | null;
   focused: boolean;
+  hovered: boolean | null;
   arrowRightKeyEvent: boolean;
   arrowRightEventLine: number | null;
   empty: boolean | null;
@@ -1267,12 +1271,14 @@ async function readCanvasTextEditFieldDiagnostic(
     line: number;
     enabled: boolean;
     frameNr: number;
+    requestId: string | null;
     responseId: string;
     rect: {left: number; top: number; right: number; bottom: number};
     pixelsPerPoint: number;
     pointer: {x: number; y: number} | null;
     clicked: boolean;
     focused: boolean;
+    hovered: boolean | null;
     arrowRightKeyEvent: boolean;
     empty: boolean | null;
     valueBytes: number;
@@ -1280,9 +1286,14 @@ async function readCanvasTextEditFieldDiagnostic(
   }> = [];
   for (let index = lines.length - 1; index >= 0; index -= 1) {
     const value = lines[index] ?? "";
-    if (!value.includes(`OpenObsidian CI canvas-text-edit-field: field=${field} `)) continue;
+    const fieldPrefix = requestId === undefined
+      ? `OpenObsidian CI canvas-text-edit-field: field=${field} `
+      : `OpenObsidian CI canvas-text-edit-field: request_id=${requestId}, field=${field} `;
+    if (!value.includes(fieldPrefix)) continue;
     const enabled = value.match(/\benabled=(true|false)/)?.[1];
     const frameNr = value.match(/\bframe_nr=(\d+)/)?.[1];
+    const observedRequestId = value.match(/\brequest_id=([^,\s]+)/)?.[1] ?? null;
+    if (requestId !== undefined && observedRequestId !== requestId) continue;
     const responseId = value.match(/\bresponse_id=(.*?),\s*rect=/)?.[1]?.trim();
     const geometry = value.match(/\brect=\[\[\s*(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s*\]\s*-\s*\[\s*(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s*\]\],\s*pixels_per_point=(\d+(?:\.\d+)?)/);
     const pointerMatch = value.match(/\bpointer=Some\(\[\s*(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s*\]\)/);
@@ -1290,6 +1301,7 @@ async function readCanvasTextEditFieldDiagnostic(
     if (!frameNr || !responseId || !geometry || (!pointerMatch && !pointerIsNone)) return null;
     const clicked = value.match(/\bclicked=(true|false)/)?.[1];
     const focused = value.match(/\bfocused=(true|false)/)?.[1];
+    const hovered = value.match(/\bhovered=(true|false)/)?.[1];
     const arrowRightKeyEvent = value.match(/\barrow_right_key_event=(true|false)/)?.[1];
     const empty = value.match(/\bempty=(true|false)/)?.[1];
     const valueBytes = value.match(/\bvalue_bytes=(\d+)/)?.[1];
@@ -1307,6 +1319,7 @@ async function readCanvasTextEditFieldDiagnostic(
       line: index,
       enabled: enabled === "true",
       frameNr: Number(frameNr),
+      requestId: observedRequestId,
       responseId,
       rect,
       pixelsPerPoint,
@@ -1315,6 +1328,7 @@ async function readCanvasTextEditFieldDiagnostic(
         : null,
       clicked: clicked === "true",
       focused: focused === "true",
+      hovered: hovered === undefined ? null : hovered === "true",
       arrowRightKeyEvent: arrowRightKeyEvent === "true",
       empty: empty === "true",
       valueBytes: Number(valueBytes),
@@ -1333,6 +1347,94 @@ async function readCanvasTextEditFieldDiagnostic(
     arrowRightKeyEvent: arrowRightEventLine !== null,
     arrowRightEventLine,
   };
+}
+
+type CanvasFocusSnapshot = {
+  request_id: string;
+  line: number;
+  frame_nr: number;
+  monotonic_ms: number;
+  raw_events_empty: true;
+  pointer_button_primary: boolean;
+  pointer: {x: number; y: number} | null;
+  fields: {
+    path: NonNullable<Awaited<ReturnType<typeof readCanvasTextEditFieldDiagnostic>>>;
+    id: NonNullable<Awaited<ReturnType<typeof readCanvasTextEditFieldDiagnostic>>>;
+  };
+  x11: ReturnType<typeof x11InteractionState>;
+};
+
+async function readCanvasFocusSnapshot(
+  logPath: string,
+  requestId: string,
+  afterLine: number,
+  afterFrameNr: number,
+): Promise<CanvasFocusSnapshot | null> {
+  const log = await readFile(logPath, "utf8").catch(() => "");
+  const lines = log.split(/\r?\n/);
+  let marker: Omit<CanvasFocusSnapshot, "fields" | "x11"> | null = null;
+  for (let index = lines.length - 1; index > afterLine; index -= 1) {
+    const value = lines[index] ?? "";
+    if (!value.startsWith("OpenObsidian CI canvas-text-edit-focus-snapshot: ")
+      || !value.includes(`request_id=${requestId}, `)) continue;
+    const observedRequestId = value.match(/\brequest_id=([^,\s]+)/)?.[1];
+    const frameNr = value.match(/\bframe_nr=(\d+)/)?.[1];
+    const monotonicMs = value.match(/\bmonotonic_ms=(\d+)/)?.[1];
+    const pointerButtonPrimary = value.match(/\bpointer_button_primary=(true|false)/)?.[1];
+    const pointerMatch = value.match(/\bpointer=Some\(\[\s*(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s*\]\)/);
+    const pointerIsNone = /\bpointer=None\b/.test(value);
+    if (observedRequestId !== requestId || !frameNr || !monotonicMs || !pointerButtonPrimary
+      || !value.includes("raw_events=[]") || (!pointerMatch && !pointerIsNone)) return null;
+    marker = {
+      request_id: requestId,
+      line: index,
+      frame_nr: Number(frameNr),
+      monotonic_ms: Number(monotonicMs),
+      raw_events_empty: true,
+      pointer_button_primary: pointerButtonPrimary === "true",
+      pointer: pointerMatch ? {x: Number(pointerMatch[1]), y: Number(pointerMatch[2])} : null,
+    };
+    break;
+  }
+  if (!marker || marker.frame_nr <= afterFrameNr) return null;
+  const [path, id] = await Promise.all([
+    readCanvasTextEditFieldDiagnostic(logPath, "path", marker.line, requestId),
+    readCanvasTextEditFieldDiagnostic(logPath, "id", marker.line, requestId),
+  ]);
+  if (!path || !id || path.line <= marker.line || id.line <= marker.line
+    || path.requestId !== requestId || id.requestId !== requestId
+    || path.frameNr !== marker.frame_nr || id.frameNr !== marker.frame_nr
+    || path.hovered === null || id.hovered === null) return null;
+  return {...marker, fields: {path, id}, x11: x11InteractionState()};
+}
+
+let canvasFocusSnapshotRequestSequence = 0;
+
+async function requestCanvasFocusSnapshot(
+  logPath: string,
+  stage: string,
+  afterLine: number,
+  afterFrameNr: number,
+): Promise<CanvasFocusSnapshot> {
+  const requestId = `${process.pid}-${Date.now()}-${++canvasFocusSnapshotRequestSequence}`;
+  const temporaryRequestFile = `${linuxCanvasFocusSnapshotRequestFile}.${requestId}.tmp`;
+  try {
+    await rm(linuxCanvasFocusSnapshotRequestFile, {force: true});
+    await writeFile(temporaryRequestFile, `${requestId}\n`, {flag: "wx"});
+    await rename(temporaryRequestFile, linuxCanvasFocusSnapshotRequestFile);
+    const snapshot = await waitFor(
+      `fresh event-free Canvas focus snapshot ${stage} (request ${requestId})`,
+      () => readCanvasFocusSnapshot(logPath, requestId, afterLine, afterFrameNr),
+      (value) => value !== null,
+      10_000,
+    );
+    if (!snapshot) throw new Error(`Canvas focus snapshot request ${requestId} returned no paired marker and widget records`);
+    return snapshot;
+  } catch (error) {
+    await rm(linuxCanvasFocusSnapshotRequestFile, {force: true}).catch(() => undefined);
+    await rm(temporaryRequestFile, {force: true}).catch(() => undefined);
+    throw new Error(`Could not capture requested event-free Canvas snapshot ${stage}: request_id=${requestId}; detail=${error instanceof Error ? error.message : String(error)}`);
+  }
 }
 
 async function waitForOpenObsidianRefreshIdle(
@@ -9439,6 +9541,7 @@ async function captureGroupOrderScenario(
   fixturePaths: string[],
   scenarioFixture: GroupOrderScenarioFixture,
   stage: "first-open" | "reopen",
+  beforeTargetSelection?: () => Promise<void>,
 ): Promise<GroupOrderScenarioObservation> {
   let visible = emptyGroupOrderVisibleState(scenario);
   const stateSamples: GroupOrderScenarioObservation["state_samples"] = [];
@@ -9502,7 +9605,7 @@ async function captureGroupOrderScenario(
     } catch (stateProbeError) {
       minimalRendererStateError = stateProbeError instanceof Error ? stateProbeError.message : String(stateProbeError);
     }
-    const targetAlreadyActive = stage === "reopen"
+    const targetAlreadyActive = stage === "reopen" && !beforeTargetSelection
       && Boolean(minimalRendererState
         && minimalRendererState.active_file_path === scenario.base_path
         && minimalRendererState.active_view_type === "bases");
@@ -9554,6 +9657,7 @@ async function captureGroupOrderScenario(
         throw new Error(`${stage}: Obsidian did not list the exact C07.3 target ${scenario.base_path}`);
       }
       probePhase = "select-target-base";
+      await beforeTargetSelection?.();
       const clicked = await connection.evaluateJson<boolean>(`(() => {
       const path = ${JSON.stringify(scenario.base_path)};
       const visible = (element) => {
@@ -16276,11 +16380,11 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
     : diagnosticField === "id"
       ? "path"
       : null;
-  const readCanvasFieldPair = async (afterLine: number) => {
+  const readCanvasFieldPair = async (afterLine: number, requestId?: string) => {
     if (!diagnosticField || !siblingDiagnosticField) return null;
     const [target, sibling] = await Promise.all([
-      readCanvasTextEditFieldDiagnostic(logPath, diagnosticField, afterLine),
-      readCanvasTextEditFieldDiagnostic(logPath, siblingDiagnosticField, afterLine),
+      readCanvasTextEditFieldDiagnostic(logPath, diagnosticField, afterLine, requestId),
+      readCanvasTextEditFieldDiagnostic(logPath, siblingDiagnosticField, afterLine, requestId),
     ]);
     return target && sibling ? {target, sibling} : null;
   };
@@ -16333,6 +16437,8 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
     let targetVisualReadback: Awaited<ReturnType<typeof readCanvasInputScreenshotValue>> | null = null;
     let targetReadbackScreenshot: Awaited<ReturnType<typeof captureOpenObsidianScreenshot>> | null = null;
     let targetVisualReadbackError = "";
+    let clipboardUsedForEntry = false;
+    let clipboardAbortCleanup: Record<string, unknown> | null = null;
     try {
       xdotool("windowfocus", "--sync", windowId);
       // Move through a neutral app corner first so the target move creates a fresh
@@ -16475,7 +16581,6 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
         targetAndSiblingWidgetReadback = {target: preEntryTargetWidget, sibling: preEntrySiblingWidget};
         const pasteStageDiagnostics: Array<Record<string, unknown>> = [];
         const diagnosticMotionStages: Array<Record<string, unknown>> = [];
-        let clipboardUsedForEntry = false;
         const usesClipboardSentinel = diagnosticField === "path";
         const entryMethod = fieldAlreadyContainsExpectedValue
           ? "not used; exact requested value was already present"
@@ -16483,6 +16588,11 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
             ? "xclip clipboard paste via Ctrl+V; first-character sentinel, then one remainder paste when nonempty"
             : "xdotool type --clearmodifiers; no Ctrl selection/paste chords or clipboard operation";
         if (!fieldAlreadyContainsExpectedValue && usesClipboardSentinel) {
+          if (!diagnosticField || !siblingDiagnosticField) {
+            throw new Error("Linux Canvas clipboard paste is missing its target/sibling diagnostic field pairing");
+          }
+          const focusTargetField: "path" | "id" = diagnosticField;
+          const focusSiblingField: "path" | "id" = siblingDiagnosticField;
           const characters = Array.from(value);
           if (characters.length === 0) {
             throw new Error("Refusing to paste an empty requested value into Canvas field " + diagnosticField);
@@ -16493,12 +16603,7 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
           let lastObservedLine = Math.max(preEntryTargetWidget.line, preEntrySiblingWidget.line);
           const motionTargetGeometry = preEntryTargetWidget;
           const motionSiblingGeometry = preEntrySiblingWidget;
-          const candidateDiagnosticMotionPoints = [
-            {x: clickX + 1, y: clickY},
-            {x: clickX + 2, y: clickY},
-            {x: clickX - 1, y: clickY},
-            {x: clickX - 2, y: clickY},
-          ];
+          const candidateDiagnosticMotionPoints = [{x: clickX + 1, y: clickY}];
           const pointInsideRect = (
             point: {x: number; y: number},
             rect: {left: number; top: number; right: number; bottom: number},
@@ -16516,11 +16621,9 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
           const safeDiagnosticMotionPoints = motionPointChecks
             .filter((point) => point.differs_from_click_pointer && point.inside_target && !point.inside_sibling)
             .map(({x, y}) => ({x, y}));
-          const safeMotionPointsAreDistinct = new Set(safeDiagnosticMotionPoints.map((point) => `${point.x},${point.y}`)).size
-            === safeDiagnosticMotionPoints.length;
-          if (!safeMotionPointsAreDistinct || safeDiagnosticMotionPoints.length < 3) {
+          if (safeDiagnosticMotionPoints.length !== 1) {
             throw new Error(
-              "Refusing Linux Canvas diagnostic motions without three safe in-field points"
+              "Refusing Linux Canvas pointer motion because the single +1px sample is not safely inside the path field"
                 + "; click_pointer=" + JSON.stringify({x: clickX, y: clickY})
                 + "; motion_point_checks=" + JSON.stringify(motionPointChecks)
                 + "; target=" + JSON.stringify(motionTargetGeometry)
@@ -16529,13 +16632,15 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
           }
           let currentPointer = {x: clickX, y: clickY};
 
-          const movePointerForFreshDiagnostics = (stage: string): Record<string, unknown> => {
-            const motionsForStage = safeDiagnosticMotionPoints
-              .filter((point) => point.x !== currentPointer.x || point.y !== currentPointer.y)
-              .slice(0, 2);
-            if (motionsForStage.length !== 2) {
+          const movePointerForFreshDiagnostics = async (
+            stage: string,
+            expectedText: string,
+            afterClipboardSnapshot: CanvasFocusSnapshot,
+          ): Promise<Record<string, unknown>> => {
+            const motionPoint = safeDiagnosticMotionPoints[0];
+            if (!motionPoint || (motionPoint.x === currentPointer.x && motionPoint.y === currentPointer.y)) {
               throw new Error(
-                "Refusing Linux Canvas diagnostic motion stage without two points distinct from the current pointer"
+                "Refusing Linux Canvas diagnostic motion without one distinct, validated +1px point"
                   + "; stage=" + stage
                   + "; current_pointer=" + JSON.stringify(currentPointer)
                   + "; safe_candidates=" + JSON.stringify(safeDiagnosticMotionPoints),
@@ -16544,39 +16649,66 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
             const motionRecord: Record<string, unknown> = {
               stage,
               window_id: windowId,
-              point_source: "validated target-field click position plus or minus one and two window-relative pixels",
+              point_source: "single validated +1 window-relative pixel from the target-field click position",
               click_pointer: {x: clickX, y: clickY},
               current_pointer_before_stage: {...currentPointer},
               target_rect: motionTargetGeometry.rect,
               sibling_rect: motionSiblingGeometry.rect,
               pixels_per_point: motionTargetGeometry.pixelsPerPoint,
-              motions: motionsForStage.map((point) => ({...point, status: "pending"})),
+              motion: {...motionPoint, status: "pending"},
+              snapshot_after_clipboard_staging: afterClipboardSnapshot,
               status: "running",
             };
             diagnosticMotionStages.push(motionRecord);
-            const motions = motionRecord.motions as Array<Record<string, unknown>>;
-            for (const motion of motions) {
-              try {
-                const x = Number(motion.x);
-                const y = Number(motion.y);
-                if (x === currentPointer.x && y === currentPointer.y) {
-                  throw new Error(`pointer motion would repeat the current position (${x},${y})`);
-                }
-                xdotool("mousemove", "--sync", "--window", windowId, String(motion.x), String(motion.y));
-                motion.status = "sent";
-                currentPointer = {x, y};
-              } catch (error) {
-                motion.status = "failed";
-                motion.error = error instanceof Error ? error.message : String(error);
-                motionRecord.status = "failed";
-                throw new Error(
-                  "Could not refresh Linux Canvas diagnostics with in-field pointer motion " + stage
-                    + "; diagnostic_pointer_motions=" + JSON.stringify(diagnosticMotionStages),
-                );
-              }
+            try {
+              const beforeMotion = await assertPasteState(
+                "after clipboard staging and before the single +1px pointer motion",
+                expectedText,
+                afterClipboardSnapshot.line,
+                afterClipboardSnapshot,
+              );
+              motionRecord.refresh_after_clipboard_staging = beforeMotion.refresh;
+              xdotool("mousemove", "--sync", "--window", windowId, String(motionPoint.x), String(motionPoint.y));
+              (motionRecord.motion as Record<string, unknown>).status = "sent";
+              currentPointer = {...motionPoint};
+              const afterMotionSnapshot = await requestCanvasFocusSnapshot(
+                logPath,
+                `after single +1px pointer motion for ${stage}`,
+                Math.max(beforeMotion.pair.target.line, beforeMotion.pair.sibling.line),
+                afterClipboardSnapshot.frame_nr,
+              );
+              motionRecord.snapshot_after_motion = afterMotionSnapshot;
+              const afterMotion = await assertPasteState(
+                "after the single +1px pointer motion before paste",
+                expectedText,
+                afterMotionSnapshot.line,
+                afterMotionSnapshot,
+              );
+              motionRecord.after_motion_state = {
+                target: afterMotion.pair.target,
+                sibling: afterMotion.pair.sibling,
+                refresh: afterMotion.refresh,
+                x11: afterMotionSnapshot.x11,
+              };
+              motionRecord.refresh_after_motion = afterMotion.refresh;
+              motionRecord.status = "completed; focus retained and paste guard passed";
+              return motionRecord;
+            } catch (error) {
+              const detail = error instanceof Error ? error.message : String(error);
+              const snapshot = motionRecord.snapshot_after_motion as CanvasFocusSnapshot | undefined;
+              const targetStillFocused = snapshot?.fields.path.focused === true;
+              const siblingFocused = snapshot?.fields.id.focused === true;
+              motionRecord.status = snapshot && (!targetStillFocused || siblingFocused)
+                ? "stopped immediately after focus transfer; paste not dispatched"
+                : "failed closed before paste";
+              motionRecord.error = detail;
+              throw new Error(
+                "Linux Canvas pointer snapshot/paste guard failed " + stage
+                  + "; no additional pointer motion or Ctrl+V was dispatched"
+                  + "; diagnostic_pointer_motions=" + JSON.stringify(diagnosticMotionStages)
+                  + "; detail=" + detail,
+              );
             }
-            motionRecord.status = "completed";
-            return motionRecord;
           };
 
           const checkFreshFieldPair = async (stage: string, afterLine: number) => {
@@ -16613,11 +16745,20 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
             return pair;
           };
 
-          const assertPasteState = async (stage: string, expectedText: string, afterLine: number) => {
-            const pair = await checkFreshFieldPair(stage, afterLine);
+          const assertPasteState = async (
+            stage: string,
+            expectedText: string,
+            afterLine: number,
+            focusSnapshot?: CanvasFocusSnapshot,
+          ) => {
+            const pair = focusSnapshot
+              ? {target: focusSnapshot.fields[focusTargetField], sibling: focusSnapshot.fields[focusSiblingField]}
+              : await checkFreshFieldPair(stage, afterLine);
             const refresh = await readOpenObsidianRefreshDiagnostics(logPath);
             const refreshChanged = openObsidianRefreshActivityChanged(refreshBeforeClick, refresh)
               || (refresh.receiverStates.at(-1)?.busy ?? false);
+            const x11WindowFocused = !focusSnapshot || focusSnapshot.x11.focused_window_id === windowId;
+            const primaryButtonReleased = !focusSnapshot || !focusSnapshot.pointer_button_primary;
             const expectedSha256 = expectedHash(expectedText);
             const expectedBytes = Buffer.byteLength(expectedText, "utf8");
             const siblingUnchanged = pair.sibling.valueBytes === preEntrySiblingWidget.valueBytes
@@ -16629,6 +16770,8 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
               && pair.target.valueSha256 === expectedSha256
               && pair.target.empty === (expectedText.length === 0);
             if (refreshChanged
+              || !x11WindowFocused
+              || !primaryButtonReleased
               || !pair.target.enabled
               || !pair.target.focused
               || !pair.sibling.enabled
@@ -16643,16 +16786,19 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
                   + "; expected_prefix_bytes=" + expectedBytes
                   + "; expected_prefix_sha256=" + expectedSha256
                   + "; refresh_stable=" + !refreshChanged
+                  + "; x11_window_focused=" + x11WindowFocused
+                  + "; primary_button_released=" + primaryButtonReleased
                   + "; sibling_unchanged=" + siblingUnchanged
                   + "; response_ids_stable=" + responseIdsStable
                   + "; target=" + JSON.stringify(pair.target)
                   + "; sibling=" + JSON.stringify(pair.sibling)
+                  + "; focus_snapshot=" + JSON.stringify(focusSnapshot ?? null)
                   + "; refresh=" + JSON.stringify(refresh)
                   + "; completed_paste_stages=" + JSON.stringify(pasteStageDiagnostics)
                   + "; diagnostic_pointer_motions=" + JSON.stringify(diagnosticMotionStages),
               );
             }
-            return {pair, refresh, expectedBytes, expectedSha256};
+            return {pair, refresh, expectedBytes, expectedSha256, focus_snapshot: focusSnapshot ?? null};
           };
 
           const dispatchCtrlV = (
@@ -16679,13 +16825,13 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
           };
 
           const stageClipboard = (stage: string, text: string) => {
+            clipboardUsedForEntry = true;
             try {
               execFileSync("xclip", ["-selection", "clipboard"], {
                 input: text,
                 stdio: ["pipe", "ignore", "ignore"],
                 timeout: 5_000,
               });
-              clipboardUsedForEntry = true;
             } catch (error) {
               const detail = error instanceof Error ? error.message : String(error);
               throw new Error("Could not stage Canvas " + stage + " clipboard text: " + detail + "; input_method=xclip clipboard plus Ctrl+V; completed_paste_stages=" + JSON.stringify(pasteStageDiagnostics));
@@ -16694,12 +16840,26 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
 
           const firstCharacterBytes = Buffer.byteLength(firstCharacter, "utf8");
           stageClipboard("first-character sentinel", firstCharacter);
-          const firstCharacterPointerMotion = movePointerForFreshDiagnostics("first-character sentinel");
+          const firstCharacterClipboardSnapshot = await requestCanvasFocusSnapshot(
+            logPath,
+            "after first-character clipboard staging",
+            lastObservedLine,
+            preEntryTargetWidget.frameNr,
+          );
+          const firstCharacterPointerMotion = await movePointerForFreshDiagnostics(
+            "first-character sentinel",
+            "",
+            firstCharacterClipboardSnapshot,
+          );
+          const firstAfterMotionSnapshot = firstCharacterPointerMotion.snapshot_after_motion as CanvasFocusSnapshot;
           const firstBeforePaste = await assertPasteState(
-            "immediately before first-character Ctrl+V after clipboard staging",
+            "immediately before first-character Ctrl+V after clipboard staging and one sampled pointer motion",
             "",
             lastObservedLine,
+            firstAfterMotionSnapshot,
           );
+          lastObservedLine = Math.max(firstBeforePaste.pair.target.line, firstBeforePaste.pair.sibling.line);
+          let lastObservedFrameNr = firstAfterMotionSnapshot.frame_nr;
           const firstPasteLine = Math.max(firstBeforePaste.pair.target.line, firstBeforePaste.pair.sibling.line);
           dispatchCtrlV("first-character sentinel", firstBeforePaste, firstCharacterPointerMotion);
           const firstAfterPaste = await assertPasteState(
@@ -16708,6 +16868,7 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
             firstPasteLine,
           );
           lastObservedLine = Math.max(firstAfterPaste.pair.target.line, firstAfterPaste.pair.sibling.line);
+          lastObservedFrameNr = Math.max(firstAfterPaste.pair.target.frameNr, firstAfterPaste.pair.sibling.frameNr);
           fieldStateReadback = firstAfterPaste.pair.target;
           siblingFieldStateReadback = firstAfterPaste.pair.sibling;
           targetAndSiblingWidgetReadback = firstAfterPaste.pair;
@@ -16722,6 +16883,7 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
               sibling: firstBeforePaste.pair.sibling,
               refresh_diagnostics: firstBeforePaste.refresh,
               refresh_stable: true,
+              focus_snapshot: firstBeforePaste.focus_snapshot,
             },
             after_paste: {
               target: firstAfterPaste.pair.target,
@@ -16735,17 +16897,27 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
           const remainder = characters.slice(1).join("");
           if (remainder.length > 0) {
             stageClipboard("remainder", remainder);
-            const remainderPointerMotion = movePointerForFreshDiagnostics("remainder");
+            const remainderClipboardSnapshot = await requestCanvasFocusSnapshot(
+              logPath,
+              "after remainder clipboard staging",
+              lastObservedLine,
+              lastObservedFrameNr,
+            );
             const remainderBeforePaste = await assertPasteState(
               "immediately before remainder Ctrl+V after clipboard staging",
               firstCharacter,
               lastObservedLine,
+              remainderClipboardSnapshot,
             );
             const remainderPasteLine = Math.max(
               remainderBeforePaste.pair.target.line,
               remainderBeforePaste.pair.sibling.line,
             );
-            dispatchCtrlV("remainder", remainderBeforePaste, remainderPointerMotion);
+            dispatchCtrlV("remainder", remainderBeforePaste, {
+              motion_sent: false,
+              reason: "the single +1px pointer probe was sampled before the sentinel paste; no +2px motion is permitted in the active paste path",
+              clipboard_stage_focus_snapshot: remainderClipboardSnapshot,
+            });
             const remainderAfterPaste = await assertPasteState(
               "after remainder paste",
               value,
@@ -16754,6 +16926,10 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
             lastObservedLine = Math.max(
               remainderAfterPaste.pair.target.line,
               remainderAfterPaste.pair.sibling.line,
+            );
+            lastObservedFrameNr = Math.max(
+              remainderAfterPaste.pair.target.frameNr,
+              remainderAfterPaste.pair.sibling.frameNr,
             );
             fieldStateReadback = remainderAfterPaste.pair.target;
             siblingFieldStateReadback = remainderAfterPaste.pair.sibling;
@@ -16769,6 +16945,7 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
                 sibling: remainderBeforePaste.pair.sibling,
                 refresh_diagnostics: remainderBeforePaste.refresh,
                 refresh_stable: true,
+                focus_snapshot: remainderBeforePaste.focus_snapshot,
               },
               after_paste: {
                 target: remainderAfterPaste.pair.target,
@@ -16776,7 +16953,8 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
                 refresh_diagnostics: remainderAfterPaste.refresh,
                 refresh_stable: true,
               },
-              pre_paste_pointer_motion: remainderPointerMotion,
+              pre_paste_pointer_motion: null,
+              clipboard_stage_focus_snapshot: remainderClipboardSnapshot,
             });
           }
 
@@ -16987,8 +17165,26 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
     } catch (error) {
       const failure = error as NodeJS.ErrnoException;
       const errorMessage = error instanceof Error ? error.message : "unknown error";
+      if (clipboardUsedForEntry && process.platform === "linux") {
+        clipboardAbortCleanup = {attempted: true, method: "replace the staged X11 clipboard selection with empty content; never dispatch Ctrl+V during cleanup"};
+        try {
+          execFileSync("xclip", ["-selection", "clipboard"], {
+            input: "",
+            stdio: ["pipe", "ignore", "ignore"],
+            timeout: 5_000,
+          });
+          clipboardAbortCleanup.succeeded = true;
+          clipboardUsedForEntry = false;
+        } catch (cleanupError) {
+          clipboardAbortCleanup.succeeded = false;
+          clipboardAbortCleanup.error = cleanupError instanceof Error ? cleanupError.message : String(cleanupError);
+        }
+      } else {
+        clipboardAbortCleanup = {attempted: false, reason: "no Linux clipboard content was staged"};
+      }
+      await rm(linuxCanvasFocusSnapshotRequestFile, {force: true}).catch(() => undefined);
       const failureLabel = diagnosticField === "path" ? "Linux Canvas field input failed" : "Linux keyboard entry failed";
-      throw new Error(failureLabel + " for " + controlName + ": code=" + (failure.code ?? "unknown") + "; syscall=" + (failure.syscall ?? "unknown") + "; click=(" + clickX + "," + clickY + "); detail=" + errorMessage);
+      throw new Error(failureLabel + " for " + controlName + ": code=" + (failure.code ?? "unknown") + "; syscall=" + (failure.syscall ?? "unknown") + "; click=(" + clickX + "," + clickY + "); clipboard_abort_cleanup=" + JSON.stringify(clipboardAbortCleanup) + "; detail=" + errorMessage);
     }
 
     let clipboardReadback = "";
@@ -17900,8 +18096,10 @@ async function runOpenObsidianCanvasTextEdit(
     appEnv.XDG_DATA_HOME = join(workDirectory, "openobsidian-canvas-edit-data");
     appEnv.LIBGL_ALWAYS_SOFTWARE = "1";
     appEnv.WGPU_BACKEND = "gl";
+    appEnv.OPENOBSIDIAN_CI_CANVAS_FOCUS_SNAPSHOT_REQUEST_FILE = linuxCanvasFocusSnapshotRequestFile;
     appDataRoot = join(userConfigRoot, "OpenObsidian");
   }
+  await rm(linuxCanvasFocusSnapshotRequestFile, {force: true});
   await mkdir(join(homeRoot, "Desktop"), {recursive: true});
   editReport.status = "running";
   editReport.source_canvas_path = canvasPath;
@@ -18190,6 +18388,7 @@ async function runOpenObsidianCanvasTextEdit(
     throw error;
   } finally {
     await stopProcess(child).catch(() => undefined);
+    await rm(linuxCanvasFocusSnapshotRequestFile, {force: true}).catch(() => undefined);
   }
 }
 
@@ -21201,6 +21400,12 @@ async function captureC074SourceCheckpoint(
   };
   const checkpoints = basesReport.source_checkpoints as C074SourceObservation[];
   checkpoints.push(checkpoint);
+  basesReport.pinned_app_base_mutations_by_source_checkpoint = checkpoints.map((sourceCheckpoint) => ({
+    stage: sourceCheckpoint.stage,
+    observed_at: sourceCheckpoint.observed_at,
+    changed_base_sources_from_seed: sourceCheckpoint.changed_sources_from_seed
+      .filter((entry) => entry.path.toLowerCase().endsWith(".base")),
+  }));
   await saveReport();
   return checkpoint;
 }
@@ -21212,27 +21417,188 @@ async function reseedC074SourceFiles(
   performed_after: string;
   method: string;
   restored_paths: string[];
+  tie_seed_creation_order: string[];
+  tie_note_hashes_before_reseed: Record<string, GroupOrderSourceHash | null | undefined>;
+  tie_note_expected_seed_hashes: Record<string, GroupOrderSourceHash | undefined>;
+  tie_note_hashes_after_reseed: Record<string, GroupOrderSourceHash | null>;
+  tie_note_hashes_match_seed: boolean;
+  pinned_app_base_mutations_before_reseed: C074SourceObservation["changed_sources_from_seed"];
   source_hashes_after_reseed: C074SourceObservation;
 }> {
   if (observed.unexpected_source_paths.length > 0) {
     throw new Error(`C07.4 Obsidian capture created or exposed unexpected Markdown/.base sources: ${JSON.stringify(observed.unexpected_source_paths)}`);
   }
   const restoredPaths: string[] = [];
+  const tieSeedCreationOrder = ["Notes/Text/Ties/z-last.md", "Notes/Text/Ties/a-first.md"];
+  for (const path of tieSeedCreationOrder) {
+    if (!setup.sourceFiles[path] || !setup.sourceHashes[path]) {
+      throw new Error(`C07.4 cannot reseed the exact equal-key path-tie fixture; missing ${path}`);
+    }
+  }
   for (const [path, bytes] of Object.entries(setup.sourceFiles)) {
     const current = observed.source_hashes[path];
     const expected = setup.sourceHashes[path];
     if (!isDeepStrictEqual(current, expected)) restoredPaths.push(path);
-    if (!isDeepStrictEqual(current, expected)) {
+    if (!tieSeedCreationOrder.includes(path) && !isDeepStrictEqual(current, expected)) {
       const destination = resolveContainedPath(numberReferenceVaultRoot, path);
       await mkdir(dirname(destination), {recursive: true});
       await writeFile(await assertNoSymlinkPathComponents(numberReferenceVaultRoot, path), bytes);
     }
   }
-  return {
+  for (const path of tieSeedCreationOrder) {
+    const guardedPath = await assertNoSymlinkPathComponents(numberReferenceVaultRoot, path);
+    try {
+      await unlink(guardedPath);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+    }
+  }
+  for (const path of tieSeedCreationOrder) {
+    const bytes = setup.sourceFiles[path];
+    if (!bytes) throw new Error(`C07.4 exact tie-note source bytes disappeared during reseed: ${path}`);
+    const destination = resolveContainedPath(numberReferenceVaultRoot, path);
+    await mkdir(dirname(destination), {recursive: true});
+    await writeFile(await assertNoSymlinkPathComponents(numberReferenceVaultRoot, path), bytes, {flag: "wx"});
+  }
+  const tieNoteHashesAfterReseed: Record<string, GroupOrderSourceHash | null> = {};
+  for (const path of tieSeedCreationOrder) {
+    const bytes = await readFile(await assertNoSymlinkPathComponents(numberReferenceVaultRoot, path));
+    tieNoteHashesAfterReseed[path] = {
+      bytes: bytes.length,
+      sha256: createHash("sha256").update(bytes).digest("hex"),
+    };
+    if (!restoredPaths.includes(path)) restoredPaths.push(path);
+  }
+  const tieNoteHashesMatchSeed = tieSeedCreationOrder.every((path) =>
+    isDeepStrictEqual(tieNoteHashesAfterReseed[path], setup.sourceHashes[path])
+  );
+  const sourceHashesAfterReseed = await captureC074SourceCheckpoint("before-reopen-after-reseed", setup);
+  const reseedResult = {
     performed_after: observed.stage,
-    method: "harness restored exact seed bytes before the reopen session",
+    method: "harness restored changed source bytes, then removed and recreated the exact equal-key tie notes in z-last.md then a-first.md creation order before reopen",
     restored_paths: restoredPaths,
-    source_hashes_after_reseed: await captureC074SourceCheckpoint("before-reopen-after-reseed", setup),
+    tie_seed_creation_order: tieSeedCreationOrder,
+    tie_note_hashes_before_reseed: Object.fromEntries(tieSeedCreationOrder.map((path) => [path, observed.source_hashes[path]])),
+    tie_note_expected_seed_hashes: Object.fromEntries(tieSeedCreationOrder.map((path) => [path, setup.sourceHashes[path]])),
+    tie_note_hashes_after_reseed: tieNoteHashesAfterReseed,
+    tie_note_hashes_match_seed: tieNoteHashesMatchSeed,
+    pinned_app_base_mutations_before_reseed: observed.changed_sources_from_seed.filter((entry) => entry.path.toLowerCase().endsWith(".base")),
+    source_hashes_after_reseed: sourceHashesAfterReseed,
+  };
+  const basesReport = report.bases_number_reference as Record<string, unknown>;
+  basesReport.reseed_before_reopen = reseedResult;
+  basesReport.source_hashes_after_reseed = sourceHashesAfterReseed.source_hashes;
+  basesReport.reopen_seed_hashes_match = isDeepStrictEqual(setup.sourceHashes, sourceHashesAfterReseed.source_hashes);
+  await saveReport();
+  if (!tieNoteHashesMatchSeed || basesReport.reopen_seed_hashes_match !== true) {
+    basesReport.reseed_hash_validation_error = {
+      tie_note_hashes_match_seed: tieNoteHashesMatchSeed,
+      whole_fixture_hashes_match_seed: basesReport.reopen_seed_hashes_match,
+      tie_note_hashes_after_reseed: tieNoteHashesAfterReseed,
+      tie_note_hashes_before_reseed: reseedResult.tie_note_hashes_before_reseed,
+      expected_tie_note_hashes: reseedResult.tie_note_expected_seed_hashes,
+      full_source_checkpoint: sourceHashesAfterReseed,
+    };
+    await saveReport();
+    throw new Error("C07.4 reseed did not restore exact tie-note and whole-fixture seed bytes before reopen");
+  }
+  return reseedResult;
+}
+
+type C074TiePathEnumerationRead = {
+  vault_file_count: number;
+  paths_in_order: string[];
+  fixture_paths_in_order: string[];
+  fixture_path_set: string[];
+  tie_paths_in_order: string[];
+};
+
+async function readC074TiePathEnumeration(
+  connection: DevToolsConnection,
+  expectedNotePaths: string[],
+): Promise<C074TiePathEnumerationRead> {
+  const expectedJson = JSON.stringify(expectedNotePaths);
+  return await connection.evaluateJson<C074TiePathEnumerationRead>(`(() => {
+    const expectedPaths = new Set(${expectedJson});
+    const tiePaths = new Set(["Notes/Text/Ties/z-last.md", "Notes/Text/Ties/a-first.md"]);
+    const allPaths = window.app?.vault?.getFiles?.().map((file) => file.path) ?? [];
+    const fixturePaths = allPaths.filter((path) => expectedPaths.has(path));
+    return {
+      vault_file_count: allPaths.length,
+      paths_in_order: allPaths,
+      fixture_paths_in_order: fixturePaths,
+      fixture_path_set: [...fixturePaths].sort(),
+      tie_paths_in_order: allPaths.filter((path) => tiePaths.has(path)),
+    };
+  })()`, "C07.4 enumerate settled equal-key tie-note paths before reopen selection");
+}
+
+async function captureStableC074TiePathEnumeration(
+  connection: DevToolsConnection,
+  expectedNotePaths: string[],
+  stage: string,
+): Promise<Record<string, unknown>> {
+  const expectedPathSet = [...expectedNotePaths].sort();
+  const expectedTieOrder = ["Notes/Text/Ties/z-last.md", "Notes/Text/Ties/a-first.md"];
+  type StablePair = {
+    first: C074TiePathEnumerationRead;
+    second: C074TiePathEnumerationRead;
+    fixture_path_set_complete: boolean;
+    enumeration_order_stable: boolean;
+    tie_order_stable: boolean;
+    vault_path_enumeration_stable: boolean;
+  };
+  let lastPair: StablePair | null = null;
+  let readPairAttempts = 0;
+  let failureMessage: string | null = null;
+  try {
+    await waitFor(
+      `two stable settled fixture path enumerations before C07.4 ${stage} tie-view selection`,
+      async () => {
+        const first = await readC074TiePathEnumeration(connection, expectedNotePaths);
+        await delay(150);
+        const second = await readC074TiePathEnumeration(connection, expectedNotePaths);
+        readPairAttempts += 1;
+        const pair: StablePair = {
+          first,
+          second,
+          fixture_path_set_complete: isDeepStrictEqual(first.fixture_path_set, expectedPathSet)
+            && isDeepStrictEqual(second.fixture_path_set, expectedPathSet),
+          enumeration_order_stable: isDeepStrictEqual(first.fixture_paths_in_order, second.fixture_paths_in_order),
+          tie_order_stable: isDeepStrictEqual(first.tie_paths_in_order, second.tie_paths_in_order),
+          vault_path_enumeration_stable: isDeepStrictEqual(first.paths_in_order, second.paths_in_order),
+        };
+        lastPair = pair;
+        return pair;
+      },
+      (value) => value.fixture_path_set_complete
+        && value.enumeration_order_stable
+        && value.tie_order_stable
+        && value.vault_path_enumeration_stable
+        && isDeepStrictEqual(value.first.tie_paths_in_order, expectedTieOrder)
+        && isDeepStrictEqual(value.second.tie_paths_in_order, expectedTieOrder),
+      15_000,
+    );
+  } catch (error) {
+    failureMessage = error instanceof Error ? error.message : String(error);
+  }
+  const passed = lastPair !== null
+    && lastPair.fixture_path_set_complete
+    && lastPair.enumeration_order_stable
+    && lastPair.tie_order_stable
+    && lastPair.vault_path_enumeration_stable
+    && isDeepStrictEqual(lastPair.first.tie_paths_in_order, expectedTieOrder)
+    && isDeepStrictEqual(lastPair.second.tie_paths_in_order, expectedTieOrder);
+  return {
+    stage,
+    captured_at: new Date().toISOString(),
+    required_settled_reads: 2,
+    read_pair_attempts: readPairAttempts,
+    expected_fixture_path_set: expectedPathSet,
+    expected_tie_path_order: expectedTieOrder,
+    ...(lastPair ?? {}),
+    passed,
+    failure: passed ? null : failureMessage ?? "settled enumeration reads did not produce the required stable reverse tie order",
   };
 }
 
@@ -21254,6 +21620,46 @@ async function captureC074Scenario(
   await delay(300);
   const basePath = resolveContainedPath(scenarioFixture.vault_root, scenario.base_path);
   const sourceBytesBeforeCapture = await readFile(basePath);
+  const isReopenTiePathScenario = stage === "reopen" && scenario.id === "text-equal-key-path-tie";
+  const requiresMacOSReopenTiePathEnumeration = isReopenTiePathScenario && process.platform === "darwin";
+  let tiePathEnumerationBeforeSelection: Record<string, unknown> | null = isReopenTiePathScenario
+    ? requiresMacOSReopenTiePathEnumeration
+      ? {
+        stage,
+        required: true,
+        status: "pending-before-target-click",
+        runner_os: process.env.RUNNER_OS ?? process.platform,
+      }
+      : {
+        stage,
+        required: false,
+        status: "not-required",
+        runner_os: process.env.RUNNER_OS ?? process.platform,
+        reason: "the additional two-read tie enumeration is a macOS reopen gate; the tie seed-order predicate remains required on this runner",
+      }
+    : null;
+  const preselectionScenarioEntry = ((report.bases_number_reference as Record<string, unknown>).scenarios as Array<Record<string, unknown>>)
+    .find((entry) => entry.id === scenario.id);
+  if (isReopenTiePathScenario && preselectionScenarioEntry) {
+    preselectionScenarioEntry.reopen_preselection_tie_path_enumeration = tiePathEnumerationBeforeSelection;
+  }
+  const beforeTargetSelection = requiresMacOSReopenTiePathEnumeration
+    ? async (): Promise<void> => {
+      const enumeration = await captureStableC074TiePathEnumeration(
+        connection,
+        fixture.notes.map((note) => note.path),
+        stage,
+      );
+      tiePathEnumerationBeforeSelection = enumeration;
+      if (preselectionScenarioEntry) {
+        preselectionScenarioEntry.reopen_preselection_tie_path_enumeration = enumeration;
+      }
+      await saveReport();
+      if (enumeration.passed !== true) {
+        throw new Error(`C07.4 macOS reopen tie path enumeration failed immediately before selecting ${scenario.base_path}: ${JSON.stringify(enumeration)}`);
+      }
+    }
+    : undefined;
   const groupOrderScenario: GroupOrderScenario = {
     id: scenario.id,
     base_path: scenario.base_path,
@@ -21263,7 +21669,14 @@ async function captureC074Scenario(
     coverage: scenario.coverage,
     source: scenario.source,
   };
-  const observation = await captureGroupOrderScenario(connection, groupOrderScenario, fixturePaths, scenarioFixture, stage);
+  const observation = await captureGroupOrderScenario(
+    connection,
+    groupOrderScenario,
+    fixturePaths,
+    scenarioFixture,
+    stage,
+    beforeTargetSelection,
+  );
   const sourceBytesAfterCapture = await readFile(basePath);
   if (observation.screenshot) {
     const existingName = observation.screenshot;
@@ -21396,7 +21809,8 @@ async function captureC074Scenario(
     && textComparisonProbesComplete && diagnosticsMetadataComplete && runnerMetadataComplete;
   const tieSeedOrder = renderer.vault_file_tie_seed_order as string[];
   const pathTieSeedOrderDisambiguates = scenario.id !== "text-equal-key-path-tie"
-    || isDeepStrictEqual(tieSeedOrder, ["Notes/Text/Ties/z-last.md", "Notes/Text/Ties/a-first.md"]);
+    || (isDeepStrictEqual(tieSeedOrder, ["Notes/Text/Ties/z-last.md", "Notes/Text/Ties/a-first.md"])
+      && (!requiresMacOSReopenTiePathEnumeration || tiePathEnumerationBeforeSelection?.passed === true));
   const complete = observation.requested_file_path === scenario.base_path
     && observation.selection_succeeded
     && observation.active_file_path === scenario.base_path
@@ -21488,15 +21902,112 @@ async function captureC074Scenario(
     runner_metadata_complete: runnerMetadataComplete,
     path_tie_seed_order: tieSeedOrder,
     path_tie_seed_order_disambiguates: pathTieSeedOrderDisambiguates,
+    reopen_preselection_tie_path_enumeration: tiePathEnumerationBeforeSelection,
+    reopen_preselection_tie_path_enumeration_required: requiresMacOSReopenTiePathEnumeration,
+    reopen_preselection_tie_path_enumeration_passed: !requiresMacOSReopenTiePathEnumeration
+      || tiePathEnumerationBeforeSelection?.passed === true,
     row_occurrence_count: occurrences.length,
     row_occurrence_count_matches_result_count: resultCountMatchesOccurrences,
     visible_path_links_match_ordered_row_occurrences: visibleRowsMatchMappedOccurrences,
     complete,
   };
+  const basesReport = report.bases_number_reference as Record<string, unknown>;
+  const scenarioEntry = (basesReport.scenarios as Array<Record<string, unknown>>)
+    .find((entry) => entry.id === scenario.id);
+  if (scenarioEntry) scenarioEntry[stage === "first-open" ? "first_open_observation" : "reopen_observation"] = result;
+  await saveReport();
   if (!complete) {
-    throw new Error(`C07.4 ${stage} ${scenario.id} failed exact selected-view, result-count, or row-mapping acceptance: ${JSON.stringify(result).slice(0, 12_000)}`);
+    const acceptanceSummary = {
+      scenario_id: scenario.id,
+      stage,
+      requested_path_matches: observation.requested_file_path === scenario.base_path,
+      selection_succeeded: observation.selection_succeeded,
+      active_path_matches: observation.active_file_path === scenario.base_path,
+      active_view_is_bases: observation.active_view_type === "bases",
+      state_settled: observation.state_settled,
+      extraction_not_ambiguous: observation.extraction_ambiguous === false,
+      screenshot_present: typeof observation.screenshot === "string" && observation.screenshot.length > 0,
+      screenshot_error_absent: observation.screenshot_error === undefined,
+      screenshot_dimensions_present: observation.screenshot_dimensions !== null,
+      screenshot_width_positive: observation.screenshot_dimensions !== null && observation.screenshot_dimensions.width > 0,
+      screenshot_height_positive: observation.screenshot_dimensions !== null && observation.screenshot_dimensions.height > 0,
+      initial_probe_error_absent: observation.probe_error === undefined,
+      retry_probe_error_absent: observation.probe_retry_error === undefined,
+      selected_root_count_evidence_valid: selectedRootCountEvidence,
+      result_count_matches_occurrences: resultCountMatchesOccurrences,
+      expected_row_paths_complete: expectedRowPathsComplete,
+      dom_ordinals_complete: domOrdinalsComplete,
+      fresh_sweep_complete: freshSweepComplete,
+      grouped_membership_complete: groupedMembershipComplete,
+      visible_rows_match_mapped_occurrences: visibleRowsMatchMappedOccurrences,
+      no_unmapped_path_candidates: observation.unmapped_visible_path_candidates.length === 0,
+      no_unmapped_row_candidates: observation.unmapped_visible_row_candidates.length === 0,
+      no_visible_error_texts: observation.visible_error_texts.length === 0,
+      frontmatter_properties_complete: frontmatterPropertiesComplete,
+      number_probes_complete: numberProbesComplete,
+      number_identity_probes_complete: numberIdentityProbesComplete,
+      text_comparison_probes_complete: textComparisonProbesComplete,
+      renderer_metadata_complete: diagnosticsMetadataComplete,
+      runner_metadata_complete: runnerMetadataComplete,
+      renderer_diagnostics_complete: rendererDiagnosticsComplete,
+      tie_seed_order_disambiguates: pathTieSeedOrderDisambiguates,
+      reopen_preselection_tie_enumeration_required: requiresMacOSReopenTiePathEnumeration,
+      reopen_preselection_tie_enumeration_passed: !requiresMacOSReopenTiePathEnumeration
+        || tiePathEnumerationBeforeSelection?.passed === true,
+    };
+    if (scenarioEntry) scenarioEntry[stage === "first-open" ? "first_open_acceptance_summary" : "reopen_acceptance_summary"] = acceptanceSummary;
+    await saveReport();
+    throw new Error(`C07.4 ${stage} ${scenario.id} failed scenario acceptance: ${JSON.stringify(acceptanceSummary)}`);
   }
   return result;
+}
+
+async function captureC074ScenarioWithFailureEvidence(
+  connection: DevToolsConnection,
+  browserVersion: string,
+  fixture: C074NumberReferenceFixture,
+  scenario: C074NumberReferenceScenario,
+  fixturePaths: string[],
+  scenarioFixture: GroupOrderScenarioFixture,
+  stage: "first-open" | "reopen",
+): Promise<Record<string, unknown>> {
+  try {
+    return await captureC074Scenario(
+      connection,
+      browserVersion,
+      fixture,
+      scenario,
+      fixturePaths,
+      scenarioFixture,
+      stage,
+    );
+  } catch (error) {
+    const failureMessage = error instanceof Error ? error.message : String(error);
+    const basesReport = report.bases_number_reference as Record<string, unknown>;
+    const scenarioEntry = (basesReport.scenarios as Array<Record<string, unknown>>)
+      .find((entry) => entry.id === scenario.id);
+    const observationKey = stage === "first-open" ? "first_open_observation" : "reopen_observation";
+    const existingObservation = scenarioEntry?.[observationKey];
+    if (existingObservation && typeof existingObservation === "object"
+      && (existingObservation as Record<string, unknown>).complete === false) {
+      (existingObservation as Record<string, unknown>).capture_error_after_full_observation = failureMessage;
+      await saveReport();
+      return existingObservation as Record<string, unknown>;
+    }
+    const failure = {
+      stage,
+      scenario_id: scenario.id,
+      target_base_path: scenario.base_path,
+      complete: false,
+      failed_at: new Date().toISOString(),
+      runner_os: process.env.RUNNER_OS ?? process.platform,
+      error: failureMessage,
+      error_stack: error instanceof Error ? error.stack ?? null : null,
+    };
+    if (scenarioEntry) scenarioEntry[stage === "first-open" ? "first_open_observation" : "reopen_observation"] = failure;
+    await saveReport();
+    return failure;
+  }
 }
 
 async function runBasesNumberReferenceProbe(): Promise<void> {
@@ -21581,7 +22092,7 @@ async function runBasesNumberReferenceProbe(): Promise<void> {
     await captureC074SourceCheckpoint("first-open-after-vault-selection", fixtureSetup);
 
     for (const scenario of fixture.scenarios) {
-      const observation = await captureC074Scenario(
+      const observation = await captureC074ScenarioWithFailureEvidence(
         firstConnection,
         first.browserVersion,
         fixture,
@@ -21607,7 +22118,8 @@ async function runBasesNumberReferenceProbe(): Promise<void> {
     const reseed = await reseedC074SourceFiles(fixtureSetup, firstAfterShutdown);
     basesReport.reseed_before_reopen = reseed;
     basesReport.source_hashes_after_reseed = reseed.source_hashes_after_reseed.source_hashes;
-    basesReport.reopen_seed_hashes_match = isDeepStrictEqual(fixtureSetup.sourceHashes, reseed.source_hashes_after_reseed.source_hashes);
+    basesReport.reopen_seed_hashes_match = reseed.tie_note_hashes_match_seed
+      && isDeepStrictEqual(fixtureSetup.sourceHashes, reseed.source_hashes_after_reseed.source_hashes);
     if (basesReport.reopen_seed_hashes_match !== true) {
       throw new Error("C07.4 reseed did not restore the exact original Markdown and .base seed bytes before reopen");
     }
@@ -21647,7 +22159,7 @@ async function runBasesNumberReferenceProbe(): Promise<void> {
     await captureC074SourceCheckpoint("reopen-after-vault-restore", fixtureSetup);
 
     for (const scenario of fixture.scenarios) {
-      const observation = await captureC074Scenario(
+      const observation = await captureC074ScenarioWithFailureEvidence(
         reopenConnection,
         reopened.browserVersion,
         fixture,
@@ -21674,7 +22186,6 @@ async function runBasesNumberReferenceProbe(): Promise<void> {
     basesReport.reopen_source_mutation_observed = reopenAfterShutdown.changed_sources_from_seed.length > 0;
 
     const scenarioAcceptance: Record<string, boolean> = {};
-    const comparisonFailures: Array<{scenario_id: string; first_open: unknown; reopen: unknown}> = [];
     for (const scenario of fixture.scenarios) {
       const entry = scenarioReport.find((candidate) => candidate.id === scenario.id)!;
       const firstObservation = firstObservations[scenario.id];
@@ -21691,12 +22202,25 @@ async function runBasesNumberReferenceProbe(): Promise<void> {
         reopen_projection: reopenComplete ? c074ComparableObservation(reopenObservation) : null,
       };
       scenarioAcceptance[scenario.id] = firstComplete && reopenComplete && comparable;
-      if (!scenarioAcceptance[scenario.id]) {
-        comparisonFailures.push({scenario_id: scenario.id, first_open: entry.first_open_observation, reopen: entry.reopen_observation});
-      }
     }
     basesReport.scenario_acceptance = scenarioAcceptance;
-    basesReport.first_open_reopen_comparison_passed = Object.values(scenarioAcceptance).every(Boolean);
+    const allTenFirstOpenPredicatesPassed = fixture.scenarios.length === 10
+      && fixture.scenarios.every((scenario) => firstObservations[scenario.id]?.complete === true);
+    const allTenReopenPredicatesPassed = fixture.scenarios.length === 10
+      && fixture.scenarios.every((scenario) => reopenedObservations[scenario.id]?.complete === true);
+    const allTenComparablePairsPassed = fixture.scenarios.length === 10
+      && scenarioReport.length === 10
+      && Object.keys(scenarioAcceptance).length === 10
+      && fixture.scenarios.every((scenario) => scenarioAcceptance[scenario.id] === true);
+    basesReport.scenario_acceptance_runner_os = process.env.RUNNER_OS ?? process.platform;
+    basesReport.required_scenario_count = 10;
+    basesReport.observed_scenario_count = fixture.scenarios.length;
+    basesReport.all_ten_first_open_predicates_passed = allTenFirstOpenPredicatesPassed;
+    basesReport.all_ten_reopen_predicates_passed = allTenReopenPredicatesPassed;
+    basesReport.all_ten_comparable_pairs_passed = allTenComparablePairsPassed;
+    basesReport.first_open_reopen_comparison_passed = allTenFirstOpenPredicatesPassed
+      && allTenReopenPredicatesPassed
+      && allTenComparablePairsPassed;
     const sourceCheckpoints = basesReport.source_checkpoints as C074SourceObservation[];
     const expectedSourcePaths = [...scenarioFixture.fixture_paths].sort();
     const expectedSourceCheckpointStages = [
@@ -21730,7 +22254,21 @@ async function runBasesNumberReferenceProbe(): Promise<void> {
       ? "completed"
       : "incomplete";
     if (basesReport.capture_status !== "completed") {
-      throw new Error(`C07.4 number-reference first-open/reopen acceptance failed: ${JSON.stringify({scenario_acceptance: scenarioAcceptance, source_checkpoint_matrix_complete: basesReport.source_checkpoint_matrix_complete, reopen_source_hashes_match_seed: basesReport.reopen_source_hashes_match_seed, comparison_failures: comparisonFailures.map((failure) => ({scenario_id: failure.scenario_id, first_open_complete: (failure.first_open as Record<string, unknown> | undefined)?.complete, reopen_complete: (failure.reopen as Record<string, unknown> | undefined)?.complete}))}).slice(0, 12_000)}`);
+      const failedScenarioIds = fixture.scenarios.filter((scenario) => scenarioAcceptance[scenario.id] !== true).map((scenario) => scenario.id);
+      basesReport.acceptance_failure_summary = {
+        runner_os: process.env.RUNNER_OS ?? process.platform,
+        required_scenario_count: 10,
+        observed_scenario_count: fixture.scenarios.length,
+        all_ten_first_open_predicates_passed: allTenFirstOpenPredicatesPassed,
+        all_ten_reopen_predicates_passed: allTenReopenPredicatesPassed,
+        all_ten_comparable_pairs_passed: allTenComparablePairsPassed,
+        failed_scenario_ids: failedScenarioIds,
+        source_checkpoint_matrix_complete: basesReport.source_checkpoint_matrix_complete,
+        reopen_seed_hashes_match: basesReport.reopen_seed_hashes_match,
+        reopen_source_hashes_match_seed: basesReport.reopen_source_hashes_match_seed,
+      };
+      await saveReport();
+      throw new Error(`C07.4 number-reference acceptance failed on ${process.env.RUNNER_OS ?? process.platform}: ${JSON.stringify(basesReport.acceptance_failure_summary)}`);
     }
     basesReport.status = "captured-reference-only";
     basesReport.rust_parity_claimed = false;

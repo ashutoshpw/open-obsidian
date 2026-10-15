@@ -7729,3 +7729,87 @@ Recorded renewed independent approvals from r3_repair_scope and macos_c074_revie
 ## R3.1 final whole-milestone review complete — 2026-10-15T21:37:11Z
 
 Reviewed all eight changed/added files as one bounded deliverable after two independent approvals. The diff contains only the keyed tracker/Linux Canvas repair, goal cadence and matching MIG-002 fingerprint, and related state/evidence/plan/journal updates. The goal SHA matches both the mapping review and MIG-002 reference. No local project tests, validators, builds, or formatters ran. The milestone is ready for one push to origin/main; no CI has been dispatched yet.
+
+
+## R3.1 pushed once; exact-SHA CI batch in flight — 2026-10-15T21:38:35Z
+
+Pushed the reviewed milestone commit 4ab6cf6fd3602fa9e15bc0d58e9b2ecc8a3bb349 once to origin/main. Seven required workflows and 20 jobs were observed on that exact SHA. Rust migration inventory and plugin renderer passed; five workflows and 12 jobs remained in progress at this snapshot. The initial workflow/job IDs and statuses are in [evidence/r2.8.136-r3-1-attempt-1-4ab6cf6.json](evidence/r2.8.136-r3-1-attempt-1-4ab6cf6.json). Keep origin/main at this SHA until the full batch is terminal and reconciled; no duplicate batch or local executable validation was started.
+
+
+## R3.1 exact-SHA CI progress — 2026-10-15T21:39:39Z
+
+Read-only status check confirmed all seven required workflows on 4ab6cf6fd3602fa9e15bc0d58e9b2ecc8a3bb349: five workflows and 13 jobs are terminal and passing. The three-platform round-trip and four-job Rust CI workflows remain active; no failures are recorded. Initial and refreshed run/job evidence is in [evidence/r2.8.136-r3-1-attempt-1-4ab6cf6.json](evidence/r2.8.136-r3-1-attempt-1-4ab6cf6.json). origin/main stays at this SHA; no duplicate submission or local validation was run.
+
+
+## R3.1 CI snapshot: Rust Ubuntu job passed — 2026-10-15T21:41:51Z
+
+Exact SHA 4ab6cf6fd3602fa9e15bc0d58e9b2ecc8a3bb349 remains in flight with no failures: five workflows are complete, 14/20 jobs have passed, and only the Rust CI and three-platform round-trip workflows remain active. Completed desktop, plugin-renderer, and loaded-plugin runs have platform artifacts; inventory and quality have no artifact requirement. Refreshed workflow/job statuses are in [evidence/r2.8.136-r3-1-attempt-1-4ab6cf6.json](evidence/r2.8.136-r3-1-attempt-1-4ab6cf6.json). origin/main remains held at this SHA.
+
+
+## R3.1 CI snapshot: 15 of 20 jobs passed — 2026-10-15T21:43:20Z
+
+All five non-round-trip/non-Rust workflows are complete and passing. Rust Ubuntu and macOS jobs have passed; Rust Windows and MSRV remain active alongside the three platform round-trip jobs. Fifteen of 20 jobs have passed and no failure is recorded on exact SHA 4ab6cf6fd3602fa9e15bc0d58e9b2ecc8a3bb349. Updated job IDs/statuses are in [evidence/r2.8.136-r3-1-attempt-1-4ab6cf6.json](evidence/r2.8.136-r3-1-attempt-1-4ab6cf6.json); origin/main remains held at this SHA.
+
+## R3.1 CI snapshot: 18 of 20 jobs terminal; one failed — 2026-10-15T21:47:52Z
+
+Exact SHA 4ab6cf6fd3602fa9e15bc0d58e9b2ecc8a3bb349 remains in flight: six of seven workflows are terminal and passing, and 18 of 20 jobs are terminal (17 passed, one failed). Rust CI has now passed all four jobs. Ubuntu round-trip job 116684889568 failed during the vault round-trip step; macOS and Windows round-trip jobs remain active. The workflow is still running, so its logs are not yet available. Updated run/job state is in [evidence/r2.8.136-r3-1-attempt-1-4ab6cf6.json](evidence/r2.8.136-r3-1-attempt-1-4ab6cf6.json). origin/main remains held at this SHA until every job is terminal; no retry, duplicate batch, or local executable validation was started.
+
+## R3.1 Ubuntu CI artifact inspected — 2026-10-15T21:49:56Z
+
+Downloaded Linux artifact 12008339796 (9,037,887 bytes; archive SHA-256 `19b44dfbecd46d1040f040f934d583ebdd1fbe5dd00ade86f962561f7d5c362b`; report SHA-256 `a2de19aa3e6689944c774f9a8603d9384db86e5dd69d8c53f47b19f5d3f24794`). The log shows the Canvas edit-path target was clicked/focused at frame 90 and received ArrowRight at frame 91. After the added in-field pointer motion to (239,89), focus shifted to the sibling ID field by frame 98; the second motion at (240,89) left it there. No paste stage completed, and the guard preserved the vault. This is the same focus-handoff class as the previous R3 run after off-field motion, so the in-field motion candidate did not resolve it; the exact event causing the transfer remains unconfirmed. Full run/job/artifact details are in [evidence/r2.8.136-r3-1-attempt-1-4ab6cf6.json](evidence/r2.8.136-r3-1-attempt-1-4ab6cf6.json). macOS and Windows jobs remain active; no source changes, retry, duplicate CI batch, or local executable validation occurred.
+
+## R3.1 CI snapshot: 19 of 20 jobs terminal — 2026-10-15T21:54:13Z
+
+Exact SHA 4ab6cf6fd3602fa9e15bc0d58e9b2ecc8a3bb349 remains in flight: six of seven workflows are terminal and passing, and 19 of 20 jobs are terminal (18 passed, one failed). Windows round-trip passed and its artifact is recorded in [evidence/r2.8.136-r3-1-attempt-1-4ab6cf6.json](evidence/r2.8.136-r3-1-attempt-1-4ab6cf6.json); its reference report records completed C07.2/C07.3/C07.4 captures, two pinned-Obsidian `.base` rewrites, and no Rust parity claim. Ubuntu round-trip failed before paste, with the fail-closed guard preserving the vault. Only macOS round-trip job 116684889663 remains active. Keep origin/main at this SHA; no duplicate batch, retry, or local executable validation was started.
+
+## R3.1 Ubuntu source triage reviewed — 2026-10-15T22:00:29Z
+
+A read-only source review of exact SHA 4ab6cf6fd3602fa9e15bc0d58e9b2ecc8a3bb349 found the R3.1 change is confined to the round-trip harness; the Rust Canvas UI is unchanged. The path and ID fields are separate egui text widgets. The artifact shows path focus after click/ArrowRight, then focus transfers to the sibling ID field after the added in-field PointerMoved events. The cause is not isolated because there is no fresh focus sample between clipboard staging and pointer motion. A bounded next repair candidate is to refresh raw-event-gated telemetry with ArrowRight after clipboard staging, then keep all existing pre-paste guards and add clipboard/X11 focus evidence. This is provisional until the active exact-SHA batch is terminal; no code was changed, no local executable validation ran, and no new CI was started. Details are in [evidence/r2.8.136-r3-1-attempt-1-4ab6cf6.json](evidence/r2.8.136-r3-1-attempt-1-4ab6cf6.json).
+
+## R3.1 independent harness audit refined focus triage — 2026-10-15T22:01:44Z
+
+A second read-only review confirmed the harness validates click geometry and the path field’s focus at frame 90/91, then stages text with xclip and sends two pointer moves before reading focus. The first fresh post-motion sample is frame 98; focus is already on the sibling ID field. Because there is no sample between xclip and the first move, the trigger is still unisolated. After the current CI batch is terminal, the next bounded evidence step is to sample X11 and egui focus immediately after xclip, then send and sample each in-field motion separately, retaining every fail-closed guard. Any neutral Right-key telemetry probe must remain value/focus guarded. Details are in [evidence/r2.8.136-r3-1-attempt-1-4ab6cf6.json](evidence/r2.8.136-r3-1-attempt-1-4ab6cf6.json); no code change, local executable validation, retry, or new CI occurred.
+
+## R3.1 follow-up focus-trace design review — 2026-10-15T22:11:37Z
+
+A fresh read-only review found that a passive post-xclip read cannot use the existing egui logger as a focus checkpoint: the logger emits field diagnostics only when `input.raw.events` is nonempty, so an unchanged read may return stale frame 91. Require a fresh app-emitted event-free snapshot with an advancing frame/log line and explicit empty raw-event list. Then send the +1 pointer move alone, capture a fresh same-frame path/ID pair, and stop immediately if focus transfers or a guard fails. Diagnose +2 only in a separate diagnostic-only attempt after a new click and geometry revalidation, with paste disabled. Capture bounded egui events, monotonic time, frame/line, pointer and button state, both widgets' focus/hover/IDs/rects, refresh state, and X11 focused window ID/title. Keep all paste/save guards unchanged; do not synthesize a key event and treat it as a passive checkpoint. The current exact-SHA batch remains active at `4ab6cf6fd3602fa9e15bc0d58e9b2ecc8a3bb349` (19/20 jobs terminal, 18 passed, one failed, macOS job `116684889663` running); `origin/main` was independently confirmed at the same SHA. No source edit, local executable validation, retry, dispatch, commit, or push occurred.
+
+
+## R3.1 exact-SHA CI terminal reconciliation and R3.2 repair plan — 2026-10-15T22:27:21Z
+
+The seven required GitHub Actions workflows and all 20 jobs are terminal on exact SHA 4ab6cf6fd3602fa9e15bc0d58e9b2ecc8a3bb349; origin/main and the active worktree HEAD remain at this SHA. Six workflows and 18 jobs passed; the round-trip workflow failed on Ubuntu job 116684889568 and macOS job 116684889663. Windows round-trip and the inventory, desktop, quality, plugin renderer, loaded-plugin, and Rust CI workflows passed. Exact run/job results and terminal counts are reconciled in evidence/r2.8.136-r3-1-attempt-1-4ab6cf6.json; no retry, duplicate batch, or local executable validation was run.
+
+Ubuntu failed closed before paste: after the Canvas path target was focused, clipboard staging and the first in-field pointer motion were followed by focus moving to the sibling ID field. The original capture did not sample fresh egui state between staging and each pointer motion. macOS failed C07.4 reopen for text-equal-key-path-tie: selected view, result count, row mapping, and source hashes passed, but the reopened vault-file enumeration was lexical [a-first.md, z-last.md] instead of the reverse [z-last.md, a-first.md] needed to prove path tie-breaking. The reseed restores only changed-byte files, so it did not recreate the unchanged tie notes. The macOS artifact is 32,064,852 bytes, archive SHA-256 f2e78a5c76f1a452f9c36aea25dd318673bbf310c4934bc6fcff4d0e57746def; the report SHA-256 is 28f09b7d630badbc1304e5488b1cd1e6acd78de03d63976855daadb3ef60cf7c. Neither failure establishes Rust parity.
+
+Defined the bounded follow-up R2.8.136-R3.2-C07.4-REOPEN-TIE-ORDER-AND-LINUX-CANVAS-FOCUS-REPAIR in evidence/r2.8.136-r3-2-roundtrip-harness-repair-plan.json. It repairs and verifies the macOS tie-order precondition, adds fresh one-step-at-a-time Linux egui/X11 focus diagnostics while retaining all fail-closed guards, and records complete C07.4 acceptance predicates. Plan review is pending; work remains local and no CI batch is active.
+
+
+## Goal cadence clarification and R3.2 plan approval — 2026-10-15T22:31:15Z
+
+Clarified the GitHub CI push rule in `goal.md`: a push submits one complete, reviewed, named milestone; it is not a request for CI after each minor edit. Related small changes and local commits stay grouped locally, and milestones must represent measurable deliverables rather than being created to obtain early CI feedback. A full cross-platform batch may take several hours, so the submitted SHA remains fixed until all required jobs are terminal and reconciled. Updated MIG-002 and synchronized `requirements.json.mapping_review.goal_sha256` to `42ef146035e83e6c047d904b53f99eff454a9394d562f877e31ca9a3dc81a4e8`.
+
+Recorded both independent reviews in the R3.2 plan. The acceptance criteria now require two consecutive stable reopened macOS file-order reads immediately before selecting the tie view, persistence of the full report on precondition failure, passing predicates for all ten C07.4 first-open/reopen scenarios, exact tie-note fixture hashes across reseeding, and separate reporting of pinned-app `.base` mutations. The stale future CI evidence filename is unset until the implementation SHA is known. The plan is approved for implementation; no source implementation, CI dispatch, push, or executable validation occurred in this documentation/planning update.
+
+
+## R3.2 cross-platform C07.4 gate clarified — 2026-10-15T22:34:04Z
+
+The final plan re-review found that the explicit all-ten C07.4 pass condition was previously stated only under macOS, while the following comparator milestone requires complete captures on all three operating systems. Updated R3.2 CI acceptance to require every C07.4 first-open/reopen predicate and comparison to pass on Ubuntu, macOS, and Windows, with a complete source-checkpoint matrix per platform; macOS also retains the extra stable reverse-order tie precondition and exact reseed hashes. Final scope re-review is pending. Read-only source audits located the Mac reseed and Linux snapshot points; they made no edits and ran no validation.
+
+
+## R3.2 final scope review passed — 2026-10-15T22:34:04Z
+
+The final independent review approved the updated R3.2 plan. Its CI criteria require all ten C07.4 first-open/reopen scenarios and comparisons to pass on Ubuntu, macOS, and Windows with complete source checkpoints per OS; macOS also has the additional reopened tie-order gate. The goal SHA `42ef146035e83e6c047d904b53f99eff454a9394d562f877e31ca9a3dc81a4e8` matches the goal and requirements mapping, the one-push milestone cadence matches, and the future CI evidence filename remains unset until the implementation SHA exists. The plan is now approved for implementation. No CI batch is active.
+
+
+## R3.2 implementation complete locally; final review underway — 2026-10-15T22:55:23Z
+
+Implemented the approved R3.2 harness repairs. Linux CI diagnostics now request event-free egui snapshots by atomic request ID, require a newer frame and matching path/ID records, and capture pointer, button, widget, refresh, and X11 state. A 100 ms repaint cadence runs only when the CI request-file environment variable is present, so file polling wakes an otherwise idle UI without changing ordinary app behavior. The Linux paste path samples one validated +1 px move, checks focus immediately after clipboard staging and motion, stops on the first failed guard, and preserves clipboard cleanup and the existing no-paste/no-save failure path.
+
+The Mac reopened tie scenario recreates the exact tie-note bytes in z-last then a-first order and requires two stable reverse-order `app.vault.getFiles()` reads in a callback after the target is visible and immediately before its selection. This extra gate is Mac-only; Ubuntu and Windows retain the existing tie-seed predicate. C07.4 reports `.base` mutation evidence separately for every source checkpoint, retains exact tie-note hashes around reseeding, and saves field-by-field acceptance summaries before failure. The all-ten first-open/reopen/comparison gates remain required on all three platforms.
+
+`goal.md` and the MIG-002 mapping retain the one-push-per-meaningful-milestone policy and synchronized goal hash `42ef146035e83e6c047d904b53f99eff454a9394d562f877e31ca9a3dc81a4e8`. An independent whole-milestone source review is in progress. Changes remain local and uncommitted; no CI batch or push has started. No local tests, builds, app runs, formatters, or executable validation were run. After review, submit the complete R3.2 milestone once and wait for every required job on its exact SHA before the next push.
+
+
+## R3.2 whole-milestone source review approved — 2026-10-15T22:56:26Z
+
+The independent read-only review by `tracker_nextstep_oct16` approved the complete R3.2 implementation for one submission to `origin/main`, finding no source-level gaps against the approved criteria. The review confirmed the CI-only repaint cadence and fresh focus snapshots; Mac-only tie reseeding, hash verification, and two stable preselection reads; per-checkpoint `.base` mutation reporting; all-ten C07.4 gates on Ubuntu, macOS, and Windows; fail-closed Linux paste/save guards; and the synchronized goal hash and push cadence. The review did not run tests or builds. The milestone is implementation-complete and ready for one push; CI acceptance remains pending all seven required workflows and 20 jobs passing on the submitted exact SHA.

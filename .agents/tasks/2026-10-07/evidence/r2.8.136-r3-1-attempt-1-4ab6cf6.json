@@ -1,0 +1,605 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.8.136-R3.1-MILESTONE-MAP-AND-LINUX-CANVAS-FOCUS-REPAIR",
+  "attempt": 1,
+  "submitted_sha": "4ab6cf6fd3602fa9e15bc0d58e9b2ecc8a3bb349",
+  "starting_sha": "3f428b6d9e2fe2bf3789c0a02cd7d7690234ec91",
+  "pushed_once": true,
+  "observed_at": "2026-10-15T22:27:21Z",
+  "status": "terminal-failed on exact SHA 4ab6cf6fd3602fa9e15bc0d58e9b2ecc8a3bb349: 7/7 workflows and 20/20 jobs terminal; 6 workflows and 18 jobs passed; Ubuntu and macOS round-trip jobs failed.",
+  "required_workflows": 7,
+  "required_jobs": 20,
+  "origin_main_sha_at_observation": "4ab6cf6fd3602fa9e15bc0d58e9b2ecc8a3bb349",
+  "workflow_counts": {
+    "observed": 7,
+    "terminal": 7,
+    "passed": 6,
+    "failed": 1,
+    "queued": 0,
+    "in_progress": 0
+  },
+  "job_counts": {
+    "observed": 20,
+    "terminal": 20,
+    "passed": 18,
+    "failed": 2,
+    "cancelled": 0,
+    "queued": 0,
+    "in_progress": 0
+  },
+  "workflows": [
+    {
+      "name": "Obsidian vault round-trip acceptance",
+      "run_id": 38811296519,
+      "status": "completed",
+      "conclusion": "failure",
+      "head_sha": "4ab6cf6fd3602fa9e15bc0d58e9b2ecc8a3bb349",
+      "event": "push",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38811296519",
+      "created_at": "2026-10-15T21:37:35Z",
+      "started_at": "2026-10-15T21:37:35Z",
+      "jobs": [
+        {
+          "job_id": 116684889568,
+          "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04",
+          "status": "completed",
+          "conclusion": "failure",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38811296519/job/116684889568"
+        },
+        {
+          "job_id": 116684889663,
+          "name": "Obsidian 1.14.4 vault round-trip on macos-latest",
+          "status": "completed",
+          "conclusion": "failure",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38811296519/job/116684889663"
+        },
+        {
+          "job_id": 116684889697,
+          "name": "Obsidian 1.14.4 vault round-trip on windows-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38811296519/job/116684889697"
+        }
+      ]
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 38811296521,
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "4ab6cf6fd3602fa9e15bc0d58e9b2ecc8a3bb349",
+      "event": "push",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38811296521",
+      "created_at": "2026-10-15T21:37:35Z",
+      "started_at": "2026-10-15T21:37:35Z",
+      "jobs": [
+        {
+          "job_id": 116684889070,
+          "name": "inventory",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38811296521/job/116684889070"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 38811296568,
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "4ab6cf6fd3602fa9e15bc0d58e9b2ecc8a3bb349",
+      "event": "push",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38811296568",
+      "created_at": "2026-10-15T21:37:35Z",
+      "started_at": "2026-10-15T21:37:35Z",
+      "jobs": [
+        {
+          "job_id": 116684889797,
+          "name": "macos-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38811296568/job/116684889797"
+        },
+        {
+          "job_id": 116684890149,
+          "name": "ubuntu-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38811296568/job/116684890149"
+        },
+        {
+          "job_id": 116684890162,
+          "name": "windows-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38811296568/job/116684890162"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 38811296624,
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "4ab6cf6fd3602fa9e15bc0d58e9b2ecc8a3bb349",
+      "event": "push",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38811296624",
+      "created_at": "2026-10-15T21:37:36Z",
+      "started_at": "2026-10-15T21:37:36Z",
+      "jobs": [
+        {
+          "job_id": 116684889913,
+          "name": "ubuntu-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38811296624/job/116684889913"
+        },
+        {
+          "job_id": 116684890308,
+          "name": "windows-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38811296624/job/116684890308"
+        },
+        {
+          "job_id": 116684890468,
+          "name": "macos-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38811296624/job/116684890468"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 38811296656,
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "4ab6cf6fd3602fa9e15bc0d58e9b2ecc8a3bb349",
+      "event": "push",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38811296656",
+      "created_at": "2026-10-15T21:37:36Z",
+      "started_at": "2026-10-15T21:37:36Z",
+      "jobs": [
+        {
+          "job_id": 116684890212,
+          "name": "windows-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38811296656/job/116684890212"
+        },
+        {
+          "job_id": 116684890513,
+          "name": "ubuntu-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38811296656/job/116684890513"
+        },
+        {
+          "job_id": 116684890675,
+          "name": "macos-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38811296656/job/116684890675"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 38811296805,
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "4ab6cf6fd3602fa9e15bc0d58e9b2ecc8a3bb349",
+      "event": "push",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38811296805",
+      "created_at": "2026-10-15T21:37:36Z",
+      "started_at": "2026-10-15T21:37:36Z",
+      "jobs": [
+        {
+          "job_id": 116684890619,
+          "name": "windows-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38811296805/job/116684890619"
+        },
+        {
+          "job_id": 116684890853,
+          "name": "macos-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38811296805/job/116684890853"
+        },
+        {
+          "job_id": 116684890878,
+          "name": "ubuntu-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38811296805/job/116684890878"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 38811297064,
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "4ab6cf6fd3602fa9e15bc0d58e9b2ecc8a3bb349",
+      "event": "push",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38811297064",
+      "created_at": "2026-10-15T21:37:36Z",
+      "started_at": "2026-10-15T21:37:36Z",
+      "jobs": [
+        {
+          "job_id": 116684891642,
+          "name": "rust (windows-latest)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38811297064/job/116684891642"
+        },
+        {
+          "job_id": 116684891786,
+          "name": "rust (ubuntu-latest)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38811297064/job/116684891786"
+        },
+        {
+          "job_id": 116684892344,
+          "name": "rust (macos-latest)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38811297064/job/116684892344"
+        },
+        {
+          "job_id": 116684892395,
+          "name": "minimum supported Rust (1.95)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38811297064/job/116684892395"
+        }
+      ]
+    }
+  ],
+  "snapshots": [
+    {
+      "observed_at": "2026-10-15T21:38:35Z",
+      "workflow_counts": {
+        "observed": 7,
+        "terminal": 2,
+        "passed": 2,
+        "failed": 0,
+        "queued": 0,
+        "in_progress": 5
+      },
+      "job_counts": {
+        "observed": 20,
+        "terminal": 8,
+        "passed": 8,
+        "failed": 0,
+        "cancelled": 0,
+        "queued": 0,
+        "in_progress": 12
+      },
+      "origin_main_sha": "4ab6cf6fd3602fa9e15bc0d58e9b2ecc8a3bb349"
+    },
+    {
+      "observed_at": "2026-10-15T21:39:39Z",
+      "workflow_counts": {
+        "observed": 7,
+        "terminal": 5,
+        "passed": 5,
+        "failed": 0,
+        "queued": 0,
+        "in_progress": 2
+      },
+      "job_counts": {
+        "observed": 20,
+        "terminal": 13,
+        "passed": 13,
+        "failed": 0,
+        "cancelled": 0,
+        "queued": 0,
+        "in_progress": 7
+      },
+      "active_workflows": [
+        38811296519,
+        38811297064
+      ],
+      "active_job_ids": [
+        116684889568,
+        116684889663,
+        116684889697,
+        116684891642,
+        116684891786,
+        116684892344,
+        116684892395
+      ],
+      "origin_main_sha": "4ab6cf6fd3602fa9e15bc0d58e9b2ecc8a3bb349"
+    },
+    {
+      "observed_at": "2026-10-15T21:41:51Z",
+      "workflow_counts": {
+        "observed": 7,
+        "terminal": 5,
+        "passed": 5,
+        "failed": 0,
+        "queued": 0,
+        "in_progress": 2
+      },
+      "job_counts": {
+        "observed": 20,
+        "terminal": 14,
+        "passed": 14,
+        "failed": 0,
+        "cancelled": 0,
+        "queued": 0,
+        "in_progress": 6
+      },
+      "active_workflows": [
+        38811296519,
+        38811297064
+      ],
+      "active_job_ids": [
+        116684889568,
+        116684889663,
+        116684889697,
+        116684891642,
+        116684892344,
+        116684892395
+      ],
+      "completed_job_ids": [
+        116684889070,
+        116684889913,
+        116684890308,
+        116684890468,
+        116684890212,
+        116684890513,
+        116684890675,
+        116684889797,
+        116684890149,
+        116684890162,
+        116684890619,
+        116684890853,
+        116684890878,
+        116684891786
+      ],
+      "origin_main_sha": "4ab6cf6fd3602fa9e15bc0d58e9b2ecc8a3bb349"
+    },
+    {
+      "observed_at": "2026-10-15T21:43:20Z",
+      "workflow_counts": {
+        "observed": 7,
+        "terminal": 5,
+        "passed": 5,
+        "failed": 0,
+        "queued": 0,
+        "in_progress": 2
+      },
+      "job_counts": {
+        "observed": 20,
+        "terminal": 15,
+        "passed": 15,
+        "failed": 0,
+        "cancelled": 0,
+        "queued": 0,
+        "in_progress": 5
+      },
+      "active_workflows": [
+        38811296519,
+        38811297064
+      ],
+      "active_job_ids": [
+        116684889568,
+        116684889663,
+        116684889697,
+        116684891642,
+        116684892395
+      ],
+      "completed_job_ids": [
+        116684889070,
+        116684889913,
+        116684890308,
+        116684890468,
+        116684890212,
+        116684890513,
+        116684890675,
+        116684889797,
+        116684890149,
+        116684890162,
+        116684890619,
+        116684890853,
+        116684890878,
+        116684891786,
+        116684892344
+      ],
+      "origin_main_sha": "4ab6cf6fd3602fa9e15bc0d58e9b2ecc8a3bb349"
+    },
+    {
+      "observed_at": "2026-10-15T21:47:52Z",
+      "workflow_counts": {
+        "observed": 7,
+        "terminal": 6,
+        "passed": 6,
+        "failed": 0,
+        "queued": 0,
+        "in_progress": 1
+      },
+      "job_counts": {
+        "observed": 20,
+        "terminal": 18,
+        "passed": 17,
+        "failed": 1,
+        "cancelled": 0,
+        "queued": 0,
+        "in_progress": 2
+      },
+      "origin_main_sha": "4ab6cf6fd3602fa9e15bc0d58e9b2ecc8a3bb349"
+    },
+    {
+      "observed_at": "2026-10-15T21:54:13Z",
+      "workflow_counts": {
+        "observed": 7,
+        "terminal": 6,
+        "passed": 6,
+        "failed": 0,
+        "queued": 0,
+        "in_progress": 1
+      },
+      "job_counts": {
+        "observed": 20,
+        "terminal": 19,
+        "passed": 18,
+        "failed": 1,
+        "cancelled": 0,
+        "queued": 0,
+        "in_progress": 1
+      },
+      "origin_main_sha": "4ab6cf6fd3602fa9e15bc0d58e9b2ecc8a3bb349"
+    },
+    {
+      "observed_at": "2026-10-15T22:27:21Z",
+      "workflow_counts": {
+        "observed": 7,
+        "terminal": 7,
+        "passed": 6,
+        "failed": 1,
+        "queued": 0,
+        "in_progress": 0
+      },
+      "job_counts": {
+        "observed": 20,
+        "terminal": 20,
+        "passed": 18,
+        "failed": 2,
+        "cancelled": 0,
+        "queued": 0,
+        "in_progress": 0
+      },
+      "origin_main_sha": "4ab6cf6fd3602fa9e15bc0d58e9b2ecc8a3bb349"
+    }
+  ],
+  "submitted_at": "2026-10-15T21:37:35Z",
+  "artifact_digests": {
+    "Linux": {
+      "artifact_id": 12008339796,
+      "size_bytes": 9037887,
+      "archive_sha256": "19b44dfbecd46d1040f040f934d583ebdd1fbe5dd00ade86f962561f7d5c362b",
+      "report_sha256": "a2de19aa3e6689944c774f9a8603d9384db86e5dd69d8c53f47b19f5d3f24794",
+      "status": "failed before the first Canvas edit-path paste; target focus transferred to the sibling ID field after diagnostic in-field pointer motion; fail-closed guard prevented paste; C07.2/C07.3/C07.4 remain pending"
+    },
+    "Windows": {
+      "artifact_id": 12009516366,
+      "size_bytes": 23130524,
+      "archive_sha256": "7d56791823ca0f3418927245992f2d19d9a55292608e1b073cc65019f6e8648a",
+      "report_sha256": "1b03b982b4024ec1cd9c003d92669211359e2e3b859cda37d7134e6e1d3836fb",
+      "status": "passed; C07.2/C07.3/C07.4 reference capture completed; two pinned-app .base source rewrites observed; rust_parity_claimed=false"
+    },
+    "macOS": {
+      "artifact_id": 12009799285,
+      "artifact_name": "obsidian-vault-roundtrip-macOS-4ab6cf6fd3602fa9e15bc0d58e9b2ecc8a3bb349",
+      "artifact_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38811296519/artifacts/12009799285",
+      "archive_size_bytes": 32064852,
+      "archive_sha256": "f2e78a5c76f1a452f9c36aea25dd318673bbf310c4934bc6fcff4d0e57746def",
+      "expired": false,
+      "expires_at": "2026-11-14T22:16:28Z",
+      "report_file": "obsidian-vault-roundtrip-report.json",
+      "report_sha256": "28f09b7d630badbc1304e5488b1cd1e6acd78de03d63976855daadb3ef60cf7c"
+    }
+  },
+  "failure_triage_roundtrip_ubuntu": {
+    "workflow": "Obsidian vault round-trip acceptance",
+    "run_id": 38811296519,
+    "job_id": 116684889568,
+    "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38811296519/job/116684889568",
+    "failed_step": "Author, open, snapshot, and reopen the same vault",
+    "artifact": {
+      "id": 12008339796,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38811296519/artifacts/12008339796",
+      "archive_size_bytes": 9037887,
+      "archive_sha256": "19b44dfbecd46d1040f040f934d583ebdd1fbe5dd00ade86f962561f7d5c362b",
+      "report_file": "obsidian-vault-roundtrip-report.json",
+      "report_sha256": "a2de19aa3e6689944c774f9a8603d9384db86e5dd69d8c53f47b19f5d3f24794"
+    },
+    "report_summary": "Pinned Obsidian round-trip stopped while setting the OpenObsidian Canvas edit-path field before any paste stage. The accessible-field lookup found no editable role. The screenshot fallback click at (238,89) focused target id_E51C at frame 90; ArrowRight was observed on it at frame 91. The added in-field pointer motions to (239,89) and (240,89) were recorded at frames 98 and 99; after the first motion, target id_E51C lost focus and sibling id_6C61 received focus. At the pre-paste guard, the target remained unfocused, the sibling remained focused, target and sibling response IDs/layout were stable, refresh queues were empty, and no paste stage completed. This confirms the small in-field pointer-motion candidate still causes or coincides with the focus handoff seen in the prior R3 attempt with off-field motion. The exact event causing the handoff remains unisolated. The guard aborted safely; the artifact does not establish a Canvas data/round-trip mutation or Rust parity result.",
+    "source_review": {
+      "reviewer": "r3_repair_scope",
+      "reviewed_sha": "4ab6cf6fd3602fa9e15bc0d58e9b2ecc8a3bb349",
+      "source": "audit-obsidian-vault-roundtrip.ts",
+      "facts": [
+        "R3.1 Linux source delta is in the round-trip audit harness; crates/ui-egui/src/lib.rs is unchanged from R3.",
+        "The path and ID fields are separate egui TextEdit::singleline widgets with distinct IDs and no explicit request_focus/surrender_focus or path-to-ID transfer logic in the UI block.",
+        "The screenshot fallback clicked the path field at (238,89), with path id_E51C focused at frame 90 and ArrowRight observed on it at frame 91.",
+        "The harness stages clipboard text with xclip, then sends two non-clicking xdotool PointerMoved events at (239,89) and (240,89); both points are inside the target rect and outside the sibling rect.",
+        "The first post-motion observation at frame 98 shows the path unfocused and the sibling ID field focused; the same state persists at frame 99.",
+        "There is no fresh focus sample between clipboard staging and the first pointer motion, and both motions are sent before readback; the exact triggering action is not isolated.",
+        "The pre-paste guard aborts before Ctrl+V; no Canvas paste or edit is recorded."
+      ],
+      "hypothesis": "The focus transfer occurs after clipboard staging and by the first in-field PointerMoved event, but current logs cannot distinguish whether xclip staging or the first motion triggers it. The harness evidence does not implicate Canvas persistence or establish Rust parity.",
+      "candidate_after_batch_terminal": "After the current exact-SHA batch is terminal, keep the follow-up bounded to the Linux round-trip harness. A passive read after xclip is not evidence unless it receives a fresh app-emitted egui snapshot: the current logger emits field diagnostics only when raw input events exist, so an unchanged read can return stale frame 91. Add an environment-gated per-frame or one-shot repaint snapshot that records an advancing frame/log line and an explicit empty raw-event list immediately after clipboard staging. Then send only the +1 pointer move, capture one fresh same-frame path/ID sample, and stop that trial immediately if focus transfers or any existing guard fails. Do not send +2 after a failed +1; if +2 needs diagnosis, test it in a separate diagnostic-only attempt after a new click and geometry revalidation, with paste disabled. At each checkpoint record monotonic time, frame/line, bounded full egui raw-event details, pointer position and button state, both widgets' focus/hover/IDs/rects, refresh state, and X11 focused window ID/title. Keep all existing fail-closed value, sibling, response-ID, geometry, and refresh checks; Ctrl+V remains unreachable until the complete pre-paste guard passes.",
+      "guardrail": "Preserve all fail-closed paste/save guards; do not change Canvas persistence or Rust UI/model behavior based on this harness-only evidence.",
+      "status": "Provisional diagnosis only; wait until all jobs in the current exact-SHA batch are terminal before finalizing or implementing a repair.",
+      "followup_design_review": {
+        "reviewer": "macos_c074_review",
+        "reviewed_at": "2026-10-15T22:11:37Z",
+        "status": "Read-only review refined the follow-up checkpoints; no source edits or CI actions were performed.",
+        "findings": [
+          "The UI emits path/ID focus diagnostics only when input.raw.events is nonempty. xclip alone produces no egui input, so reading the current diagnostic file after clipboard staging can return stale frame 91 and falsely suggest focus remained stable.",
+          "The current helper dispatches two pointer motions before checking a fresh field pair. Split the diagnostic into one motion, one advancing same-frame pair, and a guard assertion before any next motion.",
+          "If the +1 motion loses focus, stop that trial. Diagnose +2 only in a separate attempt from a newly clicked and revalidated field with paste disabled.",
+          "Capture bounded egui raw events, monotonic timestamp, advancing frame/line, pointer and button state, both widgets' focus/hover/IDs/rects, and X11 focused window ID/title to distinguish widget focus transfer from window deactivation.",
+          "Keep existing fail-closed guards and do not use a synthetic key event to make a passive post-xclip observation appear fresh."
+        ]
+      },
+      "reviewers": [
+        "r3_repair_scope",
+        "macos_c074_review"
+      ]
+    }
+  },
+  "roundtrip_windows_summary": {
+    "workflow_run_id": 38811296519,
+    "job_id": 116684889697,
+    "artifact_id": 12009516366,
+    "artifact_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38811296519/artifacts/12009516366",
+    "status": "passed",
+    "report_sha256": "1b03b982b4024ec1cd9c003d92669211359e2e3b859cda37d7134e6e1d3836fb",
+    "canvas_text_edit": "passed",
+    "reference_capture_summary": {
+      "status": "completed",
+      "c07_2": "captured-reference-mutation",
+      "c07_3": "captured-reference-only",
+      "c07_4": "captured-reference-only",
+      "source_rewrite_observation_count": 2,
+      "rust_parity_claimed": false
+    }
+  },
+  "failure_triage_roundtrip_macos": {
+    "workflow": "Obsidian vault round-trip acceptance",
+    "run_id": 38811296519,
+    "job_id": 116684889663,
+    "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38811296519/job/116684889663",
+    "failed_step": "Author, open, snapshot, and reopen the same vault",
+    "artifact": {
+      "id": 12009799285,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38811296519/artifacts/12009799285",
+      "archive_size_bytes": 32064852,
+      "archive_sha256": "f2e78a5c76f1a452f9c36aea25dd318673bbf310c4934bc6fcff4d0e57746def",
+      "report_sha256": "28f09b7d630badbc1304e5488b1cd1e6acd78de03d63976855daadb3ef60cf7c"
+    },
+    "report_summary": "C07.4 reopen text-equal-key-path-tie. Selected path Bases/10 Equal key path tie.base, active view bases, settled selection, count=2 with valid selected-root evidence, and mapped visible rows a-first.md/z-last.md passed. The failing predicate was path_tie_seed_order_disambiguates: first-open app.vault.getFiles() order was [z-last.md, a-first.md], while reopen process diagnostics before this last scenario showed [a-first.md, z-last.md]. The harness only rewrites files whose bytes differ; neither tie note changed, so reseed did not reset filesystem/enumeration order. Report capture is incomplete; no Rust parity claim.",
+    "source_review": {
+      "reviewer": "macos_c074_review",
+      "source_sha": "4ab6cf6fd3602fa9e15bc0d58e9b2ecc8a3bb349",
+      "source": "audit-obsidian-vault-roundtrip.ts",
+      "facts": [
+        "Tie order is captured from app.vault.getFiles() at observation time.",
+        "The text-path-tie scenario requires actual reverse seed order [z-last.md, a-first.md] before its output can prove the path tie-break.",
+        "reseedC074SourceFiles restores only changed-byte files; unchanged tie notes are not removed and recreated before the second Obsidian session.",
+        "Mac first-open seed order is reverse and passes; reopen process order is lexical and the final scenario fails.",
+        "Selected view, result count, row mapping, and source hashes pass; retain these gates."
+      ],
+      "candidate_repair": "Between sessions, recreate the two exact seed note files in the intended reverse order, record removals/write order/hash checks, and verify reopened app.vault.getFiles() tie order before accepting C07.4. If reverse order cannot be established, fail closed with a specific precondition diagnostic; do not relax the guard."
+    },
+    "status": "Terminal failure cause isolated; harness repair pending."
+  }
+}

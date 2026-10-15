@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
-  "status": "R3 exact-SHA CI is terminal and reconciled with two failures. R3.1 repairs the keyed milestone tracker and Linux Canvas focus path; its goal cadence fingerprint is synchronized, two independent reviewers approved its amended scope, and final whole-milestone review is complete. Ready for one submission.",
-  "updated_at": "2026-10-15T21:37:11Z",
+  "status": "R3.1 is terminal-failed on exact SHA 4ab6cf6fd3602fa9e15bc0d58e9b2ecc8a3bb349. R3.2 implementation is complete and independently reviewed; ready for one milestone push. No local executable validation or active CI batch.",
+  "updated_at": "2026-10-15T22:56:26Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
   "last_reconciled_head": "1ddae8fc44ab1d74c924abbb300240f0e591a888",
-  "current_milestone": "R3 was pushed once at exact SHA 3f428b6d9e2fe2bf3789c0a02cd7d7690234ec91. Its full seven-workflow/20-job batch is terminal and reconciled as failed: 18 jobs passed; inventory and Ubuntu round-trip failed. Windows and macOS C07.4 captures match across all ten first-open/reopen scenarios; Linux C07.4 remains unobserved. R3.1 is implemented locally; its goal cadence and exact requirements fingerprint are synchronized and its amended scope is approved by two independent reviewers. Complete the whole-milestone review before one submission.",
-  "next_action": "Push this completed R3.1 milestone once to origin/main; monitor all required workflows/jobs on that exact SHA until terminal and reconcile their evidence before any next milestone.",
-  "push_status": "origin/main remains at R3 SHA 3f428b6d9e2fe2bf3789c0a02cd7d7690234ec91. R3.1 is fully reviewed and ready for one push; after submission hold the new exact SHA until its full CI batch is terminal and reconciled.",
+  "current_milestone": "R3.1 CI is terminal-failed; R3.2 is implementation-complete and approved by independent whole-milestone review, ready for one push.",
+  "next_action": "Commit and push the complete R3.2 milestone exactly once to origin/main. Wait for all seven required workflows and 20 jobs to become terminal on that exact SHA and reconcile their evidence before another push.",
+  "push_status": "R3.1 is terminal on submitted SHA 4ab6cf6fd3602fa9e15bc0d58e9b2ecc8a3bb349; two round-trip jobs failed. R3.2 is independently reviewed and ready for one local milestone commit and push; no R3.2 CI batch is active.",
   "blockers": [
     "C07.3 pinned Obsidian reference capture passed all 14 scenarios on first open and reopen across Linux, macOS, and Windows at exact SHA 0a9cb9c00835881a7629c96721974dfa9461cc50; see evidence/r2.8.129-attempt-1-0a9cb9c.json. Rust parity remains pending. Separate mixed-worktree C07.3 edits remain local and are excluded from the C07.4 candidate; review and submit them separately. Do not claim a full-fixture membership oracle from reference UI results.",
     "R2.8.120 failed its terminal exact-SHA CI batch on 985af8aa18be53c285221b2ed21d4062e69b9f3d. Linux C07.3 table row diagnostics reject visible rows despite each uniquely matching an already captured fixture path; formula Kanban extraction records no card memberships although the screenshot shows the 5/4/4/0 cards. macOS display metrics failed before first-run picker interaction, and Windows stopped after picker closure when the host HWND changed. See evidence/r2.8.120-attempt-1-985af8a.json; keep C07.3 pending.",
@@ -67,7 +67,7 @@
         "plugin-renderer"
       ],
       "implementation_sha": "15ee500b04be9acef86a1b5fbf3d1e0ccb5bf7b7",
-      "next_action": "R3 on exact SHA 3f428b6d9e2fe2bf3789c0a02cd7d7690234ec91 is terminal and reconciled: 7 workflows/20 jobs, 5 workflows/18 jobs passed, with inventory and Ubuntu round-trip failed. R3.1 repairs the keyed tracker, Linux Canvas focus path, and goal fingerprint; two independent reviewers approved the amended scope. Complete final whole-milestone review, then submit once. After that exact-SHA batch, complete the required Linux C07.4 reference capture and reconcile its source observations before changing Rust comparator semantics.",
+      "next_action": "R3.1 was submitted once to origin/main at exact SHA 4ab6cf6fd3602fa9e15bc0d58e9b2ecc8a3bb349. Rust migration inventory and plugin renderer passed; the other five workflows and 12 jobs remain active. Hold origin/main until all 20 jobs are terminal and evidence is reconciled. After this batch, capture Linux C07.4 reference behavior before changing Rust comparator semantics.",
       "implementation_sha_note": "15ee500b04be9acef86a1b5fbf3d1e0ccb5bf7b7 is the last accepted R2 Rust implementation milestone (R2.8.114); R2.8.115\u2013R2.8.121 are reference-capture/harness work, and R2.8.119, R2.8.120 and R2.8.121 failed."
     },
     "R3": {
@@ -26920,6 +26920,87 @@
         116652031807
       ],
       "evidence": "evidence/r2.8.136-r3-attempt-1-3f428b6.json"
+    },
+    {
+      "milestone": "R2.8.136-R3.1-MILESTONE-MAP-AND-LINUX-CANVAS-FOCUS-REPAIR",
+      "attempt": 1,
+      "sha": "4ab6cf6fd3602fa9e15bc0d58e9b2ecc8a3bb349",
+      "workflow_run_ids": [
+        38811296521,
+        38811296519,
+        38811296624,
+        38811296656,
+        38811296568,
+        38811296805,
+        38811297064
+      ],
+      "observed_at": "2026-10-15T21:43:20Z",
+      "status": "CI in progress on exact SHA 4ab6cf6fd3602fa9e15bc0d58e9b2ecc8a3bb349: 5/7 workflows terminal (5 passed); 15/20 jobs terminal (15 passed).",
+      "workflow_counts": {
+        "observed": 7,
+        "terminal": 5,
+        "passed": 5,
+        "failed": 0,
+        "queued": 0,
+        "in_progress": 2
+      },
+      "job_counts": {
+        "observed": 20,
+        "terminal": 15,
+        "passed": 15,
+        "failed": 0,
+        "cancelled": 0,
+        "queued": 0,
+        "in_progress": 5
+      },
+      "failed_jobs": [],
+      "evidence": "evidence/r2.8.136-r3-1-attempt-1-4ab6cf6.json"
+    },
+    {
+      "milestone": "R2.8.136-R3.1-MILESTONE-MAP-AND-LINUX-CANVAS-FOCUS-REPAIR",
+      "attempt": 1,
+      "sha": "4ab6cf6fd3602fa9e15bc0d58e9b2ecc8a3bb349",
+      "workflow_run_ids": [
+        38811297064,
+        38811296805,
+        38811296656,
+        38811296624,
+        38811296521,
+        38811296568,
+        38811296519
+      ],
+      "observed_at": "2026-10-15T22:27:21Z",
+      "status": "terminal-failed on exact SHA 4ab6cf6fd3602fa9e15bc0d58e9b2ecc8a3bb349: 7/7 workflows and 20/20 jobs terminal; 6 workflows and 18 jobs passed; Ubuntu and macOS round-trip jobs failed.",
+      "workflow_counts": {
+        "observed": 7,
+        "terminal": 7,
+        "passed": 6,
+        "failed": 1,
+        "queued": 0,
+        "in_progress": 0
+      },
+      "job_counts": {
+        "observed": 20,
+        "terminal": 20,
+        "passed": 18,
+        "failed": 2,
+        "cancelled": 0,
+        "queued": 0,
+        "in_progress": 0
+      },
+      "failed_jobs": [
+        {
+          "job_id": 116684889568,
+          "platform": "ubuntu-24.04",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38811296519/job/116684889568"
+        },
+        {
+          "job_id": 116684889663,
+          "platform": "macos-latest",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38811296519/job/116684889663"
+        }
+      ],
+      "evidence": "evidence/r2.8.136-r3-1-attempt-1-4ab6cf6.json"
     }
   ],
   "milestones": {
@@ -43034,13 +43115,13 @@
     "R2.8.136-R3.1-MILESTONE-MAP-AND-LINUX-CANVAS-FOCUS-REPAIR": {
       "id": "R2.8.136-R3.1-MILESTONE-MAP-AND-LINUX-CANVAS-FOCUS-REPAIR",
       "name": "Restore keyed milestone state, preserve Linux Canvas focus, and synchronize milestone cadence",
-      "status": "implementation complete locally; R3 predecessor terminal and reconciled; amended scope approved by two independent reviewers; final whole-milestone review complete; ready for one push",
+      "status": "terminal-failed; 7/7 workflows and 20/20 jobs terminal; 6 workflows and 18 jobs passed; Ubuntu and macOS round-trip failed.",
       "starting_sha": "3f428b6d9e2fe2bf3789c0a02cd7d7690234ec91",
       "plan": "evidence/r2.8.136-r3-1-tracker-schema-repair-plan.json",
       "local_executable_validation": false,
       "source_review": "Approved read-only reviews by linux_repair_audit and c063_scope_review; safe target-bounded pointer motions preserve the fail-closed paste guards.",
       "plan_review": "Two renewed independent reviewers approved the amended scope: r3_repair_scope and macos_c074_review. Final whole-milestone review is complete; ready for one push.",
-      "ci_dispatched": false,
+      "ci_dispatched": true,
       "required_workflows": [
         "OpenObsidian Rust CI",
         "Rust migration inventory",
@@ -43052,7 +43133,50 @@
       ],
       "expected_jobs": 20,
       "deliverable": "Restore the keyed state.json milestones schema expected by inventory CI, keep the validated Linux Canvas path field focused during fresh diagnostics, and synchronize goal.md one-push-per-complete-milestone cadence with requirements.json and its exact goal hash.",
-      "predecessor_ci_evidence": "evidence/r2.8.136-r3-attempt-1-3f428b6.json"
+      "predecessor_ci_evidence": "evidence/r2.8.136-r3-attempt-1-3f428b6.json",
+      "implementation_sha": "4ab6cf6fd3602fa9e15bc0d58e9b2ecc8a3bb349",
+      "submitted_at": "2026-10-15T21:38:35Z",
+      "ci_run_ids": [
+        38811296521,
+        38811296519,
+        38811296624,
+        38811296656,
+        38811296568,
+        38811296805,
+        38811297064
+      ],
+      "ci_evidence_file": "evidence/r2.8.136-r3-1-attempt-1-4ab6cf6.json",
+      "ci_snapshot": {
+        "observed_at": "2026-10-15T22:27:21Z",
+        "workflow_counts": {
+          "observed": 7,
+          "terminal": 7,
+          "passed": 6,
+          "failed": 1,
+          "queued": 0,
+          "in_progress": 0
+        },
+        "job_counts": {
+          "observed": 20,
+          "terminal": 20,
+          "passed": 18,
+          "failed": 2,
+          "cancelled": 0,
+          "queued": 0,
+          "in_progress": 0
+        },
+        "origin_main_sha": "4ab6cf6fd3602fa9e15bc0d58e9b2ecc8a3bb349"
+      },
+      "ci_failure_summary": {
+        "failed_job_ids": [
+          116684889568,
+          116684889663
+        ],
+        "ubuntu": "Focus handoff followed clipboard staging/first pointer movement; pre-paste guard stopped before paste.",
+        "macos": "C07.4 reopen tie-order precondition false because unchanged tie-note files were not recreated; selected view/count/row mapping passed.",
+        "rust_parity_claimed": false
+      },
+      "next_action": "Complete independent review and implement R2.8.136-R3.2-C07.4-REOPEN-TIE-ORDER-AND-LINUX-CANVAS-FOCUS-REPAIR: recreate and verify the macOS C07.4 tie-note reverse enumeration before reopen acceptance, and add fresh one-checkpoint-at-a-time Linux egui/X11 focus telemetry while retaining fail-closed paste/save guards. Keep all edits local; push once only after the full named milestone is implemented and reviewed."
     }
   },
   "ci_preparation": {
@@ -43118,49 +43242,65 @@
   },
   "current_requirement_count": 221,
   "current_ci_attempt": {
-    "status": "terminal-failed: 7/7 workflows terminal (5 passed, 2 failed); 20/20 jobs terminal (18 passed, 2 failed); Windows and macOS round-trip passed, inventory and Ubuntu round-trip failed.",
-    "implementation_sha": "3f428b6d9e2fe2bf3789c0a02cd7d7690234ec91",
-    "evidence_file": "evidence/r2.8.136-r3-attempt-1-3f428b6.json",
-    "plan_file": "evidence/r2.8.136-r3-linux-canvas-diagnostics-mutation-summary-plan.json",
-    "milestone": "R2.8.136-R3-LINUX-CANVAS-DIAGNOSTICS-AND-MUTATION-SUMMARY-REPAIR",
+    "status": "terminal-failed on exact SHA 4ab6cf6fd3602fa9e15bc0d58e9b2ecc8a3bb349: 7/7 workflows and 20/20 jobs terminal; 6 workflows and 18 jobs passed; Ubuntu and macOS round-trip jobs failed.",
+    "implementation_sha": "4ab6cf6fd3602fa9e15bc0d58e9b2ecc8a3bb349",
+    "evidence_file": "evidence/r2.8.136-r3-1-attempt-1-4ab6cf6.json",
+    "plan_file": "evidence/r2.8.136-r3-1-tracker-schema-repair-plan.json",
+    "milestone": "R2.8.136-R3.1-MILESTONE-MAP-AND-LINUX-CANVAS-FOCUS-REPAIR",
     "attempt": 1,
-    "observed_at": "2026-10-15T21:28:37Z",
-    "submitted_at": "2026-10-15T20:24:28Z",
+    "observed_at": "2026-10-15T22:27:21Z",
+    "submitted_at": "2026-10-15T21:38:35Z",
     "workflow_count": 7,
     "completed_workflows": 7,
-    "successful_workflows": 5,
+    "successful_workflows": 6,
     "in_progress_workflows": 0,
     "queued_workflows": 0,
-    "failed_workflows": 2,
+    "failed_workflows": 1,
     "job_count": 20,
     "passed_jobs": 18,
     "in_progress_jobs": 0,
     "queued_jobs": 0,
     "failed_jobs": 2,
     "failed_job_ids": [
-      116652031664,
-      116652031807
+      116684889568,
+      116684889663
     ],
     "active_job_ids": [],
     "run_ids": [
-      38801683645,
-      38801683598,
-      38801683546,
-      38801683713,
-      38801683974,
-      38801683969,
-      38801683964
+      38811297064,
+      38811296805,
+      38811296656,
+      38811296624,
+      38811296521,
+      38811296568,
+      38811296519
     ],
-    "completed_at": "2026-10-15T21:24:15Z"
+    "completed_at": "2026-10-15T22:16:36Z"
   },
   "planned_next_milestone": {
-    "milestone": "R2.8.136-R3.1-MILESTONE-MAP-AND-LINUX-CANVAS-FOCUS-REPAIR",
-    "name": "Restore keyed milestone state, preserve Linux Canvas focus, and synchronize milestone cadence",
-    "status": "implementation complete locally; R3 predecessor terminal and reconciled; amended scope approved by two independent reviewers; final whole-milestone review complete; ready for one push",
-    "plan": "evidence/r2.8.136-r3-1-tracker-schema-repair-plan.json",
-    "starting_sha": "3f428b6d9e2fe2bf3789c0a02cd7d7690234ec91",
-    "required_workflows": 7,
-    "expected_jobs": 20
+    "id": "R2.8.136-R3.2-C07.4-REOPEN-TIE-ORDER-AND-LINUX-CANVAS-FOCUS-REPAIR",
+    "name": "Restore C07.4 reopened tie-order precondition and isolate Linux Canvas focus loss",
+    "status": "implementation-complete / independent whole-milestone review approved; ready for one push",
+    "plan": "evidence/r2.8.136-r3-2-roundtrip-harness-repair-plan.json",
+    "planning_base_sha": "4ab6cf6fd3602fa9e15bc0d58e9b2ecc8a3bb349",
+    "implementation_start_sha": "4ab6cf6fd3602fa9e15bc0d58e9b2ecc8a3bb349",
+    "local_executable_validation": false,
+    "required_workflows": [
+      "OpenObsidian Rust CI",
+      "Rust migration inventory",
+      "Obsidian vault round-trip acceptance",
+      "OpenObsidian desktop build",
+      "OpenObsidian quality",
+      "OpenObsidian plugin renderer matrix",
+      "OpenObsidian loaded plugin workflows"
+    ],
+    "expected_jobs": 20,
+    "deliverable": "Repair the round-trip harness preconditions that caused both R3.1 failures: prove stable reverse file enumeration immediately before the macOS C07.4 tie selection, require every first-open/reopen predicate to pass, preserve exact tie-note bytes and separately report pinned-app .base mutations for every checkpoint, and isolate Linux Canvas focus telemetry with an env-gated repaint cadence without weakening fail-closed paste/save gates. Keep the clarified milestone-batched CI policy synchronized with its exact goal hash.",
+    "predecessor_ci_evidence": "evidence/r2.8.136-r3-1-attempt-1-4ab6cf6.json",
+    "implementation_sha": null,
+    "submitted_at": null,
+    "ci_dispatched": false,
+    "ci_evidence_file": null
   },
   "planned_independent_milestone": {
     "milestone": "unassigned until C07.5/C07.4 sequencing is settled",
@@ -43205,16 +43345,17 @@
   "planned_following_milestone": {
     "milestone": "C07.4 Rust JavaScript-number and locale comparator implementation",
     "name": "Implement the reference-captured C07.4 comparison contract in crates/doc",
-    "status": "Windows and macOS C07.4 first-open/reopen captures match across all ten scenarios and are reconciled. Linux C07.4 was not captured because Ubuntu R3 failed before that stage. Keep Rust comparator semantics gated until Linux C07.4 capture and source mutations are reconciled.",
-    "deliverable": "Implement the pinned-app JavaScript number conversion, identity/filter/sort/contains semantics and the recorded locale collation policy with fixture-backed Rust parity.",
-    "depends_on": "The Linux C07.4 reference report and its raw result/source observations must be complete and reconciled on exact-SHA GitHub CI before implementing comparator semantics. Windows and macOS R3 results and source mutations are reconciled in evidence/r2.8.136-r3-attempt-1-3f428b6.json; Ubuntu R3 job 116652031807 failed before C07.4. The macOS R3 job 116652031855 completed successfully."
+    "status": "pending complete, reconciled three-OS C07.4 reference capture from R3.2; do not change Rust comparator semantics first",
+    "deliverable": "Implement pinned-app JavaScript number conversion, identity/filter/sort/contains semantics and recorded locale collation policy with fixture-backed Rust parity.",
+    "depends_on": "Complete R3.2 and verify complete C07.4 first-open/reopen reference captures, tie-order precondition, source hashes and mutations on Windows, macOS and Linux. No Rust parity claim until exact-SHA CI evidence supports captured semantics."
   },
   "current_repair_milestone": {
-    "id": "R2.8.136-R3.1-MILESTONE-MAP-AND-LINUX-CANVAS-FOCUS-REPAIR",
-    "name": "Restore keyed milestone state, preserve Linux Canvas focus, and synchronize milestone cadence",
-    "status": "implementation complete locally; R3 predecessor terminal and reconciled; amended scope approved by two independent reviewers; final whole-milestone review complete; ready for one push",
-    "plan": "evidence/r2.8.136-r3-1-tracker-schema-repair-plan.json",
-    "starting_sha": "3f428b6d9e2fe2bf3789c0a02cd7d7690234ec91",
+    "id": "R2.8.136-R3.2-C07.4-REOPEN-TIE-ORDER-AND-LINUX-CANVAS-FOCUS-REPAIR",
+    "name": "Restore C07.4 reopened tie-order precondition and isolate Linux Canvas focus loss",
+    "status": "planned / approved for implementation",
+    "plan": "evidence/r2.8.136-r3-2-roundtrip-harness-repair-plan.json",
+    "planning_base_sha": "4ab6cf6fd3602fa9e15bc0d58e9b2ecc8a3bb349",
+    "implementation_start_sha": "4ab6cf6fd3602fa9e15bc0d58e9b2ecc8a3bb349",
     "local_executable_validation": false,
     "required_workflows": [
       "OpenObsidian Rust CI",
@@ -43226,31 +43367,34 @@
       "OpenObsidian loaded plugin workflows"
     ],
     "expected_jobs": 20,
-    "plan_review": "Two renewed independent reviewers approved the amended scope: r3_repair_scope and macos_c074_review. Final whole-milestone review is complete; ready for one push.",
-    "source_review": "Previous source reviews approved the bounded Linux Canvas focus repair and its fail-closed guards; the added cadence/fingerprint documentation change does not alter product/runtime behavior.",
+    "deliverable": "Repair the round-trip harness preconditions that caused both R3.1 failures: prove stable reverse file enumeration before the macOS C07.4 tie case, require every first-open/reopen predicate to pass, preserve exact tie-note bytes, and isolate Linux Canvas focus telemetry without weakening the fail-closed paste gate. Keep the clarified milestone-batched CI policy synchronized with its exact goal hash.",
+    "predecessor_ci_evidence": "evidence/r2.8.136-r3-1-attempt-1-4ab6cf6.json",
+    "implementation_sha": null,
+    "submitted_at": null,
     "ci_dispatched": false,
-    "predecessor_ci_evidence": "evidence/r2.8.136-r3-attempt-1-3f428b6.json"
+    "ci_evidence_file": null
   },
   "current_ci_batch": {
-    "milestone": "R2.8.136-R3-LINUX-CANVAS-DIAGNOSTICS-AND-MUTATION-SUMMARY-REPAIR; attempt 1",
-    "sha": "3f428b6d9e2fe2bf3789c0a02cd7d7690234ec91",
-    "started_at": "2026-10-15T20:24:28Z",
-    "status": "terminal-failed: 7/7 workflows terminal (5 passed, 2 failed); 20/20 jobs terminal (18 passed, 2 failed); Windows and macOS round-trip passed, inventory and Ubuntu round-trip failed.",
+    "milestone": "R2.8.136-R3.1-MILESTONE-MAP-AND-LINUX-CANVAS-FOCUS-REPAIR; attempt 1",
+    "sha": "4ab6cf6fd3602fa9e15bc0d58e9b2ecc8a3bb349",
+    "started_at": "2026-10-15T21:37:35Z",
+    "completed_at": "2026-10-15T22:16:36Z",
+    "status": "terminal-failed on exact SHA 4ab6cf6fd3602fa9e15bc0d58e9b2ecc8a3bb349: 7/7 workflows and 20/20 jobs terminal; 6 workflows and 18 jobs passed; Ubuntu and macOS round-trip jobs failed.",
     "required_workflows": 7,
     "required_jobs": 20,
     "run_ids": [
-      38801683645,
-      38801683598,
-      38801683546,
-      38801683713,
-      38801683974,
-      38801683969,
-      38801683964
+      38811297064,
+      38811296805,
+      38811296656,
+      38811296624,
+      38811296521,
+      38811296568,
+      38811296519
     ],
-    "status_snapshot_at": "2026-10-15T21:28:37Z",
+    "status_snapshot_at": "2026-10-15T22:27:21Z",
     "completed_workflows": 7,
-    "passed_workflows": 5,
-    "failed_workflows": 2,
+    "passed_workflows": 6,
+    "failed_workflows": 1,
     "workflows_in_progress": 0,
     "workflows_queued": 0,
     "completed_jobs": 20,
@@ -43260,15 +43404,15 @@
     "jobs_queued": 0,
     "main_sha_held": true,
     "failed_job_ids": [
-      116652031664,
-      116652031807
+      116684889568,
+      116684889663
     ],
     "active_job_ids": [],
     "workflow_counts": {
       "observed": 7,
       "terminal": 7,
-      "passed": 5,
-      "failed": 2,
+      "passed": 6,
+      "failed": 1,
       "queued": 0,
       "in_progress": 0
     },
@@ -43277,13 +43421,13 @@
       "terminal": 20,
       "passed": 18,
       "failed": 2,
+      "cancelled": 0,
       "queued": 0,
       "in_progress": 0
     },
-    "evidence": "evidence/r2.8.136-r3-attempt-1-3f428b6.json",
+    "evidence": "evidence/r2.8.136-r3-1-attempt-1-4ab6cf6.json",
     "all_jobs_terminal": true,
-    "in_flight": false,
-    "completed_at": "2026-10-15T21:24:15Z"
+    "in_flight": false
   },
   "parallel_local_milestones": [
     {
@@ -43370,64 +43514,29 @@
     }
   },
   "planned_repair_milestone": {
-    "milestone": "R2.8.136-R3.1-MILESTONE-MAP-AND-LINUX-CANVAS-FOCUS-REPAIR",
-    "name": "Restore keyed milestone state, preserve Linux Canvas focus, and synchronize milestone cadence",
-    "status": "implementation complete locally; R3 predecessor terminal and reconciled; amended scope approved by two independent reviewers; final whole-milestone review complete; ready for one push",
-    "plan": "evidence/r2.8.136-r3-1-tracker-schema-repair-plan.json",
-    "starting_sha": "3f428b6d9e2fe2bf3789c0a02cd7d7690234ec91"
+    "id": "R2.8.136-R3.2-C07.4-REOPEN-TIE-ORDER-AND-LINUX-CANVAS-FOCUS-REPAIR",
+    "name": "Restore C07.4 reopened tie-order precondition and isolate Linux Canvas focus loss",
+    "status": "implementation-complete / independent whole-milestone review approved; ready for one push",
+    "plan": "evidence/r2.8.136-r3-2-roundtrip-harness-repair-plan.json",
+    "planning_base_sha": "4ab6cf6fd3602fa9e15bc0d58e9b2ecc8a3bb349",
+    "implementation_start_sha": "4ab6cf6fd3602fa9e15bc0d58e9b2ecc8a3bb349",
+    "local_executable_validation": false,
+    "required_workflows": [
+      "OpenObsidian Rust CI",
+      "Rust migration inventory",
+      "Obsidian vault round-trip acceptance",
+      "OpenObsidian desktop build",
+      "OpenObsidian quality",
+      "OpenObsidian plugin renderer matrix",
+      "OpenObsidian loaded plugin workflows"
+    ],
+    "expected_jobs": 20,
+    "deliverable": "Repair the round-trip harness preconditions that caused both R3.1 failures: prove stable reverse file enumeration immediately before the macOS C07.4 tie selection, require every first-open/reopen predicate to pass, preserve exact tie-note bytes and separately report pinned-app .base mutations for every checkpoint, and isolate Linux Canvas focus telemetry with an env-gated repaint cadence without weakening fail-closed paste/save gates. Keep the clarified milestone-batched CI policy synchronized with its exact goal hash.",
+    "predecessor_ci_evidence": "evidence/r2.8.136-r3-1-attempt-1-4ab6cf6.json",
+    "implementation_sha": null,
+    "submitted_at": null,
+    "ci_dispatched": false,
+    "ci_evidence_file": null
   },
-  "active_ci_batch": {
-    "milestone": "R2.8.136-R3-LINUX-CANVAS-DIAGNOSTICS-AND-MUTATION-SUMMARY-REPAIR; attempt 1",
-    "sha": "3f428b6d9e2fe2bf3789c0a02cd7d7690234ec91",
-    "started_at": "2026-10-15T20:24:28Z",
-    "status": "terminal-failed: 7/7 workflows terminal (5 passed, 2 failed); 20/20 jobs terminal (18 passed, 2 failed); Windows and macOS round-trip passed, inventory and Ubuntu round-trip failed.",
-    "required_workflows": 7,
-    "required_jobs": 20,
-    "run_ids": [
-      38801683645,
-      38801683598,
-      38801683546,
-      38801683713,
-      38801683974,
-      38801683969,
-      38801683964
-    ],
-    "status_snapshot_at": "2026-10-15T21:28:37Z",
-    "completed_workflows": 7,
-    "passed_workflows": 5,
-    "failed_workflows": 2,
-    "workflows_in_progress": 0,
-    "workflows_queued": 0,
-    "completed_jobs": 20,
-    "jobs_passed": 18,
-    "jobs_failed": 2,
-    "jobs_in_progress": 0,
-    "jobs_queued": 0,
-    "main_sha_held": true,
-    "failed_job_ids": [
-      116652031664,
-      116652031807
-    ],
-    "active_job_ids": [],
-    "workflow_counts": {
-      "observed": 7,
-      "terminal": 7,
-      "passed": 5,
-      "failed": 2,
-      "queued": 0,
-      "in_progress": 0
-    },
-    "job_counts": {
-      "observed": 20,
-      "terminal": 20,
-      "passed": 18,
-      "failed": 2,
-      "queued": 0,
-      "in_progress": 0
-    },
-    "evidence": "evidence/r2.8.136-r3-attempt-1-3f428b6.json",
-    "all_jobs_terminal": true,
-    "in_flight": false,
-    "completed_at": "2026-10-15T21:24:15Z"
-  }
+  "active_ci_batch": null
 }

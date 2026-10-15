@@ -1,0 +1,113 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.8.136-R3.2-C07.4-REOPEN-TIE-ORDER-AND-LINUX-CANVAS-FOCUS-REPAIR",
+  "name": "Restore C07.4 reopened tie-order precondition and isolate Linux Canvas focus loss",
+  "status": "implementation-complete / independent whole-milestone review approved; ready for one push",
+  "recorded_at": "2026-10-15T22:27:21Z",
+  "planning_base_sha": "4ab6cf6fd3602fa9e15bc0d58e9b2ecc8a3bb349",
+  "implementation_start_sha": "4ab6cf6fd3602fa9e15bc0d58e9b2ecc8a3bb349",
+  "goal_sha256": "42ef146035e83e6c047d904b53f99eff454a9394d562f877e31ca9a3dc81a4e8",
+  "canonical_mapping_source": [
+    "goal.md",
+    "requirements.json"
+  ],
+  "bounded_outcome": "Repair the round-trip harness preconditions that caused both R3.1 failures, so C07.4 tie behavior is evaluated only against verified reverse input order on reopen, and Linux Canvas focus telemetry isolates clipboard/pointer effects without weakening the fail-closed paste gate. Preserve the updated milestone-batched CI policy and its exact goal hash.",
+  "scope": [
+    "Mac C07.4 tie case: remove and recreate the two exact seeded tie notes between first-open and reopen in a documented order; record exact byte hashes and actual reopened app.vault.getFiles() enumeration; after vault load/settling and immediately before selecting the tie .base, require two consecutive identical enumeration reads and accept the comparison only when reverse input order is verified.",
+    "Linux Canvas edit-path diagnosis: emit a fresh, advancing egui focus snapshot after clipboard staging even with an empty egui raw-event list; send and sample one pointer move at a time; capture X11 focused-window/pointer state and both path/ID widgets; stop after the first focus transfer. Preserve every existing paste/save guard.",
+    "Record the C07.4 acceptance predicates in a compact failure summary that remains available even when the detailed observation is large.",
+    "Keep goal.md and requirements.json goal_sha256 synchronized with the clarified one-push-per-implementation-complete-milestone policy."
+  ],
+  "out_of_scope": [
+    "Changing Rust Canvas UI/model behavior or comparator semantics.",
+    "Weakening or bypassing selected-view, result-count, row-mapping, seed-order, source-byte/hash, no-paste, or save guards.",
+    "Claiming Rust parity from reference-only observations.",
+    "C07.5, C09.2, and unrelated feature work."
+  ],
+  "implementation_criteria": [
+    "On macOS reopen, record removal and recreation of the two tie notes from exact fixture bytes, verify both exact fixture-byte hashes before and after reseeding, and record actual app.vault.getFiles() order immediately before selecting the tie .base.",
+    "After the vault is loaded and settled, take two consecutive app.vault.getFiles() reads immediately before selecting the tie .base; require identical reads and the order [Notes/Text/Ties/z-last.md, Notes/Text/Ties/a-first.md] before evaluating the tie predicate. Otherwise report a specific failed precondition and persist the full report before throwing.",
+    "On each of Ubuntu, macOS, and Windows, require all ten C07.4 first-open and reopen scenarios to pass their existing per-scenario predicates and comparisons. Report pinned-app .base mutations separately under existing rules; preserve the exact hashes of the two seeded tie-note files across reseeding.",
+    "On Linux, produce a new per-frame egui snapshot after xclip staging with an advancing frame/log marker and explicit raw-event list, including empty; then sample the +1 pointer move separately. Do not issue +2 after failed +1. If +2 is diagnosed later, use a separate paste-disabled trial after a fresh click and geometry check.",
+    "At each Linux checkpoint capture monotonic timestamp, frame/line, pointer/button state, both widgets ID/focus/hover/rect, refresh state, and X11 focused window ID/title.",
+    "Keep Ctrl+V unreachable unless the existing full pre-paste guard passes; preserve exact source bytes and post-save checks.",
+    "Persist a compact field-by-field C07.4 acceptance breakdown before throwing; do not truncate those predicates."
+  ],
+  "ci_acceptance_criteria": [
+    "All seven required GitHub Actions workflows and all 20 jobs pass on one exact implementation SHA.",
+    "Ubuntu round-trip completes the Canvas operation without an unexplained path-to-ID focus handoff; any failed checkpoint remains fail-closed and cannot paste or save.",
+    "On Ubuntu, macOS, and Windows, all ten C07.4 scenarios pass their existing first-open and reopen predicates and their first-open/reopen comparisons; each platform records the complete source-checkpoint matrix. No Rust parity claim is made until the captured reference semantics are reconciled.",
+    "On macOS, the reopened tie scenario additionally proves stable reverse input enumeration across two consecutive reads immediately before selecting the tie view and expected output ordering; both tie-note fixture hashes match their exact bytes across reseeding; pinned-app .base mutations are reported separately under existing rules.",
+    "Windows round-trip remains passing; no parity claim is recorded until the reference capture gates complete.",
+    "CI artifacts contain fresh Linux focus checkpoints, macOS reseed/order evidence, acceptance predicate summaries, screenshots, and source-hash evidence."
+  ],
+  "required_workflows": [
+    "OpenObsidian Rust CI",
+    "Rust migration inventory",
+    "Obsidian vault round-trip acceptance",
+    "OpenObsidian desktop build",
+    "OpenObsidian quality",
+    "OpenObsidian plugin renderer matrix",
+    "OpenObsidian loaded plugin workflows"
+  ],
+  "expected_jobs": 20,
+  "push_policy": "Keep related small changes local under a meaningful, bounded deliverable. Do not define a minor change as a milestone solely to trigger CI. Push origin/main once only after full scope and evidence criteria are implementation-complete and the whole milestone is reviewed; wait for the complete exact-SHA batch, which may take several hours, before the next push.",
+  "local_executable_validation": false,
+  "ci_dispatched": false,
+  "submitted_sha": null,
+  "ci_evidence_file": null,
+  "plan_reviews": [
+    {
+      "reviewer": "macos_c074_review",
+      "status": "approved with implementation detail",
+      "findings": [
+        "Require two consecutive matching app.vault.getFiles() reads after vault settling and immediately before selecting the tie .base.",
+        "Persist the detailed report before throwing on a failed reverse-order precondition."
+      ]
+    },
+    {
+      "reviewer": "tracker_nextstep_oct16",
+      "status": "approved after cross-platform acceptance clarification",
+      "findings": [
+        "Require all ten C07.4 first-open and reopen scenarios to pass their existing predicates.",
+        "Preserve and hash the two exact tie-note fixture bytes across reseeding; report pinned-app .base mutations separately under existing rules.",
+        "Defer the exact-SHA CI evidence filename until the R3.2 implementation SHA is known.",
+        "Latest review requested an explicit all-ten-scenarios pass gate on Linux, macOS, and Windows; the CI acceptance criteria now state this, with the macOS tie-order proof as an additional gate.",
+        "Confirmed the final all-ten-scenarios pass gate applies to Ubuntu, macOS, and Windows, with the additional macOS reopened tie-order gate; goal hash and one-push cadence match."
+      ]
+    }
+  ],
+  "final_whole_milestone_review": {
+    "reviewer": "tracker_nextstep_oct16",
+    "reviewed_at": "2026-10-15T22:56:26Z",
+    "status": "approved for the single R3.2 submission to origin/main",
+    "findings": [
+      "No source-level gaps against the approved R3.2 implementation criteria.",
+      "The CI-only 100 ms repaint cadence, event-free focus snapshots, macOS tie reseed/hash checks and two stable preselection enumeration reads, per-checkpoint .base mutation reporting, and all-ten cross-platform gates match the plan.",
+      "Linux paste and save guards remain fail-closed; the goal hash and one-push policy match the plan and requirements."
+    ],
+    "limitations": [
+      "This was a read-only source review; no tests or builds were run.",
+      "R3.2 acceptance remains pending the seven required workflows and 20 jobs passing on the submitted exact SHA."
+    ]
+  },
+  "predecessor_ci": {
+    "sha": "4ab6cf6fd3602fa9e15bc0d58e9b2ecc8a3bb349",
+    "status": "terminal-failed",
+    "run_ids": [
+      38811297064,
+      38811296805,
+      38811296656,
+      38811296624,
+      38811296521,
+      38811296568,
+      38811296519
+    ],
+    "failed_job_ids": [
+      116684889568,
+      116684889663
+    ],
+    "evidence_file": "evidence/r2.8.136-r3-1-attempt-1-4ab6cf6.json"
+  },
+  "push_boundary": "Do not push this plan or partial edits for feedback. The next origin/main push is exactly once for the completed and reviewed R3.2 milestone; the R3.1 batch is terminal and no CI batch is active. Small fixes stay bundled into this milestone; do not create a micro-milestone for early CI feedback."
+}
