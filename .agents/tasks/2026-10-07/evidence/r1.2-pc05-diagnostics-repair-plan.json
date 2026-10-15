@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "milestone": "R1.2-PC05-CI-DIAGNOSTICS-REPAIR",
+  "status": "implementation-complete / CI-pending",
+  "recorded_at": "2026-10-15T05:37:59Z",
+  "based_on_sha": "c15da767700cf159e0716756400c349edec6e005",
+  "prior_batch": {
+    "evidence": "r1.2-pc05-diagnostics-attempt-1-c15da76.json",
+    "workflows_terminal": 7,
+    "jobs_terminal": 20,
+    "workflows_passed": 5,
+    "jobs_passed": 16,
+    "failed_jobs": [
+      "Rust CI Ubuntu rustfmt",
+      "Rust CI Windows Clippy items-after-test-module",
+      "Rust CI macOS Clippy items-after-test-module",
+      "Migration inventory stale scripts/audit-rust-plugin-runtime.ts fingerprint"
+    ]
+  },
+  "bounded_outcome": "Repair the terminal Rust formatting/Clippy and inventory failures, and make renderer and loaded-plugin CI artifacts machine-readable and structurally validated across all operating systems.",
+  "scope": [
+    "Apply the CI-reported Rust formatting layout and place the test module after production items without changing acceptance behavior.",
+    "Reconcile only inventory rows needed by this repair, add the validator row, and exclude unrelated C07/C09 fixture and crate work.",
+    "Keep Electron installer output outside renderer JSONL and loaded-plugin JSON report payloads on Ubuntu, macOS, and Windows.",
+    "Validate exact artifact/combination IDs, memberships, report shapes, passed-row evidence, denial recovery, and the no-plugin-promotion invariant in CI."
+  ],
+  "required_ci": {
+    "workflows": [
+      "OpenObsidian Rust CI",
+      "OpenObsidian Obsidian vault round-trip",
+      "OpenObsidian migration inventory",
+      "OpenObsidian loaded plugin workflows",
+      "OpenObsidian desktop build",
+      "OpenObsidian quality",
+      "OpenObsidian plugin renderer matrix"
+    ],
+    "platforms": ["Ubuntu 24.04", "macOS latest", "Windows latest"],
+    "expected_jobs": 20
+  },
+  "acceptance": [
+    "Rust fmt passes on Ubuntu, Clippy passes on Windows and macOS, and the Ubuntu MSRV/workspace gates pass without weakening any checks.",
+    "Inventory passes with exact tracked path coverage and SHA-256 values for the submitted tree.",
+    "Renderer CI emits exactly 28 JSONL records with no installer or summary text in the report payload on all three operating systems.",
+    "Loaded-plugin CI emits one valid JSON document with exact fixture IDs and combination memberships; any passed report is supported by matching nested lifecycle, plugin-load, denial-recovery, persistence, and integrity evidence.",
+    "All seven required workflows and 20 jobs pass on the one submitted SHA; artifact metadata, digests, report hashes, and limitations are reconciled before marking the milestone achieved.",
+    "No compatibility status is promoted; all three platform Obsidian round-trip jobs remain required."
+  ],
+  "implementation_review": {
+    "rust_static_review": "Passed: changes match the Ubuntu rustfmt diagnostics and move tests after production items; no semantic change identified.",
+    "inventory_static_review": "Passed: c15 baseline hash correction is identified, changed script/workflow rows are reconciled, and unrelated C07/C09 paths are excluded.",
+    "report_static_review": "Passed after follow-up: passed artifact/combination rows must have loaded results, and combination recovery must match the configured denied capability, cleanup, disabled writer policy, deterministic persistence and per-target markers. The PC01 Excalidraw projection remains a separate check per producer behavior.",
+    "local_executable_validation": false
+  },
+  "push_policy": "Keep all incremental edits local. Push this complete reviewed milestone once to origin/main, then hold the remote at that exact SHA until every required workflow and job is terminal; do not start another CI batch while this one runs, even if it takes several hours.",
+  "planning_note": "The grouped scope was documented after some local draft edits already existed. Subsequent work has stayed within this bounded repair scope. No repair push or local executable validation has occurred."
+}

@@ -1987,7 +1987,7 @@
     },
     {
       "path": "scripts/audit-plugin-loaded-workflows.ts",
-      "sha256": "264a61f0655dfab80ef7814689d75ae50631042eb13c463440405076af3538cc",
+      "sha256": "55b0be8bf6ab45806eb0428d3cbb5b6afc8eeb6bfb7e7cd6bd4c7fe208e111a8",
       "rust_owner": "xtask",
       "mapping_status": "reviewed",
       "status": "pending",
@@ -1996,7 +1996,7 @@
     },
     {
       "path": "scripts/audit-plugin-renderer.ts",
-      "sha256": "340c13f64fc38818f1d7d36248f31ff1a378ce1e2afd4316c2ffe6d17161d20f",
+      "sha256": "497a2818d169ae64bac8db763e0618852f8811f497c1e0edf4ba06a875bd66ee",
       "rust_owner": "xtask",
       "mapping_status": "reviewed",
       "status": "pending",
@@ -2005,7 +2005,7 @@
     },
     {
       "path": "scripts/audit-rust-plugin-runtime.ts",
-      "sha256": "94e4ef5bab352f096a2f534ed3c24b7ab61960b4ce2e51baef723e59ffc0318a",
+      "sha256": "63aff1d283854e2132dd8b485f69613d02d772c1b0db05391479c6a66d14fe36",
       "rust_owner": "xtask",
       "mapping_status": "reviewed",
       "status": "pending",
@@ -2238,6 +2238,15 @@
       "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
+      "path": "scripts/validate-plugin-audit-report.ts",
+      "sha256": "c8836ee81ad0e2831f015c8683acab3cb7a0c905b8b63055448a5181ae6f677a",
+      "rust_owner": "xtask",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R1",
+      "purpose": "Validates exact fixture IDs, report structure and passed-row evidence for the R1.2 loaded-plugin and renderer CI artifacts without promoting compatibility."
+    },
+    {
       "path": "scripts/validate-plugin-d15.ts",
       "sha256": "b7f736b049843bbf0d1644d9004bb6f31df3f6bbb760f91ad8d3e74fbd8220ef",
       "rust_owner": "xtask",
@@ -2351,7 +2360,7 @@
     },
     {
       "path": ".github/workflows/plugin-loaded-workflows.yml",
-      "sha256": "d83a7d01f6d0d7aacba100190fbeed6d50c2d400c66658c0c8b26a76de787903",
+      "sha256": "20695f506ab1ae90e74172f9d745e74b508a81c4a4d4b93b0c3c5ec43265bacb",
       "rust_owner": "xtask",
       "mapping_status": "reviewed",
       "status": "pending",
@@ -2360,7 +2369,7 @@
     },
     {
       "path": ".github/workflows/plugin-renderer-matrix.yml",
-      "sha256": "c833af78697f039896d9eea333c399e512dc62d4e277047a604387f5b06c67ca",
+      "sha256": "1cc881b2e386d29b5a3ccbce30767488d1e31347e7fc5a90685df0aabdd8d7db",
       "rust_owner": "xtask",
       "mapping_status": "reviewed",
       "status": "pending",
@@ -2457,7 +2466,7 @@
     ".agents/tasks/2026-09-09/01-init/references/ux-accessibility/index.md": "7f9d020434c29fc661a7ebe500f5e93dc3721477e358b54675446719f99f0ccd",
     ".agents/tasks/2026-09-09/01-init/references/vault-compatibility/index.md": "ba0aeafa795b36ce0d0756d847386aeb068f5811187f5b267ba1fc2e90a79b8c"
   },
-  "reviewed_at": "2026-10-12T11:21:16+00:00",
+  "reviewed_at": "2026-10-15T05:37:59Z",
   "mapping_policy": "Source and acceptance rows were manually reconciled to Rust responsibility boundaries. Test/fixture owners name their semantic target; test_harness/fixture_reader name the shared testkit. Mapping does not imply implementation or acceptance.",
   "target_architecture": {
     "crates/doc": "Lossless Markdown/YAML/link/Canvas/Bases document models and source transforms.",

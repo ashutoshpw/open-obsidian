@@ -242,7 +242,7 @@ async function main(): Promise<number> {
   const summary = summarizeResults(results);
   const modeLabel = mode === "lifecycle" ? "ARTIFACT LIFECYCLE" : "RENDERER PREFLIGHT";
   const limitation = mode === "lifecycle" ? "artifact lifecycle is isolated and non-certifying; cross-platform/reference results remain pending" : "lifecycle and runtime dispositions remain pending-runtime";
-  console.log(`PLUGIN ${modeLabel}: ${summary.passed ? "passed" : "failed"}; ${summary.denied} denied, ${summary.loaded} loaded, ${summary.failed} ordinary renderer failures, ${summary.notApplicable} not-applicable; ${limitation}`);
+  console.error(`PLUGIN ${modeLabel}: ${summary.passed ? "passed" : "failed"}; ${summary.denied} denied, ${summary.loaded} loaded, ${summary.failed} ordinary renderer failures, ${summary.notApplicable} not-applicable; ${limitation}`);
   return summary.passed ? 0 : 1;
 }
 

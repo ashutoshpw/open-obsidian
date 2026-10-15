@@ -1801,7 +1801,7 @@ if (import.meta.main) {
     const evidence = await runLoadedPluginWorkflowAudit();
     console.log(JSON.stringify(evidence, null, 2));
   } catch (error) {
-    console.error(JSON.stringify({evidence_version: 1, status: "failed", command: "bun run audit:plugin-loaded-workflows", error: error instanceof Error ? error.message : String(error)}));
-    process.exit(1);
+    console.log(JSON.stringify({evidence_version: 1, status: "failed", command: "bun run audit:plugin-loaded-workflows", error: error instanceof Error ? error.message : String(error)}));
+    process.exitCode = 1;
   }
 }

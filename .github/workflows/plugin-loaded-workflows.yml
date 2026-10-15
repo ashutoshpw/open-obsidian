@@ -32,17 +32,25 @@ jobs:
           bun-version-file: package.json
       - name: Install locked dependencies
         run: bun install --frozen-lockfile
+      - name: Install Electron binary for report workers
+        shell: bash
+        run: |
+          node -e "const {execFileSync}=require('node:child_process');const {dirname,join}=require('node:path');execFileSync(process.execPath,[join(dirname(require.resolve('electron/package.json')),'install.js')],{stdio:'inherit'});"
       - name: Configure Electron Linux sandbox helper
         if: runner.os == 'Linux'
         run: |
           electron_package_dir="$(dirname "$(node -p "require.resolve('electron/package.json')")")"
-          node "$electron_package_dir/install.js"
           sandbox_helper="$electron_package_dir/dist/chrome-sandbox"
           test -f "$sandbox_helper"
           sudo chown root:root "$sandbox_helper"
           sudo chmod 4755 "$sandbox_helper"
       - name: Run unchanged loaded-workflow audit
+        id: loaded_audit
+        shell: bash
         run: bun run audit:plugin-loaded-workflows > loaded-plugin-workflows-${{ runner.os }}.json
+      - name: Parse loaded-plugin JSON evidence
+        if: always() && steps.loaded_audit.outcome != 'skipped'
+        run: bun scripts/validate-plugin-audit-report.ts loaded-json loaded-plugin-workflows-${{ runner.os }}.json
       - name: Upload loaded-workflow evidence
         if: always()
         uses: actions/upload-artifact@v4

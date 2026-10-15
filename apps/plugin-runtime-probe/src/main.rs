@@ -8,8 +8,7 @@ use std::{
     fs,
     path::{Path, PathBuf},
     sync::{
-        Arc,
-        Mutex,
+        Arc, Mutex,
         atomic::{AtomicBool, Ordering},
     },
     time::{Duration, Instant, SystemTime, UNIX_EPOCH},
@@ -153,7 +152,8 @@ impl ApplicationHandler<ProbeEvent> for ProbeApp {
                         diagnostics.budget_exceeded_messages.saturating_add(1);
                     return;
                 }
-                let remaining_bytes = MAX_IPC_TOTAL_BYTES.saturating_sub(diagnostics.received_bytes);
+                let remaining_bytes =
+                    MAX_IPC_TOTAL_BYTES.saturating_sub(diagnostics.received_bytes);
                 if body.len() > remaining_bytes {
                     diagnostics.received_bytes = MAX_IPC_TOTAL_BYTES;
                     diagnostics.budget_exhausted = true;
@@ -163,7 +163,8 @@ impl ApplicationHandler<ProbeEvent> for ProbeApp {
                 }
                 diagnostics.received_bytes += body.len();
                 if body.len() > MAX_IPC_MESSAGE_BYTES {
-                    diagnostics.oversized_messages = diagnostics.oversized_messages.saturating_add(1);
+                    diagnostics.oversized_messages =
+                        diagnostics.oversized_messages.saturating_add(1);
                     return;
                 }
                 drop(diagnostics);
@@ -193,13 +194,11 @@ impl ApplicationHandler<ProbeEvent> for ProbeApp {
                 self.window = Some(window);
                 self._webview = Some(webview);
             }
-            Err(error) => {
-                self.finish_error(
-                    event_loop,
-                    "webview_creation_failed",
-                    format!("webview creation failed: {error}"),
-                )
-            }
+            Err(error) => self.finish_error(
+                event_loop,
+                "webview_creation_failed",
+                format!("webview creation failed: {error}"),
+            ),
         }
     }
 
@@ -268,9 +267,10 @@ impl ApplicationHandler<ProbeEvent> for ProbeApp {
                             );
                             return;
                         }
-                        let report_post_started = self.last_progress.as_ref().is_some_and(|progress| {
-                            progress.stage == "report-post" && progress.phase == "start"
-                        });
+                        let report_post_started =
+                            self.last_progress.as_ref().is_some_and(|progress| {
+                                progress.stage == "report-post" && progress.phase == "start"
+                            });
                         if !report_post_started {
                             self.finish_error(
                                 event_loop,
@@ -320,7 +320,8 @@ impl ApplicationHandler<ProbeEvent> for ProbeApp {
                         event_loop.exit();
                     }
                     _ => self.record_ipc_failure(|diagnostics| {
-                        diagnostics.unknown_messages = diagnostics.unknown_messages.saturating_add(1);
+                        diagnostics.unknown_messages =
+                            diagnostics.unknown_messages.saturating_add(1);
                     }),
                 }
             }
@@ -603,7 +604,10 @@ fn parse_progress(value: &Value) -> Option<ProbeProgress> {
 fn bounded_optional_u64(value: &Value, key: &str, maximum: u64) -> Option<Option<u64>> {
     match value.get(key) {
         None => Some(None),
-        Some(_) => value[key].as_u64().filter(|number| *number <= maximum).map(Some),
+        Some(_) => value[key]
+            .as_u64()
+            .filter(|number| *number <= maximum)
+            .map(Some),
     }
 }
 
@@ -650,61 +654,6 @@ fn host_diagnostics(
         "lastStage":progress_value(last_progress),
         "ipc":ipc_diagnostics_value(diagnostics),
     })
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn parses_only_bounded_allowlisted_progress() {
-        let progress = parse_progress(&json!({
-            "stage":"editor-callback",
-            "phase":"start",
-            "elapsedMs":1200,
-            "callbackIndex":7,
-            "invokedCallbacks":8,
-            "completedCallbacks":6,
-        }))
-        .expect("bounded editor callback progress is accepted");
-
-        assert_eq!(progress.stage, "editor-callback");
-        assert_eq!(progress.phase, "start");
-        assert_eq!(progress.elapsed_ms, 1200);
-        assert_eq!(progress.callback_index, Some(7));
-        assert_eq!(progress.invoked_callbacks, Some(8));
-        assert_eq!(progress.completed_callbacks, Some(6));
-    }
-
-    #[test]
-    fn rejects_unrecognized_or_out_of_range_progress() {
-        assert!(parse_progress(&json!({
-            "stage":"plugin-invented-stage",
-            "phase":"start",
-            "elapsedMs":10,
-        }))
-        .is_none());
-        assert!(parse_progress(&json!({
-            "stage":"plugin-load",
-            "phase":"running",
-            "elapsedMs":10,
-        }))
-        .is_none());
-        assert!(parse_progress(&json!({
-            "stage":"editor-callback",
-            "phase":"start",
-            "elapsedMs":30_001,
-            "callbackIndex":0,
-        }))
-        .is_none());
-        assert!(parse_progress(&json!({
-            "stage":"editor-callback",
-            "phase":"start",
-            "elapsedMs":10,
-            "callbackIndex":8,
-        }))
-        .is_none());
-    }
 }
 
 fn parse_arguments() -> Result<Arguments, String> {
@@ -889,4 +838,67 @@ fn create_session_token(bundle_sha256: &str) -> String {
         .as_nanos();
     let input = format!("{bundle_sha256}:{}:{timestamp}", std::process::id());
     sha256(input.as_bytes())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parses_only_bounded_allowlisted_progress() {
+        let progress = parse_progress(&json!({
+            "stage":"editor-callback",
+            "phase":"start",
+            "elapsedMs":1200,
+            "callbackIndex":7,
+            "invokedCallbacks":8,
+            "completedCallbacks":6,
+        }))
+        .expect("bounded editor callback progress is accepted");
+
+        assert_eq!(progress.stage, "editor-callback");
+        assert_eq!(progress.phase, "start");
+        assert_eq!(progress.elapsed_ms, 1200);
+        assert_eq!(progress.callback_index, Some(7));
+        assert_eq!(progress.invoked_callbacks, Some(8));
+        assert_eq!(progress.completed_callbacks, Some(6));
+    }
+
+    #[test]
+    fn rejects_unrecognized_or_out_of_range_progress() {
+        assert!(
+            parse_progress(&json!({
+                "stage":"plugin-invented-stage",
+                "phase":"start",
+                "elapsedMs":10,
+            }))
+            .is_none()
+        );
+        assert!(
+            parse_progress(&json!({
+                "stage":"plugin-load",
+                "phase":"running",
+                "elapsedMs":10,
+            }))
+            .is_none()
+        );
+        assert!(
+            parse_progress(&json!({
+                "stage":"editor-callback",
+                "phase":"start",
+                "elapsedMs":30_001,
+                "callbackIndex":0,
+            }))
+            .is_none()
+        );
+        assert!(
+            parse_progress(&json!({
+                "stage":"editor-callback",
+                "phase":"start",
+                "elapsedMs":10,
+                "callbackIndex":8,
+            }))
+            .is_none()
+        );
+    }
 }

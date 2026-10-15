@@ -10289,12 +10289,12 @@
       "source": {
         "path": ".agents/tasks/2026-10-07/goal.md",
         "heading": "Mandatory execution workflow: GitHub CI only",
-        "clause": "The CI scheduling unit is a complete milestone, not a commit or individual change. Do not push minor changes for incremental feedback or relabel a minor task/fix/commit as a milestone to start CI. Keep individual edits, focused fixes, documentation updates, and local commits on the local branch while a named milestone is in progress. Define its bounded outcome, measurable implementation criteria, required CI workflows/platforms, and evidence before work begins. Push the accumulated milestone exactly once, only after all implementation criteria are met and the complete deliverable has been reviewed; record implementation-complete / CI-pending at that submission. Record achieved / CI-passed only after every required job passes for the exact SHA. Since the full cross-platform CI batch may take several hours, keep origin/main at the submitted SHA and do not push or dispatch another milestone until every required job is terminal and its evidence is reconciled. Group related repairs into a later named milestone; use safe parallel checks within each batch."
+        "clause": "Treat every origin/main push as a request for a costly full CI batch that may take several hours, not as feedback on an individual edit. Keep minor changes and commits local; push exactly once after the named milestone implementation is complete, reviewed, and its bounded acceptance criteria, required workflows/platforms, and evidence plan are recorded. Keep the remote at that exact SHA until all required jobs are terminal and evidence is reconciled."
       },
       "checkpoint": "R0",
       "owner": "xtask",
       "mandatory": true,
-      "acceptance_criteria": "Keep minor edits, focused fixes, documentation updates, and local commits together without individual CI pushes; related small changes may span multiple commits or work sessions inside one named milestone. A minor task, fix, commit, file change, or cleanup does not itself qualify as a milestone, and must not be relabeled to obtain CI. Push origin/main exactly once, only after a bounded, coherent milestone has met its written implementation criteria and the complete deliverable has been reviewed; do not make artificial micro-milestones to obtain CI or combine unrelated work. The push records implementation-complete / CI-pending. Allow at most one milestone CI batch in flight and keep the remote at the submitted exact SHA until every required workflow/job is terminal and its evidence is reconciled, even if that takes several hours. Record achieved / CI-passed only after all required exact-SHA jobs pass. Do not dispatch CI for per-edit feedback; use safe parallel execution inside the milestone batch.",
+      "acceptance_criteria": "Treat each origin/main push as one full cross-platform CI submission, potentially taking several hours. Keep related minor edits, fixes, documentation updates, and local commits together within one named coherent milestone; do not trigger CI for individual changes, relabel minor work as a milestone, create artificial micro-milestones, or bundle unrelated deliverables. Define bounded measurable implementation criteria, required workflows/platforms, and evidence before implementation. Push the accumulated milestone to origin/main exactly once after its complete implementation and review; record implementation-complete / CI-pending. Keep origin/main at the submitted exact SHA until every required workflow/job is terminal and evidence is reconciled. Record achieved / CI-passed only after every required exact-SHA job passes; do not dispatch CI for per-edit feedback.",
       "fixture_ids": [
         "fixture:mig-002"
       ],
@@ -10398,6 +10398,21 @@
           "kind": "rust-migration-goal",
           "version": "2026-10-15-complete-milestone-ci-scheduling-unit",
           "sha256": "32c2b1652f36006a087b0d0830b72cc2a518f216169e95599a26c7020fa50540"
+        },
+        {
+          "kind": "rust-migration-goal",
+          "version": "2026-10-15-batch-related-edits-before-ci",
+          "sha256": "54ca3176c0289a9c3771cb10a0d75ffdfa1fc2f7f2701b33cced5bfe50846a55"
+        },
+        {
+          "kind": "rust-migration-goal",
+          "version": "2026-10-15-aggregate-related-minor-work-before-multihour-ci",
+          "sha256": "30c41b21a8fe352b60c31e975cff15df32b602dfbd33a1916d922f7941a55d04"
+        },
+        {
+          "kind": "rust-migration-goal",
+          "version": "2026-10-15-explicit-multihour-milestone-push-gate",
+          "sha256": "ce6004e3344e27503d9070d0858076b8626a2ce30e02ce72f2d4cebbd326e6a3"
         }
       ],
       "applicable_platforms": [
@@ -11165,7 +11180,7 @@
     "post_r0_2_additions": [
       "MIG-016: maintain current, accurate documentation throughout migration and audit it at cutover."
     ],
-    "goal_sha256": "32c2b1652f36006a087b0d0830b72cc2a518f216169e95599a26c7020fa50540",
+    "goal_sha256": "ce6004e3344e27503d9070d0858076b8626a2ce30e02ce72f2d4cebbd326e6a3",
     "policy": "Every inherited requirement was reviewed by ID and assigned a Rust owner, migration phase, acceptance criterion and retained/superseded/external disposition. Historical status/evidence remain preserved separately. Rust acceptance remains pending unless current exact-SHA migration evidence is attached; external items remain external_pending."
   }
 }
