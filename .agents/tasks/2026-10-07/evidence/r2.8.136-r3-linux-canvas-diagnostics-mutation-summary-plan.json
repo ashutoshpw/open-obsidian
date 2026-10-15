@@ -1,0 +1,114 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.8.136-R3-LINUX-CANVAS-DIAGNOSTICS-AND-MUTATION-SUMMARY-REPAIR",
+  "name": "Refresh Linux Canvas diagnostics and report source mutations truthfully",
+  "status": "implementation complete; independent source review passed; ready for one milestone push; CI not dispatched",
+  "recorded_at": "2026-10-15T20:12:50Z",
+  "implementation_completed_at": "2026-10-15T20:23:05Z",
+  "planning_base_sha": "1ddae8fc44ab1d74c924abbb300240f0e591a888",
+  "implementation_start_sha": "1ddae8fc44ab1d74c924abbb300240f0e591a888",
+  "implementation_start_sha_policy": "Confirmed origin/main and worktree HEAD both equal 1ddae8fc44ab1d74c924abbb300240f0e591a888 at 2026-10-15T20:16:54Z before source edits; keep all work in this single named repair milestone.",
+  "depends_on": [
+    "R2 attempt 1 is terminal-failed and fully reconciled on exact SHA 1ddae8fc44ab1d74c924abbb300240f0e591a888; all seven workflows and 20 jobs are terminal, six workflows and 19 jobs passed, and Ubuntu round-trip job 116619046867 failed before any paste. See evidence/r2.8.136-r2-attempt-1-1ddae8f.json.",
+    "The Linux failure occurs because clipboard staging does not generate egui raw input events, so the same-frame Canvas diagnostics do not refresh before Ctrl+V. The path remained focused and empty, sibling ID remained unfocused, and no paste occurred.",
+    "Windows and macOS completed all ten C07.4 reference scenarios on first open and reopen. Their reports record pinned Obsidian source mutations and make no Rust parity claim.",
+    "Windows and macOS reports both retain a top-level reference_source_mutation_observed=false despite section-level confirmed source mutation. C07.2 on macOS reports captured-reference-mutation with two rewrite observations; C07.4 reports mutation=true; C07.3 reports false.",
+    "Independent read-only reviews recommended two neutral, non-clicking pointer motions after each clipboard stage and a tri-state per-section plus aggregate mutation summary. The plan was approved by both reviewers before source edits began."
+  ],
+  "bounded_outcome": "Repair the Linux Canvas path-entry diagnostic refresh after clipboard staging without weakening field identity, focus, sibling, hash, refresh, OCR, or no-save guards; make C07.2, C07.3, C07.4, and aggregate source-mutation reporting truthful and explicit when unknown.",
+  "scope": [
+    "In .agents/tasks/2026-10-07/audit-obsidian-vault-roundtrip.ts, change only the Linux Canvas path-input branch and the C07 reference_capture_summary/console source-mutation aggregation needed for accurate C07.2-C07.4 reporting.",
+    "After staging the first Unicode character and after staging the remaining path text, send two non-clicking pointer motions within the same OpenObsidian window, at distinct neutral client points (5,5) and (6,5), using the existing xdotool wrapper. This guarantees a PointerMoved event without typing, clicking, or intentionally changing the focused target.",
+    "Run the existing fresh same-frame target/sibling diagnostics immediately after the pointer motion and before Ctrl+V. Preserve target geometry, unique response IDs, focus, exact bytes/hash, sibling unfocused/unchanged, refresh stability, sentinel acceptance, exact final path OCR, and abort-without-retry/save behavior.",
+    "In reference_capture_summary, retain the explicit mutation fields c07_2_reference_source_mutation_observed, c07_3_reference_source_mutation_observed, c07_4_reference_source_mutation_observed, plus reference_source_mutation_observed as the aggregate. Use true for any confirmed rewrite even if the section later fails; false only when the section completed with complete source observations and no mutation; null/unknown for pending, skipped, or inconclusive failure without a confirmed mutation.",
+    "Compute reference_source_mutation_observed as true if any included C07 section confirms mutation; false only if C07.2, C07.3, and C07.4 all completed with complete observations and each is false; otherwise null/unknown. Preserve true when a failed section already recorded a rewrite. Print all three namespaced section states and the aggregate in the console summary.",
+    "Preserve C07.2, C07.3, and C07.4 reference-only semantics. Do not infer Rust parity or source preservation from pinned Obsidian captures."
+  ],
+  "out_of_scope": [
+    "Changing Rust application or egui behavior, Canvas schema, or vault write behavior.",
+    "Changing macOS or Windows input paths, pinned Obsidian behavior, C07.4 expected scenarios, or C07.3 membership/comparator semantics.",
+    "Relaxing any existing same-frame, focus, sibling-value/hash, refresh, source-snapshot, final OCR, or no-save-on-failure guards.",
+    "Claiming Rust parity, changing C07.5, or modifying unrelated workflows, milestones, or compatibility policies."
+  ],
+  "implementation_criteria": [
+    "Only Linux Canvas path entry uses the diagnostic pointer motion; Linux text-card-ID typing and macOS/Windows input handling retain their current behavior.",
+    "After first-character clipboard staging, distinct same-window neutral motions at (5,5) and (6,5) produce fresh same-frame target/sibling diagnostics before the sentinel Ctrl+V; no click/key is sent by the motion helper.",
+    "Before sentinel paste, the path field is still blank and focused; sibling ID is unfocused, value/hash unchanged; response IDs are fresh and unique; refresh remains idle/stable. After sentinel paste, exact one-character bytes/hash and focus are verified before staging the remainder.",
+    "After remainder staging and pointer motion, fresh same-frame checks prove the exact sentinel prefix remains in the focused target, sibling remains unfocused and hash-identical, and refresh remains stable before the single remainder paste. Final field bytes/hash and target-anchored exact OCR are checked before save or downstream capture.",
+    "Any missing/stale/ambiguous diagnostics, focus loss, sibling change, refresh activity, mismatch, or clipboard/paste error aborts without retry or Save.",
+    "The report explicitly includes c07_2_reference_source_mutation_observed, c07_3_reference_source_mutation_observed, and c07_4_reference_source_mutation_observed. A confirmed rewrite sets its section field to true even if a later step in that section fails; false requires completed capture and complete source observations proving no mutation; otherwise use null.",
+    "reference_source_mutation_observed is the aggregate: true if any section is true; false only when all three sections complete with complete observations and are false; null otherwise. The three namespaced section fields and aggregate appear in the report and final console line, with null rendered explicitly as unknown.",
+    "All C07 captures retain reference-only interpretation and no Rust parity/source-preservation claim."
+  ],
+  "ci_acceptance_criteria": [
+    "All seven required GitHub Actions workflows and all 20 required jobs pass on one exact submitted SHA across Ubuntu 24.04, macOS latest, and Windows latest.",
+    "Ubuntu passes the full Linux Canvas first-character sentinel and remainder path-entry flow, all ten C07.4 scenarios on first open and reopen, exact final path OCR, and existing text-card-ID field/sibling guards.",
+    "macOS and Windows pass their existing authoring, reopen, Canvas, and ten C07.4 first-open/reopen acceptance scenarios.",
+    "All three platform reports carry section-level C07.2/C07.3/C07.4 mutation states and a consistent aggregate; known Obsidian source rewrites are reported true, confirmed unchanged complete captures false, and unrun/incomplete captures unknown.",
+    "The three round-trip artifacts, archive/report hashes, exact-SHA workflow/job outcomes, and source checkpoint limitations are reconciled. No Rust parity or source-preservation claim is made from reference capture.",
+    "No local tests, builds, formatting, linting, validators, type checks, runtime probes, or application launches are used for acceptance."
+  ],
+  "required_workflows": [
+    "OpenObsidian Rust CI",
+    "Rust migration inventory",
+    "Obsidian vault round-trip acceptance",
+    "OpenObsidian desktop build",
+    "OpenObsidian quality",
+    "OpenObsidian plugin renderer matrix",
+    "OpenObsidian loaded plugin workflows"
+  ],
+  "expected_jobs": 20,
+  "required_platforms": [
+    "Ubuntu 24.04",
+    "macOS latest",
+    "Windows latest"
+  ],
+  "expected_evidence": "Starting and submitted SHAs; exact-SHA URLs/IDs/conclusions for all seven workflows and 20 jobs; per-paste-stage Linux same-frame target/sibling/focus/hash/refresh records and final target-anchored OCR; exact report fields c07_2_reference_source_mutation_observed, c07_3_reference_source_mutation_observed, c07_4_reference_source_mutation_observed, and aggregate reference_source_mutation_observed on each platform; all three artifact IDs, archive/report SHA-256 values, and reference-only/source-mutation limitations.",
+  "push_policy": "Keep minor changes and local commits grouped under this one named, independently reviewed milestone. Push to origin/main once only after implementation criteria and the full submission review are complete. Hold origin/main at the submitted SHA until every required job is terminal and evidence is reconciled, even if CI takes several hours. Do not overlap full milestone batches or push an evidence-only change.",
+  "local_executable_validation": false,
+  "independent_review": {
+    "status": "plan approved; source implementation independently reviewed and approved; no blockers",
+    "reviewers": [
+      {
+        "name": "linux_repair_audit",
+        "result": "Approved: two-point motion after each clipboard stage precedes existing guards; all fail-closed checks and exact-SHA matrix remain intact; report tri-state contract is clear.",
+        "reviewed_at": "2026-10-15T20:16:54Z"
+      },
+      {
+        "name": "c063_scope_review",
+        "result": "Approved: named per-section and aggregate JSON fields, true-on-confirmed-rewrite including later failure, false only for complete unchanged observations, unknown otherwise; exact-SHA acceptance is adequate.",
+        "reviewed_at": "2026-10-15T20:16:54Z"
+      }
+    ],
+    "source_implementation_started_after_review": true,
+    "source_review": {
+      "status": "passed; no blockers",
+      "reviewed_at": "2026-10-15T20:23:05Z",
+      "reviewers": [
+        {
+          "name": "linux_repair_audit",
+          "result": "Confirmed pointer motions run after each clipboard stage and before the unchanged fail-closed guards. Found a Ctrl+V dispatch diagnostic gap; dispatchCtrlV now records the pre-paste target/sibling state, refresh diagnostics, motion receipt, and earlier paste stages on dispatch failure. Follow-up review confirmed the gap is closed and no guards changed."
+        },
+        {
+          "name": "c063_scope_review",
+          "result": "Confirmed C07.2/C07.3/C07.4 true-on-confirmed-mutation, false-only-on-complete-unchanged, null-otherwise semantics; the aggregate and console output match the plan."
+        }
+      ]
+    },
+    "ci_dispatched": false,
+    "findings_resolved": [
+      "Explicitly named c07_2_reference_source_mutation_observed, c07_3_reference_source_mutation_observed, c07_4_reference_source_mutation_observed, and aggregate reference_source_mutation_observed.",
+      "Confirmed mutation remains true if a later operation in that section fails after recording a rewrite.",
+      "False requires complete unchanged source observations; not-run or inconclusive sections remain null/unknown.",
+      "Placed two non-clicking neutral pointer motions after each Linux Canvas path clipboard staging call and before the existing pre-paste assertions.",
+      "Ctrl+V dispatch errors retain the validated pre-paste field pair, refresh diagnostics, pointer-motion receipt, and completed prior paste stages."
+    ]
+  },
+  "origin_main_sha_at_planning": "1ddae8fc44ab1d74c924abbb300240f0e591a888",
+  "ci_dispatched": false,
+  "ci_run_ids": [],
+  "submitted_sha": null,
+  "submitted_at": null,
+  "ci_snapshot": null,
+  "ci_evidence_file": null
+}

@@ -1089,7 +1089,94 @@ function delay(milliseconds: number): Promise<void> {
   return new Promise((resolveDelay) => setTimeout(resolveDelay, milliseconds));
 }
 
+type C07ReferenceMutationState = boolean | null;
+
+function c07ReferenceMutationState(
+  section: Record<string, unknown>,
+  sectionId: "c07_2" | "c07_3" | "c07_4",
+): C07ReferenceMutationState {
+  if (sectionId === "c07_2") {
+    const rewriteObservations = Array.isArray(section.source_rewrite_observations)
+      ? section.source_rewrite_observations
+      : [];
+    if (section.reference_source_mutation_observed === true
+      || section.status === "captured-reference-mutation"
+      || rewriteObservations.length > 0) return true;
+    if (section.capture_status === "completed"
+      && section.status === "passed"
+      && section.reference_app_source_preservation_passed === true
+      && rewriteObservations.length === 0) return false;
+    return null;
+  }
+
+  if (sectionId === "c07_3") {
+    const checkpoints = Array.isArray(section.source_hash_checkpoints)
+      ? section.source_hash_checkpoints as Array<Record<string, unknown>>
+      : [];
+    const confirmedMutation = checkpoints.some((checkpoint) =>
+      Array.isArray(checkpoint.changes) && checkpoint.changes.length > 0);
+    if (section.reference_source_mutation_observed === true || confirmedMutation) return true;
+    if (section.capture_status === "completed"
+      && section.source_observation_recording_complete === true
+      && section.reference_source_mutation_observed === false
+      && checkpoints.every((checkpoint) => checkpoint.unchanged === true)) return false;
+    return null;
+  }
+
+  const checkpoints = Array.isArray(section.source_checkpoints)
+    ? section.source_checkpoints as Array<Record<string, unknown>>
+    : [];
+  const confirmedMutation = checkpoints.some((checkpoint) =>
+    Array.isArray(checkpoint.changed_sources_from_seed) && checkpoint.changed_sources_from_seed.length > 0);
+  if (section.reference_source_mutation_observed === true
+    || section.reopen_source_mutation_observed === true
+    || confirmedMutation) return true;
+  if (section.capture_status === "completed"
+    && section.source_checkpoint_matrix_complete === true
+    && section.reference_source_mutation_observed === false
+    && section.reopen_source_mutation_observed === false
+    && checkpoints.every((checkpoint) => Array.isArray(checkpoint.changed_sources_from_seed)
+      && checkpoint.changed_sources_from_seed.length === 0)) return false;
+  return null;
+}
+
+function updateC07ReferenceCaptureSummary(): void {
+  const c07_2 = report.bases_group_direction_reference as Record<string, unknown>;
+  const c07_3 = report.bases_group_order_reference as Record<string, unknown>;
+  const c07_4 = report.bases_number_reference as Record<string, unknown>;
+  const c07_2Mutation = c07ReferenceMutationState(c07_2, "c07_2");
+  const c07_3Mutation = c07ReferenceMutationState(c07_3, "c07_3");
+  const c07_4Mutation = c07ReferenceMutationState(c07_4, "c07_4");
+  const mutationStates = [c07_2Mutation, c07_3Mutation, c07_4Mutation];
+  const aggregateMutation = mutationStates.includes(true)
+    ? true
+    : mutationStates.every((state) => state === false)
+      ? false
+      : null;
+  const capturesComplete = [c07_2, c07_3, c07_4].every((section) => section.capture_status === "completed");
+  const priorSummary = (report.reference_capture_summary as Record<string, unknown> | undefined) ?? {};
+  const rewriteObservations = Array.isArray(c07_2.source_rewrite_observations)
+    ? c07_2.source_rewrite_observations
+    : [];
+  report.reference_capture_summary = {
+    ...priorSummary,
+    status: capturesComplete ? "completed" : "incomplete",
+    c07_2_capture_status: c07_2.status ?? "pending",
+    c07_3_group_order_capture_status: c07_3.status ?? "pending",
+    c07_4_number_reference_capture_status: c07_4.status ?? "pending",
+    c07_2_reference_source_mutation_observed: c07_2Mutation,
+    c07_3_reference_source_mutation_observed: c07_3Mutation,
+    c07_4_reference_source_mutation_observed: c07_4Mutation,
+    reference_source_mutation_observed: aggregateMutation,
+    reference_app_source_preservation_passed: c07_2.reference_app_source_preservation_passed ?? null,
+    source_rewrite_observation_count: rewriteObservations.length,
+    rust_parity_claimed: false,
+    interpretation: "Per-section source mutation states describe pinned Obsidian behavior only. Confirmed rewrites are reference observations and do not establish Rust source preservation or comparator parity.",
+  };
+}
+
 async function saveReport(): Promise<void> {
+  updateC07ReferenceCaptureSummary();
   await mkdir(reportDirectory, {recursive: true});
   await writeFile(join(reportDirectory, "obsidian-vault-roundtrip-report.json"), `${JSON.stringify(report, null, 2)}\n`);
 }
@@ -9669,6 +9756,8 @@ async function assertBasesDirectionSourceHashes(
     };
     observed[path] = actual;
     if (actual.bytes !== baseline.bytes || actual.sha256 !== baseline.sha256) {
+      const basesReport = report.bases_group_direction_reference as Record<string, unknown>;
+      basesReport.reference_source_mutation_observed = true;
       const artifactPath = `bases-direction-source-changed-${stage.replaceAll(/[^a-z0-9-]/gi, "-")}-${basename(path)}`;
       await writeFile(join(reportDirectory, artifactPath), bytes);
       const isKnownReferenceRewrite = allowKnownReferenceRewrite
@@ -9677,7 +9766,6 @@ async function assertBasesDirectionSourceHashes(
         && actual.sha256 === normalizedInvalidBasesDirectionSha256
         && bytes.equals(normalizedInvalidBasesDirection);
       if (isKnownReferenceRewrite) continue;
-      const basesReport = report.bases_group_direction_reference as Record<string, unknown>;
       basesReport.reference_app_source_preservation_passed = false;
       const mismatch = `Obsidian changed C07 source ${path} ${stage}: expected ${baseline.bytes} bytes / ${baseline.sha256}, got ${actual.bytes} bytes / ${actual.sha256}`;
       if (unexpectedMismatches) {
@@ -16386,6 +16474,7 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
         let siblingFieldStateReadback = preEntrySiblingWidget;
         targetAndSiblingWidgetReadback = {target: preEntryTargetWidget, sibling: preEntrySiblingWidget};
         const pasteStageDiagnostics: Array<Record<string, unknown>> = [];
+        const diagnosticMotionStages: Array<Record<string, unknown>> = [];
         let clipboardUsedForEntry = false;
         const usesClipboardSentinel = diagnosticField === "path";
         const entryMethod = fieldAlreadyContainsExpectedValue
@@ -16402,6 +16491,36 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
           if (firstCharacter === undefined) throw new Error("Missing first Canvas input character for " + diagnosticField);
           const expectedHash = (text: string) => createHash("sha256").update(text, "utf8").digest("hex");
           let lastObservedLine = Math.max(preEntryTargetWidget.line, preEntrySiblingWidget.line);
+
+          const movePointerForFreshDiagnostics = (stage: string): Record<string, unknown> => {
+            const motionRecord: Record<string, unknown> = {
+              stage,
+              window_id: windowId,
+              motions: [
+                {x: 5, y: 5, status: "pending"},
+                {x: 6, y: 5, status: "pending"},
+              ],
+              status: "running",
+            };
+            diagnosticMotionStages.push(motionRecord);
+            const motions = motionRecord.motions as Array<Record<string, unknown>>;
+            for (const motion of motions) {
+              try {
+                xdotool("mousemove", "--sync", "--window", windowId, String(motion.x), String(motion.y));
+                motion.status = "sent";
+              } catch (error) {
+                motion.status = "failed";
+                motion.error = error instanceof Error ? error.message : String(error);
+                motionRecord.status = "failed";
+                throw new Error(
+                  "Could not refresh Linux Canvas diagnostics with neutral pointer motion " + stage
+                    + "; diagnostic_pointer_motions=" + JSON.stringify(diagnosticMotionStages),
+                );
+              }
+            }
+            motionRecord.status = "completed";
+            return motionRecord;
+          };
 
           const checkFreshFieldPair = async (stage: string, afterLine: number) => {
             let pair: Awaited<ReturnType<typeof readCanvasFieldPair>> = null;
@@ -16422,6 +16541,7 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
                 "Canvas diagnostics did not arrive " + stage
                   + "; input_method=xclip clipboard plus Ctrl+V"
                   + "; completed_paste_stages=" + JSON.stringify(pasteStageDiagnostics)
+                  + "; diagnostic_pointer_motions=" + JSON.stringify(diagnosticMotionStages)
                   + "; detail=" + detail,
               );
             }
@@ -16429,7 +16549,8 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
               throw new Error(
                 "Canvas diagnostics did not arrive " + stage
                   + "; after_line=" + afterLine
-                  + "; completed_paste_stages=" + JSON.stringify(pasteStageDiagnostics),
+                  + "; completed_paste_stages=" + JSON.stringify(pasteStageDiagnostics)
+                  + "; diagnostic_pointer_motions=" + JSON.stringify(diagnosticMotionStages),
               );
             }
             return pair;
@@ -16470,10 +16591,34 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
                   + "; target=" + JSON.stringify(pair.target)
                   + "; sibling=" + JSON.stringify(pair.sibling)
                   + "; refresh=" + JSON.stringify(refresh)
-                  + "; completed_paste_stages=" + JSON.stringify(pasteStageDiagnostics),
+                  + "; completed_paste_stages=" + JSON.stringify(pasteStageDiagnostics)
+                  + "; diagnostic_pointer_motions=" + JSON.stringify(diagnosticMotionStages),
               );
             }
             return {pair, refresh, expectedBytes, expectedSha256};
+          };
+
+          const dispatchCtrlV = (
+            stage: string,
+            beforePaste: Awaited<ReturnType<typeof assertPasteState>>,
+            pointerMotion: Record<string, unknown>,
+          ): void => {
+            try {
+              xdotool("key", "--clearmodifiers", "ctrl+v");
+            } catch (error) {
+              const detail = error instanceof Error ? error.message : String(error);
+              throw new Error(
+                "Could not dispatch Canvas " + stage + " Ctrl+V"
+                  + "; before_paste=" + JSON.stringify({
+                    target: beforePaste.pair.target,
+                    sibling: beforePaste.pair.sibling,
+                    refresh_diagnostics: beforePaste.refresh,
+                  })
+                  + "; pre_paste_pointer_motion=" + JSON.stringify(pointerMotion)
+                  + "; completed_paste_stages=" + JSON.stringify(pasteStageDiagnostics)
+                  + "; detail=" + detail,
+              );
+            }
           };
 
           const stageClipboard = (stage: string, text: string) => {
@@ -16492,13 +16637,14 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
 
           const firstCharacterBytes = Buffer.byteLength(firstCharacter, "utf8");
           stageClipboard("first-character sentinel", firstCharacter);
+          const firstCharacterPointerMotion = movePointerForFreshDiagnostics("first-character sentinel");
           const firstBeforePaste = await assertPasteState(
             "immediately before first-character Ctrl+V after clipboard staging",
             "",
             lastObservedLine,
           );
           const firstPasteLine = Math.max(firstBeforePaste.pair.target.line, firstBeforePaste.pair.sibling.line);
-          xdotool("key", "--clearmodifiers", "ctrl+v");
+          dispatchCtrlV("first-character sentinel", firstBeforePaste, firstCharacterPointerMotion);
           const firstAfterPaste = await assertPasteState(
             "after first-character sentinel paste",
             firstCharacter,
@@ -16526,11 +16672,13 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
               refresh_diagnostics: firstAfterPaste.refresh,
               refresh_stable: true,
             },
+            pre_paste_pointer_motion: firstCharacterPointerMotion,
           });
 
           const remainder = characters.slice(1).join("");
           if (remainder.length > 0) {
             stageClipboard("remainder", remainder);
+            const remainderPointerMotion = movePointerForFreshDiagnostics("remainder");
             const remainderBeforePaste = await assertPasteState(
               "immediately before remainder Ctrl+V after clipboard staging",
               firstCharacter,
@@ -16540,7 +16688,7 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
               remainderBeforePaste.pair.target.line,
               remainderBeforePaste.pair.sibling.line,
             );
-            xdotool("key", "--clearmodifiers", "ctrl+v");
+            dispatchCtrlV("remainder", remainderBeforePaste, remainderPointerMotion);
             const remainderAfterPaste = await assertPasteState(
               "after remainder paste",
               value,
@@ -16571,6 +16719,7 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
                 refresh_diagnostics: remainderAfterPaste.refresh,
                 refresh_stable: true,
               },
+              pre_paste_pointer_motion: remainderPointerMotion,
             });
           }
 
@@ -19511,6 +19660,7 @@ async function runBasesDirectionReferenceProbe(): Promise<void> {
     const noReferenceSourceRewriteObserved = sourceRewriteObservations.length === 0;
     const finalSourceHashesMatchSeed = isDeepStrictEqual(sourceHashes, secondCloseHashes);
     basesReport.source_hashes_unchanged_across_both_sessions = noReferenceSourceRewriteObserved && finalSourceHashesMatchSeed;
+    basesReport.reference_source_mutation_observed = sourceRewriteObservations.length > 0 || !finalSourceHashesMatchSeed;
     basesReport.reference_app_source_preservation_passed = basesReport.source_hashes_unchanged_across_both_sessions;
     basesReport.source_hashes_unchanged_except_known_reference_rewrite = Object.entries(secondCloseHashes).every(([path, actual]) => {
       const baseline = sourceHashes?.[path];
@@ -19658,13 +19808,6 @@ async function runBasesDirectionReferenceProbe(): Promise<void> {
     basesReport.status = basesReport.reference_app_source_preservation_passed === true
       ? "passed"
       : "captured-reference-mutation";
-    report.reference_capture_summary = {
-      status: "completed",
-      c07_capture_status: basesReport.status,
-      reference_app_source_preservation_passed: basesReport.reference_app_source_preservation_passed,
-      source_rewrite_observation_count: (basesReport.source_rewrite_observations as unknown[]).length,
-      interpretation: "C07.2 reference capture completed. A passing capture records pinned-app behavior and does not establish Rust source-preservation parity.",
-    };
     await saveReport();
   } catch (error) {
     basesReport.status = "failed";
@@ -20384,14 +20527,6 @@ async function runBasesGroupOrderReferenceProbe(): Promise<void> {
     }
     basesReport.status = "captured-reference-only";
     basesReport.rust_parity_claimed = false;
-    report.reference_capture_summary = {
-      status: "completed",
-      c07_2_capture_status: (report.bases_group_direction_reference as Record<string, unknown>).status,
-      c07_3_group_order_capture_status: basesReport.status,
-      rust_parity_claimed: false,
-      reference_source_mutation_observed: basesReport.reference_source_mutation_observed,
-      interpretation: "Pinned-app C07.3 observations were captured on this runner. Exact Obsidian source rewrites are recorded as reference behavior and do not establish Rust source preservation or groupOrder parity.",
-    };
     await saveReport();
   } catch (error) {
     basesReport.status = "failed";
@@ -21542,17 +21677,6 @@ async function runBasesNumberReferenceProbe(): Promise<void> {
     }
     basesReport.status = "captured-reference-only";
     basesReport.rust_parity_claimed = false;
-    const priorSummary = (report.reference_capture_summary as Record<string, unknown> | undefined) ?? {};
-    report.reference_capture_summary = {
-      ...priorSummary,
-      status: "completed",
-      c07_2_capture_status: (report.bases_group_direction_reference as Record<string, unknown>).status,
-      c07_3_group_order_capture_status: (report.bases_group_order_reference as Record<string, unknown>).status,
-      c07_4_number_reference_capture_status: basesReport.status,
-      rust_parity_claimed: false,
-      c07_4_reference_source_mutation_observed: basesReport.reference_source_mutation_observed,
-      interpretation: "Pinned-app C07.2, C07.3, and C07.4 observations were captured on this runner. Exact Obsidian source rewrites are recorded as reference behavior and do not establish Rust source preservation or comparator parity.",
-    };
     await saveReport();
   } catch (error) {
     basesReport.status = "failed";
@@ -21652,11 +21776,17 @@ try {
 }
 
 const referenceCaptureSummary = report.reference_capture_summary as Record<string, unknown> | undefined;
-const sourceObservationMessage = typeof referenceCaptureSummary?.reference_source_mutation_observed === "boolean"
-  ? `; pinned-app source mutation observed=${String(referenceCaptureSummary.reference_source_mutation_observed)}`
-  : typeof referenceCaptureSummary?.reference_app_source_preservation_passed === "boolean"
-    ? `; C07.2 pinned-app source hashes preserved=${String(referenceCaptureSummary.reference_app_source_preservation_passed)}`
-    : "";
+const displayMutationState = (state: unknown): string => state === true
+  ? "true"
+  : state === false
+    ? "false"
+    : "unknown";
+const sourceObservationMessage = referenceCaptureSummary
+  ? `; pinned-app source mutation C07.2=${displayMutationState(referenceCaptureSummary.c07_2_reference_source_mutation_observed)}`
+    + ` C07.3=${displayMutationState(referenceCaptureSummary.c07_3_reference_source_mutation_observed)}`
+    + ` C07.4=${displayMutationState(referenceCaptureSummary.c07_4_reference_source_mutation_observed)}`
+    + ` aggregate=${displayMutationState(referenceCaptureSummary.reference_source_mutation_observed)}`
+  : "";
 const captureMessage = referenceCaptureSummary
   ? `; C07 reference capture=${String(referenceCaptureSummary.status)}${sourceObservationMessage}`
   : "";
