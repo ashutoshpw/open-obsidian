@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
-  "status": "R2.8.130/C07.4 implementation is complete and independently reviewed; ready for one milestone push, with CI not yet submitted.",
-  "updated_at": "2026-10-15T10:40:40Z",
+  "status": "R2.8.130/C07.4 attempt 1 is terminal-failed on 38e119bc328626851aaf0f6f769cf9f53bc576cf; the R2.8.131 grouped-root evidence repair is implementation-complete and independently reviewed, ready for one milestone submission. C07.4 remains pending until exact-SHA CI passes; no Rust parity is claimed.",
+  "updated_at": "2026-10-15T11:45:23Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "cca13eb6114d4e694b11973579bb94fa6d552e32",
-  "current_milestone": "R2.8.130-C07.4-JAVASCRIPT-NUMBER-REFERENCE-CAPTURE implementation is complete and independently reviewed in isolated worktree /tmp/openobsidian-r2.8.130-c07.4. The fixture, source-preserving capture helpers, workflow trigger, and traceability are ready for one exact-SHA submission; no Rust parity is claimed.",
-  "next_action": "Submit the isolated, C07.4-only implementation once to origin/main to run its seven required workflows and 20 jobs. After the push, keep origin/main at that exact SHA until every job is terminal and evidence is reconciled. Preserve the mixed main-worktree C07.3/C07.5/C09.2 edits. Run executable validation only in GitHub Actions.",
-  "push_status": "origin/main remains at R1.2.3 SHA cca13eb6114d4e694b11973579bb94fa6d552e32; its exact-SHA CI batch and artifact reconciliation are complete with 7/7 workflows and 20/20 jobs passed. The C07.4 milestone is complete and reviewed; one push is ready, but has not yet been made.",
+  "last_reconciled_head": "38e119bc328626851aaf0f6f769cf9f53bc576cf",
+  "current_milestone": "R2.8.131-C07.4-GROUPED-ROOT-COUNT-EVIDENCE-REPAIR is implementation-complete and independently reviewed, ready for one push. C07.4 remains pending until all required exact-SHA CI passes; no Rust parity is claimed.",
+  "next_action": "Submit the complete R2.8.131 repair once to origin/main. Then keep origin/main fixed until all seven required workflows and 20 jobs are terminal; reconcile all reports/artifacts before marking C07.4 achieved / CI-passed. Run executable validation only in GitHub Actions.",
+  "push_status": "C07.4 attempt 1 was pushed once at 38e119bc328626851aaf0f6f769cf9f53bc576cf and is terminal-failed: six of seven workflows and 17 of 20 jobs passed; all three round-trip jobs failed at the same C07.4 evidence predicate. R2.8.131 is now reviewed and ready for one repair push; it has not yet been submitted.",
   "blockers": [
     "C07.3 pinned Obsidian reference capture passed all 14 scenarios on first open and reopen across Linux, macOS, and Windows at exact SHA 0a9cb9c00835881a7629c96721974dfa9461cc50; see evidence/r2.8.129-attempt-1-0a9cb9c.json. Rust parity remains pending. Separate mixed-worktree C07.3 edits remain local and are excluded from the C07.4 candidate; review and submit them separately. Do not claim a full-fixture membership oracle from reference UI results.",
     "R2.8.120 failed its terminal exact-SHA CI batch on 985af8aa18be53c285221b2ed21d4062e69b9f3d. Linux C07.3 table row diagnostics reject visible rows despite each uniquely matching an already captured fixture path; formula Kanban extraction records no card memberships although the screenshot shows the 5/4/4/0 cards. macOS display metrics failed before first-run picker interaction, and Windows stopped after picker closure when the host HWND changed. See evidence/r2.8.120-attempt-1-985af8a.json; keep C07.3 pending.",
@@ -41616,22 +41616,24 @@
   },
   "current_requirement_count": 221,
   "current_ci_attempt": {
-    "status": "CI-failed; all seven workflows and 20 jobs are terminal; six workflows and 19 jobs passed, with one macOS Obsidian round-trip job failed before Canvas text-card ID input.",
-    "implementation_sha": "2c34aeba3d6712cc255592e6c469cc0dca2823b4",
-    "evidence_file": ".agents/tasks/2026-10-07/evidence/c06.2-attempt-3-2c34aeb.json",
-    "milestone": "C06.2 omitted-array Canvas fixture repair",
-    "attempt": 3,
-    "observed_at": "2026-10-15T02:19:10Z",
+    "status": "terminal-failed on exact SHA 38e119bc328626851aaf0f6f769cf9f53bc576cf: 7/7 workflows terminal, 6 passed and 1 failed; 20/20 jobs terminal, 17 passed and 3 failed (all platform round-trip jobs).",
+    "implementation_sha": "38e119bc328626851aaf0f6f769cf9f53bc576cf",
+    "evidence_file": "evidence/r2.8.130-c07.4-attempt-1-38e119b.json",
+    "plan_file": ".agents/tasks/2026-10-07/evidence/r2.8.130-c07.4-reference-capture-plan.json",
+    "milestone": "R2.8.130-C07.4-JAVASCRIPT-NUMBER-REFERENCE-CAPTURE",
+    "attempt": 1,
+    "observed_at": "2026-10-15T11:37:10Z",
     "workflow_count": 7,
     "completed_workflows": 7,
     "successful_workflows": 6,
     "in_progress_workflows": 0,
+    "queued_workflows": 0,
     "failed_workflows": 1,
     "job_count": 20,
-    "passed_jobs": 19,
+    "passed_jobs": 17,
     "in_progress_jobs": 0,
     "queued_jobs": 0,
-    "failed_jobs": 1
+    "failed_jobs": 3
   },
   "planned_next_milestone": {
     "milestone": "C06.2",
@@ -41707,7 +41709,7 @@
     "milestone": "R2.8.130",
     "name": "C07.4 JavaScript-number behavior reference capture",
     "plan": "evidence/r2.8.130-c07.4-reference-capture-plan.json",
-    "status": "Implementation complete and independently reviewed in isolated worktree /tmp/openobsidian-r2.8.130-c07.4; ready for one milestone push, with CI not yet submitted. Preserve unsubmitted C07.3/C07.5/C09.2 edits in the main worktree.",
+    "status": "Terminal-failed on exact SHA 38e119bc328626851aaf0f6f769cf9f53bc576cf: 6/7 workflows and 17/20 jobs passed; three platform round-trip jobs failed at the same C07.4 grouped-root count-evidence predicate. Evidence: evidence/r2.8.130-c07.4-attempt-1-38e119b.json. C07.4 remains pending.",
     "deliverable": "Capture numeric sort, relational/equality filters, array contains, and identity around 2^53 in pinned Obsidian 1.14.4, with source hashes and exact first-open/reopen ordered row reports on all three platforms. Do not change Rust semantics before reference outcomes are recorded.",
     "acceptance": [
       "Characterize values at, below, and above 2^53 and distinct JSON integer/float spellings that JavaScript parses to the same Number; capture sorting, comparison filters, equality, array contains, locale/case/diacritic/numeric-text/path tie-break behavior separately.",
@@ -41754,17 +41756,38 @@
     "depends_on": "C06.2 attempt 3 is terminal-failed and reconciled on 2c34aeba3d6712cc255592e6c469cc0dca2823b4. Independent root-cause review found a visible field and placeholder in the artifact but no AX match and a full-screen OCR label miss."
   },
   "current_ci_batch": {
-    "milestone": "C06.2 omitted-array Canvas fixture repair; attempt 3",
-    "sha": "2c34aeba3d6712cc255592e6c469cc0dca2823b4",
-    "run_id": 38668732351,
-    "run_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38668732351",
-    "status": "Failed; all seven workflows and 20 jobs are terminal. Six workflows succeeded; the Obsidian round-trip workflow failed on macOS. Nineteen jobs passed and one failed.",
+    "milestone": "R2.8.130-C07.4-JAVASCRIPT-NUMBER-REFERENCE-CAPTURE; attempt 1",
+    "sha": "38e119bc328626851aaf0f6f769cf9f53bc576cf",
+    "run_ids": [
+      38722412054,
+      38722412059,
+      38722412139,
+      38722412062,
+      38722412240,
+      38722412108,
+      38722412070
+    ],
+    "status": "terminal-failed on exact SHA 38e119bc328626851aaf0f6f769cf9f53bc576cf; six of seven workflows and 17 of 20 jobs passed; the three platform round-trip jobs failed at the same C07.4 grouped-table count-evidence predicate.",
+    "workflows_expected": 7,
+    "workflows_observed": 7,
     "workflows_terminal": 7,
+    "workflows_passed": 6,
+    "workflows_failed": 1,
+    "workflows_in_progress": 0,
+    "jobs_expected": 20,
+    "jobs_observed": 20,
     "jobs_terminal": 20,
-    "jobs_passed": 19,
-    "jobs_failed": 1,
+    "jobs_passed": 17,
+    "jobs_failed": 3,
+    "jobs_in_progress": 0,
+    "jobs_queued": 0,
     "pending": [],
-    "evidence": "evidence/c06.2-attempt-3-2c34aeb.json"
+    "failed": [
+      116379942197,
+      116379942709,
+      116379942846
+    ],
+    "evidence": "evidence/r2.8.130-c07.4-attempt-1-38e119b.json"
   },
   "parallel_local_milestones": [
     {
@@ -41831,5 +41854,17 @@
         "C09.2 still depends on the unsubmitted C07.5 VaultRoot::open_regular_file_nofollow API and its Unix libc dependency; submit it only after that dependency is accepted. Broader C09 remains pending. No local executable validation occurred."
       ]
     }
-  }
+  },
+  "planned_repair_milestone": {
+    "id": "R2.8.131-C07.4-GROUPED-ROOT-COUNT-EVIDENCE-REPAIR",
+    "name": "Accept grouped result containers and enforce complete numeric-group fixture membership",
+    "plan": "evidence/r2.8.131-c07.4-grouped-root-count-evidence-repair-plan.json",
+    "status": "Implementation-complete and independently reviewed; ready for one exact-SHA CI submission. No active batch; not yet pushed.",
+    "depends_on_sha": "38e119bc328626851aaf0f6f769cf9f53bc576cf",
+    "failed_attempt_evidence": "evidence/r2.8.130-c07.4-attempt-1-38e119b.json",
+    "implementation_summary": "For count evidence, selected table shells still require exactly one visible table and selected table containers require a positive safe-integer descendant count. For numeric-group-identity, require every fixture-declared Notes/Numbers path exactly once; preserve all other C07.4 evidence gates.",
+    "independent_review": "Three read-only reviewers found no remaining plan, source-scope, evidence, or submission blocker after the fixture-membership gate was added. The earlier 7-row plan/source gap was fixed and reviewed before submission.",
+    "local_executable_validation": false
+  },
+  "active_ci_batch": null
 }

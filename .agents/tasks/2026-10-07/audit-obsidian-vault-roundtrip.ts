@@ -19560,12 +19560,20 @@ async function captureC074Scenario(
   const uniquePaths = [...new Set(occurrencePaths)].sort();
   const visiblePaths = observation.visible_fixture_path_links.map((entry) => entry.path);
   const resultCountMatchesOccurrences = observation.result_count !== null && observation.result_count === occurrences.length;
+  const expectedRowPaths = scenario.id === "numeric-group-identity"
+    ? fixture.notes.filter((note) => note.path.startsWith("Notes/Numbers/")).map((note) => note.path).sort()
+    : null;
+  const expectedRowPathsComplete = expectedRowPaths === null
+    || (occurrences.length === expectedRowPaths.length && isDeepStrictEqual(uniquePaths, expectedRowPaths));
   const observedDomOrdinals = observation.visible_fixture_path_links.map((entry) => entry.result_order_ordinal).sort((left, right) => left - right);
   const domOrdinalsComplete = isDeepStrictEqual(observedDomOrdinals, observation.visible_fixture_path_links.map((_entry, index) => index));
   const resultCountEvidence = observation.result_count_evidence;
   const selectedRootCountEvidence = resultCountEvidence.length === 1
-    && (resultCountEvidence[0].scope === "selected-table-shell" || resultCountEvidence[0].scope === "selected-table-container")
-    && resultCountEvidence[0].selected_result_root.contained_visible_table_count === 1;
+    && ((resultCountEvidence[0].scope === "selected-table-shell"
+      && resultCountEvidence[0].selected_result_root.contained_visible_table_count === 1)
+      || (resultCountEvidence[0].scope === "selected-table-container"
+        && Number.isSafeInteger(resultCountEvidence[0].selected_result_root.contained_visible_table_count)
+        && resultCountEvidence[0].selected_result_root.contained_visible_table_count > 0));
   const freshSweepDuplicatePathSamples = observation.visibility_sampling.fresh_sweep_duplicate_path_samples;
   const freshSweepComplete = observation.visibility_sampling.fresh_sweep_coverage_complete === true
     && freshSweepDuplicatePathSamples === 0
@@ -19689,6 +19697,7 @@ async function captureC074Scenario(
     && observation.probe_retry_error === undefined
     && selectedRootCountEvidence
     && resultCountMatchesOccurrences
+    && expectedRowPathsComplete
     && domOrdinalsComplete
     && freshSweepComplete
     && groupedMembershipComplete
@@ -19723,6 +19732,8 @@ async function captureC074Scenario(
     result_count: observation.result_count,
     result_count_evidence: observation.result_count_evidence,
     selected_root_count_evidence_valid: selectedRootCountEvidence,
+    expected_row_paths: expectedRowPaths,
+    expected_row_paths_complete: expectedRowPathsComplete,
     ordered_row_occurrences: occurrences,
     dom_ordinals_complete: domOrdinalsComplete,
     fresh_sweep_complete: freshSweepComplete,

@@ -1,0 +1,157 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.8.130-C07.4-JAVASCRIPT-NUMBER-REFERENCE-CAPTURE",
+  "attempt": 1,
+  "implementation_sha": "38e119bc328626851aaf0f6f769cf9f53bc576cf",
+  "submitted_at": "2026-10-15T10:44:34Z",
+  "reconciled_at": "2026-10-15T11:37:10Z",
+  "status": "terminal-failed",
+  "milestone_achieved": false,
+  "rust_parity_claimed": false,
+  "workflow_summary": {
+    "expected": 7,
+    "observed": 7,
+    "terminal": 7,
+    "passed": 6,
+    "failed": 1,
+    "jobs_expected": 20,
+    "jobs_observed": 20,
+    "jobs_terminal": 20,
+    "jobs_passed": 17,
+    "jobs_failed": 3,
+    "jobs_in_progress": 0
+  },
+  "workflows": [
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 38722412054,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38722412054",
+      "conclusion": "success",
+      "jobs": [
+        {"id": 116379941387, "name": "minimum supported Rust (1.95)", "conclusion": "success"},
+        {"id": 116379941621, "name": "rust (macos-latest)", "conclusion": "success"},
+        {"id": 116379941682, "name": "rust (ubuntu-latest)", "conclusion": "success"},
+        {"id": 116379941704, "name": "rust (windows-latest)", "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 38722412059,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38722412059",
+      "conclusion": "success",
+      "jobs": [
+        {"id": 116379941949, "name": "ubuntu-latest", "conclusion": "success"},
+        {"id": 116379942191, "name": "macos-latest", "conclusion": "success"},
+        {"id": 116379942283, "name": "windows-latest", "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 38722412139,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38722412139",
+      "conclusion": "success",
+      "jobs": [
+        {"id": 116379942308, "name": "ubuntu-latest", "conclusion": "success"},
+        {"id": 116379942519, "name": "windows-latest", "conclusion": "success"},
+        {"id": 116379942659, "name": "macos-latest", "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 38722412062,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38722412062",
+      "conclusion": "success",
+      "jobs": [
+        {"id": 116379941112, "name": "inventory", "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "Obsidian vault round-trip acceptance",
+      "run_id": 38722412240,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38722412240",
+      "conclusion": "failure",
+      "jobs": [
+        {"id": 116379942197, "name": "Obsidian 1.14.4 vault round-trip on macos-latest", "conclusion": "failure"},
+        {"id": 116379942709, "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04", "conclusion": "failure"},
+        {"id": 116379942846, "name": "Obsidian 1.14.4 vault round-trip on windows-latest", "conclusion": "failure"}
+      ]
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 38722412108,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38722412108",
+      "conclusion": "success",
+      "jobs": [
+        {"id": 116379942356, "name": "windows-latest", "conclusion": "success"},
+        {"id": 116379942549, "name": "ubuntu-latest", "conclusion": "success"},
+        {"id": 116379942744, "name": "macos-latest", "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 38722412070,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38722412070",
+      "conclusion": "success",
+      "jobs": [
+        {"id": 116379942132, "name": "ubuntu-latest", "conclusion": "success"},
+        {"id": 116379942367, "name": "macos-latest", "conclusion": "success"},
+        {"id": 116379942385, "name": "windows-latest", "conclusion": "success"}
+      ]
+    }
+  ],
+  "roundtrip_failure": {
+    "common_failing_step": "Author, open, snapshot, and reopen the same vault",
+    "common_scenario": "C07.4 first-open numeric-group-identity",
+    "common_failure": "selected_root_count_evidence_valid=false",
+    "selected_view": "Bases/06 Numeric group identity.base",
+    "selected_view_type": "bases",
+    "settled": true,
+    "result_count": 7,
+    "mapped_ordered_row_occurrences": 7,
+    "unique_fixture_paths": 7,
+    "unmapped_or_ambiguous_rows": 0,
+    "group_headings": 4,
+    "result_count_evidence_items": 1,
+    "result_count_scope": "selected-table-container",
+    "contained_visible_table_count": 4,
+    "nearest_table_shell": null,
+    "failed_predicate": "The C07.4 wrapper requires contained_visible_table_count === 1 for both selected-table-shell and selected-table-container scopes.",
+    "interpretation": "One unique selected .bases-table-container contains one table per visible group (four tables total), while the displayed count and mapped row occurrences both equal seven. The count is of descendant tables, not selected result roots or rows. The separate nearest_table_shell=null diagnostic is expected for a grouped container with multiple table descendants.",
+    "reopen_reached": false,
+    "rust_parity_claimed": false
+  },
+  "artifacts": [
+    {
+      "platform": "Linux",
+      "artifact_id": 11966864863,
+      "name": "obsidian-vault-roundtrip-Linux-38e119bc328626851aaf0f6f769cf9f53bc576cf",
+      "archive_sha256": "d03aba96cc5bc13159d6b1e57abf22048c662cd3c00944eb9c2f0563872483f0",
+      "size_bytes": 21530968,
+      "report_sha256": "189b63a5c0011af1b1061552f44f3a92b4ecf49c3001b01568b422d0957934e2"
+    },
+    {
+      "platform": "Windows",
+      "artifact_id": 11966524893,
+      "name": "obsidian-vault-roundtrip-Windows-38e119bc328626851aaf0f6f769cf9f53bc576cf",
+      "archive_sha256": "ee26984fad62182df37e0accbd4da8fcf68f2f8637a6e3bf24fef47b79ae1ae7",
+      "size_bytes": 22258947,
+      "report_sha256": "4690398b2d1b3ada680a1fa779932f54715399ea4b8badf202613b2937ae852a"
+    },
+    {
+      "platform": "macOS",
+      "artifact_id": 11969785148,
+      "name": "obsidian-vault-roundtrip-macOS-38e119bc328626851aaf0f6f769cf9f53bc576cf",
+      "archive_sha256": "2fdb50b07b3aa90848fbe151dc4cd432c301527364d433714c4b6864c459a739",
+      "size_bytes": 30904867,
+      "report_sha256": "399c59dd531b4da92221e0a9e61d23fd6391bb82251541e48b90be5dec3ce7a0"
+    }
+  ],
+  "fixture_sha256": "4002a7bbf61b36467f7ce409e9c1694e117a896ced41a44260244f95915f0ed4",
+  "local_executable_validation": false,
+  "notes": [
+    "All seven required workflows and all 20 jobs are terminal on the exact submitted SHA.",
+    "Six workflows and 17 jobs passed; the three platform round-trip jobs failed at the same grouped-root count predicate.",
+    "No source or workflow change is justified by this evidence beyond the narrow C07.4 wrapper acceptance predicate; unrelated Rust semantics remain untouched.",
+    "No local tests, builds, formatters, linters, validators, application launches, or runtime probes were run."
+  ]
+}

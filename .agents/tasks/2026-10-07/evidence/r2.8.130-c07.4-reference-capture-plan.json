@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "milestone": "R2.8.130-C07.4-JAVASCRIPT-NUMBER-REFERENCE-CAPTURE",
-  "status": "implementation complete; ready for one milestone push; CI not submitted",
+  "status": "terminal-failed on exact SHA 38e119bc328626851aaf0f6f769cf9f53bc576cf: six of seven workflows and 17 of 20 jobs passed; all three platform round-trip jobs failed the same C07.4 grouped-table count-evidence predicate. C07.4 remains pending.",
   "recorded_at": "2026-10-15",
   "bounded_outcome": "Capture pinned Obsidian 1.14.4 behavior for JavaScript number conversion, identity, ordering, filtering, array containment, and locale-sensitive text/path tie cases before changing Rust comparator semantics.",
   "scope": [
@@ -45,9 +45,89 @@
     "c07_3_reference_capture_sha": "0a9cb9c00835881a7629c96721974dfa9461cc50",
     "c06_2_projection_sha": "cca13eb6114d4e694b11973579bb94fa6d552e32",
     "origin_main_at_planning": "cca13eb6114d4e694b11973579bb94fa6d552e32",
-    "active_ci_batch": null,
-    "worktree_isolation": "The main worktree contains unsubmitted C07.3/C07.5/C09.2 edits in shared audit and workflow files. Implement R2.8.130 from a clean worktree based on origin/main and preserve the existing dirty tree untouched."
+    "worktree_isolation": "The main worktree contains unsubmitted C07.3/C07.5/C09.2 edits in shared audit and workflow files. Implement R2.8.130 from a clean worktree based on origin/main and preserve the existing dirty tree untouched.",
+    "last_ci_batch": {
+      "implementation_sha": "38e119bc328626851aaf0f6f769cf9f53bc576cf",
+      "submitted_at": "2026-10-15T10:44:34Z",
+      "workflows": [
+        {
+          "name": "OpenObsidian Rust CI",
+          "run_id": 38722412054,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38722412054"
+        },
+        {
+          "name": "Obsidian vault round-trip acceptance",
+          "run_id": 38722412240,
+          "status": "completed",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38722412240",
+          "conclusion": "failure"
+        },
+        {
+          "name": "Rust migration inventory",
+          "run_id": 38722412062,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38722412062"
+        },
+        {
+          "name": "OpenObsidian loaded plugin workflows",
+          "run_id": 38722412108,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38722412108"
+        },
+        {
+          "name": "OpenObsidian desktop build",
+          "run_id": 38722412070,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38722412070"
+        },
+        {
+          "name": "OpenObsidian quality",
+          "run_id": 38722412059,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38722412059"
+        },
+        {
+          "name": "OpenObsidian plugin renderer matrix",
+          "run_id": 38722412139,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38722412139"
+        }
+      ],
+      "job_status": {
+        "total": 20,
+        "passed": 17,
+        "running": 0,
+        "failed": 3,
+        "failed_jobs": [
+          {
+            "job_id": 116379942197,
+            "job": "Obsidian 1.14.4 vault round-trip on macos-latest",
+            "conclusion": "failure"
+          },
+          {
+            "job_id": 116379942709,
+            "job": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04",
+            "conclusion": "failure"
+          },
+          {
+            "job_id": 116379942846,
+            "job": "Obsidian 1.14.4 vault round-trip on windows-latest",
+            "conclusion": "failure"
+          }
+        ]
+      },
+      "terminal_at": "2026-10-15T11:37:10Z"
+    }
   },
   "submission_gate": "No push or dispatch for individual edits. Finish the complete bounded capture, fixture inventory/traceability updates, goal/requirement/state linkage, and a read-only whole-milestone review first. Then push once to origin/main to start one exact-SHA batch. Keep origin/main fixed until all seven workflows/20 jobs are terminal and every report/artifact is reconciled.",
-  "local_executable_validation": false
+  "local_executable_validation": false,
+  "attempt_1_evidence": "evidence/r2.8.130-c07.4-attempt-1-38e119b.json",
+  "follow_up_repair_plan": "evidence/r2.8.131-c07.4-grouped-root-count-evidence-repair-plan.json"
 }

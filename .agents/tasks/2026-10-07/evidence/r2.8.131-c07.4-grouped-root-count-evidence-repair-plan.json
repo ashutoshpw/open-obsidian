@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.8.131-C07.4-GROUPED-ROOT-COUNT-EVIDENCE-REPAIR",
+  "status": "implementation-complete / independently reviewed / ready for one milestone push",
+  "recorded_at": "2026-10-15",
+  "bounded_outcome": "Repair the C07.4 selected-result-root count-evidence predicate so one uniquely selected grouped table container may own multiple visible per-group tables, and ensure numeric-group-identity captures the complete fixture-declared row set while preserving all other fail-closed evidence gates.",
+  "scope": [
+    "Change only the C07.4-specific selectedRootCountEvidence wrapper predicate in audit-obsidian-vault-roundtrip.ts: selected-table-shell still requires exactly one contained visible table; selected-table-container requires a positive safe-integer descendant table count.",
+    "For numeric-group-identity only, compare the unique observed row-path set and row-occurrence count against the fixture-declared Notes/Numbers paths, so every expected numeric group row is present exactly once without hard-coding the observed display order.",
+    "Keep the one result-count evidence item requirement and both allowed scopes. Preserve all existing selected-root uniqueness/containment checks, exact active .base selection, settled-state requirement, displayed-count-to-row-occurrence equality, complete ordered row mapping, fresh-sweep completeness, duplicate/ambiguity rejection, group membership checks, source-byte/hash capture, and all report fields.",
+    "Record this bounded repair and exact-SHA evidence in task state/journal; keep the failed attempt-1 report evidence immutable and retain C07.4 as pending until the repair batch passes."
+  ],
+  "exclusions": [
+    "Do not change shared C07.3 helpers, selectors, groupOrder behavior, DevTools timeouts, table discovery, visible-root ownership, fixture contents, Rust semantics, workflow topology, or acceptance strictness outside the single C07.4 predicate.",
+    "Do not claim Rust parity or promote any compatibility status.",
+    "Do not run local tests, builds, formatting, lint, validators, application launches, or runtime probes."
+  ],
+  "implementation_acceptance": [
+    "The count-evidence list must still contain exactly one item, with scope selected-table-shell or selected-table-container.",
+    "For selected-table-shell, contained_visible_table_count must equal 1.",
+    "For selected-table-container, contained_visible_table_count must be a positive safe integer; the selected container remains the unique accepted result root and must contain every visible table root.",
+    "For numeric-group-identity, the observed row-occurrence count must equal the number of fixture-declared Notes/Numbers paths, and the sorted unique observed path set must exactly match those paths. This fixture-declared set contains seven rows; do not hard-code a separate order assertion here.",
+    "All other C07.4 completeness gates remain unchanged and required. In particular, displayed result_count must equal mapped row occurrences; missing, duplicated, unmapped, ambiguous, or partial fixture rows fail closed.",
+    "The complete source, state, evidence, and scope must receive independent read-only review before submission."
+  ],
+  "ci_acceptance": [
+    "All seven required GitHub Actions workflows and all 20 jobs pass on one exact repair SHA across Ubuntu, macOS, and Windows.",
+    "All C07.4 first-open and reopen captures complete on each platform, including numeric-group-identity with one selected table container, four visible group table descendants, result count seven, exactly the seven fixture-declared ordered row paths with no duplicate/unmapped/ambiguous rows, and valid count evidence.",
+    "Reconcile exact-SHA workflow/job URLs, IDs and conclusions plus all three report payload hashes, artifact IDs/archive digests, source and fixture hashes, and screenshots before marking C07.4 achieved / CI-passed.",
+    "Do not claim Rust parser/evaluator/comparator parity from this capture milestone."
+  ],
+  "required_workflows": [
+    "OpenObsidian Rust CI",
+    "Obsidian vault round-trip acceptance",
+    "Rust migration inventory",
+    "OpenObsidian loaded plugin workflows",
+    "OpenObsidian desktop build",
+    "OpenObsidian quality",
+    "OpenObsidian plugin renderer matrix"
+  ],
+  "required_platforms": [
+    "Ubuntu 24.04",
+    "macOS latest",
+    "Windows latest"
+  ],
+  "dependencies": {
+    "failed_attempt_evidence": "evidence/r2.8.130-c07.4-attempt-1-38e119b.json",
+    "failed_implementation_sha": "38e119bc328626851aaf0f6f769cf9f53bc576cf",
+    "origin_main_at_planning": "38e119bc328626851aaf0f6f769cf9f53bc576cf",
+    "active_ci_batches": 0
+  },
+  "submission_gate": "Implementation, evidence, and three independent read-only reviews are complete. Immediately before pushing, verify origin/main still equals 38e119bc328626851aaf0f6f769cf9f53bc576cf and no required CI batch is active. Then push this one bounded repair milestone once; wait for all seven required workflows and 20 jobs to become terminal before another push.",
+  "local_executable_validation": false,
+  "implementation_candidate": {
+    "source_path": "audit-obsidian-vault-roundtrip.ts",
+    "change_summary": "The C07.4 wrapper keeps exactly one allowed result-count evidence item; selected-table-shell still requires one contained visible table; selected-table-container now requires a positive safe-integer descendant table count. For numeric-group-identity only, the observed occurrence count and sorted unique path set must match the fixture-declared Notes/Numbers rows, and the report exposes the expected set and match result.",
+    "preserved_gates": [
+      "Exact active .base selection and settled-state checks.",
+      "Displayed result count equals ordered mapped row occurrences.",
+      "Fresh sweep completeness, duplicate rejection, unambiguous mapping, and group-membership checks.",
+      "Existing unique selected-root and descendant-containment checks in the shared observation helper.",
+      "Numeric-group-identity must contain every fixture-declared Notes/Numbers row exactly once; report order remains observed rather than hard-coded, and the new expected_row_paths_complete diagnostic participates in acceptance."
+    ],
+    "local_executable_validation": false
+  },
+  "implementation_review": {
+    "status": "complete",
+    "reviewers": [
+      "acceptance gap scan",
+      "C07.4 capture-plan review",
+      "roadmap/submission-scope review"
+    ],
+    "findings": [
+      "The failure predicate is isolated to the C07.4 wrapper; the shared helper still selects one unique result root and requires the selected container to contain all visible table roots.",
+      "A selected-table-shell requires exactly one contained visible table; a selected-table-container requires a positive safe-integer descendant count, while exactly one count evidence item and an allowed scope remain required.",
+      "For numeric-group-identity, the fixture declares seven Notes/Numbers paths; the wrapper now requires the same number of occurrences and an exact sorted unique path-set match, and records expected_row_paths_complete in the report and complete predicate.",
+      "The displayed count still must equal all ordered row occurrences. DOM ordering, sweep coverage, duplicates, ambiguous/unmapped rows, group ownership, renderer metadata, and other C07.4 gates remain unchanged.",
+      "Exact-SHA attempt 1 evidence is internally consistent: all 7 workflows/20 jobs are terminal, 6 workflows/17 jobs passed, all 3 platform round-trip jobs failed for the same prior predicate, and no Rust parity is claimed.",
+      "No unrelated Rust semantics, fixtures, shared C07.3 helpers, workflow topology, goal/requirements edits, or C07.5/C09.2 work is required in this repair."
+    ],
+    "local_executable_validation": false
+  },
+  "plan_revision": {
+    "recorded_at": "2026-10-15T11:42:17Z",
+    "reason": "Independent submission review found that the original plan required exactly seven numeric-group rows while the existing wrapper only equated displayed result count with observed occurrences. The bounded repair now adds a fixture-derived complete path-set gate before further source edits.",
+    "source_edit_after_revision": true
+  }
+}
