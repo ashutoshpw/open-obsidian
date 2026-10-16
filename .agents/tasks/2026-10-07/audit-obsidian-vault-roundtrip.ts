@@ -21204,23 +21204,32 @@ async function validateCanvasWriteTransaction(
       || manifestEntry.sha256 !== createHash("sha256").update(manifestBytes).digest("hex")) {
       throw new Error("Canvas write transaction recovery manifest did not match its accepted snapshot metadata");
     }
-    let manifest: Record<string, unknown>;
+    let parsedManifest: unknown;
     try {
-      manifest = JSON.parse(manifestBytes.toString("utf8")) as Record<string, unknown>;
+      parsedManifest = JSON.parse(manifestBytes.toString("utf8")) as unknown;
     } catch {
       throw new Error("Canvas write transaction recovery manifest was not valid JSON");
     }
+    if (typeof parsedManifest !== "object" || parsedManifest === null || Array.isArray(parsedManifest)) {
+      throw new Error("Canvas write transaction recovery manifest failed fields: schema_root");
+    }
+    const manifest = parsedManifest as Record<string, unknown>;
     const expectedManifestKeys = ["bytes", "captured_at", "current_revision", "expected_revision", "id", "path", "relative_path", "revision"].sort();
-    if (JSON.stringify(Object.keys(manifest).sort()) !== JSON.stringify(expectedManifestKeys)
-      || manifest.id !== recordId
-      || manifest.relative_path !== canvasPath
-      || manifest.revision !== expectedRevision
-      || manifest.bytes !== expectedBytes.length
-      || manifest.path !== expectedAbsoluteBytesPath
-      || !canvasDecimalTimestamp(manifest.captured_at)
-      || manifest.expected_revision !== beforeRevision
-      || manifest.current_revision !== beforeRevision) {
-      throw new Error("Canvas write transaction recovery manifest did not match the exact writer schema and pre/post Canvas state");
+    const failedManifestFields: string[] = [];
+    if (JSON.stringify(Object.keys(manifest).sort()) !== JSON.stringify(expectedManifestKeys)) failedManifestFields.push("schema_keys");
+    if (manifest.id !== recordId) failedManifestFields.push("id");
+    if (manifest.relative_path !== canvasPath) failedManifestFields.push("relative_path");
+    if (manifest.revision !== expectedRevision) failedManifestFields.push("revision");
+    if (manifest.bytes !== expectedBytes.length) failedManifestFields.push("bytes");
+    if (typeof manifest.path !== "string"
+      || normalizeCanvasRecoveryPath(manifest.path) !== normalizeCanvasRecoveryPath(expectedAbsoluteBytesPath)) {
+      failedManifestFields.push("path");
+    }
+    if (!canvasDecimalTimestamp(manifest.captured_at)) failedManifestFields.push("captured_at");
+    if (manifest.expected_revision !== beforeRevision) failedManifestFields.push("expected_revision");
+    if (manifest.current_revision !== beforeRevision) failedManifestFields.push("current_revision");
+    if (failedManifestFields.length > 0) {
+      throw new Error(`Canvas write transaction recovery manifest failed fields: ${failedManifestFields.join(", ")}`);
     }
     recoveryRecords.push({
       id: recordId,
@@ -21459,6 +21468,7 @@ async function runOpenObsidianCanvasTextEdit(
     delete appEnv.OPENOBSIDIAN_CI_CANVAS_DISABLE_EGUI_MEMORY_PERSISTENCE;
   }
   const windowsPersistenceOptOut = process.platform === "win32" && !expectedAbortCanary;
+  const linuxExpectedAbortPersistenceOptOut = process.platform === "linux" && expectedAbortCanary;
   if (windowsPersistenceOptOut) appEnv.OPENOBSIDIAN_CI_CANVAS_DISABLE_EFRAME_PERSISTENCE = "1";
   if (process.platform === "linux" && expectedAbortCanary) appEnv.OPENOBSIDIAN_CI_CANVAS_FOCUS_TRACE = "1";
   else delete appEnv.OPENOBSIDIAN_CI_CANVAS_FOCUS_TRACE;
@@ -21530,6 +21540,18 @@ async function runOpenObsidianCanvasTextEdit(
       status: "not_applicable",
       reason: "The full eframe-persistence opt-out is restricted to the normal Windows Canvas text-edit child.",
     },
+    linux_expected_abort_persistence_profile: linuxExpectedAbortPersistenceOptOut ? {
+      environment_flag: "OPENOBSIDIAN_CI_CANVAS_DISABLE_EFRAME_PERSISTENCE",
+      environment_value: "1",
+      expected_persist_egui_memory: false,
+      expected_persist_window: false,
+      expected_runtime_log_marker: "OPENOBSIDIAN_CI_CANVAS_EFRAME_PERSISTENCE_POLICY_DISABLED=1;persist_egui_memory=false;persist_window=false",
+      launch_scope: "Linux expected-abort canary child after standard persistence warm-up",
+      app_ron_expectation: "strict full-root app-data equality; no new app.ron",
+    } : {
+      status: "not_applicable",
+      reason: "The full eframe-persistence opt-out is restricted to the Linux expected-abort canary child.",
+    },
     mesa_shader_cache_scratch: process.platform === "linux" ? {
       configured_root: mesaShaderCacheRoot,
       canonical_root: null,
@@ -21559,6 +21581,7 @@ async function runOpenObsidianCanvasTextEdit(
     reason: "The egui-memory opt-out is restricted to the normal macOS Canvas text-edit profile.",
   };
   editReport.app_data_windows_persistence_profile = appDataRootInventory.windows_canvas_persistence_profile;
+  editReport.app_data_linux_expected_abort_persistence_profile = appDataRootInventory.linux_expected_abort_persistence_profile;
   let canonicalVaultForAppData = "";
   let canonicalAppDataRootForAppData = "";
   let canonicalManagedUserDataRoot = "";
@@ -21979,13 +22002,17 @@ async function runOpenObsidianCanvasTextEdit(
       eframeInspectionEvidence,
     );
     editReport.app_data_snapshot_pre_launch = appDataSnapshotBeforeActualLaunch;
+    if (linuxExpectedAbortPersistenceOptOut) {
+      appEnv.OPENOBSIDIAN_CI_CANVAS_DISABLE_EFRAME_PERSISTENCE = "1";
+      canvasEframeMemoryPolicyByRoot.set(resolve(appDataRoot), "disabled");
+    }
     child = launchLogged(
       openObsidianBinary,
       [],
       logPath,
       appEnv,
       process.platform === "darwin" && !expectedAbortCanary,
-      windowsPersistenceOptOut,
+      windowsPersistenceOptOut || linuxExpectedAbortPersistenceOptOut,
     );
     editReport.pid = child.pid ?? null;
     await delay(1_000);
@@ -22047,6 +22074,23 @@ async function runOpenObsidianCanvasTextEdit(
         && appEnv.OPENOBSIDIAN_CI_CANVAS_DISABLE_EFRAME_PERSISTENCE === "1";
       if (!persistenceProfile.runtime_policy_mapping_passed) {
         throw new Error("Windows Canvas runtime did not confirm the exact env flag disables both eframe persistence channels");
+      }
+    }
+    if (linuxExpectedAbortPersistenceOptOut) {
+      const persistenceProfile = editReport.app_data_linux_expected_abort_persistence_profile as Record<string, unknown>;
+      const expectedMarker = String(persistenceProfile.expected_runtime_log_marker);
+      const startupLog = await waitFor(
+        "OpenObsidian to report the Linux expected-abort eframe-persistence policy",
+        async () => await readFile(logPath, "utf8"),
+        (contents) => contents.includes(expectedMarker),
+        10_000,
+      );
+      persistenceProfile.runtime_log_marker_observed = startupLog.includes(expectedMarker);
+      persistenceProfile.runtime_log_path = logName;
+      persistenceProfile.runtime_policy_mapping_passed = persistenceProfile.runtime_log_marker_observed === true
+        && appEnv.OPENOBSIDIAN_CI_CANVAS_DISABLE_EFRAME_PERSISTENCE === "1";
+      if (!persistenceProfile.runtime_policy_mapping_passed) {
+        throw new Error("Linux expected-abort Canvas runtime did not confirm the exact env flag disables both eframe persistence channels");
       }
     }
     if (process.platform === "darwin") {
@@ -22965,8 +23009,11 @@ async function runOpenObsidianCanvasTextEdit(
         if (!preservationVerified) canaryFailureReasons.push("complete post-abort vault, app-data, source-byte, destination, and app-termination preservation checks did not all pass");
         const appRonInspectionsComplete = eframeInspectionEvidence.length > 0
           && eframeInspectionEvidence.every((inspection) => inspection.result === "passed");
+        const linuxPersistenceProfile = editReport.app_data_linux_expected_abort_persistence_profile as Record<string, unknown>;
+        const linuxPersistenceMappingPassed = linuxPersistenceProfile.runtime_policy_mapping_passed === true;
         editReport.app_data_eframe_app_ron_inspections_complete = appRonInspectionsComplete;
         if (!appRonInspectionsComplete) canaryFailureReasons.push("one or more per-phase app.ron inspection records are missing or failed");
+        if (!linuxPersistenceMappingPassed) canaryFailureReasons.push("the Linux expected-abort eframe-persistence runtime policy marker was not verified");
         if (typeof preservationRecord.artifact_write_error === "string") canaryFailureReasons.push("one or more full preservation evidence artifacts could not be written");
         editReport.status = canaryFailureReasons.length === 0 ? "passed" : "failed";
         editReport.expected_abort_marker = {

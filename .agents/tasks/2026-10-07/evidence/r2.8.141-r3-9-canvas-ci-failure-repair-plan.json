@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "R2.8.141-R3.9-CROSS-PLATFORM-CANVAS-CI-FAILURE-REPAIR",
   "name": "Repair the grouped R3.8 inventory, formatting, and Canvas CI failures",
-  "status": "implementation-complete / CI-pending; the complete grouped change is independently source-reviewed and ready for one exact-SHA milestone submission. No local executable validation.",
+  "status": "R3.9 was submitted once on exact SHA 49ef8e8ecfa60b9de245a8b62ffe26aadf17bab7; terminal CI failed (6/7 workflows passed, 18/20 jobs passed, Windows and Linux round-trip failed, macOS passed). All 16 artifact records and all three round-trip report/archive digests are reconciled.",
   "planning_base_sha": "586b3f42aafe4e1ffeb47e7a145c2f62881fd9a3",
   "starting_sha": "586b3f42aafe4e1ffeb47e7a145c2f62881fd9a3",
   "expected_starting_sha": "586b3f42aafe4e1ffeb47e7a145c2f62881fd9a3",
@@ -79,11 +79,12 @@
     "All artifact API digests, downloaded round-trip archive SHA-256 values, report SHA-256 values, exact report source SHA, and privacy-safe synthetic-data summary."
   ],
   "local_executable_validation": false,
-  "implementation_sha": null,
-  "submitted_sha": null,
-  "pushed_once": false,
-  "all_required_jobs_terminal": false,
-  "ci_attempt_evidence": null,
+  "implementation_sha": "49ef8e8ecfa60b9de245a8b62ffe26aadf17bab7",
+  "submitted_sha": "49ef8e8ecfa60b9de245a8b62ffe26aadf17bab7",
+  "pushed_once": true,
+  "all_required_jobs_terminal": true,
+  "ci_attempt_evidence": "evidence/r2.8.141-r3-9-attempt-1-49ef8e8.json",
+  "origin_main_sha_after_push": "49ef8e8ecfa60b9de245a8b62ffe26aadf17bab7",
   "review_findings": [
     "Inventory/rustfmt review: the validator compares exact goal bytes with requirements.json.mapping_review.goal_sha256; update only that field. The sole Ubuntu fmt finding is a semantic-free line wrap.",
     "Linux review: the observed failure follows the post-clipboard canary click and ArrowRight. Suppress only that post-staging ArrowRight for expectedAbortCanary, preserve normal recovery, and leave the separately guarded pre-staging ArrowRight and its own event/focus/paste-state checks intact; every existing fail-closed predicate remains required.",
@@ -91,5 +92,173 @@
     "Integrated reviewer approved this single four-failure scope with the Linux fail-closed and Windows exact-transaction acceptance above.",
     "Independent inventory/Rust/tracker review found the active goal hash matches the mapping, the Rust diff is only the semantic-free line wrap, and no out-of-scope source edits; tracker status pointers were reconciled before milestone submission."
   ],
-  "origin_main_verified_at": "2026-10-16T08:24:27Z"
+  "origin_main_verified_at": "2026-10-16T08:28:20Z",
+  "windows_failure_triage": {
+    "reviewed_at": "2026-10-16T08:45:06Z",
+    "review_type": "read-only source/artifact review",
+    "conclusion": "Failure is localized to the exact recovery manifest predicate, but the failing record and field are not reported.",
+    "observed": [
+      "Recovery blob bytes and hashes were checked before manifest validation.",
+      "Manifest file snapshot byte/hash metadata passed before the grouped exact-schema/state predicate.",
+      "All eight Windows eframe app.ron inspections through the after-draft-edit phase passed with null expected app.ron path and empty app.ron inventories.",
+      "No accepted post-save or post-close snapshot was recorded because transaction validation threw."
+    ],
+    "unconfirmed_hypothesis": "Raw equality on manifest.path against a Node-built Windows path may reject a semantically identical Rust canonical path spelling; the artifact has no per-field mismatch flags or raw manifests, so this is not proven.",
+    "bounded_repair_if_confirmed": "Compare manifest.path and expected canonical target using the existing Windows path normalizer with exact normalized equality; preserve exact schema/revision/byte checks, confinement, changed-path checks, the full-root null-app.ron invariant, and close-state comparison.",
+    "no_source_change_started": true
+  },
+  "linux_failure_triage": {
+    "reviewed_at": "2026-10-16T08:47:10Z",
+    "review_type": "read-only artifact and source review",
+    "conclusion": "The expected abort guard itself passed; the independent app-data preservation gate failed only because a new app.ron appeared after process termination.",
+    "observed": [
+      "The synthetic target-value mismatch was the sole failed pre-motion predicate.",
+      "Zero pointer-motion and Ctrl+V dispatches, zero completed pastes, no save attempt, successful clipboard/request-marker cleanup, process termination, absent destination, and unchanged vault/Canvas source were recorded.",
+      "Every other app-data path was unchanged; the sole delta was data/openobsidian/app.ron (2631 bytes, sha256 df5fb43653f671f2b37af7806a4fc6823273bcb8e482fc86719e42b8687818bb).",
+      "The expected-path app.ron inspection passed; strict app-data snapshot equality correctly rejected the new file."
+    ],
+    "source_observation": "The harness clears OPENOBSIDIAN_CI_CANVAS_DISABLE_EFRAME_PERSISTENCE by default and currently sets it only for non-canary Windows Canvas runs; the Linux expected-abort canary sets focus tracing but leaves eframe persistence enabled. The Rust adapter uses this flag to disable both eframe persistence channels.",
+    "bounded_repair_candidate": "Set the existing full eframe persistence-disable flag only in the Linux expected-abort canary child environment, record the runtime policy in its evidence, and preserve strict complete app-data snapshot equality. Do not allowlist app.ron or move the comparison boundary after shutdown.",
+    "candidate_not_implemented": true
+  },
+  "terminal_ci_reconciliation": {
+    "completed_at": "2026-10-16T09:20:49Z",
+    "workflow_counts": {
+      "observed": 7,
+      "terminal": 7,
+      "passed": 6,
+      "failed": 1,
+      "cancelled": 0,
+      "queued": 0,
+      "in_progress": 0
+    },
+    "job_counts": {
+      "observed": 20,
+      "terminal": 20,
+      "passed": 18,
+      "failed": 2,
+      "cancelled": 0,
+      "queued": 0,
+      "in_progress": 0
+    },
+    "all_required_jobs_terminal": true,
+    "artifact_inventory_count": 16,
+    "artifact_inventory_complete": true,
+    "macos_job_id": 116883381483,
+    "macos_artifact_id": 12036902575,
+    "macos_archive_sha256": "192f27f2a5683ed9614bbbd75084aebe3993b3e435a9cb730695301f01f3f048",
+    "macos_report_sha256": "d52a03f25592b458ddd3208668f8567ad902ccd684ef9c829b4bb097c31b60f8",
+    "macos_report_status": "passed",
+    "macos_source_sha": "49ef8e8ecfa60b9de245a8b62ffe26aadf17bab7",
+    "macos_vault_snapshot_count": 66,
+    "follow_up_plan": "evidence/r2.8.142-r3-10-windows-linux-canvas-repair-plan.json"
+  },
+  "workflow_counts": {
+    "observed": 7,
+    "terminal": 7,
+    "passed": 6,
+    "failed": 1,
+    "cancelled": 0,
+    "queued": 0,
+    "in_progress": 0
+  },
+  "job_counts": {
+    "observed": 20,
+    "terminal": 20,
+    "passed": 18,
+    "failed": 2,
+    "cancelled": 0,
+    "queued": 0,
+    "in_progress": 0
+  },
+  "terminal_at": "2026-10-16T09:20:49Z",
+  "failed_job_ids": [
+    116883381204,
+    116883381665
+  ],
+  "active_job_ids": [],
+  "queued_job_ids": [],
+  "artifact_inventory_count": 16,
+  "artifact_inventory_complete": true,
+  "interim_ci_snapshot_2026_10_16T084103Z": {
+    "at": "2026-10-16T08:41:03Z",
+    "source_sha": "49ef8e8ecfa60b9de245a8b62ffe26aadf17bab7",
+    "workflow_counts": {
+      "observed": 7,
+      "terminal": 6,
+      "passed": 6,
+      "failed": 0,
+      "cancelled": 0,
+      "queued": 0,
+      "in_progress": 1
+    },
+    "job_counts": {
+      "observed": 20,
+      "terminal": 19,
+      "passed": 17,
+      "failed": 2,
+      "cancelled": 0,
+      "queued": 0,
+      "in_progress": 1
+    },
+    "failed_job_ids": [
+      116883381204,
+      116883381665
+    ],
+    "active_job_ids": [
+      116883381483
+    ],
+    "all_required_jobs_terminal": false,
+    "reconciled_failure_artifact_ids": [
+      12034257976,
+      12034748511
+    ],
+    "artifact_reconciliation_complete": false,
+    "findings": [
+      "Windows report failed exact Canvas writer transaction manifest/pre-post state validation.",
+      "Linux expected-abort guard matched the synthetic-only mismatch and all input, clipboard, vault, Canvas, and process-termination checks passed, but strict app-data snapshot equality rejected the newly persisted data/openobsidian/app.ron; expected-path eframe inspection passed.",
+      "Read-only Windows review: exact failure is localized to the manifest predicate, but field/record is unknown; raw manifest.path normalization is a plausible, unconfirmed Windows-specific cause. All eight eframe inspections through after-draft-edit passed; no accepted post-save/close snapshot exists.",
+      "Read-only Linux artifact/source review: expected synthetic abort and all input/vault/Canvas/clipboard checks passed; strict snapshot equality rejected only the new app.ron written at shutdown. The existing eframe persistence-disable flag is currently set only for non-canary Windows runs. Candidate: set it for the Linux abort canary only, retain strict snapshot equality, and report the policy; no source change before terminal CI."
+    ],
+    "artifact_inventory_at": "2026-10-16T08:47:39Z",
+    "artifact_inventory_count": 15,
+    "artifact_inventory_complete": false
+  },
+  "current_ci_snapshot": {
+    "at": "2026-10-16T09:20:49Z",
+    "source_sha": "49ef8e8ecfa60b9de245a8b62ffe26aadf17bab7",
+    "workflow_counts": {
+      "observed": 7,
+      "terminal": 7,
+      "passed": 6,
+      "failed": 1,
+      "cancelled": 0,
+      "queued": 0,
+      "in_progress": 0
+    },
+    "job_counts": {
+      "observed": 20,
+      "terminal": 20,
+      "passed": 18,
+      "failed": 2,
+      "cancelled": 0,
+      "queued": 0,
+      "in_progress": 0
+    },
+    "failed_job_ids": [
+      116883381204,
+      116883381665
+    ],
+    "active_job_ids": [],
+    "queued_job_ids": [],
+    "all_required_jobs_terminal": true,
+    "artifact_inventory_count": 16,
+    "artifact_inventory_complete": true,
+    "findings": [
+      "All seven required workflows and all twenty jobs are terminal on the exact submitted SHA; six workflows and eighteen jobs passed, and the round-trip workflow failed with two failed platform jobs.",
+      "The macOS Canvas text-edit and reopen acceptance passed. Windows failed the recovery-manifest/pre-post Canvas predicate; raw values are unavailable, so path spelling remains a plausible, unconfirmed cause.",
+      "Linux expected-abort safety predicates passed, but strict app-data equality found only the shutdown-created data/openobsidian/app.ron; the prelaunch baseline did not contain this file.",
+      "All sixteen GitHub API artifact records and all three round-trip archive/API digests, report hashes, and source SHAs are reconciled."
+    ]
+  }
 }

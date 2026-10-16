@@ -1,0 +1,94 @@
+{
+  "schema_version": 1,
+  "milestone_id": "R2.8.142-R3.10-WINDOWS-LINUX-CANVAS-ROUNDTRIP-REPAIR",
+  "milestone": "R3.10 Windows and Linux Canvas round-trip repair",
+  "status": "Implementation complete locally; independent source and tracker reviews complete; final whole-milestone review approved; ready for one CI-triggering push. No CI has been submitted for R3.10.",
+  "planning_base_sha": "49ef8e8ecfa60b9de245a8b62ffe26aadf17bab7",
+  "starting_sha": "49ef8e8ecfa60b9de245a8b62ffe26aadf17bab7",
+  "objective": "Repair the two terminal R3.9 round-trip failures as one complete milestone: preserve exact Windows Canvas recovery-manifest and process-close acceptance while accounting for Windows canonical path spelling; keep the Linux expected-abort canary from creating app-owned eframe persistence while preserving strict full app-data equality and all canary safety checks.",
+  "source_findings": {
+    "windows": {
+      "job_id": 116883381204,
+      "report_status": "failed",
+      "report_sha256": "4dd7bdf4725c1c0c9aff50906e89e22f72d95d8ea3353ab562d4bfafc206ec83",
+      "report_bytes": 436125,
+      "vault_snapshot_count": 17,
+      "error": "Canvas write transaction recovery manifest did not match the exact writer schema and pre/post Canvas state.",
+      "root_cause": "The report does not expose raw manifest values or field-level flags. Static source inspection shows Rust serializes a canonicalized PathBuf with to_string_lossy(), while the harness uses raw string equality for manifest.path and already normalizes Windows canonical paths for confinement. A Windows extended-length prefix or equivalent spelling difference is plausible but remains unconfirmed.",
+      "archive_sha256": "b4f606ddbf38bbe3b79e71c9b26d4b27814cb0f767aca565549cac801ec1b341"
+    },
+    "linux": {
+      "job_id": 116883381665,
+      "report_status": "failed",
+      "report_sha256": "12b0ba1533ec9a415615a7ac4f59f1a4073ebfec997d6775e90aa0d3f125a8be",
+      "report_bytes": 960377,
+      "vault_snapshot_count": 19,
+      "finding": "The expected-abort guard was the sole failed predicate; there was no pointer motion, Ctrl+V, completed paste, or save; cleanup, process exit, vault and Canvas preservation passed. Strict app-data equality failed because shutdown created data/openobsidian/app.ron (2631 bytes; SHA-256 df5fb43653f671f2b37af7806a4fc6823273bcb8e482fc86719e42b8687818bb).",
+      "source_candidate": "The existing OPENOBSIDIAN_CI_CANVAS_DISABLE_EFRAME_PERSISTENCE flag disables both persisted egui memory and window state and emits a runtime marker. Scope that existing flag to the Linux expected-abort child and keep strict equality.",
+      "archive_sha256": "6f8dde225a4c913f7e8bf1fea6c68c004f357a52ed0e2c0fb2662325e3034613",
+      "warmup_baseline": "The R3.9 report contains no data/openobsidian/app.ron in the stabilized prelaunch snapshot or any earlier phase inspection; the only app.ron appeared in the post-termination snapshot."
+    },
+    "macos": {
+      "job_id": 116883381483,
+      "report_status": "passed",
+      "report_sha256": "d52a03f25592b458ddd3208668f8567ad902ccd684ef9c829b4bb097c31b60f8",
+      "report_bytes": 70003278,
+      "vault_snapshot_count": 66,
+      "archive_sha256": "192f27f2a5683ed9614bbbd75084aebe3993b3e435a9cb730695301f01f3f048"
+    }
+  },
+  "scope": {
+    "included": [
+      "Windows Canvas transaction recovery manifest and state acceptance: compare the serialized canonical artifact path using the existing Windows path normalizer, retain exact schema/revision/byte checks, canonical root confinement, regular-file checks, unchanged pre-save state, and accepted post-save/process-close equality; include failed-field diagnostics without dumping path values.",
+      "Linux expected-abort canary: disable eframe persistence only for that child using the existing environment flag, require the Rust runtime policy marker, and retain exact full-root app-data equality with no allowlist or shifted snapshot boundary.",
+      "Keep ordinary Linux Canvas workflow persistence behavior unchanged; preserve the existing Windows persistence profile and all macOS acceptance.",
+      "Reconcile all 16 GitHub API artifact metadata records, plus the three round-trip archive/API digests, report hashes, report source SHAs, and exact-SHA workflow results in tracker evidence."
+    ],
+    "excluded": [
+      "The separate dirty root checkout C07.3/C07.5/C09.2 changes and stale evidence; do not transplant or merge them.",
+      "Unrelated Bases, appearance, plugin, or vault migration work.",
+      "Allowlisting app.ron, weakening manifest/schema/revision/hash checks, moving preservation snapshots after shutdown, or relaxing canary guards."
+    ]
+  },
+  "acceptance": [
+    "A whole-source and tracker review approves the complete R3.10 milestone before its single push.",
+    "All seven required GitHub Actions workflows and all 20 required jobs pass for the exact R3.10 SHA.",
+    "Windows Canvas write transaction has exactly the expected prepared/committed journal entries, exact recovery bytes and manifests, confined regular files, unchanged pre-save state, and process-close state equal to the accepted post-save snapshot.",
+    "Linux expected-abort canary proves the synthetic target-value mismatch is its sole failed predicate; it dispatches no pointer motion, Ctrl+V, completed paste, or save; cleanup and process exit succeed; vault and full app-data snapshots remain identical, with no new app.ron.",
+    "The eframe persistence opt-out is scoped only to the Linux expected-abort canary and its runtime marker is present; normal Linux and macOS workflows retain their established policies.",
+    "All 16 GitHub API artifact metadata records, plus the three round-trip archive/API digests and report source SHAs, are reconciled."
+  ],
+  "required_workflows": [
+    "Rust migration inventory",
+    "OpenObsidian Rust CI",
+    "Obsidian vault round-trip acceptance",
+    "OpenObsidian desktop build",
+    "OpenObsidian quality",
+    "OpenObsidian plugin renderer matrix",
+    "OpenObsidian loaded plugin workflows"
+  ],
+  "required_job_count": 20,
+  "validation_policy": "GitHub Actions only. Do not run local tests, builds, formatters, linters, validators, runtime probes, or application launches. Keep all work local until the named milestone is complete and reviewed; push once, then hold origin/main at its submitted SHA until all jobs and artifacts are reconciled.",
+  "evidence": "evidence/r2.8.141-r3-9-attempt-1-49ef8e8.json",
+  "platforms": [
+    "Ubuntu 24.04",
+    "macOS latest",
+    "Windows latest"
+  ],
+  "implementation": {
+    "base_sha": "49ef8e8ecfa60b9de245a8b62ffe26aadf17bab7",
+    "files": [
+      ".agents/tasks/2026-10-07/audit-obsidian-vault-roundtrip.ts"
+    ],
+    "changes": [
+      "Compare Windows recovery manifest paths through the existing Windows canonical-path normalizer while retaining exact manifest schema, revision, size, hash, journal, confinement, and process-close checks.",
+      "Report failed manifest field labels only; reject non-object JSON roots with a schema_root label.",
+      "Enable the existing full eframe-persistence opt-out only for the Linux expected-abort child after standard warm-up and prelaunch inspection; require its runtime marker and keep complete app-data snapshot equality.",
+      "Keep ordinary Linux, Windows, and macOS persistence behavior unchanged outside the named Linux canary scope."
+    ],
+    "windows_root_cause": "Unconfirmed; the next round-trip report will identify failed manifest field labels without exposing values.",
+    "linux_baseline_evidence": "R3.9 Linux report shows no app.ron in the stabilized prelaunch snapshot or prior phase inspections; the only app.ron was created at canary shutdown.",
+    "independent_review": "Read-only Windows and Linux source reviews approved the bounded changes; a follow-up review approved the non-object manifest root guard. Tracker review identified and the local tracker updates reconcile stale R3.9 terminal fields."
+  },
+  "local_executable_validation": false
+}

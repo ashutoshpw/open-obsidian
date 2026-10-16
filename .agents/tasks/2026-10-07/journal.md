@@ -8202,3 +8202,62 @@ Implemented the complete grouped R3.9 repair locally: updated only the inventory
 Independent read-only reviews approved the Linux, Windows, Rust/inventory, and integrated scope. The Linux review confirmed the pre-staging canary `ArrowRight` is separately guarded and fails before clipboard staging if its follow-up focus/paste-state checks do not pass. Tracker status pointers now identify R3.9 as implementation-complete / CI-pending and retain R3.8 as the terminal-failed predecessor. No local tests, builds, formatters, linters, validators, or application launches were run. No commit or push has occurred; the next action is one milestone commit and one push after the final tracker review, followed by all seven required workflows/twenty jobs on the exact submitted SHA.
 
 Final read-only push-gate check at 2026-10-16T08:24:27Z confirmed `origin/main` is still `586b3f42aafe4e1ffeb47e7a145c2f62881fd9a3`, and the predecessor seven-workflow/twenty-job CI batch is terminal and fully reconciled.
+
+## R3.9 pushed once; exact-SHA CI active — 2026-10-16T08:26:54Z
+
+Committed the complete reviewed R3.9 milestone once as `49ef8e8ecfa60b9de245a8b62ffe26aadf17bab7` (`R2.8.141: repair grouped R3.8 CI failures`) and pushed it once to `origin/main` from predecessor `586b3f42aafe4e1ffeb47e7a145c2f62881fd9a3`. All seven required workflows were triggered on the exact submitted SHA. At the first status snapshot, Rust migration inventory passed; the Ubuntu jobs in desktop build, quality, plugin renderer, and loaded-plugin workflows also passed. One of seven workflows was terminal and five of twenty jobs passed, with fourteen running and one queued; no failures were observed. Run IDs and job IDs are recorded in [R3.9 attempt 1 evidence](evidence/r2.8.141-r3-9-attempt-1-49ef8e8.json).
+
+`origin/main` was rechecked at 2026-10-16T08:28:20Z and remains at `49ef8e8ecfa60b9de245a8b62ffe26aadf17bab7`. Hold main while the exact-SHA batch is queued or running; do not push another milestone or start another full batch. All testing and executable validation remain in GitHub Actions only.
+
+## R3.9 CI progress — 2026-10-16T08:32:07Z
+
+Five workflows are terminal-success: inventory, desktop build, quality, plugin renderer matrix, and loaded-plugin workflows. Rust CI Ubuntu and macOS jobs also passed. The remaining jobs are Rust MSRV, Rust Windows, and the Linux/macOS/Windows round-trip jobs. The batch is at 5/7 workflows and 15/20 jobs passed, with five jobs in progress and no failures observed. Exact run/job statuses are recorded in [R3.9 attempt 1 evidence](evidence/r2.8.141-r3-9-attempt-1-49ef8e8.json); keep `origin/main` at the submitted SHA until the remaining jobs and artifact reconciliation finish.
+
+
+## R3.9 CI progress — 2026-10-16T08:41:03Z
+
+Six of seven required workflows are terminal-success, with all four Rust CI jobs passed; the OpenObsidian vault round-trip workflow remains active on exact SHA `49ef8e8ecfa60b9de245a8b62ffe26aadf17bab7`. Nineteen of twenty jobs are terminal: seventeen passed, two failed, and macOS round-trip job `116883381483` remains in progress. GitHub confirms `origin/main` still points to `49ef8e8ecfa60b9de245a8b62ffe26aadf17bab7`.
+
+Windows round-trip job `116883381204` failed the exact Canvas write transaction manifest/pre/post state check. Its report is `failed`, source SHA matches the submitted SHA, archive `12034257976` matches GitHub's API digest (`b4f606ddbf38bbe3b79e71c9b26d4b27814cb0f767aca565549cac801ec1b341`), and report SHA-256 is `4dd7bdf4725c1c0c9aff50906e89e22f72d95d8ea3353ab562d4bfafc206ec83`.
+
+Linux round-trip job `116883381665` reached the expected synthetic target-value guard abort; the guard's target-value mismatch was its sole failed predicate. It recorded zero pointer-motion dispatches, zero Ctrl+V/pastes, no save, successful empty-clipboard and request-marker cleanup, process termination, unchanged vault/Canvas snapshots, and passed expected-path eframe `app.ron` inspection. Strict post-abort app-data equality failed because shutdown created `data/openobsidian/app.ron` (2631 bytes; SHA-256 `df5fb43653f671f2b37af7806a4fc6823273bcb8e482fc86719e42b8687818bb`). Artifact `12034748511` matches the API digest (`6f8dde225a4c913f7e8bf1fea6c68c004f357a52ed0e2c0fb2662325e3034613`); report SHA-256 is `12b0ba1533ec9a415615a7ac4f59f1a4073ebfec997d6775e90aa0d3f125a8be`.
+
+The Windows and Linux failed-job reports and archive digests are reconciled locally; full batch artifact reconciliation remains pending the macOS job and complete artifact inventory. Keep `origin/main` pinned at `49ef8e8ecfa60b9de245a8b62ffe26aadf17bab7`. No source repair, rerun, commit, or additional push occurred; no local executable validation ran.
+
+
+## R3.9 Windows failure artifact review — 2026-10-16T08:45:06Z
+
+A read-only independent review of Windows job `116883381204` localized the failure to the grouped exact recovery-manifest predicate at `audit-obsidian-vault-roundtrip.ts` around line 21213. The artifact shows recovery blob/hash and manifest snapshot metadata checks precede it. The error does not identify whether the `previous` or `incoming` record failed or which manifest field differed. All eight Windows eframe `app.ron` inspection phases through after-draft-edit passed with the expected path set to null and empty app.ron inventories; transaction validation threw before any post-save or process-close snapshot was accepted.
+
+A raw comparison of the Rust serialized Windows `manifest.path` against a Node-built expected path is a plausible, **unconfirmed** cause because Rust canonicalizes the recovery directory and the harness already normalizes Windows path spellings for confinement checks. If confirmed after the complete batch, a bounded repair can compare normalized exact paths while retaining every schema/revision/byte check, recovery-root confinement, full-root no-app.ron invariant, and close-state equality. The artifact lacks field-level mismatch flags and raw manifests, so no source change is justified yet. The exact-SHA macOS round-trip job remains active; no source change or push occurred.
+
+
+## R3.9 Linux failure artifact and source review — 2026-10-16T08:47:10Z
+
+Independent read-only review confirms the expected-abort guard itself passed: the synthetic target-value mismatch was the sole failed pre-motion predicate; there were zero pointer-motion/Ctrl+V dispatches, zero completed pastes, no save, successful clipboard/request-marker cleanup, an absent destination, process termination, and unchanged vault/Canvas snapshots. Every other app-data path was unchanged. The only delta was a newly persisted data/openobsidian/app.ron (2631 bytes; SHA-256 df5fb43653f671f2b37af7806a4fc6823273bcb8e482fc86719e42b8687818bb); its expected-path inspection passed, but strict full-snapshot equality correctly rejected the new file.
+
+Source inspection confirms the harness clears the eframe-persistence environment flag by default, then sets it only for non-canary Windows Canvas runs. The Linux abort canary enables focus tracing but leaves eframe persistence on. A bounded repair candidate is to enable the existing persistence-disable flag only for the Linux expected-abort child, report the policy, and preserve strict app-data equality. Do not allowlist app.ron or move the comparison boundary past shutdown. This remains a candidate, not an implementation; the macOS round-trip job is still active, so no repair or push occurred.
+
+
+## R3.9 artifact inventory snapshot — 2026-10-16T08:47:39Z
+
+GitHub currently lists 15 artifacts across the six terminal-success workflows and the two completed round-trip jobs. The API SHA-256 digests, IDs, sizes, names, workflow/run associations, and API URLs are recorded in the R3.9 attempt evidence. The two failed round-trip archives are downloaded and match their API digests; other archives are retained by GitHub and were not downloaded. The macOS round-trip artifact is not yet listed because job 116883381483 remains active, so this inventory is provisional and full reconciliation is still pending.
+
+## R3.9 terminal CI and complete artifact reconciliation — 2026-10-16T09:28:10Z
+
+All seven required workflows and all 20 jobs are terminal on exact SHA 49ef8e8ecfa60b9de245a8b62ffe26aadf17bab7: six workflows succeeded and the Obsidian vault round-trip workflow failed; 18 jobs passed and two failed. GitHub confirms origin/main remains at 49ef8e8ecfa60b9de245a8b62ffe26aadf17bab7.
+
+macOS round-trip job 116883381483 passed. Its archive 12036902575 is 32,973,964 bytes and matches the GitHub API SHA-256 192f27f2a5683ed9614bbbd75084aebe3993b3e435a9cb730695301f01f3f048. The report is 70,003,278 bytes, SHA-256 d52a03f25592b458ddd3208668f8567ad902ccd684ef9c829b4bb097c31b60f8, reports passed, matches the submitted source SHA, and contains 66 vault snapshots. The Windows and Linux round-trip archives/reports remain reconciled at their previously recorded hashes and source SHA. Current GitHub API inventory is 16 artifacts; the prior 15 entries match current API names, sizes, and digests, and the macOS entry is now added. All three round-trip archives match their API digests.
+
+Terminal failures remain limited to Windows job 116883381204 and Linux job 116883381665. Windows failed the exact recovery-manifest/pre-post Canvas predicate; raw manifest values are unavailable, so the suspected canonical Windows path spelling difference is still an inference. Linux passed the expected-abort safety guard but strict post-shutdown app-data equality detected the new data/openobsidian/app.ron; no allowlist or shifted snapshot boundary is acceptable.
+
+Recorded a new pre-implementation R3.10 plan in evidence/r2.8.142-r3-10-windows-linux-canvas-repair-plan.json. The separate dirty /deploy/APPS/open-obsidian checkout was independently reviewed and is mixed, stale C07.3/C07.5/C09.2 work; it is preserved as a salvage source and is not transplanted onto the authoritative 49ef8e8 worktree. No source repair, local executable validation, commit, or push has occurred. R3.10 remains local until complete review; its only validation will be GitHub Actions.
+
+
+## R3.10 repair implementation and independent review — 2026-10-16T09:35:33Z
+
+Implemented the bounded Windows/Linux round-trip repairs locally on `49ef8e8ecfa60b9de245a8b62ffe26aadf17bab7`. Windows recovery manifests now compare path spelling through the existing Windows canonical-path normalizer, retain the exact schema/state/hash/confinement checks, and report failed field labels only; non-object JSON roots report `schema_root`. The root cause remains unconfirmed pending the next GitHub report.
+
+For the Linux expected-abort canary only, the harness now enables the existing eframe-persistence opt-out after the standard warm-up and prelaunch inspection, passes it through the explicit launcher allowance, requires the runtime marker, and validates post-termination app-data under the disabled persistence policy. The canary still requires exact full-root app-data and vault equality, unchanged Canvas bytes, no new `app.ron`, and all existing input, cleanup, and termination checks. The R3.9 report confirms the stabilized prelaunch root had no `data/openobsidian/app.ron`; its only appearance was at shutdown. Ordinary Linux, Windows, and macOS launch policies remain unchanged.
+
+Independent read-only source and tracker reviews approved the bounded changes. The tracker review identified stale R3.9 terminal summary fields; they are reconciled to 7/7 workflows and 20/20 jobs terminal, 6 workflows and 18 jobs passed, 2 failed jobs, and all 16 API artifacts accounted for. R3.10 acceptance now names all three platforms and distinguishes the 16 API artifact records from the three downloaded round-trip archive digests. No local tests, builds, formatters, linters, validators, or app launches were run. R3.10 remains local pending final whole-milestone review and one CI-triggering push.
