@@ -1,6 +1,6 @@
 import {createHash} from "node:crypto";
 import {execFileSync, spawnSync} from "node:child_process";
-import {lstat, mkdir, readFile, readdir, readlink, realpath, rename, rm, unlink, writeFile} from "node:fs/promises";
+import {cp, lstat, mkdir, readFile, readdir, readlink, realpath, rename, rm, unlink, writeFile} from "node:fs/promises";
 import {createWriteStream} from "node:fs";
 import {basename, dirname, isAbsolute, join, relative, resolve, sep} from "node:path";
 import {spawn, type ChildProcess} from "node:child_process";
@@ -112,6 +112,28 @@ type SnapshotEntry = {
   target?: string;
   target_bytes_base64?: string;
   target_sha256?: string;
+};
+
+type CanvasInputSafetyTracker = {
+  expectedAbortCanary: boolean;
+  clipboardStaged: boolean;
+  completedPasteStages: Array<Record<string, unknown>>;
+  diagnosticMotionStages: Array<Record<string, unknown>>;
+  motionDispatchAttempts: number;
+  pasteDispatchAttempts: number;
+  saveAttempted: boolean;
+  clipboardCleanup: Record<string, unknown> | null;
+  requestMarkerCleanup: Record<string, unknown> | null;
+  focusCheckpoints: Array<Record<string, unknown>>;
+  guardFailures: Array<Record<string, unknown>>;
+  baseline: {
+    vaultRoot: string;
+    appDataRoot: string;
+    vaultSnapshot: SnapshotEntry[];
+    appDataSnapshot: SnapshotEntry[];
+    canvasBytes: Buffer;
+    canvasSha256: string;
+  } | null;
 };
 
 type GroupOrderScenario = {
@@ -546,6 +568,8 @@ const linuxCanvasFocusSnapshotRequestFile = join(workDirectory, "openobsidian-ca
 const vaultRoot = join(workDirectory, "C01.2 Roundtrip Fixture");
 const canvasVaultName = "C06 Canvas Reference Fixture";
 const canvasVaultRoot = join(workDirectory, canvasVaultName);
+const canvasAbortCanaryVaultName = "C06 Canvas Abort Canary Fixture";
+const canvasAbortCanaryVaultRoot = join(workDirectory, canvasAbortCanaryVaultName);
 const basesVaultName = "C07 Bases Direction Reference Fixture";
 const basesVaultRoot = join(workDirectory, basesVaultName);
 const groupOrderVaultName = "C07 Group Order Reference Fixture";
@@ -867,6 +891,7 @@ const report: Record<string, unknown> = {
   canvas_reference_reopen: {
     status: "pending",
     text_edit: {status: "pending"},
+    expected_abort_canary: {status: process.platform === "linux" ? "pending" : "not_applicable"},
     note_creation: {status: "pending"},
   },
   bases_group_direction_reference: {
@@ -1364,6 +1389,15 @@ type CanvasFocusSnapshot = {
   x11: ReturnType<typeof x11InteractionState>;
 };
 
+class ExpectedCanvasAbortCanaryError extends Error {
+  readonly code = "EXPECTED_CANVAS_ABORT_CANARY";
+
+  constructor(message: string) {
+    super(message);
+    this.name = "ExpectedCanvasAbortCanaryError";
+  }
+}
+
 async function readCanvasFocusSnapshot(
   logPath: string,
   requestId: string,
@@ -1383,7 +1417,9 @@ async function readCanvasFocusSnapshot(
     const pointerButtonPrimary = value.match(/\bpointer_button_primary=(true|false)/)?.[1];
     const pointerMatch = value.match(/\bpointer=Some\(\[\s*(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s*\]\)/);
     const pointerIsNone = /\bpointer=None\b/.test(value);
+    const parsedMonotonicMs = Number(monotonicMs);
     if (observedRequestId !== requestId || !frameNr || !monotonicMs || !pointerButtonPrimary
+      || !Number.isFinite(parsedMonotonicMs) || parsedMonotonicMs <= 0
       || !value.includes("raw_events=[]") || (!pointerMatch && !pointerIsNone)) return null;
     marker = {
       request_id: requestId,
@@ -16366,8 +16402,12 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
   controlName: string,
   value: string,
   logPath = join(reportDirectory, "openobsidian-canvas-note-create.log"),
+  safetyTracker?: CanvasInputSafetyTracker,
 ): Promise<string> {
   const fileSafeName = controlName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  const inputScreenshotPrefix = safetyTracker?.expectedAbortCanary
+    ? "openobsidian-canvas-abort-canary-input"
+    : "openobsidian-canvas-input";
   const maximumAttempts = 3;
   let lastFailure = "no field-position attempt completed";
   const diagnosticField = controlName === "Canvas edit path"
@@ -16391,7 +16431,7 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
   for (let attempt = 1; attempt <= maximumAttempts; attempt += 1) {
     await waitForOpenObsidianRefreshIdle(0, 0, false, logPath);
     const refreshBeforeCapture = await readOpenObsidianRefreshDiagnostics(logPath);
-    const before = await captureOpenObsidianScreenshot(windowId, child, `openobsidian-canvas-input-${fileSafeName}-before`);
+    const before = await captureOpenObsidianScreenshot(windowId, child, `${inputScreenshotPrefix}-${fileSafeName}-before-${attempt}`);
     const layout = await locateCanvasTextInput(before, controlName);
     const labelOcrFound = Boolean(layout.labelBoundsOcr);
     const screenshotSize = await pngDimensions(before.windowPngPath);
@@ -16573,6 +16613,9 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
         const fieldAlreadyContainsExpectedValue = preEntryTargetWidget.valueSha256 === expectedValueSha256
           && preEntryTargetWidget.valueBytes === expectedValueBytes
           && preEntryTargetWidget.empty === false;
+        if (safetyTracker?.expectedAbortCanary && fieldAlreadyContainsExpectedValue) {
+          throw new Error("Linux expected-abort canary requires an empty Canvas path field so its synthetic prefix mismatch remains the only failed pre-motion predicate");
+        }
         if (preEntryTargetWidget.empty !== true && !fieldAlreadyContainsExpectedValue) {
           throw new Error(`Refusing to type into a nonempty Canvas field whose value does not match the requested synthetic value: field=${diagnosticField}; diagnostic=${JSON.stringify(preEntryTargetWidget)}`);
         }
@@ -16581,25 +16624,29 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
         targetAndSiblingWidgetReadback = {target: preEntryTargetWidget, sibling: preEntrySiblingWidget};
         const pasteStageDiagnostics: Array<Record<string, unknown>> = [];
         const diagnosticMotionStages: Array<Record<string, unknown>> = [];
+        if (safetyTracker) {
+          safetyTracker.completedPasteStages = pasteStageDiagnostics;
+          safetyTracker.diagnosticMotionStages = diagnosticMotionStages;
+        }
         const usesClipboardSentinel = diagnosticField === "path";
         const entryMethod = fieldAlreadyContainsExpectedValue
           ? "not used; exact requested value was already present"
           : usesClipboardSentinel
             ? "xclip clipboard paste via Ctrl+V; first-character sentinel, then one remainder paste when nonempty"
             : "xdotool type --clearmodifiers; no Ctrl selection/paste chords or clipboard operation";
+        const expectedHash = (text: string) => createHash("sha256").update(text, "utf8").digest("hex");
+        const focusTargetField: "path" | "id" = diagnosticField === "id" ? "id" : "path";
+        const focusSiblingField: "path" | "id" = siblingDiagnosticField === "id" ? "id" : "path";
         if (!fieldAlreadyContainsExpectedValue && usesClipboardSentinel) {
           if (!diagnosticField || !siblingDiagnosticField) {
             throw new Error("Linux Canvas clipboard paste is missing its target/sibling diagnostic field pairing");
           }
-          const focusTargetField: "path" | "id" = diagnosticField;
-          const focusSiblingField: "path" | "id" = siblingDiagnosticField;
           const characters = Array.from(value);
           if (characters.length === 0) {
             throw new Error("Refusing to paste an empty requested value into Canvas field " + diagnosticField);
           }
           const firstCharacter = characters[0];
           if (firstCharacter === undefined) throw new Error("Missing first Canvas input character for " + diagnosticField);
-          const expectedHash = (text: string) => createHash("sha256").update(text, "utf8").digest("hex");
           let lastObservedLine = Math.max(preEntryTargetWidget.line, preEntrySiblingWidget.line);
           const motionTargetGeometry = preEntryTargetWidget;
           const motionSiblingGeometry = preEntrySiblingWidget;
@@ -16668,6 +16715,7 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
                 afterClipboardSnapshot,
               );
               motionRecord.refresh_after_clipboard_staging = beforeMotion.refresh;
+              if (safetyTracker) safetyTracker.motionDispatchAttempts += 1;
               xdotool("mousemove", "--sync", "--window", windowId, String(motionPoint.x), String(motionPoint.y));
               (motionRecord.motion as Record<string, unknown>).status = "sent";
               currentPointer = {...motionPoint};
@@ -16698,6 +16746,11 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
               const snapshot = motionRecord.snapshot_after_motion as CanvasFocusSnapshot | undefined;
               const targetStillFocused = snapshot?.fields.path.focused === true;
               const siblingFocused = snapshot?.fields.id.focused === true;
+              if (error instanceof ExpectedCanvasAbortCanaryError) {
+                motionRecord.status = "expected synthetic guard abort before pointer dispatch";
+                motionRecord.error = detail;
+                throw error;
+              }
               motionRecord.status = snapshot && (!targetStillFocused || siblingFocused)
                 ? "stopped immediately after focus transfer; paste not dispatched"
                 : "failed closed before paste";
@@ -16769,27 +16822,80 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
             const targetValueExact = pair.target.valueBytes === expectedBytes
               && pair.target.valueSha256 === expectedSha256
               && pair.target.empty === (expectedText.length === 0);
-            if (refreshChanged
-              || !x11WindowFocused
-              || !primaryButtonReleased
-              || !pair.target.enabled
-              || !pair.target.focused
-              || !pair.sibling.enabled
-              || pair.sibling.focused
-              || pair.sibling.arrowRightKeyEvent
-              || !siblingUnchanged
-              || !responseIdsStable
-              || !targetValueExact) {
+            const pointerInsideTarget = !focusSnapshot || (focusSnapshot.pointer !== null
+              && focusSnapshot.pointer.x >= pair.target.rect.left
+              && focusSnapshot.pointer.x <= pair.target.rect.right
+              && focusSnapshot.pointer.y >= pair.target.rect.top
+              && focusSnapshot.pointer.y <= pair.target.rect.bottom);
+            const pointerOutsideSibling = !focusSnapshot || (focusSnapshot.pointer !== null
+              && (focusSnapshot.pointer.x < pair.sibling.rect.left
+                || focusSnapshot.pointer.x > pair.sibling.rect.right
+                || focusSnapshot.pointer.y < pair.sibling.rect.top
+                || focusSnapshot.pointer.y > pair.sibling.rect.bottom));
+            const guardPredicates = {
+              event_free_snapshot: !focusSnapshot || focusSnapshot.raw_events_empty,
+              refresh_stable: !refreshChanged,
+              x11_window_focused: x11WindowFocused,
+              primary_button_released: primaryButtonReleased,
+              pointer_inside_target: pointerInsideTarget,
+              pointer_outside_sibling: pointerOutsideSibling,
+              target_enabled: pair.target.enabled,
+              target_focused: pair.target.focused,
+              sibling_enabled: pair.sibling.enabled,
+              sibling_unfocused: !pair.sibling.focused,
+              sibling_arrow_right_absent: !pair.sibling.arrowRightKeyEvent,
+              sibling_unchanged: siblingUnchanged,
+              response_ids_stable: responseIdsStable,
+              target_value_exact: targetValueExact,
+            };
+            const failedPredicates = Object.entries(guardPredicates)
+              .filter(([, passed]) => !passed)
+              .map(([name]) => name);
+            if (failedPredicates.length > 0) {
+              const failureRecord = {
+                stage,
+                expected_text: expectedText,
+                expected_bytes: expectedBytes,
+                expected_sha256: expectedSha256,
+                guard_predicates: guardPredicates,
+                failed_predicates: failedPredicates,
+                target: pair.target,
+                sibling: pair.sibling,
+                focus_snapshot: focusSnapshot ?? null,
+                refresh,
+              };
+              safetyTracker?.guardFailures.push(failureRecord);
+              const isSyntheticCanaryMismatch = safetyTracker?.expectedAbortCanary === true
+                && expectedText.length > 0
+                && pair.target.empty === true
+                && failedPredicates.length === 1
+                && failedPredicates[0] === "target_value_exact"
+                && guardPredicates.event_free_snapshot
+                && guardPredicates.refresh_stable
+                && guardPredicates.x11_window_focused
+                && guardPredicates.primary_button_released
+                && guardPredicates.pointer_inside_target
+                && guardPredicates.pointer_outside_sibling
+                && guardPredicates.target_enabled
+                && guardPredicates.target_focused
+                && guardPredicates.sibling_enabled
+                && guardPredicates.sibling_unfocused
+                && guardPredicates.sibling_arrow_right_absent
+                && guardPredicates.sibling_unchanged
+                && guardPredicates.response_ids_stable;
+              if (isSyntheticCanaryMismatch) {
+                throw new ExpectedCanvasAbortCanaryError(
+                  "Expected pre-motion canary abort: the synthetic nonempty prefix was the sole failed guard predicate; evidence="
+                    + JSON.stringify(failureRecord),
+                );
+              }
               throw new Error(
                 "Canvas paste guard failed " + stage
                   + "; input_method=xclip clipboard plus Ctrl+V"
                   + "; expected_prefix_bytes=" + expectedBytes
                   + "; expected_prefix_sha256=" + expectedSha256
-                  + "; refresh_stable=" + !refreshChanged
-                  + "; x11_window_focused=" + x11WindowFocused
-                  + "; primary_button_released=" + primaryButtonReleased
-                  + "; sibling_unchanged=" + siblingUnchanged
-                  + "; response_ids_stable=" + responseIdsStable
+                  + "; guard_predicates=" + JSON.stringify(guardPredicates)
+                  + "; failed_predicates=" + JSON.stringify(failedPredicates)
                   + "; target=" + JSON.stringify(pair.target)
                   + "; sibling=" + JSON.stringify(pair.sibling)
                   + "; focus_snapshot=" + JSON.stringify(focusSnapshot ?? null)
@@ -16807,6 +16913,7 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
             pointerMotion: Record<string, unknown>,
           ): void => {
             try {
+              if (safetyTracker) safetyTracker.pasteDispatchAttempts += 1;
               xdotool("key", "--clearmodifiers", "ctrl+v");
             } catch (error) {
               const detail = error instanceof Error ? error.message : String(error);
@@ -16826,6 +16933,7 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
 
           const stageClipboard = (stage: string, text: string) => {
             clipboardUsedForEntry = true;
+            if (safetyTracker) safetyTracker.clipboardStaged = true;
             try {
               execFileSync("xclip", ["-selection", "clipboard"], {
                 input: text,
@@ -16838,18 +16946,193 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
             }
           };
 
+          const capturePathFocusCheckpoint = async (
+            stage: string,
+            afterLine: number,
+            afterFrameNr: number,
+          ): Promise<{snapshot: CanvasFocusSnapshot; refresh: Awaited<ReturnType<typeof readOpenObsidianRefreshDiagnostics>>}> => {
+            const snapshot = await requestCanvasFocusSnapshot(logPath, stage, afterLine, afterFrameNr);
+            if (snapshot.monotonic_ms <= 0) {
+              throw new Error(`Canvas focus checkpoint monotonic time must be app-relative and nonzero: stage=${stage}; observed_ms=${snapshot.monotonic_ms}`);
+            }
+            const refresh = await readOpenObsidianRefreshDiagnostics(logPath);
+            const previous = safetyTracker?.focusCheckpoints.at(-1);
+            const previousMonotonicMs = typeof previous?.monotonic_ms === "number" ? previous.monotonic_ms : null;
+            if (previousMonotonicMs !== null && snapshot.monotonic_ms <= previousMonotonicMs) {
+              throw new Error(`Canvas focus checkpoint monotonic time did not advance: stage=${stage}; previous_ms=${previousMonotonicMs}; observed_ms=${snapshot.monotonic_ms}`);
+            }
+            const refreshStable = !openObsidianRefreshActivityChanged(refreshBeforeClick, refresh)
+              && !(refresh.receiverStates.at(-1)?.busy ?? false);
+            const checkpoint = {
+              stage,
+              request_id: snapshot.request_id,
+              line: snapshot.line,
+              frame_nr: snapshot.frame_nr,
+              monotonic_ms: snapshot.monotonic_ms,
+              raw_events_empty: snapshot.raw_events_empty,
+              pointer_button_primary: snapshot.pointer_button_primary,
+              pointer: snapshot.pointer,
+              target: snapshot.fields[focusTargetField],
+              sibling: snapshot.fields[focusSiblingField],
+              x11: snapshot.x11,
+              refresh_stable: refreshStable,
+              refresh,
+            };
+            safetyTracker?.focusCheckpoints.push(checkpoint);
+            return {snapshot, refresh};
+          };
+          const stageClipboardWithFocusCheckpoints = async (
+            stage: string,
+            text: string,
+            expectedCurrentValue: string,
+            afterLine: number,
+            afterFrameNr: number,
+          ) => {
+            const beforeClipboard = await capturePathFocusCheckpoint(
+              `immediately before ${stage} clipboard staging`,
+              afterLine,
+              afterFrameNr,
+            );
+            await assertPasteState(
+              `fresh pre-staging target guard for ${stage}`,
+              expectedCurrentValue,
+              beforeClipboard.snapshot.line,
+              beforeClipboard.snapshot,
+            );
+            stageClipboard(stage, text);
+            const immediatelyAfterClipboard = await capturePathFocusCheckpoint(
+              `immediately after ${stage} clipboard staging`,
+              beforeClipboard.snapshot.line,
+              beforeClipboard.snapshot.frame_nr,
+            );
+            await delay(100);
+            const afterClipboardDelay = await capturePathFocusCheckpoint(
+              `100ms after ${stage} clipboard staging`,
+              immediatelyAfterClipboard.snapshot.line,
+              immediatelyAfterClipboard.snapshot.frame_nr,
+            );
+            return {beforeClipboard, immediatelyAfterClipboard, afterClipboardDelay};
+          };
+          const focusReacquisitionDecision = (
+            stage: string,
+            checkpoints: Awaited<ReturnType<typeof stageClipboardWithFocusCheckpoints>>,
+          ) => {
+            const focusOwnershipLost = [
+              checkpoints.immediatelyAfterClipboard.snapshot,
+              checkpoints.afterClipboardDelay.snapshot,
+            ].some((snapshot) => (
+              !snapshot.fields[focusTargetField].focused || snapshot.fields[focusSiblingField].focused
+            ));
+            const canaryRequiresFinalClick = safetyTracker?.expectedAbortCanary === true;
+            const decision = {
+              stage,
+              required: canaryRequiresFinalClick || focusOwnershipLost,
+              reason: canaryRequiresFinalClick
+                ? "the expected-abort canary requires a real final target click and ArrowRight after clipboard staging"
+                : focusOwnershipLost
+                  ? "a post-staging checkpoint recorded target focus loss or sibling focus"
+                  : "both post-staging checkpoints retained target focus and an unfocused sibling",
+              focus_ownership_lost_during_staging: focusOwnershipLost,
+            };
+            const latestCheckpoint = safetyTracker?.focusCheckpoints.at(-1);
+            if (latestCheckpoint) latestCheckpoint.target_focus_reacquisition_decision = decision;
+            return decision;
+          };
+          const reacquireTargetFocusAfterClipboard = async (
+            stage: string,
+            afterSnapshot: CanvasFocusSnapshot,
+            expectedCurrentValue: string,
+          ): Promise<CanvasFocusSnapshot> => {
+            const target = afterSnapshot.fields[focusTargetField];
+            const sibling = afterSnapshot.fields[focusSiblingField];
+            const clickInsideCurrentTarget = clickX >= target.rect.left * target.pixelsPerPoint
+              && clickX <= target.rect.right * target.pixelsPerPoint
+              && clickY >= target.rect.top * target.pixelsPerPoint
+              && clickY <= target.rect.bottom * target.pixelsPerPoint;
+            const clickOutsideCurrentSibling = clickX < sibling.rect.left * sibling.pixelsPerPoint
+              || clickX > sibling.rect.right * sibling.pixelsPerPoint
+              || clickY < sibling.rect.top * sibling.pixelsPerPoint
+              || clickY > sibling.rect.bottom * sibling.pixelsPerPoint;
+            const idsStable = target.responseId === preEntryTargetWidget.responseId
+              && sibling.responseId === preEntrySiblingWidget.responseId
+              && target.responseId !== sibling.responseId;
+            const expectedCurrentHash = expectedHash(expectedCurrentValue);
+            const expectedCurrentBytes = Buffer.byteLength(expectedCurrentValue, "utf8");
+            const targetValueUnchanged = target.valueBytes === expectedCurrentBytes
+              && target.valueSha256 === expectedCurrentHash
+              && target.empty === (expectedCurrentValue.length === 0);
+            const siblingUnchanged = sibling.valueBytes === preEntrySiblingWidget.valueBytes
+              && sibling.valueSha256 === preEntrySiblingWidget.valueSha256;
+            const refreshStable = safetyTracker?.focusCheckpoints.at(-1)?.refresh_stable === true;
+            const windowFocused = afterSnapshot.x11.focused_window_id === windowId;
+            const pointerButtonReleased = !afterSnapshot.pointer_button_primary;
+            const pointerStillInTarget = afterSnapshot.pointer !== null
+              && afterSnapshot.pointer.x >= target.rect.left
+              && afterSnapshot.pointer.x <= target.rect.right
+              && afterSnapshot.pointer.y >= target.rect.top
+              && afterSnapshot.pointer.y <= target.rect.bottom;
+            const guardPredicates = {
+              target_enabled: target.enabled,
+              sibling_enabled: sibling.enabled,
+              current_target_value_exact: targetValueUnchanged,
+              sibling_unchanged: siblingUnchanged,
+              response_ids_stable: idsStable,
+              click_inside_current_target: clickInsideCurrentTarget,
+              click_outside_current_sibling: clickOutsideCurrentSibling,
+              pointer_still_in_target: pointerStillInTarget,
+              pointer_button_released: pointerButtonReleased,
+              x11_window_focused: windowFocused,
+              refresh_stable: refreshStable,
+            };
+            const failedPredicates = Object.entries(guardPredicates)
+              .filter(([, passed]) => !passed)
+              .map(([name]) => name);
+            const priorCheckpoint = safetyTracker?.focusCheckpoints.at(-1);
+            if (priorCheckpoint) priorCheckpoint.target_reacquisition_guard = {guard_predicates: guardPredicates, failed_predicates: failedPredicates};
+            if (failedPredicates.length > 0) {
+              throw new Error(`Refusing final Canvas target click after ${stage} clipboard staging because current target geometry/state failed: ${JSON.stringify({guardPredicates, failedPredicates, target, sibling, afterSnapshot})}`);
+            }
+            xdotool("click", "--clearmodifiers", "1");
+            xdotool("key", "--clearmodifiers", "Right");
+            await delay(100);
+            return (await capturePathFocusCheckpoint(
+              `fresh target focus after ${stage} clipboard staging and final click/ArrowRight`,
+              afterSnapshot.line,
+              afterSnapshot.frame_nr,
+            )).snapshot;
+          };
           const firstCharacterBytes = Buffer.byteLength(firstCharacter, "utf8");
-          stageClipboard("first-character sentinel", firstCharacter);
-          const firstCharacterClipboardSnapshot = await requestCanvasFocusSnapshot(
-            logPath,
-            "after first-character clipboard staging",
+          const firstCharacterClipboardCheckpoints = await stageClipboardWithFocusCheckpoints(
+            "first-character sentinel",
+            firstCharacter,
+            "",
             lastObservedLine,
             preEntryTargetWidget.frameNr,
           );
+          const firstCharacterReacquisition = focusReacquisitionDecision(
+            "first-character sentinel",
+            firstCharacterClipboardCheckpoints,
+          );
+          const firstCharacterFinalFocusSnapshot = firstCharacterReacquisition.required
+            ? await reacquireTargetFocusAfterClipboard(
+              "first-character sentinel",
+              firstCharacterClipboardCheckpoints.afterClipboardDelay.snapshot,
+              "",
+            )
+            : firstCharacterClipboardCheckpoints.afterClipboardDelay.snapshot;
+          if (safetyTracker?.expectedAbortCanary) {
+            const syntheticPrefix = "__openobsidian_expected_abort_canary__";
+            await movePointerForFreshDiagnostics(
+              "expected-abort canary synthetic prefix mismatch",
+              syntheticPrefix,
+              firstCharacterFinalFocusSnapshot,
+            );
+            throw new Error("Linux Canvas expected-abort canary did not fail its synthetic pre-motion prefix guard");
+          }
           const firstCharacterPointerMotion = await movePointerForFreshDiagnostics(
             "first-character sentinel",
             "",
-            firstCharacterClipboardSnapshot,
+            firstCharacterFinalFocusSnapshot,
           );
           const firstAfterMotionSnapshot = firstCharacterPointerMotion.snapshot_after_motion as CanvasFocusSnapshot;
           const firstBeforePaste = await assertPasteState(
@@ -16892,22 +17175,33 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
               refresh_stable: true,
             },
             pre_paste_pointer_motion: firstCharacterPointerMotion,
+            clipboard_staging_focus_checkpoints: firstCharacterClipboardCheckpoints,
+            target_focus_reacquisition: firstCharacterReacquisition,
+            final_focus_snapshot: firstCharacterFinalFocusSnapshot,
           });
 
           const remainder = characters.slice(1).join("");
           if (remainder.length > 0) {
-            stageClipboard("remainder", remainder);
-            const remainderClipboardSnapshot = await requestCanvasFocusSnapshot(
-              logPath,
-              "after remainder clipboard staging",
+            const remainderClipboardCheckpoints = await stageClipboardWithFocusCheckpoints(
+              "remainder",
+              remainder,
+              firstCharacter,
               lastObservedLine,
               lastObservedFrameNr,
             );
+            const remainderReacquisition = focusReacquisitionDecision("remainder", remainderClipboardCheckpoints);
+            const remainderFinalFocusSnapshot = remainderReacquisition.required
+              ? await reacquireTargetFocusAfterClipboard(
+                "remainder",
+                remainderClipboardCheckpoints.afterClipboardDelay.snapshot,
+                firstCharacter,
+              )
+              : remainderClipboardCheckpoints.afterClipboardDelay.snapshot;
             const remainderBeforePaste = await assertPasteState(
-              "immediately before remainder Ctrl+V after clipboard staging",
+              "immediately before remainder Ctrl+V after clipboard staging and final target focus",
               firstCharacter,
               lastObservedLine,
-              remainderClipboardSnapshot,
+              remainderFinalFocusSnapshot,
             );
             const remainderPasteLine = Math.max(
               remainderBeforePaste.pair.target.line,
@@ -16916,7 +17210,7 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
             dispatchCtrlV("remainder", remainderBeforePaste, {
               motion_sent: false,
               reason: "the single +1px pointer probe was sampled before the sentinel paste; no +2px motion is permitted in the active paste path",
-              clipboard_stage_focus_snapshot: remainderClipboardSnapshot,
+              clipboard_stage_focus_snapshot: remainderClipboardCheckpoints.afterClipboardDelay.snapshot,
             });
             const remainderAfterPaste = await assertPasteState(
               "after remainder paste",
@@ -16954,7 +17248,9 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
                 refresh_stable: true,
               },
               pre_paste_pointer_motion: null,
-              clipboard_stage_focus_snapshot: remainderClipboardSnapshot,
+              clipboard_stage_focus_checkpoints: remainderClipboardCheckpoints,
+              target_focus_reacquisition: remainderReacquisition,
+              final_focus_snapshot: remainderFinalFocusSnapshot,
             });
           }
 
@@ -17055,7 +17351,7 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
             targetReadbackScreenshot = await captureOpenObsidianScreenshot(
               windowId,
               child,
-              `openobsidian-canvas-input-${fileSafeName}-field-readback-${attempt}-${visualProbe}`,
+              `${inputScreenshotPrefix}-${fileSafeName}-field-readback-${attempt}-${visualProbe}`,
             );
             targetVisualReadback = await readCanvasInputScreenshotValue(
               targetReadbackScreenshot,
@@ -17094,6 +17390,62 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
         const refreshChangedDuringInput = openObsidianRefreshActivityChanged(refreshBeforeClick, refreshAfterVisualReadback)
           || (refreshAfterVisualReadback.receiverStates.at(-1)?.busy ?? false);
         if (exactTargetVisualReadback && !refreshChangedDuringInput) {
+          if (clipboardUsedForEntry) {
+            const successfulClipboardCleanup: Record<string, unknown> = {
+              attempted: true,
+              method: "neutralize the staged X11 clipboard after exact Canvas path readback",
+            };
+            try {
+              execFileSync("xclip", ["-selection", "clipboard"], {
+                input: "",
+                stdio: ["pipe", "ignore", "ignore"],
+                timeout: 5_000,
+              });
+              const clipboardReadback = execFileSync("xclip", ["-selection", "clipboard", "-o"], {
+                encoding: "utf8",
+                stdio: ["ignore", "pipe", "ignore"],
+                timeout: 2_000,
+              });
+              successfulClipboardCleanup.readback = {
+                attempted: true,
+                succeeded: clipboardReadback.length === 0,
+                utf8_bytes: Buffer.byteLength(clipboardReadback, "utf8"),
+                sha256: createHash("sha256").update(clipboardReadback, "utf8").digest("hex"),
+              };
+              if (clipboardReadback.length !== 0) {
+                throw new Error(`X11 clipboard readback after successful path entry was not empty: utf8_bytes=${Buffer.byteLength(clipboardReadback, "utf8")}`);
+              }
+              successfulClipboardCleanup.succeeded = true;
+              clipboardUsedForEntry = false;
+              clipboardAbortCleanup = successfulClipboardCleanup;
+              if (safetyTracker) safetyTracker.clipboardStaged = false;
+            } catch (cleanupError) {
+              successfulClipboardCleanup.succeeded = false;
+              successfulClipboardCleanup.error = cleanupError instanceof Error ? cleanupError.message : String(cleanupError);
+              if (safetyTracker) safetyTracker.clipboardCleanup = successfulClipboardCleanup;
+              throw new Error("Canvas path input succeeded but clipboard neutralization/readback failed: " + JSON.stringify(successfulClipboardCleanup));
+            }
+            if (safetyTracker) safetyTracker.clipboardCleanup = successfulClipboardCleanup;
+          }
+          const successfulMarkerCleanup: Record<string, unknown> = {
+            attempted: true,
+            path: linuxCanvasFocusSnapshotRequestFile,
+          };
+          try {
+            await rm(linuxCanvasFocusSnapshotRequestFile, {force: true});
+            const markerRemains = await lstat(linuxCanvasFocusSnapshotRequestFile).then(() => true, (cleanupError: NodeJS.ErrnoException) => {
+              if (cleanupError.code === "ENOENT") return false;
+              throw cleanupError;
+            });
+            successfulMarkerCleanup.succeeded = !markerRemains;
+            if (markerRemains) throw new Error("Canvas focus request marker remained after successful path input");
+          } catch (cleanupError) {
+            successfulMarkerCleanup.succeeded = false;
+            successfulMarkerCleanup.error = cleanupError instanceof Error ? cleanupError.message : String(cleanupError);
+            if (safetyTracker) safetyTracker.requestMarkerCleanup = successfulMarkerCleanup;
+            throw new Error("Canvas path input succeeded but focus request-marker cleanup failed: " + JSON.stringify(successfulMarkerCleanup));
+          }
+          if (safetyTracker) safetyTracker.requestMarkerCleanup = successfulMarkerCleanup;
           return JSON.stringify({
             name: controlName,
             action: fieldAlreadyContainsExpectedValue
@@ -17118,6 +17470,9 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
             entry_method: entryMethod,
             clipboard_used: clipboardUsedForEntry,
             paste_stage_diagnostics: diagnosticField === "path" ? pasteStageDiagnostics : undefined,
+            focus_checkpoints: safetyTracker?.focusCheckpoints,
+            clipboard_neutralization: safetyTracker?.clipboardCleanup,
+            request_marker_cleanup: safetyTracker?.requestMarkerCleanup,
             target_widget_field: diagnosticField,
             target_and_sibling_geometry_before_click: targetAndSiblingGeometryBeforeClick,
             click_geometry_validation: clickGeometryValidation,
@@ -17173,18 +17528,56 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
             stdio: ["pipe", "ignore", "ignore"],
             timeout: 5_000,
           });
+          const clipboardReadback = execFileSync("xclip", ["-selection", "clipboard", "-o"], {
+            encoding: "utf8",
+            stdio: ["ignore", "pipe", "ignore"],
+            timeout: 2_000,
+          });
+          clipboardAbortCleanup.readback = {
+            attempted: true,
+            succeeded: clipboardReadback.length === 0,
+            utf8_bytes: Buffer.byteLength(clipboardReadback, "utf8"),
+            sha256: createHash("sha256").update(clipboardReadback, "utf8").digest("hex"),
+          };
+          if (clipboardReadback.length !== 0) {
+            throw new Error(`X11 clipboard readback after neutralization was not empty: utf8_bytes=${Buffer.byteLength(clipboardReadback, "utf8")}`);
+          }
           clipboardAbortCleanup.succeeded = true;
           clipboardUsedForEntry = false;
+          if (safetyTracker) safetyTracker.clipboardStaged = false;
         } catch (cleanupError) {
           clipboardAbortCleanup.succeeded = false;
           clipboardAbortCleanup.error = cleanupError instanceof Error ? cleanupError.message : String(cleanupError);
         }
       } else {
-        clipboardAbortCleanup = {attempted: false, reason: "no Linux clipboard content was staged"};
+        clipboardAbortCleanup = safetyTracker?.clipboardCleanup
+          ?? {attempted: false, reason: "no Linux clipboard content was staged"};
       }
-      await rm(linuxCanvasFocusSnapshotRequestFile, {force: true}).catch(() => undefined);
+      if (safetyTracker) safetyTracker.clipboardCleanup = clipboardAbortCleanup;
+      const requestMarkerCleanup: Record<string, unknown> = {attempted: true, path: linuxCanvasFocusSnapshotRequestFile};
+      try {
+        await rm(linuxCanvasFocusSnapshotRequestFile, {force: true});
+        const markerRemains = await lstat(linuxCanvasFocusSnapshotRequestFile).then(() => true, (cleanupError: NodeJS.ErrnoException) => {
+          if (cleanupError.code === "ENOENT") return false;
+          throw cleanupError;
+        });
+        requestMarkerCleanup.succeeded = !markerRemains;
+        if (markerRemains) throw new Error("Canvas focus snapshot request marker remained after cleanup");
+      } catch (cleanupError) {
+        requestMarkerCleanup.succeeded = false;
+        requestMarkerCleanup.error = cleanupError instanceof Error ? cleanupError.message : String(cleanupError);
+      }
+      if (safetyTracker) safetyTracker.requestMarkerCleanup = requestMarkerCleanup;
+      if (error instanceof ExpectedCanvasAbortCanaryError
+        && safetyTracker?.expectedAbortCanary === true
+        && clipboardAbortCleanup.attempted === true
+        && clipboardAbortCleanup.succeeded === true
+        && (clipboardAbortCleanup.readback as Record<string, unknown> | undefined)?.succeeded === true
+        && requestMarkerCleanup.succeeded === true) {
+        throw error;
+      }
       const failureLabel = diagnosticField === "path" ? "Linux Canvas field input failed" : "Linux keyboard entry failed";
-      throw new Error(failureLabel + " for " + controlName + ": code=" + (failure.code ?? "unknown") + "; syscall=" + (failure.syscall ?? "unknown") + "; click=(" + clickX + "," + clickY + "); clipboard_abort_cleanup=" + JSON.stringify(clipboardAbortCleanup) + "; detail=" + errorMessage);
+      throw new Error(failureLabel + " for " + controlName + ": code=" + (failure.code ?? "unknown") + "; syscall=" + (failure.syscall ?? "unknown") + "; click=(" + clickX + "," + clickY + "); clipboard_abort_cleanup=" + JSON.stringify(clipboardAbortCleanup) + "; request_marker_cleanup=" + JSON.stringify(requestMarkerCleanup) + "; detail=" + errorMessage);
     }
 
     let clipboardReadback = "";
@@ -17192,6 +17585,7 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
     let verificationAttempts = 0;
     for (verificationAttempts = 1; verificationAttempts <= 5; verificationAttempts += 1) {
       xdotool("key", "--clearmodifiers", "ctrl+a");
+      if (process.platform === "linux" && safetyTracker) safetyTracker.clipboardStaged = true;
       xdotool("key", "--clearmodifiers", "ctrl+c");
       await delay(100);
       try {
@@ -17212,7 +17606,7 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
     const verification = await captureOpenObsidianScreenshot(
       windowId,
       child,
-      `openobsidian-canvas-input-${fileSafeName}-readback`,
+      `${inputScreenshotPrefix}-${fileSafeName}-readback`,
     );
     let visualReadback: Awaited<ReturnType<typeof readCanvasInputScreenshotValue>> | undefined;
     let visualReadbackError = "";
@@ -17225,6 +17619,39 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
     const refreshChangedDuringInput = openObsidianRefreshActivityChanged(refreshBeforeClick, refreshAfterVerification)
       || (refreshAfterVerification.receiverStates.at(-1)?.busy ?? false);
     if (clipboardReadback === value && !refreshChangedDuringInput) {
+      if (process.platform === "linux" && safetyTracker) {
+        const cleanup: Record<string, unknown> = {
+          attempted: true,
+          method: "neutralize the Linux Canvas field clipboard readback and verify an empty selection",
+        };
+        try {
+          execFileSync("xclip", ["-selection", "clipboard"], {
+            input: "",
+            stdio: ["pipe", "ignore", "ignore"],
+            timeout: 5_000,
+          });
+          const emptyReadback = execFileSync("xclip", ["-selection", "clipboard", "-o"], {
+            encoding: "utf8",
+            stdio: ["ignore", "pipe", "ignore"],
+            timeout: 2_000,
+          });
+          cleanup.readback = {
+            attempted: true,
+            succeeded: emptyReadback.length === 0,
+            utf8_bytes: Buffer.byteLength(emptyReadback, "utf8"),
+            sha256: createHash("sha256").update(emptyReadback, "utf8").digest("hex"),
+          };
+          if (emptyReadback.length !== 0) throw new Error("X11 clipboard readback after field verification cleanup was not empty");
+          cleanup.succeeded = true;
+          safetyTracker.clipboardStaged = false;
+        } catch (cleanupError) {
+          cleanup.succeeded = false;
+          cleanup.error = cleanupError instanceof Error ? cleanupError.message : String(cleanupError);
+          safetyTracker.clipboardCleanup = cleanup;
+          throw new Error("Canvas field readback succeeded but clipboard neutralization/readback failed: " + JSON.stringify(cleanup));
+        }
+        safetyTracker.clipboardCleanup = cleanup;
+      }
       return JSON.stringify({
         name: controlName,
         action: "focused the OCR-positioned field, then Ctrl+A and keyboard entry",
@@ -17268,6 +17695,7 @@ async function replaceMacOSOpenObsidianTextInputWithKeyboard(
   logPath = join(reportDirectory, "openobsidian-canvas-note-create.log"),
 ): Promise<string> {
   const fileSafeName = controlName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  const inputScreenshotPrefix = "openobsidian-canvas-input";
   const macOSCanvasLocatorCaptureOptions = controlName === "Canvas edit text-card ID"
     ? {macOSCanvasLocatorCapture: true}
     : {};
@@ -17311,7 +17739,7 @@ async function replaceMacOSOpenObsidianTextInputWithKeyboard(
       const attemptBefore = await captureOpenObsidianScreenshot(
         windowId,
         child,
-        `openobsidian-canvas-input-${fileSafeName}-before`,
+        `${inputScreenshotPrefix}-${fileSafeName}-before-${attempt}`,
         undefined,
         macOSCanvasLocatorCaptureOptions,
       );
@@ -17426,7 +17854,7 @@ async function replaceMacOSOpenObsidianTextInputWithKeyboard(
     before = await captureOpenObsidianScreenshot(
       windowId,
       child,
-      `openobsidian-canvas-input-${fileSafeName}-before`,
+      `${inputScreenshotPrefix}-${fileSafeName}-before-final`,
       undefined,
       macOSCanvasLocatorCaptureOptions,
     );
@@ -17484,7 +17912,7 @@ async function replaceMacOSOpenObsidianTextInputWithKeyboard(
       const readbackPosition = await captureOpenObsidianScreenshot(
         windowId,
         child,
-        `openobsidian-canvas-input-${fileSafeName}-readback-position-${attempt}`,
+        `${inputScreenshotPrefix}-${fileSafeName}-readback-position-${attempt}`,
         undefined,
         macOSCanvasLocatorCaptureOptions,
       );
@@ -17638,7 +18066,7 @@ async function replaceMacOSOpenObsidianTextInputWithKeyboard(
           verification = await captureOpenObsidianScreenshot(
             windowId,
             child,
-            `openobsidian-canvas-input-${fileSafeName}-readback`,
+            `${inputScreenshotPrefix}-${fileSafeName}-readback`,
             undefined,
             macOSCanvasLocatorCaptureOptions,
           );
@@ -17672,7 +18100,7 @@ async function replaceMacOSOpenObsidianTextInputWithKeyboard(
     verification = await captureOpenObsidianScreenshot(
       windowId,
       child,
-      `openobsidian-canvas-input-${fileSafeName}-readback`,
+      `${inputScreenshotPrefix}-${fileSafeName}-readback`,
       undefined,
       macOSCanvasLocatorCaptureOptions,
     );
@@ -17767,11 +18195,15 @@ async function replaceOpenObsidianTextInput(
   controlName: string,
   value: string,
   logPath = join(reportDirectory, "openobsidian-canvas-note-create.log"),
+  safetyTracker?: CanvasInputSafetyTracker,
 ): Promise<string> {
   await waitForOpenObsidianRefreshIdle(0, 0, false, logPath);
   const processId = child.pid;
   if (!processId) throw new Error("OpenObsidian did not expose its process id for Canvas text entry");
   if (process.platform === "linux") {
+    if (safetyTracker && (safetyTracker.expectedAbortCanary || controlName === "Canvas edit path")) {
+      return await replaceLinuxOpenObsidianTextInputWithKeyboard(child, windowId, controlName, value, logPath, safetyTracker);
+    }
     const script = `
 import json
 import sys
@@ -17843,7 +18275,7 @@ sys.exit(1)
       const failure = error as NodeJS.ErrnoException & {stderr?: Buffer | string; stdout?: Buffer | string};
       const output = [failure.stdout, failure.stderr].filter(Boolean).map(String).join("\n").trim();
       try {
-        return await replaceLinuxOpenObsidianTextInputWithKeyboard(child, windowId, controlName, value, logPath);
+        return await replaceLinuxOpenObsidianTextInputWithKeyboard(child, windowId, controlName, value, logPath, safetyTracker);
       } catch (fallbackError) {
         const fallbackMessage = fallbackError instanceof Error ? fallbackError.message : "unknown keyboard fallback error";
         throw new Error(`Could not set the accessible OpenObsidian ${controlName} field: ${output || failure.message}; screenshot-verified keyboard fallback failed: ${fallbackMessage}`);
@@ -18073,35 +18505,66 @@ async function runOpenObsidianCanvasTextEdit(
   expectedSeedCanvas: {bytes: number; sha256: string},
   seedDocument: CanvasReferenceDocument,
   expectedEditedDocument: CanvasReferenceDocument,
-): Promise<{snapshot: SnapshotEntry[]; canvas: {bytes: number; sha256: string}}> {
+  options: {vaultRoot?: string; expectedAbortCanary?: boolean} = {},
+): Promise<{snapshot: SnapshotEntry[]; canvas: {bytes: number; sha256: string}} | {expectedAbortCanary: true}> {
   const canvasReport = report.canvas_reference_reopen as Record<string, unknown>;
-  const editReport = canvasReport.text_edit as Record<string, unknown>;
+  const expectedAbortCanary = options.expectedAbortCanary === true;
+  const selectedVaultRoot = options.vaultRoot ?? canvasVaultRoot;
+  const selectedVaultName = basename(selectedVaultRoot);
+  const editReport = (expectedAbortCanary
+    ? canvasReport.expected_abort_canary
+    : canvasReport.text_edit) as Record<string, unknown>;
   const snapshots = report.vault_snapshots as Record<string, unknown>;
-  const logPath = join(reportDirectory, "openobsidian-canvas-text-edit.log");
-  const userConfigRoot = join(workDirectory, "openobsidian-canvas-edit-user-config");
-  const homeRoot = join(workDirectory, "openobsidian-canvas-edit-home");
-  const localDataRoot = join(workDirectory, "openobsidian-canvas-edit-local-data");
+  const runName = expectedAbortCanary ? "canvas-abort-canary" : "canvas-text-edit";
+  const artifactPrefix = expectedAbortCanary ? "canvas-abort-canary" : "canvas-text-edit";
+  const logName = `openobsidian-${runName}.log`;
+  const logPath = join(reportDirectory, logName);
+  const appDataContainer = join(workDirectory, `openobsidian-${runName}-app-data`);
+  const userConfigRoot = join(appDataContainer, "config");
+  const homeRoot = join(appDataContainer, "home");
+  const localDataRoot = join(appDataContainer, "local-data");
   const appEnv: NodeJS.ProcessEnv = {...process.env, HOME: homeRoot};
-  let appDataRoot: string;
+  const appDataRoot = appDataContainer;
   if (process.platform === "win32") {
     appEnv.APPDATA = userConfigRoot;
     appEnv.LOCALAPPDATA = localDataRoot;
     appEnv.USERPROFILE = homeRoot;
-    appDataRoot = join(userConfigRoot, "OpenObsidian");
   } else if (process.platform === "darwin") {
-    appDataRoot = join(homeRoot, "Library", "Application Support", "OpenObsidian");
+    appEnv.XDG_CONFIG_HOME = userConfigRoot;
+    appEnv.XDG_CACHE_HOME = join(appDataContainer, "cache");
+    appEnv.XDG_DATA_HOME = join(appDataContainer, "data");
+    appEnv.XDG_STATE_HOME = join(appDataContainer, "state");
   } else {
     appEnv.XDG_CONFIG_HOME = userConfigRoot;
-    appEnv.XDG_CACHE_HOME = join(workDirectory, "openobsidian-canvas-edit-cache");
-    appEnv.XDG_DATA_HOME = join(workDirectory, "openobsidian-canvas-edit-data");
+    appEnv.XDG_CACHE_HOME = join(appDataContainer, "cache");
+    appEnv.XDG_DATA_HOME = join(appDataContainer, "data");
+    appEnv.XDG_STATE_HOME = join(appDataContainer, "state");
     appEnv.LIBGL_ALWAYS_SOFTWARE = "1";
     appEnv.WGPU_BACKEND = "gl";
     appEnv.OPENOBSIDIAN_CI_CANVAS_FOCUS_SNAPSHOT_REQUEST_FILE = linuxCanvasFocusSnapshotRequestFile;
-    appDataRoot = join(userConfigRoot, "OpenObsidian");
   }
+  const safetyTracker: CanvasInputSafetyTracker = {
+    expectedAbortCanary,
+    clipboardStaged: false,
+    completedPasteStages: [],
+    diagnosticMotionStages: [],
+    motionDispatchAttempts: 0,
+    pasteDispatchAttempts: 0,
+    saveAttempted: false,
+    clipboardCleanup: null,
+    requestMarkerCleanup: null,
+    focusCheckpoints: [],
+    guardFailures: [],
+    baseline: null,
+  };
   await rm(linuxCanvasFocusSnapshotRequestFile, {force: true});
+  await rm(appDataContainer, {recursive: true, force: true});
   await mkdir(join(homeRoot, "Desktop"), {recursive: true});
+  await mkdir(appDataContainer, {recursive: true});
   editReport.status = "running";
+  editReport.expected_abort_canary = expectedAbortCanary;
+  editReport.vault_name = selectedVaultName;
+  editReport.vault_root = selectedVaultRoot;
   editReport.source_canvas_path = canvasPath;
   editReport.source_text_node_id = "text-1";
   editReport.edited_text = canvasEditedText;
@@ -18150,21 +18613,21 @@ async function runOpenObsidianCanvasTextEdit(
       child,
       window,
       logPath,
-      canvasVaultRoot,
+      selectedVaultRoot,
       editReport,
-      "openobsidian-canvas-text-edit",
+      `openobsidian-${runName}`,
     );
     const initialMarkdownCount = countMarkdownFiles(seedSnapshot);
     const opened = await waitFor("OpenObsidian to render the Canvas text-edit fixture vault", async () => {
       await delay(750);
-      return await captureOpenObsidianScreenshot(window!.window_id, child!, "openobsidian-canvas-text-edit-selected", editReport);
-    }, (capture) => ocrTextContainsFuzzyPhrase(capture.ocrText, canvasVaultName, 1)
+      return await captureOpenObsidianScreenshot(window!.window_id, child!, `openobsidian-${runName}-selected`, editReport);
+    }, (capture) => ocrTextContainsFuzzyPhrase(capture.ocrText, selectedVaultName, 1)
       && new RegExp(`${initialMarkdownCount}\\s+Markdown files found`, "i").test(capture.ocrText), 30_000);
     screenshots.vault_selected = relative(reportDirectory, opened.windowPngPath);
     editReport.selected_vault_visible = true;
     editReport.markdown_count_before_edit = initialMarkdownCount;
 
-    const canonicalVault = await realpath(canvasVaultRoot);
+    const canonicalVault = await realpath(selectedVaultRoot);
     const canonicalAppData = await realpath(appDataRoot);
     const relativeAppData = relative(canonicalVault, canonicalAppData);
     if (relativeAppData === "" || (!relativeAppData.startsWith(`..${sep}`) && relativeAppData !== ".." && !relativeAppData.startsWith(sep))) {
@@ -18173,9 +18636,9 @@ async function runOpenObsidianCanvasTextEdit(
     editReport.app_data_root = appDataRoot;
     editReport.app_data_canonical_root_is_outside_vault = true;
 
-    const beforeEdit = await snapshotTree(canvasVaultRoot);
+    const beforeEdit = await snapshotTree(selectedVaultRoot);
     ensureExactSnapshot(seedSnapshot, beforeEdit, "Canvas vault before native text-card edit");
-    const canvasBytesBefore = await readFile(join(canvasVaultRoot, canvasPath));
+    const canvasBytesBefore = await readFile(join(selectedVaultRoot, canvasPath));
     const seedHash = createHash("sha256").update(canvasBytesBefore).digest("hex");
     if (canvasBytesBefore.length !== expectedSeedCanvas.bytes || seedHash !== expectedSeedCanvas.sha256) {
       throw new Error("OpenObsidian changed the Canvas source before native text-card edit");
@@ -18211,7 +18674,7 @@ async function runOpenObsidianCanvasTextEdit(
     );
     const expandedForm = await waitFor(
       "OpenObsidian to expose the native Canvas text-edit fields",
-      async () => await captureOpenObsidianScreenshot(window!.window_id, child!, "openobsidian-canvas-text-edit-expanded-form", editReport),
+      async () => await captureOpenObsidianScreenshot(window!.window_id, child!, `openobsidian-${runName}-expanded-form`, editReport),
       (capture) => ocrTextContainsFuzzyPhrase(capture.ocrText, "Canvas edit path", 2)
         && ocrTextContainsFuzzyPhrase(capture.ocrText, "Canvas edit text-card ID", 2),
       30_000,
@@ -18219,8 +18682,35 @@ async function runOpenObsidianCanvasTextEdit(
     screenshots.expanded_form = relative(reportDirectory, expandedForm.windowPngPath);
     editReport.expanded_form_ocr = expandedForm.ocrText.slice(0, 4_000);
 
-    const canvasPathReadback = await replaceOpenObsidianTextInput(child, window.window_id, "Canvas edit path", canvasPath, logPath);
-    const textCardIdReadback = await replaceOpenObsidianTextInput(child, window.window_id, "Canvas edit text-card ID", "text-1", logPath);
+    const vaultBeforeFieldInput = await snapshotTree(selectedVaultRoot);
+    ensureExactSnapshot(seedSnapshot, vaultBeforeFieldInput, "Canvas vault before first native text-edit field input");
+    const canvasBytesBeforeFieldInput = await readFile(join(selectedVaultRoot, canvasPath));
+    const canvasHashBeforeFieldInput = createHash("sha256").update(canvasBytesBeforeFieldInput).digest("hex");
+    if (canvasBytesBeforeFieldInput.length !== expectedSeedCanvas.bytes
+      || canvasHashBeforeFieldInput !== expectedSeedCanvas.sha256
+      || vaultBeforeFieldInput.some((entry) => entry.path === canvasNotePath)) {
+      throw new Error("Canvas source bytes or destination state changed before first native text-edit field input");
+    }
+    const appDataBeforeFieldInput = await snapshotTree(appDataRoot);
+    safetyTracker.baseline = {
+      vaultRoot: selectedVaultRoot,
+      appDataRoot,
+      vaultSnapshot: vaultBeforeFieldInput,
+      appDataSnapshot: appDataBeforeFieldInput,
+      canvasBytes: canvasBytesBeforeFieldInput,
+      canvasSha256: canvasHashBeforeFieldInput,
+    };
+    editReport.vault_snapshot_before_field_input = vaultBeforeFieldInput;
+    editReport.app_data_snapshot_before_field_input = appDataBeforeFieldInput;
+    editReport.canvas_source_before_field_input = {
+      bytes: canvasBytesBeforeFieldInput.length,
+      sha256: canvasHashBeforeFieldInput,
+    };
+    editReport.destination_absent_before_field_input = true;
+    await saveReport();
+
+    const canvasPathReadback = await replaceOpenObsidianTextInput(child, window.window_id, "Canvas edit path", canvasPath, logPath, safetyTracker);
+    const textCardIdReadback = await replaceOpenObsidianTextInput(child, window.window_id, "Canvas edit text-card ID", "text-1", logPath, safetyTracker);
     interactions.canvas_path = canvasPathReadback;
     interactions.text_card_id = textCardIdReadback;
     const inputReadbackEntries = [
@@ -18241,9 +18731,9 @@ async function runOpenObsidianCanvasTextEdit(
       .map(([name]) => name);
     if (unverifiedInputs.length > 0) throw new Error(`Canvas edit inputs did not provide exact field-value readbacks: ${unverifiedInputs.join(", ")}`);
 
-    const afterInput = await snapshotTree(canvasVaultRoot);
+    const afterInput = await snapshotTree(selectedVaultRoot);
     ensureExactSnapshot(beforeEdit, afterInput, "Canvas path and text-card ID entry must not write to the vault");
-    if ((await readFile(join(canvasVaultRoot, canvasPath))).compare(canvasBytesBefore) !== 0
+    if ((await readFile(join(selectedVaultRoot, canvasPath))).compare(canvasBytesBefore) !== 0
       || afterInput.some((entry) => entry.path === canvasNotePath)) {
       throw new Error("Entering native Canvas edit inputs wrote to the vault or changed its Canvas source");
     }
@@ -18254,7 +18744,7 @@ async function runOpenObsidianCanvasTextEdit(
     interactions.load = await invokeNativeAccessibleControl(child, window.window_id, "Load Canvas text card", undefined, true);
     const loadedDraft = await waitFor(
       "OpenObsidian to load the selected Canvas text-card draft",
-      async () => await captureOpenObsidianScreenshot(window!.window_id, child!, "openobsidian-canvas-text-edit-loaded", editReport),
+      async () => await captureOpenObsidianScreenshot(window!.window_id, child!, `openobsidian-${runName}-loaded`, editReport),
       (capture) => ocrTextContainsPhrase(capture.ocrText, "Canvas text draft")
         && ocrTextContainsPhrase(capture.ocrText, "Canvas text loaded")
         && capture.ocrText.includes(canvasMarker),
@@ -18262,16 +18752,16 @@ async function runOpenObsidianCanvasTextEdit(
     );
     screenshots.loaded = relative(reportDirectory, loadedDraft.windowPngPath);
     editReport.loaded_ocr = loadedDraft.ocrText.slice(0, 4_000);
-    const afterLoad = await snapshotTree(canvasVaultRoot);
+    const afterLoad = await snapshotTree(selectedVaultRoot);
     ensureExactSnapshot(afterInput, afterLoad, "Loading the Canvas text-card draft must not write to the vault");
-    if ((await readFile(join(canvasVaultRoot, canvasPath))).compare(canvasBytesBefore) !== 0
+    if ((await readFile(join(selectedVaultRoot, canvasPath))).compare(canvasBytesBefore) !== 0
       || afterLoad.some((entry) => entry.path === canvasNotePath)) {
       throw new Error("Loading the native Canvas text-card draft wrote to the vault or changed its source");
     }
     editReport.vault_snapshot_after_load = afterLoad;
     editReport.no_write_during_load = true;
 
-    const draftReadback = await replaceOpenObsidianTextInput(child, window.window_id, "Canvas text draft", canvasEditedText, logPath);
+    const draftReadback = await replaceOpenObsidianTextInput(child, window.window_id, "Canvas text draft", canvasEditedText, logPath, safetyTracker);
     interactions.canvas_text_draft = draftReadback;
     let parsedDraftReadback: {exact_readback?: boolean; fallback?: {exact_readback?: boolean}};
     try {
@@ -18283,19 +18773,22 @@ async function runOpenObsidianCanvasTextEdit(
     if (!editReport.draft_readback_exact) {
       throw new Error("The native Canvas text draft did not provide an exact field-value readback");
     }
-    const afterDraft = await snapshotTree(canvasVaultRoot);
+    const afterDraft = await snapshotTree(selectedVaultRoot);
     ensureExactSnapshot(afterLoad, afterDraft, "Editing the Canvas draft must not write to the vault before Save Canvas text");
-    if ((await readFile(join(canvasVaultRoot, canvasPath))).compare(canvasBytesBefore) !== 0
+    if ((await readFile(join(selectedVaultRoot, canvasPath))).compare(canvasBytesBefore) !== 0
       || afterDraft.some((entry) => entry.path === canvasNotePath)) {
       throw new Error("Editing the Canvas text draft wrote to the vault before explicit save");
     }
     editReport.vault_snapshot_after_draft = afterDraft;
     editReport.no_write_before_save = true;
 
+    await saveReport();
+    editReport.save_attempted = true;
+    safetyTracker.saveAttempted = true;
     interactions.save = await invokeNativeAccessibleControl(child, window.window_id, "Save Canvas text", undefined, true);
     const savedCanvasBytes = await waitFor("OpenObsidian to save the selected Canvas text card", async () => {
       try {
-        const bytes = await readFile(join(canvasVaultRoot, canvasPath));
+        const bytes = await readFile(join(selectedVaultRoot, canvasPath));
         let document: unknown;
         try {
           document = JSON.parse(bytes.toString("utf8")) as unknown;
@@ -18316,10 +18809,10 @@ async function runOpenObsidianCanvasTextEdit(
       throw new Error(`Saved Canvas text edit was not valid JSON: ${error instanceof Error ? error.message : "unknown parse error"}`);
     }
     if (!canvasDocumentMatchesExpectedTextEdit(savedDocument, expectedEditedDocument)) {
-      await writeFile(join(reportDirectory, "canvas-text-edit-incorrect-output.canvas"), savedCanvasBytes);
+      await writeFile(join(reportDirectory, `${artifactPrefix}-incorrect-output.canvas`), savedCanvasBytes);
       throw new Error("Saved Canvas JSON did not equal the seed document with only text-1.text changed");
     }
-    const afterSave = await snapshotTree(canvasVaultRoot);
+    const afterSave = await snapshotTree(selectedVaultRoot);
     const saveChanges = changedPaths(afterDraft, afterSave);
     if (saveChanges.length !== 1 || saveChanges[0]?.path !== canvasPath
       || saveChanges[0]?.before?.kind !== "file" || saveChanges[0]?.after?.kind !== "file") {
@@ -18338,6 +18831,15 @@ async function runOpenObsidianCanvasTextEdit(
       throw new Error("Saving the Canvas edit changed a sibling node, an edge, or other non-target document data");
     }
     editReport.status = "passed";
+    editReport.focus_checkpoints = safetyTracker.focusCheckpoints;
+    editReport.guard_failures = safetyTracker.guardFailures;
+    editReport.diagnostic_motion_stages = safetyTracker.diagnosticMotionStages;
+    editReport.motion_dispatch_attempts = safetyTracker.motionDispatchAttempts;
+    editReport.paste_dispatch_attempts = safetyTracker.pasteDispatchAttempts;
+    editReport.completed_paste_stages = safetyTracker.completedPasteStages;
+    editReport.save_attempted = safetyTracker.saveAttempted;
+    editReport.clipboard_cleanup = safetyTracker.clipboardCleanup;
+    editReport.request_marker_cleanup = safetyTracker.requestMarkerCleanup;
     editReport.interactions = interactions;
     editReport.screenshots = screenshots;
     editReport.vault_snapshot_after_save = afterSave;
@@ -18350,25 +18852,25 @@ async function runOpenObsidianCanvasTextEdit(
     editReport.no_markdown_created = true;
     snapshots.canvas_text_edit_before = beforeEdit;
     snapshots.canvas_text_edit_after = afterSave;
-    await writeFile(join(reportDirectory, "canvas-text-edit-before.json"), `${JSON.stringify(beforeEdit, null, 2)}\n`);
-    await writeFile(join(reportDirectory, "canvas-text-edit-after.json"), `${JSON.stringify(afterSave, null, 2)}\n`);
-    await writeFile(join(reportDirectory, "canvas-text-edit-source-before.canvas"), canvasBytesBefore);
-    await writeFile(join(reportDirectory, "canvas-text-edit-source-after.canvas"), savedCanvasBytes);
+    await writeFile(join(reportDirectory, `${artifactPrefix}-before.json`), `${JSON.stringify(beforeEdit, null, 2)}\n`);
+    await writeFile(join(reportDirectory, `${artifactPrefix}-after.json`), `${JSON.stringify(afterSave, null, 2)}\n`);
+    await writeFile(join(reportDirectory, `${artifactPrefix}-source-before.canvas`), canvasBytesBefore);
+    await writeFile(join(reportDirectory, `${artifactPrefix}-source-after.canvas`), savedCanvasBytes);
     editReport.artifacts = {
-      openobsidian_log: "openobsidian-canvas-text-edit.log",
-      before_snapshot: "canvas-text-edit-before.json",
-      after_snapshot: "canvas-text-edit-after.json",
-      source_before: "canvas-text-edit-source-before.canvas",
-      source_after: "canvas-text-edit-source-after.canvas",
+      openobsidian_log: logName,
+      before_snapshot: `${artifactPrefix}-before.json`,
+      after_snapshot: `${artifactPrefix}-after.json`,
+      source_before: `${artifactPrefix}-source-before.canvas`,
+      source_after: `${artifactPrefix}-source-after.canvas`,
     };
     await saveReport();
 
     await delay(1_000);
     await stopProcess(child);
     child = undefined;
-    const afterClose = await snapshotTree(canvasVaultRoot);
+    const afterClose = await snapshotTree(selectedVaultRoot);
     ensureExactSnapshot(afterSave, afterClose, "OpenObsidian close after native Canvas text edit");
-    const closedBytes = await readFile(join(canvasVaultRoot, canvasPath));
+    const closedBytes = await readFile(join(selectedVaultRoot, canvasPath));
     if (closedBytes.compare(savedCanvasBytes) !== 0 || afterClose.some((entry) => entry.path === canvasNotePath)) {
       throw new Error("OpenObsidian changed the saved Canvas edit on close or created a Markdown note");
     }
@@ -18384,7 +18886,237 @@ async function runOpenObsidianCanvasTextEdit(
     editReport.status = "failed";
     editReport.error = error instanceof Error ? error.message : String(error);
     editReport.screenshots = screenshots;
-    await saveReport();
+    editReport.focus_checkpoints = safetyTracker.focusCheckpoints;
+    editReport.guard_failures = safetyTracker.guardFailures;
+    editReport.diagnostic_motion_stages = safetyTracker.diagnosticMotionStages;
+    editReport.motion_dispatch_attempts = safetyTracker.motionDispatchAttempts;
+    editReport.paste_dispatch_attempts = safetyTracker.pasteDispatchAttempts;
+    editReport.completed_paste_stages = safetyTracker.completedPasteStages;
+    editReport.save_attempted = safetyTracker.saveAttempted;
+    const expectedCanaryMarker = error instanceof ExpectedCanvasAbortCanaryError
+      && error.code === "EXPECTED_CANVAS_ABORT_CANARY";
+    let canaryPassed = false;
+    const canaryFailureReasons: string[] = [];
+    const baseline = safetyTracker.baseline;
+    if (baseline && !safetyTracker.saveAttempted) {
+      if (safetyTracker.clipboardStaged && process.platform === "linux") {
+        const cleanup: Record<string, unknown> = {
+          attempted: true,
+          method: "neutralize staged X11 clipboard before closing the Canvas app",
+        };
+        try {
+          execFileSync("xclip", ["-selection", "clipboard"], {
+            input: "",
+            stdio: ["pipe", "ignore", "ignore"],
+            timeout: 5_000,
+          });
+          const clipboardReadback = execFileSync("xclip", ["-selection", "clipboard", "-o"], {
+            encoding: "utf8",
+            stdio: ["ignore", "pipe", "ignore"],
+            timeout: 2_000,
+          });
+          cleanup.readback = {
+            attempted: true,
+            succeeded: clipboardReadback.length === 0,
+            utf8_bytes: Buffer.byteLength(clipboardReadback, "utf8"),
+            sha256: createHash("sha256").update(clipboardReadback, "utf8").digest("hex"),
+          };
+          if (clipboardReadback.length !== 0) throw new Error("X11 clipboard readback after abort cleanup was not empty");
+          cleanup.succeeded = true;
+          safetyTracker.clipboardStaged = false;
+        } catch (cleanupError) {
+          cleanup.succeeded = false;
+          cleanup.error = cleanupError instanceof Error ? cleanupError.message : String(cleanupError);
+        }
+        safetyTracker.clipboardCleanup = cleanup;
+      }
+
+      const markerCleanup: Record<string, unknown> = {
+        attempted: true,
+        path: linuxCanvasFocusSnapshotRequestFile,
+      };
+      try {
+        await rm(linuxCanvasFocusSnapshotRequestFile, {force: true});
+        const markerRemains = await lstat(linuxCanvasFocusSnapshotRequestFile).then(() => true, (cleanupError: NodeJS.ErrnoException) => {
+          if (cleanupError.code === "ENOENT") return false;
+          throw cleanupError;
+        });
+        markerCleanup.succeeded = !markerRemains;
+        if (markerRemains) throw new Error("Canvas focus request marker remained after abort cleanup");
+      } catch (cleanupError) {
+        markerCleanup.succeeded = false;
+        markerCleanup.error = cleanupError instanceof Error ? cleanupError.message : String(cleanupError);
+      }
+      safetyTracker.requestMarkerCleanup = markerCleanup;
+
+      let appTermination: Record<string, unknown> = {attempted: false, already_stopped: child === undefined};
+      if (child) {
+        const processToStop = child;
+        let stopError = "";
+        try {
+          await stopProcess(processToStop);
+        } catch (stopFailure) {
+          stopError = stopFailure instanceof Error ? stopFailure.message : String(stopFailure);
+        }
+        const exited = processToStop.exitCode !== null || processToStop.signalCode !== null;
+        appTermination = {
+          attempted: true,
+          pid: processToStop.pid ?? null,
+          exited,
+          exit_code: processToStop.exitCode,
+          signal_code: processToStop.signalCode,
+          error: stopError || null,
+        };
+        if (exited) child = undefined;
+      }
+      const appTerminated = appTermination.exited === true || appTermination.already_stopped === true;
+      const [vaultCapture, appDataCapture, canvasCapture] = await Promise.allSettled([
+        snapshotTree(baseline.vaultRoot),
+        snapshotTree(baseline.appDataRoot),
+        readFile(join(baseline.vaultRoot, canvasPath)),
+      ]);
+      const postAbortVault = vaultCapture.status === "fulfilled" ? vaultCapture.value : null;
+      const postAbortAppData = appDataCapture.status === "fulfilled" ? appDataCapture.value : null;
+      const postAbortCanvasBytes = canvasCapture.status === "fulfilled" ? canvasCapture.value : null;
+      const vaultChanges = postAbortVault ? changedPaths(baseline.vaultSnapshot, postAbortVault) : null;
+      const appDataChanges = postAbortAppData ? changedPaths(baseline.appDataSnapshot, postAbortAppData) : null;
+      const destinationAbsent = postAbortVault !== null
+        && !postAbortVault.some((entry) => entry.path === canvasNotePath);
+      const canvasAfter = postAbortCanvasBytes
+        ? {
+          bytes: postAbortCanvasBytes.length,
+          sha256: createHash("sha256").update(postAbortCanvasBytes).digest("hex"),
+        }
+        : null;
+      const canvasBytesUnchanged = postAbortCanvasBytes !== null
+        && postAbortCanvasBytes.equals(baseline.canvasBytes)
+        && canvasAfter?.sha256 === baseline.canvasSha256;
+      const preservationVerified = appTerminated
+        && !safetyTracker.saveAttempted
+        && vaultChanges !== null && vaultChanges.length === 0
+        && appDataChanges !== null && appDataChanges.length === 0
+        && canvasBytesUnchanged
+        && destinationAbsent;
+      const preservationRecord: Record<string, unknown> = {
+        complete: postAbortVault !== null && postAbortAppData !== null && postAbortCanvasBytes !== null,
+        app_termination: appTermination,
+        save_attempted: safetyTracker.saveAttempted,
+        vault_root: baseline.vaultRoot,
+        vault_snapshot_before: baseline.vaultSnapshot,
+        vault_snapshot_after: postAbortVault,
+        vault_changes: vaultChanges,
+        app_data_root: baseline.appDataRoot,
+        app_data_snapshot_before: baseline.appDataSnapshot,
+        app_data_snapshot_after: postAbortAppData,
+        app_data_changes: appDataChanges,
+        canvas_source_before: {
+          bytes: baseline.canvasBytes.length,
+          sha256: baseline.canvasSha256,
+        },
+        canvas_source_after: canvasAfter,
+        canvas_source_bytes_unchanged: canvasBytesUnchanged,
+        destination_path: canvasNotePath,
+        destination_absent_after_abort: destinationAbsent,
+        clipboard_cleanup: safetyTracker.clipboardCleanup,
+        request_marker_cleanup: safetyTracker.requestMarkerCleanup,
+        preservation_verified: preservationVerified,
+        capture_errors: [
+          vaultCapture.status === "rejected" ? `vault: ${vaultCapture.reason instanceof Error ? vaultCapture.reason.message : String(vaultCapture.reason)}` : null,
+          appDataCapture.status === "rejected" ? `app_data: ${appDataCapture.reason instanceof Error ? appDataCapture.reason.message : String(appDataCapture.reason)}` : null,
+          canvasCapture.status === "rejected" ? `canvas_source: ${canvasCapture.reason instanceof Error ? canvasCapture.reason.message : String(canvasCapture.reason)}` : null,
+        ].filter((value): value is string => value !== null),
+      };
+      editReport.pre_save_abort_preservation = preservationRecord;
+      if (expectedAbortCanary) {
+        snapshots.canvas_abort_canary_vault_before = baseline.vaultSnapshot;
+        snapshots.canvas_abort_canary_vault_after = postAbortVault;
+      } else {
+        snapshots.canvas_text_edit_abort_vault_before = baseline.vaultSnapshot;
+        snapshots.canvas_text_edit_abort_vault_after = postAbortVault;
+      }
+      try {
+        await writeFile(join(reportDirectory, `${artifactPrefix}-abort-vault-before.json`), `${JSON.stringify(baseline.vaultSnapshot, null, 2)}\n`);
+        if (postAbortVault) await writeFile(join(reportDirectory, `${artifactPrefix}-abort-vault-after.json`), `${JSON.stringify(postAbortVault, null, 2)}\n`);
+        await writeFile(join(reportDirectory, `${artifactPrefix}-abort-app-data-before.json`), `${JSON.stringify(baseline.appDataSnapshot, null, 2)}\n`);
+        if (postAbortAppData) await writeFile(join(reportDirectory, `${artifactPrefix}-abort-app-data-after.json`), `${JSON.stringify(postAbortAppData, null, 2)}\n`);
+        await writeFile(join(reportDirectory, `${artifactPrefix}-abort-source-before.canvas`), baseline.canvasBytes);
+        if (postAbortCanvasBytes) await writeFile(join(reportDirectory, `${artifactPrefix}-abort-source-after.canvas`), postAbortCanvasBytes);
+        preservationRecord.artifacts = {
+          vault_before: `${artifactPrefix}-abort-vault-before.json`,
+          vault_after: postAbortVault ? `${artifactPrefix}-abort-vault-after.json` : null,
+          app_data_before: `${artifactPrefix}-abort-app-data-before.json`,
+          app_data_after: postAbortAppData ? `${artifactPrefix}-abort-app-data-after.json` : null,
+          canvas_source_before: `${artifactPrefix}-abort-source-before.canvas`,
+          canvas_source_after: postAbortCanvasBytes ? `${artifactPrefix}-abort-source-after.canvas` : null,
+        };
+      } catch (artifactError) {
+        preservationRecord.artifact_write_error = artifactError instanceof Error ? artifactError.message : String(artifactError);
+      }
+
+      if (expectedAbortCanary) {
+        const guardFailure = safetyTracker.guardFailures.at(-1);
+        const failedPredicates = guardFailure?.failed_predicates;
+        const guardWasSyntheticOnly = Array.isArray(failedPredicates)
+          && failedPredicates.length === 1
+          && failedPredicates[0] === "target_value_exact"
+          && (guardFailure?.expected_text as string | undefined) === "__openobsidian_expected_abort_canary__"
+          && (guardFailure?.target as {empty?: boolean} | undefined)?.empty === true;
+        const expectedAbortMotionRecord = safetyTracker.diagnosticMotionStages.length === 1
+          && safetyTracker.diagnosticMotionStages[0]?.status === "expected synthetic guard abort before pointer dispatch"
+          && (safetyTracker.diagnosticMotionStages[0]?.motion as {status?: string} | undefined)?.status === "pending"
+          && safetyTracker.diagnosticMotionStages[0]?.snapshot_after_motion === undefined;
+        const noDiagnosticMotion = safetyTracker.motionDispatchAttempts === 0 && expectedAbortMotionRecord;
+        const noPaste = safetyTracker.pasteDispatchAttempts === 0
+          && safetyTracker.completedPasteStages.length === 0;
+        const clipboardCleanup = safetyTracker.clipboardCleanup;
+        const clipboardWasCleared = clipboardCleanup?.succeeded === true
+          && (clipboardCleanup.readback as Record<string, unknown> | undefined)?.succeeded === true;
+        const requestMarkerWasRemoved = safetyTracker.requestMarkerCleanup?.succeeded === true;
+        if (!expectedCanaryMarker) canaryFailureReasons.push("the exact typed expected-abort marker was not observed");
+        if (!guardWasSyntheticOnly) canaryFailureReasons.push("the synthetic target-value mismatch was not the sole failed pre-motion predicate");
+        if (!noDiagnosticMotion) canaryFailureReasons.push("a diagnostic pointer motion was attempted or dispatched");
+        if (!noPaste) canaryFailureReasons.push("a Ctrl+V dispatch or completed paste stage was recorded");
+        if (safetyTracker.saveAttempted) canaryFailureReasons.push("Save Canvas text was attempted");
+        if (!clipboardWasCleared) canaryFailureReasons.push("clipboard neutralization and empty readback were not both proven");
+        if (!requestMarkerWasRemoved) canaryFailureReasons.push("the focus snapshot request marker was not proven removed");
+        if (!preservationVerified) canaryFailureReasons.push("complete post-abort vault, app-data, source-byte, destination, and app-termination preservation checks did not all pass");
+        if (typeof preservationRecord.artifact_write_error === "string") canaryFailureReasons.push("one or more full preservation evidence artifacts could not be written");
+        editReport.status = canaryFailureReasons.length === 0 ? "passed" : "failed";
+        editReport.expected_abort_marker = {
+          observed: expectedCanaryMarker,
+          code: expectedCanaryMarker ? (error as ExpectedCanvasAbortCanaryError).code : null,
+          error: error instanceof Error ? error.message : String(error),
+        };
+        editReport.synthetic_guard_failure_only = guardWasSyntheticOnly;
+        editReport.zero_diagnostic_pointer_dispatches = noDiagnosticMotion;
+        editReport.zero_ctrl_v_dispatches_and_completed_pastes = noPaste;
+        editReport.save_attempted = safetyTracker.saveAttempted;
+        editReport.clipboard_cleared_and_readback_empty = clipboardWasCleared;
+        editReport.request_marker_removed = requestMarkerWasRemoved;
+        editReport.preservation_verified = preservationVerified;
+        editReport.expected_abort_validation_failures = canaryFailureReasons;
+        canaryPassed = canaryFailureReasons.length === 0;
+      }
+    } else if (expectedAbortCanary) {
+      canaryFailureReasons.push("the canary did not reach a pre-save point with complete vault and app-data baselines");
+      editReport.status = "failed";
+      editReport.expected_abort_validation_failures = canaryFailureReasons;
+    }
+    try {
+      await saveReport();
+    } catch (reportError) {
+      editReport.report_persist_error = reportError instanceof Error ? reportError.message : String(reportError);
+      canaryPassed = false;
+      if (expectedAbortCanary) canaryFailureReasons.push("the final expected-abort report could not be persisted");
+    }
+    if (expectedAbortCanary && expectedCanaryMarker && canaryPassed) {
+      return {expectedAbortCanary: true};
+    }
+    if (expectedAbortCanary && expectedCanaryMarker) {
+      throw new Error("Linux Canvas expected-abort canary could not prove its abort contract: "
+        + canaryFailureReasons.join("; ")
+        + "; original_marker=" + (error instanceof Error ? error.message : String(error)));
+    }
     throw error;
   } finally {
     await stopProcess(child).catch(() => undefined);
@@ -18737,12 +19469,51 @@ async function runCanvasReferenceProbe(): Promise<void> {
     const {seed: seedDocument, edited: expectedEditedDocument} = canvasReferenceDocumentsWithEditedText(canvasEditedText);
     const seedSnapshot = await snapshotTree(canvasVaultRoot);
     snapshots.canvas_reference_seed = seedSnapshot;
+    if (process.platform === "linux") {
+      const expectedAbortCanaryReport = canvasReport.expected_abort_canary as Record<string, unknown>;
+      expectedAbortCanaryReport.status = "running";
+      expectedAbortCanaryReport.fixture_vault_name = canvasAbortCanaryVaultName;
+      expectedAbortCanaryReport.fixture_vault_root = canvasAbortCanaryVaultRoot;
+      try {
+        await rm(canvasAbortCanaryVaultRoot, {recursive: true, force: true});
+        await cp(canvasVaultRoot, canvasAbortCanaryVaultRoot, {recursive: true});
+        const canarySeedSnapshot = await snapshotTree(canvasAbortCanaryVaultRoot);
+        ensureExactSnapshot(seedSnapshot, canarySeedSnapshot, "Linux expected-abort canary fixture clone");
+        expectedAbortCanaryReport.fixture_snapshot_matches_seed = true;
+        expectedAbortCanaryReport.fixture_snapshot = canarySeedSnapshot;
+        const canaryResult = await runOpenObsidianCanvasTextEdit(
+          canarySeedSnapshot,
+          seedCanvas,
+          seedDocument,
+          expectedEditedDocument,
+          {vaultRoot: canvasAbortCanaryVaultRoot, expectedAbortCanary: true},
+        );
+        if (!("expectedAbortCanary" in canaryResult) || canaryResult.expectedAbortCanary !== true) {
+          throw new Error("Linux expected-abort canary returned without its exact tagged abort result");
+        }
+      } catch (error) {
+        expectedAbortCanaryReport.status = "failed";
+        expectedAbortCanaryReport.pipeline_error = error instanceof Error ? error.message : String(error);
+        try {
+          await saveReport();
+        } catch (reportError) {
+          expectedAbortCanaryReport.pipeline_error_report_write_error = reportError instanceof Error ? reportError.message : String(reportError);
+        }
+        throw error;
+      }
+    } else {
+      (canvasReport.expected_abort_canary as Record<string, unknown>).status = "not_applicable";
+      (canvasReport.expected_abort_canary as Record<string, unknown>).reason = "the deterministic pre-motion canary is Linux-only";
+    }
     const textEdit = await runOpenObsidianCanvasTextEdit(
       seedSnapshot,
       seedCanvas,
       seedDocument,
       expectedEditedDocument,
     );
+    if (!("snapshot" in textEdit) || !("canvas" in textEdit)) {
+      throw new Error("The normal Canvas text edit returned an expected-abort canary result");
+    }
     const expectedCanvas = textEdit.canvas;
     const editedSnapshot = textEdit.snapshot;
     snapshots.canvas_reference_after_native_text_edit = editedSnapshot;

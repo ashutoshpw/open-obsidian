@@ -22,8 +22,7 @@ use std::fmt::{self, Write as _};
 use std::path::Path;
 use std::rc::Rc;
 use std::sync::{
-    Arc,
-    OnceLock,
+    Arc, OnceLock,
     atomic::{AtomicU16, Ordering},
     mpsc::{self, Receiver, TryRecvError},
 };
@@ -45,6 +44,7 @@ const MAX_BASE_ROW_TEXT_BYTES: usize = 4096;
 const BASES_TRUNCATION_MARKER: &str = "… [truncated]";
 const MAX_TRANSCLUSION_PREVIEW_BYTES: usize = MAX_NOTE_SOURCE_PREVIEW_BYTES;
 const VAULT_RECONCILIATION_INTERVAL: Duration = Duration::from_secs(60);
+static CI_CANVAS_FOCUS_SNAPSHOT_START: OnceLock<Instant> = OnceLock::new();
 #[cfg(test)]
 const C03_RENAME_FIXTURE: &str = include_str!("../../../fixtures/rename-plan.json");
 #[cfg(test)]
@@ -274,6 +274,9 @@ fn run_with_desktop_services_and_session_internal(
     initial_session: Option<VaultSession>,
     external_file_opener: Option<Box<ExternalFileOpenAction>>,
 ) -> eframe::Result {
+    if std::env::var_os("OPENOBSIDIAN_CI_CANVAS_FOCUS_SNAPSHOT_REQUEST_FILE").is_some() {
+        let _ = CI_CANVAS_FOCUS_SNAPSHOT_START.set(Instant::now());
+    }
     let options = eframe::NativeOptions::default();
     eframe::run_native(
         "OpenObsidian",
@@ -2194,8 +2197,7 @@ impl OpenObsidianApp {
                 None
             };
             if let Some(request_id) = snapshot_request {
-                static SNAPSHOT_MONOTONIC_START: OnceLock<Instant> = OnceLock::new();
-                let monotonic_ms = SNAPSHOT_MONOTONIC_START
+                let monotonic_ms = CI_CANVAS_FOCUS_SNAPSHOT_START
                     .get_or_init(Instant::now)
                     .elapsed()
                     .as_millis();
