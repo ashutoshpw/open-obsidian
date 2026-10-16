@@ -8877,3 +8877,66 @@ The unstable-refresh repair now drops timer-only work without requeueing the fai
 ## 2026-10-16T21:44:29Z — R3.18 implementation and independent review complete
 
 Completed the approved R3.18 implementation locally: the inventory gate computes 221 reviewed rows as 196 inherited plus 25 recognized additions, with a separate exact 16-MIG-row check; the UI now hashes full-vault snapshots off-frame, preserves the prior listing/revision when a scan cannot establish a stable snapshot, clears timer-only retry work, and keeps newer watcher/manual triggers actionable; Canvas draft leases, stale-source conflict history and cancellation, and one-time safe handoff are covered; periodic root-watch repair preserves queued filesystem hints; the strict cross-platform harness checks exact Canvas target/sibling values, paired click geometry, request correlation, persistence, and reopen behavior. Clarified the deferral quiet-window acceptance to require no extra full-refresh request/result or pending rescan state while allowing separately correlated watcher-only probes. Three independent read-only implementation reviews found no remaining acceptance gaps or tracker mismatches. Two likely rustfmt layout issues were corrected by source inspection only. The goal continues to prohibit minor-change pushes and requires one push after a complete reviewed milestone; R3.18 is implementation-complete but not achieved. No tests, builds, formatters, validators, local executable checks, commits, CI dispatches, or pushes occurred. Final live `origin/main` and active-CI checks remain to be done before the single R3.18 push; the last verified base is `37994bfb0cdea541f907a33b2c38527a411ca2c7`.
+
+
+## 2026-10-16T21:49:16Z — R3.18 submitted; exact-SHA CI pending
+
+The reviewed R3.18 consolidated repair was committed once as `15fc2c10f87ada3ba9fb191e76206ce45acac74d` and pushed to `origin/main` once after confirming the prior R3.17 batch was terminal, no required Actions run was active, and `origin/main` still matched the reviewed base `37994bfb0cdea541f907a33b2c38527a411ca2c7`. A post-push remote check confirmed `origin/main` at `15fc2c10f87ada3ba9fb191e76206ce45acac74d`. All seven required workflows triggered on that SHA. At this observation, four workflows and twelve of twenty jobs had passed; three workflows and eight jobs remained in progress. No failures were reported. R3.18 remains implementation-complete / CI-pending, not achieved. Keep `origin/main` at this SHA until all required jobs and artifacts are reconciled. The post-push status/evidence edits in this worktree are local and do not trigger another CI batch. No local tests, builds, formatters, validators, or runtime checks were run.
+
+
+## 2026-10-16T21:51:04Z — R3.18 CI progress; failures await complete logs
+
+Read-only GitHub Actions polling on exact SHA `15fc2c10f87ada3ba9fb191e76206ce45acac74d` shows five of seven required workflows terminal-successful. Thirteen of twenty jobs passed; Rust macOS job 117211507802 and Rust Ubuntu job 117211508123 failed; minimum-Rust, Windows Rust, and all three round-trip jobs remain in progress. The Rust workflow is still active, so `gh run view --log-failed` reports that logs will be available only after the workflow completes. No source or workflow changes were made. Keep `origin/main` fixed at `15fc2c10f87ada3ba9fb191e76206ce45acac74d`, wait for every required job to become terminal, then inspect Rust failure logs and reconcile round-trip reports/artifacts before preparing one consolidated repair milestone. No local executable validation was run.
+
+
+## 2026-10-16T21:52:01Z — Rust platform job failures updated
+
+A subsequent read-only poll on `15fc2c10f87ada3ba9fb191e76206ce45acac74d` shows the Rust macOS, Ubuntu, and Windows jobs terminal-failed. Thirteen jobs have passed; the minimum-supported-Rust job and all three round-trip jobs remain active. Run-level Rust CI logs remain unavailable until its minimum-Rust job finishes. No failure cause is inferred from status alone, and no source changes or local validation were made. Keep `origin/main` fixed and reconcile the complete batch before repair.
+
+
+## 2026-10-16T21:53:46Z — Round-trip failures recorded; two jobs remain
+
+On exact SHA `15fc2c10f87ada3ba9fb191e76206ce45acac74d`, Ubuntu and Windows vault round-trip jobs have now failed. The minimum-Rust job and macOS round-trip job remain active. The batch currently has five of seven workflows successful, 13 passed jobs, five failed jobs, and two active jobs. Read-only artifact/report identity and failure inspection is underway in parallel. Keep `origin/main` unchanged; wait for terminal results and full artifact reconciliation before consolidating any repair. No local executable validation or source edits were made.
+
+
+## 2026-10-16T21:56:24Z — Round-trip batch terminal on three platforms; Linux/Windows reports reconciled
+
+Run 38971746893 is terminal-failed on exact SHA `15fc2c10f87ada3ba9fb191e76206ce45acac74d` for Linux, Windows, and macOS. Linux artifact 12077522504 (2,590,805 bytes) and Windows artifact 12076873273 (2,842,372 bytes) were downloaded read-only; archive SHA-256 values match Actions API digests, and report identities match the exact SHA, run 38971746893, attempt 1, and platform. Both reports fail at the first external-note watcher reconciliation with: “Timed out waiting for a post-edit changed watcher snapshot probe and correlated full refresh; last value=null.” Linux report SHA-256: `1f516637e066b81c3a52ebc63168565db68f47214bdcae60d99c7923e2ef4132`; Windows report SHA-256: `7746147c29f75904220854abd11ebcae2714e91cf462c2ec94e928dc9eb12db8`. macOS report inspection and complete artifact inventory remain pending. Rust CI has three failed platform jobs; its minimum-supported-Rust job remains active. No source changes or local executable validation were made; keep `origin/main` fixed until full reconciliation.
+
+
+## 2026-10-16T21:58:02Z — R3.18 CI terminal; artifact inventory complete, report reconciliation in progress
+
+All seven required workflows and all twenty jobs are terminal for exact SHA `15fc2c10f87ada3ba9fb191e76206ce45acac74d`. Five workflows and thirteen jobs passed; Rust CI and round-trip acceptance failed (four Rust jobs, three round-trip jobs). Both UI tests failed on macOS, Ubuntu, and Rust 1.95; Windows failed only the stale-source test. The unstable-retry test was not reported as a Windows failure; the separately invoked attachment-preview test is filtered from the workspace command and runs in its own step. Ubuntu additionally reports rustfmt differences. All three round-trip reports fail at the first external-note watcher reconciliation with the same changed-snapshot/full-refresh timeout.
+
+GitHub API inventory found twelve artifacts across the seven workflows. All three round-trip archives were downloaded; archive digests match Actions metadata and report identities/digests match the exact SHA, run, attempt, and platform. Three large desktop previews remain metadata-only under policy. Six small plugin-renderer and loaded-plugin report payloads are being reconciled. Do not push a repair yet; complete evidence review and define one consolidated R3.19 repair milestone first. No local tests/builds/formatters/validators were run.
+
+
+## 2026-10-16T22:02:47Z — R3.18 exact-SHA CI and artifact reconciliation complete
+
+All seven required workflows and twenty jobs for 15fc2c10f87ada3ba9fb191e76206ce45acac74d are terminal: five workflows / thirteen jobs passed; Rust CI and vault round-trip acceptance failed. origin/main remains at the submitted SHA. No source change, local executable validation, rerun, or push occurred during reconciliation.
+
+The Rust jobs found two UI test failures on macOS, Ubuntu, and Rust 1.95; Windows failed only the stale-source test; the retry test was not reported as a Windows failure. The attachment-preview test is filtered from the workspace command and runs in a separate passing step. The failures are an ambiguous, unasserted Markdown source draft label lookup and a transient snapshot-probe receiver assertion. Ubuntu also reported rustfmt diffs in ui-egui and vault/watcher.rs. The three round-trip jobs all stopped after external creation of After refresh.md, before edit/rename scenarios; no post-create watcher hint, snapshot probe, or refresh was logged, and watch_error is null. A possible cause is that queued watcher notifications do not request an egui repaint, but this remains unproven because current logs cannot distinguish callback delivery from UI polling.
+
+All 12 artifact records are reconciled: nine report archives match GitHub API sizes/digests and have payload identity/report hashes checked; the three large desktop previews remain metadata-only under policy. The renderer reports are identical 28-record reports across platforms. Loaded-plugin reports each cover 328 source paths and remain partial (11 complete, 10 partial); no compatibility status was promoted. Full hashes and artifact IDs are recorded in evidence/r2.8.150-r3-18-r3-17-ci-repair-candidate.json.
+
+Next: complete the integrated scope review, then define and review one consolidated R3.19 repair milestone. Keep implementation and evidence local until the whole milestone is complete and reviewed; submit it to origin/main once, then wait for and reconcile its entire exact-SHA CI batch.
+
+## 2026-10-16T22:07:10Z — R3.19 repair plan approved
+
+The R3.19 repair plan is recorded at .agents/tasks/2026-10-07/evidence/r2.8.151-r3-19-r3-18-ci-repair-candidate.json and approved by three independent read-only reviewers. Their review required exact Windows failure accounting, explicit inventory and Canvas coverage retention, event-vs-poll watcher diagnostics with a coalescing-safe correlation ID, a 15-second callback-to-poll bound before the unchanged 60-second timer, and preservation of the watcher-during-refresh retry assertions. The plan treats missing egui wake-up as a hypothesis and does not claim it as proven.
+
+Implementation has not started. origin/main remains at 15fc2c10f87ada3ba9fb191e76206ce45acac74d; the R3.18 exact-SHA batch is terminal-failed and all 12 artifacts are reconciled. Next, implement the entire named R3.19 milestone locally, review it as a whole, then make one push after the exact-base/no-active-batch gate. No local executable validation is allowed.
+
+## 2026-10-16T22:07:44Z — R3.19 implementation started
+
+The approved UI regression/formatting work and watcher wake/correlation work are proceeding in two isolated local worktrees based on 15fc2c10f87ada3ba9fb191e76206ce45acac74d. This keeps overlapping ui-egui edits separated while they are developed. The goal worktree still contains only local evidence/plan updates; source changes remain unpushed.
+
+No tests, builds, formatter, validator, runtime probe, or application launch has been run locally. After both diffs return, integrate and review them as one milestone, resolve any conflict, finish any missing scope, and only then perform the one-push submission gate.
+
+## 2026-10-16T22:32:28Z — R3.19 implementation and integrated review complete locally
+
+The UI and watcher worktrees were integrated at source head `1c863ab73b6d74df9dd5aa3df11fba399018b46a`. The integrated diff preserves the stale-source and retry coverage, adds the egui repaint wake path to both vault-open paths, records coalesced watcher batch IDs/counts and notify-error attribution, and carries the batch through probe and refresh diagnostics. The strict external create/edit round-trip audit requires a real filesystem callback, exact contiguous callback counts and batch lineage, callback-to-poll within 15 seconds, and `timer_due_before_poll=false`; it waits for callback log records without relying on output line order and cannot fall back to the periodic timer.
+
+Independent UI, watcher, and integrated static review found no blocking merge issue. The integrated reviewer confirmed the goal's cadence rule: one push per complete reviewed milestone, with the next push held until every exact-SHA CI job and artifact is reconciled. Duplicate snapshots of one watcher batch now merge cumulative event and notify-error counts by maximum.
+
+R3.19 is implementation-complete locally but remains unpushed and not CI-accepted. The final live `origin/main` and no-active-CI submission gate is still required before one push. No local tests, builds, formatter, linter, validator, benchmark, runtime probe, or application launch was used as acceptance evidence. One agent accidentally ran `git diff --check` once in the watcher worktree; it was not treated as acceptance evidence and was not repeated.

@@ -1,0 +1,126 @@
+{
+  "schema_version": 1,
+  "plan_id": "R2.8.151-R3.19-R3.18-CI-REPAIR",
+  "milestone_id": "R3.19",
+  "name": "R3.19 consolidated repair of R3.18 exact-SHA CI failures",
+  "status": "implementation complete / integrated review approved / ready for submission gate; unpushed",
+  "created_at": "2026-10-16T22:05:38Z",
+  "candidate_base_sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+  "integrated_source_head": "1c863ab73b6d74df9dd5aa3df11fba399018b46a",
+  "source_commits": [
+    "94ecf748b3d2ec961a31c59785ebd86f47ae7e64",
+    "02b3fab3407cb3652863509125d1afcbcdabf0cd",
+    "f058b560c3154972d6abf024c0db1e557e935a7c",
+    "1c863ab73b6d74df9dd5aa3df11fba399018b46a"
+  ],
+  "objective": "Repair the exact Rust test, formatting, and cross-platform watcher reconciliation failures from R3.18 in one reviewed milestone, preserving the complete R3.18 acceptance scope and all vault-safety and Canvas snapshot-lease contracts.",
+  "source_ci_evidence": ".agents/tasks/2026-10-07/evidence/r2.8.150-r3-18-r3-17-ci-repair-candidate.json",
+  "source_ci_summary": {
+    "implementation_sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+    "workflow_counts": {
+      "total": 7,
+      "terminal": 7,
+      "passed": 5,
+      "failed": 2
+    },
+    "job_counts": {
+      "total": 20,
+      "terminal": 20,
+      "passed": 13,
+      "failed": 7
+    },
+    "all_jobs_terminal": true,
+    "all_artifacts_reconciled": true,
+    "origin_main_sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+    "failed_workflows": {
+      "OpenObsidian Rust CI": {
+        "run_id": 38971746806,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746806",
+        "job_ids": [
+          117211507802,
+          117211508069,
+          117211508123,
+          117211508179
+        ],
+        "findings": [
+          "macOS, Ubuntu, and Rust 1.95 fail both egui UI tests; Windows fails only the stale-source test. The retry test is not reported as a Windows failure; the separately invoked attachment-preview test is filtered from the Windows workspace command and runs in its own step. Ubuntu also fails cargo fmt --all -- --check on the reported Rust formatting hunks.",
+          "The unasserted get_by_label(\"Markdown source draft\") lookup at crates/ui-egui/src/lib.rs:10286 is ambiguous because the editor and read-only preview share that label.",
+          "The unstable-refresh test at crates/ui-egui/src/lib.rs:10906 assumes a snapshot-probe receiver remains live after a full UI frame. The CI log establishes only that the receiver was absent; a fast probe completion is a plausible explanation, not a proven cause."
+        ]
+      },
+      "Obsidian vault round-trip acceptance": {
+        "run_id": 38971746893,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746893",
+        "job_ids": [
+          117211508553,
+          117211508867,
+          117211508955
+        ],
+        "finding": "All three platform reports time out after external creation of After refresh.md, before the first watcher reconciliation or later edit/rename scenarios. No post-create watcher hint, snapshot probe, refresh request, or consumed result is logged; watch_error is null."
+      }
+    },
+    "watcher_cause_assessment": "A likely cause is that the notify callback queues a channel hint but does not wake egui, whose idle repaint is scheduled at the 60-second reconciliation interval while the harness waits 30 seconds. This is a hypothesis: current artifacts cannot distinguish callback delivery from UI polling."
+  },
+  "scope": [
+    "Remove the unasserted ambiguous Markdown source draft accessibility lookup from the stale-source conflict test. Keep the explicit Markdown source editor role/name lookup, attempted-draft value assertion, conflict-history payload checks, invalidated revision, disabled Save, available Cancel action, retained snapshot lease, and unchanged external bytes. Do not change production labels or reduce conflict coverage.",
+    "Make the unstable-refresh retry test deterministic around the asynchronous snapshot-probe boundary. Do not require a worker receiver or batch to remain present after a complete UI frame. Preserve the watcher-during-refresh request ID through its snapshot probe; prove that an unchanged probe clears the unstable-refresh error without changing the old listing or revision; prove the failed timer batch does not cause an immediate full refresh and that a later scheduled timer performs the retry. Keep newer watcher/manual triggers actionable. Use a deterministic scheduling seam or gated probe if required; do not add timing sleeps or enlarge the fixture merely to slow the worker.",
+    "Make real filesystem watcher delivery wake the native egui event loop within 15 seconds, before the 60-second periodic reconciliation timer, using a narrow thread-safe wake callback or equivalent app-level bridge that keeps crates/vault independent of egui. Preserve the existing notification queue, request correlation, hint coalescing, snapshot-probe/full-refresh rules, and 60-second periodic reconciliation interval; do not use a shorter periodic interval as the fix.",
+    "Add CI-only diagnostics that distinguish notification callback enqueue/wake from UI polling/consumption. Allocate a stable watcher batch ID when the first callback enters an empty pending batch; callbacks coalesced before UI polling retain that batch ID and increment a coalesced-event count. After the UI polls the batch, link its ID and count to the existing vault-rescan request ID; carry that request ID unchanged through snapshot-probe schedule/result and full-refresh request/result. A callback after the batch has been polled gets a new ID and remains a separate later hint, including while a snapshot probe is in flight. Avoid logging vault paths or file contents. Keep watcher initialization status visible so missing delivery and missing polling can be separated from a genuine filesystem error.",
+    "Add focused coverage that exercises the production filesystem-notification enqueue and wake path and proves callback-to-UI-poll occurs within 15 seconds without waiting for the periodic timer, then verifies the linked request reaches the changed-snapshot probe and stable full refresh without manual input. Preserve unchanged-snapshot suppression, distinct same-Markdown-count content edits, path additions, duplicate-hint quiet-window behavior, later-hint separation, and root-watch repair without draining a real queued event.",
+    "Apply only the formatting changes reported by the R3.18 Ubuntu CI formatter in crates/ui-egui/src/lib.rs and crates/vault/src/watcher.rs. Do not run a local formatter; GitHub Actions remains the formatting oracle.",
+    "Carry the complete R3.18 test and acceptance scope forward unchanged. In particular, all Linux, macOS, and Windows vault round-trip scenarios must continue past external note creation through in-place content edit, rename, manual refresh, exact persisted bytes, first-open/reopen checks, and the strict correlation/quiet-window assertions. No failed early step may hide later acceptance scenarios."
+  ],
+  "acceptance_criteria": [
+    "Both affected UI tests run and pass on Linux, macOS, and Windows; the Rust 1.95 job also runs and passes them. The Windows workflow's separately invoked attachment-preview test remains filtered from its workspace command and passes in its dedicated step. The stale-source test still proves the editor displays the attempted draft and preserves external bytes/conflict history. The retry test preserves the watcher-during-refresh request ID through the probe, proves an unchanged probe clears the unstable error without changing the previous listing/revision, proves no immediate full refresh starts, keeps newer watcher/manual triggers actionable, and proves a later timer starts the retry without asserting transient receiver lifetime.",
+    "A real external filesystem event causes callback-to-egui polling within 15 seconds and before the 60-second periodic timer on every supported OS. Diagnostics link the stable coalesced watcher batch ID and event count to the existing request ID, then show that request ID through snapshot-probe schedule/result and full-refresh request/result. The periodic interval remains 60 seconds.",
+    "For Linux, macOS, and Windows, the focused test and strict round-trip harness exercise the production notify enqueue/wake path. External note creation is observed through one correlated watcher hint, changed snapshot probe, and stable full refresh before manual refresh. The complete existing round-trip suite then reaches and passes all later edit, rename, persistence, first-open/reopen, and strict quiet-window checks.",
+    "No existing migration coverage is removed, ignored, filtered, or weakened. The inventory workflow still verifies 221 reviewed rows as 196 inherited plus 25 new rows, 16 goal-level MIG rows, and the existing C06.2/C07.2–C07.9 checks. Rust CI continues to run the Canvas focused-field/deferred-refresh tests, snapshot-lease lifecycle cases, and exact target/sibling path and ID checks with their current strict outcomes.",
+    "Unchanged watcher hints yield an unchanged full revision and no full refresh; content-only edits with unchanged Markdown count and path additions produce changed revisions and correlated refreshes; later hints remain separately correlated; duplicate hints do not cause extra refreshes; periodic root-watch repair preserves genuine queued events.",
+    "GitHub Actions formatting passes. OpenObsidian Rust CI passes on Ubuntu, macOS, and Windows plus the declared Rust 1.95 job. Rust migration inventory, quality, plugin renderer matrix, loaded plugin workflows, desktop build, and all three vault round-trip jobs pass on the same submitted SHA.",
+    "Every artifact from every required workflow for the R3.19 SHA is enumerated and reconciled by exact run/SHA, API size/digest, and payload/report identity. Large native preview artifacts may remain metadata-only under the established policy; partial compatibility reports do not promote compatibility status.",
+    "No local tests, builds, formatter, linter, validator, benchmark, runtime probe, or application launch is used as acceptance evidence."
+  ],
+  "out_of_scope": [
+    "Changing requirement totals, IDs, mappings, provenance, or migration dispositions.",
+    "Changing public-facing accessibility labels or removing stale-source conflict guarantees to make a query pass.",
+    "Changing the periodic watcher interval, weakening watcher request correlation, suppressing distinct changes, or allowing manual/timer refresh to stand in for the required real watcher event.",
+    "Removing or relaxing any R3.18 Canvas target/sibling, exact-value, persistence, reopen, snapshot-lease, conflict-history, security, or quiet-window assertions.",
+    "Promoting compatibility from partial plugin reports, changing release/signing/publication scope, or claiming R3.18 achieved."
+  ],
+  "required_workflows": [
+    "OpenObsidian Rust CI",
+    "Rust migration inventory",
+    "Obsidian vault round-trip acceptance",
+    "OpenObsidian desktop build",
+    "OpenObsidian quality",
+    "OpenObsidian plugin renderer matrix",
+    "OpenObsidian loaded plugin workflows"
+  ],
+  "submission_gate": "Keep all R3.19 changes local until the complete scope is implemented and independently reviewed. Before one push, verify live origin/main is still candidate_base_sha and no required CI batch is active; if main moved, reconcile and repeat the review. Push the completed milestone to origin/main exactly once, then hold main at the submitted SHA until all required jobs are terminal and artifacts/reports are reconciled. R3.19 is achieved only if every required job passes on that exact SHA.",
+  "review_status": "approved",
+  "implementation_started": true,
+  "implementation_complete": true,
+  "local_executable_validation": false,
+  "local_check_deviation": "One agent accidentally ran git diff --check once in the watcher worktree. It was not used as acceptance evidence. No local tests, builds, formatters, linters, validators, benchmarks, runtime probes, or application launches were used.",
+  "pushed_once": false,
+  "milestone_achieved": false,
+  "next_action": "Verify live origin/main still equals candidate_base_sha and no required CI batch is active; submit this reviewed milestone to origin/main once. Then wait for every exact-SHA workflow/job and reconcile all artifacts before any next push. No local executable validation.",
+  "updated_at": "2026-10-16T22:32:28Z",
+  "reviewed_at": "2026-10-16T22:32:28Z",
+  "reviewed_by": [
+    "r318_ui_ci_review",
+    "r318_watcher_review",
+    "r319_integrated_plan_review",
+    "r319_ui_fix_impl",
+    "r319_watcher_fix_impl"
+  ],
+  "review_findings": [
+    "UI review confirmed removing only the unasserted ambiguous lookup preserves the stale-source conflict assertions; the async retry test must assert outcome and correlation rather than transient receiver lifetime.",
+    "Watcher review confirmed the wake-up cause is unproven and required callback/poll diagnostics, stable coalescing semantics, a 15-second bound before the unchanged 60-second timer, and a production-path test.",
+    "Integrated review required exact Windows test-filter reporting and explicit retention of inventory, Canvas deferral/snapshot-lease, and strict target/sibling coverage; all were added.",
+    "Independent implementation review confirmed the merged UI and watcher changes preserve the retry/stale-source assertions, real notify wake path, stable batch lineage, and exact 15-second/no-timer strict round-trip checks. Callback diagnostics may interleave with UI hint logs; strict audit waits for the complete same-ID callback count without relying on line order.",
+    "Duplicate snapshots of a watcher batch merge event_count and notify_error_callbacks by maximum so cumulative counters are not double-counted or lost."
+  ],
+  "implementation_status": "implementation_complete_ready_to_submit",
+  "implementation_started_at": "2026-10-16T22:07:44Z"
+}

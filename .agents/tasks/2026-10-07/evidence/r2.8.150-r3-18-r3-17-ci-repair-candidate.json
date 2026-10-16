@@ -3,9 +3,9 @@
   "milestone_id": "R3.18",
   "plan_id": "R2.8.150-R3.18-R3.17-CI-REPAIR",
   "name": "R3.18 consolidated repair of R3.17 exact-SHA CI failures",
-  "status": "implementation_complete_waiting_for_submission",
+  "status": "ci_failed_artifacts_reconciled",
   "created_at": "2026-10-16T20:16:42Z",
-  "updated_at": "2026-10-16T21:44:29Z",
+  "updated_at": "2026-10-16T22:06:32Z",
   "candidate_base_sha": "37994bfb0cdea541f907a33b2c38527a411ca2c7",
   "starting_sha": "37994bfb0cdea541f907a33b2c38527a411ca2c7",
   "goal_sha256": "eb70762b8507e93e8fb247d112230fe3d40d6fdc4d1d6408f24f20b01dc6feb3",
@@ -71,7 +71,7 @@
     "Changing release/signing/publication scope or claiming R3.17 achieved."
   ],
   "acceptance_criteria": [
-    "The inventory CI check accepts exactly 221 reviewed requirements: the manifest's 196 inherited rows must match computed legacy IDs and 25 recognized migration rows must match computed new IDs; it separately validates 16 MIG rows plus C06.2 and C07.2\u2013C07.9, and all existing parent/source/mapping checks still run.",
+    "The inventory CI check accepts exactly 221 reviewed requirements: the manifest's 196 inherited rows must match computed legacy IDs and 25 recognized migration rows must match computed new IDs; it separately validates 16 MIG rows plus C06.2 and C07.2–C07.9, and all existing parent/source/mapping checks still run.",
     "Each of the four Canvas deferral tests first proves path/ID field focus, then observes its production trigger (timer_due or a real VaultWatcher hint) without input events, logs correlated state even if pending=false, and proves one pending request with no refresh until safe handoff. After handoff exactly one correlated full refresh completes and the strict quiet window contains no extra full-refresh request/result or pending rescan state. Any later watcher-only snapshot probe remains separately correlated and cannot cause an extra full refresh.",
     "The stale-source conflict test verifies unchanged external bytes and preview snapshot text, retained/readable conflict history payload, invalidated revision, disabled Save, retained source_draft lease, and that the editor displays the attempted draft. The editor and Cancel source edits remain available after the failed compare-and-swap; cancel releases the lease without writing, clears the draft only after that explicit resolution, and preserves conflict history.",
     "Canvas lease lifecycle coverage proves that pending refresh stays deferred after field focus leaves while a preview lease is held; successful reload replaces the lease; failed reload retains it; cancel releases it without writing; successful save releases it only after receiver completion; and exactly one pending refresh begins at the first safe handoff.",
@@ -119,11 +119,818 @@
     ],
     "local_executable_validation": false
   },
-  "implementation_status": "complete_and_reviewed_waiting_for_live_origin_main_and_ci_batch_recheck",
+  "implementation_status": "implementation_complete_ci_failed",
   "implementation_started": true,
   "implementation_complete": true,
-  "pushed_once": false,
+  "pushed_once": true,
   "milestone_achieved": false,
   "local_executable_validation": false,
-  "next_action": "Recheck live origin/main and required CI activity, then commit and push the complete reviewed R3.18 milestone once."
+  "next_action": "Complete independent review of the exact-SHA failure seams, define and review one consolidated R3.19 repair milestone, then implement it locally. Keep origin/main at the R3.18 SHA until the complete repair milestone is reviewed.",
+  "implementation_sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+  "submitted_sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+  "attempt": 1,
+  "triggered_at": "2026-10-16T21:47:45Z",
+  "workflow_runs": [
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 38971746806,
+      "status": "completed",
+      "conclusion": "failure",
+      "sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746806"
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 38971746799,
+      "status": "completed",
+      "conclusion": "success",
+      "sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746799"
+    },
+    {
+      "name": "Obsidian vault round-trip acceptance",
+      "run_id": 38971746893,
+      "status": "completed",
+      "conclusion": "failure",
+      "sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746893"
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 38971746857,
+      "status": "completed",
+      "conclusion": "success",
+      "sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746857"
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 38971746956,
+      "status": "completed",
+      "conclusion": "success",
+      "sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746956"
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 38971746972,
+      "status": "completed",
+      "conclusion": "success",
+      "sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746972"
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 38971746871,
+      "status": "completed",
+      "conclusion": "success",
+      "sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746871"
+    }
+  ],
+  "workflow_counts": {
+    "observed": 7,
+    "terminal": 7,
+    "passed": 5,
+    "failed": 2,
+    "cancelled": 0,
+    "queued": 0,
+    "in_progress": 0
+  },
+  "job_counts": {
+    "observed": 20,
+    "terminal": 20,
+    "passed": 13,
+    "failed": 7,
+    "cancelled": 0,
+    "queued": 0,
+    "in_progress": 0
+  },
+  "submission_gate_result": {
+    "passed": true,
+    "origin_main_sha_before_push": "37994bfb0cdea541f907a33b2c38527a411ca2c7",
+    "origin_main_sha_after_push": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+    "no_active_prior_ci_batch": true,
+    "push_count": 1,
+    "post_push_origin_main_sha_verified_at": "2026-10-16T21:48:50Z"
+  },
+  "jobs": [
+    {
+      "run_id": 38971746806,
+      "job_id": 117211507802,
+      "name": "rust (macos-latest)",
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746806/job/117211507802"
+    },
+    {
+      "run_id": 38971746806,
+      "job_id": 117211508069,
+      "name": "minimum supported Rust (1.95)",
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746806/job/117211508069"
+    },
+    {
+      "run_id": 38971746806,
+      "job_id": 117211508123,
+      "name": "rust (ubuntu-latest)",
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746806/job/117211508123"
+    },
+    {
+      "run_id": 38971746806,
+      "job_id": 117211508179,
+      "name": "rust (windows-latest)",
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746806/job/117211508179"
+    },
+    {
+      "run_id": 38971746799,
+      "job_id": 117211508533,
+      "name": "ubuntu-latest",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746799/job/117211508533"
+    },
+    {
+      "run_id": 38971746799,
+      "job_id": 117211508931,
+      "name": "windows-latest",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746799/job/117211508931"
+    },
+    {
+      "run_id": 38971746799,
+      "job_id": 117211508983,
+      "name": "macos-latest",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746799/job/117211508983"
+    },
+    {
+      "run_id": 38971746893,
+      "job_id": 117211508553,
+      "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04",
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746893/job/117211508553"
+    },
+    {
+      "run_id": 38971746893,
+      "job_id": 117211508867,
+      "name": "Obsidian 1.14.4 vault round-trip on macos-latest",
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746893/job/117211508867"
+    },
+    {
+      "run_id": 38971746893,
+      "job_id": 117211508955,
+      "name": "Obsidian 1.14.4 vault round-trip on windows-latest",
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746893/job/117211508955"
+    },
+    {
+      "run_id": 38971746857,
+      "job_id": 117211508367,
+      "name": "ubuntu-latest",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746857/job/117211508367"
+    },
+    {
+      "run_id": 38971746857,
+      "job_id": 117211508627,
+      "name": "windows-latest",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746857/job/117211508627"
+    },
+    {
+      "run_id": 38971746857,
+      "job_id": 117211508647,
+      "name": "macos-latest",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746857/job/117211508647"
+    },
+    {
+      "run_id": 38971746956,
+      "job_id": 117211508561,
+      "name": "windows-latest",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746956/job/117211508561"
+    },
+    {
+      "run_id": 38971746956,
+      "job_id": 117211508829,
+      "name": "ubuntu-latest",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746956/job/117211508829"
+    },
+    {
+      "run_id": 38971746956,
+      "job_id": 117211508965,
+      "name": "macos-latest",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746956/job/117211508965"
+    },
+    {
+      "run_id": 38971746972,
+      "job_id": 117211509248,
+      "name": "macos-latest",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746972/job/117211509248"
+    },
+    {
+      "run_id": 38971746972,
+      "job_id": 117211509271,
+      "name": "windows-latest",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746972/job/117211509271"
+    },
+    {
+      "run_id": 38971746972,
+      "job_id": 117211509740,
+      "name": "ubuntu-latest",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746972/job/117211509740"
+    },
+    {
+      "run_id": 38971746871,
+      "job_id": 117211508418,
+      "name": "inventory",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746871/job/117211508418"
+    }
+  ],
+  "failed_job_ids": [
+    117211507802,
+    117211508123,
+    117211508179,
+    117211508069,
+    117211508553,
+    117211508867,
+    117211508955
+  ],
+  "active_job_ids": [],
+  "failure_inspection": "All seven workflows and twenty jobs are terminal on exact SHA 15fc2c10f87ada3ba9fb191e76206ce45acac74d: five workflows and thirteen jobs passed; Rust CI and round-trip acceptance failed. Both UI tests failed on macOS, Ubuntu, and Rust 1.95; Windows failed only the stale-source test. The unstable-retry test is not reported as a Windows failure; the separate attachment-preview test is filtered from the Windows workspace command and runs in its own step. Ubuntu also reports rustfmt differences. All three round-trip reports stop at first post-creation watcher reconciliation. Static review confirms an unasserted ambiguous accessible-label lookup and a transient asynchronous receiver assertion. A likely watcher cause is that channel notification delivery does not wake the idle egui loop (which may wait 60 seconds between repaints while the harness waits 30 seconds), but artifacts cannot prove that cause. All 12 artifacts are reconciled; partial loaded-plugin reports promote no compatibility status.",
+  "failed_jobs": [
+    {
+      "run_id": 38971746806,
+      "job_id": 117211507802,
+      "name": "rust (macos-latest)",
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746806/job/117211507802",
+      "failed_step": "Run workspace tests",
+      "log_findings": [
+        "Two failures: egui_defers_an_unstable_refresh_retry_until_a_later_trigger at crates/ui-egui/src/lib.rs:10906 (vault_snapshot_probe_receiver was None), and egui_stale_source_edit_preserves_external_note_and_disables_retry at line 10286 (multiple Markdown source draft nodes)."
+      ]
+    },
+    {
+      "run_id": 38971746806,
+      "job_id": 117211508123,
+      "name": "rust (ubuntu-latest)",
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746806/job/117211508123",
+      "failed_step": "Check formatting; Run workspace tests",
+      "log_findings": [
+        "cargo fmt --all -- --check reports diffs in crates/ui-egui/src/lib.rs at lines 862, 4492, 4512, 4555, 4822, 5284, 5306, 5325, 10834, 10924, 10962, 10991, 11036, 11050, 11061, 11132, and 11253, plus crates/vault/src/watcher.rs:309.",
+        "The same two UI tests failed as on macOS."
+      ]
+    },
+    {
+      "run_id": 38971746806,
+      "job_id": 117211508179,
+      "name": "rust (windows-latest)",
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746806/job/117211508179",
+      "failed_step": "Run Windows workspace tests",
+      "log_findings": [
+        "egui_stale_source_edit_preserves_external_note_and_disables_retry failed at crates/ui-egui/src/lib.rs:10286 due to multiple Markdown source draft nodes; 122 passed, 1 failed, 1 filtered."
+      ]
+    },
+    {
+      "run_id": 38971746806,
+      "job_id": 117211508069,
+      "name": "minimum supported Rust (1.95)",
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746806/job/117211508069",
+      "failed_step": "Run locked workspace tests at the declared MSRV",
+      "log_findings": [
+        "Toolchain setup succeeded with rustc 1.95.0; 122 passed and the same two UI tests failed as on macOS and Ubuntu."
+      ]
+    },
+    {
+      "run_id": 38971746893,
+      "job_id": 117211508553,
+      "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04",
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746893/job/117211508553",
+      "failed_step": "Author, open, snapshot, and reopen the same vault",
+      "log_findings": [
+        "Timed out waiting for a post-edit changed watcher snapshot probe and correlated full refresh; last value=null. This occurred after creation of After refresh.md, before later external edits/rename."
+      ]
+    },
+    {
+      "run_id": 38971746893,
+      "job_id": 117211508867,
+      "name": "Obsidian 1.14.4 vault round-trip on macos-latest",
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746893/job/117211508867",
+      "failed_step": "Author, open, snapshot, and reopen the same vault",
+      "log_findings": [
+        "Timed out waiting for a post-edit changed watcher snapshot probe and correlated full refresh; last value=null. Failure occurred at first post-creation watcher reconciliation, before in-place edit or rename."
+      ]
+    },
+    {
+      "run_id": 38971746893,
+      "job_id": 117211508955,
+      "name": "Obsidian 1.14.4 vault round-trip on windows-latest",
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746893/job/117211508955",
+      "failed_step": "Author, open, snapshot, and reopen the same vault",
+      "log_findings": [
+        "Timed out waiting for a post-edit changed watcher snapshot probe and correlated full refresh; last value=null. Failure occurred at first watcher reconciliation after external note creation."
+      ]
+    }
+  ],
+  "artifacts": [
+    {
+      "run_id": 38971746893,
+      "artifact_id": 12077522504,
+      "name": "obsidian-vault-roundtrip-Linux-15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+      "size_in_bytes": 2590805,
+      "digest": "sha256:ee3db46bc81e608c938536d35af66ef323e068eefa47a50cab3cec18d6d9af59",
+      "expired": false,
+      "kind": "roundtrip-report",
+      "platform": "Linux",
+      "downloaded": true,
+      "archive_sha256_verified": true,
+      "report_sha256": "1f516637e066b81c3a52ebc63168565db68f47214bdcae60d99c7923e2ef4132",
+      "source_sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+      "archive_sha256": "ee3db46bc81e608c938536d35af66ef323e068eefa47a50cab3cec18d6d9af59",
+      "payload_status": "reconciled",
+      "report_status": "failed",
+      "identity_verified": true,
+      "failure": "Timed out waiting for a post-edit changed watcher snapshot probe and correlated full refresh; last value=null.",
+      "failure_stage": "after external creation of After refresh.md, before in-place edit and rename"
+    },
+    {
+      "run_id": 38971746893,
+      "artifact_id": 12076883582,
+      "name": "obsidian-vault-roundtrip-macOS-15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+      "size_in_bytes": 3635273,
+      "digest": "sha256:4b1c871224ded37a8786a9c31b04efad8f9d658c5d5b535af446b3b965cdd41b",
+      "expired": false,
+      "kind": "roundtrip-report",
+      "platform": "macOS",
+      "downloaded": true,
+      "archive_sha256_verified": true,
+      "report_sha256": "22e067108d9ceb05889ca6a13e9d0718eda62fbaa8904af898e4ccac66faca12",
+      "source_sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+      "archive_sha256": "4b1c871224ded37a8786a9c31b04efad8f9d658c5d5b535af446b3b965cdd41b",
+      "payload_status": "reconciled",
+      "report_status": "failed",
+      "identity_verified": true,
+      "failure": "Timed out waiting for a post-edit changed watcher snapshot probe and correlated full refresh; last value=null.",
+      "failure_stage": "after external creation of After refresh.md, before in-place edit and rename"
+    },
+    {
+      "run_id": 38971746893,
+      "artifact_id": 12076873273,
+      "name": "obsidian-vault-roundtrip-Windows-15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+      "size_in_bytes": 2842372,
+      "digest": "sha256:32d97778566fe56297ce0b04457e66dc55b3d6e1125f8c21f5b70e5749436484",
+      "expired": false,
+      "kind": "roundtrip-report",
+      "platform": "Windows",
+      "downloaded": true,
+      "archive_sha256_verified": true,
+      "report_sha256": "7746147c29f75904220854abd11ebcae2714e91cf462c2ec94e928dc9eb12db8",
+      "source_sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+      "archive_sha256": "32d97778566fe56297ce0b04457e66dc55b3d6e1125f8c21f5b70e5749436484",
+      "payload_status": "reconciled",
+      "report_status": "failed",
+      "identity_verified": true,
+      "failure": "Timed out waiting for a post-edit changed watcher snapshot probe and correlated full refresh; last value=null.",
+      "failure_stage": "after external creation of After refresh.md, before in-place edit and rename"
+    },
+    {
+      "run_id": 38971746857,
+      "artifact_id": 12076717642,
+      "name": "openobsidian-Linux-preview-15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+      "size_in_bytes": 125946850,
+      "digest": "sha256:31af9cda2fa37a09146547445dba3f46e5873dc94033245a29c2a3985d2fc2bd",
+      "expired": false,
+      "kind": "desktop-preview",
+      "platform": "Linux",
+      "downloaded": false,
+      "archive_sha256_verified": false,
+      "payload_status": "metadata_only_per_policy",
+      "source_sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+      "expires_at": "2027-01-14"
+    },
+    {
+      "run_id": 38971746857,
+      "artifact_id": 12076284748,
+      "name": "openobsidian-macOS-preview-15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+      "size_in_bytes": 397395784,
+      "digest": "sha256:c05a3bd8c428e012c762e7e62c5061f5dd7e64da08912f2b0231fd902cd64a00",
+      "expired": false,
+      "kind": "desktop-preview",
+      "platform": "macOS",
+      "downloaded": false,
+      "archive_sha256_verified": false,
+      "payload_status": "metadata_only_per_policy",
+      "source_sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+      "expires_at": "2027-01-14"
+    },
+    {
+      "run_id": 38971746857,
+      "artifact_id": 12077586920,
+      "name": "openobsidian-Windows-preview-15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+      "size_in_bytes": 163006126,
+      "digest": "sha256:5132470ffb6a049ccd3ae4318c0c024abef4690ca47c1243f53662e31e29cd25",
+      "expired": false,
+      "kind": "desktop-preview",
+      "platform": "Windows",
+      "downloaded": false,
+      "archive_sha256_verified": false,
+      "payload_status": "metadata_only_per_policy",
+      "source_sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+      "expires_at": "2027-01-14"
+    },
+    {
+      "run_id": 38971746972,
+      "artifact_id": 12076623151,
+      "name": "plugin-renderer-lifecycle-Linux-15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+      "size_in_bytes": 3100,
+      "digest": "sha256:2ca932adc3738dde0183ba19dd4bcce5a0e7782663b5593aca5e14e169aa803d",
+      "expired": false,
+      "kind": "plugin-renderer-report",
+      "platform": "Linux",
+      "downloaded": true,
+      "archive_sha256_verified": true,
+      "source_sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+      "archive_sha256": "2ca932adc3738dde0183ba19dd4bcce5a0e7782663b5593aca5e14e169aa803d",
+      "report_sha256": "ed6d318114dce8586b80491d3b3235a8c214ae1f962f1e251cce658909bc7e2c",
+      "payload_status": "reconciled",
+      "report_status": "renderer_matrix_success",
+      "record_count": 28,
+      "platform_reports_byte_identical": true,
+      "record_status_counts": {
+        "renderer-loaded": 4,
+        "renderer-denied": 23,
+        "not-applicable": 1
+      },
+      "integrity_status_counts": {
+        "passed": 27,
+        "not-applicable": 1
+      },
+      "execution_status_counts": {
+        "renderer-wrapper": 27,
+        "not-executed": 1
+      },
+      "identity_note": "JSONL omits run/SHA/platform; exact run and SHA are established by Actions artifact metadata and SHA-bearing artifact names; member filename identifies platform."
+    },
+    {
+      "run_id": 38971746972,
+      "artifact_id": 12076618141,
+      "name": "plugin-renderer-lifecycle-Windows-15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+      "size_in_bytes": 3104,
+      "digest": "sha256:0ebcf9c30aaa32b8b81e57df4e2aed2ad06ff97aea7d923b8fca6fa691786d2a",
+      "expired": false,
+      "kind": "plugin-renderer-report",
+      "platform": "Windows",
+      "downloaded": true,
+      "archive_sha256_verified": true,
+      "source_sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+      "archive_sha256": "0ebcf9c30aaa32b8b81e57df4e2aed2ad06ff97aea7d923b8fca6fa691786d2a",
+      "report_sha256": "ed6d318114dce8586b80491d3b3235a8c214ae1f962f1e251cce658909bc7e2c",
+      "payload_status": "reconciled",
+      "report_status": "renderer_matrix_success",
+      "record_count": 28,
+      "platform_reports_byte_identical": true,
+      "record_status_counts": {
+        "renderer-loaded": 4,
+        "renderer-denied": 23,
+        "not-applicable": 1
+      },
+      "integrity_status_counts": {
+        "passed": 27,
+        "not-applicable": 1
+      },
+      "execution_status_counts": {
+        "renderer-wrapper": 27,
+        "not-executed": 1
+      },
+      "identity_note": "JSONL omits run/SHA/platform; exact run and SHA are established by Actions artifact metadata and SHA-bearing artifact names; member filename identifies platform."
+    },
+    {
+      "run_id": 38971746972,
+      "artifact_id": 12076254738,
+      "name": "plugin-renderer-lifecycle-macOS-15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+      "size_in_bytes": 3100,
+      "digest": "sha256:10921bf1aa8abfffbbcb0e94c70ab0fd53d26e475c8e42438f9481adc5d9ba5b",
+      "expired": false,
+      "kind": "plugin-renderer-report",
+      "platform": "macOS",
+      "downloaded": true,
+      "archive_sha256_verified": true,
+      "source_sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+      "archive_sha256": "10921bf1aa8abfffbbcb0e94c70ab0fd53d26e475c8e42438f9481adc5d9ba5b",
+      "report_sha256": "ed6d318114dce8586b80491d3b3235a8c214ae1f962f1e251cce658909bc7e2c",
+      "payload_status": "reconciled",
+      "report_status": "renderer_matrix_success",
+      "record_count": 28,
+      "platform_reports_byte_identical": true,
+      "record_status_counts": {
+        "renderer-loaded": 4,
+        "renderer-denied": 23,
+        "not-applicable": 1
+      },
+      "integrity_status_counts": {
+        "passed": 27,
+        "not-applicable": 1
+      },
+      "execution_status_counts": {
+        "renderer-wrapper": 27,
+        "not-executed": 1
+      },
+      "identity_note": "JSONL omits run/SHA/platform; exact run and SHA are established by Actions artifact metadata and SHA-bearing artifact names; member filename identifies platform."
+    },
+    {
+      "run_id": 38971746799,
+      "artifact_id": 12077146695,
+      "name": "loaded-plugin-workflows-Linux-15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+      "size_in_bytes": 171483,
+      "digest": "sha256:ad65e96470590773967b66f9bc3f2665b8ef182db9b093c75b1c5b455ef0545e",
+      "expired": false,
+      "kind": "loaded-plugin-report",
+      "platform": "Linux",
+      "downloaded": true,
+      "archive_sha256_verified": true,
+      "source_sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+      "archive_sha256": "ad65e96470590773967b66f9bc3f2665b8ef182db9b093c75b1c5b455ef0545e",
+      "report_sha256": "3db1a0b39b82c2e9c23fb78f6abdfe29f17db318658114357d989518a0f79ded",
+      "payload_status": "reconciled",
+      "report_status": "partial",
+      "paths": 328,
+      "complete_count": 11,
+      "complete_ids": [
+        "PC04",
+        "PC07",
+        "PC08",
+        "PC17",
+        "PC19",
+        "PC20",
+        "PC21",
+        "PC22",
+        "PC23",
+        "PC24",
+        "PC25"
+      ],
+      "partial_count": 10,
+      "partial_ids": [
+        "PC02",
+        "PC03",
+        "PC05",
+        "PC06",
+        "PC09",
+        "PC10",
+        "PC11",
+        "PC12",
+        "PC14",
+        "PC15"
+      ],
+      "compatibility_promoted": false,
+      "integrity_checks": "passed",
+      "source_tree_head": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+      "platform_runtime": "linux / x64 / Electron 44.3.0 / xvfb-run",
+      "source_tree_sha256": "4600e18c0209f1bcc69c1cbc84385609d9a520b421bd839a94a520b68efbc6fe"
+    },
+    {
+      "run_id": 38971746799,
+      "artifact_id": 12076667980,
+      "name": "loaded-plugin-workflows-macOS-15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+      "size_in_bytes": 171496,
+      "digest": "sha256:1407e91e0c990d2d5e687b7f0c63e94e68e45aedadd4fb970e2a2fa34c3039b9",
+      "expired": false,
+      "kind": "loaded-plugin-report",
+      "platform": "macOS",
+      "downloaded": true,
+      "archive_sha256_verified": true,
+      "source_sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+      "archive_sha256": "1407e91e0c990d2d5e687b7f0c63e94e68e45aedadd4fb970e2a2fa34c3039b9",
+      "report_sha256": "8ce1536dffd44b7e9ce55aea00fa28c9e61f9d7224e55b1d7409da36d8139bd4",
+      "payload_status": "reconciled",
+      "report_status": "partial",
+      "paths": 328,
+      "complete_count": 11,
+      "complete_ids": [
+        "PC04",
+        "PC07",
+        "PC08",
+        "PC17",
+        "PC19",
+        "PC20",
+        "PC21",
+        "PC22",
+        "PC23",
+        "PC24",
+        "PC25"
+      ],
+      "partial_count": 10,
+      "partial_ids": [
+        "PC02",
+        "PC03",
+        "PC05",
+        "PC06",
+        "PC09",
+        "PC10",
+        "PC11",
+        "PC12",
+        "PC14",
+        "PC15"
+      ],
+      "compatibility_promoted": false,
+      "integrity_checks": "passed",
+      "source_tree_head": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+      "platform_runtime": "darwin / arm64 / Electron 44.3.0 / xvfb-run",
+      "source_tree_sha256": "a9ac6810f6678c44041587cff0ccbdd90b817e1f49a9fd306264f916dc829131"
+    },
+    {
+      "run_id": 38971746799,
+      "artifact_id": 12076414402,
+      "name": "loaded-plugin-workflows-Windows-15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+      "size_in_bytes": 171472,
+      "digest": "sha256:438110fb632673742d8825d9b65be7eea33849f94bc1d8a62b8de90d6b7e8ffb",
+      "expired": false,
+      "kind": "loaded-plugin-report",
+      "platform": "Windows",
+      "downloaded": true,
+      "archive_sha256_verified": true,
+      "source_sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+      "archive_sha256": "438110fb632673742d8825d9b65be7eea33849f94bc1d8a62b8de90d6b7e8ffb",
+      "report_sha256": "6c66cda95c883f58e066a7b860d47ce8ff9601c9029b91bf9cbc4b395feb0700",
+      "payload_status": "reconciled",
+      "report_status": "partial",
+      "paths": 328,
+      "complete_count": 11,
+      "complete_ids": [
+        "PC04",
+        "PC07",
+        "PC08",
+        "PC17",
+        "PC19",
+        "PC20",
+        "PC21",
+        "PC22",
+        "PC23",
+        "PC24",
+        "PC25"
+      ],
+      "partial_count": 10,
+      "partial_ids": [
+        "PC02",
+        "PC03",
+        "PC05",
+        "PC06",
+        "PC09",
+        "PC10",
+        "PC11",
+        "PC12",
+        "PC14",
+        "PC15"
+      ],
+      "compatibility_promoted": false,
+      "integrity_checks": "passed",
+      "source_tree_head": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+      "platform_runtime": "win32 / x64 / Electron 44.3.0 / xvfb-run",
+      "source_tree_sha256": "3d25ee25985155c61cf305f91d465edc98b271317f67cf669fc8d336dc5d5075"
+    }
+  ],
+  "artifact_inventory_count": 12,
+  "artifact_inventory_complete": true,
+  "artifacts_reconciled": true,
+  "roundtrip_report_payloads_reconciled": true,
+  "artifact_reconciliation": {
+    "status": "Complete: all 12 Actions artifact records are tied to exact runs and SHA; nine report archives were downloaded and matched by API size/digest and report identity; three large desktop previews remain metadata-only under the existing policy.",
+    "workflow_run_ids_checked": [
+      38971746806,
+      38971746799,
+      38971746893,
+      38971746857,
+      38971746956,
+      38971746972,
+      38971746871
+    ],
+    "metadata_record_count": 12,
+    "archive_payloads_downloaded_and_hash_verified": 9,
+    "metadata_only_preview_count": 3,
+    "plugin_renderer_reports": {
+      "run_id": 38971746972,
+      "artifact_ids": [
+        12076623151,
+        12076618141,
+        12076254738
+      ],
+      "payload_reconciliation": "verified",
+      "archive_hashes_match_actions_api": true,
+      "report_sha256_by_platform": {
+        "Linux": "ed6d318114dce8586b80491d3b3235a8c214ae1f962f1e251cce658909bc7e2c",
+        "Windows": "ed6d318114dce8586b80491d3b3235a8c214ae1f962f1e251cce658909bc7e2c",
+        "macOS": "ed6d318114dce8586b80491d3b3235a8c214ae1f962f1e251cce658909bc7e2c"
+      },
+      "records_per_platform": 28,
+      "reports_byte_identical": true,
+      "identity_caveat": "JSONL omits run/SHA/platform; Actions artifact metadata, SHA-bearing names, and platform member filenames establish identity."
+    },
+    "loaded_plugin_workflow_reports": {
+      "run_id": 38971746799,
+      "artifact_ids": [
+        12077146695,
+        12076667980,
+        12076414402
+      ],
+      "payload_reconciliation": "verified",
+      "archive_hashes_match_actions_api": true,
+      "report_sha256_by_platform": {
+        "Linux": "3db1a0b39b82c2e9c23fb78f6abdfe29f17db318658114357d989518a0f79ded",
+        "macOS": "8ce1536dffd44b7e9ce55aea00fa28c9e61f9d7224e55b1d7409da36d8139bd4",
+        "Windows": "6c66cda95c883f58e066a7b860d47ce8ff9601c9029b91bf9cbc4b395feb0700"
+      },
+      "source_tree_head": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+      "source_tree_paths_per_platform": 328,
+      "report_status": "partial",
+      "complete_count_per_platform": 11,
+      "partial_count_per_platform": 10,
+      "compatibility_promoted": false,
+      "integrity_checks": "passed"
+    },
+    "roundtrip_reports": {
+      "artifact_ids": [
+        12077522504,
+        12076883582,
+        12076873273
+      ],
+      "hashes_and_sizes_match_actions_api": true,
+      "embedded_source_sha_run_attempt_platform_match": true,
+      "platform_statuses": {
+        "Linux": "failed",
+        "Windows": "failed",
+        "macOS": "failed"
+      },
+      "report_sha256": {
+        "Linux": "1f516637e066b81c3a52ebc63168565db68f47214bdcae60d99c7923e2ef4132",
+        "macOS": "22e067108d9ceb05889ca6a13e9d0718eda62fbaa8904af898e4ccac66faca12",
+        "Windows": "7746147c29f75904220854abd11ebcae2714e91cf462c2ec94e928dc9eb12db8"
+      },
+      "error": "Timed out waiting for a post-edit changed watcher snapshot probe and correlated full refresh; last value=null.",
+      "stage": "after external creation of After refresh.md, before in-place edit and rename",
+      "watch_error": null,
+      "observation": "No watcher hint, snapshot probe, reconciliation request, or consumed result appears after file creation in any platform log. Reports do not prove whether the notify callback fired or whether egui polled the hint."
+    },
+    "metadata_only_previews": {
+      "artifact_ids": [
+        12076717642,
+        12076284748,
+        12077586920
+      ],
+      "sizes_in_bytes": [
+        125946850,
+        397395784,
+        163006126
+      ],
+      "api_digests": {
+        "Linux": "sha256:31af9cda2fa37a09146547445dba3f46e5873dc94033245a29c2a3985d2fc2bd",
+        "macOS": "sha256:c05a3bd8c428e012c762e7e62c5061f5dd7e64da08912f2b0231fd902cd64a00",
+        "Windows": "sha256:5132470ffb6a049ccd3ae4318c0c024abef4690ca47c1243f53662e31e29cd25"
+      },
+      "api_digests_recorded": true,
+      "payloads_downloaded": false,
+      "expires_at": "2027-01-14"
+    },
+    "report_payloads_identity_reconciled": 9
+  }
 }
