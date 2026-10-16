@@ -12,7 +12,8 @@ use openobsidian_engine::{
     VaultError, VaultHistoryCleanup, VaultHistoryKind, VaultHistoryPlan, VaultHistoryPolicy,
     VaultHistoryRecord, VaultInlineImage, VaultLinkResolution, VaultNoteEmbedDisposition,
     VaultNoteEmbedNode, VaultNoteEmbedReport, VaultRenamePreview, VaultRenameRecoveryReport,
-    VaultRenameResult, VaultSession, VaultWatcher, VaultWriteRecoveryReport, VaultWriteRequest,
+    VaultRenameResult, VaultSession, VaultWatchEventBatch, VaultWatcher, VaultWriteRecoveryReport,
+    VaultWriteRequest,
     analyze_markdown_preview, plan_history_retention,
 };
 use sha2::{Digest, Sha256};
@@ -112,6 +113,43 @@ impl VaultRescanOrigins {
 struct VaultRescanBatch {
     origins: VaultRescanOrigins,
     request_id: Option<String>,
+    watcher_event_batches: Vec<VaultWatchEventBatch>,
+}
+
+fn watcher_event_batches_label(batches: &[VaultWatchEventBatch]) -> String {
+    if batches.is_empty() {
+        "none".to_owned()
+    } else {
+        batches
+            .iter()
+            .map(|batch| format!("{}:{}", batch.id, batch.event_count))
+            .collect::<Vec<_>>()
+            .join("|")
+    }
+}
+
+fn merge_watcher_event_batches(
+    target: &mut Vec<VaultWatchEventBatch>,
+    incoming: impl IntoIterator<Item = VaultWatchEventBatch>,
+) {
+    for incoming_batch in incoming {
+        if let Some(existing_batch) = target
+            .iter_mut()
+            .find(|batch| batch.id == incoming_batch.id)
+        {
+            existing_batch.event_count = existing_batch.event_count.max(incoming_batch.event_count);
+        } else {
+            target.push(incoming_batch);
+        }
+    }
+}
+
+fn watch_vault_with_repaint(
+    root: &Path,
+    context: &eframe::egui::Context,
+) -> Result<VaultWatcher, openobsidian_engine::VaultWatchError> {
+    let context = context.clone();
+    VaultWatcher::watch_with_wakeup(root, move || context.request_repaint())
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -474,9 +512,30 @@ fn run_with_desktop_services_and_session_internal(
     eframe::run_native(
         "OpenObsidian",
         options,
-        Box::new(move |_creation_context| {
+        Box::new(move |creation_context| {
+            let session = initial_session.map(Arc::new);
+            let watcher_result = session.as_ref().map(|session| {
+                watch_vault_with_repaint(session.root_path(), &creation_context.egui_ctx)
+            });
+            let (vault_watcher, vault_watch_error) = match watcher_result {
+                Some(Ok(watcher)) => (Some(watcher), None),
+                Some(Err(_)) => (
+                    None,
+                    Some(
+                        "Automatic vault notifications are unavailable; periodic disk reconciliation remains active."
+                            .to_owned(),
+                    ),
+                ),
+                None => (None, None),
+            };
+            let next_vault_reconciliation = session
+                .as_ref()
+                .map(|_| Instant::now() + VAULT_RECONCILIATION_INTERVAL);
             Ok(Box::new(OpenObsidianApp {
-                session: initial_session.map(Arc::new),
+                session,
+                vault_watcher,
+                vault_watch_error,
+                next_vault_reconciliation,
                 storage_protection_probe: Some(Box::new(probe)),
                 open_vault_action: Some(Box::new(open_vault)),
                 external_file_opener,
@@ -501,6 +560,7 @@ struct OpenObsidianApp {
     vault_refresh_receiver: Option<VaultRefreshReceiver>,
     vault_refresh_request_id: Option<String>,
     vault_refresh_trigger_origins: VaultRescanOrigins,
+    vault_refresh_event_batches: Vec<VaultWatchEventBatch>,
     vault_refresh_error: Option<String>,
     vault_refresh_status: Option<String>,
     vault_watcher: Option<VaultWatcher>,
@@ -509,6 +569,7 @@ struct OpenObsidianApp {
     vault_rescan_pending: bool,
     vault_rescan_origins: VaultRescanOrigins,
     vault_rescan_request_id: Option<String>,
+    vault_rescan_event_batches: Vec<VaultWatchEventBatch>,
     vault_rescan_promoted_batch: Option<VaultRescanBatch>,
     last_reconciled_vault_revision: Option<String>,
     vault_snapshot_probe_receiver: Option<VaultSnapshotProbeReceiver>,
@@ -679,7 +740,7 @@ impl OpenObsidianApp {
         let open_result = self.vault_open_receiver.as_ref().map(Receiver::try_recv);
         match open_result {
             Some(Ok(Ok(session))) => {
-                let watcher = VaultWatcher::watch(session.root_path());
+                let watcher = watch_vault_with_repaint(session.root_path(), ui.ctx());
                 self.vault_watch_error = watcher.as_ref().err().map(|_| {
                     "Automatic vault notifications are unavailable; periodic disk reconciliation remains active."
                         .to_owned()
@@ -689,6 +750,7 @@ impl OpenObsidianApp {
                 self.vault_rescan_pending = false;
                 self.vault_rescan_origins = VaultRescanOrigins::default();
                 self.vault_rescan_request_id = None;
+                self.vault_rescan_event_batches.clear();
                 self.vault_rescan_promoted_batch = None;
                 self.last_reconciled_vault_revision = None;
                 self.vault_snapshot_probe_receiver = None;
@@ -709,6 +771,7 @@ impl OpenObsidianApp {
                 self.vault_refresh_receiver = None;
                 self.vault_refresh_request_id = None;
                 self.vault_refresh_trigger_origins = VaultRescanOrigins::default();
+                self.vault_refresh_event_batches.clear();
                 self.vault_refresh_error = None;
                 self.vault_refresh_status = None;
                 self.history_records.clear();
@@ -4334,6 +4397,7 @@ impl OpenObsidianApp {
                 manual_button: true,
                 ..VaultRescanOrigins::default()
             },
+            Vec::new(),
         );
     }
 
@@ -4341,14 +4405,20 @@ impl OpenObsidianApp {
         &mut self,
         request_id: String,
         trigger_origins: VaultRescanOrigins,
+        watcher_event_batches: Vec<VaultWatchEventBatch>,
     ) {
-        self.start_vault_refresh_with_request_id(Some(request_id), trigger_origins);
+        self.start_vault_refresh_with_request_id(
+            Some(request_id),
+            trigger_origins,
+            watcher_event_batches,
+        );
     }
 
     fn start_vault_refresh_with_request_id(
         &mut self,
         request_id: Option<String>,
         trigger_origins: VaultRescanOrigins,
+        watcher_event_batches: Vec<VaultWatchEventBatch>,
     ) {
         let Some(mut session) = self.session.as_ref().map(|session| (**session).clone()) else {
             return;
@@ -4356,12 +4426,14 @@ impl OpenObsidianApp {
         self.vault_refresh_generation = self.vault_refresh_generation.saturating_add(1);
         self.vault_refresh_request_id = request_id;
         self.vault_refresh_trigger_origins = trigger_origins;
+        self.vault_refresh_event_batches = watcher_event_batches;
         let ci_diagnostics = std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some();
         let entries_before = session.entries().len();
         let trigger_sources = trigger_origins.label();
+        let watcher_batches = watcher_event_batches_label(&self.vault_refresh_event_batches);
         if ci_diagnostics {
             eprintln!(
-                "OpenObsidian CI vault refresh scheduled: generation={}, trigger_sources={trigger_sources}, entries_before={entries_before}",
+                "OpenObsidian CI vault refresh scheduled: generation={}, trigger_sources={trigger_sources}, watcher_event_batches={watcher_batches}, entries_before={entries_before}",
                 self.vault_refresh_generation,
             );
         }
@@ -4461,6 +4533,7 @@ impl OpenObsidianApp {
         let batch = VaultRescanBatch {
             origins: self.vault_rescan_origins,
             request_id: self.vault_rescan_request_id.take(),
+            watcher_event_batches: std::mem::take(&mut self.vault_rescan_event_batches),
         };
         self.vault_rescan_pending = false;
         self.vault_rescan_origins = VaultRescanOrigins::default();
@@ -4470,6 +4543,10 @@ impl OpenObsidianApp {
     fn merge_vault_rescan_batch(&mut self, batch: VaultRescanBatch) {
         self.vault_rescan_pending = true;
         self.vault_rescan_origins.merge(batch.origins);
+        merge_watcher_event_batches(
+            &mut self.vault_rescan_event_batches,
+            batch.watcher_event_batches,
+        );
         if self.vault_rescan_request_id.is_none() {
             self.vault_rescan_request_id = batch.request_id;
         }
@@ -4478,6 +4555,10 @@ impl OpenObsidianApp {
     fn queue_promoted_vault_rescan_batch(&mut self, batch: VaultRescanBatch) {
         if let Some(promoted) = &mut self.vault_rescan_promoted_batch {
             promoted.origins.merge(batch.origins);
+            merge_watcher_event_batches(
+                &mut promoted.watcher_event_batches,
+                batch.watcher_event_batches,
+            );
             if promoted.request_id.is_none() {
                 promoted.request_id = batch.request_id;
             }
@@ -4491,6 +4572,7 @@ impl OpenObsidianApp {
         if self.vault_rescan_origins.is_empty() {
             self.vault_rescan_pending = false;
             self.vault_rescan_request_id = None;
+            self.vault_rescan_event_batches.clear();
         }
         let promoted_batch_is_empty =
             if let Some(batch) = &mut self.vault_rescan_promoted_batch {
@@ -4517,9 +4599,10 @@ impl OpenObsidianApp {
             .as_deref()
             .unwrap_or("missing-request-id");
         let trigger_sources = batch.origins.label();
+        let watcher_batches = watcher_event_batches_label(&batch.watcher_event_batches);
         if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some() {
             eprintln!(
-                "OpenObsidian CI vault snapshot probe scheduled: request_id={request_id}, trigger_sources={trigger_sources}, baseline_revision={baseline_revision}"
+                "OpenObsidian CI vault snapshot probe scheduled: request_id={request_id}, trigger_sources={trigger_sources}, watcher_event_batches={watcher_batches}, baseline_revision={baseline_revision}"
             );
         }
         let (sender, receiver) = mpsc::channel();
@@ -4559,20 +4642,21 @@ impl OpenObsidianApp {
             .request_id
             .as_deref()
             .unwrap_or("missing-request-id");
+        let watcher_batches = watcher_event_batches_label(&batch.watcher_event_batches);
         let baseline_revision = self.last_reconciled_vault_revision.as_deref();
         match outcome {
             Ok(current_revision) if Some(current_revision.as_str()) == baseline_revision => {
                 self.vault_refresh_error = None;
                 if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some() {
                     eprintln!(
-                        "OpenObsidian CI vault snapshot probe result: request_id={request_id}, outcome=unchanged, revision_sha256={current_revision}"
+                        "OpenObsidian CI vault snapshot probe result: request_id={request_id}, outcome=unchanged, watcher_event_batches={watcher_batches}, revision_sha256={current_revision}"
                     );
                 }
             }
             Ok(current_revision) => {
                 if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some() {
                     eprintln!(
-                        "OpenObsidian CI vault snapshot probe result: request_id={request_id}, outcome=changed, baseline_revision_sha256={}, revision_sha256={current_revision}",
+                        "OpenObsidian CI vault snapshot probe result: request_id={request_id}, outcome=changed, watcher_event_batches={watcher_batches}, baseline_revision_sha256={}, revision_sha256={current_revision}",
                         baseline_revision.unwrap_or("unavailable")
                     );
                 }
@@ -4582,7 +4666,7 @@ impl OpenObsidianApp {
                 self.last_reconciled_vault_revision = None;
                 if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some() {
                     eprintln!(
-                        "OpenObsidian CI vault snapshot probe result: request_id={request_id}, outcome=error, error={error}"
+                        "OpenObsidian CI vault snapshot probe result: request_id={request_id}, outcome=error, watcher_event_batches={watcher_batches}, error={error}"
                     );
                 }
                 self.queue_promoted_vault_rescan_batch(batch);
@@ -4623,6 +4707,15 @@ impl OpenObsidianApp {
     }
 
     fn mark_vault_rescan_pending(&mut self, origin: VaultRescanOrigin, request_id: Option<&str>) {
+        self.mark_vault_rescan_pending_with_event_batch(origin, request_id, None);
+    }
+
+    fn mark_vault_rescan_pending_with_event_batch(
+        &mut self,
+        origin: VaultRescanOrigin,
+        request_id: Option<&str>,
+        event_batch: Option<VaultWatchEventBatch>,
+    ) {
         let had_filesystem_watcher = self.vault_rescan_origins.filesystem_watcher;
         let had_periodic_timer = self.vault_rescan_origins.periodic_timer;
         self.vault_rescan_pending = true;
@@ -4636,6 +4729,12 @@ impl OpenObsidianApp {
             VaultRescanOrigin::ManualButton => {
                 self.vault_rescan_origins.manual_button = true;
             }
+        }
+        if let Some(event_batch) = event_batch {
+            merge_watcher_event_batches(
+                &mut self.vault_rescan_event_batches,
+                std::iter::once(event_batch),
+            );
         }
         if let Some(request_id) = request_id.filter(|request_id| !request_id.is_empty()) {
             if origin != VaultRescanOrigin::PeriodicTimer || !had_filesystem_watcher {
@@ -4656,14 +4755,46 @@ impl OpenObsidianApp {
     fn poll_vault_change_hints(&mut self, ui: &mut eframe::egui::Ui) {
         self.poll_vault_snapshot_probe(ui);
         let mut state_changed = false;
-        let mut watcher_hint = self.vault_watcher.as_mut().and_then(VaultWatcher::poll);
+        let watcher_poll_started_at = Instant::now();
+        let watcher_notification = self
+            .vault_watcher
+            .as_mut()
+            .and_then(VaultWatcher::poll_with_batch);
+        let watcher_poll_completed_at = Instant::now();
+        let mut watcher_hint = watcher_notification.map(|notification| notification.hint);
+        let mut watcher_event_batch =
+            watcher_notification.and_then(|notification| notification.event_batch);
         let watcher_hint_request_id = watcher_hint
             .as_ref()
             .and_then(|_| self.vault_watcher_hint_request_id.take());
         if let Some(hint) = watcher_hint {
-            self.mark_vault_rescan_pending(
+            let callback_to_poll_ms = watcher_event_batch.map(|batch| {
+                watcher_poll_completed_at
+                    .saturating_duration_since(batch.enqueued_at)
+                    .as_millis()
+            });
+            let timer_due_before_poll = self
+                .next_vault_reconciliation
+                .is_some_and(|deadline| watcher_poll_started_at >= deadline);
+            let watcher_batches = watcher_event_batch.map_or_else(
+                || "none".to_owned(),
+                |batch| format!("{}:{}", batch.id, batch.event_count),
+            );
+            if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some() {
+                if let Some(batch) = watcher_event_batch {
+                    eprintln!(
+                        "OpenObsidian CI vault watcher callback batch polled: batch_id={}, event_count={}, notify_error_callbacks={}, callback_to_poll_ms={}, timer_due_before_poll={timer_due_before_poll}",
+                        batch.id,
+                        batch.event_count,
+                        batch.notify_error_callbacks,
+                        callback_to_poll_ms.unwrap_or(0),
+                    );
+                }
+            }
+            self.mark_vault_rescan_pending_with_event_batch(
                 VaultRescanOrigin::FilesystemWatcher,
                 watcher_hint_request_id.as_deref(),
+                watcher_event_batch,
             );
             let request_id = self
                 .vault_rescan_request_id
@@ -4671,8 +4802,16 @@ impl OpenObsidianApp {
                 .unwrap_or("missing-request-id");
             if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some() {
                 eprintln!(
-                    "OpenObsidian CI vault watcher hint: hint={hint:?}, request_id={request_id}, refresh_in_flight={}",
-                    self.vault_refresh_receiver.is_some()
+                    "OpenObsidian CI vault watcher hint: hint={hint:?}, request_id={request_id}, refresh_in_flight={}, event_batch_id={}, event_count={}, callback_to_poll_ms={}, timer_due_before_poll={timer_due_before_poll}, watcher_event_batches={watcher_batches}, notify_error_callbacks={}",
+                    self.vault_refresh_receiver.is_some(),
+                    watcher_event_batch.map_or_else(
+                        || "none".to_owned(),
+                        |batch| batch.id.to_string(),
+                    ),
+                    watcher_event_batch.map_or(0, |batch| batch.event_count),
+                    callback_to_poll_ms
+                        .map_or_else(|| "none".to_owned(), |elapsed| elapsed.to_string()),
+                    watcher_event_batch.map_or(0, |batch| batch.notify_error_callbacks),
                 );
             }
             state_changed = true;
@@ -4696,26 +4835,48 @@ impl OpenObsidianApp {
                 VaultRescanOrigin::PeriodicTimer,
                 forced_request_id.as_deref(),
             );
-            let rewatch_hint = if let Some(watcher) = &mut self.vault_watcher {
+            let rewatch_notification = if let Some(watcher) = &mut self.vault_watcher {
                 watcher.request_root_rewatch();
-                watcher.poll()
+                watcher.poll_with_batch()
             } else {
                 None
             };
+            let rewatch_poll_completed_at = Instant::now();
+            let rewatch_hint = rewatch_notification.map(|notification| notification.hint);
             if let Some(hint) = rewatch_hint {
+                watcher_event_batch = rewatch_notification
+                    .and_then(|notification| notification.event_batch);
                 let request_id = self.vault_watcher_hint_request_id.take();
-                self.mark_vault_rescan_pending(
+                self.mark_vault_rescan_pending_with_event_batch(
                     VaultRescanOrigin::FilesystemWatcher,
                     request_id.as_deref(),
+                    watcher_event_batch,
                 );
                 let request_id = self
                     .vault_rescan_request_id
                     .as_deref()
                     .unwrap_or("missing-request-id");
                 if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some() {
+                    let callback_to_poll_ms = watcher_event_batch.map(|batch| {
+                        rewatch_poll_completed_at
+                            .saturating_duration_since(batch.enqueued_at)
+                            .as_millis()
+                    });
                     eprintln!(
-                        "OpenObsidian CI vault watcher hint: hint={hint:?}, request_id={request_id}, refresh_in_flight={}",
-                        self.vault_refresh_receiver.is_some()
+                        "OpenObsidian CI vault watcher hint: hint={hint:?}, request_id={request_id}, refresh_in_flight={}, event_batch_id={}, event_count={}, callback_to_poll_ms={}, timer_due_before_poll=true, watcher_event_batches={}, notify_error_callbacks={}",
+                        self.vault_refresh_receiver.is_some(),
+                        watcher_event_batch.map_or_else(
+                            || "none".to_owned(),
+                            |batch| batch.id.to_string(),
+                        ),
+                        watcher_event_batch.map_or(0, |batch| batch.event_count),
+                        callback_to_poll_ms
+                            .map_or_else(|| "none".to_owned(), |elapsed| elapsed.to_string()),
+                        watcher_event_batch.map_or_else(
+                            || "none".to_owned(),
+                            |batch| format!("{}:{}", batch.id, batch.event_count),
+                        ),
+                        watcher_event_batch.map_or(0, |batch| batch.notify_error_callbacks),
                     );
                 }
                 watcher_hint = Some(hint);
@@ -4732,6 +4893,7 @@ impl OpenObsidianApp {
                         "OpenObsidian CI vault watcher rescan requested: request_id={request_id}"
                     );
                 }
+                ui.ctx().request_repaint();
             } else if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some() {
                 eprintln!(
                     "OpenObsidian CI vault watcher rescan unavailable: request_id={request_id}, watcher_present=false"
@@ -4831,6 +4993,7 @@ impl OpenObsidianApp {
                     format!("vault-rescan-{sequence}")
                 });
             let trigger_sources = batch.origins.label();
+            let watcher_batches = watcher_event_batches_label(&batch.watcher_event_batches);
             let request_source = if batch.origins.manual_button
                 && !batch.origins.filesystem_watcher
                 && !batch.origins.periodic_timer
@@ -4841,11 +5004,15 @@ impl OpenObsidianApp {
             };
             if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some() {
                 eprintln!(
-                    "OpenObsidian CI vault refresh request: source={request_source}, request_id={request_id}, trigger_sources={trigger_sources}, promoted_from_snapshot_probe={promoted}, frame_nr={}",
+                    "OpenObsidian CI vault refresh request: source={request_source}, request_id={request_id}, trigger_sources={trigger_sources}, watcher_event_batches={watcher_batches}, promoted_from_snapshot_probe={promoted}, frame_nr={}",
                     ui.ctx().cumulative_frame_nr()
                 );
             }
-            self.start_vault_refresh_for_request(request_id, batch.origins);
+            self.start_vault_refresh_for_request(
+                request_id,
+                batch.origins,
+                batch.watcher_event_batches,
+            );
             ui.ctx().request_repaint();
         } else if self.vault_rescan_pending || self.vault_rescan_promoted_batch.is_some() {
             ui.ctx().request_repaint_after(Duration::from_millis(100));
@@ -5271,6 +5438,8 @@ impl OpenObsidianApp {
                     .vault_refresh_request_id
                     .take()
                     .unwrap_or_else(|| "none".to_owned());
+                let watcher_batches =
+                    watcher_event_batches_label(&self.vault_refresh_event_batches);
                 let entries = outcome.session.entries().len();
                 let snapshot_stable = outcome.snapshot_revision_sha256.is_some();
                 if !snapshot_stable {
@@ -5283,13 +5452,14 @@ impl OpenObsidianApp {
                     );
                     if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some() {
                         eprintln!(
-                            "OpenObsidian CI vault refresh result consumed: request_id={request_id}, succeeded=false, snapshot_stable=false, snapshot_before_sha256={}, snapshot_after_sha256={}",
+                            "OpenObsidian CI vault refresh result consumed: request_id={request_id}, succeeded=false, snapshot_stable=false, watcher_event_batches={watcher_batches}, snapshot_before_sha256={}, snapshot_after_sha256={}",
                             outcome.snapshot_before_sha256.as_deref().unwrap_or("unavailable"),
                             outcome.snapshot_after_sha256.as_deref().unwrap_or("unavailable"),
                         );
                     }
                     self.vault_refresh_receiver = None;
                     self.vault_refresh_trigger_origins = VaultRescanOrigins::default();
+                    self.vault_refresh_event_batches.clear();
                     self.clear_pending_periodic_vault_rescan();
                     self.next_vault_reconciliation =
                         Some(Instant::now() + VAULT_RECONCILIATION_INTERVAL);
@@ -5324,13 +5494,14 @@ impl OpenObsidianApp {
                         .unwrap_or(false);
                 if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some() {
                     eprintln!(
-                        "OpenObsidian CI vault refresh result consumed: request_id={request_id}, succeeded=true, snapshot_stable=true, snapshot_before_sha256={}, snapshot_after_sha256={}, revision_sha256={}, entries={entries}, expected_path_visible={expected_path_visible}",
+                        "OpenObsidian CI vault refresh result consumed: request_id={request_id}, succeeded=true, snapshot_stable=true, watcher_event_batches={watcher_batches}, snapshot_before_sha256={}, snapshot_after_sha256={}, revision_sha256={}, entries={entries}, expected_path_visible={expected_path_visible}",
                         outcome.snapshot_before_sha256.as_deref().unwrap_or("unavailable"),
                         outcome.snapshot_after_sha256.as_deref().unwrap_or("unavailable"),
                         outcome.snapshot_revision_sha256.as_deref().unwrap_or("unavailable"),
                     );
                 }
                 self.vault_refresh_receiver = None;
+                self.vault_refresh_event_batches.clear();
                 let VaultRefreshOutcome {
                     session,
                     preserve_note_preview,
@@ -5409,23 +5580,34 @@ impl OpenObsidianApp {
                     .vault_refresh_request_id
                     .take()
                     .unwrap_or_else(|| "none".to_owned());
+                let watcher_batches =
+                    watcher_event_batches_label(&self.vault_refresh_event_batches);
                 if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some() {
                     eprintln!(
-                        "OpenObsidian CI vault refresh result consumed: request_id={request_id}, succeeded=false"
+                        "OpenObsidian CI vault refresh result consumed: request_id={request_id}, succeeded=false, watcher_event_batches={watcher_batches}"
                     );
                 }
                 self.vault_refresh_receiver = None;
                 self.vault_refresh_trigger_origins = VaultRescanOrigins::default();
+                self.vault_refresh_event_batches.clear();
                 self.last_reconciled_vault_revision = None;
                 self.vault_refresh_status = None;
                 self.vault_refresh_error = Some(error);
             }
             Some(Err(TryRecvError::Disconnected)) => {
-                self.vault_refresh_request_id = None;
+                let request_id = self
+                    .vault_refresh_request_id
+                    .take()
+                    .unwrap_or_else(|| "none".to_owned());
+                let watcher_batches =
+                    watcher_event_batches_label(&self.vault_refresh_event_batches);
                 self.vault_refresh_trigger_origins = VaultRescanOrigins::default();
+                self.vault_refresh_event_batches.clear();
                 self.last_reconciled_vault_revision = None;
                 if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some() {
-                    eprintln!("OpenObsidian CI vault refresh result channel disconnected");
+                    eprintln!(
+                        "OpenObsidian CI vault refresh result channel disconnected: request_id={request_id}, watcher_event_batches={watcher_batches}"
+                    );
                 }
                 self.vault_refresh_receiver = None;
                 self.vault_refresh_status = None;
@@ -10727,26 +10909,96 @@ mod tests {
         let session = VaultSession::open(&vault_path, &app_data_path)
             .expect("open vault before applying an external filesystem change");
         assert_eq!(session.entries().len(), 1);
-        let watcher = VaultWatcher::watch(session.root_path()).expect("watch the open test vault");
+        let (wake_sender, wake_receiver) = mpsc::channel();
+        let wake_count = Arc::new(AtomicU64::new(0));
+        let watcher_root = vault_path.clone();
+        let callback_wake_count = Arc::clone(&wake_count);
         let app = OpenObsidianApp {
             session: Some(Arc::new(session)),
-            vault_watcher: Some(watcher),
             next_vault_reconciliation: Some(Instant::now() + Duration::from_secs(60)),
             ..OpenObsidianApp::default()
         };
-        let mut harness = Harness::new_ui_state(|ui, app| app.show_ui(ui), app);
+        let mut harness = Harness::new_ui_state(
+            move |ui, app| {
+                if app.vault_watcher.is_none() {
+                    let callback_context = ui.ctx().clone();
+                    let callback_wake_count = Arc::clone(&callback_wake_count);
+                    let callback_wake_sender = wake_sender.clone();
+                    app.vault_watcher = Some(
+                        VaultWatcher::watch_with_wakeup(&watcher_root, move || {
+                            callback_context.request_repaint();
+                            callback_wake_count.fetch_add(1, Ordering::Relaxed);
+                            let _ = callback_wake_sender.send(Instant::now());
+                        })
+                        .expect("watch the open test vault with a repaint wake callback"),
+                    );
+                }
+                app.show_ui(ui)
+            },
+            app,
+        );
         harness.step();
         harness.get_by_label("1 Markdown files found.");
+        let periodic_reconciliation_deadline = harness
+            .state()
+            .next_vault_reconciliation
+            .expect("the open vault has a periodic reconciliation deadline");
 
         let external_source = b"# Added outside OpenObsidian\r\n";
         std::fs::write(vault_path.join("After.md"), external_source)
             .expect("create a note outside OpenObsidian");
+        let callback_woke_at = wake_receiver
+            .recv_timeout(Duration::from_secs(15))
+            .expect("a real filesystem notification invokes the repaint wake before the timer");
+        assert!(wake_count.load(Ordering::Relaxed) > 0);
+        assert!(
+            callback_woke_at < periodic_reconciliation_deadline,
+            "the notify callback wake occurred before the periodic timer"
+        );
         let expected_vault = existing_vault_tree_snapshot(&vault_path);
         let expected_app_data = existing_vault_tree_snapshot(&app_data_path);
         let expected_status = "Note list refreshed: 2 Markdown files found.";
         let deadline = Instant::now() + Duration::from_secs(15);
+        let mut observed_watcher_batch = false;
         loop {
             harness.step();
+            let ui_poll_completed_at = Instant::now();
+            let polled_event_batch = harness
+                .state()
+                .vault_rescan_event_batches
+                .first()
+                .copied()
+                .or_else(|| {
+                    harness
+                        .state()
+                        .vault_snapshot_probe_batch
+                        .as_ref()
+                        .and_then(|batch| batch.watcher_event_batches.first().copied())
+                })
+                .or_else(|| harness.state().vault_refresh_event_batches.first().copied())
+                .or_else(|| {
+                    harness
+                        .state()
+                        .vault_rescan_promoted_batch
+                        .as_ref()
+                        .and_then(|batch| batch.watcher_event_batches.first().copied())
+                });
+            if !observed_watcher_batch {
+                let batch = polled_event_batch.expect(
+                    "the wake callback is consumed by the first UI poll after the external edit",
+                );
+                assert!(
+                    ui_poll_completed_at.saturating_duration_since(batch.enqueued_at)
+                        <= Duration::from_secs(15),
+                    "the real watcher callback batch reached the UI after fifteen seconds"
+                );
+                assert!(
+                    ui_poll_completed_at < periodic_reconciliation_deadline,
+                    "the watcher event reached the UI before the periodic timer"
+                );
+                assert!(batch.event_count > 0);
+                observed_watcher_batch = true;
+            }
             if harness.state().vault_refresh_status.as_deref() == Some(expected_status) {
                 break;
             }
@@ -11226,6 +11478,7 @@ mod tests {
                     ..VaultRescanOrigins::default()
                 },
                 request_id: Some("first-watcher-probe".to_owned()),
+                watcher_event_batches: Vec::new(),
             }),
             last_reconciled_vault_revision: Some(baseline_revision.clone()),
             next_vault_reconciliation: Some(Instant::now() + VAULT_RECONCILIATION_INTERVAL),

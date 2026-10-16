@@ -19,7 +19,8 @@ pub use openobsidian_vault::{
     VaultHistoryPolicy, VaultHistoryRecord, VaultInlineImage, VaultLinkResolution,
     VaultNoteEmbedDisposition, VaultNoteEmbedNode, VaultNoteEmbedReport, VaultNoteEmbedResolution,
     VaultReadPreview, VaultRenamePreview, VaultRenameRecoveryIssue, VaultRenameRecoveryReport,
-    VaultRenameResult, VaultWatchError, VaultWatchHint, VaultWatcher, VaultWriteRecoveryIssue,
+    VaultRenameResult, VaultWatchError, VaultWatchEventBatch, VaultWatchHint, VaultWatchPoll,
+    VaultWatcher, VaultWriteRecoveryIssue,
     VaultWriteRecoveryReport, VaultWriteRequest, VaultWriteResult, analyze_markdown_preview,
     plan_history_retention,
 };

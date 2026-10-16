@@ -351,7 +351,9 @@ pub use history::{
 pub use rename_transaction::{
     VaultRenameRecoveryIssue, VaultRenameRecoveryReport, VaultRenameResult,
 };
-pub use watcher::{VaultWatchError, VaultWatchHint, VaultWatcher};
+pub use watcher::{
+    VaultWatchError, VaultWatchEventBatch, VaultWatchHint, VaultWatchPoll, VaultWatcher,
+};
 pub use write_recovery::{VaultWriteRecoveryIssue, VaultWriteRecoveryReport};
 
 #[derive(Clone, Debug)]
