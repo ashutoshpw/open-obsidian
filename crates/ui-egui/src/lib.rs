@@ -44,7 +44,16 @@ const MAX_BASE_ROW_TEXT_BYTES: usize = 4096;
 const BASES_TRUNCATION_MARKER: &str = "… [truncated]";
 const MAX_TRANSCLUSION_PREVIEW_BYTES: usize = MAX_NOTE_SOURCE_PREVIEW_BYTES;
 const VAULT_RECONCILIATION_INTERVAL: Duration = Duration::from_secs(60);
+const CI_CANVAS_DISABLE_EGUI_MEMORY_PERSISTENCE_ENV: &str =
+    "OPENOBSIDIAN_CI_CANVAS_DISABLE_EGUI_MEMORY_PERSISTENCE";
 static CI_CANVAS_FOCUS_SNAPSHOT_START: OnceLock<Instant> = OnceLock::new();
+
+fn ci_canvas_egui_memory_persistence_disabled() -> bool {
+    matches!(
+        std::env::var(CI_CANVAS_DISABLE_EGUI_MEMORY_PERSISTENCE_ENV).as_deref(),
+        Ok("1")
+    )
+}
 
 fn ci_canvas_focus_modifiers_json(modifiers: eframe::egui::Modifiers) -> String {
     format!(
@@ -63,10 +72,7 @@ fn ci_canvas_focus_pointer_button_name(button: eframe::egui::PointerButton) -> &
     }
 }
 
-fn ci_canvas_focus_raw_event_record(
-    event_index: usize,
-    event: &eframe::egui::Event,
-) -> String {
+fn ci_canvas_focus_raw_event_record(event_index: usize, event: &eframe::egui::Event) -> String {
     use eframe::egui::Event;
 
     match event {
@@ -367,7 +373,13 @@ fn run_with_desktop_services_and_session_internal(
     if std::env::var_os("OPENOBSIDIAN_CI_CANVAS_FOCUS_SNAPSHOT_REQUEST_FILE").is_some() {
         let _ = CI_CANVAS_FOCUS_SNAPSHOT_START.set(Instant::now());
     }
-    let options = eframe::NativeOptions::default();
+    let mut options = eframe::NativeOptions::default();
+    options.persist_window = true;
+    if ci_canvas_egui_memory_persistence_disabled() {
+        eprintln!(
+            "OPENOBSIDIAN_CI_CANVAS_EGUI_MEMORY_POLICY_DISABLED=1;persist_egui_memory=false;persist_window=true"
+        );
+    }
     eframe::run_native(
         "OpenObsidian",
         options,
@@ -470,6 +482,10 @@ struct OpenObsidianApp {
 impl eframe::App for OpenObsidianApp {
     fn ui(&mut self, ui: &mut eframe::egui::Ui, _frame: &mut eframe::Frame) {
         self.show_ui(ui);
+    }
+
+    fn persist_egui_memory(&self) -> bool {
+        !ci_canvas_egui_memory_persistence_disabled()
     }
 }
 

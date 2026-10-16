@@ -114,6 +114,24 @@ type SnapshotEntry = {
   target_sha256?: string;
 };
 
+type SnapshotAdditionalRoot = {
+  pathPrefix: string;
+  root: string;
+};
+
+type EframePersistenceFile = {
+  path: string;
+  bytes: number;
+  sha256: string;
+  /** Available to in-memory validators; deliberately omitted from JSON reports. */
+  content: string;
+};
+
+const snapshotAdditionalRoots = new Map<string, SnapshotAdditionalRoot[]>();
+const canvasAppDataSnapshotRoots = new Set<string>();
+const rawEframePersistenceContents = new Set<string>();
+const canvasEframeMemoryPolicyByRoot = new Map<string, "required" | "disabled">();
+
 type CanvasInputSafetyTracker = {
   expectedAbortCanary: boolean;
   clipboardStaged: boolean;
@@ -1205,10 +1223,42 @@ function updateC07ReferenceCaptureSummary(): void {
   };
 }
 
+function createEframePersistenceFile(path: string, bytes: number, sha256: string, content: string): EframePersistenceFile {
+  rawEframePersistenceContents.add(content);
+  const file = {path, bytes, sha256} as EframePersistenceFile;
+  Object.defineProperty(file, "content", {value: content, enumerable: false});
+  return file;
+}
+
+function assertSummaryOnlyEframePersistenceReport(value: unknown, rawContents: string[], path = "report", inEframeRecord = false): void {
+  if (typeof value === "string") {
+    if (rawContents.some((content) => content.length > 0 && value.includes(content))) {
+      throw new Error(`Serialized report contains raw eframe persistence text at ${path}`);
+    }
+    return;
+  }
+  if (Array.isArray(value)) {
+    value.forEach((entry, index) => assertSummaryOnlyEframePersistenceReport(entry, rawContents, `${path}[${index}]`, inEframeRecord));
+    return;
+  }
+  if (value === null || typeof value !== "object") return;
+  for (const [key, entry] of Object.entries(value)) {
+    const childPath = `${path}.${key}`;
+    const childIsEframeRecord = inEframeRecord || key.toLowerCase().includes("eframe");
+    if (childIsEframeRecord && key.toLowerCase() === "content") {
+      throw new Error(`Serialized eframe persistence metadata contains a raw content field at ${childPath}`);
+    }
+    assertSummaryOnlyEframePersistenceReport(entry, rawContents, childPath, childIsEframeRecord);
+  }
+}
+
 async function saveReport(): Promise<void> {
   updateC07ReferenceCaptureSummary();
   await mkdir(reportDirectory, {recursive: true});
-  await writeFile(join(reportDirectory, "obsidian-vault-roundtrip-report.json"), `${JSON.stringify(report, null, 2)}\n`);
+  const serialized = `${JSON.stringify(report, null, 2)}\n`;
+  const serializedTree = JSON.parse(serialized) as unknown;
+  assertSummaryOnlyEframePersistenceReport(serializedTree, [...rawEframePersistenceContents].sort((left, right) => right.length - left.length));
+  await writeFile(join(reportDirectory, "obsidian-vault-roundtrip-report.json"), serialized);
 }
 
 async function saveReportAfterStageFailure(stage: string, evidence: Record<string, unknown>, originalError: unknown): Promise<void> {
@@ -2479,9 +2529,20 @@ async function connectObsidian(port: number): Promise<{connection: DevToolsConne
   return {connection, browserVersion: version.Browser ?? "unknown", target};
 }
 
-function launchLogged(command: string, args: string[], logPath: string, env: NodeJS.ProcessEnv): ChildProcess {
+function launchLogged(
+  command: string,
+  args: string[],
+  logPath: string,
+  env: NodeJS.ProcessEnv,
+  allowCanvasEguiMemoryPersistenceOptOut = false,
+): ChildProcess {
   const log = createWriteStream(logPath, {flags: "a"});
-  const child = spawn(command, args, {env, stdio: ["ignore", "pipe", "pipe"]});
+  const childEnv = {...env};
+  if (!allowCanvasEguiMemoryPersistenceOptOut
+    || childEnv.OPENOBSIDIAN_CI_CANVAS_DISABLE_EGUI_MEMORY_PERSISTENCE !== "1") {
+    delete childEnv.OPENOBSIDIAN_CI_CANVAS_DISABLE_EGUI_MEMORY_PERSISTENCE;
+  }
+  const child = spawn(command, args, {env: childEnv, stdio: ["ignore", "pipe", "pipe"]});
   child.stdout?.pipe(log, {end: false});
   child.stderr?.pipe(log, {end: false});
   child.once("close", () => log.end());
@@ -10873,14 +10934,15 @@ async function createFixture(): Promise<void> {
 
 async function snapshotTree(root: string): Promise<SnapshotEntry[]> {
   const entries: SnapshotEntry[] = [];
-  async function visit(directory: string): Promise<void> {
+  async function visit(directory: string, snapshotRoot: string, pathPrefix: string): Promise<void> {
     const directoryMetadata = await lstat(directory);
     if (!directoryMetadata.isDirectory()) throw new Error(`Source tree directory changed type while snapshotting: ${directory}`);
     const children = await readdir(directory, {withFileTypes: true});
     children.sort((left, right) => left.name.localeCompare(right.name, "en"));
     for (const child of children) {
       const absolutePath = join(directory, child.name);
-      const relativePath = relative(root, absolutePath).split(sep).join("/");
+      const childRelativePath = relative(snapshotRoot, absolutePath).split(sep).join("/");
+      const relativePath = pathPrefix.length > 0 ? `${pathPrefix}/${childRelativePath}` : childRelativePath;
       const metadata = await lstat(absolutePath);
       if (metadata.isSymbolicLink()) {
         const targetBytes = await readlink(absolutePath, {encoding: "buffer"});
@@ -10893,7 +10955,7 @@ async function snapshotTree(root: string): Promise<SnapshotEntry[]> {
         });
       } else if (metadata.isDirectory()) {
         entries.push({path: relativePath, kind: "directory"});
-        await visit(absolutePath);
+        await visit(absolutePath, snapshotRoot, pathPrefix);
       } else if (metadata.isFile()) {
         const bytes = await readFile(absolutePath);
         entries.push({
@@ -10907,19 +10969,54 @@ async function snapshotTree(root: string): Promise<SnapshotEntry[]> {
       }
     }
   }
-  await visit(root);
+  await visit(root, root, "");
+  const additionalRoots = snapshotAdditionalRoots.get(resolve(root)) ?? [];
+  for (const additional of additionalRoots) {
+    const metadata = await lstat(additional.root);
+    if (!metadata.isDirectory()) throw new Error(`Additional app-data snapshot root changed type: ${additional.root}`);
+    if (entries.some((entry) => entry.path === additional.pathPrefix
+      || entry.path.startsWith(`${additional.pathPrefix}/`))) {
+      throw new Error(`Additional app-data snapshot prefix collides with the primary tree: ${additional.pathPrefix}`);
+    }
+    entries.push({path: additional.pathPrefix, kind: "directory"});
+    await visit(additional.root, additional.root, additional.pathPrefix);
+  }
   entries.sort((left, right) => left.path.localeCompare(right.path, "en"));
+  if (canvasAppDataSnapshotRoots.has(resolve(root))) {
+    const hostNoise = entries.filter((entry) => (
+      process.platform === "linux" && /(?:^|\/)mesa_shader_cache(?:\/|$)/i.test(entry.path)
+    ) || (
+      process.platform === "win32" && (/(?:^|\/)iconcache_[^/]*\.db$/i.test(entry.path)
+        || /(?:^|\/)Microsoft\/Windows\/Caches(?:\/|$)/i.test(entry.path))
+    ));
+    if (hostNoise.length > 0) {
+      const failures = (report.canvas_app_data_host_noise_failures as Array<Record<string, unknown>> | undefined) ?? [];
+      failures.push({app_data_root: root, full_snapshot: entries, offending_entries: hostNoise});
+      report.canvas_app_data_host_noise_failures = failures;
+      throw new Error(`Canvas app-data snapshot ${root} includes host cache entries: ${JSON.stringify(hostNoise)}`);
+    }
+  }
   return entries;
 }
 
-async function readSnapshotTextFiles(root: string, snapshot: SnapshotEntry[], matchesPath: (path: string) => boolean): Promise<Array<{path: string; bytes: number; sha256: string; content: string}>> {
+function snapshotEntryAbsolutePath(root: string, relativePath: string): string {
+  const additionalRoots = snapshotAdditionalRoots.get(resolve(root)) ?? [];
+  for (const additional of [...additionalRoots].sort((left, right) => right.pathPrefix.length - left.pathPrefix.length)) {
+    if (relativePath === additional.pathPrefix) return additional.root;
+    const prefix = `${additional.pathPrefix}/`;
+    if (relativePath.startsWith(prefix)) return join(additional.root, ...relativePath.slice(prefix.length).split("/"));
+  }
+  return join(root, relativePath);
+}
+
+async function readSnapshotTextFiles(root: string, snapshot: SnapshotEntry[], matchesPath: (path: string) => boolean): Promise<EframePersistenceFile[]> {
   const files = snapshot.filter((entry) => entry.kind === "file" && matchesPath(entry.path));
-  return await Promise.all(files.map(async (entry) => ({
-    path: entry.path,
-    bytes: entry.bytes ?? 0,
-    sha256: entry.sha256 ?? "",
-    content: await readFile(join(root, entry.path), "utf8"),
-  })));
+  return await Promise.all(files.map(async (entry) => createEframePersistenceFile(
+    entry.path,
+    entry.bytes ?? 0,
+    entry.sha256 ?? "",
+    await readFile(snapshotEntryAbsolutePath(root, entry.path), "utf8"),
+  )));
 }
 
 function changedPaths(before: SnapshotEntry[], after: SnapshotEntry[]): Array<{path: string; before?: SnapshotEntry; after?: SnapshotEntry}> {
@@ -11037,6 +11134,8 @@ type CanvasEframeInspectionEvidence = {
   phase: string;
   path_policy: "exact" | "legacy-unrestricted";
   expected_app_ron_relative_path: string | null;
+  egui_memory_policy: "required" | "disabled";
+  observed_ron_entries: Array<{path: string; kind: string; bytes: number; sha256: string}>;
   observed_app_ron_entries: Array<{path: string; kind: string; bytes: number; sha256: string}>;
   checked_files: Array<{
     path: string;
@@ -11044,6 +11143,7 @@ type CanvasEframeInspectionEvidence = {
     sha256: string;
     window_section_present: boolean;
     egui_section_present: boolean;
+    expected_egui_section_present: boolean;
     forbidden_path_checks: number;
     forbidden_path_leak_found: boolean;
   }>;
@@ -11058,12 +11158,19 @@ async function validateCanvasEframeFiles(
   forbiddenPaths: string[],
   expectedAppRonRelativePath?: string | null,
   inspectionEvidence?: CanvasEframeInspectionEvidence[],
-): Promise<Array<{path: string; bytes: number; sha256: string; content: string}>> {
+  eguiMemoryPolicy?: "required" | "disabled",
+): Promise<EframePersistenceFile[]> {
+  const effectiveEguiMemoryPolicy = eguiMemoryPolicy
+    ?? canvasEframeMemoryPolicyByRoot.get(resolve(appDataRoot))
+    ?? "required";
+  const ronEntries = snapshot.filter((entry) => entry.path.toLowerCase().endsWith(".ron"));
   const appRonEntries = snapshot.filter((entry) => basename(entry.path).toLowerCase() === "app.ron");
   const phaseEvidence: CanvasEframeInspectionEvidence = {
     phase: label,
     path_policy: expectedAppRonRelativePath === undefined ? "legacy-unrestricted" : "exact",
     expected_app_ron_relative_path: expectedAppRonRelativePath ?? null,
+    egui_memory_policy: effectiveEguiMemoryPolicy,
+    observed_ron_entries: ronEntries.map(({path, kind, bytes, sha256}) => ({path, kind, bytes, sha256})),
     observed_app_ron_entries: appRonEntries.map(({path, kind, bytes, sha256}) => ({path, kind, bytes, sha256})),
     checked_files: [],
     result: "failed",
@@ -11080,12 +11187,12 @@ async function validateCanvasEframeFiles(
     }
     const eframeEntries = appRonEntries.filter((entry) => entry.kind === "file");
     const eframeFiles = await Promise.all(eframeEntries.map(async (entry) => {
-      const bytes = await readFile(join(appDataRoot, entry.path));
+      const bytes = await readFile(snapshotEntryAbsolutePath(appDataRoot, entry.path));
       const sha256 = createHash("sha256").update(bytes).digest("hex");
       if (bytes.length !== entry.bytes || sha256 !== entry.sha256) {
         throw new Error(`${label} ${entry.path} changed after its app-data snapshot was captured`);
       }
-      return {path: entry.path, bytes: bytes.length, sha256, content: bytes.toString("utf8")};
+      return createEframePersistenceFile(entry.path, bytes.length, sha256, bytes.toString("utf8"));
     }));
     const checkedForbiddenPaths = forbiddenPaths.filter((path) => path.length > 0);
     for (const file of eframeFiles) {
@@ -11098,11 +11205,13 @@ async function validateCanvasEframeFiles(
         sha256: file.sha256,
         window_section_present: windowSectionPresent,
         egui_section_present: eguiSectionPresent,
+        expected_egui_section_present: effectiveEguiMemoryPolicy === "required",
         forbidden_path_checks: checkedForbiddenPaths.length,
         forbidden_path_leak_found: forbiddenPathLeakFound,
       });
-      if (!windowSectionPresent || !eguiSectionPresent) {
-        throw new Error(`${label} ${file.path} did not contain the expected eframe window and egui state`);
+      if (!windowSectionPresent || (effectiveEguiMemoryPolicy === "required" && !eguiSectionPresent)
+        || (effectiveEguiMemoryPolicy === "disabled" && eguiSectionPresent)) {
+        throw new Error(`${label} ${file.path} did not contain the expected eframe window and ${effectiveEguiMemoryPolicy === "required" ? "egui" : "no egui-memory"} state`);
       }
       if (forbiddenPathLeakFound) {
         throw new Error(`${label} ${file.path} contains a vault or app-data-root path`);
@@ -11130,45 +11239,67 @@ async function validateCanvasAppDataDelta(
     forbiddenPaths: string[];
     expectedEframeAppRonRelativePath: string | null;
     inspectionEvidence?: CanvasEframeInspectionEvidence[];
+    eguiMemoryPolicy?: "required" | "disabled";
   },
 ): Promise<void> {
-  if (!isDeepStrictEqual(changes, changedPaths(before, after))) {
-    throw new Error(`${label} supplied a phase delta that did not match its complete app-data snapshots`);
-  }
-  const markerPaths = canvasManagedMarkerPaths(appDataRoot, managedUserDataRoot, vaultRoot);
-  const managedEntries = new Set([
-    markerPaths.rootMarker,
-    markerPaths.vaultsDirectory,
-    markerPaths.vaultDirectory,
-    markerPaths.vaultMarker,
-  ]);
-  const unexpected = changes.filter((change) => {
-    if (basename(change.path).toLowerCase() === "app.ron") {
-      return !options.allowEframeAppRon
-        || change.path !== options.expectedEframeAppRonRelativePath
-        || change.after?.kind !== "file";
+  const actualChanges = changedPaths(before, after);
+  let unexpectedChanges: Array<{path: string; before?: SnapshotEntry; after?: SnapshotEntry}> = [];
+  try {
+    if (!isDeepStrictEqual(changes, actualChanges)) {
+      throw new Error(`${label} supplied a phase delta that did not match its complete app-data snapshots`);
     }
-    if (!options.allowManagedBootstrap || !managedEntries.has(change.path)) return true;
-    if (change.before !== undefined) return true;
-    const expectedKind = change.path === markerPaths.vaultsDirectory || change.path === markerPaths.vaultDirectory
-      ? "directory"
-      : "file";
-    return change.after?.kind !== expectedKind;
-  });
-  if (unexpected.length > 0) {
-    throw new Error(`${label} contained app-data changes outside the exact managed bootstrap and documented app.ron allowance: ${JSON.stringify(unexpected).slice(0, 6_000)}`);
+    const markerPaths = canvasManagedMarkerPaths(appDataRoot, managedUserDataRoot, vaultRoot);
+    const managedEntries = new Set([
+      markerPaths.rootMarker,
+      markerPaths.vaultsDirectory,
+      markerPaths.vaultDirectory,
+      markerPaths.vaultMarker,
+    ]);
+    unexpectedChanges = changes.filter((change) => {
+      if (basename(change.path).toLowerCase() === "app.ron") {
+        return !options.allowEframeAppRon
+          || change.path !== options.expectedEframeAppRonRelativePath
+          || change.after?.kind !== "file";
+      }
+      if (!options.allowManagedBootstrap || !managedEntries.has(change.path)) return true;
+      if (change.before !== undefined) return true;
+      const expectedKind = change.path === markerPaths.vaultsDirectory || change.path === markerPaths.vaultDirectory
+        ? "directory"
+        : "file";
+      return change.after?.kind !== expectedKind;
+    });
+    if (unexpectedChanges.length > 0) {
+      throw new Error(`${label} contained ${unexpectedChanges.length} app-data change(s) outside the exact managed bootstrap and documented app.ron allowance`);
+    }
+    if (options.allowManagedBootstrap) {
+      await validateCanvasManagedMarkerSnapshot(appDataRoot, managedUserDataRoot, vaultRoot, after, `${label} result`);
+    }
+    await validateCanvasEframeFiles(
+      appDataRoot,
+      after,
+      `${label} result`,
+      options.forbiddenPaths,
+      options.expectedEframeAppRonRelativePath,
+      options.inspectionEvidence,
+      options.eguiMemoryPolicy,
+    );
+  } catch (error) {
+    const failures = (report.canvas_app_data_delta_failures as Array<Record<string, unknown>> | undefined) ?? [];
+    failures.push({
+      phase: label,
+      app_data_root: appDataRoot,
+      managed_user_data_root: managedUserDataRoot,
+      vault_root: vaultRoot,
+      before_snapshot: before,
+      after_snapshot: after,
+      supplied_changes: changes,
+      actual_changes: actualChanges,
+      unexpected_changes: unexpectedChanges,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    report.canvas_app_data_delta_failures = failures;
+    throw error;
   }
-  if (options.allowManagedBootstrap) {
-    await validateCanvasManagedMarkerSnapshot(appDataRoot, managedUserDataRoot, vaultRoot, after, `${label} result`);
-  }
-  await validateCanvasEframeFiles(
-    appDataRoot,
-    after,
-    `${label} result`,
-    options.forbiddenPaths,
-    options.expectedEframeAppRonRelativePath,
-    options.inspectionEvidence,
-  );
 }
 
 function expectedCanvasEframeAppRonRelativePath(platform: NodeJS.Platform): string | null {
@@ -11203,26 +11334,45 @@ async function runLinuxCanvasAppDataWarmupCycle(
   const canonicalManagedUserDataRoot = await realpath(managedUserDataRoot);
   const forbiddenPaths = [selectedVaultRoot, resolve(selectedVaultRoot), canonicalVaultRoot, appDataRoot, resolve(appDataRoot), canonicalAppDataRoot, managedUserDataRoot, resolve(managedUserDataRoot), canonicalManagedUserDataRoot];
   const preLaunch = await snapshotTree(appDataRoot);
-  const preLaunchMarkerState = await validateCanvasManagedMarkerState(
-    appDataRoot,
-    managedUserDataRoot,
-    selectedVaultRoot,
-    preLaunch,
-    `Linux Canvas app-data warm-up cycle ${cycleNumber} pre-launch tree`,
-  );
-  await validateCanvasEframeFiles(
-    appDataRoot,
-    preLaunch,
-    `Linux Canvas app-data warm-up cycle ${cycleNumber} pre-launch tree`,
-    forbiddenPaths,
-    "data/openobsidian/app.ron",
-    inspectionEvidence,
-  );
+  let preLaunchMarkersInitialized = false;
+  try {
+    const preLaunchMarkerState = await validateCanvasManagedMarkerState(
+      appDataRoot,
+      managedUserDataRoot,
+      selectedVaultRoot,
+      preLaunch,
+      `Linux Canvas app-data warm-up cycle ${cycleNumber} pre-launch tree`,
+    );
+    preLaunchMarkersInitialized = preLaunchMarkerState.initialized;
+    await validateCanvasEframeFiles(
+      appDataRoot,
+      preLaunch,
+      `Linux Canvas app-data warm-up cycle ${cycleNumber} pre-launch tree`,
+      forbiddenPaths,
+      "data/openobsidian/app.ron",
+      inspectionEvidence,
+    );
+  } catch (error) {
+    const failures = (report.canvas_app_data_delta_failures as Array<Record<string, unknown>> | undefined) ?? [];
+    failures.push({
+      phase: `Linux Canvas app-data warm-up cycle ${cycleNumber} pre-launch validation`,
+      app_data_root: appDataRoot,
+      before_snapshot: preLaunch,
+      after_snapshot: preLaunch,
+      supplied_changes: [],
+      actual_changes: [],
+      error: error instanceof Error ? error.message : String(error),
+    });
+    report.canvas_app_data_delta_failures = failures;
+    throw error;
+  }
   const warmupEnv = {...appEnv};
   delete warmupEnv.OPENOBSIDIAN_CI_CANVAS_FOCUS_TRACE;
   const child = launchLogged(openObsidianBinary, [], cycleLogPath, warmupEnv);
   let postSetup: SnapshotEntry[] | null = null;
   let window: {window_id: string; title: string; geometry: string} | undefined;
+  let setupFailure: unknown;
+  let setupFailed = false;
   try {
     await delay(1_000);
     if (child.exitCode !== null || child.signalCode !== null) {
@@ -11287,8 +11437,29 @@ async function runLinuxCanvasAppDataWarmupCycle(
         inspectionEvidence,
       },
     );
+  } catch (error) {
+    setupFailure = error;
+    setupFailed = true;
   } finally {
     await stopProcess(child).catch(() => undefined);
+  }
+  if (setupFailed) {
+    const failureSnapshot = await snapshotTree(appDataRoot).catch(() => null);
+    const failures = (report.canvas_app_data_delta_failures as Array<Record<string, unknown>> | undefined) ?? [];
+    failures.push({
+      phase: `Linux Canvas app-data warm-up cycle ${cycleNumber} failed setup`,
+      app_data_root: appDataRoot,
+      before_snapshot: preLaunch,
+      post_setup_snapshot: postSetup,
+      post_close_failure_snapshot: failureSnapshot,
+      pre_launch_to_post_setup_changes: postSetup ? changedPaths(preLaunch, postSetup) : null,
+      pre_launch_to_failure_close_changes: failureSnapshot ? changedPaths(preLaunch, failureSnapshot) : null,
+      post_setup_to_failure_close_changes: postSetup && failureSnapshot ? changedPaths(postSetup, failureSnapshot) : null,
+      window_geometry: window?.geometry ?? null,
+      error: setupFailure instanceof Error ? setupFailure.message : String(setupFailure),
+    });
+    report.canvas_app_data_delta_failures = failures;
+    throw setupFailure;
   }
   if (!postSetup || !window) throw new Error(`OpenObsidian warm-up cycle ${cycleNumber} did not reach a complete setup snapshot`);
   const postClose = await snapshotTree(appDataRoot);
@@ -11315,7 +11486,7 @@ async function runLinuxCanvasAppDataWarmupCycle(
     postSetup,
     postClose,
     geometry: window.geometry,
-    preLaunchMarkersInitialized: preLaunchMarkerState.initialized,
+    preLaunchMarkersInitialized,
     startupChanges: changedPaths(preLaunch, postSetup),
     closeChanges,
   };
@@ -11323,7 +11494,7 @@ async function runLinuxCanvasAppDataWarmupCycle(
 
 function ensureAppDataChangesAreMacEframeUiStateOnly(
   changes: Array<{path: string; before?: SnapshotEntry; after?: SnapshotEntry}>,
-  eframeFiles: Array<{path: string; bytes: number; sha256: string; content: string}>,
+  eframeFiles: EframePersistenceFile[],
   label: string,
   forbiddenPaths: string[],
 ): void {
@@ -20854,17 +21025,29 @@ async function runOpenObsidianCanvasTextEdit(
   const logPath = join(reportDirectory, logName);
   const appDataContainer = join(workDirectory, `openobsidian-${runName}-app-data`);
   const userConfigRoot = join(appDataContainer, "config");
-  const homeRoot = join(appDataContainer, "home");
-  const localDataRoot = join(appDataContainer, "local-data");
+  const homeRoot = process.platform === "win32"
+    ? join(workDirectory, `openobsidian-${runName}-user-profile-scratch`)
+    : join(appDataContainer, "home");
+  const localDataRoot = process.platform === "win32"
+    ? join(workDirectory, `openobsidian-${runName}-local-appdata-scratch`)
+    : join(appDataContainer, "local-data");
+  const mesaShaderCacheRoot = join(workDirectory, `openobsidian-${runName}-mesa-shader-cache-scratch`);
   const appEnv: NodeJS.ProcessEnv = {...process.env, HOME: homeRoot};
   const appDataRoot = appDataContainer;
   const expectedEframeAppRonPath = expectedCanvasEframeAppRonRelativePath(process.platform);
+  const windowsAdditionalAppDataRoots: SnapshotAdditionalRoot[] = [];
+  canvasAppDataSnapshotRoots.add(resolve(appDataRoot));
   let managedUserDataRoot: string;
   if (process.platform === "win32") {
     appEnv.APPDATA = userConfigRoot;
     appEnv.LOCALAPPDATA = localDataRoot;
     appEnv.USERPROFILE = homeRoot;
     managedUserDataRoot = join(userConfigRoot, "OpenObsidian");
+    windowsAdditionalAppDataRoots.push(
+      {pathPrefix: "external/userprofile-roaming/OpenObsidian", root: join(homeRoot, "AppData", "Roaming", "OpenObsidian")},
+      {pathPrefix: "external/userprofile-local/OpenObsidian", root: join(homeRoot, "AppData", "Local", "OpenObsidian")},
+      {pathPrefix: "external/localappdata/OpenObsidian", root: join(localDataRoot, "OpenObsidian")},
+    );
   } else if (process.platform === "darwin") {
     appEnv.XDG_CONFIG_HOME = userConfigRoot;
     appEnv.XDG_CACHE_HOME = join(appDataContainer, "cache");
@@ -20878,8 +21061,15 @@ async function runOpenObsidianCanvasTextEdit(
     appEnv.XDG_STATE_HOME = join(appDataContainer, "state");
     appEnv.LIBGL_ALWAYS_SOFTWARE = "1";
     appEnv.WGPU_BACKEND = "gl";
+    appEnv.MESA_SHADER_CACHE_DIR = mesaShaderCacheRoot;
     appEnv.OPENOBSIDIAN_CI_CANVAS_FOCUS_SNAPSHOT_REQUEST_FILE = linuxCanvasFocusSnapshotRequestFile;
     managedUserDataRoot = join(userConfigRoot, "OpenObsidian");
+  }
+  if (process.platform === "darwin" && !expectedAbortCanary) {
+    appEnv.OPENOBSIDIAN_CI_CANVAS_DISABLE_EGUI_MEMORY_PERSISTENCE = "1";
+    canvasEframeMemoryPolicyByRoot.set(resolve(appDataRoot), "disabled");
+  } else {
+    delete appEnv.OPENOBSIDIAN_CI_CANVAS_DISABLE_EGUI_MEMORY_PERSISTENCE;
   }
   if (process.platform === "linux" && expectedAbortCanary) appEnv.OPENOBSIDIAN_CI_CANVAS_FOCUS_TRACE = "1";
   else delete appEnv.OPENOBSIDIAN_CI_CANVAS_FOCUS_TRACE;
@@ -20901,69 +21091,273 @@ async function runOpenObsidianCanvasTextEdit(
     preStagingFocusRecovery: null,
     baseline: null,
   };
-  await rm(linuxCanvasFocusSnapshotRequestFile, {force: true});
-  await rm(appDataContainer, {recursive: true, force: true});
-  await mkdir(join(homeRoot, "Desktop"), {recursive: true});
-  await mkdir(appDataContainer, {recursive: true});
-  await mkdir(managedUserDataRoot, {recursive: true});
-  await mkdir(localDataRoot, {recursive: true});
-  await mkdir(join(appDataContainer, "cache"), {recursive: true});
-  await mkdir(join(appDataContainer, "data", "openobsidian"), {recursive: true});
-  await mkdir(join(appDataContainer, "state"), {recursive: true});
-  await mkdir(join(homeRoot, "Library", "Application Support", "OpenObsidian"), {recursive: true});
-  const canonicalVaultForAppData = await realpath(selectedVaultRoot);
-  const canonicalAppDataRootForAppData = await realpath(appDataRoot);
-  const canonicalManagedUserDataRoot = await realpath(managedUserDataRoot);
-  const appDataRelativeToVault = relative(canonicalVaultForAppData, canonicalAppDataRootForAppData);
-  if (appDataRelativeToVault === ""
-    || (!appDataRelativeToVault.startsWith(`..${sep}`) && appDataRelativeToVault !== ".." && !appDataRelativeToVault.startsWith(sep))) {
-    throw new Error("OpenObsidian's Canvas app-data root is inside the selected vault before process launch");
-  }
-  const appDataSnapshotBeforeAnyLaunch = await snapshotTree(appDataRoot);
-  const appDataMarkerStateBeforeAnyLaunch = await validateCanvasManagedMarkerState(
-    appDataRoot,
-    managedUserDataRoot,
-    selectedVaultRoot,
-    appDataSnapshotBeforeAnyLaunch,
-    `${process.platform} Canvas app-data before any process launch`,
-  );
-  await validateCanvasEframeFiles(
-    appDataRoot,
-    appDataSnapshotBeforeAnyLaunch,
-    `${process.platform} Canvas app-data before any process launch`,
-    [selectedVaultRoot, resolve(selectedVaultRoot), canonicalVaultForAppData, appDataRoot, resolve(appDataRoot), canonicalAppDataRootForAppData, managedUserDataRoot, resolve(managedUserDataRoot), canonicalManagedUserDataRoot],
-    expectedEframeAppRonPath,
-    eframeInspectionEvidence,
-  );
+  const appDataRootInventory: Record<string, unknown> = {
+    app_data_container: {configured_root: appDataRoot, canonical_root: null, monitored: true},
+    windows_primary_app_owned_root: process.platform === "win32" ? {
+      environment_root: "APPDATA",
+      configured_root: managedUserDataRoot,
+      canonical_root: null,
+      monitored: true,
+    } : null,
+    windows_external_app_owned_roots: windowsAdditionalAppDataRoots.map((root) => ({
+      path_prefix: root.pathPrefix,
+      configured_root: root.root,
+      canonical_root: null,
+      monitored: true,
+      canonical_outside_app_data_and_vault: null,
+    })),
+    windows_precreated_empty_app_owned_directories: process.platform === "win32" ? [{
+      path_prefix: "external/userprofile-roaming/OpenObsidian/data",
+      configured_path: join(windowsAdditionalAppDataRoots[0]!.root, "data"),
+      created_before_prelaunch_baseline: false,
+      initially_empty: null,
+    }] : [],
+    windows_shell_scratch_roots: process.platform === "win32" ? [
+      {name: "USERPROFILE", configured_root: homeRoot, canonical_root: null, monitored: false, canonical_outside_app_data_and_vault: null},
+      {name: "LOCALAPPDATA", configured_root: localDataRoot, canonical_root: null, monitored: false, canonical_outside_app_data_and_vault: null},
+    ] : [],
+    mesa_shader_cache_scratch: process.platform === "linux" ? {
+      configured_root: mesaShaderCacheRoot,
+      canonical_root: null,
+      monitored: false,
+      canonical_outside_app_data_and_vault: null,
+    } : null,
+  };
   editReport.status = "running";
   editReport.expected_abort_canary = expectedAbortCanary;
   editReport.app_data_expected_eframe_app_ron_relative_path = expectedEframeAppRonPath;
-  editReport.vault_name = selectedVaultName;
-  editReport.vault_root = selectedVaultRoot;
-  editReport.source_canvas_path = canvasPath;
-  editReport.source_text_node_id = "text-1";
-  editReport.edited_text = canvasEditedText;
-  editReport.accessible_labels = [
-    "Edit Canvas text card",
-    "Canvas edit path",
-    "Canvas edit text-card ID",
-    "Load Canvas text card",
-    "Canvas text draft",
-    "Save Canvas text",
-    "Reload Canvas",
-    "Cancel Canvas edit",
-  ];
-  editReport.save_policy = "The selected card is loaded into a draft; the vault must remain byte- and snapshot-identical until Save Canvas text is explicitly activated.";
   editReport.app_data_root = appDataRoot;
   editReport.managed_user_data_root = managedUserDataRoot;
-  editReport.app_data_root_exists_pre_launch = true;
-  editReport.managed_user_data_root_exists_pre_launch = true;
-  editReport.app_data_expected_vault_data_id = canvasVaultDataId(selectedVaultRoot);
-  editReport.app_data_vault_id_derivation = "first 24 lowercase hex characters of SHA-256 over UTF-8 bytes of the lexical absolute Node path.resolve(selectedVaultRoot) string";
-  editReport.app_data_snapshot_before_any_launch = appDataSnapshotBeforeAnyLaunch;
-  editReport.app_data_managed_markers_initialized_before_any_launch = appDataMarkerStateBeforeAnyLaunch.initialized;
-  editReport.app_data_canonical_root = canonicalAppDataRootForAppData;
-  editReport.app_data_canonical_root_is_outside_vault = true;
+  editReport.app_data_root_exists_pre_launch = false;
+  editReport.managed_user_data_root_exists_pre_launch = false;
+  editReport.app_data_canonical_root = null;
+  editReport.app_data_canonical_root_is_outside_vault = false;
+  editReport.app_data_root_inventory = appDataRootInventory;
+  editReport.app_data_mac_persistence_profile = process.platform === "darwin" && !expectedAbortCanary ? {
+    environment_flag: "OPENOBSIDIAN_CI_CANVAS_DISABLE_EGUI_MEMORY_PERSISTENCE",
+    environment_value: appEnv.OPENOBSIDIAN_CI_CANVAS_DISABLE_EGUI_MEMORY_PERSISTENCE,
+    expected_persist_egui_memory: false,
+    expected_persist_window: true,
+    expected_runtime_log_marker: "OPENOBSIDIAN_CI_CANVAS_EGUI_MEMORY_POLICY_DISABLED=1;persist_egui_memory=false;persist_window=true",
+    app_ron_section_expectation: {window: true, egui: false},
+  } : {
+    status: "not_applicable",
+    reason: "The egui-memory opt-out is restricted to the normal macOS Canvas text-edit profile.",
+  };
+  let canonicalVaultForAppData = "";
+  let canonicalAppDataRootForAppData = "";
+  let canonicalManagedUserDataRoot = "";
+  let appDataSnapshotBeforeAnyLaunch: SnapshotEntry[] = [];
+  let appDataSnapshotBeforeAnyLaunchCaptured = false;
+  let appDataPreflightStage = "prepare_app_data_roots";
+  try {
+    await rm(linuxCanvasFocusSnapshotRequestFile, {force: true});
+    await rm(appDataContainer, {recursive: true, force: true});
+    if (process.platform === "win32") {
+      await rm(homeRoot, {recursive: true, force: true});
+      await rm(localDataRoot, {recursive: true, force: true});
+    }
+    if (process.platform === "linux") await rm(mesaShaderCacheRoot, {recursive: true, force: true});
+    await mkdir(join(homeRoot, "Desktop"), {recursive: true});
+    await mkdir(appDataContainer, {recursive: true});
+    editReport.app_data_root_exists_pre_launch = true;
+    await mkdir(managedUserDataRoot, {recursive: true});
+    editReport.managed_user_data_root_exists_pre_launch = true;
+    await mkdir(localDataRoot, {recursive: true});
+    await mkdir(join(appDataContainer, "cache"), {recursive: true});
+    await mkdir(join(appDataContainer, "data", "openobsidian"), {recursive: true});
+    await mkdir(join(appDataContainer, "state"), {recursive: true});
+    await mkdir(join(homeRoot, "Library", "Application Support", "OpenObsidian"), {recursive: true});
+    if (process.platform === "win32") {
+      for (const additional of windowsAdditionalAppDataRoots) await mkdir(additional.root, {recursive: true});
+      await mkdir(join(windowsAdditionalAppDataRoots[0]!.root, "data"), {recursive: true});
+      snapshotAdditionalRoots.set(resolve(appDataRoot), windowsAdditionalAppDataRoots);
+    }
+    if (process.platform === "linux") await mkdir(mesaShaderCacheRoot, {recursive: true});
+    if (process.platform === "win32") {
+      appDataRootInventory.windows_precreated_empty_app_owned_directories = [{
+        path_prefix: "external/userprofile-roaming/OpenObsidian/data",
+        configured_path: join(windowsAdditionalAppDataRoots[0]!.root, "data"),
+        created_before_prelaunch_baseline: true,
+        initially_empty: true,
+      }];
+      editReport.app_data_root_inventory = appDataRootInventory;
+    }
+
+    appDataPreflightStage = "canonicalize_and_check_root_isolation";
+    canonicalVaultForAppData = await realpath(selectedVaultRoot);
+    canonicalAppDataRootForAppData = await realpath(appDataRoot);
+    canonicalManagedUserDataRoot = await realpath(managedUserDataRoot);
+    appDataRootInventory.app_data_container = {
+      configured_root: appDataRoot,
+      canonical_root: canonicalAppDataRootForAppData,
+      monitored: true,
+    };
+    appDataRootInventory.windows_primary_app_owned_root = process.platform === "win32" ? {
+      environment_root: "APPDATA",
+      configured_root: managedUserDataRoot,
+      canonical_root: canonicalManagedUserDataRoot,
+      monitored: true,
+    } : null;
+    editReport.app_data_root_inventory = appDataRootInventory;
+    editReport.app_data_canonical_root = canonicalAppDataRootForAppData;
+    const appDataRelativeToVault = relative(canonicalVaultForAppData, canonicalAppDataRootForAppData);
+    if (appDataRelativeToVault === ""
+      || (!appDataRelativeToVault.startsWith(`..${sep}`) && appDataRelativeToVault !== ".." && !appDataRelativeToVault.startsWith(sep))) {
+      throw new Error("OpenObsidian's Canvas app-data root is inside the selected vault before process launch");
+    }
+    editReport.app_data_canonical_root_is_outside_vault = true;
+    const pathIsInside = (parent: string, child: string): boolean => {
+      const childRelativeToParent = relative(parent, child);
+      return childRelativeToParent === ""
+        || (childRelativeToParent !== ".."
+          && !childRelativeToParent.startsWith(`..${sep}`)
+          && !isAbsolute(childRelativeToParent));
+    };
+    const canonicalExternalAppDataRoots = await Promise.all(windowsAdditionalAppDataRoots.map(async (additional) => ({
+      path_prefix: additional.pathPrefix,
+      configured_root: additional.root,
+      canonical_root: await realpath(additional.root),
+    })));
+    const canonicalScratchRoots = process.platform === "win32"
+      ? await Promise.all([
+        {name: "USERPROFILE", root: homeRoot},
+        {name: "LOCALAPPDATA", root: localDataRoot},
+      ].map(async (scratch) => ({
+        name: scratch.name,
+        configured_root: scratch.root,
+        canonical_root: await realpath(scratch.root),
+      })))
+      : [];
+    const allExternalRoots = [
+      ...canonicalExternalAppDataRoots.map((root) => ({name: root.path_prefix, canonical: root.canonical_root})),
+      ...canonicalScratchRoots.map((root) => ({name: root.name, canonical: root.canonical_root})),
+      ...(process.platform === "linux" ? [{name: "MESA_SHADER_CACHE_DIR", canonical: await realpath(mesaShaderCacheRoot)}] : []),
+    ];
+    Object.assign(appDataRootInventory, {
+      windows_external_app_owned_roots: canonicalExternalAppDataRoots.map((root) => ({
+        ...root,
+        monitored: true,
+        canonical_outside_app_data_and_vault: false,
+      })),
+      windows_shell_scratch_roots: canonicalScratchRoots.map((root) => ({
+        ...root,
+        monitored: false,
+        canonical_outside_app_data_and_vault: false,
+      })),
+      mesa_shader_cache_scratch: process.platform === "linux" ? {
+        configured_root: mesaShaderCacheRoot,
+        canonical_root: (allExternalRoots.find((root) => root.name === "MESA_SHADER_CACHE_DIR"))?.canonical ?? null,
+        monitored: false,
+        canonical_outside_app_data_and_vault: false,
+      } : null,
+    });
+    editReport.app_data_root_inventory = appDataRootInventory;
+    for (const external of allExternalRoots) {
+      if (pathIsInside(canonicalAppDataRootForAppData, external.canonical)
+        || pathIsInside(external.canonical, canonicalAppDataRootForAppData)
+        || pathIsInside(canonicalVaultForAppData, external.canonical)
+        || pathIsInside(external.canonical, canonicalVaultForAppData)) {
+        throw new Error(`Canvas external root ${external.name} is not disjoint from the app-data root and selected vault`);
+      }
+    }
+    Object.assign(appDataRootInventory, {
+      app_data_container: {
+        configured_root: appDataRoot,
+        canonical_root: canonicalAppDataRootForAppData,
+        monitored: true,
+      },
+      windows_primary_app_owned_root: process.platform === "win32" ? {
+        environment_root: "APPDATA",
+        configured_root: managedUserDataRoot,
+        canonical_root: canonicalManagedUserDataRoot,
+        monitored: true,
+      } : null,
+      windows_external_app_owned_roots: canonicalExternalAppDataRoots.map((root) => ({
+        ...root,
+        monitored: true,
+        canonical_outside_app_data_and_vault: true,
+      })),
+      windows_shell_scratch_roots: canonicalScratchRoots.map((root) => ({
+        ...root,
+        monitored: false,
+        canonical_outside_app_data_and_vault: true,
+      })),
+      mesa_shader_cache_scratch: process.platform === "linux" ? {
+        configured_root: mesaShaderCacheRoot,
+        canonical_root: (allExternalRoots.find((root) => root.name === "MESA_SHADER_CACHE_DIR"))?.canonical ?? null,
+        monitored: false,
+        canonical_outside_app_data_and_vault: true,
+      } : null,
+    });
+    editReport.app_data_root_inventory = appDataRootInventory;
+    editReport.app_data_canonical_root = canonicalAppDataRootForAppData;
+    editReport.app_data_canonical_root_is_outside_vault = true;
+
+    appDataPreflightStage = "capture_prelaunch_app_data_snapshot";
+    appDataSnapshotBeforeAnyLaunch = await snapshotTree(appDataRoot);
+    appDataSnapshotBeforeAnyLaunchCaptured = true;
+    editReport.app_data_snapshot_before_any_launch = appDataSnapshotBeforeAnyLaunch;
+    editReport.vault_name = selectedVaultName;
+    editReport.vault_root = selectedVaultRoot;
+    editReport.source_canvas_path = canvasPath;
+    editReport.source_text_node_id = "text-1";
+    editReport.edited_text = canvasEditedText;
+    editReport.accessible_labels = [
+      "Edit Canvas text card",
+      "Canvas edit path",
+      "Canvas edit text-card ID",
+      "Load Canvas text card",
+      "Canvas text draft",
+      "Save Canvas text",
+      "Reload Canvas",
+      "Cancel Canvas edit",
+    ];
+    editReport.save_policy = "The selected card is loaded into a draft; the vault must remain byte- and snapshot-identical until Save Canvas text is explicitly activated.";
+    editReport.app_data_expected_vault_data_id = canvasVaultDataId(selectedVaultRoot);
+    editReport.app_data_vault_id_derivation = "first 24 lowercase hex characters of SHA-256 over UTF-8 bytes of the lexical absolute Node path.resolve(selectedVaultRoot) string";
+
+    appDataPreflightStage = "validate_prelaunch_markers_and_eframe_file";
+    const appDataMarkerStateBeforeAnyLaunch = await validateCanvasManagedMarkerState(
+      appDataRoot,
+      managedUserDataRoot,
+      selectedVaultRoot,
+      appDataSnapshotBeforeAnyLaunch,
+      `${process.platform} Canvas app-data before any process launch`,
+    );
+    await validateCanvasEframeFiles(
+      appDataRoot,
+      appDataSnapshotBeforeAnyLaunch,
+      `${process.platform} Canvas app-data before any process launch`,
+      [selectedVaultRoot, resolve(selectedVaultRoot), canonicalVaultForAppData, appDataRoot, resolve(appDataRoot), canonicalAppDataRootForAppData, managedUserDataRoot, resolve(managedUserDataRoot), canonicalManagedUserDataRoot],
+      expectedEframeAppRonPath,
+      eframeInspectionEvidence,
+    );
+    editReport.app_data_managed_markers_initialized_before_any_launch = appDataMarkerStateBeforeAnyLaunch.initialized;
+  } catch (preflightError) {
+    const errorSummary = preflightError instanceof Error ? preflightError.message : String(preflightError);
+    editReport.status = "failed";
+    editReport.error = errorSummary;
+    const hostNoiseFailures = report.canvas_app_data_host_noise_failures as Array<{app_data_root?: string; full_snapshot?: SnapshotEntry[]}> | undefined;
+    const hostNoiseSnapshot = hostNoiseFailures?.filter((failure) => failure.app_data_root === appDataRoot).at(-1)?.full_snapshot;
+    const failureSnapshot = appDataSnapshotBeforeAnyLaunchCaptured ? appDataSnapshotBeforeAnyLaunch : hostNoiseSnapshot ?? null;
+    if (failureSnapshot) editReport.app_data_snapshot_before_any_launch = failureSnapshot;
+    editReport.app_data_failure_evidence = {
+      app_data_root: appDataRoot,
+      preflight_stage: appDataPreflightStage,
+      root_inventory: appDataRootInventory,
+      phases: {before_any_launch: failureSnapshot},
+      deltas: {before_any_launch_to_failed_preflight: null},
+      preflight_delta_status: "not_computed_no_post_failure_snapshot",
+      preflight_error: errorSummary,
+    };
+    try {
+      await saveReport();
+    } catch (reportError) {
+      editReport.app_data_failure_evidence_report_write_error = reportError instanceof Error ? reportError.message : String(reportError);
+    }
+    throw preflightError;
+  }
   const screenshots: Record<string, string> = {};
   let child: ChildProcess | undefined;
   let window: {window_id: string; title: string; geometry: string} | undefined;
@@ -21085,7 +21479,7 @@ async function runOpenObsidianCanvasTextEdit(
       eframeInspectionEvidence,
     );
     editReport.app_data_snapshot_pre_launch = appDataSnapshotBeforeActualLaunch;
-    child = launchLogged(openObsidianBinary, [], logPath, appEnv);
+    child = launchLogged(openObsidianBinary, [], logPath, appEnv, process.platform === "darwin" && !expectedAbortCanary);
     editReport.pid = child.pid ?? null;
     await delay(1_000);
     if (child.exitCode !== null || child.signalCode !== null) {
@@ -21114,6 +21508,23 @@ async function runOpenObsidianCanvasTextEdit(
       window = {window_id: String(child.pid ?? "unknown"), title: "OpenObsidian Canvas text-edit window", geometry: "native window bounds captured during screenshot"};
     }
     editReport.window = window;
+    if (process.platform === "darwin") {
+      const persistenceProfile = editReport.app_data_mac_persistence_profile as Record<string, unknown>;
+      const expectedMarker = String(persistenceProfile.expected_runtime_log_marker);
+      const startupLog = await waitFor(
+        "OpenObsidian to report the isolated Canvas egui-memory persistence policy",
+        async () => await readFile(logPath, "utf8"),
+        (contents) => contents.includes(expectedMarker),
+        10_000,
+      );
+      persistenceProfile.runtime_log_marker_observed = startupLog.includes(expectedMarker);
+      persistenceProfile.runtime_log_path = logName;
+      persistenceProfile.runtime_policy_mapping_passed = persistenceProfile.runtime_log_marker_observed === true
+        && appEnv.OPENOBSIDIAN_CI_CANVAS_DISABLE_EGUI_MEMORY_PERSISTENCE === "1";
+      if (!persistenceProfile.runtime_policy_mapping_passed) {
+        throw new Error("macOS Canvas runtime did not confirm the exact env flag disables egui-memory persistence while window persistence remains enabled");
+      }
+    }
     if (process.platform === "darwin") {
       appDataSnapshotPostStartup = await snapshotTree(appDataRoot);
       editReport.app_data_snapshot_after_startup_settled = appDataSnapshotPostStartup;
@@ -21627,6 +22038,20 @@ async function runOpenObsidianCanvasTextEdit(
     await stopProcess(child);
     child = undefined;
     const appDataAfterClose = await assertAppDataMatchesPostPickerBaseline("after-process-close");
+    if (process.platform === "darwin") {
+      const closeInspection = eframeInspectionEvidence.at(-1);
+      const appRonInspection = closeInspection?.checked_files.find((entry) => entry.path === expectedEframeAppRonPath);
+      const persistenceProfile = editReport.app_data_mac_persistence_profile as Record<string, unknown>;
+      persistenceProfile.final_app_ron_path = appRonInspection?.path ?? null;
+      persistenceProfile.final_window_section_present = appRonInspection?.window_section_present ?? false;
+      persistenceProfile.final_egui_section_present = appRonInspection?.egui_section_present ?? false;
+      persistenceProfile.final_app_ron_inspection_passed = closeInspection?.result === "passed"
+        && appRonInspection?.window_section_present === true
+        && appRonInspection?.egui_section_present === false;
+      if (!persistenceProfile.final_app_ron_inspection_passed) {
+        throw new Error("macOS Canvas post-close app.ron did not contain only the expected window persistence section");
+      }
+    }
     const appDataChangesAfterClose = changedPaths(appDataBeforeFieldInput, appDataAfterClose);
     if (appDataChangesAfterClose.length > 0) {
       throw new Error(`OpenObsidian changed app data after the settled post-picker baseline and close: ${JSON.stringify(appDataChangesAfterClose).slice(0, 6_000)}`);
@@ -21656,6 +22081,41 @@ async function runOpenObsidianCanvasTextEdit(
   } catch (error) {
     editReport.status = "failed";
     editReport.error = error instanceof Error ? error.message : String(error);
+    const appDataFailurePhases: Record<string, SnapshotEntry[] | null> = {
+      before_any_launch: appDataSnapshotBeforeAnyLaunch,
+      before_actual_launch: appDataSnapshotBeforeActualLaunch,
+      after_startup_settled: appDataSnapshotPostStartup,
+      pre_picker: appDataSnapshotPrePicker,
+      picker_open: appDataSnapshotPickerOpen,
+      post_selection: appDataSnapshotPostSelection,
+      post_picker: appDataSnapshotPostPicker,
+      after_canvas_editor_setup: appDataSnapshotAfterCanvasSetup,
+      post_picker_input_baseline: safetyTracker.baseline?.appDataSnapshot ?? null,
+    };
+    const appDataFailureDeltas: Record<string, Array<{path: string; before?: SnapshotEntry; after?: SnapshotEntry}> | null> = {
+      before_launch_to_actual_launch: changedPaths(appDataSnapshotBeforeAnyLaunch, appDataSnapshotBeforeActualLaunch),
+      before_actual_launch_to_startup: appDataSnapshotPostStartup
+        ? changedPaths(appDataSnapshotBeforeActualLaunch, appDataSnapshotPostStartup)
+        : null,
+      startup_to_pre_picker: appDataSnapshotPostStartup && appDataSnapshotPrePicker
+        ? changedPaths(appDataSnapshotPostStartup, appDataSnapshotPrePicker)
+        : null,
+      picker_open_to_post_selection: appDataSnapshotPickerOpen && appDataSnapshotPostSelection
+        ? changedPaths(appDataSnapshotPickerOpen, appDataSnapshotPostSelection)
+        : null,
+      pre_picker_to_post_picker: appDataSnapshotPrePicker && appDataSnapshotPostPicker
+        ? changedPaths(appDataSnapshotPrePicker, appDataSnapshotPostPicker)
+        : null,
+      post_picker_to_editor_setup: appDataSnapshotPostPicker && appDataSnapshotAfterCanvasSetup
+        ? changedPaths(appDataSnapshotPostPicker, appDataSnapshotAfterCanvasSetup)
+        : null,
+    };
+    editReport.app_data_failure_evidence = {
+      app_data_root: appDataRoot,
+      phases: appDataFailurePhases,
+      deltas: appDataFailureDeltas,
+      interaction_checkpoints: editReport.app_data_interaction_checkpoints ?? [],
+    };
     editReport.screenshots = screenshots;
     editReport.focus_checkpoints = safetyTracker.focusCheckpoints;
     editReport.guard_failures = safetyTracker.guardFailures;
@@ -21771,6 +22231,8 @@ async function runOpenObsidianCanvasTextEdit(
       }
       const vaultChanges = postAbortVault ? changedPaths(baseline.vaultSnapshot, postAbortVault) : null;
       const appDataChanges = postAbortAppData ? changedPaths(baseline.appDataSnapshot, postAbortAppData) : null;
+      (editReport.app_data_failure_evidence as Record<string, unknown>).post_termination_snapshot = postAbortAppData;
+      (editReport.app_data_failure_evidence as Record<string, unknown>).post_termination_changes_from_baseline = appDataChanges;
       const destinationAbsent = postAbortVault !== null
         && !postAbortVault.some((entry) => entry.path === canvasNotePath);
       const canvasAfter = postAbortCanvasBytes
@@ -21934,6 +22396,16 @@ async function runOpenObsidianCanvasTextEdit(
   } finally {
     await stopProcess(child).catch(() => undefined);
     await rm(linuxCanvasFocusSnapshotRequestFile, {force: true}).catch(() => undefined);
+    if (process.platform === "win32") {
+      await Promise.all([
+        rm(homeRoot, {recursive: true, force: true}),
+        rm(localDataRoot, {recursive: true, force: true}),
+      ]).then(() => undefined, () => undefined);
+      snapshotAdditionalRoots.delete(resolve(appDataRoot));
+    }
+    if (process.platform === "linux") await rm(mesaShaderCacheRoot, {recursive: true, force: true}).catch(() => undefined);
+    canvasAppDataSnapshotRoots.delete(resolve(appDataRoot));
+    canvasEframeMemoryPolicyByRoot.delete(resolve(appDataRoot));
   }
 }
 

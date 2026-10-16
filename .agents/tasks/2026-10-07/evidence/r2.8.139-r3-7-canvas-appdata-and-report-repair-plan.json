@@ -1,0 +1,121 @@
+{
+  "schema_version": 1,
+  "id": "R2.8.139-R3.7-CROSS-PLATFORM-CANVAS-APP-DATA-AND-REPORT-REPAIR",
+  "name": "Repair Canvas app-data isolation and privacy-safe CI reporting",
+  "status": "implementation complete; independent read-only implementation reviews found no blockers; ready for one milestone push; no local executable validation or CI dispatch",
+  "planning_base_sha": "968ba6fe9cfc527528d7504208170a656f52dcdd",
+  "expected_starting_sha": "968ba6fe9cfc527528d7504208170a656f52dcdd",
+  "starting_sha_confirmation_gate": "Before implementation, verify origin/main and this worktree are still at 968ba6fe9cfc527528d7504208170a656f52dcdd. Reconcile any newer main commit and review it before editing. Keep all work local until this milestone is complete and independently reviewed.",
+  "goal_sha256": "c0be89ea6705ca5b05c6589c14ffa38ebe7358e3671f39543429f3866df6eaf3",
+  "predecessor_milestone": "R2.8.138-R3.6-LINUX-CANVAS-CANARY-CLICK-DISPATCH-WATERMARK-REPAIR",
+  "predecessor_sha": "968ba6fe9cfc527528d7504208170a656f52dcdd",
+  "predecessor_evidence": "evidence/r2.8.138-r3-6-attempt-1-968ba6f.json",
+  "predecessor_ci_result": {
+    "exact_sha": "968ba6fe9cfc527528d7504208170a656f52dcdd",
+    "workflows": {"terminal": 7, "passed": 5, "failed": 2},
+    "jobs": {"terminal": 20, "passed": 16, "failed": 4},
+    "failed_jobs": [
+      {"id": 116824888485, "platform": "Ubuntu 24.04", "cause": "cargo fmt --all -- --check: ci_canvas_focus_raw_event_record signature at crates/ui-egui/src/lib.rs:63 must be formatted onto one line"},
+      {"id": 116824888544, "platform": "Ubuntu 24.04", "cause": "Canvas app-data warm-up captured Mesa shader-cache writes under the monitored XDG cache root"},
+      {"id": 116824888293, "platform": "Windows latest", "cause": "Windows Explorer icon-cache and Windows Caches writes, plus app-owned roots not included in the current monitored-root model, appeared during setup"},
+      {"id": 116824888142, "platform": "macOS latest", "cause": "Canvas post-picker app-data equality failed after eframe changed app.ron during text-field interaction; the report does not prove that the change contains only UI state"}
+    ],
+    "roundtrip_artifact_count": 3,
+    "roundtrip_archive_hashes_match_api_digests": true,
+    "roundtrip_report_sha256": {
+      "windows": "5a88087779dec193c7fef0b18f3279621f9589c0ff1e93c3fd213b5b35cb5aac",
+      "macos": "95b647df6420f7529ea26b1ba0270c2c02f5b250d34b13fa914ac4a9d9eb4fd8",
+      "linux": "4d77c1f0cbfb013883625863f5b8d57215af9333631269257ca62390be94bb01"
+    },
+    "privacy_finding": "The macOS report serialized raw .ron content through eframe persistence records in multiple scenarios, contrary to R3.6 summary-only evidence requirements. No raw contents are copied into tracker evidence."
+  },
+  "deliverable": "Fix the Rust formatting failure; isolate runner-generated Linux and Windows caches from the exact monitored app-data roots while continuing to snapshot every explicit app-owned root; keep macOS Canvas app-data byte-identical through its text-entry flow; make all eframe persistence evidence summary-only; and retain complete structured failure snapshots and deltas.",
+  "scope": [
+    "Apply the exact cargo fmt correction reported by Ubuntu Rust CI without unrelated formatting churn.",
+    "On Linux Canvas runs, direct Mesa shader cache output to a run-scoped sibling scratch root outside appDataContainer and the selected vault. Continue monitoring the XDG config, data, state, and cache roots exactly; do not allowlist Mesa paths. Verify every scratch root is canonical and outside the vault before launch.",
+    "On Windows Canvas runs, put USERPROFILE and LOCALAPPDATA in run-scoped sibling roots outside appDataContainer so Explorer icon-cache and Microsoft Windows cache writes are not part of the app-data tree. Explicitly prove both scratch roots are canonical and outside appDataContainer and the selected vault. Keep APPDATA and its OpenObsidian app root under the monitored appDataContainer. Explicitly monitor APPDATA/OpenObsidian, the observed USERPROFILE/AppData/Roaming/OpenObsidian root, and the candidate USERPROFILE/AppData/Local/OpenObsidian and LOCALAPPDATA/OpenObsidian roots so moving the profile does not hide app-owned data; report whether candidate roots are absent or empty. Snapshot the union of appDataContainer and those exact app-owned roots, with stable logical path prefixes, and prove every external app-owned root is canonical and outside the selected vault. Apply the complete .ron discovery/path policy across this union and reject every app.ron on Windows. Do not add broad path exemptions.",
+    "For the macOS Canvas text-edit CI profile only, set OPENOBSIDIAN_CI_CANVAS_DISABLE_EGUI_MEMORY_PERSISTENCE=1 in the harness child-process environment and implement the matching UI-runtime hook so OpenObsidianApp::persist_egui_memory returns false only when that flag is exactly enabled. Keep NativeOptions.persist_window and all normal product defaults enabled, keep Linux/Windows behavior unchanged, and leave the separate C07.4 app.ron persistence/reference scenarios unchanged. Because the app has no custom App::save data, the macOS Canvas profile should retain native window persistence while excluding potentially sensitive transient text-edit/undo memory. Record the effective persistence policy in the Canvas app-data report. Update app.ron inspection to require the exact macOS path, a present window section, an absent egui-memory section only in this profile, and all existing forbidden-path checks; retain current section expectations in every other profile. Retain the post-picker baseline and exact full-tree equality assertions through macOS field input, draft load/edit, explicit save, and process close; Linux expected-abort acceptance remains in its separate canary profile. Do not permit an app.ron exception.",
+    "Keep raw RON text in memory only for existing structural and forbidden-path inspection. Ensure every serialized eframe persistence record contains metadata/inspection summaries only (path, byte count, SHA-256, parsed section/check results), never a content field. Add a GitHub CI-path assertion over the final report tree used for JSON serialization, recursively including every nested and duplicate eframe persistence alias, which fails if a raw content field remains.",
+    "When app-data phase validation fails, retain complete structured before/after snapshots and path deltas in the CI report, using path/kind/byte-count/hash metadata only. Keep an error summary, but do not truncate away the only per-path evidence or serialize file contents.",
+    "Preserve all R3.6 exact click-event/frame/watermark behavior, the full R3.5 expected-abort/recovery/clipboard/vault-preservation contract, exact marker bytes and vault IDs, and all C07.4 reference acceptance."
+  ],
+  "out_of_scope": [
+    "Changing product UI or vault behavior outside the Canvas CI persistence profile.",
+    "Changing the app.ron equality policy to allow an unexplained macOS delta.",
+    "Adding cache-path allowlists or excluding an app-owned data root without an explicit snapshot.",
+    "Rewriting prior evidence or copying raw RON contents into committed reports.",
+    "C07.5/C09 work or any unrelated migration scope."
+  ],
+  "implementation_constraints": [
+    "Use GitHub Actions as the only test and executable-validation environment. Do not run local tests, builds, formatters, linters, application launches, or validators.",
+    "Before implementation, obtain independent review of this plan and reconcile any requested changes here.",
+    "Keep all edits and optional commits local until the whole milestone is implemented and reviewed. Push the complete milestone to origin/main once, then hold that exact SHA until all required jobs are terminal and reconciled, even if CI takes several hours.",
+    "Do not overlap another full CI batch. If this batch fails, wait for all jobs to finish and group related corrections into one later reviewed repair milestone.",
+    "Do not force-push; preserve the existing R3.6 failure evidence and exact-SHA history."
+  ],
+  "required_workflows": [
+    "OpenObsidian Rust CI",
+    "Rust migration inventory",
+    "Obsidian vault round-trip acceptance",
+    "OpenObsidian desktop build",
+    "OpenObsidian quality",
+    "OpenObsidian plugin renderer matrix",
+    "OpenObsidian loaded plugin workflows"
+  ],
+  "expected_jobs": 20,
+  "platforms": ["Ubuntu 24.04", "macOS latest", "Windows latest"],
+  "implementation_acceptance": [
+    "The Ubuntu Rust formatting job no longer reports the R3.6 signature-formatting failure; the scoped Rust CI jobs compile and pass as recorded by GitHub CI.",
+    "Linux Mesa shader-cache files are outside the monitored app-data roots; XDG app-owned roots remain fully snapshotted; two separate post-close warm-up cycles are exact-equal; and the fresh expected-abort Canvas canary has exact pre/post app-data equality plus the carried vault and clipboard preservation evidence.",
+    "Windows Explorer iconcache and Windows Caches entries remain outside monitored roots, while APPDATA/OpenObsidian and all three profile/local app-owned roots (USERPROFILE/AppData/Roaming/OpenObsidian, USERPROFILE/AppData/Local/OpenObsidian, LOCALAPPDATA/OpenObsidian) are explicitly snapshotted. Every external root is canonical and outside the selected vault and appDataContainer; `.ron` discovery covers the union and confirms zero app.ron files. Exact managed-marker checks and settled setup-through-close equality pass, and the report contains complete phase deltas.",
+    "macOS Canvas text entry, draft load/edit, explicit save, and process-close phases remain exactly equal to the post-picker baseline with only eframe egui-memory persistence disabled in that isolated profile; report evidence confirms the exact env flag maps to App::persist_egui_memory=false while NativeOptions.persist_window stays enabled; the exact app.ron path has a window section and no egui-memory section; forbidden-path checks still pass; ordinary app.ron section behavior remains covered in dedicated CI scenarios; and the separate Linux expected-abort canary passes its carried acceptance.",
+    "All serialized eframe persistence rows contain summary metadata only; a CI assertion rejects any nested raw content field. Existing internal app.ron inspections and forbidden-vault/app-data-path checks still run before serialization.",
+    "All phase failures retain complete structured path-level snapshots/deltas without embedded file contents, so runner-only cache noise and application-owned changes remain distinguishable. Preflight setup, canonicalization, root-isolation, initial-snapshot, and marker/eframe validation failures also record the preflight stage, configured/canonical root inventory available at that point, and any safe baseline snapshot; a delta is null when there is no measured post-failure snapshot.",
+    "All carried R3.5/R3.6 safety and C07.4 acceptance criteria pass across Linux, macOS, and Windows; no compatibility or reference-capture pass is inferred from the failed predecessor batch.",
+    "All seven required workflows and twenty jobs pass on the one submitted exact SHA, and run/job/report/artifact hashes are reconciled before the milestone is marked achieved."
+  ],
+  "evidence_to_collect": [
+    "Implementation SHA, submitted SHA, origin/main SHA before and after push, and exact workflow/job IDs and URLs.",
+    "All required workflow conclusions and the three OS-specific Canvas app-data root/scratch-root summaries, canonical path checks, and per-phase full-tree equality results.",
+    "Proof that no Mesa shader-cache, Explorer icon-cache, or Windows Caches path appears under a monitored root; explicit inventories for all monitored OpenObsidian roots.",
+    "Summary-only eframe inspection records and the CI serialization guard result; no raw .ron text.",
+    "Complete app-data phase snapshots and deltas on failure or pass, C07.4 scenario counts, expected-abort clipboard/vault evidence, and all available artifact API/archive/report hashes.",
+    "Confirmation that no local executable validation was run and that this milestone was pushed once only after review."
+  ],
+  "local_executable_validation": false,
+  "pushed_once": false,
+  "run_ids": [],
+  "all_required_jobs_terminal": false,
+  "review_findings": [
+    {
+      "reviewer": "r36_appdata",
+      "finding": "The initial plan needed an explicit USERPROFILE/AppData/Local/OpenObsidian candidate root, canonical/outside-vault checks for both Windows scratch roots, a concrete Rust hook for the macOS eframe policy, and an app.ron profile rule consistent with egui-memory being absent.",
+      "resolution": "Added both USERPROFILE and LOCALAPPDATA OpenObsidian candidate roots; required scratch and app-owned root containment checks; named the harness flag and OpenObsidianApp::persist_egui_memory mapping; and made the macOS window-present/egui-absent policy explicit while preserving other profiles."
+    },
+    {
+      "reviewer": "r36_final_review",
+      "finding": "No blocking regression found; ensure the privacy guard checks the final serialized report tree, including nested aliases, and make the environment-flag-to-App::persist_egui_memory mapping explicit.",
+      "resolution": "The scope now requires the final JSON serialization tree to be traversed recursively and names the exact flag and false-returning App method; window persistence and the dedicated C07.4 report flow remain enabled."
+    },
+    {
+      "reviewer": "r36_appdata",
+      "finding": "The previous Windows setup created USERPROFILE/AppData/Roaming/OpenObsidian/data before the app-data baseline, so the exact observed app-owned folder could otherwise look like an unexplained runtime change.",
+      "resolution": "The harness recreates only that exact empty directory before the baseline and records its logical path and initial-empty state in the root inventory."
+    },
+    {
+      "reviewer": "r36_final_review",
+      "finding": "The initial Canvas app-data snapshot was assigned after preflight checks, so those failures could omit it; inherited persistence flags could also affect non-target child launches.",
+      "resolution": "Snapshot and root inventory are attached before prelaunch validation, all app-data preparation/canonicalization/snapshot/validation work shares a failure-evidence handler, and launchLogged strips the opt-out flag by default, allowing exact value 1 only for the normal macOS Canvas text-edit launch."
+    },
+    {
+      "reviewer": "r37_appdata_review",
+      "finding": "Root setup, canonicalization/disjointness checks, and initial snapshot capture originally ran before the structured evidence handler.",
+      "resolution": "The complete app-data preflight now runs under one catch that records its stage, configured and available canonical roots, any safe baseline snapshot, and the error. Host-noise snapshot failures preserve the snapshot produced by snapshotTree; preflight deltas are null when no post-failure snapshot exists. Focused follow-up review found no remaining blocker."
+    },
+    {
+      "reviewer": "r37_privacy_launch_review",
+      "finding": "No blockers in summary-only serialization, exact macOS persistence opt-out scoping, or Rust runtime mapping.",
+      "resolution": "Confirmed the final serialized report is recursively guarded, the child launch only permits the exact opt-out on the intended macOS Canvas profile, and window persistence remains enabled."
+    }
+  ]
+}

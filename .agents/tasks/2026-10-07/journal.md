@@ -8099,3 +8099,46 @@ Recorded the final goal fingerprint `c0be89ea6705ca5b05c6589c14ffa38ebe7358e3671
 The independent integrated review passed the click-frame correlation, Linux app-data stabilization/preservation, exact platform app.ron paths, retained inspection summaries, goal cadence, and assigned-worktree submission flow. Two focused read-only follow-ups confirmed explicit inspection rows for Linux pre-editor setup, macOS pre-picker and the all-platform pre-input baseline, with exact path, snapshot hash, section, and forbidden-path checks. The R3.6 plan lists all seven required workflows and twenty jobs. The named implementation milestone is complete and ready for one push; `origin/main` is still `7e40c10aaf5b28bb52cd98eadf53ebc59447a91f`. No local executable validation or CI batch occurred.
 
 Committed the R3.6 implementation source locally as `24f7e1d243073ab2f1ee9baeb1e6850b160b527d` after independent review. The CI and tracker handoff remains a separate local commit; `origin/main` is unchanged and the milestone will be pushed only once after that handoff is complete. No local executable validation ran.
+
+## R3.6 exact-SHA CI started — 2026-10-16T05:20:03Z
+
+Pushed the completed reviewed milestone once to `origin/main` as `968ba6fe9cfc527528d7504208170a656f52dcdd`; its parent is the reconciled R3.5 SHA `7e40c10aaf5b28bb52cd98eadf53ebc59447a91f`. All seven required workflows triggered on that exact SHA. Initial capture: inventory passed, the Ubuntu plugin-renderer and Ubuntu desktop-build jobs passed, 5 jobs were queued, 12 in progress, and no failures were observed (1/7 workflows, 3/20 jobs terminal). Exact run and job IDs are in [the R3.6 attempt evidence](evidence/r2.8.138-r3-6-attempt-1-968ba6f.json). Keep `origin/main` pinned at this SHA through terminal reconciliation; no local executable validation or follow-up push occurred.
+
+## R3.6 Ubuntu Rust formatting failure observed; batch still active — 2026-10-16T05:22:44Z
+
+The exact-SHA batch now has 9/20 jobs passed and one failed: Rust CI Ubuntu job `116824888485` failed at `Check formatting`. The inventory workflow is the only terminal workflow; six workflows and ten jobs remain queued or running. `gh run view --log-failed` reports that logs are unavailable until Rust CI run `38855167206` completes. Recorded the failed job and current statuses in the attempt evidence. Do not change source, rerun CI, commit, or push until the entire batch is terminal; no local executable validation ran.
+
+## R3.6 CI progress — 2026-10-16T05:26:17Z
+
+Reconciled all seven workflow records for submitted SHA 968ba6fe9cfc527528d7504208170a656f52dcdd: four workflows and 15/20 jobs are terminal, with 14 jobs passed and one Ubuntu Rust formatting failure. Five jobs remain active (three platform round-trips, Rust 1.95 MSRV, loaded-plugin macOS). The Rust CI parent is still active, so failure logs are unavailable; artifacts and round-trip reports remain pending. No source repair, rerun, commit, or push occurred. Keep origin/main at this exact SHA until all jobs are terminal.
+
+## R3.6 CI progress — 2026-10-16T05:27:08Z
+
+Updated the exact-SHA snapshot for 968ba6fe9cfc527528d7504208170a656f52dcdd: five workflows are terminal-success and 17/20 jobs are terminal; 15 passed and two failed. Failures are Rust CI Ubuntu formatting job 116824888485 and Windows round-trip job 116824888293. Three jobs remain active: macOS/Linux round-trips and Rust 1.95 MSRV. Parent runs are still active, so final failure logs and round-trip reports have not been reconciled. No source repair, rerun, commit, or push occurred; keep origin/main at this SHA.
+
+## R3.6 CI progress — 2026-10-16T05:29:19Z
+
+The Linux round-trip job 116824888544 also failed. The exact-SHA batch now has 18/20 jobs terminal, 15 passed and three failed: Ubuntu Rust formatting job 116824888485 plus Windows/Linux round-trip jobs 116824888293 and 116824888544. Five workflows are terminal-success; macOS round-trip and Rust 1.95 MSRV remain active. Failure logs and platform reports will be reconciled after both parent workflows terminate. No repair, rerun, commit, or push occurred.
+
+## R3.6 CI progress — 2026-10-16T05:30:18Z
+
+Rust CI run 38855167206 is terminal-failed. Its MSRV job 116824888083 passed, macOS job 116824888417 passed, Windows job 116824888639 passed, and Ubuntu formatting job 116824888485 failed. Round-trip Windows/Linux jobs 116824888293 and 116824888544 failed. The batch has 19/20 jobs terminal (16 passed, three failed); macOS round-trip job 116824888142 remains active. Hold main and defer full failure/artifact reconciliation until that job finishes.
+
+## R3.6 CI batch terminal — 2026-10-16T05:31:11Z
+
+All seven required workflows and twenty jobs completed on exact SHA 968ba6fe9cfc527528d7504208170a656f52dcdd. Five workflows and sixteen jobs passed. Rust CI Ubuntu formatting job 116824888485 failed, as did the Linux, macOS, and Windows round-trip jobs 116824888544, 116824888142, and 116824888293. The exact-SHA batch is terminal-failed; review all four job logs, platform reports, and artifacts before defining a grouped repair milestone. No rerun, source change, commit, or follow-up push has occurred.
+
+
+## R3.6 exact-SHA CI reconciled; R3.7 repair plan approved — 2026-10-16T05:41:43Z
+
+Reconciled the complete R3.6 batch on `968ba6fe9cfc527528d7504208170a656f52dcdd`: all seven required workflows and twenty jobs are terminal; five workflows and sixteen jobs passed, while Rust CI and the round-trip workflow failed (Ubuntu formatting plus Linux, Windows, and macOS round-trip jobs). All fourteen available artifact API digests are recorded; the three downloaded round-trip archive hashes match their API digests, and report hashes are recorded. Inventory and quality published no artifacts; the failed Linux Rust job stopped before its runtime artifact upload. See [R3.6 attempt evidence](evidence/r2.8.138-r3-6-attempt-1-968ba6f.json) and [R3.6 plan reconciliation](evidence/r2.8.138-r3-6-linux-canvas-canary-click-dispatch-watermark-plan.json).
+
+The failures are grouped in the reviewed [R3.7 repair plan](evidence/r2.8.139-r3-7-canvas-appdata-and-report-repair-plan.json): fix the one rustfmt signature; move Linux Mesa and Windows runner caches outside strict monitored roots while explicitly snapshotting every app-owned root; disable only eframe egui-memory persistence for the macOS Canvas child process while keeping window persistence; ensure nested eframe report records serialize metadata only; and retain complete path/hash deltas on failures. Independent read-only plan reviews found no blockers after the path-union and persistence-inspector clarifications. `origin/main` remains pinned at `968ba6fe9cfc527528d7504208170a656f52dcdd`. No source implementation, local executable validation, commit, or follow-up push has occurred.
+
+## R3.7 implementation and independent review complete — 2026-10-16T06:06:02Z
+
+Implemented the grouped R3.7 repair locally: redirected Linux Mesa cache and Windows profile scratch outside monitored roots; added the three explicit Windows OpenObsidian roots to the snapshot union; preserved the exact empty Windows `OpenObsidian/data` baseline directory; scoped macOS egui-memory opt-out to the normal Canvas text-edit launch; made eframe RON text non-enumerable and guarded the final serialized report; retained complete phase snapshots and deltas on failures; and applied the exact Ubuntu Rust formatting correction.
+
+Independent read-only source reviews found no remaining blocker. Follow-up review closed the app-data preflight evidence gap: setup, canonicalization/isolation checks, initial snapshot capture, and marker/eframe preflight now share one failure handler that records its stage, configured and available canonical roots, and any safe baseline snapshot. It uses a null delta when no post-failure snapshot was measured. The privacy/launch review confirmed default flag stripping for non-target child processes and the exact macOS flag-to-`persist_egui_memory=false` mapping while window persistence remains enabled. The R3.7 plan records findings and resolutions.
+
+No local tests, builds, formatters, linters, validators, or application launches were run. The complete reviewed milestone has one local commit and is pending its single push; `origin/main` is still pinned at `968ba6fe9cfc527528d7504208170a656f52dcdd`. The next action is one push, followed by holding the exact submitted SHA through all seven required GitHub Actions workflows and twenty jobs.

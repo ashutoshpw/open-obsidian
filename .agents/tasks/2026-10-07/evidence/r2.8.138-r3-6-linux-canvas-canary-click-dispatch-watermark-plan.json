@@ -2,13 +2,24 @@
   "schema_version": 1,
   "id": "R2.8.138-R3.6-LINUX-CANVAS-CANARY-CLICK-DISPATCH-WATERMARK-REPAIR",
   "name": "Bind the Linux Canvas canary click check to a post-dispatch frame",
-  "status": "implementation-complete and independently reviewed, including explicit exact-equality app.ron inspection evidence; ready for one milestone push. origin/main remains at the reconciled R3.5 SHA 7e40c10aaf5b28bb52cd98eadf53ebc59447a91f",
+  "status": "terminal-failed and fully reconciled on exact SHA 968ba6fe9cfc527528d7504208170a656f52dcdd: 7/7 workflows and 20/20 jobs terminal; 5 workflows/16 jobs passed and 2 workflows/4 jobs failed. A grouped R3.7 repair plan is approved; no follow-up push has occurred.",
   "planning_base_sha": "7e40c10aaf5b28bb52cd98eadf53ebc59447a91f",
   "expected_starting_sha": "7e40c10aaf5b28bb52cd98eadf53ebc59447a91f",
   "starting_sha_confirmation_gate": "At implementation start, verify origin/main still equals the reconciled R3.5 SHA and inspect any intervening commits or uncommitted work before using this plan.",
   "local_implementation_sha": "24f7e1d243073ab2f1ee9baeb1e6850b160b527d",
-  "submitted_sha": null,
-  "pushed_once": false,
+  "submitted_sha": "968ba6fe9cfc527528d7504208170a656f52dcdd",
+  "submitted_at": "2026-10-16T05:19:23Z",
+  "pushed_once": true,
+  "run_ids": [
+    38855167206,
+    38855167218,
+    38855167122,
+    38855167227,
+    38855167269,
+    38855167355,
+    38855167423
+  ],
+  "all_required_jobs_terminal": true,
   "goal_sha256": "c0be89ea6705ca5b05c6589c14ffa38ebe7358e3671f39543429f3866df6eaf3",
   "predecessor_milestone": "R2.8.137-R3.5-LINUX-CANVAS-CANARY-BASELINE-TRACE-REPAIR",
   "predecessor_ci_run": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38844361889",
@@ -71,7 +82,7 @@
     "Require complete, unique, consecutive trace records from prePositionFrame through W. Treat prePositionFrame only as the state/event boundary described above; preserve its raw event vector but do not apply the subsequent-command allowlist to it. From the next frame through positioningStartFrame, allow only the optional WindowFocused(true) attributed to the recorded xdotool windowfocus command within the bounded frame interval and optional ModifiersChanged(NONE); require positioningStartFrame itself to be event-free. From positioningStartFrame through W, allow only PointerMoved events attributable in order to the two logged xdotool mousemove destinations, plus optional ModifiersChanged(NONE). Map the xdotool window-local pixel destinations (5,5) and (clickX,clickY) into egui logical points using the stable pixels-per-point scale. Accept an ordered subsequence of those two destinations to account for backend coalescing, but require the target destination (clickX,clickY) to be observed; every observed PointerMoved position must match the next allowed destination per axis within 1.5 physical pixels: abs(dx) * pixelsPerPoint <= 1.5 and abs(dy) * pixelsPerPoint <= 1.5 (equivalently 1.5 / pixelsPerPoint logical points per axis), and no duplicate or other move is allowed. Record command boundaries and coordinates. Require the paired W pointer to match the target destination. Position movement may arrive in W, but no PointerMoved event is allowed after W. Reject primary/secondary buttons, keys/text/paste/IME, wheel/touch, other focus events, and unknown events throughout these pre-dispatch intervals. Immediately before dispatch, require W to show no primary-button event, the primary button released, and all five current modifier bits clear. Retain pre-dispatch retry behavior only for failures detected before click dispatch.",
     "After capturing and validating the watermark, send exactly one coordinate click synchronously: perform no await, delay, screenshot, log wait, pointer action, or other input between watermark capture and click dispatch. If unexpected raw input is observed in that interval, fail before text entry.",
     "The R3.6-instrumented click is the initial path-field focus click: its two scripted pointer-positioning commands precede it, and it establishes the event-free pre-Tab baseline before the existing Tab-induced focus loss and recovery. The R3.5 recovery sequence later sends a separate stationary target click at the already positioned pointer, after the two stable recovery observations and before ArrowRight. That later click retains its existing fresh clicked/geometry/pointer guards and sends no pointer movement. Report separate counters: target_coordinate_click_dispatch_attempts counts only the initial traced click and must equal one; stationary_recovery_click_dispatch_attempts counts only the later recovery click and must equal one. The W+1-through-initial-click exact raw press/release contract applies only to the first click; do not conflate the two click phases.",
-    "From W+1 through the click frame, require exactly one complete trace record for every consecutive frame, with no missing or duplicate frame records, and preserve every frame’s raw event vector order. Accept exactly one primary press followed by exactly one primary release, both with all five event modifier bits clear, plus zero or more ModifiersChanged(NONE) events; reject any nonempty modifier change, pointer move, key/text/paste/IME event, other button, wheel/touch event, window-focus change, other/unknown event, or incomplete trace. Require all five current modifier bits clear at W and after release. Preserve event_index when events share a frame.",
+    "From W+1 through the click frame, require exactly one complete trace record for every consecutive frame, with no missing or duplicate frame records, and preserve every frame\u2019s raw event vector order. Accept exactly one primary press followed by exactly one primary release, both with all five event modifier bits clear, plus zero or more ModifiersChanged(NONE) events; reject any nonempty modifier change, pointer move, key/text/paste/IME event, other button, wheel/touch event, window-focus change, other/unknown event, or incomplete trace. Require all five current modifier bits clear at W and after release. Preserve event_index when events share a frame.",
     "Require press.frame_nr > W. Treat this as observed egui frame ordering for the single initial pre-Tab focus click, not a measurement of dispatch-to-egui wall-clock latency. Compare each event position directly with the path and ID response rectangles in the same egui logical-point coordinate space; require both positions inside the path rectangle and outside the sibling ID rectangle. Also require the press and release positions to match each other and the paired W pointer per axis within 1.5 physical pixels: abs(dx) * pixelsPerPoint <= 1.5 and abs(dy) * pixelsPerPoint <= 1.5 (equivalently 1.5 / pixelsPerPoint logical points per axis), with stable geometry, scale, and distinct response IDs. If press and release share a frame, require press.event_index < release.event_index; otherwise require press.frame_nr < release.frame_nr. The raw release, path Response::clicked=true observation, accepted path widget row, and accepted sibling widget row must all have the same initial-click frame_nr. The later stationary recovery click is a distinct R3.5 action and does not enter this initial-click frame comparison.",
     "Require the target click observation line to be newer than clickDispatchWatermark.line as a secondary check, no sibling click, and the primary button released after the click. Use strict frame_nr comparisons for frame freshness; log-line order alone never proves a post-dispatch event.",
     "A Response::clicked=true observation alone is insufficient proof of one raw click. Fail closed on missing, duplicate, reordered, modified, unrelated, out-of-geometry, sibling, or unpaired raw events or mismatched frame relations.",
@@ -170,7 +181,7 @@
     "Source-flow inspection found the macOS harness starts without a vault, writes eframe app.ron state at startup, then opens the native picker; managed root/vault markers are created only after the picker returns a selected vault path. The carried macOS acceptance now scopes app.ron changes to startup and confirmed panel-open, requires startup-to-pre-picker equality, validates marker bootstrap after selection, and requires post-selection equality through close. This amendment awaits independent plan review."
   ],
   "drafted_at": "2026-10-16T03:42:31Z",
-  "last_revised_at": "2026-10-16T05:18:16Z",
+  "last_revised_at": "2026-10-16T05:41:43Z",
   "review_findings": [
     {
       "reviewer": "independent static review of the plan and frame trace",
@@ -248,7 +259,7 @@
     "Require target-only ArrowRight evidence and the final complete event-free pre-staging guard before clipboard staging; any other predicate failure aborts before clipboard staging, paste, additional diagnostic pointer motion, or Save.",
     "For the initial pre-Tab focus click, verify its two planned positioning destinations and exactly one traced coordinate-click dispatch; later, keep the R3.5 focus-recovery sequence stationary through its separate recovery click. Reach only the expected synthetic-prefix abort after recovery, with zero pointer movement after the initial positioning, zero additional diagnostic pointer motion, zero Ctrl+V dispatches, zero completed paste stages, zero Save attempts, verified clipboard cleanup and readback, request-marker removal, destination absent, and app termination.",
     "These app-data requirements apply to each R3.6 runOpenObsidianCanvasTextEdit profile. The separate runOpenObsidian C07.4 reference-roundtrip flow, including its picker-cancellation sequence, remains governed by the carried R3.5 app-data acceptance and is not covered by the Canvas-profile snapshots. Require full preservation of authoritative vault files, Canvas source bytes, and the complete canonical app-data tree. For Linux, use a dedicated app-data root outside the fixture vault. Before starting the canary, run up to three separate no-canary process cycles; each cycle launches a fresh app, opens the same fixture vault at the same runner geometry, expands the same Canvas editor UI, and records full pre-launch, post-setup, and post-close trees. For every cycle, validate exact managed marker paths and bytes; classify every addition, removal, or change across those phases only as an exact managed marker creation or inspected eframe app.ron UI-state change; inspect every resulting app.ron for expected window/egui state and vault/app-data-root path leakage; reject all other deltas. Require two consecutive post-close snapshots from distinct cycles to match exactly by path, kind, byte count, and file hash; fail if no matching pair is reached within three cycles. After stability, launch a fresh process and require its pre-launch tree to equal the stabilized post-close tree. Classify pre-launch through settled vault selection with only an exact inspected app.ron allowance and no new markers; require exact full-tree equality from settled vault selection to the pre-editor-setup snapshot. Classify pre-editor-setup through expanded Canvas editor setup with only the exact inspected app.ron allowance. Then snapshot every app-data path/kind/byte count/hash immediately before the canary-specific interaction. After abort and process termination, require the entire tree to equal that baseline exactly, including app.ron; no Linux app.ron exception is allowed during the canary interval. If warm-up does not stabilize or any canary-interval entry changes, preservation fails. The R3.5 Linux report had 186 entries before entry and 187 after termination because app.ron was created; clipboard cleanup was null, so no preservation pass may be inherited.",
-    "For each macOS Canvas text-edit profile, capture pre-launch (including a missing-root state if applicable), settled startup, immediately pre-picker, confirmed native-panel-open, settled selected-vault setup, and post-close full-tree snapshots. This harness launches without a vault, so pre-launch-to-settled-startup may contain only the observed eframe app.ron startup write; root/vault markers must not appear before a vault selection. Require exact full-tree equality from settled startup to immediately pre-picker. From pre-picker to confirmed panel-open, allow only the documented app.ron UI-state transition, inspect its contents, and reject vault/app-data-root path leakage. From confirmed panel-open to settled selected-vault setup, allow only the exact managed root/vault marker bootstrap and inspected app.ron setup changes; validate every marker path and byte. Derive <id> as the first 24 lowercase hex characters of SHA-256 over UTF-8 bytes of the lexical absolute path string produced by Node path.resolve(selectedVaultRoot), without realpath/symlink resolution, matching Rust resolve_legacy_path. Require exact full-tree equality from the settled post-selection/setup baseline through Canvas editor interactions and process close. R3.5 observed app.ron changing 1994→3400 bytes during startup and 3400→3399 when opening the picker, with no later changes after the picker baseline. These phase-scoped app.ron transitions are the only exception; the Linux-only canary is not applicable on macOS.",
+    "For each macOS Canvas text-edit profile, capture pre-launch (including a missing-root state if applicable), settled startup, immediately pre-picker, confirmed native-panel-open, settled selected-vault setup, and post-close full-tree snapshots. This harness launches without a vault, so pre-launch-to-settled-startup may contain only the observed eframe app.ron startup write; root/vault markers must not appear before a vault selection. Require exact full-tree equality from settled startup to immediately pre-picker. From pre-picker to confirmed panel-open, allow only the documented app.ron UI-state transition, inspect its contents, and reject vault/app-data-root path leakage. From confirmed panel-open to settled selected-vault setup, allow only the exact managed root/vault marker bootstrap and inspected app.ron setup changes; validate every marker path and byte. Derive <id> as the first 24 lowercase hex characters of SHA-256 over UTF-8 bytes of the lexical absolute path string produced by Node path.resolve(selectedVaultRoot), without realpath/symlink resolution, matching Rust resolve_legacy_path. Require exact full-tree equality from the settled post-selection/setup baseline through Canvas editor interactions and process close. R3.5 observed app.ron changing 1994\u21923400 bytes during startup and 3400\u21923399 when opening the picker, with no later changes after the picker baseline. These phase-scoped app.ron transitions are the only exception; the Linux-only canary is not applicable on macOS.",
     "For each Windows Canvas text-edit profile, keep the canonical root outside the fixture vault and record its pre-launch presence/absence and full tree, then snapshot after startup and selected-vault/editor setup. The only allowed startup additions are the exact managed bootstrap entries: `.openobsidian-user-data-root` with ASCII bytes openobsidian-user-data-root-v1 followed by exactly one 0x0A byte; vaults/; vaults/<id>/; and vaults/<id>/.openobsidian-vault-data with ASCII bytes openobsidian-vault-data-v1 followed by exactly one 0x0A byte. Derive <id> from the first 24 lowercase hex characters of SHA-256 over the UTF-8 bytes of the lexical absolute path string produced by Node path.resolve(selectedVaultRoot), without realpath/symlink resolution, matching Rust resolve_legacy_path. Validate exact paths, kinds, and marker contents; fail on any other startup delta, including app.ron. Use the validated post-setup snapshot as the interaction baseline and require exact path/kind/byte-count/hash equality through editor interactions and process close. R3.5 observed no startup/picker/close changes and no app.ron after startup, but lacked a pre-launch snapshot; it does not exempt new runs from the bootstrap allowlist. The Linux-only canary is not applicable.",
     "Retain full round-trip acceptance and all ten C07.4 scenarios on first open and reopen for Ubuntu, macOS, and Windows; reconcile every comparable pair and checkpoint. Keep C07.4 reference-only and make no Rust parity claim."
   ],
@@ -315,5 +326,210 @@
       "macos": "6d59a2be666622eed3124f2528717d9b4293375d33899e056866207aa41ebf28"
     },
     "summary": "Ubuntu failed before the Linux expected-abort marker; macOS and Windows round-trip reports passed. MacOS expected-abort canary is Linux-only and not applicable. All three platform report hashes and artifact digests are reconciled."
+  },
+  "artifacts_reconciled": true,
+  "workflow_counts": {
+    "observed": 7,
+    "terminal": 7,
+    "passed": 5,
+    "failed": 2,
+    "cancelled": 0,
+    "queued": 0,
+    "in_progress": 0
+  },
+  "job_counts": {
+    "observed": 20,
+    "terminal": 20,
+    "passed": 16,
+    "failed": 4,
+    "cancelled": 0,
+    "queued": 0,
+    "in_progress": 0
+  },
+  "ci_reconciliation": {
+    "exact_sha": "968ba6fe9cfc527528d7504208170a656f52dcdd",
+    "origin_main_sha": "968ba6fe9cfc527528d7504208170a656f52dcdd",
+    "reconciled_at": "2026-10-16T05:41:43Z",
+    "workflows": {
+      "observed": 7,
+      "terminal": 7,
+      "passed": 5,
+      "failed": 2,
+      "cancelled": 0,
+      "queued": 0,
+      "in_progress": 0
+    },
+    "jobs": {
+      "observed": 20,
+      "terminal": 20,
+      "passed": 16,
+      "failed": 4,
+      "cancelled": 0,
+      "queued": 0,
+      "in_progress": 0
+    },
+    "run_ids": [
+      38855167122,
+      38855167206,
+      38855167218,
+      38855167227,
+      38855167269,
+      38855167355,
+      38855167423
+    ],
+    "failed_job_ids": [
+      116824888142,
+      116824888293,
+      116824888544,
+      116824888485
+    ],
+    "artifact_count": 14,
+    "artifacts_reconciled": true,
+    "workflow_artifacts": [
+      {
+        "artifact_id": 12027153062,
+        "run_id": 38855167122,
+        "name": "obsidian-vault-roundtrip-Windows-968ba6fe9cfc527528d7504208170a656f52dcdd",
+        "size_in_bytes": 10330086,
+        "api_digest": "sha256:6b824e7be5e99f78c539d938008a666b04a870f999a11ea867b2ae59f78e88cb",
+        "archive_sha256_verified": true,
+        "report_sha256": "5a88087779dec193c7fef0b18f3279621f9589c0ff1e93c3fd213b5b35cb5aac",
+        "archive_download_sha256": "6b824e7be5e99f78c539d938008a666b04a870f999a11ea867b2ae59f78e88cb",
+        "archive_matches_api_digest": true
+      },
+      {
+        "artifact_id": 12026513372,
+        "run_id": 38855167122,
+        "name": "obsidian-vault-roundtrip-macOS-968ba6fe9cfc527528d7504208170a656f52dcdd",
+        "size_in_bytes": 14008738,
+        "api_digest": "sha256:a0e92b8a5393ebbfdec7df075dfc956c64dfef16e0ec27f3cb42dd89256aa9aa",
+        "archive_sha256_verified": true,
+        "report_sha256": "95b647df6420f7529ea26b1ba0270c2c02f5b250d34b13fa914ac4a9d9eb4fd8",
+        "archive_download_sha256": "a0e92b8a5393ebbfdec7df075dfc956c64dfef16e0ec27f3cb42dd89256aa9aa",
+        "archive_matches_api_digest": true
+      },
+      {
+        "artifact_id": 12026373427,
+        "run_id": 38855167122,
+        "name": "obsidian-vault-roundtrip-Linux-968ba6fe9cfc527528d7504208170a656f52dcdd",
+        "size_in_bytes": 8775529,
+        "api_digest": "sha256:246eadc2151315c1ee71e413d04b91fc630c80e419e934b6568ca1e7322f3463",
+        "archive_sha256_verified": true,
+        "report_sha256": "4d77c1f0cbfb013883625863f5b8d57215af9333631269257ca62390be94bb01",
+        "archive_download_sha256": "246eadc2151315c1ee71e413d04b91fc630c80e419e934b6568ca1e7322f3463",
+        "archive_matches_api_digest": true
+      },
+      {
+        "artifact_id": 12027311412,
+        "run_id": 38855167206,
+        "name": "rust-plugin-runtime-macOS-968ba6fe9cfc527528d7504208170a656f52dcdd",
+        "size_in_bytes": 3630,
+        "api_digest": "sha256:8094953556d2bba7e75b605677f9e3f8e73cc9bd66aef81735f4ee08281c2ea3"
+      },
+      {
+        "artifact_id": 12026852182,
+        "run_id": 38855167206,
+        "name": "rust-plugin-runtime-Windows-968ba6fe9cfc527528d7504208170a656f52dcdd",
+        "size_in_bytes": 3616,
+        "api_digest": "sha256:21ca11fc62e5d97c4ab4213a5a57012b6c3acdf46aeb93d5cf6ef39ff317db30"
+      },
+      {
+        "artifact_id": 12027420425,
+        "run_id": 38855167227,
+        "name": "plugin-renderer-lifecycle-macOS-968ba6fe9cfc527528d7504208170a656f52dcdd",
+        "size_in_bytes": 3100,
+        "api_digest": "sha256:1294d66bdb2f8c7a7fbcdbab2c3ad250ea35577e74c0643a302f026a1c6d1202"
+      },
+      {
+        "artifact_id": 12027036396,
+        "run_id": 38855167227,
+        "name": "plugin-renderer-lifecycle-Windows-968ba6fe9cfc527528d7504208170a656f52dcdd",
+        "size_in_bytes": 3104,
+        "api_digest": "sha256:4d5b2d68001c4f09659677f4bf390c675b58e3659d31e06038bfb52225547640"
+      },
+      {
+        "artifact_id": 12026986392,
+        "run_id": 38855167227,
+        "name": "plugin-renderer-lifecycle-Linux-968ba6fe9cfc527528d7504208170a656f52dcdd",
+        "size_in_bytes": 3100,
+        "api_digest": "sha256:118e4a4b4c92ea23afa7e4d9bc41cc479a0683e520baf383e8d9c669a4e78239"
+      },
+      {
+        "artifact_id": 12027186851,
+        "run_id": 38855167355,
+        "name": "loaded-plugin-workflows-macOS-968ba6fe9cfc527528d7504208170a656f52dcdd",
+        "size_in_bytes": 171488,
+        "api_digest": "sha256:1f956ffcfca7c9a28ffd4bb82de94a2ef34b154502b75ece937f22b449ace48a"
+      },
+      {
+        "artifact_id": 12026736706,
+        "run_id": 38855167355,
+        "name": "loaded-plugin-workflows-Linux-968ba6fe9cfc527528d7504208170a656f52dcdd",
+        "size_in_bytes": 171463,
+        "api_digest": "sha256:a47e5cd27628a862d973903b529b03e5cd0b734f848f1888e24ec4a224f86b19"
+      },
+      {
+        "artifact_id": 12026583168,
+        "run_id": 38855167355,
+        "name": "loaded-plugin-workflows-Windows-968ba6fe9cfc527528d7504208170a656f52dcdd",
+        "size_in_bytes": 171467,
+        "api_digest": "sha256:38669677789d544911d779d03f1f87558c183e50f00b691e172a3d6a735009ca"
+      },
+      {
+        "artifact_id": 12026806722,
+        "run_id": 38855167423,
+        "name": "openobsidian-Windows-preview-968ba6fe9cfc527528d7504208170a656f52dcdd",
+        "size_in_bytes": 163006126,
+        "api_digest": "sha256:4851c0325fb5b0e1fd830f34c4f1e61ce29499256f4cebd2c4b4ff5e6ed6547d"
+      },
+      {
+        "artifact_id": 12026583099,
+        "run_id": 38855167423,
+        "name": "openobsidian-Linux-preview-968ba6fe9cfc527528d7504208170a656f52dcdd",
+        "size_in_bytes": 125946850,
+        "api_digest": "sha256:393bf007be376f57ae7caaaf5d29aa6924122caaf14d76ee4f57110c42e2e084"
+      },
+      {
+        "artifact_id": 12026532740,
+        "run_id": 38855167423,
+        "name": "openobsidian-macOS-preview-968ba6fe9cfc527528d7504208170a656f52dcdd",
+        "size_in_bytes": 397395784,
+        "api_digest": "sha256:0fa691c04937dcfcd92f1982d9c4995a4d0590028e9b18889efd41b6aced4fd7"
+      }
+    ],
+    "roundtrip_archive_hashes_match_api_digests": true,
+    "roundtrip_report_sha256": {
+      "windows": "5a88087779dec193c7fef0b18f3279621f9589c0ff1e93c3fd213b5b35cb5aac",
+      "macos": "95b647df6420f7529ea26b1ba0270c2c02f5b250d34b13fa914ac4a9d9eb4fd8",
+      "linux": "4d77c1f0cbfb013883625863f5b8d57215af9333631269257ca62390be94bb01"
+    },
+    "failure_findings": [
+      {
+        "job_id": 116824888485,
+        "summary": "Ubuntu Rust CI failed only cargo fmt --all -- --check: crates/ui-egui/src/lib.rs:63 needs ci_canvas_focus_raw_event_record(event_index: usize, event: &eframe::egui::Event) on one line. The workspace tests step passed."
+      },
+      {
+        "job_id": 116824888544,
+        "summary": "Linux round-trip failed during app-data warm-up cycle 1 pre-launch-to-post-setup because pre-existing runner cache/mesa_shader_cache paths were added to the observed tree. C07 reference capture did not start."
+      },
+      {
+        "job_id": 116824888293,
+        "summary": "Windows round-trip failed during pre-launch-to-post-setup because 26 app-data changes included Windows Explorer icon-cache directories/files and OpenObsidian setup paths outside the current managed-bootstrap allowance. C07 reference capture did not start."
+      },
+      {
+        "job_id": 116824888142,
+        "summary": "macOS round-trip failed at after-field-input: the exact app.ron path changed from 1,994 bytes (SHA-256 603f5e0e828dd723a2bc2b9e8d502fcf8df3ef4bb80bcf4c4e45175980c6a925) to 2,829 bytes (SHA-256 82428b6fb774a49f2656545e1f7abf2cdc19bc278a0fe121b0f4af40aa37704a). C07 reference capture did not complete."
+      },
+      {
+        "job_id": 116824888142,
+        "category": "evidence privacy",
+        "summary": "The macOS round-trip report embeds full app.ron content in openobsidian_app_data.eframe_persistence_files_after_picker_baseline_and_close[].content, despite the R3.6 plan requiring summary-only app.ron evidence. Do not copy file contents into tracker records."
+      }
+    ],
+    "privacy_limit": "Report findings retain metadata and summaries only; raw .ron content is intentionally not duplicated in tracker evidence.",
+    "missing_artifacts": [
+      "Rust Linux runtime artifact was not uploaded because the job stopped at formatting before its artifact step.",
+      "The Rust migration inventory and OpenObsidian quality workflows did not publish artifacts."
+    ]
   }
 }
