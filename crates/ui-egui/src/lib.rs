@@ -862,10 +862,7 @@ impl OpenObsidianApp {
             if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some() {
                 eprintln!("OpenObsidian CI manual vault refresh queued: request_id={request_id}");
             }
-            self.mark_vault_rescan_pending(
-                VaultRescanOrigin::ManualButton,
-                Some(&request_id),
-            );
+            self.mark_vault_rescan_pending(VaultRescanOrigin::ManualButton, Some(&request_id));
             ui.ctx().request_repaint();
         }
         if self.session.is_some() {
@@ -4492,13 +4489,12 @@ impl OpenObsidianApp {
             self.vault_rescan_pending = false;
             self.vault_rescan_request_id = None;
         }
-        let promoted_batch_is_empty =
-            if let Some(batch) = &mut self.vault_rescan_promoted_batch {
-                batch.origins.clear_periodic_timer();
-                batch.origins.is_empty()
-            } else {
-                false
-            };
+        let promoted_batch_is_empty = if let Some(batch) = &mut self.vault_rescan_promoted_batch {
+            batch.origins.clear_periodic_timer();
+            batch.origins.is_empty()
+        } else {
+            false
+        };
         if promoted_batch_is_empty {
             self.vault_rescan_promoted_batch = None;
         }
@@ -4512,10 +4508,7 @@ impl OpenObsidianApp {
             return false;
         };
         let batch = self.take_vault_rescan_batch();
-        let request_id = batch
-            .request_id
-            .as_deref()
-            .unwrap_or("missing-request-id");
+        let request_id = batch.request_id.as_deref().unwrap_or("missing-request-id");
         let trigger_sources = batch.origins.label();
         if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some() {
             eprintln!(
@@ -4555,10 +4548,7 @@ impl OpenObsidianApp {
         };
         self.vault_snapshot_probe_receiver = None;
         let batch = self.vault_snapshot_probe_batch.take().unwrap_or_default();
-        let request_id = batch
-            .request_id
-            .as_deref()
-            .unwrap_or("missing-request-id");
+        let request_id = batch.request_id.as_deref().unwrap_or("missing-request-id");
         let baseline_revision = self.last_reconciled_vault_revision.as_deref();
         match outcome {
             Ok(current_revision) if Some(current_revision.as_str()) == baseline_revision => {
@@ -4822,14 +4812,10 @@ impl OpenObsidianApp {
             let Some(batch) = batch else {
                 return;
             };
-            let request_id = batch
-                .request_id
-                .clone()
-                .unwrap_or_else(|| {
-                    let sequence =
-                        CI_VAULT_RESCAN_REQUEST_SEQUENCE.fetch_add(1, Ordering::Relaxed);
-                    format!("vault-rescan-{sequence}")
-                });
+            let request_id = batch.request_id.clone().unwrap_or_else(|| {
+                let sequence = CI_VAULT_RESCAN_REQUEST_SEQUENCE.fetch_add(1, Ordering::Relaxed);
+                format!("vault-rescan-{sequence}")
+            });
             let trigger_sources = batch.origins.label();
             let request_source = if batch.origins.manual_button
                 && !batch.origins.filesystem_watcher
@@ -5284,8 +5270,14 @@ impl OpenObsidianApp {
                     if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some() {
                         eprintln!(
                             "OpenObsidian CI vault refresh result consumed: request_id={request_id}, succeeded=false, snapshot_stable=false, snapshot_before_sha256={}, snapshot_after_sha256={}",
-                            outcome.snapshot_before_sha256.as_deref().unwrap_or("unavailable"),
-                            outcome.snapshot_after_sha256.as_deref().unwrap_or("unavailable"),
+                            outcome
+                                .snapshot_before_sha256
+                                .as_deref()
+                                .unwrap_or("unavailable"),
+                            outcome
+                                .snapshot_after_sha256
+                                .as_deref()
+                                .unwrap_or("unavailable"),
                         );
                     }
                     self.vault_refresh_receiver = None;
@@ -5306,8 +5298,7 @@ impl OpenObsidianApp {
                         " The existing listing was kept; reconciliation will retry after another watcher event or the next scheduled check."
                     };
                     self.vault_refresh_status = None;
-                    self.vault_refresh_error =
-                        Some(format!("{snapshot_message}{retry_message}"));
+                    self.vault_refresh_error = Some(format!("{snapshot_message}{retry_message}"));
                     ui.ctx().request_repaint();
                     return;
                 }
@@ -5325,9 +5316,18 @@ impl OpenObsidianApp {
                 if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some() {
                     eprintln!(
                         "OpenObsidian CI vault refresh result consumed: request_id={request_id}, succeeded=true, snapshot_stable=true, snapshot_before_sha256={}, snapshot_after_sha256={}, revision_sha256={}, entries={entries}, expected_path_visible={expected_path_visible}",
-                        outcome.snapshot_before_sha256.as_deref().unwrap_or("unavailable"),
-                        outcome.snapshot_after_sha256.as_deref().unwrap_or("unavailable"),
-                        outcome.snapshot_revision_sha256.as_deref().unwrap_or("unavailable"),
+                        outcome
+                            .snapshot_before_sha256
+                            .as_deref()
+                            .unwrap_or("unavailable"),
+                        outcome
+                            .snapshot_after_sha256
+                            .as_deref()
+                            .unwrap_or("unavailable"),
+                        outcome
+                            .snapshot_revision_sha256
+                            .as_deref()
+                            .unwrap_or("unavailable"),
                     );
                 }
                 self.vault_refresh_receiver = None;
@@ -10283,7 +10283,6 @@ mod tests {
             "Markdown source editor",
         );
         assert_eq!(draft_editor.value().as_deref(), Some(expected));
-        harness.get_by_label("Markdown source draft");
         harness.state_mut().note_source_mode = NoteSourceMode::Reading;
         harness.step();
         let stale_reading_editor = harness.get_by_role_and_label(
@@ -10834,12 +10833,24 @@ mod tests {
             .as_ref()
             .expect("edited watched vault remains open");
         assert_eq!(session.entries().len(), 2);
-        assert_eq!(session.read("Before.md").unwrap().document.as_bytes(), edited_source);
-        assert_eq!(existing_vault_tree_snapshot(&vault_path), expected_vault_after_content_edit);
-        assert_eq!(existing_vault_tree_snapshot(&app_data_path), expected_app_data);
+        assert_eq!(
+            session.read("Before.md").unwrap().document.as_bytes(),
+            edited_source
+        );
+        assert_eq!(
+            existing_vault_tree_snapshot(&vault_path),
+            expected_vault_after_content_edit
+        );
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            expected_app_data
+        );
 
         drop(harness);
-        assert_eq!(existing_vault_tree_snapshot(&vault_path), expected_vault_after_content_edit);
+        assert_eq!(
+            existing_vault_tree_snapshot(&vault_path),
+            expected_vault_after_content_edit
+        );
         assert_eq!(
             existing_vault_tree_snapshot(&app_data_path),
             expected_app_data
@@ -10897,40 +10908,45 @@ mod tests {
             next_vault_reconciliation: Some(Instant::now() + VAULT_RECONCILIATION_INTERVAL),
             ..OpenObsidianApp::default()
         };
-        let mut harness = Harness::new_ui_state(|ui, app| app.show_ui(ui), app);
+        // Keep the queued watcher batch inspectable before its async probe runs.
+        let process_vault_change_hints = Rc::new(std::cell::Cell::new(false));
+        let process_vault_change_hints_in_ui = Rc::clone(&process_vault_change_hints);
+        let mut harness = Harness::new_ui_state(
+            move |ui, app| {
+                app.poll_vault_refresh_task(ui);
+                if process_vault_change_hints_in_ui.get() {
+                    app.poll_vault_change_hints(ui);
+                }
+            },
+            app,
+        );
 
         harness.step();
 
         let state = harness.state();
         assert!(state.vault_refresh_receiver.is_none());
-        assert!(state.vault_snapshot_probe_receiver.is_some());
-        assert!(!state.vault_rescan_pending);
-        assert!(state.vault_rescan_origins.is_empty());
+        assert!(state.vault_snapshot_probe_receiver.is_none());
+        assert!(state.vault_rescan_pending);
+        assert!(state.vault_rescan_origins.is_watcher_only());
         assert_eq!(
             state.vault_rescan_request_id.as_deref(),
-            None,
-            "the watcher trigger is consumed by its snapshot-only probe"
-        );
-        assert_eq!(
-            state
-                .vault_snapshot_probe_batch
-                .as_ref()
-                .and_then(|batch| batch.request_id.as_deref()),
             Some("watcher-during-refresh"),
-            "dropping the failed timer trigger preserves watcher request attribution"
+            "dropping the failed timer trigger preserves the later watcher request"
         );
+        assert_eq!(state.vault_refresh_generation, 0);
         assert_eq!(
             state.last_reconciled_vault_revision.as_deref(),
             Some(baseline_revision.as_str()),
             "the still-open session keeps its last known full-vault revision"
         );
-        assert!(state
-            .vault_refresh_error
-            .as_deref()
-            .is_some_and(|error| error.contains("vault changed while the note list was refreshing")));
-        assert!(state
-            .next_vault_reconciliation
-            .is_some_and(|deadline| deadline > Instant::now()));
+        assert!(state.vault_refresh_error.as_deref().is_some_and(|error| {
+            error.contains("vault changed while the note list was refreshing")
+        }));
+        assert!(
+            state
+                .next_vault_reconciliation
+                .is_some_and(|deadline| deadline > Instant::now())
+        );
         assert_eq!(
             state
                 .session
@@ -10942,6 +10958,20 @@ mod tests {
             "the unstable worker listing is not applied"
         );
 
+        assert!(
+            harness.state_mut().start_vault_snapshot_probe(),
+            "the preserved watcher trigger starts a later snapshot-only probe"
+        );
+        assert_eq!(
+            harness
+                .state()
+                .vault_snapshot_probe_batch
+                .as_ref()
+                .and_then(|batch| batch.request_id.as_deref()),
+            Some("watcher-during-refresh"),
+            "the later snapshot probe retains watcher request attribution"
+        );
+        process_vault_change_hints.set(true);
         wait_for_vault_reconciliation(&mut harness);
         assert!(
             harness.state().vault_refresh_error.is_none(),
@@ -10952,21 +10982,40 @@ mod tests {
             Some(baseline_revision.as_str()),
             "the unchanged watcher probe preserves the last known revision"
         );
+        assert_eq!(
+            harness
+                .state()
+                .session
+                .as_ref()
+                .expect("the existing session remains open")
+                .entries()
+                .len(),
+            1,
+            "the unchanged watcher probe keeps the last known listing"
+        );
+        assert_eq!(
+            harness.state().vault_refresh_generation,
+            0,
+            "an unchanged watcher probe does not start an immediate full refresh"
+        );
 
         harness.state_mut().next_vault_reconciliation =
             Some(Instant::now() - Duration::from_secs(1));
         harness.step();
-        assert!(
-            harness.state().vault_refresh_receiver.is_some(),
+        assert_eq!(
+            harness.state().vault_refresh_generation,
+            1,
             "the scheduled reconciliation retries after its later timer trigger"
         );
         wait_for_vault_refresh(&mut harness);
         assert!(harness.state().vault_refresh_error.is_none());
-        assert!(harness
-            .state()
-            .last_reconciled_vault_revision
-            .as_deref()
-            .is_some_and(|revision| revision == baseline_revision.as_str()));
+        assert!(
+            harness
+                .state()
+                .last_reconciled_vault_revision
+                .as_deref()
+                .is_some_and(|revision| revision == baseline_revision.as_str())
+        );
     }
 
     #[test]
@@ -10991,15 +11040,17 @@ mod tests {
         assert_eq!(scanned_session.entries().len(), 2);
 
         let (sender, receiver) = mpsc::channel();
-        assert!(sender
-            .send(Ok(VaultRefreshOutcome {
-                session: scanned_session,
-                preserve_note_preview: false,
-                snapshot_revision_sha256: None,
-                snapshot_before_sha256: None,
-                snapshot_after_sha256: None,
-            }))
-            .is_ok());
+        assert!(
+            sender
+                .send(Ok(VaultRefreshOutcome {
+                    session: scanned_session,
+                    preserve_note_preview: false,
+                    snapshot_revision_sha256: None,
+                    snapshot_before_sha256: None,
+                    snapshot_after_sha256: None,
+                }))
+                .is_ok()
+        );
         let app = OpenObsidianApp {
             session: Some(Arc::new(session)),
             vault_refresh_receiver: Some(receiver),
@@ -11036,10 +11087,9 @@ mod tests {
             Some(baseline_revision.as_str()),
             "an unavailable full-vault snapshot retains the previous revision"
         );
-        assert!(state
-            .vault_refresh_error
-            .as_deref()
-            .is_some_and(|error| error.contains("stable full-vault snapshot could not be established")));
+        assert!(state.vault_refresh_error.as_deref().is_some_and(|error| {
+            error.contains("stable full-vault snapshot could not be established")
+        }));
         assert_eq!(
             state
                 .session
@@ -11050,9 +11100,11 @@ mod tests {
             1,
             "the listing from a scan without a stable snapshot is not applied"
         );
-        assert!(state
-            .next_vault_reconciliation
-            .is_some_and(|deadline| deadline > Instant::now()));
+        assert!(
+            state
+                .next_vault_reconciliation
+                .is_some_and(|deadline| deadline > Instant::now())
+        );
 
         harness.state_mut().next_vault_reconciliation =
             Some(Instant::now() - Duration::from_secs(1));
@@ -11061,11 +11113,12 @@ mod tests {
         assert_eq!(harness.state().vault_refresh_generation, 1);
         wait_for_vault_refresh(&mut harness);
         assert!(harness.state().vault_refresh_error.is_none());
-        assert!(harness
-            .state()
-            .last_reconciled_vault_revision
-            .as_deref()
-            .is_some_and(|revision| revision != baseline_revision.as_str()),
+        assert!(
+            harness
+                .state()
+                .last_reconciled_vault_revision
+                .as_deref()
+                .is_some_and(|revision| revision != baseline_revision.as_str()),
             "a later scheduled full refresh establishes the changed vault revision"
         );
         assert_eq!(
@@ -11132,15 +11185,17 @@ mod tests {
             harness.state().vault_refresh_request_id.as_deref(),
             Some("unstable-refresh-with-manual-followup")
         );
-        assert!(sender
-            .send(Ok(VaultRefreshOutcome {
-                session,
-                preserve_note_preview: false,
-                snapshot_revision_sha256: None,
-                snapshot_before_sha256: Some(baseline_revision.clone()),
-                snapshot_after_sha256: Some(changed_revision),
-            }))
-            .is_ok());
+        assert!(
+            sender
+                .send(Ok(VaultRefreshOutcome {
+                    session,
+                    preserve_note_preview: false,
+                    snapshot_revision_sha256: None,
+                    snapshot_before_sha256: Some(baseline_revision.clone()),
+                    snapshot_after_sha256: Some(changed_revision),
+                }))
+                .is_ok()
+        );
 
         harness.step();
 
@@ -11253,9 +11308,11 @@ mod tests {
             "a later watcher hint retains its own request ID while the first probe is busy"
         );
 
-        assert!(first_probe_sender
-            .send(Ok(baseline_revision.clone()))
-            .is_ok());
+        assert!(
+            first_probe_sender
+                .send(Ok(baseline_revision.clone()))
+                .is_ok()
+        );
         harness.step();
 
         assert!(harness.state().vault_snapshot_probe_receiver.is_some());
