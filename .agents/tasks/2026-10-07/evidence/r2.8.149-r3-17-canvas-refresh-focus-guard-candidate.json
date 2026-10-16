@@ -1,0 +1,236 @@
+{
+  "schema_version": 1,
+  "milestone_id": "R3.17",
+  "plan_id": "R2.8.149-R3.17-CANVAS-REFRESH-FOCUS-GUARD",
+  "name": "Canvas form focus-safe vault reconciliation",
+  "status": "R3.17 implementation is complete and the integrated milestone review is approved; no CI dispatch or push has occurred.",
+  "created_at": "2026-10-16T18:56:56Z",
+  "goal_sha256": "9db16f84ca14a5e13ff7a63756fbb587ee94d114105b6f4ae165e3fce7484a12",
+  "trigger_evidence": {
+    "implementation_sha": "81abce92933ff79280768f63c14973a0299beada",
+    "workflow_run_id": 38944357363,
+    "workflow_run_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38944357363",
+    "failed_job_id": 117119600534,
+    "failed_job_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38944357363/job/117119600534",
+    "platform": "Ubuntu",
+    "artifact_id": 12065606078,
+    "artifact_sha256": "52dd23dd683c5e2b698ab6c8cd5a964e701c95581f59222c689fe92ee887cef3",
+    "report_sha256": "325e6dcb4bdd9bbdc112983187950265f7343b7a9c50cc449a0e218b814a4e85",
+    "failure_checkpoint": "Canvas ID screenshot-readback post-capture diagnostic correlation, before OCR and save",
+    "observed": [
+      "The Linux ID value read back exactly as text-1, but the screenshot helper rejected the post-capture focus/geometry correlation after a refresh and before OCR or save; no write was attempted.",
+      "The macOS round-trip job passed on the same exact SHA with no additional failure; its report confirms the application round trip passed and all ten C07.4 scenarios/28 source checkpoints passed first-open/reopen capture as reference-only evidence. Obsidian source rewrites were observed and Rust parity remains unclaimed.",
+      "The Windows round-trip passed, while its C07.4 capture also remains reference-only and observed source rewrites. The single failure in the fully terminal batch is Linux job 117119600534."
+    ],
+    "source_trace_inference": "The 60-second periodic rescan is the most likely trigger because the report records monotonic_ms=66657 and no vault watcher hint, but the generic log label does not prove which path fired.",
+    "relevant_source": [
+      "crates/ui-egui/src/lib.rs:508-521",
+      "crates/ui-egui/src/lib.rs:881-883",
+      "crates/ui-egui/src/lib.rs:4232-4284",
+      ".agents/tasks/2026-10-07/audit-obsidian-vault-roundtrip.ts:17554-17647"
+    ]
+  },
+  "objective": "Prevent periodic or filesystem-watcher vault reconciliation from interrupting Canvas path or text-card ID entry. Keep each rescan pending while either field is focused or a source operation/draft holds the vault snapshot, then reconcile once at the first safe handoff.",
+  "scope": [
+    "Render the current egui content before making the reconciliation start decision, or return equivalent same-frame focus state from the Canvas editor; keep refresh-result polling before rendering.",
+    "Treat focus in either Canvas path or text-card ID TextEdit as busy for watcher and periodic reconciliation. Derive this from the current frame and clear/deactivate it when the editor is collapsed or not rendered; do not keep stale focus state.",
+    "Keep vault_rescan_pending set while either target is focused or a vault source-snapshot owner remains active. Treat vault_opening, vault_open_receiver, history_receiver, link_receiver, bases_receiver, note_preview_receiver, note_preview_write_receiver, vault_refresh_receiver, rename_receiver, canvas_note_receiver, and canvas_text_edit_receiver as in-flight source operations. Treat a durable canvas_text_edit_preview or note_source_preview.source_draft as an explicit snapshot lease. A Canvas reload keeps the old lease through its receiver and, on success, replaces it with a lease for the newly loaded preview; a failed reload retains the old preview and lease. Thus reload resolves/replaces the old draft, but a pending refresh remains deferred while the replacement preview is open. A Markdown source draft must be saved successfully or canceled before source rereading. Keep frame-local target focus separate from this owner set and reset focus to false when either widget is not rendered. The pending refresh stays coalesced until focus, snapshot leases, and all receivers clear; then start exactly one refresh on the first eligible egui frame and preserve the existing refresh-result handoff.",
+    "Preserve the origin of each pending refresh in diagnostics so a periodic rescan and a filesystem watcher hint can be distinguished without changing their shared safe deferral behavior.",
+    "Add production-state-machine egui regression coverage for both target fields and both trigger paths (periodic rescan and filesystem watcher hint). If no deterministic watcher-hint injection seam exists, add the narrowest test-only seam that enters the existing production hint path; do not make watcher coverage conditional.",
+    "Provide a CI-only deterministic trigger seam that forces a periodic reconciliation request through the existing production timer decision path. In the strict GitHub round-trip harness, force a pending request while each target is focused on Ubuntu, macOS, and Windows; observe pending=true and no refresh receiver through field value/correlation capture, then release focus and all source-snapshot leases, observe exactly one refresh start on the first eligible frame, and complete it within 15 seconds. The egui production-state-machine tests must also inject watcher hints through the existing production hint path for both fields, so both timer and watcher sources are deterministic and covered."
+  ],
+  "out_of_scope": [
+    "Relaxing screenshot focus, sibling-field, geometry, event-free, refresh-stability, OCR, or exact-value assertions in the round-trip harness.",
+    "Disabling watcher or periodic reconciliation, dropping/coalescing away a pending request before the one safe refresh, or allowing stale vault state to persist after the handoff.",
+    "Unrelated C07.5, C09.2, plugin, Canvas model, or persistence changes unless terminal R3.16 evidence shows they are required to address an additional failure; any such expansion must be reviewed and added to the final milestone plan.",
+    "Any source repair, local executable validation, CI dispatch, or push before the full R3.16 run and its artifacts are terminal and reconciled."
+  ],
+  "acceptance_criteria": [
+    "With the periodic deadline forced due on the same egui frame as a click into the Canvas path field, the path field remains enabled and focused, vault_rescan_pending remains true, and no refresh receiver starts; repeat for the text-card ID field.",
+    "A filesystem watcher hint injected through the production hint path while each target field is focused produces the same deferral assertions; diagnostic evidence identifies it as a watcher hint, while the timer case identifies a periodic rescan.",
+    "While either field remains focused, or while any defined source-snapshot owner remains active, the pending request is retained and no refresh starts. A durable Canvas or note edit draft remains a snapshot lease until save, reload, or cancel explicitly resolves it; verify cancel releases the lease without writing. A successful Canvas reload replaces the prior draft lease with a lease for the newly loaded preview, so refresh remains deferred until that preview is saved or canceled; a failed reload preserves the prior lease. On the first eligible frame after focus release, draft resolution, and receiver completion/cancellation, exactly one refresh starts; assert one correlated request and result, reject any additional refresh or pending state during the post-result quiet window, and complete the refresh within a 15-second deadline.",
+    "The completed refresh observes an external synthetic-vault note change, the note becomes available in the open session, and before/after vault and app-data snapshots show no unrelated mutation.",
+    "The strict round-trip harness forces reconciliation during path and ID entry and retains all existing correlation, focus, geometry, event-free, refresh-stability, OCR, and exact-value checks; Ubuntu, macOS, and Windows each pass both Canvas path and text-card ID focus/value readbacks using the platform-specific approved capture method, without refresh interleaving. After the safe handoff, each platform observes exactly one correlated completed refresh within 15 seconds, followed by a one-second quiet window with no additional request, result, or pending reconciliation state.",
+    "After the final plan incorporates every terminal R3.16 platform finding, the implementation SHA passes all seven required GitHub Actions workflows and all 20 jobs. Reconcile all 16 artifact metadata records, all 12 non-preview report payloads, workflow/job logs and exact-SHA provenance; four preview payloads may remain metadata-only under the existing policy.",
+    "No local tests, builds, formatters, linters, validators, runtime probes, or application launches are used as acceptance evidence."
+  ],
+  "required_workflows": [
+    "Rust migration inventory",
+    "OpenObsidian Rust CI",
+    "Obsidian vault round-trip acceptance",
+    "OpenObsidian desktop build",
+    "OpenObsidian quality",
+    "OpenObsidian plugin renderer matrix",
+    "OpenObsidian loaded plugin workflows"
+  ],
+  "expected_jobs": 20,
+  "submission_gate": "R3.16 is terminal-failed and reconciled on exact SHA 81abce92933ff79280768f63c14973a0299beada: 6/7 workflows and 19/20 jobs passed, with only the Ubuntu round-trip failure. All 16 artifact metadata records and all 12 non-preview report payloads are reconciled; four previews remain metadata-only. The macOS archive/report size, hashes, source SHA, run ID, attempt, and pass status match GitHub, although its embedded top-level milestone label is stale; C07.4 remains reference-only with source mutation observed and no Rust parity claim. Three independent reviewers approved the R3.17 plan. The full implementation and integrated milestone review are complete. Keep the milestone local until the final live origin/main and in-flight-batch checks pass. Immediately before submission, require origin/main to equal candidate_base_sha and confirm no earlier CI batch is in flight. If origin/main moved, reconcile the intervening commits, update the plan base/scope as needed, and repeat review. The integrated whole-milestone review was approved by r317_harness_seam_audit. Then push the accumulated R3.17 milestone once to origin/main for its full required CI batch.",
+  "review_status": "approved for local implementation by local_milestone_audit, r314_repair_scope_review, and r317_harness_seam_audit",
+  "local_validation": "Read-only source inspection and git diff --check (whitespace only); no project tests, builds, formatters, linters, validators, runtime probes, or application launches.",
+  "candidate_base_sha": "81abce92933ff79280768f63c14973a0299beada",
+  "required_artifact_reconciliation": {
+    "artifact_metadata_records": 16,
+    "non_preview_report_payloads": 12,
+    "preview_payloads_metadata_only": 4,
+    "terminal_required_workflows": 7,
+    "terminal_required_jobs": 20
+  },
+  "reviewed_by": [
+    "local_milestone_audit",
+    "r314_repair_scope_review",
+    "r317_harness_seam_audit"
+  ],
+  "candidate_review_note": "All three independent reviewers approved the plan. Implementation must release the Canvas snapshot lease independently after a successful save while retaining it on failed/stale saves; retain note source drafts through write completion and release only on success/cancel/reload; emit request-correlated, frame-correlated diagnostics with trigger source, path/ID focus, pending state, and refresh receiver; consume the one-shot periodic trigger through the existing timer-decision branch; exercise watcher hints through a real VaultWatcher request_rescan/poll path.",
+  "terminal_r3_16_evidence": {
+    "submitted_sha": "81abce92933ff79280768f63c14973a0299beada",
+    "run_attempt": 1,
+    "workflow_runs": [
+      {
+        "id": 38944357341,
+        "name": "Rust migration inventory",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38944357341",
+        "head_sha": "81abce92933ff79280768f63c14973a0299beada",
+        "run_attempt": 1,
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-16T18:03:05Z",
+        "updated_at": "2026-10-16T18:03:17Z",
+        "job_count": 1
+      },
+      {
+        "id": 38944357377,
+        "name": "OpenObsidian Rust CI",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38944357377",
+        "head_sha": "81abce92933ff79280768f63c14973a0299beada",
+        "run_attempt": 1,
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-16T18:03:05Z",
+        "updated_at": "2026-10-16T18:12:57Z",
+        "job_count": 4
+      },
+      {
+        "id": 38944357363,
+        "name": "Obsidian vault round-trip acceptance",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38944357363",
+        "head_sha": "81abce92933ff79280768f63c14973a0299beada",
+        "run_attempt": 1,
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-10-16T18:03:05Z",
+        "updated_at": "2026-10-16T19:04:40Z",
+        "job_count": 3
+      },
+      {
+        "id": 38944357491,
+        "name": "OpenObsidian desktop build",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38944357491",
+        "head_sha": "81abce92933ff79280768f63c14973a0299beada",
+        "run_attempt": 1,
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-16T18:03:05Z",
+        "updated_at": "2026-10-16T18:04:26Z",
+        "job_count": 3
+      },
+      {
+        "id": 38944357493,
+        "name": "OpenObsidian quality",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38944357493",
+        "head_sha": "81abce92933ff79280768f63c14973a0299beada",
+        "run_attempt": 1,
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-16T18:03:05Z",
+        "updated_at": "2026-10-16T18:05:17Z",
+        "job_count": 3
+      },
+      {
+        "id": 38944357709,
+        "name": "OpenObsidian plugin renderer matrix",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38944357709",
+        "head_sha": "81abce92933ff79280768f63c14973a0299beada",
+        "run_attempt": 1,
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-16T18:03:05Z",
+        "updated_at": "2026-10-16T18:04:50Z",
+        "job_count": 3
+      },
+      {
+        "id": 38944357762,
+        "name": "OpenObsidian loaded plugin workflows",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38944357762",
+        "head_sha": "81abce92933ff79280768f63c14973a0299beada",
+        "run_attempt": 1,
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-16T18:03:06Z",
+        "updated_at": "2026-10-16T18:05:30Z",
+        "job_count": 3
+      }
+    ],
+    "workflow_counts": {
+      "observed": 7,
+      "terminal": 7,
+      "passed": 6,
+      "failed": 1,
+      "cancelled": 0,
+      "queued": 0,
+      "in_progress": 0
+    },
+    "job_counts": {
+      "observed": 20,
+      "terminal": 20,
+      "passed": 19,
+      "failed": 1,
+      "cancelled": 0,
+      "queued": 0,
+      "in_progress": 0
+    },
+    "artifact_metadata_records": 16,
+    "non_preview_report_payloads_reconciled": 12,
+    "preview_artifacts_metadata_only": 4,
+    "all_artifact_head_shas_match": true,
+    "macos_artifact_id": 12069202184,
+    "macos_archive_sha256": "cc72b44f2c42945b425cb8e5b15a73dfad56bf701d343b54e6fee68b48f6e0e9",
+    "macos_report_sha256": "e70eed1ca119a7354a362ac620a59e03001bd8cc8b86ea1bbfd10449a5289124",
+    "macos_report_source_sha": "81abce92933ff79280768f63c14973a0299beada",
+    "macos_report_run_id": "38944357363",
+    "macos_report_run_attempt": "1",
+    "macos_roundtrip_status": "passed",
+    "macos_c07_4_capture": {
+      "status": "captured-reference-only",
+      "scenarios": 10,
+      "source_checkpoints": 28,
+      "first_open_reopen_passed": true,
+      "source_mutation_observed": true,
+      "rust_parity_claimed": false
+    },
+    "macos_embedded_milestone_caveat": "The report top-level milestone is the stale label R2.8.76-C01.2-reference-app-external-note-rename-refresh. Its included_milestone_sections identify C07.2, C07.3, and C07.4; exact report source SHA 81abce92933ff79280768f63c14973a0299beada, workflow run 38944357363, attempt 1, size, and SHA-256 reconcile to the macOS artifact. The C07.4 section is captured-reference-only, observed source mutation, and no Rust parity claim."
+  },
+  "final_scope_review_status": "approved by three independent reviews; implementation authorized",
+  "updated_at": "2026-10-16T20:00:02Z",
+  "implementation_status": "implementation_complete_reviewed_unpushed",
+  "implementation_started_at": "2026-10-16T19:25:05Z",
+  "implementation_started_from_sha": "81abce92933ff79280768f63c14973a0299beada",
+  "implementation_completed_at": "2026-10-16T19:49:11Z",
+  "implementation_files": [
+    "crates/ui-egui/src/lib.rs",
+    ".agents/tasks/2026-10-07/audit-obsidian-vault-roundtrip.ts",
+    ".agents/tasks/2026-10-07/goal.md",
+    ".agents/tasks/2026-10-07/requirements.json",
+    ".agents/tasks/2026-10-07/state.json",
+    ".agents/tasks/2026-10-07/journal.md",
+    ".agents/tasks/2026-10-07/evidence/r2.8.148-r3-16-linux-canvas-full-eframe-persistence-isolation-plan.json",
+    ".agents/tasks/2026-10-07/evidence/r2.8.148-attempt-1-81abce92933ff79280768f63c14973a0299beada.json",
+    ".agents/tasks/2026-10-07/evidence/r2.8.149-r3-17-canvas-refresh-focus-guard-candidate.json"
+  ],
+  "implementation_review_status": "Production review approved by local_milestone_audit; corrected harness review approved by r314_repair_scope_review and r317_harness_seam_audit; integrated whole-milestone tracker review approved by r317_harness_seam_audit.",
+  "implementation_reviewed_by": [
+    "local_milestone_audit",
+    "r314_repair_scope_review",
+    "r317_harness_seam_audit"
+  ],
+  "implementation_reviewed_at": "2026-10-16T20:00:02Z"
+}

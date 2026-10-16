@@ -8691,3 +8691,113 @@ A whole-milestone reviewer found duplicate active state fields that still descri
 ## R3.16 whole-milestone review approved — 2026-10-16T18:01:55Z
 
 Two independent reviewers approved the corrected complete R3.16 source and tracker diff. The reviews confirmed the Linux-only added opt-out, pre-focus marker check, strict app-data equality, unchanged Windows/expected-abort opt-outs, exact R3.15 predecessor evidence, C07.4 pending status, and GitHub Actions-only milestone cadence. A stale phase R3 and downstream C07.4/C09.2 dependency metadata was corrected and re-reviewed. The R3.16 milestone is implementation-complete locally and awaits a fresh origin/main recheck before its single push. No local executable validation was run.
+
+
+## R3.16 pushed once; exact-SHA CI batch started — 2026-10-16T18:04:18Z
+
+The complete reviewed R3.16 milestone was pushed once to origin/main at 81abce92933ff79280768f63c14973a0299beada from base 146a13de133350ad398e5196ee1344dc343a1a72; a read-only remote check confirms origin/main is at the submitted SHA. All seven required workflow runs target this exact SHA. Initial snapshot: 1/7 workflows and 4/20 jobs passed; 4 workflows and 14 jobs are active; 2 workflows and 2 jobs are queued; no failures are reported. Current run IDs and job IDs are recorded in .agents/tasks/2026-10-07/evidence/r2.8.148-attempt-1-81abce92933ff79280768f63c14973a0299beada.json. Artifact inventory and report reconciliation remain pending. Keep origin/main fixed and do not push another milestone until all jobs are terminal and artifacts are reconciled. No local executable validation ran.
+
+
+## R3.16 exact-SHA CI and artifact progress — 2026-10-16T18:10:23Z
+
+Read-only GitHub Actions recheck confirms all seven required workflow runs target `81abce92933ff79280768f63c14973a0299beada`. Five workflows and 16 of 20 jobs have passed. The Rust 1.95 MSRV job and Ubuntu, Windows, and macOS Obsidian round-trip jobs remain active; no failure or cancellation is reported. Keep `origin/main` at `81abce92933ff79280768f63c14973a0299beada` until the batch is terminal.
+
+The GitHub artifact API currently exposes 13 of the 16 expected records. The pending three are the platform round-trip artifacts. The nine available non-preview report archives were downloaded and their sizes and SHA-256 digests match the GitHub API metadata. Four available preview artifacts remain intentionally undownloaded. The Linux, macOS, and Windows Rust feasibility reports each record PC05 and PC08 as passed with integrity passed; their certification remains feasibility-only, legacy compatibility remains Pending, and Rust parity is unclaimed. Each renderer report contains 28 records with the same 4 loaded / 23 denied / 1 not-applicable distribution. The three loaded-plugin reports remain partial and explicitly promote no plugin. Their hashes, metadata, parsed summaries, and temporary archive paths are recorded in `.agents/tasks/2026-10-07/evidence/r2.8.148-attempt-1-81abce92933ff79280768f63c14973a0299beada.json`.
+
+The full artifact inventory and round-trip report payload reconciliation remain incomplete. R3.16 is not yet achieved. No local tests, builds, formatters, linters, validators, application launches, or runtime checks were run.
+
+
+## 2026-10-16T18:34:51Z — R3.16 partial CI and artifact reconciliation
+
+R3.16 remains active on exact SHA `81abce92933ff79280768f63c14973a0299beada`; `origin/main` is still held there. Six of seven required workflows have passed, with 18/20 jobs passed, Ubuntu round-trip job `117119600534` failed, and macOS job `117119600815` still running. Reconciled 15/16 artifact metadata records and 11/12 non-preview reports.
+
+Windows round-trip artifact `12066960741` is hash-verified (archive SHA-256 `713c82354735903a0c91eea50d73ae35523cca8c05c288d5bef242ab6c0dfef8`; report SHA-256 `dd3c96ee97c52f836c760932c6ec35b00113df90cb71633a9888a6f321ea119c`). Its round-trip and persistence checks passed. C07.4 captured all 10 scenarios across first open and reopen, with a complete 28-checkpoint matrix. Obsidian rewrote the seeded `.base` files; this remains reference-only evidence and claims no Rust parity.
+
+Linux round-trip artifact `12065606078` is also hash-verified (archive SHA-256 `52dd23dd683c5e2b698ab6c8cd5a964e701c95581f59222c689fe92ee887cef3`; report SHA-256 `325e6dcb4bdd9bbdc112983187950265f7343b7a9c50cc449a0e218b814a4e85`). It failed before save because the Canvas ID field did not gain focus; no vault write was attempted, and the full eframe persistence-off marker and runtime mapping passed. The after-field-input app-data checkpoint was not captured.
+
+The goal’s push cadence now states that minor changes stay local and one reviewed milestone is pushed once to trigger its full CI batch; no later batch starts before exact-SHA results and artifacts are reconciled. No source repair or push while macOS remains active.
+
+
+## 2026-10-16T18:45:43Z — R3.16 Ubuntu failure detail correction
+
+Follow-up read-only analysis of Linux report `12065606078` and the harness identified the exact failing boundary: the ID field value read back as `text-1`, but `canvas_reference_reopen.text_edit.readback_capture_correlations[1]` rejected the screenshot helper’s post-capture diagnostic snapshot before OCR. A watcher refresh began between focused frames and the diagnostic sample; the later frame showed the fields disabled and their reported rectangles shifted from y=79–98 to y=110–129. This explains the correlation failure, but the refresh trigger and its timing relative to screenshot capture remain unknown. The Windows path uses UI Automation and does not exercise Linux AT-SPI/screenshot-positioned input. No source edit, test, rerun, or push was made.
+
+
+## 2026-10-16T18:48:23Z — R3.16 live status and goal cadence sync
+
+Read-only GitHub recheck confirms run 38944357363 still targets `81abce92933ff79280768f63c14973a0299beada`: six of seven workflows are complete and passing; 18/20 jobs passed, Ubuntu round-trip job 117119600534 failed, and macOS job 117119600815 remains active on “Author, open, snapshot, and reopen the same vault.” `origin/main` was rechecked at the same SHA. The artifact API still shows 15/16 records; 11/12 non-preview report payloads are reconciled, with the macOS report pending. R3.16 remains unachieved and no source repair or push is permitted before batch and artifact reconciliation.
+
+Synced the active `state.json` status summary to this live snapshot without changing historical entries. The locally revised `goal.md` SHA-256 is `b6b870359439e21d7a45304b12f84df963034ca7253f75dadd20e2be057515ba`; synchronized `state.json`, `requirements.json.mapping_review.goal_sha256`, and MIG-002 cadence language/reference metadata. These tracker updates remain local under the milestone cadence. No tests, builds, validators, or application launches were run.
+
+
+## 2026-10-16T18:49:59Z — R3.16 Linux refresh source trace
+
+A read-only source trace found that the generic `watcher_reconciliation` log label covers both filesystem hints and the 60-second periodic full rescan. The failed report has `monotonic_ms=66657` and no `vault watcher hint` entry, making the periodic rescan the most likely trigger, but the exact trigger remains unproven. Canvas path/ID setup is not part of `canvas_text_editing()` busy state, and reconciliation is polled before the form is drawn; a refresh can therefore disable the focused fields and insert status UI that shifts geometry, matching the report. Recorded this as an inference in the R3.16 attempt evidence. Candidate directions for a later reviewed repair are to hold reconciliation during active path/ID interaction, recover the harness only after stable geometry while retaining strict checks, and log timer/hint sources distinctly. No source edits, tests/builds, CI runs, or pushes occurred.
+
+
+## 2026-10-16T18:51:57Z — R3.16 tracker alias reconciliation
+
+A fresh read-only poll confirms the macOS round-trip job 117119600815 is still active on step 16, with report upload pending; only Linux and Windows round-trip artifacts are available. `origin/main` remains at `81abce92933ff79280768f63c14973a0299beada`. A tracker audit found the parent `phases.milestone_status`, `phases.next_action`, and top-level remote-verification timestamp lagged the current snapshot. Updated those active aliases and the attempt timestamp; historical entries remain unchanged. No source edit, test/build/validator, CI dispatch, or push occurred.
+
+
+## 2026-10-16T18:56:56Z — R3.17 candidate scope drafted
+
+Drafted a local, unreviewed candidate plan for an app-side Canvas form focus guard against watcher/periodic vault reconciliation. The design combines current-frame `TextEdit::has_focus()` with post-render reconciliation polling, retains pending rescans, and adds egui coverage for same-frame focus, continued deferral, and eventual external-change reconciliation. Strict round-trip correlation checks remain acceptance gates. The plan explicitly waits for R3.16 terminal macOS and artifact evidence before scope freeze, implementation, and submission. No source changes, executable checks, CI dispatch, or push occurred.
+
+
+## 2026-10-16T18:57:44Z — R3.17 candidate linked to C07.4
+
+Updated the C07.4 blocker and active state pointer to the local R3.17 focus-safe reconciliation candidate. The latest read-only poll still shows job 117119600815 active on step 16, only Linux/Windows round-trip artifacts available, and `origin/main` at `81abce92933ff79280768f63c14973a0299beada`. The 60-second rescan remains a likely but unconfirmed trigger. The candidate remains unreviewed and cannot be implemented/submitted until the R3.16 batch is terminal and reconciled. No source edit, executable validation, CI dispatch, or push occurred.
+
+
+## 2026-10-16T19:00:42Z — R3.16 CI poll and R3.17 candidate review
+
+A direct GitHub Actions poll confirms run 38944357363 remains in progress at exact SHA `81abce92933ff79280768f63c14973a0299beada`: six of seven workflows and 18/20 jobs are terminal-passing, the Ubuntu round-trip job failed, and macOS job 117119600815 is still on step 16. The run has 15 artifact metadata records; Linux and Windows round-trip artifacts are present, while the macOS report is still pending. A fresh `origin/main` lookup still returns `81abce92933ff79280768f63c14973a0299beada`. Updated the live evidence and active tracker aliases.
+
+Revised the local R3.17 candidate against independent review: trigger wording now preserves the unconfirmed timer-versus-watcher inference; watcher-hint coverage and a deterministic test seam are mandatory; handoff, one-refresh behavior, and a 15-second completion deadline are measurable; all three platforms must pass both path and ID focus/value readbacks; and the terminal R3.16 artifact/report gate names all 16 metadata records, 12 non-preview payloads, and four preview metadata-only payloads. Candidate-level review is complete, but final scope and implementation remain gated on R3.16 reconciliation. No source edit, test/build/validator, CI dispatch, or push occurred.
+
+
+## 2026-10-16T19:10:05Z — R3.16 terminal CI and artifact reconciliation
+
+The exact-SHA batch at `81abce92933ff79280768f63c14973a0299beada` is terminal: all seven workflows and 20 jobs completed on attempt 1; six workflows and 19 jobs passed, and the sole failure is Ubuntu round-trip job 117119600534. macOS job 117119600815 passed and uploaded artifact 12069202184. A fresh remote lookup still finds `origin/main` at `81abce92933ff79280768f63c14973a0299beada`.
+
+Reconciled all 16 artifact metadata records against their workflow source SHA and run; 12 non-preview archives/reports are reconciled and each archive digest matches the GitHub API digest. Four preview artifacts remain metadata-only under the existing policy. The macOS artifact is 32,500,927 bytes with archive SHA-256 `cc72b44f2c42945b425cb8e5b15a73dfad56bf701d343b54e6fee68b48f6e0e9`; its 70,091,238-byte report has SHA-256 `e70eed1ca119a7354a362ac620a59e03001bd8cc8b86ea1bbfd10449a5289124`, source SHA `81abce92933ff79280768f63c14973a0299beada`, run 38944357363, attempt 1, and status `passed`. macOS completed the full round trip and captured all ten C07.4 scenarios/28 checkpoints on first open and reopen as reference-only evidence; source rewrites were observed, so this is not Rust parity. It adds no new failure. The Linux screenshot readback failure remains the sole repair target.
+
+Updated the R3.17 candidate with the terminal platform evidence and left final independent plan review pending before implementation. A separate tracker audit found phase completion is correctly milestone-level; it also found the mapping-review total lagged nine supplemental rows. Updated current review counts to 221 (196 inherited plus 25 migration rows), recorded all ten post-R0.2 additions, and clarified that phase completion never promotes row-level Rust status. C07.4 remains pending. No source edit, local tests/builds/validators, new CI dispatch, or push occurred.
+
+## 2026-10-16T19:13:06Z — milestone CI cadence clarified
+
+Clarified the goal rule: small edits stay local, no complete CI batch is triggered for each minor change, and one named, reviewed milestone is pushed once to `origin/main` only after its implementation criteria are met. Hold that SHA until the potentially multi-hour batch is terminal and artifacts/evidence are reconciled; exact-SHA CI success marks the milestone achieved. Synced the current goal fingerprint in the state, requirements, and R3.17 candidate records. This docs-only update remains local and does not change R3.16 CI evidence or acceptance. No executable validation, CI dispatch, commit, or push occurred.
+
+## 2026-10-16T19:17:15Z — R3.16 evidence aliases reconciled; R3.17 plan revised
+
+Queried all seven GitHub Actions runs, 20 exact-SHA jobs, 16 artifact records, and `origin/main`. R3.16 attempt 1 is terminal-failed: 6/7 workflows and 19/20 jobs passed, with Ubuntu round-trip job 117119600534 as the sole failure; macOS round-trip job 117119600815 passed. Verified the Mac artifact and report sizes and SHA-256 digests, source SHA, run ID, and attempt. Recorded that the report's embedded top-level milestone label is stale, while its included C07.2/C07.3/C07.4 sections remain reference evidence only; C07.4 source mutation was observed and Rust parity remains unclaimed. Synchronized the attempt record and all active state aliases, including the R3 phase pointer.
+
+Both independent R3.17 plan reviews found the current-frame focus approach feasible and requested precise source-snapshot lease semantics, deterministic CI triggers for the periodic and watcher paths, the Mac label caveat, and a re-review if `origin/main` moves from the candidate base. These corrections are recorded in the candidate; fresh reviews are pending. No source change, local executable validation, CI dispatch, commit, or push occurred.
+
+
+## 2026-10-16T19:25:05Z — R3.17 scope approved; local implementation started
+
+Three independent reviews approved the R3.17 Canvas focus-safe reconciliation plan after R3.16 exact-SHA CI and artifact reconciliation. The candidate base and live `origin/main` remain `81abce92933ff79280768f63c14973a0299beada`. Recorded implementation requirements include frame-correlated request diagnostics, a one-shot periodic request-file trigger through the production timer branch, watcher coverage through a real `VaultWatcher::request_rescan()`/poll, independent lease release after successful save, and draft retention on failed/stale writes. Local implementation is in progress and will remain unpushed until the entire milestone is complete and reviewed. No tests, builds, formatters, linters, validators, application launches, CI dispatch, or push were run.
+
+## 2026-10-16T19:49:11Z — R3.17 implementation review corrections
+
+Completed the R3.17 source and strict round-trip harness locally. The harness now validates the synthetic external Markdown note as the sole expected vault delta and uses that post-addition snapshot for load checks. Its handoff gate rejects additional or uncorrelated refresh requests/results and any newly pending reconciliation state, then observes a one-second quiet window. Periodic and watcher requests are armed before the target-field click so the first test frame exercises focus acquisition and reconciliation together. Added note-source draft lease coverage: a due production timer remains pending during the draft and write receiver, then starts exactly one refresh after successful source save releases the lease. Candidate scope now records that Canvas reload replaces the prior lease with a new preview lease, so refresh remains deferred while that preview is open.
+
+Independent implementation reviews approved the production-state-machine behavior and the corrected round-trip harness; the final integrated tracker review remains pending. Reconciled candidate status, C07.4 blocker text, active R3 phase pointers, and planned-next-milestone to R3.17. Goal cadence remains one reviewed milestone push after completion, with no new CI batch until the exact-SHA current batch has been reconciled. No tests, builds, formatters, linters, project validators, runtime probes, app launches, CI dispatches, commits, or pushes were run. `git diff --check` was used only as a whitespace check.
+
+## 2026-10-16T19:56:46Z — reconciled active milestone pointers before integrated review
+
+The active repair aliases now point to the locally complete R3.17 candidate; the terminal-failed R3.16 record remains preserved under current/historical repair records. Updated the deferred C09.2 dependency text to reflect reconciled C07.4 reference capture, pending R3.17 CI, and the outstanding C07.5 no-follow/libc dependency. A live `git ls-remote` read at 19:56:46Z returned `origin/main` at `81abce92933ff79280768f63c14973a0299beada`, matching the R3.17 candidate base; this is not the final pre-push recheck. The goal cadence already requires one reviewed milestone push, then a full exact-SHA CI/artifact reconciliation before the next push. No tests, builds, validators, CI dispatches, commits, or pushes were run.
+
+## 2026-10-16T19:58:49Z — aligned the current repair and CI verification aliases
+
+Reclassified the terminal R3.16 repair as the previous repair and added its complete record to historical repairs. `current_repair_milestone` now points to the active R3.17 local candidate, while `active_ci_batch` remains the fully reconciled terminal R3.16 batch with a next action describing R3.17 review/submission. Synchronized top-level `origin_main_sha_verified_at` with the live verification at 19:56:46Z; both active remote SHA aliases match candidate base 81abce92933ff79280768f63c14973a0299beada. Final pre-push recheck is still required. No tests, builds, validators, CI dispatches, commits, or pushes were run.
+
+## 2026-10-16T19:59:06Z — removed stale R3.16 action text from historical aliases
+
+Updated the archived R3.16 `next_action` in both previous and historical repair records so it clearly marks R3.16 as terminal and points readers to active R3.17 state. R3.16 evidence and status remain unchanged. No tests, builds, validators, CI dispatches, commits, or pushes were run.
+
+## 2026-10-16T20:00:02Z — R3.17 integrated milestone review approved
+
+The integrated whole-milestone review by `r317_harness_seam_audit` approved the R3.17 source, round-trip harness, and reconciled tracker. The reviewers confirmed the goal batches minor changes locally, pushes one complete reviewed milestone to `origin/main`, and holds that SHA until all required CI jobs and artifacts are reconciled. Updated the candidate, active milestone aliases, phase next actions, and C07.4 blocker to record approval; C07.4 remains pending with no Rust parity claim. R3.17 remains unpushed pending the final live `origin/main` and no-in-flight-batch checks. No project tests/builds/validators, CI dispatches, commits, or pushes occurred.

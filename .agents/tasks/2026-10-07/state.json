@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
-  "status": "R3.16 implementation and tracker sync are complete locally and approved by two independent whole-milestone reviewers; ready for one push after the origin/main recheck.",
-  "updated_at": "2026-10-16T18:01:55Z",
+  "status": "R3.16 is terminal-failed on exact SHA 81abce92933ff79280768f63c14973a0299beada: all seven workflows and 20 jobs are terminal; six workflows and 19 jobs passed, and Ubuntu round-trip job 117119600534 failed. All 16 artifact metadata records and 12 non-preview report payloads are reconciled; four previews remain metadata-only. The macOS round-trip passed; its exact-SHA/run/attempt/hash evidence reconciles, with a stale embedded top-level milestone label recorded as a caveat. C07.4 remains reference-only with source mutation observed and no Rust parity claim. R3.16 is not achieved; keep origin/main at the submitted SHA.",
+  "updated_at": "2026-10-16T20:00:02Z",
   "branch": "codex/r3.3-tracker",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R3",
-  "last_reconciled_head": "146a13de133350ad398e5196ee1344dc343a1a72",
-  "current_milestone": "R3.16 Linux Canvas full eframe persistence isolation: implementation complete and whole milestone approved; ready for one push after the origin/main recheck.",
-  "next_action": "Immediately recheck origin/main at 146a13de133350ad398e5196ee1344dc343a1a72; if unchanged, commit and push the complete R3.16 milestone once, then hold the submitted SHA until all seven workflows/20 jobs and artifacts are reconciled.",
-  "push_status": "R3.15 was pushed once at 146a13de133350ad398e5196ee1344dc343a1a72. Exact-SHA CI terminal-failed (6/7 workflows; 19/20 jobs passed). All artifacts/reports are reconciled. Keep origin/main at this SHA while one repair milestone is prepared locally; do not submit another batch until implementation and whole-diff review are complete.",
+  "last_reconciled_head": "81abce92933ff79280768f63c14973a0299beada",
+  "current_milestone": "R3.17 Canvas form focus-safe vault reconciliation: implementation complete and all source/harness/integrated tracker reviews approved locally from 81abce92933ff79280768f63c14973a0299beada; unpushed.",
+  "next_action": "Immediately before submission, recheck live origin/main equals candidate_base_sha and confirm no required CI batch is in flight. If either changed, reconcile and repeat review. Then push the complete R3.17 milestone to origin/main exactly once and wait for all seven required workflows, 20 jobs, artifacts, and reports to reach terminal reconciled status.",
+  "push_status": "R3.16 is terminal-failed and fully reconciled at 81abce92933ff79280768f63c14973a0299beada. R3.17 implementation and integrated review are approved locally. No local executable validation, CI dispatch, commit, or push has occurred. Perform the final live origin/main and in-flight-batch checks, then submit the complete milestone once.",
   "blockers": [
     "C07.3 pinned Obsidian reference capture passed all 14 scenarios on first open and reopen across Linux, macOS, and Windows at exact SHA 0a9cb9c00835881a7629c96721974dfa9461cc50; see evidence/r2.8.129-attempt-1-0a9cb9c.json. Rust parity remains pending. Separate mixed-worktree C07.3 edits remain local and are excluded from the C07.4 candidate; review and submit them separately. Do not claim a full-fixture membership oracle from reference UI results.",
     "R2.8.120 failed its terminal exact-SHA CI batch on 985af8aa18be53c285221b2ed21d4062e69b9f3d. Linux C07.3 table row diagnostics reject visible rows despite each uniquely matching an already captured fixture path; formula Kanban extraction records no card memberships although the screenshot shows the 5/4/4/0 cards. macOS display metrics failed before first-run picker interaction, and Windows stopped after picker closure when the host HWND changed. See evidence/r2.8.120-attempt-1-985af8a.json; keep C07.3 pending.",
@@ -37,7 +37,8 @@
     "R3.10 terminal failure: Linux Canvas round-trip job 116909896430 failed before clipboard staging because the normal child disabled the per-frame trace required by the focus-snapshot parser. Focus-transfer timing and cause remain unconfirmed. This blocks C07.4 Rust implementation until R3.11 completes and reconciles all-platform reference capture.",
     "R3.11 reports are reconciled; Linux strict OCR and the macOS C07.4 seed-order/runtime-enumeration mismatch failed. Windows C07.4 passed. Freshly review the revised R3.12 harness contract before implementation; origin/main remains pinned.",
     "R3.12 terminal-failed on ad983495302c8d7d52701eb2b698087c4013fbe0: quality failed on all three OSes because Knip flags system binary tesseract; Linux round-trip failed Canvas edit text-card ID visual readback despite exact field-state evidence and successful path crop; macOS round-trip failed note-creation Text card ID readback although target-field Vision OCR returned exact text-1. All reports/artifacts are reconciled; Windows alone captured C07.4 (10 scenarios, 28 checkpoints, reference-only). Keep C07.4 pending and prepare one independently reviewed grouped repair milestone.",
-    "R3.13 exact-SHA CI is terminal and artifact/report-reconciled on 89da1495fac160fc77029ea4ad60c9c47724148b: 7/7 workflows and 20/20 jobs terminal, 19 passed and one Linux round-trip job failed. macOS and Windows captured C07.4 reference behavior; Linux field-state matched the expected six-byte Canvas ID but OCR returned `text-1 |` because the crop included the widget right border. C07.4 remains pending and Rust parity is unclaimed. R3.14 was pushed once to origin/main at 67f5e6c1bedbcfc0fc645a5652a1a23419750ab3; terminal exact-SHA CI has 7/7 workflows and 20/20 jobs complete, with 6/7 workflows and 19/20 jobs passing. Ubuntu round-trip failed at after-field-input because new app.ron changed strict app-data equality. All 16 API artifact records and 12 downloaded non-preview payloads/reports are reconciled; four preview payloads were intentionally not downloaded. R3.14 is not achieved; C07.4 remains pending and Rust parity is unclaimed."
+    "R3.13 exact-SHA CI is terminal and artifact/report-reconciled on 89da1495fac160fc77029ea4ad60c9c47724148b: 7/7 workflows and 20/20 jobs terminal, 19 passed and one Linux round-trip job failed. macOS and Windows captured C07.4 reference behavior; Linux field-state matched the expected six-byte Canvas ID but OCR returned `text-1 |` because the crop included the widget right border. C07.4 remains pending and Rust parity is unclaimed. R3.14 was pushed once to origin/main at 67f5e6c1bedbcfc0fc645a5652a1a23419750ab3; terminal exact-SHA CI has 7/7 workflows and 20/20 jobs complete, with 6/7 workflows and 19/20 jobs passing. Ubuntu round-trip failed at after-field-input because new app.ron changed strict app-data equality. All 16 API artifact records and 12 downloaded non-preview payloads/reports are reconciled; four preview payloads were intentionally not downloaded. R3.14 is not achieved; C07.4 remains pending and Rust parity is unclaimed.",
+    "R3.16 exact-SHA attempt 1 is terminal-failed and fully reconciled on 81abce92933ff79280768f63c14973a0299beada: all 7 workflows and 20 jobs are terminal; 6 workflows and 19 jobs passed, with Ubuntu round-trip job 117119600534 the sole failure. All 16 artifact metadata records and 12 non-preview report payloads are reconciled; four previews remain metadata-only. The macOS round-trip passed with a stale embedded top-level milestone label recorded as a caveat; C07.4 remains reference-only with source mutation observed and no Rust parity claim. R3.17 plan approval and implementation reviews are complete; the final integrated tracker review is pending before the one-push submission."
   ],
   "phases": {
     "R0": {
@@ -90,17 +91,18 @@
         "OpenObsidian plugin renderer matrix",
         "OpenObsidian loaded plugin workflows"
       ],
-      "implementation_sha": "146a13de133350ad398e5196ee1344dc343a1a72",
-      "current_milestone": "R2.8.148-R3.16-LINUX-CANVAS-FULL-EFRAME-PERSISTENCE-ISOLATION",
-      "milestone_status": "R3.15 was pushed at 146a13de133350ad398e5196ee1344dc343a1a72 and is terminal-failed/reconciled: 7 workflows and 20 jobs terminal, 6 workflows/19 jobs passed, one Ubuntu round-trip failure. R3.16 implementation and tracker sync are complete locally and approved by two independent reviewers; ready for one push after origin/main recheck.",
-      "next_action": "Immediately recheck origin/main at 146a13de133350ad398e5196ee1344dc343a1a72; if unchanged, commit and push R3.16 once, then hold the submitted SHA until all required CI jobs and artifacts are reconciled.",
+      "implementation_sha": "81abce92933ff79280768f63c14973a0299beada",
+      "current_milestone": "R2.8.149-R3.17-CANVAS-REFRESH-FOCUS-GUARD",
+      "milestone_status": "R3.16 remains terminal-failed and unachieved on exact SHA 81abce92933ff79280768f63c14973a0299beada. R3.17 implementation and integrated review are approved locally; it is ready for the final live origin/main and CI activity checks before its single milestone push and full exact-SHA CI reconciliation.",
+      "next_action": "Immediately before submission, recheck live origin/main equals candidate_base_sha and confirm no required CI batch is in flight. If either changed, reconcile and repeat review. Then push the complete R3.17 milestone to origin/main exactly once and wait for all seven required workflows, 20 jobs, artifacts, and reports to reach terminal reconciled status.",
       "roundtrip_reports_reconciled": true,
       "roundtrip_report_hashes": {
-        "Linux": "81b635231c0bc7aae3968e510ce0cb3b58c826ae52aafc2af60688f81583fc17",
-        "Windows": "27c5df2d47de485b65ef045874994a8afe6ae89baf3a772d11e7cb56398a19a6",
-        "macOS": "cfaa7ce0f2164c28963571d44c0d3fa6705420327575a4e736b07eb744cee710"
+        "Linux": "325e6dcb4bdd9bbdc112983187950265f7343b7a9c50cc449a0e218b814a4e85",
+        "Windows": "dd3c96ee97c52f836c760932c6ec35b00113df90cb71633a9888a6f321ea119c",
+        "macOS": "e70eed1ca119a7354a362ac620a59e03001bd8cc8b86ea1bbfd10449a5289124"
       },
-      "current_ci_evidence": ".agents/tasks/2026-10-07/evidence/r2.8.147-attempt-1-146a13de133350ad398e5196ee1344dc343a1a72.json"
+      "current_ci_evidence": ".agents/tasks/2026-10-07/evidence/r2.8.148-attempt-1-81abce92933ff79280768f63c14973a0299beada.json",
+      "updated_at": "2026-10-16T19:49:11Z"
     },
     "R4": {
       "status": "pending",
@@ -122,8 +124,9 @@
       "required_ci": [],
       "implementation_sha": null
     },
-    "milestone_status": "R3.15 is terminal-failed/reconciled on 146a13de133350ad398e5196ee1344dc343a1a72. R3.16 implementation and tracker sync are complete locally and approved by two independent reviewers; ready for one push after origin/main recheck.",
-    "next_action": "Immediately recheck origin/main at 146a13de133350ad398e5196ee1344dc343a1a72; if unchanged, commit and push R3.16 once, then hold the submitted SHA until all required CI jobs and artifacts are reconciled."
+    "milestone_status": "R3.16 remains terminal-failed and unachieved on exact SHA 81abce92933ff79280768f63c14973a0299beada. R3.17 implementation and integrated review are approved locally; it is ready for the final live origin/main and CI activity checks before its single milestone push and full exact-SHA CI reconciliation.",
+    "next_action": "Immediately before submission, recheck live origin/main equals candidate_base_sha and confirm no required CI batch is in flight. If either changed, reconcile and repeat review. Then push the complete R3.17 milestone to origin/main exactly once and wait for all seven required workflows, 20 jobs, artifacts, and reports to reach terminal reconciled status.",
+    "updated_at": "2026-10-16T19:49:11Z"
   },
   "completed_actions": [
     "Pushed reviewed C07.3 attempt 3 once to origin/main at 1ded8e1ac2237c7b61ca38b46e1d1d777d0225c5; recorded the initial exact-SHA status in .agents/tasks/2026-10-07/evidence/r2.8.127-attempt-3-1ded8e1.json. Keep origin/main fixed until all seven workflows and 20 jobs are terminal.",
@@ -43844,57 +43847,104 @@
   "current_requirement_count": 221,
   "current_ci_attempt": {
     "attempt": 1,
-    "submitted_sha": "146a13de133350ad398e5196ee1344dc343a1a72",
+    "submitted_sha": "81abce92933ff79280768f63c14973a0299beada",
     "status": "terminal_failed",
-    "evidence": ".agents/tasks/2026-10-07/evidence/r2.8.147-attempt-1-146a13de133350ad398e5196ee1344dc343a1a72.json",
-    "updated_at": "2026-10-16T17:47:47Z"
+    "evidence": ".agents/tasks/2026-10-07/evidence/r2.8.148-attempt-1-81abce92933ff79280768f63c14973a0299beada.json",
+    "updated_at": "2026-10-16T19:17:15Z",
+    "workflow_counts": {
+      "observed": 7,
+      "terminal": 7,
+      "passed": 6,
+      "failed": 1,
+      "cancelled": 0,
+      "queued": 0,
+      "in_progress": 0
+    },
+    "job_counts": {
+      "observed": 20,
+      "terminal": 20,
+      "passed": 19,
+      "failed": 1,
+      "cancelled": 0,
+      "queued": 0,
+      "in_progress": 0
+    },
+    "completed_job_counts": {
+      "passed": 19,
+      "failed": 1,
+      "cancelled": 0
+    },
+    "active_job_ids": [],
+    "queued_job_ids": [],
+    "failed_job_ids": [
+      117119600534
+    ],
+    "all_required_jobs_terminal": true,
+    "artifact_inventory_count": 16,
+    "artifact_inventory_complete": true,
+    "artifact_metadata_reconciled": true,
+    "artifacts_reconciled": true,
+    "roundtrip_report_payloads_reconciled": true,
+    "main_sha_held": true,
+    "origin_main_sha_after_push": "81abce92933ff79280768f63c14973a0299beada",
+    "origin_main_verified_at": "2026-10-16T19:17:15Z",
+    "status_at": "2026-10-16T19:17:15Z",
+    "downloaded_non_preview_artifact_count": 12,
+    "available_non_preview_report_payload_count": 12,
+    "pending_roundtrip_artifact_count": 0,
+    "milestone_achieved": false,
+    "last_polled_at": "2026-10-16T19:17:15Z",
+    "active_job_details": [],
+    "origin_main_sha_verified_at": "2026-10-16T19:17:15Z"
   },
   "planned_next_milestone": {
-    "id": "R2.8.148-R3.16-LINUX-CANVAS-FULL-EFRAME-PERSISTENCE-ISOLATION",
-    "name": "R3.16 Linux Canvas full eframe persistence isolation",
-    "status": "implementation complete locally; whole milestone approved by two independent reviewers; ready for one push after origin/main recheck",
-    "starting_sha": "146a13de133350ad398e5196ee1344dc343a1a72",
-    "plan": ".agents/tasks/2026-10-07/evidence/r2.8.148-r3-16-linux-canvas-full-eframe-persistence-isolation-plan.json",
-    "objective": "Repair the R3.15 Linux Canvas round-trip failure by suppressing both egui-memory and window persistence in the normal Linux Canvas edit child. Preserve the existing full eframe opt-out on the normal Windows child and Linux expected-abort canary, retain strict full app-data equality, and add the same opt-out to the normal Linux child.",
-    "plan_review_status": "approved by linux_persistence_source_review and r314_repair_scope_review",
+    "id": "R2.8.149-R3.17-CANVAS-REFRESH-FOCUS-GUARD",
+    "name": "Canvas form focus-safe vault reconciliation",
+    "status": "implementation_complete_reviewed_unpushed",
+    "starting_sha": "81abce92933ff79280768f63c14973a0299beada",
+    "plan": ".agents/tasks/2026-10-07/evidence/r2.8.149-r3-17-canvas-refresh-focus-guard-candidate.json",
+    "objective": "Prevent periodic or filesystem-watcher vault reconciliation from interrupting Canvas path or text-card ID entry. Keep each rescan pending while either field is focused or a source operation/draft holds the vault snapshot, then reconcile once at the first safe handoff.",
+    "plan_review_status": "approved by three independent reviews; implementation authorized",
     "implementation_complete": true,
     "pushed_once": false,
     "milestone_achieved": false,
     "required_job_count": 20,
     "implementation_files": [
-      ".agents/tasks/2026-10-07/audit-obsidian-vault-roundtrip.ts"
-    ],
-    "tracker_files": [
+      "crates/ui-egui/src/lib.rs",
       ".agents/tasks/2026-10-07/audit-obsidian-vault-roundtrip.ts",
+      ".agents/tasks/2026-10-07/goal.md",
       ".agents/tasks/2026-10-07/requirements.json",
       ".agents/tasks/2026-10-07/state.json",
       ".agents/tasks/2026-10-07/journal.md",
-      ".agents/tasks/2026-10-07/goal.md",
       ".agents/tasks/2026-10-07/evidence/r2.8.148-r3-16-linux-canvas-full-eframe-persistence-isolation-plan.json",
-      ".agents/tasks/2026-10-07/evidence/r2.8.148-attempt-1-<full-submitted-sha>.json",
-      ".agents/tasks/2026-10-07/evidence/r2.8.147-attempt-1-146a13de133350ad398e5196ee1344dc343a1a72.json",
-      ".agents/tasks/2026-10-07/evidence/r2.8.147-r3-15-linux-canvas-egui-persistence-isolation-plan.json",
-      ".agents/tasks/2026-10-07/evidence/r2.8.146-attempt-1-67f5e6c.json",
-      ".agents/tasks/2026-10-07/evidence/r2.8.146-r3-14-linux-id-ocr-border-repair-plan.json"
+      ".agents/tasks/2026-10-07/evidence/r2.8.148-attempt-1-81abce92933ff79280768f63c14973a0299beada.json",
+      ".agents/tasks/2026-10-07/evidence/r2.8.149-r3-17-canvas-refresh-focus-guard-candidate.json"
     ],
-    "terminal_predecessor_evidence_paths": [
-      ".agents/tasks/2026-10-07/evidence/r2.8.147-attempt-1-146a13de133350ad398e5196ee1344dc343a1a72.json",
-      ".agents/tasks/2026-10-07/evidence/r2.8.147-r3-15-linux-canvas-egui-persistence-isolation-plan.json",
-      ".agents/tasks/2026-10-07/evidence/r2.8.146-attempt-1-67f5e6c.json",
-      ".agents/tasks/2026-10-07/evidence/r2.8.146-r3-14-linux-id-ocr-border-repair-plan.json"
+    "tracker_files": [
+      "crates/ui-egui/src/lib.rs",
+      ".agents/tasks/2026-10-07/audit-obsidian-vault-roundtrip.ts",
+      ".agents/tasks/2026-10-07/goal.md",
+      ".agents/tasks/2026-10-07/requirements.json",
+      ".agents/tasks/2026-10-07/state.json",
+      ".agents/tasks/2026-10-07/journal.md",
+      ".agents/tasks/2026-10-07/evidence/r2.8.148-r3-16-linux-canvas-full-eframe-persistence-isolation-plan.json",
+      ".agents/tasks/2026-10-07/evidence/r2.8.148-attempt-1-81abce92933ff79280768f63c14973a0299beada.json",
+      ".agents/tasks/2026-10-07/evidence/r2.8.149-r3-17-canvas-refresh-focus-guard-candidate.json"
     ],
     "implementation_started": true,
-    "implementation_started_at": "2026-10-16T17:55:27Z",
-    "implementation_started_from_sha": "146a13de133350ad398e5196ee1344dc343a1a72",
-    "whole_milestone_review_status": "approved by linux_persistence_source_review and r314_repair_scope_review",
-    "next_action": "Immediately recheck origin/main at 146a13de133350ad398e5196ee1344dc343a1a72; if unchanged, commit and push the complete R3.16 milestone once, then hold the submitted SHA until all seven workflows/20 jobs and artifacts are reconciled.",
-    "implementation_completed_at": "2026-10-16T18:01:55Z",
-    "whole_milestone_approved_at": "2026-10-16T18:01:55Z"
+    "implementation_started_at": "2026-10-16T19:25:05Z",
+    "implementation_started_from_sha": "81abce92933ff79280768f63c14973a0299beada",
+    "implementation_completed_at": "2026-10-16T19:49:11Z",
+    "whole_milestone_review_status": "Production review approved by local_milestone_audit; corrected harness review approved by r314_repair_scope_review and r317_harness_seam_audit; integrated whole-milestone tracker review approved by r317_harness_seam_audit.",
+    "local_executable_validation": false,
+    "next_action": "Immediately before submission, recheck live origin/main equals candidate_base_sha and confirm no required CI batch is in flight. If either changed, reconcile and repeat review. Then push the complete R3.17 milestone to origin/main exactly once and wait for all seven required workflows, 20 jobs, artifacts, and reports to reach terminal reconciled status.",
+    "implementation_review_status": "Production review approved by local_milestone_audit; corrected harness review approved by r314_repair_scope_review and r317_harness_seam_audit; integrated whole-milestone tracker review approved by r317_harness_seam_audit.",
+    "implementation_reviewed_at": "2026-10-16T20:00:02Z"
   },
   "planned_independent_milestone": {
-    "milestone": "unassigned until C07.5/C07.4 sequencing is settled",
+    "milestone": "unassigned until R3.17 CI is reconciled and C07.5 dependency sequencing is settled",
     "name": "C09.2 native appearance root selection and CSS diagnostics",
-    "status": "Deferred until the active R3.16 repair and C07.4 reference-capture chain advances, and until its own C07.5 no-follow API/libc dependency is accepted. Preserve the mixed-worktree draft separately; do not transplant it or schedule it ahead of those dependencies.",
+    "status": "Deferred while R3.17 is the active local repair. The C07.4 all-platform reference capture is reconciled, but Rust parity remains pending with no parity claim. Reassess C09.2 after R3.17 exact-SHA CI is terminal and reconciled, and after the C07.5 no-follow API/libc dependency is accepted. Preserve the mixed-worktree draft separately; do not transplant or schedule it ahead of those dependencies.",
     "deliverable": "Complete the current Rust appearance projection slice by making the selected .obsidian or .obsidian-* configuration root explicit in the native UI, applying supported appearance settings only from that root, distinguishing malformed/non-object appearance sources from missing files, and displaying bounded diagnostic summaries from discovered theme and snippet analysis. Keep CSS inert, preserve all vault bytes, and leave C09 pending until every remaining C09 acceptance item is satisfied.",
     "acceptance": [
       "List discovered configuration roots and provide an accessible, visible selector. Default deterministically to .obsidian when present, otherwise to the only discovered root; when multiple alternate roots exist without .obsidian, require an explicit selection before applying appearance. Keep the choice app-local and never write it into the vault.",
@@ -43919,7 +43969,7 @@
       "OpenObsidian plugin renderer matrix"
     ],
     "evidence": "Exact-SHA egui interaction reports and artifacts for selected-root projection, diagnostics, removed/non-directory root fallback, malformed/non-object and missing-selected-appearance reporting, CSS isolation, refresh and no-write behavior; fixture hashes and source-preservation records; all required workflow/job URLs and conclusions.",
-    "depends_on": "Reassess after R3.16 Linux persistence repair and all-platform C07.4 reference capture; C09.2 remains independently gated on the C07.5 no-follow API and target-scoped libc dependency being accepted.",
+    "depends_on": "Reassess after R3.17 implementation review and its exact-SHA CI batch are complete and reconciled. The C07.4 all-platform reference capture is complete/reconciled, while Rust comparator parity remains independently pending. C09.2 cannot be submitted until C07.5 VaultRoot::open_regular_file_nofollow and its target-scoped libc dependency are accepted or the dependency boundary is revised.",
     "static_reviews": {
       "status": "Read-only C09.2 review found no functional gap in the appearance UI, CSS caps or documentation, but found an isolation blocker: configuration.rs depends on the unsubmitted C07.5 VaultRoot::open_regular_file_nofollow API and target-scoped libc dependency. Reclassify/sequence this dependency before calling C09.2 implementation-complete. No local executable validation.",
       "findings": [
@@ -43934,9 +43984,9 @@
   "planned_following_milestone": {
     "milestone": "C07.4 Rust JavaScript-number and locale comparator implementation",
     "name": "Implement the reference-captured C07.4 comparison contract in crates/doc",
-    "status": "Blocked pending the approved R3.16 Linux persistence repair and exact-SHA all-platform C07.4 reference capture; no Rust comparator parity is claimed.",
+    "status": "Deferred while R3.17 is the active local repair. The C07.4 all-platform reference capture is complete and reconciled on exact SHA 81abce92933ff79280768f63c14973a0299beada, including recorded source mutations; Rust comparator parity remains pending and unclaimed.",
     "deliverable": "Implement pinned-app JavaScript number conversion, identity/filter/sort/contains semantics and recorded locale collation policy with fixture-backed Rust parity.",
-    "depends_on": "R3.16 must pass its exact-SHA CI and complete the Linux C07.4 reference capture while preserving the accepted macOS/Windows evidence. Begin C07.4 Rust comparator implementation only after all-platform pinned-app reference capture is complete and reconciled.",
+    "depends_on": "The C07.4 all-platform pinned-app reference capture prerequisite is complete and reconciled. Schedule comparator implementation after the active R3.17 CI batch is terminal/reconciled, with a fresh bounded plan review; Rust parity remains pending until its own exact-SHA CI acceptance passes.",
     "scope": [
       "In crates/doc, replace exact JSON integer comparison with a single JavaScript Number-compatible binary64 comparison/conversion path for captured numeric values and filter operands.",
       "Apply the captured numeric equality semantics consistently to scalar equality/relational filters, sorting, array contains, group identity, and any group labels whose rendering is part of observed behavior.",
@@ -43979,51 +44029,62 @@
       "For captured JSON, order is visible-column configuration and must not be projected into row sort; retain raw JSON and unknown root/view fields while projecting only supported evaluation fields.",
       "Legacy TypeScript uses distinct collation options for values and path ties; freeze the required locale/platform behavior from current all-OS capture before choosing a Rust collator."
     ],
-    "plan_review_status": "C07.4 comparator remains a placeholder. R3.15 is terminal-failed and reconciled on 146a13de133350ad398e5196ee1344dc343a1a72: strict app-data equality failed after-field-input on a new window-only app.ron under persist_window=true, supporting an inference that window persistence produced it. R3.16 plan revision 2 is approved and its implementation/tracker sync are complete locally; two fresh whole-milestone reviews are pending. Keep comparator fixtures, locale/tie decisions, and Rust parity pending until exact-SHA all-platform reference capture passes."
+    "plan_review_status": "C07.4 comparator remains a placeholder. The earlier R3.15/R3.16 sequencing notes are historical: the all-platform C07.4 reference capture is now complete/reconciled, with source mutations recorded and no Rust parity claim. R3.17 is the active local milestone; prepare and review a fresh bounded comparator plan before implementation."
   },
   "current_repair_milestone": {
-    "id": "R2.8.148-R3.16-LINUX-CANVAS-FULL-EFRAME-PERSISTENCE-ISOLATION",
-    "milestone_id": "R3.16",
-    "name": "R3.16 Linux Canvas full eframe persistence isolation",
-    "starting_sha": "146a13de133350ad398e5196ee1344dc343a1a72",
+    "id": "R2.8.149-R3.17-CANVAS-REFRESH-FOCUS-GUARD",
+    "name": "Canvas form focus-safe vault reconciliation",
+    "status": "implementation_complete_reviewed_unpushed",
+    "starting_sha": "81abce92933ff79280768f63c14973a0299beada",
+    "plan": ".agents/tasks/2026-10-07/evidence/r2.8.149-r3-17-canvas-refresh-focus-guard-candidate.json",
+    "objective": "Prevent periodic or filesystem-watcher vault reconciliation from interrupting Canvas path or text-card ID entry. Keep each rescan pending while either field is focused or a source operation/draft holds the vault snapshot, then reconcile once at the first safe handoff.",
+    "plan_review_status": "approved by three independent reviews; implementation authorized",
     "implementation_complete": true,
-    "implementation_files": [
-      ".agents/tasks/2026-10-07/audit-obsidian-vault-roundtrip.ts"
-    ],
-    "plan": ".agents/tasks/2026-10-07/evidence/r2.8.148-r3-16-linux-canvas-full-eframe-persistence-isolation-plan.json",
-    "status": "implementation complete locally; whole milestone approved by two independent reviewers; ready for one push after origin/main recheck",
-    "plan_review_status": "approved by linux_persistence_source_review and r314_repair_scope_review",
-    "whole_milestone_review_status": "approved by linux_persistence_source_review and r314_repair_scope_review",
     "pushed_once": false,
-    "required_workflows": [
-      "Rust migration inventory",
-      "OpenObsidian Rust CI",
-      "Obsidian vault round-trip acceptance",
-      "OpenObsidian desktop build",
-      "OpenObsidian quality",
-      "OpenObsidian plugin renderer matrix",
-      "OpenObsidian loaded plugin workflows"
-    ],
-    "required_job_count": 20,
-    "local_executable_validation": false,
     "milestone_achieved": false,
-    "next_action": "Immediately recheck origin/main at 146a13de133350ad398e5196ee1344dc343a1a72; if unchanged, commit and push the complete R3.16 milestone once, then hold the submitted SHA until all seven workflows/20 jobs and artifacts are reconciled.",
-    "objective": "Repair the R3.15 Linux Canvas round-trip failure by suppressing both egui-memory and window persistence in the normal Linux Canvas edit child. Preserve the existing full eframe opt-out on the normal Windows child and Linux expected-abort canary, retain strict full app-data equality, and add the same opt-out to the normal Linux child.",
+    "required_job_count": 20,
+    "implementation_files": [
+      "crates/ui-egui/src/lib.rs",
+      ".agents/tasks/2026-10-07/audit-obsidian-vault-roundtrip.ts",
+      ".agents/tasks/2026-10-07/goal.md",
+      ".agents/tasks/2026-10-07/requirements.json",
+      ".agents/tasks/2026-10-07/state.json",
+      ".agents/tasks/2026-10-07/journal.md",
+      ".agents/tasks/2026-10-07/evidence/r2.8.148-r3-16-linux-canvas-full-eframe-persistence-isolation-plan.json",
+      ".agents/tasks/2026-10-07/evidence/r2.8.148-attempt-1-81abce92933ff79280768f63c14973a0299beada.json",
+      ".agents/tasks/2026-10-07/evidence/r2.8.149-r3-17-canvas-refresh-focus-guard-candidate.json"
+    ],
+    "tracker_files": [
+      "crates/ui-egui/src/lib.rs",
+      ".agents/tasks/2026-10-07/audit-obsidian-vault-roundtrip.ts",
+      ".agents/tasks/2026-10-07/goal.md",
+      ".agents/tasks/2026-10-07/requirements.json",
+      ".agents/tasks/2026-10-07/state.json",
+      ".agents/tasks/2026-10-07/journal.md",
+      ".agents/tasks/2026-10-07/evidence/r2.8.148-r3-16-linux-canvas-full-eframe-persistence-isolation-plan.json",
+      ".agents/tasks/2026-10-07/evidence/r2.8.148-attempt-1-81abce92933ff79280768f63c14973a0299beada.json",
+      ".agents/tasks/2026-10-07/evidence/r2.8.149-r3-17-canvas-refresh-focus-guard-candidate.json"
+    ],
     "implementation_started": true,
-    "implementation_started_at": "2026-10-16T17:55:27Z",
-    "implementation_started_from_sha": "146a13de133350ad398e5196ee1344dc343a1a72",
-    "implementation_completed_at": "2026-10-16T18:01:55Z",
-    "whole_milestone_approved_at": "2026-10-16T18:01:55Z"
+    "implementation_started_at": "2026-10-16T19:25:05Z",
+    "implementation_started_from_sha": "81abce92933ff79280768f63c14973a0299beada",
+    "implementation_completed_at": "2026-10-16T19:49:11Z",
+    "whole_milestone_review_status": "Production review approved by local_milestone_audit; corrected harness review approved by r314_repair_scope_review and r317_harness_seam_audit; integrated whole-milestone tracker review approved by r317_harness_seam_audit.",
+    "local_executable_validation": false,
+    "next_action": "Immediately before submission, recheck live origin/main equals candidate_base_sha and confirm no required CI batch is in flight. If either changed, reconcile and repeat review. Then push the complete R3.17 milestone to origin/main exactly once and wait for all seven required workflows, 20 jobs, artifacts, and reports to reach terminal reconciled status.",
+    "milestone_id": "R3.17",
+    "implementation_review_status": "Production review approved by local_milestone_audit; corrected harness review approved by r314_repair_scope_review and r317_harness_seam_audit; integrated whole-milestone tracker review approved by r317_harness_seam_audit.",
+    "implementation_reviewed_at": "2026-10-16T20:00:02Z"
   },
   "current_ci_batch": {
-    "milestone": "R2.8.147-R3.15-LINUX-CANVAS-EGUI-PERSISTENCE-ISOLATION",
+    "milestone": "R2.8.148-R3.16-LINUX-CANVAS-FULL-EFRAME-PERSISTENCE-ISOLATION",
     "attempt": 1,
-    "sha": "146a13de133350ad398e5196ee1344dc343a1a72",
-    "submitted_sha": "146a13de133350ad398e5196ee1344dc343a1a72",
-    "source_sha": "146a13de133350ad398e5196ee1344dc343a1a72",
+    "sha": "81abce92933ff79280768f63c14973a0299beada",
+    "submitted_sha": "81abce92933ff79280768f63c14973a0299beada",
+    "source_sha": "81abce92933ff79280768f63c14973a0299beada",
     "status": "terminal_failed",
-    "plan": ".agents/tasks/2026-10-07/evidence/r2.8.147-r3-15-linux-canvas-egui-persistence-isolation-plan.json",
-    "evidence": ".agents/tasks/2026-10-07/evidence/r2.8.147-attempt-1-146a13de133350ad398e5196ee1344dc343a1a72.json",
+    "plan": ".agents/tasks/2026-10-07/evidence/r2.8.148-r3-16-linux-canvas-full-eframe-persistence-isolation-plan.json",
+    "evidence": ".agents/tasks/2026-10-07/evidence/r2.8.148-attempt-1-81abce92933ff79280768f63c14973a0299beada.json",
     "required_workflows": 7,
     "required_jobs": 20,
     "workflow_names": [
@@ -44036,13 +44097,13 @@
       "OpenObsidian loaded plugin workflows"
     ],
     "run_ids": [
-      38935182543,
-      38935182525,
-      38935182534,
-      38935182650,
-      38935182526,
-      38935182593,
-      38935182656
+      38944357341,
+      38944357377,
+      38944357363,
+      38944357491,
+      38944357493,
+      38944357709,
+      38944357762
     ],
     "workflow_counts": {
       "observed": 7,
@@ -44070,7 +44131,7 @@
     "active_job_ids": [],
     "queued_job_ids": [],
     "failed_job_ids": [
-      117088775346
+      117119600534
     ],
     "all_required_jobs_terminal": true,
     "artifact_inventory_count": 16,
@@ -44079,39 +44140,90 @@
     "artifacts_reconciled": true,
     "roundtrip_report_payloads_reconciled": true,
     "main_sha_held": true,
-    "origin_main_sha_before_push": "67f5e6c1bedbcfc0fc645a5652a1a23419750ab3",
-    "origin_main_sha": "146a13de133350ad398e5196ee1344dc343a1a72",
-    "origin_main_sha_after_push": "146a13de133350ad398e5196ee1344dc343a1a72",
-    "origin_main_verified_at": "2026-10-16T17:47:47Z",
-    "first_workflow_run_created_at": "2026-10-16T16:51:23Z",
-    "status_at": "2026-10-16T17:47:47Z",
-    "terminal_at": "2026-10-16T17:47:47Z",
+    "origin_main_sha_before_push": "146a13de133350ad398e5196ee1344dc343a1a72",
+    "origin_main_sha": "81abce92933ff79280768f63c14973a0299beada",
+    "origin_main_sha_after_push": "81abce92933ff79280768f63c14973a0299beada",
+    "origin_main_verified_at": "2026-10-16T19:17:15Z",
+    "first_workflow_run_created_at": "2026-10-16T18:03:05Z",
+    "status_at": "2026-10-16T19:17:15Z",
     "local_executable_validation": false,
     "milestone_achieved": false,
     "failure_findings": [
       {
-        "run_id": 38935182534,
-        "job_id": 117088775346,
-        "job_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38935182534/job/117088775346",
-        "platform": "Linux",
-        "step": "Author, open, snapshot, and reopen the same vault",
-        "status": "failure",
-        "source_sha": "146a13de133350ad398e5196ee1344dc343a1a72",
-        "finding": "The Linux report confirms the new app.ron is window-only: the passing post-termination inspection reports window_section_present=true and egui_section_present=false while the runtime marker reports persist_window=true and persist_egui_memory=false. This is consistent with window persistence producing the new file; it is an evidence-based inference, not a separate runtime proof of the writer. The exact-tree acceptance still fails, so the next repair should opt out of full eframe persistence for only the normal Linux Canvas child, with no allowlist or baseline shift.",
-        "artifact_id": 12061406931,
-        "report_sha256": "81b635231c0bc7aae3968e510ce0cb3b58c826ae52aafc2af60688f81583fc17",
-        "observed_app_ron_bytes": 181,
-        "observed_app_ron_sha256": "2752da1d06113f89c4f39c17ccfbfec0cb49e35b122b025e884b7d235868b31f",
-        "post_termination_same_hash": true,
-        "app_ron_window_section_present": true,
-        "app_ron_egui_section_present": false,
-        "inference_basis": [
-          "runtime marker: persist_egui_memory=false; persist_window=true",
-          "post-termination inspection: window section present; egui section absent",
-          "same app.ron path/hash remains in the post-termination snapshot"
-        ]
+        "job_id": 117119600534,
+        "run_id": 38944357363,
+        "workflow": "Obsidian vault round-trip acceptance",
+        "platform": "Ubuntu",
+        "artifact_id": 12065606078,
+        "source_sha": "81abce92933ff79280768f63c14973a0299beada",
+        "summary": "The Linux ID value itself read back exactly as `text-1`. The screenshot-readback helper rejected its post-capture diagnostic snapshot: a watcher refresh began between focused field frames and the diagnostic sample; a later frame showed both fields disabled/unfocused and shifted from y=79–98 to y=110–129. The helper rejected the geometry/focus correlation before OCR. This explains the observed mismatch but does not establish what triggered the refresh or its precise timing relative to pixel capture. No save or vault write was attempted; the destination remained absent and pre-save abort preservation passed. The full eframe persistence-off marker and runtime mapping passed, but the after-field-input app-data checkpoint was not captured.",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38944357363/job/117119600534"
       }
-    ]
+    ],
+    "implementation_sha": "81abce92933ff79280768f63c14973a0299beada",
+    "pushed_once": true,
+    "ci_attempt": {
+      "attempt": 1,
+      "submitted_sha": "81abce92933ff79280768f63c14973a0299beada",
+      "evidence_path": ".agents/tasks/2026-10-07/evidence/r2.8.148-attempt-1-81abce92933ff79280768f63c14973a0299beada.json",
+      "run_ids": [
+        38944357341,
+        38944357377,
+        38944357363,
+        38944357491,
+        38944357493,
+        38944357709,
+        38944357762
+      ],
+      "status": "terminal_failed",
+      "workflow_counts": {
+        "observed": 7,
+        "terminal": 7,
+        "passed": 6,
+        "failed": 1,
+        "cancelled": 0,
+        "queued": 0,
+        "in_progress": 0
+      },
+      "job_counts": {
+        "observed": 20,
+        "terminal": 20,
+        "passed": 19,
+        "failed": 1,
+        "cancelled": 0,
+        "queued": 0,
+        "in_progress": 0
+      },
+      "all_required_jobs_terminal": true,
+      "artifact_inventory_complete": true,
+      "artifact_metadata_reconciled": true,
+      "artifacts_reconciled": true,
+      "roundtrip_report_payloads_reconciled": true,
+      "origin_main_sha_after_push": "81abce92933ff79280768f63c14973a0299beada",
+      "origin_main_verified_at": "2026-10-16T19:17:15Z",
+      "artifact_inventory_count": 16,
+      "last_polled_at": "2026-10-16T19:17:15Z",
+      "downloaded_non_preview_artifact_count": 12,
+      "available_non_preview_report_payload_count": 12,
+      "pending_roundtrip_artifact_count": 0,
+      "completed_job_counts": {
+        "passed": 19,
+        "failed": 1,
+        "cancelled": 0
+      },
+      "active_job_ids": [],
+      "queued_job_ids": [],
+      "failed_job_ids": [
+        117119600534
+      ],
+      "main_sha_held": true,
+      "status_at": "2026-10-16T19:17:15Z",
+      "milestone_achieved": false
+    },
+    "downloaded_non_preview_artifact_count": 12,
+    "pending_roundtrip_artifact_count": 0,
+    "next_action": "Implement the approved R3.17 focus guard, explicit snapshot leases, deterministic timer/watcher coverage, request-correlated diagnostics, and strict three-platform round-trip harness assertions locally. Do not run local executable validation. Complete and review the whole milestone, then recheck origin/main against candidate_base_sha and submit once only if no prior CI batch is in flight.",
+    "available_non_preview_report_payload_count": 12
   },
   "parallel_local_milestones": [
     {
@@ -44220,55 +44332,60 @@
     }
   },
   "planned_repair_milestone": {
-    "id": "R2.8.148-R3.16-LINUX-CANVAS-FULL-EFRAME-PERSISTENCE-ISOLATION",
-    "name": "R3.16 Linux Canvas full eframe persistence isolation",
-    "status": "implementation complete locally; whole milestone approved by two independent reviewers; ready for one push after origin/main recheck",
-    "starting_sha": "146a13de133350ad398e5196ee1344dc343a1a72",
-    "plan": ".agents/tasks/2026-10-07/evidence/r2.8.148-r3-16-linux-canvas-full-eframe-persistence-isolation-plan.json",
-    "objective": "Repair the R3.15 Linux Canvas round-trip failure by suppressing both egui-memory and window persistence in the normal Linux Canvas edit child. Preserve the existing full eframe opt-out on the normal Windows child and Linux expected-abort canary, retain strict full app-data equality, and add the same opt-out to the normal Linux child.",
-    "plan_review_status": "approved by linux_persistence_source_review and r314_repair_scope_review",
+    "id": "R2.8.149-R3.17-CANVAS-REFRESH-FOCUS-GUARD",
+    "name": "Canvas form focus-safe vault reconciliation",
+    "status": "implementation_complete_reviewed_unpushed",
+    "starting_sha": "81abce92933ff79280768f63c14973a0299beada",
+    "plan": ".agents/tasks/2026-10-07/evidence/r2.8.149-r3-17-canvas-refresh-focus-guard-candidate.json",
+    "objective": "Prevent periodic or filesystem-watcher vault reconciliation from interrupting Canvas path or text-card ID entry. Keep each rescan pending while either field is focused or a source operation/draft holds the vault snapshot, then reconcile once at the first safe handoff.",
+    "plan_review_status": "approved by three independent reviews; implementation authorized",
     "implementation_complete": true,
     "pushed_once": false,
     "milestone_achieved": false,
     "required_job_count": 20,
     "implementation_files": [
-      ".agents/tasks/2026-10-07/audit-obsidian-vault-roundtrip.ts"
-    ],
-    "tracker_files": [
+      "crates/ui-egui/src/lib.rs",
       ".agents/tasks/2026-10-07/audit-obsidian-vault-roundtrip.ts",
+      ".agents/tasks/2026-10-07/goal.md",
       ".agents/tasks/2026-10-07/requirements.json",
       ".agents/tasks/2026-10-07/state.json",
       ".agents/tasks/2026-10-07/journal.md",
-      ".agents/tasks/2026-10-07/goal.md",
       ".agents/tasks/2026-10-07/evidence/r2.8.148-r3-16-linux-canvas-full-eframe-persistence-isolation-plan.json",
-      ".agents/tasks/2026-10-07/evidence/r2.8.148-attempt-1-<full-submitted-sha>.json",
-      ".agents/tasks/2026-10-07/evidence/r2.8.147-attempt-1-146a13de133350ad398e5196ee1344dc343a1a72.json",
-      ".agents/tasks/2026-10-07/evidence/r2.8.147-r3-15-linux-canvas-egui-persistence-isolation-plan.json",
-      ".agents/tasks/2026-10-07/evidence/r2.8.146-attempt-1-67f5e6c.json",
-      ".agents/tasks/2026-10-07/evidence/r2.8.146-r3-14-linux-id-ocr-border-repair-plan.json"
+      ".agents/tasks/2026-10-07/evidence/r2.8.148-attempt-1-81abce92933ff79280768f63c14973a0299beada.json",
+      ".agents/tasks/2026-10-07/evidence/r2.8.149-r3-17-canvas-refresh-focus-guard-candidate.json"
     ],
-    "terminal_predecessor_evidence_paths": [
-      ".agents/tasks/2026-10-07/evidence/r2.8.147-attempt-1-146a13de133350ad398e5196ee1344dc343a1a72.json",
-      ".agents/tasks/2026-10-07/evidence/r2.8.147-r3-15-linux-canvas-egui-persistence-isolation-plan.json",
-      ".agents/tasks/2026-10-07/evidence/r2.8.146-attempt-1-67f5e6c.json",
-      ".agents/tasks/2026-10-07/evidence/r2.8.146-r3-14-linux-id-ocr-border-repair-plan.json"
+    "tracker_files": [
+      "crates/ui-egui/src/lib.rs",
+      ".agents/tasks/2026-10-07/audit-obsidian-vault-roundtrip.ts",
+      ".agents/tasks/2026-10-07/goal.md",
+      ".agents/tasks/2026-10-07/requirements.json",
+      ".agents/tasks/2026-10-07/state.json",
+      ".agents/tasks/2026-10-07/journal.md",
+      ".agents/tasks/2026-10-07/evidence/r2.8.148-r3-16-linux-canvas-full-eframe-persistence-isolation-plan.json",
+      ".agents/tasks/2026-10-07/evidence/r2.8.148-attempt-1-81abce92933ff79280768f63c14973a0299beada.json",
+      ".agents/tasks/2026-10-07/evidence/r2.8.149-r3-17-canvas-refresh-focus-guard-candidate.json"
     ],
     "implementation_started": true,
-    "implementation_started_at": "2026-10-16T17:55:27Z",
-    "implementation_started_from_sha": "146a13de133350ad398e5196ee1344dc343a1a72",
-    "whole_milestone_review_status": "approved by linux_persistence_source_review and r314_repair_scope_review",
-    "next_action": "Immediately recheck origin/main at 146a13de133350ad398e5196ee1344dc343a1a72; if unchanged, commit and push the complete R3.16 milestone once, then hold the submitted SHA until all seven workflows/20 jobs and artifacts are reconciled.",
-    "implementation_completed_at": "2026-10-16T18:01:55Z",
-    "whole_milestone_approved_at": "2026-10-16T18:01:55Z"
+    "implementation_started_at": "2026-10-16T19:25:05Z",
+    "implementation_started_from_sha": "81abce92933ff79280768f63c14973a0299beada",
+    "implementation_completed_at": "2026-10-16T19:49:11Z",
+    "whole_milestone_review_status": "Production review approved by local_milestone_audit; corrected harness review approved by r314_repair_scope_review and r317_harness_seam_audit; integrated whole-milestone tracker review approved by r317_harness_seam_audit.",
+    "local_executable_validation": false,
+    "next_action": "Immediately before submission, recheck live origin/main equals candidate_base_sha and confirm no required CI batch is in flight. If either changed, reconcile and repeat review. Then push the complete R3.17 milestone to origin/main exactly once and wait for all seven required workflows, 20 jobs, artifacts, and reports to reach terminal reconciled status.",
+    "origin_main_sha_before_push": "81abce92933ff79280768f63c14973a0299beada",
+    "origin_main_verified_at": "2026-10-16T19:56:46Z",
+    "implementation_review_status": "Production review approved by local_milestone_audit; corrected harness review approved by r314_repair_scope_review and r317_harness_seam_audit; integrated whole-milestone tracker review approved by r317_harness_seam_audit.",
+    "implementation_reviewed_at": "2026-10-16T20:00:02Z"
   },
-  "active_ci_batch": null,
-  "previous_ci_batch": {
-    "milestone": "R2.8.146-R3.14-C07.4-LINUX-ID-OCR-BORDER-REPAIR; attempt 1",
-    "sha": "67f5e6c1bedbcfc0fc645a5652a1a23419750ab3",
-    "submitted_sha": "67f5e6c1bedbcfc0fc645a5652a1a23419750ab3",
-    "source_sha": "67f5e6c1bedbcfc0fc645a5652a1a23419750ab3",
-    "status": "R3.14 was submitted once to origin/main at 67f5e6c1bedbcfc0fc645a5652a1a23419750ab3; exact-SHA CI is terminal-failed. All 7 workflows and 20 jobs are terminal: 6 workflows passed, 1 failed; 19 jobs passed, and the sole failure is Ubuntu vault round-trip at after-field-input due to a new app.ron in app-data. All 16 artifact metadata records and 12 downloaded non-preview payloads/reports are reconciled; four preview payloads are intentionally undownloaded. R3.14 is not achieved.",
-    "plan": "evidence/r2.8.146-r3-14-linux-id-ocr-border-repair-plan.json",
+  "active_ci_batch": {
+    "milestone": "R2.8.148-R3.16-LINUX-CANVAS-FULL-EFRAME-PERSISTENCE-ISOLATION",
+    "attempt": 1,
+    "sha": "81abce92933ff79280768f63c14973a0299beada",
+    "submitted_sha": "81abce92933ff79280768f63c14973a0299beada",
+    "source_sha": "81abce92933ff79280768f63c14973a0299beada",
+    "status": "terminal_failed",
+    "plan": ".agents/tasks/2026-10-07/evidence/r2.8.148-r3-16-linux-canvas-full-eframe-persistence-isolation-plan.json",
+    "evidence": ".agents/tasks/2026-10-07/evidence/r2.8.148-attempt-1-81abce92933ff79280768f63c14973a0299beada.json",
     "required_workflows": 7,
     "required_jobs": 20,
     "workflow_names": [
@@ -44279,6 +44396,15 @@
       "OpenObsidian quality",
       "OpenObsidian plugin renderer matrix",
       "OpenObsidian loaded plugin workflows"
+    ],
+    "run_ids": [
+      38944357341,
+      38944357377,
+      38944357363,
+      38944357491,
+      38944357493,
+      38944357709,
+      38944357762
     ],
     "workflow_counts": {
       "observed": 7,
@@ -44300,56 +44426,203 @@
     },
     "completed_job_counts": {
       "passed": 19,
-      "failed": 1
+      "failed": 1,
+      "cancelled": 0
     },
-    "run_ids": [
-      38923246635,
-      38923246796,
-      38923246601,
-      38923246528,
-      38923246570,
-      38923246501,
-      38923246503
-    ],
     "active_job_ids": [],
     "queued_job_ids": [],
     "failed_job_ids": [
-      117048213425
+      117119600534
     ],
     "all_required_jobs_terminal": true,
     "artifact_inventory_count": 16,
-    "artifact_count": 16,
     "artifact_inventory_complete": true,
+    "artifact_metadata_reconciled": true,
     "artifacts_reconciled": true,
     "roundtrip_report_payloads_reconciled": true,
     "main_sha_held": true,
-    "origin_main_sha_before_push": "89da1495fac160fc77029ea4ad60c9c47724148b",
-    "origin_main_sha": "67f5e6c1bedbcfc0fc645a5652a1a23419750ab3",
-    "origin_main_sha_after_push": "67f5e6c1bedbcfc0fc645a5652a1a23419750ab3",
-    "origin_main_verified_at": "2026-10-16T15:24:40Z",
-    "first_workflow_run_created_at": "2026-10-16T15:21:20Z",
-    "status_at": "2026-10-16T16:28:41Z",
-    "ci_attempt_evidence": ".agents/tasks/2026-10-07/evidence/r2.8.146-attempt-1-67f5e6c.json",
+    "origin_main_sha_before_push": "146a13de133350ad398e5196ee1344dc343a1a72",
+    "origin_main_sha": "81abce92933ff79280768f63c14973a0299beada",
+    "origin_main_sha_after_push": "81abce92933ff79280768f63c14973a0299beada",
+    "origin_main_verified_at": "2026-10-16T19:17:15Z",
+    "first_workflow_run_created_at": "2026-10-16T18:03:05Z",
+    "status_at": "2026-10-16T19:17:15Z",
     "local_executable_validation": false,
-    "evidence": ".agents/tasks/2026-10-07/evidence/r2.8.146-attempt-1-67f5e6c.json",
-    "failed_jobs": [
+    "milestone_achieved": false,
+    "failure_findings": [
       {
-        "run_id": 38923246601,
-        "job_id": 117048213425,
-        "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04",
-        "status": "completed",
-        "conclusion": "failure",
-        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38923246601/job/117048213425"
+        "job_id": 117119600534,
+        "run_id": 38944357363,
+        "workflow": "Obsidian vault round-trip acceptance",
+        "platform": "Ubuntu",
+        "artifact_id": 12065606078,
+        "source_sha": "81abce92933ff79280768f63c14973a0299beada",
+        "summary": "The Linux ID value itself read back exactly as `text-1`. The screenshot-readback helper rejected its post-capture diagnostic snapshot: a watcher refresh began between focused field frames and the diagnostic sample; a later frame showed both fields disabled/unfocused and shifted from y=79–98 to y=110–129. The helper rejected the geometry/focus correlation before OCR. This explains the observed mismatch but does not establish what triggered the refresh or its precise timing relative to pixel capture. No save or vault write was attempted; the destination remained absent and pre-save abort preservation passed. The full eframe persistence-off marker and runtime mapping passed, but the after-field-input app-data checkpoint was not captured.",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38944357363/job/117119600534"
       }
     ],
-    "linux_report_payload_reconciled": true,
-    "windows_report_payload_reconciled": true,
-    "rust_msvr_job_passed": true,
+    "implementation_sha": "81abce92933ff79280768f63c14973a0299beada",
+    "pushed_once": true,
+    "ci_attempt": {
+      "attempt": 1,
+      "submitted_sha": "81abce92933ff79280768f63c14973a0299beada",
+      "evidence_path": ".agents/tasks/2026-10-07/evidence/r2.8.148-attempt-1-81abce92933ff79280768f63c14973a0299beada.json",
+      "run_ids": [
+        38944357341,
+        38944357377,
+        38944357363,
+        38944357491,
+        38944357493,
+        38944357709,
+        38944357762
+      ],
+      "status": "terminal_failed",
+      "workflow_counts": {
+        "observed": 7,
+        "terminal": 7,
+        "passed": 6,
+        "failed": 1,
+        "cancelled": 0,
+        "queued": 0,
+        "in_progress": 0
+      },
+      "job_counts": {
+        "observed": 20,
+        "terminal": 20,
+        "passed": 19,
+        "failed": 1,
+        "cancelled": 0,
+        "queued": 0,
+        "in_progress": 0
+      },
+      "all_required_jobs_terminal": true,
+      "artifact_inventory_complete": true,
+      "artifact_metadata_reconciled": true,
+      "artifacts_reconciled": true,
+      "roundtrip_report_payloads_reconciled": true,
+      "origin_main_sha_after_push": "81abce92933ff79280768f63c14973a0299beada",
+      "origin_main_verified_at": "2026-10-16T19:17:15Z",
+      "artifact_inventory_count": 16,
+      "last_polled_at": "2026-10-16T19:17:15Z",
+      "downloaded_non_preview_artifact_count": 12,
+      "available_non_preview_report_payload_count": 12,
+      "pending_roundtrip_artifact_count": 0,
+      "completed_job_counts": {
+        "passed": 19,
+        "failed": 1,
+        "cancelled": 0
+      },
+      "active_job_ids": [],
+      "queued_job_ids": [],
+      "failed_job_ids": [
+        117119600534
+      ],
+      "main_sha_held": true,
+      "status_at": "2026-10-16T19:17:15Z",
+      "milestone_achieved": false
+    },
+    "downloaded_non_preview_artifact_count": 12,
+    "pending_roundtrip_artifact_count": 0,
+    "next_action": "R3.16 is terminal-failed and fully reconciled. R3.17 implementation and integrated review are approved locally; perform the final live origin/main and in-flight-batch checks, then submit R3.17 once.",
+    "available_non_preview_report_payload_count": 12
+  },
+  "previous_ci_batch": {
+    "milestone": "R2.8.147-R3.15-LINUX-CANVAS-EGUI-PERSISTENCE-ISOLATION",
+    "attempt": 1,
+    "sha": "146a13de133350ad398e5196ee1344dc343a1a72",
+    "submitted_sha": "146a13de133350ad398e5196ee1344dc343a1a72",
+    "source_sha": "146a13de133350ad398e5196ee1344dc343a1a72",
+    "status": "terminal_failed",
+    "plan": ".agents/tasks/2026-10-07/evidence/r2.8.147-r3-15-linux-canvas-egui-persistence-isolation-plan.json",
+    "evidence": ".agents/tasks/2026-10-07/evidence/r2.8.147-attempt-1-146a13de133350ad398e5196ee1344dc343a1a72.json",
+    "required_workflows": 7,
+    "required_jobs": 20,
+    "workflow_names": [
+      "Rust migration inventory",
+      "OpenObsidian Rust CI",
+      "Obsidian vault round-trip acceptance",
+      "OpenObsidian desktop build",
+      "OpenObsidian quality",
+      "OpenObsidian plugin renderer matrix",
+      "OpenObsidian loaded plugin workflows"
+    ],
+    "run_ids": [
+      38935182543,
+      38935182525,
+      38935182534,
+      38935182650,
+      38935182526,
+      38935182593,
+      38935182656
+    ],
+    "workflow_counts": {
+      "observed": 7,
+      "terminal": 7,
+      "passed": 6,
+      "failed": 1,
+      "cancelled": 0,
+      "queued": 0,
+      "in_progress": 0
+    },
+    "job_counts": {
+      "observed": 20,
+      "terminal": 20,
+      "passed": 19,
+      "failed": 1,
+      "cancelled": 0,
+      "queued": 0,
+      "in_progress": 0
+    },
+    "completed_job_counts": {
+      "passed": 19,
+      "failed": 1,
+      "cancelled": 0
+    },
+    "active_job_ids": [],
+    "queued_job_ids": [],
+    "failed_job_ids": [
+      117088775346
+    ],
+    "all_required_jobs_terminal": true,
+    "artifact_inventory_count": 16,
+    "artifact_inventory_complete": true,
     "artifact_metadata_reconciled": true,
-    "macos_report_payload_reconciled": true,
-    "terminal_at": "2026-10-16T16:28:41Z",
-    "artifacts_reconciled_at": "2026-10-16T16:28:41Z",
-    "completed_at": "2026-10-16T16:28:41Z"
+    "artifacts_reconciled": true,
+    "roundtrip_report_payloads_reconciled": true,
+    "main_sha_held": true,
+    "origin_main_sha_before_push": "67f5e6c1bedbcfc0fc645a5652a1a23419750ab3",
+    "origin_main_sha": "146a13de133350ad398e5196ee1344dc343a1a72",
+    "origin_main_sha_after_push": "146a13de133350ad398e5196ee1344dc343a1a72",
+    "origin_main_verified_at": "2026-10-16T17:47:47Z",
+    "first_workflow_run_created_at": "2026-10-16T16:51:23Z",
+    "status_at": "2026-10-16T17:47:47Z",
+    "terminal_at": "2026-10-16T17:47:47Z",
+    "local_executable_validation": false,
+    "milestone_achieved": false,
+    "failure_findings": [
+      {
+        "run_id": 38935182534,
+        "job_id": 117088775346,
+        "job_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38935182534/job/117088775346",
+        "platform": "Linux",
+        "step": "Author, open, snapshot, and reopen the same vault",
+        "status": "failure",
+        "source_sha": "146a13de133350ad398e5196ee1344dc343a1a72",
+        "finding": "The Linux report confirms the new app.ron is window-only: the passing post-termination inspection reports window_section_present=true and egui_section_present=false while the runtime marker reports persist_window=true and persist_egui_memory=false. This is consistent with window persistence producing the new file; it is an evidence-based inference, not a separate runtime proof of the writer. The exact-tree acceptance still fails, so the next repair should opt out of full eframe persistence for only the normal Linux Canvas child, with no allowlist or baseline shift.",
+        "artifact_id": 12061406931,
+        "report_sha256": "81b635231c0bc7aae3968e510ce0cb3b58c826ae52aafc2af60688f81583fc17",
+        "observed_app_ron_bytes": 181,
+        "observed_app_ron_sha256": "2752da1d06113f89c4f39c17ccfbfec0cb49e35b122b025e884b7d235868b31f",
+        "post_termination_same_hash": true,
+        "app_ron_window_section_present": true,
+        "app_ron_egui_section_present": false,
+        "inference_basis": [
+          "runtime marker: persist_egui_memory=false; persist_window=true",
+          "post-termination inspection: window section present; egui section absent",
+          "same app.ron path/hash remains in the post-termination snapshot"
+        ]
+      }
+    ]
   },
   "prior_repair_milestone": {
     "id": "R2.8.136-R3.2-C07.4-REOPEN-TIE-ORDER-AND-LINUX-CANVAS-FOCUS-REPAIR",
@@ -44549,94 +44822,148 @@
     },
     "next_action": "This R3.11 plan is a historical terminal-failed record, superseded as the next milestone by R2.8.145/R3.13; retain its evidence and do not treat its old next-action as current."
   },
-  "goal_sha256": "8e3e167b41586d9d2bb85653648322901b0f5aac3b480efd273532fe702e4d19",
-  "planned_next_milestone_id": "R2.8.148-R3.16-LINUX-CANVAS-FULL-EFRAME-PERSISTENCE-ISOLATION",
+  "goal_sha256": "9db16f84ca14a5e13ff7a63756fbb587ee94d114105b6f4ae165e3fce7484a12",
+  "planned_next_milestone_id": "R3.17",
   "planned_ci_repair_milestone": {
-    "id": "R2.8.148-R3.16-LINUX-CANVAS-FULL-EFRAME-PERSISTENCE-ISOLATION",
-    "name": "R3.16 Linux Canvas full eframe persistence isolation",
-    "status": "implementation complete locally; whole milestone approved by two independent reviewers; ready for one push after origin/main recheck",
-    "starting_sha": "146a13de133350ad398e5196ee1344dc343a1a72",
-    "plan": ".agents/tasks/2026-10-07/evidence/r2.8.148-r3-16-linux-canvas-full-eframe-persistence-isolation-plan.json",
-    "objective": "Repair the R3.15 Linux Canvas round-trip failure by suppressing both egui-memory and window persistence in the normal Linux Canvas edit child. Preserve the existing full eframe opt-out on the normal Windows child and Linux expected-abort canary, retain strict full app-data equality, and add the same opt-out to the normal Linux child.",
-    "plan_review_status": "approved by linux_persistence_source_review and r314_repair_scope_review",
+    "id": "R2.8.149-R3.17-CANVAS-REFRESH-FOCUS-GUARD",
+    "name": "Canvas form focus-safe vault reconciliation",
+    "status": "implementation_complete_reviewed_unpushed",
+    "starting_sha": "81abce92933ff79280768f63c14973a0299beada",
+    "plan": ".agents/tasks/2026-10-07/evidence/r2.8.149-r3-17-canvas-refresh-focus-guard-candidate.json",
+    "objective": "Prevent periodic or filesystem-watcher vault reconciliation from interrupting Canvas path or text-card ID entry. Keep each rescan pending while either field is focused or a source operation/draft holds the vault snapshot, then reconcile once at the first safe handoff.",
+    "plan_review_status": "approved by three independent reviews; implementation authorized",
     "implementation_complete": true,
     "pushed_once": false,
     "milestone_achieved": false,
     "required_job_count": 20,
     "implementation_files": [
-      ".agents/tasks/2026-10-07/audit-obsidian-vault-roundtrip.ts"
-    ],
-    "tracker_files": [
+      "crates/ui-egui/src/lib.rs",
       ".agents/tasks/2026-10-07/audit-obsidian-vault-roundtrip.ts",
+      ".agents/tasks/2026-10-07/goal.md",
       ".agents/tasks/2026-10-07/requirements.json",
       ".agents/tasks/2026-10-07/state.json",
       ".agents/tasks/2026-10-07/journal.md",
-      ".agents/tasks/2026-10-07/goal.md",
       ".agents/tasks/2026-10-07/evidence/r2.8.148-r3-16-linux-canvas-full-eframe-persistence-isolation-plan.json",
-      ".agents/tasks/2026-10-07/evidence/r2.8.148-attempt-1-<full-submitted-sha>.json",
-      ".agents/tasks/2026-10-07/evidence/r2.8.147-attempt-1-146a13de133350ad398e5196ee1344dc343a1a72.json",
-      ".agents/tasks/2026-10-07/evidence/r2.8.147-r3-15-linux-canvas-egui-persistence-isolation-plan.json",
-      ".agents/tasks/2026-10-07/evidence/r2.8.146-attempt-1-67f5e6c.json",
-      ".agents/tasks/2026-10-07/evidence/r2.8.146-r3-14-linux-id-ocr-border-repair-plan.json"
+      ".agents/tasks/2026-10-07/evidence/r2.8.148-attempt-1-81abce92933ff79280768f63c14973a0299beada.json",
+      ".agents/tasks/2026-10-07/evidence/r2.8.149-r3-17-canvas-refresh-focus-guard-candidate.json"
     ],
-    "terminal_predecessor_evidence_paths": [
-      ".agents/tasks/2026-10-07/evidence/r2.8.147-attempt-1-146a13de133350ad398e5196ee1344dc343a1a72.json",
-      ".agents/tasks/2026-10-07/evidence/r2.8.147-r3-15-linux-canvas-egui-persistence-isolation-plan.json",
-      ".agents/tasks/2026-10-07/evidence/r2.8.146-attempt-1-67f5e6c.json",
-      ".agents/tasks/2026-10-07/evidence/r2.8.146-r3-14-linux-id-ocr-border-repair-plan.json"
+    "tracker_files": [
+      "crates/ui-egui/src/lib.rs",
+      ".agents/tasks/2026-10-07/audit-obsidian-vault-roundtrip.ts",
+      ".agents/tasks/2026-10-07/goal.md",
+      ".agents/tasks/2026-10-07/requirements.json",
+      ".agents/tasks/2026-10-07/state.json",
+      ".agents/tasks/2026-10-07/journal.md",
+      ".agents/tasks/2026-10-07/evidence/r2.8.148-r3-16-linux-canvas-full-eframe-persistence-isolation-plan.json",
+      ".agents/tasks/2026-10-07/evidence/r2.8.148-attempt-1-81abce92933ff79280768f63c14973a0299beada.json",
+      ".agents/tasks/2026-10-07/evidence/r2.8.149-r3-17-canvas-refresh-focus-guard-candidate.json"
     ],
+    "implementation_started": true,
+    "implementation_started_at": "2026-10-16T19:25:05Z",
+    "implementation_started_from_sha": "81abce92933ff79280768f63c14973a0299beada",
+    "implementation_completed_at": "2026-10-16T19:49:11Z",
+    "whole_milestone_review_status": "Production review approved by local_milestone_audit; corrected harness review approved by r314_repair_scope_review and r317_harness_seam_audit; integrated whole-milestone tracker review approved by r317_harness_seam_audit.",
+    "local_executable_validation": false,
+    "next_action": "Immediately before submission, recheck live origin/main equals candidate_base_sha and confirm no required CI batch is in flight. If either changed, reconcile and repeat review. Then push the complete R3.17 milestone to origin/main exactly once and wait for all seven required workflows, 20 jobs, artifacts, and reports to reach terminal reconciled status.",
+    "origin_main_sha_before_push": "81abce92933ff79280768f63c14973a0299beada",
+    "origin_main_verified_at": "2026-10-16T19:56:46Z",
+    "implementation_review_status": "Production review approved by local_milestone_audit; corrected harness review approved by r314_repair_scope_review and r317_harness_seam_audit; integrated whole-milestone tracker review approved by r317_harness_seam_audit.",
+    "implementation_reviewed_at": "2026-10-16T20:00:02Z"
+  },
+  "previous_repair_milestone": {
+    "id": "R2.8.148-R3.16-LINUX-CANVAS-FULL-EFRAME-PERSISTENCE-ISOLATION",
+    "milestone_id": "R3.16",
+    "name": "R3.16 Linux Canvas full eframe persistence isolation",
+    "starting_sha": "146a13de133350ad398e5196ee1344dc343a1a72",
+    "implementation_complete": true,
+    "implementation_files": [
+      ".agents/tasks/2026-10-07/audit-obsidian-vault-roundtrip.ts"
+    ],
+    "plan": ".agents/tasks/2026-10-07/evidence/r2.8.148-r3-16-linux-canvas-full-eframe-persistence-isolation-plan.json",
+    "status": "terminal_failed",
+    "plan_review_status": "approved by linux_persistence_source_review and r314_repair_scope_review",
+    "whole_milestone_review_status": "approved by linux_persistence_source_review and r314_repair_scope_review",
+    "pushed_once": true,
+    "required_workflows": [
+      "Rust migration inventory",
+      "OpenObsidian Rust CI",
+      "Obsidian vault round-trip acceptance",
+      "OpenObsidian desktop build",
+      "OpenObsidian quality",
+      "OpenObsidian plugin renderer matrix",
+      "OpenObsidian loaded plugin workflows"
+    ],
+    "required_job_count": 20,
+    "local_executable_validation": false,
+    "milestone_achieved": false,
+    "next_action": "Historical terminal record: R3.16 is terminal-failed, fully reconciled, and not achieved. Current work is the R3.17 local milestone in current_repair_milestone.",
+    "objective": "Repair the R3.15 Linux Canvas round-trip failure by suppressing both egui-memory and window persistence in the normal Linux Canvas edit child. Preserve the existing full eframe opt-out on the normal Windows child and Linux expected-abort canary, retain strict full app-data equality, and add the same opt-out to the normal Linux child.",
     "implementation_started": true,
     "implementation_started_at": "2026-10-16T17:55:27Z",
     "implementation_started_from_sha": "146a13de133350ad398e5196ee1344dc343a1a72",
-    "whole_milestone_review_status": "approved by linux_persistence_source_review and r314_repair_scope_review",
-    "next_action": "Immediately recheck origin/main at 146a13de133350ad398e5196ee1344dc343a1a72; if unchanged, commit and push the complete R3.16 milestone once, then hold the submitted SHA until all seven workflows/20 jobs and artifacts are reconciled.",
     "implementation_completed_at": "2026-10-16T18:01:55Z",
-    "whole_milestone_approved_at": "2026-10-16T18:01:55Z"
-  },
-  "previous_repair_milestone": {
-    "schema_version": 1,
-    "milestone_id": "R2.8.145-R3.13-C07.4-ID-READBACK-REPAIR",
-    "id": "R2.8.145-R3.13-C07.4-ID-READBACK-REPAIR",
-    "name": "R3.13 C07.4 Canvas ID readback repair",
-    "created_at": "2026-10-16",
-    "status": "Exact-SHA CI terminal but not passing on 89da1495fac160fc77029ea4ad60c9c47724148b: 7/7 workflows and 20/20 jobs terminal; 6/7 workflows and 19/20 jobs passed, with the sole failure in Linux vault round-trip. All 16 artifact records, all 3 round-trip report payloads, and the platform evidence reports are reconciled.",
-    "plan_review_status": "Revision 3 approved by two independent read-only plan reviewers; implementation approved by independent whole-milestone source review.",
-    "plan": "evidence/r2.8.145-r3-13-c07-4-id-readback-repair-plan.json",
-    "planning_base_sha": "ad983495302c8d7d52701eb2b698087c4013fbe0",
-    "starting_sha": "ad983495302c8d7d52701eb2b698087c4013fbe0",
-    "implementation_sha": "89da1495fac160fc77029ea4ad60c9c47724148b",
-    "submitted_sha": "89da1495fac160fc77029ea4ad60c9c47724148b",
-    "pushed_once": true,
-    "objective": "Repair the exact-SHA quality and Linux/macOS Canvas text-card ID readback failures that prevented the R3.12 reference-capture matrix from completing. Preserve the accepted Windows capture and the approved R3.12 Mac tie-order contract, then capture C07.4 reference behavior on all three operating systems. This milestone records pinned Obsidian behavior only and must not claim Rust comparator parity.",
-    "implementation": {
-      "status": "Implementation complete and whole-milestone review approved; exact-SHA CI is terminal-failed on 89da1495fac160fc77029ea4ad60c9c47724148b (7/7 workflows and 20/20 jobs terminal; 19 pass, one Linux round-trip failure).",
-      "files": [
-        "knip.json",
-        "crates/ui-egui/src/lib.rs",
-        ".agents/tasks/2026-10-07/audit-obsidian-vault-roundtrip.ts"
+    "whole_milestone_approved_at": "2026-10-16T18:01:55Z",
+    "implementation_sha": "81abce92933ff79280768f63c14973a0299beada",
+    "submitted_sha": "81abce92933ff79280768f63c14973a0299beada",
+    "ci_attempt": {
+      "attempt": 1,
+      "submitted_sha": "81abce92933ff79280768f63c14973a0299beada",
+      "evidence_path": ".agents/tasks/2026-10-07/evidence/r2.8.148-attempt-1-81abce92933ff79280768f63c14973a0299beada.json",
+      "run_ids": [
+        38944357341,
+        38944357377,
+        38944357363,
+        38944357491,
+        38944357493,
+        38944357709,
+        38944357762
       ],
-      "local_executable_validation": false
+      "status": "terminal_failed",
+      "workflow_counts": {
+        "observed": 7,
+        "terminal": 7,
+        "passed": 6,
+        "failed": 1,
+        "cancelled": 0,
+        "queued": 0,
+        "in_progress": 0
+      },
+      "job_counts": {
+        "observed": 20,
+        "terminal": 20,
+        "passed": 19,
+        "failed": 1,
+        "cancelled": 0,
+        "queued": 0,
+        "in_progress": 0
+      },
+      "all_required_jobs_terminal": true,
+      "artifact_inventory_complete": true,
+      "artifact_metadata_reconciled": true,
+      "artifacts_reconciled": true,
+      "roundtrip_report_payloads_reconciled": true,
+      "origin_main_sha_after_push": "81abce92933ff79280768f63c14973a0299beada",
+      "origin_main_verified_at": "2026-10-16T19:17:15Z",
+      "artifact_inventory_count": 16,
+      "available_non_preview_report_payload_count": 12,
+      "pending_roundtrip_artifact_count": 0,
+      "last_polled_at": "2026-10-16T19:17:15Z",
+      "completed_job_counts": {
+        "passed": 19,
+        "failed": 1,
+        "cancelled": 0
+      },
+      "active_job_ids": [],
+      "queued_job_ids": [],
+      "failed_job_ids": [
+        117119600534
+      ],
+      "main_sha_held": true,
+      "status_at": "2026-10-16T19:17:15Z",
+      "downloaded_non_preview_artifact_count": 12,
+      "milestone_achieved": false
     },
-    "required_workflows": [
-      "Obsidian vault round-trip acceptance",
-      "Rust migration inventory",
-      "OpenObsidian Rust CI",
-      "OpenObsidian plugin renderer matrix",
-      "OpenObsidian desktop build",
-      "OpenObsidian quality",
-      "OpenObsidian loaded plugin workflows"
-    ],
-    "expected_jobs": 20,
-    "run_ids": [
-      38910654749,
-      38910654728,
-      38910654956,
-      38910654750,
-      38910654912,
-      38910655002,
-      38910654687
-    ],
-    "ci_attempt_evidence": "evidence/r2.8.145-attempt-1-89da149.json",
+    "evidence": ".agents/tasks/2026-10-07/evidence/r2.8.148-attempt-1-81abce92933ff79280768f63c14973a0299beada.json",
     "workflow_counts": {
       "observed": 7,
       "terminal": 7,
@@ -44655,21 +44982,29 @@
       "queued": 0,
       "in_progress": 0
     },
+    "completed_job_counts": {
+      "passed": 19,
+      "failed": 1,
+      "cancelled": 0
+    },
     "active_job_ids": [],
     "queued_job_ids": [],
     "failed_job_ids": [
-      117005348184
+      117119600534
     ],
     "all_required_jobs_terminal": true,
     "artifact_inventory_count": 16,
     "artifact_inventory_complete": true,
+    "artifact_metadata_reconciled": true,
     "artifacts_reconciled": true,
     "roundtrip_report_payloads_reconciled": true,
-    "origin_main_sha_before_push": "ad983495302c8d7d52701eb2b698087c4013fbe0",
-    "origin_main_sha_after_push": "89da1495fac160fc77029ea4ad60c9c47724148b",
-    "origin_main_verified_at": "2026-10-16T14:06:48 UTC",
-    "status_at": "2026-10-16T14:58:29Z",
-    "milestone_achieved": false
+    "main_sha_held": true,
+    "origin_main_sha_after_push": "81abce92933ff79280768f63c14973a0299beada",
+    "origin_main_verified_at": "2026-10-16T19:17:15Z",
+    "status_at": "2026-10-16T19:17:15Z",
+    "downloaded_non_preview_artifact_count": 12,
+    "available_non_preview_report_payload_count": 12,
+    "pending_roundtrip_artifact_count": 0
   },
   "older_ci_batch": {
     "sha": "49ef8e8ecfa60b9de245a8b62ffe26aadf17bab7",
@@ -44719,7 +45054,7 @@
       "failed": 2
     }
   },
-  "planned_ci_repair_milestone_id": "R2.8.148-R3.16-LINUX-CANVAS-FULL-EFRAME-PERSISTENCE-ISOLATION",
+  "planned_ci_repair_milestone_id": "R3.17",
   "historical_ci_batches": [
     {
       "milestone": "R2.8.136-R3.4-LINUX-CANVAS-PRESTAGING-FOCUS-RECOVERY; attempt 1",
@@ -45613,54 +45948,178 @@
       "artifacts_reconciled": true,
       "roundtrip_report_payloads_reconciled": true,
       "milestone_achieved": false
+    },
+    {
+      "id": "R2.8.148-R3.16-LINUX-CANVAS-FULL-EFRAME-PERSISTENCE-ISOLATION",
+      "milestone_id": "R3.16",
+      "name": "R3.16 Linux Canvas full eframe persistence isolation",
+      "starting_sha": "146a13de133350ad398e5196ee1344dc343a1a72",
+      "implementation_complete": true,
+      "implementation_files": [
+        ".agents/tasks/2026-10-07/audit-obsidian-vault-roundtrip.ts"
+      ],
+      "plan": ".agents/tasks/2026-10-07/evidence/r2.8.148-r3-16-linux-canvas-full-eframe-persistence-isolation-plan.json",
+      "status": "terminal_failed",
+      "plan_review_status": "approved by linux_persistence_source_review and r314_repair_scope_review",
+      "whole_milestone_review_status": "approved by linux_persistence_source_review and r314_repair_scope_review",
+      "pushed_once": true,
+      "required_workflows": [
+        "Rust migration inventory",
+        "OpenObsidian Rust CI",
+        "Obsidian vault round-trip acceptance",
+        "OpenObsidian desktop build",
+        "OpenObsidian quality",
+        "OpenObsidian plugin renderer matrix",
+        "OpenObsidian loaded plugin workflows"
+      ],
+      "required_job_count": 20,
+      "local_executable_validation": false,
+      "milestone_achieved": false,
+      "next_action": "Historical terminal record: R3.16 is terminal-failed, fully reconciled, and not achieved. Current work is the R3.17 local milestone in current_repair_milestone.",
+      "objective": "Repair the R3.15 Linux Canvas round-trip failure by suppressing both egui-memory and window persistence in the normal Linux Canvas edit child. Preserve the existing full eframe opt-out on the normal Windows child and Linux expected-abort canary, retain strict full app-data equality, and add the same opt-out to the normal Linux child.",
+      "implementation_started": true,
+      "implementation_started_at": "2026-10-16T17:55:27Z",
+      "implementation_started_from_sha": "146a13de133350ad398e5196ee1344dc343a1a72",
+      "implementation_completed_at": "2026-10-16T18:01:55Z",
+      "whole_milestone_approved_at": "2026-10-16T18:01:55Z",
+      "implementation_sha": "81abce92933ff79280768f63c14973a0299beada",
+      "submitted_sha": "81abce92933ff79280768f63c14973a0299beada",
+      "ci_attempt": {
+        "attempt": 1,
+        "submitted_sha": "81abce92933ff79280768f63c14973a0299beada",
+        "evidence_path": ".agents/tasks/2026-10-07/evidence/r2.8.148-attempt-1-81abce92933ff79280768f63c14973a0299beada.json",
+        "run_ids": [
+          38944357341,
+          38944357377,
+          38944357363,
+          38944357491,
+          38944357493,
+          38944357709,
+          38944357762
+        ],
+        "status": "terminal_failed",
+        "workflow_counts": {
+          "observed": 7,
+          "terminal": 7,
+          "passed": 6,
+          "failed": 1,
+          "cancelled": 0,
+          "queued": 0,
+          "in_progress": 0
+        },
+        "job_counts": {
+          "observed": 20,
+          "terminal": 20,
+          "passed": 19,
+          "failed": 1,
+          "cancelled": 0,
+          "queued": 0,
+          "in_progress": 0
+        },
+        "all_required_jobs_terminal": true,
+        "artifact_inventory_complete": true,
+        "artifact_metadata_reconciled": true,
+        "artifacts_reconciled": true,
+        "roundtrip_report_payloads_reconciled": true,
+        "origin_main_sha_after_push": "81abce92933ff79280768f63c14973a0299beada",
+        "origin_main_verified_at": "2026-10-16T19:17:15Z",
+        "artifact_inventory_count": 16,
+        "available_non_preview_report_payload_count": 12,
+        "pending_roundtrip_artifact_count": 0,
+        "last_polled_at": "2026-10-16T19:17:15Z",
+        "completed_job_counts": {
+          "passed": 19,
+          "failed": 1,
+          "cancelled": 0
+        },
+        "active_job_ids": [],
+        "queued_job_ids": [],
+        "failed_job_ids": [
+          117119600534
+        ],
+        "main_sha_held": true,
+        "status_at": "2026-10-16T19:17:15Z",
+        "downloaded_non_preview_artifact_count": 12,
+        "milestone_achieved": false
+      },
+      "evidence": ".agents/tasks/2026-10-07/evidence/r2.8.148-attempt-1-81abce92933ff79280768f63c14973a0299beada.json",
+      "workflow_counts": {
+        "observed": 7,
+        "terminal": 7,
+        "passed": 6,
+        "failed": 1,
+        "cancelled": 0,
+        "queued": 0,
+        "in_progress": 0
+      },
+      "job_counts": {
+        "observed": 20,
+        "terminal": 20,
+        "passed": 19,
+        "failed": 1,
+        "cancelled": 0,
+        "queued": 0,
+        "in_progress": 0
+      },
+      "completed_job_counts": {
+        "passed": 19,
+        "failed": 1,
+        "cancelled": 0
+      },
+      "active_job_ids": [],
+      "queued_job_ids": [],
+      "failed_job_ids": [
+        117119600534
+      ],
+      "all_required_jobs_terminal": true,
+      "artifact_inventory_count": 16,
+      "artifact_inventory_complete": true,
+      "artifact_metadata_reconciled": true,
+      "artifacts_reconciled": true,
+      "roundtrip_report_payloads_reconciled": true,
+      "main_sha_held": true,
+      "origin_main_sha_after_push": "81abce92933ff79280768f63c14973a0299beada",
+      "origin_main_verified_at": "2026-10-16T19:17:15Z",
+      "status_at": "2026-10-16T19:17:15Z",
+      "downloaded_non_preview_artifact_count": 12,
+      "available_non_preview_report_payload_count": 12,
+      "pending_roundtrip_artifact_count": 0
     }
   ],
-  "origin_main_sha_after_push": "146a13de133350ad398e5196ee1344dc343a1a72",
-  "origin_main_sha": "146a13de133350ad398e5196ee1344dc343a1a72",
-  "origin_main_sha_verified_at": "2026-10-16T17:50:57Z",
+  "origin_main_sha_after_push": "81abce92933ff79280768f63c14973a0299beada",
+  "origin_main_sha": "81abce92933ff79280768f63c14973a0299beada",
+  "origin_main_sha_verified_at": "2026-10-16T19:56:46Z",
   "candidate_followup_plan": {
-    "id": "R2.8.148-R3.16-LINUX-CANVAS-FULL-EFRAME-PERSISTENCE-ISOLATION",
-    "name": "R3.16 Linux Canvas full eframe persistence isolation",
-    "status": "implementation complete locally; whole milestone approved by two independent reviewers; ready for one push after origin/main recheck",
-    "starting_sha": "146a13de133350ad398e5196ee1344dc343a1a72",
-    "plan": ".agents/tasks/2026-10-07/evidence/r2.8.148-r3-16-linux-canvas-full-eframe-persistence-isolation-plan.json",
-    "objective": "Repair the R3.15 Linux Canvas round-trip failure by suppressing both egui-memory and window persistence in the normal Linux Canvas edit child. Preserve the existing full eframe opt-out on the normal Windows child and Linux expected-abort canary, retain strict full app-data equality, and add the same opt-out to the normal Linux child.",
-    "plan_review_status": "approved by linux_persistence_source_review and r314_repair_scope_review",
-    "implementation_complete": true,
-    "pushed_once": false,
-    "milestone_achieved": false,
-    "required_job_count": 20,
-    "implementation_files": [
-      ".agents/tasks/2026-10-07/audit-obsidian-vault-roundtrip.ts"
+    "id": "R2.8.149-R3.17-CANVAS-REFRESH-FOCUS-GUARD",
+    "milestone_id": "R3.17",
+    "name": "Canvas form focus-safe vault reconciliation",
+    "status": "R3.17 plan approved by three independent reviewers; implementation complete locally and source-reviewed; final integrated tracker review pending; no executable project validation, CI dispatch, or push.",
+    "plan": ".agents/tasks/2026-10-07/evidence/r2.8.149-r3-17-canvas-refresh-focus-guard-candidate.json",
+    "candidate_base_sha": "81abce92933ff79280768f63c14973a0299beada",
+    "depends_on": "R3.16 terminal exact-SHA evidence reconciliation and independent final plan approval (both complete)",
+    "reviewed_by": [
+      "local_milestone_audit",
+      "r314_repair_scope_review",
+      "r317_harness_seam_audit"
     ],
-    "tracker_files": [
+    "local_validation": "Read-only source inspection and git diff --check (whitespace only); no project tests, builds, formatters, linters, validators, runtime probes, or application launches.",
+    "implementation_started_at": "2026-10-16T19:25:05Z",
+    "implementation_started_from_sha": "81abce92933ff79280768f63c14973a0299beada",
+    "implementation_completed_at": "2026-10-16T19:49:11Z",
+    "implementation_files": [
+      "crates/ui-egui/src/lib.rs",
       ".agents/tasks/2026-10-07/audit-obsidian-vault-roundtrip.ts",
+      ".agents/tasks/2026-10-07/goal.md",
       ".agents/tasks/2026-10-07/requirements.json",
       ".agents/tasks/2026-10-07/state.json",
       ".agents/tasks/2026-10-07/journal.md",
-      ".agents/tasks/2026-10-07/goal.md",
       ".agents/tasks/2026-10-07/evidence/r2.8.148-r3-16-linux-canvas-full-eframe-persistence-isolation-plan.json",
-      ".agents/tasks/2026-10-07/evidence/r2.8.148-attempt-1-<full-submitted-sha>.json",
-      ".agents/tasks/2026-10-07/evidence/r2.8.147-attempt-1-146a13de133350ad398e5196ee1344dc343a1a72.json",
-      ".agents/tasks/2026-10-07/evidence/r2.8.147-r3-15-linux-canvas-egui-persistence-isolation-plan.json",
-      ".agents/tasks/2026-10-07/evidence/r2.8.146-attempt-1-67f5e6c.json",
-      ".agents/tasks/2026-10-07/evidence/r2.8.146-r3-14-linux-id-ocr-border-repair-plan.json"
-    ],
-    "terminal_predecessor_evidence_paths": [
-      ".agents/tasks/2026-10-07/evidence/r2.8.147-attempt-1-146a13de133350ad398e5196ee1344dc343a1a72.json",
-      ".agents/tasks/2026-10-07/evidence/r2.8.147-r3-15-linux-canvas-egui-persistence-isolation-plan.json",
-      ".agents/tasks/2026-10-07/evidence/r2.8.146-attempt-1-67f5e6c.json",
-      ".agents/tasks/2026-10-07/evidence/r2.8.146-r3-14-linux-id-ocr-border-repair-plan.json"
-    ],
-    "implementation_started": true,
-    "implementation_started_at": "2026-10-16T17:55:27Z",
-    "implementation_started_from_sha": "146a13de133350ad398e5196ee1344dc343a1a72",
-    "whole_milestone_review_status": "approved by linux_persistence_source_review and r314_repair_scope_review",
-    "next_action": "Immediately recheck origin/main at 146a13de133350ad398e5196ee1344dc343a1a72; if unchanged, commit and push the complete R3.16 milestone once, then hold the submitted SHA until all seven workflows/20 jobs and artifacts are reconciled.",
-    "implementation_completed_at": "2026-10-16T18:01:55Z",
-    "whole_milestone_approved_at": "2026-10-16T18:01:55Z"
+      ".agents/tasks/2026-10-07/evidence/r2.8.148-attempt-1-81abce92933ff79280768f63c14973a0299beada.json",
+      ".agents/tasks/2026-10-07/evidence/r2.8.149-r3-17-canvas-refresh-focus-guard-candidate.json"
+    ]
   },
-  "origin_main_sha_before_push": "67f5e6c1bedbcfc0fc645a5652a1a23419750ab3",
-  "last_submitted_head": "146a13de133350ad398e5196ee1344dc343a1a72",
-  "planned_repair_milestone_id": "R2.8.148-R3.16-LINUX-CANVAS-FULL-EFRAME-PERSISTENCE-ISOLATION"
+  "origin_main_sha_before_push": "81abce92933ff79280768f63c14973a0299beada",
+  "last_submitted_head": "81abce92933ff79280768f63c14973a0299beada",
+  "planned_repair_milestone_id": "R3.17",
+  "origin_main_verified_at": "2026-10-16T19:56:46Z"
 }

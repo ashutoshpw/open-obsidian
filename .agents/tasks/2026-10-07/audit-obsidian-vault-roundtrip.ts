@@ -588,6 +588,7 @@ type GroupOrderScenarioObservation = GroupOrderVisibleState & {
 const reportDirectory = resolve(requiredEnv("OBSIDIAN_REPORT_DIRECTORY"));
 const workDirectory = resolve(requiredEnv("OBSIDIAN_ROUNDTRIP_WORK_DIRECTORY"));
 const linuxCanvasFocusSnapshotRequestFile = join(workDirectory, "openobsidian-canvas-focus-snapshot.request");
+const vaultReconciliationRequestFile = join(workDirectory, "openobsidian-vault-reconciliation.request");
 const vaultRoot = join(workDirectory, "C01.2 Roundtrip Fixture");
 const canvasVaultName = "C06 Canvas Reference Fixture";
 const canvasVaultRoot = join(workDirectory, canvasVaultName);
@@ -1316,8 +1317,8 @@ async function waitFor<T>(label: string, read: () => Promise<T>, predicate: (val
 }
 
 type OpenObsidianRefreshDiagnostics = {
-  requests: Array<{source: string; line: number}>;
-  consumedResults: Array<{succeeded: boolean; entries: number | null; line: number}>;
+  requests: Array<{source: string; line: number; requestId: string | null; frameNr: number | null}>;
+  consumedResults: Array<{succeeded: boolean; entries: number | null; line: number; requestId: string | null; expectedPathVisible: boolean | null}>;
   receiverStates: Array<{busy: boolean; line: number}>;
 };
 
@@ -1340,17 +1341,100 @@ async function readOpenObsidianRefreshDiagnostics(
   const diagnostics: OpenObsidianRefreshDiagnostics = {requests: [], consumedResults: [], receiverStates: []};
   for (const [line, value] of log.split(/\r?\n/).entries()) {
     const request = value.match(/OpenObsidian CI vault refresh request: source=([a-z_]+)/);
-    if (request) diagnostics.requests.push({source: request[1] ?? "unknown", line});
-    const consumed = value.match(/OpenObsidian CI vault refresh result consumed: succeeded=(true|false)(?:, entries=(\d+))?/);
+    if (request) {
+      const frameNr = value.match(/\bframe_nr=(\d+)/)?.[1];
+      diagnostics.requests.push({
+        source: request[1] ?? "unknown",
+        line,
+        requestId: value.match(/\brequest_id=([^,\s]+)/)?.[1] ?? null,
+        frameNr: frameNr === undefined ? null : Number(frameNr),
+      });
+    }
+    const consumed = value.match(/OpenObsidian CI vault refresh result consumed: (?:request_id=([^,\s]+), )?succeeded=(true|false)(?:, entries=(\d+))?/);
     if (consumed) diagnostics.consumedResults.push({
-      succeeded: consumed[1] === "true",
-      entries: consumed[2] === undefined ? null : Number(consumed[2]),
+      requestId: consumed[1] ?? null,
+      succeeded: consumed[2] === "true",
+      entries: consumed[3] === undefined ? null : Number(consumed[3]),
       line,
+      expectedPathVisible: value.match(/\bexpected_path_visible=(true|false)/)?.[1] === undefined
+        ? null
+        : value.includes("expected_path_visible=true"),
     });
     const receiverState = value.match(/OpenObsidian CI UI state: .*vault_refresh_receiver=(true|false)/);
     if (receiverState) diagnostics.receiverStates.push({busy: receiverState[1] === "true", line});
   }
   return diagnostics;
+}
+
+async function waitForDeferredVaultRefreshHandoff(
+  logPath: string,
+  pendingRequestId: string,
+  expectedEntries: number,
+  timeoutMs = 15_000,
+): Promise<Record<string, unknown>> {
+  const startedAt = Date.now();
+  const handoff = await waitFor(
+    `the first safe-frame refresh handoff for deferred request ${pendingRequestId}`,
+    async () => {
+      const [diagnostics, state] = await Promise.all([
+        readOpenObsidianRefreshDiagnostics(logPath),
+        readVaultReconciliationState(logPath, pendingRequestId),
+      ]);
+      const matchingRequests = diagnostics.requests.filter((request) => request.requestId === pendingRequestId);
+      if (matchingRequests.length !== 1 || !state) return null;
+      const request = matchingRequests[0]!;
+      const safeHandoff = state.pendingRequestId === pendingRequestId
+        && state.safeToRefresh && state.rescanPending
+        && !state.canvasPathFocused && !state.canvasTextCardIdFocused
+        && !state.snapshotLeaseActive && !state.sourceOperationReceiverBusy
+        && !state.refreshReceiver && state.frameNr === request.frameNr
+        && state.line < request.line && state.triggerSources.includes("periodic_timer");
+      if (!safeHandoff || request.source !== "watcher_reconciliation") return null;
+      return {request, state};
+    },
+    (value) => value !== null,
+    timeoutMs,
+  );
+  if (!handoff) throw new Error(`Deferred reconciliation request ${pendingRequestId} never reached its first safe refresh frame`);
+
+  const handoffValue = handoff as {request: {line: number; frameNr: number | null}; state: VaultReconciliationStateObservation};
+  const result = await waitFor(
+    `the single deferred refresh result for request ${pendingRequestId}`,
+    async () => {
+      const diagnostics = await readOpenObsidianRefreshDiagnostics(logPath);
+      const requestsFromHandoff = diagnostics.requests.filter((item) => item.line >= handoffValue.request.line);
+      const resultsFromHandoff = diagnostics.consumedResults.filter((item) => item.line >= handoffValue.request.line);
+      if (requestsFromHandoff.length > 1 || requestsFromHandoff.some((item) => item.requestId !== pendingRequestId)) {
+        throw new Error(`Deferred reconciliation ${pendingRequestId} started an additional or uncorrelated refresh request: ${JSON.stringify(requestsFromHandoff)}`);
+      }
+      if (resultsFromHandoff.length > 1 || resultsFromHandoff.some((item) => item.requestId !== pendingRequestId)) {
+        throw new Error(`Deferred reconciliation ${pendingRequestId} produced an additional or uncorrelated refresh result: ${JSON.stringify(resultsFromHandoff)}`);
+      }
+      const matchingResults = diagnostics.consumedResults.filter((item) => item.requestId === pendingRequestId);
+      if (matchingResults.length !== 1) return null;
+      const consumed = matchingResults[0]!;
+      if (consumed.line <= handoffValue.request.line || !consumed.succeeded
+        || consumed.entries !== expectedEntries || consumed.expectedPathVisible !== true) return null;
+      return consumed;
+    },
+    (value) => value !== null,
+    Math.max(1, timeoutMs - (Date.now() - startedAt)),
+  );
+  if (!result) throw new Error(`Deferred reconciliation request ${pendingRequestId} did not complete successfully within ${timeoutMs} ms`);
+  const resultValue = result as {line: number};
+  const exactlyOneRefresh = await assertSingleDeferredVaultRefresh(
+    logPath,
+    handoffValue.request.line,
+    pendingRequestId,
+    resultValue.line,
+  );
+  return {
+    request_id: pendingRequestId,
+    handoff: handoffValue,
+    result,
+    exactly_one_refresh: exactlyOneRefresh,
+    elapsed_ms: Date.now() - startedAt,
+  };
 }
 
 async function openObsidianLogLineCount(logPath: string): Promise<number> {
@@ -2360,6 +2444,217 @@ async function readCanvasFocusSnapshot(
     || trace.rawEvents.length !== 0
     || !canvasTraceFrameMatchesFieldPair(trace, path, id)) return null;
   return { ...marker, fields: {path, id}, trace, trace_frames: traceFrames, x11: x11InteractionState() };
+}
+
+type VaultReconciliationStateObservation = {
+  line: number;
+  requestId: string;
+  pendingRequestId: string;
+  frameNr: number;
+  triggerSources: string;
+  canvasPathFocused: boolean;
+  canvasTextCardIdFocused: boolean;
+  rescanPending: boolean;
+  refreshReceiver: boolean;
+  snapshotLeaseActive: boolean;
+  sourceOperationReceiverBusy: boolean;
+  safeToRefresh: boolean;
+};
+
+async function readVaultReconciliationState(
+  logPath: string,
+  requestId: string,
+): Promise<VaultReconciliationStateObservation | null> {
+  const log = await readFile(logPath, "utf8").catch(() => "");
+  const lines = log.split(/\r?\n/);
+  for (let index = lines.length - 1; index >= 0; index -= 1) {
+    const value = lines[index] ?? "";
+    if (!value.startsWith(`OpenObsidian CI vault reconciliation state: request_id=${requestId}, `)) continue;
+    const pendingRequestId = value.match(/\bpending_request_id=([^,\s]+)/)?.[1];
+    const frameNr = value.match(/\bframe_nr=(\d+)/)?.[1];
+    const triggerSources = value.match(/\btrigger_sources=([^,\s]+)/)?.[1];
+    const readBoolean = (name: string): boolean | null => {
+      const parsed = value.match(new RegExp(`\\b${name}=(true|false)`))?.[1];
+      return parsed === undefined ? null : parsed === "true";
+    };
+    const canvasPathFocused = readBoolean("canvas_path_focused");
+    const canvasTextCardIdFocused = readBoolean("canvas_text_card_id_focused");
+    const rescanPending = readBoolean("rescan_pending");
+    const refreshReceiver = readBoolean("refresh_receiver");
+    const snapshotLeaseActive = readBoolean("snapshot_lease_active");
+    const sourceOperationReceiverBusy = readBoolean("source_operation_receiver_busy");
+    const safeToRefresh = readBoolean("safe_to_refresh");
+    if (!pendingRequestId || !frameNr || !triggerSources
+      || canvasPathFocused === null || canvasTextCardIdFocused === null
+      || rescanPending === null || refreshReceiver === null
+      || snapshotLeaseActive === null || sourceOperationReceiverBusy === null
+      || safeToRefresh === null) return null;
+    return {
+      line: index,
+      requestId,
+      pendingRequestId,
+      frameNr: Number(frameNr),
+      triggerSources,
+      canvasPathFocused,
+      canvasTextCardIdFocused,
+      rescanPending,
+      refreshReceiver,
+      snapshotLeaseActive,
+      sourceOperationReceiverBusy,
+      safeToRefresh,
+    };
+  }
+  return null;
+}
+
+type VaultReconciliationStateEvent = {
+  line: number;
+  pendingRequestId: string;
+  rescanPending: boolean;
+};
+
+async function readVaultReconciliationStateEvents(logPath: string): Promise<VaultReconciliationStateEvent[]> {
+  const log = await readFile(logPath, "utf8").catch(() => "");
+  const events: VaultReconciliationStateEvent[] = [];
+  for (const [line, value] of log.split(/\r?\n/).entries()) {
+    if (!value.startsWith("OpenObsidian CI vault reconciliation state: ")) continue;
+    const pendingRequestId = value.match(/\bpending_request_id=([^,\s]+)/)?.[1];
+    const rescanPending = value.match(/\brescan_pending=(true|false)/)?.[1];
+    if (!pendingRequestId || rescanPending === undefined) continue;
+    events.push({line, pendingRequestId, rescanPending: rescanPending === "true"});
+  }
+  return events;
+}
+
+async function assertSingleDeferredVaultRefresh(
+  logPath: string,
+  requestLine: number,
+  requestId: string,
+  resultLine: number,
+  quietWindowMs = 1_000,
+): Promise<Record<string, unknown>> {
+  const deadline = Date.now() + quietWindowMs;
+  let sampleCount = 0;
+  while (Date.now() < deadline) {
+    const [diagnostics, states] = await Promise.all([
+      readOpenObsidianRefreshDiagnostics(logPath),
+      readVaultReconciliationStateEvents(logPath),
+    ]);
+    const requests = diagnostics.requests.filter((request) => request.line >= requestLine);
+    const results = diagnostics.consumedResults.filter((result) => result.line >= requestLine);
+    const additionalPendingState = states.find((state) => state.line > requestLine && state.rescanPending);
+    if (requests.length !== 1 || requests[0]?.requestId !== requestId) {
+      throw new Error(`Deferred reconciliation ${requestId} started an additional or uncorrelated refresh request: ${JSON.stringify(requests)}`);
+    }
+    if (results.length !== 1 || results[0]?.requestId !== requestId || results[0].line !== resultLine) {
+      throw new Error(`Deferred reconciliation ${requestId} produced an additional or uncorrelated refresh result: ${JSON.stringify(results)}`);
+    }
+    if (additionalPendingState) {
+      throw new Error(`A second reconciliation became pending after deferred request ${requestId}: ${JSON.stringify(additionalPendingState)}`);
+    }
+    sampleCount += 1;
+    await new Promise((resolvePromise) => setTimeout(resolvePromise, Math.min(100, Math.max(1, deadline - Date.now()))));
+  }
+  return {
+    request_count: 1,
+    result_count: 1,
+    quiet_window_ms: quietWindowMs,
+    samples: sampleCount,
+  };
+}
+
+async function writeAtomicRequestMarker(path: string, requestId: string): Promise<string> {
+  const temporaryPath = `${path}.${requestId}.tmp`;
+  await rm(path, {force: true});
+  await writeFile(temporaryPath, `${requestId}\n`, {flag: "wx"});
+  await rename(temporaryPath, path);
+  return temporaryPath;
+}
+
+async function requestCanvasReconciliationFocusCapture(
+  logPath: string,
+  stage: string,
+  targetField: "path" | "id",
+  expectedTargetValue: string,
+  expectedSiblingValue: string,
+  options: {forcePeriodicRescan: boolean; expectedPendingRequestId?: string},
+): Promise<Record<string, unknown>> {
+  const requestId = `${process.pid}-${Date.now()}-${++canvasFocusSnapshotRequestSequence}`;
+  const temporaryPaths: string[] = [];
+  const lineBaseline = await openObsidianLogLineCount(logPath);
+  try {
+    if (options.forcePeriodicRescan) {
+      temporaryPaths.push(await writeAtomicRequestMarker(vaultReconciliationRequestFile, requestId));
+    }
+    temporaryPaths.push(await writeAtomicRequestMarker(linuxCanvasFocusSnapshotRequestFile, requestId));
+    const expectedPendingRequestId = options.expectedPendingRequestId ?? requestId;
+    const expectedTargetSha256 = createHash("sha256").update(expectedTargetValue).digest("hex");
+    const expectedSiblingSha256 = createHash("sha256").update(expectedSiblingValue).digest("hex");
+    const capture = await waitFor(
+      `request-correlated ${stage} Canvas focus and pending refresh capture`,
+      async () => {
+        const log = await readFile(logPath, "utf8").catch(() => "");
+        const lines = log.split(/\r?\n/);
+        let marker: {line: number; frameNr: number} | null = null;
+        for (let index = lines.length - 1; index >= lineBaseline; index -= 1) {
+          const value = lines[index] ?? "";
+          if (!value.startsWith(`OpenObsidian CI canvas-text-edit-focus-snapshot: request_id=${requestId}, `)) continue;
+          const frameNr = value.match(/\bframe_nr=(\d+)/)?.[1];
+          if (!frameNr || !value.includes("raw_events=[]")) return null;
+          marker = {line: index, frameNr: Number(frameNr)};
+          break;
+        }
+        if (!marker) return null;
+        const [pathField, idField, state] = await Promise.all([
+          readCanvasTextEditFieldDiagnostic(logPath, "path", marker.line, requestId, marker.frameNr),
+          readCanvasTextEditFieldDiagnostic(logPath, "id", marker.line, requestId, marker.frameNr),
+          readVaultReconciliationState(logPath, requestId),
+        ]);
+        if (!pathField || !idField || !state) return null;
+        const target = targetField === "path" ? pathField : idField;
+        const sibling = targetField === "path" ? idField : pathField;
+        const targetMatches = target.enabled && target.focused && !target.clicked
+          && target.valueBytes === Buffer.byteLength(expectedTargetValue)
+          && target.valueSha256 === expectedTargetSha256;
+        const siblingMatches = sibling.enabled && !sibling.focused && !sibling.clicked
+          && sibling.valueBytes === Buffer.byteLength(expectedSiblingValue)
+          && sibling.valueSha256 === expectedSiblingSha256;
+        const sameFrame = pathField.frameNr === marker.frameNr
+          && idField.frameNr === marker.frameNr
+          && state.frameNr === marker.frameNr
+          && pathField.line > marker.line && idField.line > marker.line;
+        const expectedTrigger = state.triggerSources.includes("periodic_timer");
+        const pendingStateMatches = state.requestId === requestId
+          && state.pendingRequestId === expectedPendingRequestId
+          && state.rescanPending && !state.refreshReceiver
+          && !state.snapshotLeaseActive && !state.sourceOperationReceiverBusy
+          && !state.safeToRefresh && expectedTrigger;
+        if (!sameFrame || !targetMatches || !siblingMatches || !pendingStateMatches) return null;
+        return {
+          request_id: requestId,
+          line_baseline: lineBaseline,
+          focus_snapshot: marker,
+          target_field: targetField,
+          target_field_observation: target,
+          sibling_field_observation: sibling,
+          reconciliation_state: state,
+          checks: {same_frame: sameFrame, target_matches: targetMatches, sibling_matches: siblingMatches, pending_state_matches: pendingStateMatches},
+        };
+      },
+      (value) => value !== null,
+      15_000,
+    );
+    if (!capture) throw new Error(`No correlated pending/focused Canvas capture was observed for ${stage}`);
+    return capture as Record<string, unknown>;
+  } catch (error) {
+    await rm(linuxCanvasFocusSnapshotRequestFile, {force: true}).catch(() => undefined);
+    await rm(vaultReconciliationRequestFile, {force: true}).catch(() => undefined);
+    throw new Error(`Could not prove deferred periodic reconciliation during ${stage}: request_id=${requestId}; detail=${error instanceof Error ? error.message : String(error)}`);
+  } finally {
+    for (const temporaryPath of temporaryPaths) {
+      await rm(temporaryPath, {force: true}).catch(() => undefined);
+    }
+  }
 }
 
 let canvasFocusSnapshotRequestSequence = 0;
@@ -21549,7 +21844,9 @@ async function replaceOpenObsidianTextInput(
   const processId = child.pid;
   if (!processId) throw new Error("OpenObsidian did not expose its process id for Canvas text entry");
   if (process.platform === "linux") {
-    if (safetyTracker && (safetyTracker.expectedAbortCanary || controlName === "Canvas edit path")) {
+    if (safetyTracker && (safetyTracker.expectedAbortCanary
+      || controlName === "Canvas edit path"
+      || controlName === "Canvas edit text-card ID")) {
       return await replaceLinuxOpenObsidianTextInputWithKeyboard(child, windowId, controlName, value, logPath, safetyTracker);
     }
     const script = `
@@ -21630,6 +21927,9 @@ sys.exit(1)
       }
     }
   } else if (process.platform === "darwin") {
+    if (safetyTracker && (controlName === "Canvas edit path" || controlName === "Canvas edit text-card ID")) {
+      return await replaceMacOSOpenObsidianTextInputWithKeyboard(child, windowId, controlName, value, logPath);
+    }
     const hintValue = canvasInputHintValues[controlName];
     if (hintValue === undefined) throw new Error(`No visible macOS Canvas hint is configured for ${controlName}`);
     const script = `on run argv
@@ -21718,6 +22018,13 @@ sys.exit(1)
             if ($current.Name -ne $targetName -and [string]$pattern.Current.Value -cne $hintValue) { continue }
             if ($pattern.Current.IsReadOnly) { throw "The accessible edit field is read-only: $targetName" }
             $pattern.SetValue($replacement)
+            $focusSet = $false
+            $hasKeyboardFocus = $false
+            $element.SetFocus()
+            $focusSet = $true
+            Start-Sleep -Milliseconds 120
+            try { $hasKeyboardFocus = [bool]$element.Current.HasKeyboardFocus } catch { $hasKeyboardFocus = $false }
+            if (-not $hasKeyboardFocus) { throw "The accessible edit field did not retain keyboard focus after exact value entry: $targetName" }
             Start-Sleep -Milliseconds 150
             $actual = [string]$pattern.Current.Value
             $initialReadbackLength = $actual.Length
@@ -22218,6 +22525,13 @@ async function runOpenObsidianCanvasTextEdit(
   const mesaShaderCacheRoot = join(workDirectory, `openobsidian-${runName}-mesa-shader-cache-scratch`);
   const appEnv: NodeJS.ProcessEnv = {...process.env, HOME: homeRoot};
   delete appEnv.OPENOBSIDIAN_CI_CANVAS_DISABLE_EFRAME_PERSISTENCE;
+  appEnv.OPENOBSIDIAN_CI_CANVAS_FOCUS_SNAPSHOT_REQUEST_FILE = linuxCanvasFocusSnapshotRequestFile;
+  appEnv.OPENOBSIDIAN_CI_FORCE_VAULT_RECONCILIATION_REQUEST_FILE = vaultReconciliationRequestFile;
+  if (!expectedAbortCanary) {
+    appEnv.OPENOBSIDIAN_CI_VAULT_REFRESH_EXPECTED_PATH = "R3-17-Reconciliation-External.md";
+  } else {
+    delete appEnv.OPENOBSIDIAN_CI_VAULT_REFRESH_EXPECTED_PATH;
+  }
   const appDataRoot = appDataContainer;
   const expectedEframeAppRonPath = expectedCanvasEframeAppRonRelativePath(process.platform);
   const windowsAdditionalAppDataRoots: SnapshotAdditionalRoot[] = [];
@@ -22258,7 +22572,6 @@ async function runOpenObsidianCanvasTextEdit(
     appEnv.LIBGL_ALWAYS_SOFTWARE = "1";
     appEnv.WGPU_BACKEND = "gl";
     appEnv.MESA_SHADER_CACHE_DIR = mesaShaderCacheRoot;
-    appEnv.OPENOBSIDIAN_CI_CANVAS_FOCUS_SNAPSHOT_REQUEST_FILE = linuxCanvasFocusSnapshotRequestFile;
     managedUserDataRoot = join(linuxXdgConfigRoot, "OpenObsidian");
   }
   if (process.platform === "darwin" && !expectedAbortCanary) {
@@ -23293,8 +23606,35 @@ async function runOpenObsidianCanvasTextEdit(
     editReport.destination_absent_before_field_input = true;
     await saveReport();
 
+    const refreshDiagnosticsBeforeFocusCapture = await readOpenObsidianRefreshDiagnostics(logPath);
     const canvasPathReadback = await replaceOpenObsidianTextInput(child, window.window_id, "Canvas edit path", canvasPath, logPath, safetyTracker);
+    const pathRefreshFocusCapture = await requestCanvasReconciliationFocusCapture(
+      logPath,
+      "Canvas edit path",
+      "path",
+      canvasPath,
+      "",
+      {forcePeriodicRescan: true},
+    );
+    const pendingRefreshRequestId = String(pathRefreshFocusCapture.request_id);
     const textCardIdReadback = await replaceOpenObsidianTextInput(child, window.window_id, "Canvas edit text-card ID", "text-1", logPath, safetyTracker);
+    const idRefreshFocusCapture = await requestCanvasReconciliationFocusCapture(
+      logPath,
+      "Canvas edit text-card ID",
+      "id",
+      "text-1",
+      canvasPath,
+      {forcePeriodicRescan: false, expectedPendingRequestId: pendingRefreshRequestId},
+    );
+    editReport.refresh_focus_guard = {
+      periodic_trigger_source: "production periodic timer deadline forced by one-shot CI request file",
+      request_file: relative(reportDirectory, vaultReconciliationRequestFile),
+      request_count_before: refreshDiagnosticsBeforeFocusCapture.requests.length,
+      canvas_path_capture: pathRefreshFocusCapture,
+      text_card_id_capture: idRefreshFocusCapture,
+      pending_request_id: pendingRefreshRequestId,
+      handoff: null,
+    };
     interactions.canvas_path = canvasPathReadback;
     interactions.text_card_id = textCardIdReadback;
     const inputReadbackEntries = [
@@ -23325,6 +23665,26 @@ async function runOpenObsidianCanvasTextEdit(
     editReport.vault_snapshot_after_input = afterInput;
     editReport.no_write_during_input = true;
 
+    const externalReconciliationNotePath = join(selectedVaultRoot, "R3-17-Reconciliation-External.md");
+    const externalReconciliationNoteBytes = Buffer.from("# Added while Canvas fields are focused\n", "utf8");
+    await writeFile(externalReconciliationNotePath, externalReconciliationNoteBytes, {flag: "wx"});
+    const vaultAfterExternalReconciliationChange = await snapshotTree(selectedVaultRoot);
+    const externalNoteChanges = changedPaths(afterInput, vaultAfterExternalReconciliationChange);
+    if (externalNoteChanges.length !== 1
+      || externalNoteChanges[0]?.path !== "R3-17-Reconciliation-External.md"
+      || externalNoteChanges[0]?.before !== undefined
+      || externalNoteChanges[0]?.after?.kind !== "file"
+      || (await readFile(externalReconciliationNotePath)).compare(externalReconciliationNoteBytes) !== 0) {
+      throw new Error(`The synthetic external note was not the only expected vault change while refresh was pending: ${JSON.stringify(externalNoteChanges).slice(0, 4_000)}`);
+    }
+    editReport.external_note_written_while_refresh_pending = {
+      relative_path: "R3-17-Reconciliation-External.md",
+      bytes: externalReconciliationNoteBytes.length,
+      sha256: createHash("sha256").update(externalReconciliationNoteBytes).digest("hex"),
+      only_expected_vault_change: true,
+      snapshot: vaultAfterExternalReconciliationChange,
+    };
+
     await waitForOpenObsidianRefreshIdle(0, initialMarkdownCount, false, logPath);
     interactions.load = await invokeNativeAccessibleControl(child, window.window_id, "Load Canvas text card", undefined, true);
     const loadedDraft = await waitFor(
@@ -23338,7 +23698,7 @@ async function runOpenObsidianCanvasTextEdit(
     screenshots.loaded = relative(reportDirectory, loadedDraft.windowPngPath);
     editReport.loaded_ocr = loadedDraft.ocrText.slice(0, 4_000);
     const afterLoad = await snapshotTree(selectedVaultRoot);
-    ensureExactSnapshot(afterInput, afterLoad, "Loading the Canvas text-card draft must not write to the vault");
+    ensureExactSnapshot(vaultAfterExternalReconciliationChange, afterLoad, "Loading the Canvas text-card draft must not write to the vault");
     if ((await readFile(join(selectedVaultRoot, canvasPath))).compare(canvasBytesBefore) !== 0
       || afterLoad.some((entry) => entry.path === canvasNotePath)) {
       throw new Error("Loading the native Canvas text-card draft wrote to the vault or changed its source");
@@ -23388,6 +23748,31 @@ async function runOpenObsidianCanvasTextEdit(
       }
     }, (bytes) => bytes !== null, 15_000);
     if (!savedCanvasBytes) throw new Error("Saving the Canvas text draft did not produce the exact expected Canvas document");
+    const reconciliationHandoff = await waitForDeferredVaultRefreshHandoff(
+      logPath,
+      pendingRefreshRequestId,
+      initialMarkdownCount + 1,
+      15_000,
+    );
+    const refreshFocusGuard = editReport.refresh_focus_guard as Record<string, unknown>;
+    refreshFocusGuard.handoff = reconciliationHandoff;
+    const postRefreshSession = await waitFor(
+      "the open session to include the external note after the deferred reconciliation",
+      async () => {
+        const text = await readFile(logPath, "utf8").catch(() => "");
+        return text.includes(`OpenObsidian CI vault refresh result consumed: request_id=${pendingRefreshRequestId}, succeeded=true, entries=${initialMarkdownCount + 1}`)
+          ? true
+          : null;
+      },
+      (value) => value !== null,
+      5_000,
+    );
+    if (!postRefreshSession) throw new Error("The deferred refresh did not expose the external note in its exact request-correlated result");
+    const refreshedSnapshot = await snapshotTree(selectedVaultRoot);
+    if (!canvasSnapshotEntry(refreshedSnapshot, "R3-17-Reconciliation-External.md")) {
+      throw new Error("The exact-one deferred refresh did not retain the external synthetic-vault note");
+    }
+    refreshFocusGuard.refreshed_vault_snapshot = refreshedSnapshot;
     const savedCanvasHash = createHash("sha256").update(savedCanvasBytes).digest("hex");
     let savedDocument: unknown;
     try {

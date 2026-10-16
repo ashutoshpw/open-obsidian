@@ -23,7 +23,7 @@ use std::path::Path;
 use std::rc::Rc;
 use std::sync::{
     Arc, OnceLock,
-    atomic::{AtomicU16, Ordering},
+    atomic::{AtomicU16, AtomicU64, Ordering},
     mpsc::{self, Receiver, TryRecvError},
 };
 use std::time::{Duration, Instant, SystemTime};
@@ -49,6 +49,42 @@ const CI_CANVAS_DISABLE_EGUI_MEMORY_PERSISTENCE_ENV: &str =
 const CI_CANVAS_DISABLE_EFRAME_PERSISTENCE_ENV: &str =
     "OPENOBSIDIAN_CI_CANVAS_DISABLE_EFRAME_PERSISTENCE";
 static CI_CANVAS_FOCUS_SNAPSHOT_START: OnceLock<Instant> = OnceLock::new();
+static CI_VAULT_RESCAN_REQUEST_SEQUENCE: AtomicU64 = AtomicU64::new(1);
+
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+struct CanvasTargetFieldFocus {
+    path: bool,
+    text_card_id: bool,
+}
+
+impl CanvasTargetFieldFocus {
+    fn any(self) -> bool {
+        self.path || self.text_card_id
+    }
+}
+
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+struct VaultRescanOrigins {
+    filesystem_watcher: bool,
+    periodic_timer: bool,
+}
+
+impl VaultRescanOrigins {
+    fn label(self) -> &'static str {
+        match (self.filesystem_watcher, self.periodic_timer) {
+            (true, true) => "filesystem_watcher+periodic_timer",
+            (true, false) => "filesystem_watcher",
+            (false, true) => "periodic_timer",
+            (false, false) => "none",
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+enum VaultRescanOrigin {
+    FilesystemWatcher,
+    PeriodicTimer,
+}
 
 fn ci_canvas_egui_memory_persistence_disabled() -> bool {
     matches!(
@@ -424,12 +460,17 @@ struct OpenObsidianApp {
     vault_opening: bool,
     vault_open_error: Option<String>,
     vault_refresh_receiver: Option<VaultRefreshReceiver>,
+    vault_refresh_request_id: Option<String>,
     vault_refresh_error: Option<String>,
     vault_refresh_status: Option<String>,
     vault_watcher: Option<VaultWatcher>,
     vault_watch_error: Option<String>,
     vault_rescan_pending: bool,
+    vault_rescan_origins: VaultRescanOrigins,
+    vault_rescan_request_id: Option<String>,
     next_vault_reconciliation: Option<Instant>,
+    canvas_target_field_focus: CanvasTargetFieldFocus,
+    canvas_focus_observation_request_id: Option<String>,
     history_policy: VaultHistoryPolicy,
     history_records: Vec<VaultHistoryRecord>,
     history_plan: Option<VaultHistoryPlan>,
@@ -469,10 +510,12 @@ struct OpenObsidianApp {
     canvas_text_edit_node_id: String,
     canvas_text_edit_preview: Option<CanvasTextEditPreview>,
     canvas_text_edit_receiver: Option<CanvasTextEditReceiver>,
+    canvas_text_edit_snapshot_lease: bool,
     canvas_text_edit_error: Option<String>,
     canvas_text_edit_status: Option<String>,
     canvas_text_edit_stale: bool,
     canvas_text_edit_was_open: bool,
+    vault_refresh_generation: u64,
     bases_listing: Option<BaseFileListing>,
     bases_selected_path: Option<std::path::PathBuf>,
     bases_selected_view: Option<usize>,
@@ -511,7 +554,8 @@ impl OpenObsidianApp {
             ui.ctx().request_repaint_after(Duration::from_millis(100));
         }
         self.poll_vault_refresh_task(ui);
-        self.poll_vault_change_hints(ui);
+        self.canvas_target_field_focus = CanvasTargetFieldFocus::default();
+        self.canvas_focus_observation_request_id = None;
         self.log_ci_open_vault_availability();
         ui.heading("OpenObsidian");
         ui.label("Native Rust migration is in progress.");
@@ -519,6 +563,7 @@ impl OpenObsidianApp {
             .id_salt("openobsidian-main-content")
             .auto_shrink([false, false])
             .show(ui, |ui| self.show_ui_content(ui));
+        self.poll_vault_change_hints(ui);
     }
 
     fn show_ui_content(&mut self, ui: &mut eframe::egui::Ui) {
@@ -531,7 +576,7 @@ impl OpenObsidianApp {
             || self.rename_receiver.is_some()
             || self.canvas_note_receiver.is_some()
             || self.canvas_text_edit_receiver.is_some()
-            || self.canvas_text_edit_preview.is_some()
+            || self.canvas_text_editing()
             || self.note_source_editing();
         let open_vault_button = self.open_vault_action.as_ref().map(|_| {
             ui.add_enabled(
@@ -595,6 +640,8 @@ impl OpenObsidianApp {
                 });
                 self.vault_watcher = watcher.ok();
                 self.vault_rescan_pending = false;
+                self.vault_rescan_origins = VaultRescanOrigins::default();
+                self.vault_rescan_request_id = None;
                 self.next_vault_reconciliation =
                     Some(Instant::now() + VAULT_RECONCILIATION_INTERVAL);
                 self.rename_source_path = session
@@ -608,6 +655,7 @@ impl OpenObsidianApp {
                 self.vault_opening = false;
                 self.vault_open_error = None;
                 self.vault_refresh_receiver = None;
+                self.vault_refresh_request_id = None;
                 self.vault_refresh_error = None;
                 self.vault_refresh_status = None;
                 self.history_records.clear();
@@ -652,6 +700,7 @@ impl OpenObsidianApp {
                 self.canvas_text_edit_node_id.clear();
                 self.canvas_text_edit_preview = None;
                 self.canvas_text_edit_receiver = None;
+                self.canvas_text_edit_snapshot_lease = false;
                 self.canvas_text_edit_error = None;
                 self.canvas_text_edit_status = None;
                 self.canvas_text_edit_stale = false;
@@ -809,6 +858,7 @@ impl OpenObsidianApp {
             self.canvas_note_receiver.is_some(),
             self.canvas_text_edit_receiver.is_some(),
             self.canvas_text_edit_preview.is_some(),
+            self.canvas_text_edit_snapshot_lease,
             self.bases_receiver.is_some(),
         ]
         .into_iter()
@@ -837,7 +887,7 @@ impl OpenObsidianApp {
             || self.canvas_text_edit_preview.is_some()
             || self.note_source_editing();
         eprintln!(
-            "OpenObsidian CI UI state: session={}, vault_opening={}, vault_open_receiver={}, history_receiver={}, link_receiver={}, note_preview_receiver={}, note_preview_write_receiver={}, vault_refresh_receiver={}, rename_receiver={}, canvas_note_receiver={}, canvas_text_edit_receiver={}, canvas_text_edit_preview={}, bases_receiver={}, open_vault_enabled={}",
+            "OpenObsidian CI UI state: session={}, vault_opening={}, vault_open_receiver={}, history_receiver={}, link_receiver={}, note_preview_receiver={}, note_preview_write_receiver={}, vault_refresh_receiver={}, rename_receiver={}, canvas_note_receiver={}, canvas_text_edit_receiver={}, canvas_text_edit_preview={}, canvas_text_edit_snapshot_lease={}, bases_receiver={}, open_vault_enabled={}",
             self.session.is_some(),
             self.vault_opening,
             self.vault_open_receiver.is_some(),
@@ -850,6 +900,7 @@ impl OpenObsidianApp {
             self.canvas_note_receiver.is_some(),
             self.canvas_text_edit_receiver.is_some(),
             self.canvas_text_edit_preview.is_some(),
+            self.canvas_text_edit_snapshot_lease,
             self.bases_receiver.is_some(),
             !self.vault_opening && !vault_operation_busy,
         );
@@ -879,7 +930,31 @@ impl OpenObsidianApp {
 
 impl OpenObsidianApp {
     fn canvas_text_editing(&self) -> bool {
-        self.canvas_text_edit_receiver.is_some() || self.canvas_text_edit_preview.is_some()
+        self.canvas_text_edit_receiver.is_some() || self.canvas_text_edit_snapshot_lease
+    }
+
+    fn vault_source_operation_in_flight(&self) -> bool {
+        self.vault_opening
+            || self.vault_open_receiver.is_some()
+            || self.history_receiver.is_some()
+            || self.link_receiver.is_some()
+            || self.bases_receiver.is_some()
+            || self.note_preview_receiver.is_some()
+            || self.note_preview_write_receiver.is_some()
+            || self.vault_refresh_receiver.is_some()
+            || self.rename_receiver.is_some()
+            || self.canvas_note_receiver.is_some()
+            || self.canvas_text_edit_receiver.is_some()
+    }
+
+    fn vault_snapshot_lease_active(&self) -> bool {
+        self.canvas_text_edit_snapshot_lease || self.note_source_editing()
+    }
+
+    fn vault_reconciliation_busy(&self) -> bool {
+        self.canvas_target_field_focus.any()
+            || self.vault_source_operation_in_flight()
+            || self.vault_snapshot_lease_active()
     }
 
     fn vault_operation_busy_except_bases(&self) -> bool {
@@ -893,6 +968,8 @@ impl OpenObsidianApp {
             || self.rename_receiver.is_some()
             || self.canvas_note_receiver.is_some()
             || self.canvas_text_edit_receiver.is_some()
+            || self.canvas_text_edit_snapshot_lease
+            || self.note_source_editing()
     }
 
     fn clear_bases_state(&mut self) {
@@ -2227,6 +2304,9 @@ impl OpenObsidianApp {
         let target_fields_enabled = !operation_busy && self.canvas_text_edit_preview.is_none();
 
         let mut inputs_changed = false;
+        let mut canvas_path_focused = false;
+        let mut text_card_id_focused = false;
+        let mut field_observation_request_id = None;
         ui.horizontal_wrapped(|ui| {
             let path_label = ui.label("Canvas edit path");
             let path_input = ui
@@ -2239,6 +2319,7 @@ impl OpenObsidianApp {
                 )
                 .labelled_by(path_label.id);
             inputs_changed |= path_input.changed();
+            canvas_path_focused |= path_input.has_focus();
             let node_label = ui.label("Canvas edit text-card ID");
             let node_input = ui
                 .add_enabled(
@@ -2250,6 +2331,7 @@ impl OpenObsidianApp {
                 )
                 .labelled_by(node_label.id);
             inputs_changed |= node_input.changed();
+            text_card_id_focused |= node_input.has_focus();
             let frame_nr = ui.ctx().cumulative_frame_nr();
             let pixels_per_point = ui.ctx().pixels_per_point();
             let pixels_per_point_bits = pixels_per_point.to_bits();
@@ -2450,6 +2532,7 @@ impl OpenObsidianApp {
                 None
             };
             if let Some(request_id) = snapshot_request {
+                field_observation_request_id = Some(request_id.clone());
                 let monotonic_ms = CI_CANVAS_FOCUS_SNAPSHOT_START
                     .get_or_init(Instant::now)
                     .elapsed()
@@ -2494,8 +2577,12 @@ impl OpenObsidianApp {
                 );
             }
         });
+        self.canvas_target_field_focus.path |= canvas_path_focused;
+        self.canvas_target_field_focus.text_card_id |= text_card_id_focused;
+        self.canvas_focus_observation_request_id = field_observation_request_id;
         if inputs_changed {
             self.canvas_text_edit_preview = None;
+            self.canvas_text_edit_snapshot_lease = false;
             self.canvas_text_edit_error = None;
             self.canvas_text_edit_status = None;
             self.canvas_text_edit_stale = false;
@@ -2536,6 +2623,7 @@ impl OpenObsidianApp {
         let mut save_requested = false;
         let mut reload_requested = false;
         let mut cancel_requested = false;
+        let mut canvas_draft_changed = false;
         if let Some(preview) = &mut self.canvas_text_edit_preview {
             ui.group(|ui| {
                 ui.label(format!(
@@ -2554,13 +2642,14 @@ impl OpenObsidianApp {
                     );
                 }
                 let draft_label = ui.label("Canvas text draft");
-                ui.add_enabled(
+                let draft_input = ui.add_enabled(
                     !operation_busy && !self.canvas_text_edit_stale,
                     eframe::egui::TextEdit::multiline(&mut preview.draft_text)
                         .desired_rows(6)
                         .desired_width(560.0),
                 )
                 .labelled_by(draft_label.id);
+                canvas_draft_changed |= draft_input.changed();
                 ui.horizontal(|ui| {
                     let can_save = !operation_busy
                         && !self.canvas_text_edit_stale
@@ -2611,12 +2700,16 @@ impl OpenObsidianApp {
                 });
             });
         }
+        if canvas_draft_changed {
+            self.canvas_text_edit_snapshot_lease = true;
+        }
         if save_requested {
             self.start_canvas_text_edit_save();
         } else if reload_requested {
             self.start_canvas_text_edit_preview();
         } else if cancel_requested {
             self.canvas_text_edit_preview = None;
+            self.canvas_text_edit_snapshot_lease = false;
             self.canvas_text_edit_error = None;
             self.canvas_text_edit_status = Some("Canvas edit canceled without writing.".to_owned());
             self.canvas_text_edit_stale = false;
@@ -2649,17 +2742,20 @@ impl OpenObsidianApp {
             || self.canvas_text_editing()
             || self.note_source_editing();
         let mut inputs_changed = false;
+        let mut canvas_path_focused = false;
+        let mut text_card_id_focused = false;
         ui.horizontal_wrapped(|ui| {
             let canvas_path_label = ui.label("Canvas path");
-            inputs_changed |= ui
+            let canvas_path_input = ui
                 .add_enabled(
                     !operation_busy,
                     eframe::egui::TextEdit::singleline(&mut self.canvas_note_canvas_path)
                         .hint_text("Boards/Idea.canvas")
                         .desired_width(210.0),
                 )
-                .labelled_by(canvas_path_label.id)
-                .changed();
+                .labelled_by(canvas_path_label.id);
+            inputs_changed |= canvas_path_input.changed();
+            canvas_path_focused |= canvas_path_input.has_focus();
             let node_id_label = ui.label("Text card ID");
             let node_id_input = ui
                 .add_enabled(
@@ -2670,6 +2766,7 @@ impl OpenObsidianApp {
                 )
                 .labelled_by(node_id_label.id);
             inputs_changed |= node_id_input.changed();
+            text_card_id_focused |= node_id_input.has_focus();
             if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some()
                 && ui.input(|input| !input.raw.events.is_empty())
             {
@@ -2732,6 +2829,8 @@ impl OpenObsidianApp {
                 .labelled_by(destination_path_label.id)
                 .changed();
         });
+        self.canvas_target_field_focus.path |= canvas_path_focused;
+        self.canvas_target_field_focus.text_card_id |= text_card_id_focused;
         if inputs_changed {
             self.canvas_note_preview = None;
             self.canvas_note_confirmation = false;
@@ -3253,12 +3352,6 @@ impl OpenObsidianApp {
             self.start_note_task_write(relative_path, bytes, expected_revision_sha256);
         }
         if let Some((relative_path, bytes, expected_revision_sha256)) = source_write {
-            if let Some(preview) = &mut self.note_source_preview {
-                preview.text = String::from_utf8(bytes.clone())
-                    .expect("source editor contents must remain valid UTF-8");
-                preview.total_size_bytes = bytes.len() as u64;
-                preview.source_draft = None;
-            }
             self.start_note_preview_write(
                 relative_path,
                 bytes,
@@ -3932,10 +4025,8 @@ impl OpenObsidianApp {
         let canvas_relative_path =
             std::path::PathBuf::from(self.canvas_text_edit_path.trim().replace('\\', "/"));
         let node_id = self.canvas_text_edit_node_id.trim().to_owned();
-        self.canvas_text_edit_preview = None;
         self.canvas_text_edit_error = None;
         self.canvas_text_edit_status = None;
-        self.canvas_text_edit_stale = false;
         let (sender, receiver) = mpsc::channel();
         rayon::spawn(move || {
             let result = session
@@ -4141,13 +4232,26 @@ impl OpenObsidianApp {
     }
 
     fn start_vault_refresh(&mut self) {
+        self.start_vault_refresh_with_request_id(None);
+    }
+
+    fn start_vault_refresh_for_request(&mut self, request_id: String) {
+        self.start_vault_refresh_with_request_id(Some(request_id));
+    }
+
+    fn start_vault_refresh_with_request_id(&mut self, request_id: Option<String>) {
         let Some(mut session) = self.session.as_ref().map(|session| (**session).clone()) else {
             return;
         };
+        self.vault_refresh_generation = self.vault_refresh_generation.saturating_add(1);
+        self.vault_refresh_request_id = request_id;
         let ci_diagnostics = std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some();
         let entries_before = session.entries().len();
         if ci_diagnostics {
-            eprintln!("OpenObsidian CI vault refresh scheduled: entries_before={entries_before}");
+            eprintln!(
+                "OpenObsidian CI vault refresh scheduled: generation={}, entries_before={entries_before}",
+                self.vault_refresh_generation
+            );
         }
         let note_preview_guard = self.note_source_preview.as_ref().and_then(|preview| {
             let revision = preview.revision_sha256.as_ref()?;
@@ -4229,7 +4333,47 @@ impl OpenObsidianApp {
         self.vault_refresh_receiver = Some(receiver);
     }
 
+    fn consume_ci_periodic_reconciliation_request(&mut self, now: Instant) -> Option<String> {
+        if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_none() {
+            return None;
+        }
+        let request_file = std::env::var_os(
+            "OPENOBSIDIAN_CI_FORCE_VAULT_RECONCILIATION_REQUEST_FILE",
+        )?;
+        let request_file = Path::new(&request_file);
+        let request_id = std::fs::read_to_string(request_file).ok()?;
+        let request_id = request_id.trim().to_owned();
+        if request_id.is_empty() || std::fs::remove_file(request_file).is_err() {
+            return None;
+        }
+        self.next_vault_reconciliation = Some(now);
+        Some(request_id)
+    }
+
+    fn mark_vault_rescan_pending(
+        &mut self,
+        origin: VaultRescanOrigin,
+        request_id: Option<&str>,
+    ) {
+        self.vault_rescan_pending = true;
+        match origin {
+            VaultRescanOrigin::FilesystemWatcher => {
+                self.vault_rescan_origins.filesystem_watcher = true;
+            }
+            VaultRescanOrigin::PeriodicTimer => {
+                self.vault_rescan_origins.periodic_timer = true;
+            }
+        }
+        if let Some(request_id) = request_id.filter(|request_id| !request_id.is_empty()) {
+            self.vault_rescan_request_id = Some(request_id.to_owned());
+        } else if self.vault_rescan_request_id.is_none() {
+            let sequence = CI_VAULT_RESCAN_REQUEST_SEQUENCE.fetch_add(1, Ordering::Relaxed);
+            self.vault_rescan_request_id = Some(format!("vault-rescan-{sequence}"));
+        }
+    }
+
     fn poll_vault_change_hints(&mut self, ui: &mut eframe::egui::Ui) {
+        let mut state_changed = false;
         let watcher_hint = self.vault_watcher.as_mut().and_then(VaultWatcher::poll);
         if let Some(hint) = watcher_hint {
             if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some() {
@@ -4238,7 +4382,8 @@ impl OpenObsidianApp {
                     self.vault_refresh_receiver.is_some()
                 );
             }
-            self.vault_rescan_pending = true;
+            self.mark_vault_rescan_pending(VaultRescanOrigin::FilesystemWatcher, None);
+            state_changed = true;
         }
 
         if self.session.is_none() {
@@ -4247,38 +4392,75 @@ impl OpenObsidianApp {
         }
 
         let now = Instant::now();
-        let next_reconciliation = self
-            .next_vault_reconciliation
-            .get_or_insert(now + VAULT_RECONCILIATION_INTERVAL);
-        if now >= *next_reconciliation {
-            self.vault_rescan_pending = true;
+        let forced_request_id = self.consume_ci_periodic_reconciliation_request(now);
+        let timer_due = {
+            let next_reconciliation = self
+                .next_vault_reconciliation
+                .get_or_insert(now + VAULT_RECONCILIATION_INTERVAL);
+            now >= *next_reconciliation
+        };
+        if timer_due {
+            self.mark_vault_rescan_pending(
+                VaultRescanOrigin::PeriodicTimer,
+                forced_request_id.as_deref(),
+            );
             if let Some(watcher) = &mut self.vault_watcher {
                 watcher.request_rescan();
                 let _ = watcher.poll();
             }
-            *next_reconciliation = now + VAULT_RECONCILIATION_INTERVAL;
+            self.next_vault_reconciliation = Some(now + VAULT_RECONCILIATION_INTERVAL);
+            state_changed = true;
         }
+        let next_reconciliation = self
+            .next_vault_reconciliation
+            .unwrap_or(now + VAULT_RECONCILIATION_INTERVAL);
         ui.ctx()
             .request_repaint_after(next_reconciliation.saturating_duration_since(now));
 
-        let operation_busy = self.vault_opening
-            || self.vault_open_receiver.is_some()
-            || self.history_receiver.is_some()
-            || self.link_receiver.is_some()
-            || self.bases_receiver.is_some()
-            || self.note_preview_receiver.is_some()
-            || self.note_preview_write_receiver.is_some()
-            || self.vault_refresh_receiver.is_some()
-            || self.rename_receiver.is_some()
-            || self.canvas_note_receiver.is_some()
-            || self.canvas_text_editing()
-            || self.note_source_editing();
+        let operation_busy = self.vault_reconciliation_busy();
+        let should_log_state = std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some()
+            && self.vault_rescan_pending
+            && (state_changed || !operation_busy || self.canvas_focus_observation_request_id.is_some());
+        if should_log_state {
+            let request_id = self
+                .canvas_focus_observation_request_id
+                .as_deref()
+                .or(self.vault_rescan_request_id.as_deref())
+                .unwrap_or("missing-request-id");
+            let pending_request_id = self
+                .vault_rescan_request_id
+                .as_deref()
+                .unwrap_or("missing-request-id");
+            let frame_nr = ui.ctx().cumulative_frame_nr();
+            let trigger_sources = self.vault_rescan_origins.label();
+            eprintln!(
+                "OpenObsidian CI vault reconciliation state: request_id={request_id}, pending_request_id={pending_request_id}, frame_nr={frame_nr}, trigger_sources={trigger_sources}, canvas_path_focused={}, canvas_text_card_id_focused={}, rescan_pending={}, refresh_receiver={}, snapshot_lease_active={}, source_operation_receiver_busy={}, safe_to_refresh={}",
+                self.canvas_target_field_focus.path,
+                self.canvas_target_field_focus.text_card_id,
+                self.vault_rescan_pending,
+                self.vault_refresh_receiver.is_some(),
+                self.vault_snapshot_lease_active(),
+                self.vault_source_operation_in_flight(),
+                !operation_busy,
+            );
+        }
+
         if self.vault_rescan_pending && !operation_busy {
-            self.vault_rescan_pending = false;
+            let request_id = self
+                .vault_rescan_request_id
+                .clone()
+                .unwrap_or_else(|| "missing-request-id".to_owned());
+            let trigger_sources = self.vault_rescan_origins.label();
             if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some() {
-                eprintln!("OpenObsidian CI vault refresh request: source=watcher_reconciliation");
+                eprintln!(
+                    "OpenObsidian CI vault refresh request: source=watcher_reconciliation, request_id={request_id}, trigger_sources={trigger_sources}, frame_nr={}",
+                    ui.ctx().cumulative_frame_nr()
+                );
             }
-            self.start_vault_refresh();
+            self.vault_rescan_pending = false;
+            self.vault_rescan_origins = VaultRescanOrigins::default();
+            self.vault_rescan_request_id = None;
+            self.start_vault_refresh_for_request(request_id);
             ui.ctx().request_repaint();
         } else if self.vault_rescan_pending {
             ui.ctx().request_repaint_after(Duration::from_millis(100));
@@ -4484,6 +4666,7 @@ impl OpenObsidianApp {
             Some(Ok(CanvasTextEditTaskMessage::Preview(Ok(preview)))) => {
                 self.canvas_text_edit_receiver = None;
                 self.canvas_text_edit_preview = Some(preview);
+                self.canvas_text_edit_snapshot_lease = true;
                 self.canvas_text_edit_error = None;
                 self.canvas_text_edit_status =
                     Some("Canvas text loaded. Changes remain a draft until you save.".to_owned());
@@ -4491,10 +4674,8 @@ impl OpenObsidianApp {
             }
             Some(Ok(CanvasTextEditTaskMessage::Preview(Err(error)))) => {
                 self.canvas_text_edit_receiver = None;
-                self.canvas_text_edit_preview = None;
                 self.canvas_text_edit_status = None;
                 self.canvas_text_edit_error = Some(error);
-                self.canvas_text_edit_stale = false;
             }
             Some(Ok(CanvasTextEditTaskMessage::Saved(Ok(revision_sha256)))) => {
                 self.canvas_text_edit_receiver = None;
@@ -4507,6 +4688,7 @@ impl OpenObsidianApp {
                         preview.canvas_relative_path.display()
                     ));
                 }
+                self.canvas_text_edit_snapshot_lease = false;
                 self.canvas_text_edit_error = None;
                 self.canvas_text_edit_stale = false;
             }
@@ -4638,6 +4820,13 @@ impl OpenObsidianApp {
                     .map(|preview| preview.relative_path.clone());
                 if let Some(preview) = &mut self.note_source_preview {
                     preview.revision_sha256 = Some(revision_sha256.clone());
+                    if kind == NotePreviewWriteKind::MarkdownSource
+                        && let Some(saved_source) = preview.source_draft.take()
+                    {
+                        preview.total_size_bytes = saved_source.len() as u64;
+                        preview.truncated = false;
+                        preview.text = saved_source;
+                    }
                     if !preview.wiki_link_resolutions.is_empty() {
                         preview.wiki_link_resolution_error = Some(
                             "The source changed. Read the note preview again to refresh resolved wiki links."
@@ -4693,10 +4882,26 @@ impl OpenObsidianApp {
         let result = self.vault_refresh_receiver.as_ref().map(Receiver::try_recv);
         match result {
             Some(Ok(Ok(outcome))) => {
+                let request_id = self
+                    .vault_refresh_request_id
+                    .take()
+                    .unwrap_or_else(|| "none".to_owned());
+                let entries = outcome.session.entries().len();
+                let expected_path_visible = std::env::var_os(
+                    "OPENOBSIDIAN_CI_VAULT_REFRESH_EXPECTED_PATH",
+                )
+                .map(|expected_path| {
+                    let expected_path = std::path::PathBuf::from(expected_path);
+                    outcome
+                        .session
+                        .entries()
+                        .iter()
+                        .any(|entry| entry.relative_path == expected_path)
+                })
+                .unwrap_or(true);
                 if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some() {
                     eprintln!(
-                        "OpenObsidian CI vault refresh result consumed: succeeded=true, entries={}",
-                        outcome.session.entries().len()
+                        "OpenObsidian CI vault refresh result consumed: request_id={request_id}, succeeded=true, entries={entries}, expected_path_visible={expected_path_visible}"
                     );
                 }
                 self.vault_refresh_receiver = None;
@@ -4767,14 +4972,19 @@ impl OpenObsidianApp {
                 ));
             }
             Some(Ok(Err(error))) => {
+                let request_id = self
+                    .vault_refresh_request_id
+                    .take()
+                    .unwrap_or_else(|| "none".to_owned());
                 if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some() {
-                    eprintln!("OpenObsidian CI vault refresh result consumed: succeeded=false");
+                    eprintln!("OpenObsidian CI vault refresh result consumed: request_id={request_id}, succeeded=false");
                 }
                 self.vault_refresh_receiver = None;
                 self.vault_refresh_status = None;
                 self.vault_refresh_error = Some(error);
             }
             Some(Err(TryRecvError::Disconnected)) => {
+                self.vault_refresh_request_id = None;
                 if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some() {
                     eprintln!("OpenObsidian CI vault refresh result channel disconnected");
                 }
@@ -6412,6 +6622,148 @@ mod tests {
         }
     }
 
+    #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+    enum CanvasFocusTestField {
+        Path,
+        TextCardId,
+    }
+
+    fn assert_canvas_refresh_defers_for_focused_field(
+        field: CanvasFocusTestField,
+        trigger: VaultRescanOrigin,
+    ) {
+        let temporary = UiTempDir::new();
+        let vault_path = temporary.0.join("vault");
+        let app_data_path = temporary.0.join("app-data");
+        let canvas_source =
+            br#"{"nodes":[{"id":"text-1","type":"text","text":"before"}],"edges":[]}"#;
+        let app = canvas_text_edit_test_app(&vault_path, &app_data_path, canvas_source);
+        let mut harness = Harness::new_ui_state(|ui, app| app.show_ui(ui), app);
+        harness.step();
+        expand_canvas_text_edit(&mut harness);
+
+        let target_label = match field {
+            CanvasFocusTestField::Path => "Canvas edit path",
+            CanvasFocusTestField::TextCardId => "Canvas edit text-card ID",
+        };
+        let external_note = b"# Added while Canvas target is focused\n";
+        std::fs::write(vault_path.join("External.md"), external_note)
+            .expect("write an external note while a Canvas target is focused");
+        let expected_vault = existing_vault_tree_snapshot(&vault_path);
+        let expected_app_data = existing_vault_tree_snapshot(&app_data_path);
+
+        // Make the trigger eligible before the click event is handled so focus
+        // acquisition and reconciliation happen on the same egui frame.
+        match trigger {
+            VaultRescanOrigin::PeriodicTimer => {
+                harness.state_mut().next_vault_reconciliation =
+                    Some(Instant::now() - Duration::from_secs(1));
+            }
+            VaultRescanOrigin::FilesystemWatcher => {
+                let root = harness
+                    .state()
+                    .session
+                    .as_ref()
+                    .expect("test vault session remains open")
+                    .root_path()
+                    .to_path_buf();
+                let watcher = VaultWatcher::watch(root).expect("watch the test vault");
+                harness.state_mut().vault_watcher = Some(watcher);
+                harness
+                    .state()
+                    .vault_watcher
+                    .as_ref()
+                    .expect("test watcher was installed")
+                    .request_rescan();
+            }
+        }
+
+        harness.get_by_label(target_label).click();
+        harness.step();
+        let focus = harness.state().canvas_target_field_focus;
+        assert_eq!(focus.path, field == CanvasFocusTestField::Path);
+        assert_eq!(focus.text_card_id, field == CanvasFocusTestField::TextCardId);
+        for _ in 0..2 {
+            let state = harness.state();
+            assert!(state.vault_rescan_pending);
+            assert!(state.vault_refresh_receiver.is_none());
+            assert_eq!(state.vault_refresh_generation, 0);
+            assert_eq!(state.canvas_target_field_focus.path, field == CanvasFocusTestField::Path);
+            assert_eq!(
+                state.canvas_target_field_focus.text_card_id,
+                field == CanvasFocusTestField::TextCardId
+            );
+            assert_eq!(
+                state.vault_rescan_origins.periodic_timer,
+                trigger == VaultRescanOrigin::PeriodicTimer
+            );
+            assert_eq!(
+                state.vault_rescan_origins.filesystem_watcher,
+                trigger == VaultRescanOrigin::FilesystemWatcher
+            );
+            assert!(!state.vault_snapshot_lease_active());
+            assert!(!state.vault_source_operation_in_flight());
+            harness.step();
+        }
+
+        let request_id = harness
+            .state()
+            .vault_rescan_request_id
+            .clone()
+            .expect("pending rescan has a correlation ID");
+        harness.get_by_label("Load Canvas text card").click();
+        harness.step();
+        assert!(harness.state().vault_rescan_pending);
+        assert!(harness.state().vault_refresh_receiver.is_none());
+        assert_eq!(harness.state().vault_refresh_generation, 0);
+        assert!(
+            harness.state().vault_source_operation_in_flight()
+                || harness.state().vault_snapshot_lease_active()
+        );
+        wait_for_canvas_text_edit_task(&mut harness);
+        assert!(harness.state().canvas_text_edit_preview.is_some());
+        assert!(harness.state().vault_snapshot_lease_active());
+        assert!(harness.state().vault_rescan_pending);
+        assert!(harness.state().vault_refresh_receiver.is_none());
+        assert_eq!(harness.state().vault_refresh_generation, 0);
+        assert!(!harness.state().vault_source_operation_in_flight());
+        assert_eq!(harness.state().canvas_target_field_focus, CanvasTargetFieldFocus::default());
+
+        harness.get_by_label("Cancel Canvas edit").click();
+        harness.step();
+        assert_eq!(harness.state().canvas_target_field_focus, CanvasTargetFieldFocus::default());
+        assert!(!harness.state().vault_rescan_pending);
+        assert!(!harness.state().vault_snapshot_lease_active());
+        assert_eq!(harness.state().vault_refresh_generation, 1);
+        assert_eq!(
+            harness.state().vault_refresh_request_id.as_deref(),
+            Some(request_id.as_str())
+        );
+
+        wait_for_vault_refresh(&mut harness);
+        assert!(harness.state().vault_refresh_error.is_none());
+        assert_eq!(harness.state().vault_refresh_generation, 1);
+        let session = harness
+            .state()
+            .session
+            .as_ref()
+            .expect("reconciled vault session remains open");
+        assert_eq!(session.entries().len(), 1);
+        assert_eq!(session.read("External.md").unwrap().document.as_bytes(), external_note);
+        assert_eq!(existing_vault_tree_snapshot(&vault_path), expected_vault);
+        assert_eq!(existing_vault_tree_snapshot(&app_data_path), expected_app_data);
+
+        for _ in 0..3 {
+            harness.step();
+            assert_eq!(harness.state().vault_refresh_generation, 1);
+            assert!(!harness.state().vault_rescan_pending);
+            assert!(harness.state().vault_refresh_receiver.is_none());
+        }
+        drop(harness);
+        assert_eq!(existing_vault_tree_snapshot(&vault_path), expected_vault);
+        assert_eq!(existing_vault_tree_snapshot(&app_data_path), expected_app_data);
+    }
+
     fn wait_for_history(harness: &mut Harness<'_, OpenObsidianApp>) {
         let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
         loop {
@@ -7788,6 +8140,7 @@ mod tests {
                 .map(|preview| preview.original_text.as_str()),
             Some("before")
         );
+        assert!(harness.state().vault_snapshot_lease_active());
 
         replace_canvas_text_draft(&mut harness, "draft only");
         assert_eq!(
@@ -7798,6 +8151,7 @@ mod tests {
                 .map(|preview| preview.draft_text.as_str()),
             Some("draft only")
         );
+        assert!(harness.state().vault_snapshot_lease_active());
         assert_eq!(existing_vault_tree_snapshot(&vault_path), vault_before);
         assert_eq!(
             existing_vault_tree_snapshot(&app_data_path),
@@ -7821,6 +8175,7 @@ mod tests {
         harness.step();
 
         assert!(harness.state().canvas_text_edit_preview.is_none());
+        assert!(!harness.state().vault_snapshot_lease_active());
         assert_eq!(
             harness.state().canvas_text_edit_status.as_deref(),
             Some("Canvas edit canceled without writing.")
@@ -7890,6 +8245,7 @@ mod tests {
         harness.get_by_label("Load Canvas text card").click();
         harness.step();
         wait_for_canvas_text_edit_task(&mut harness);
+        assert!(harness.state().vault_snapshot_lease_active());
         replace_canvas_text_draft(&mut harness, "edited text card");
         assert_eq!(existing_vault_tree_snapshot(&vault_path), vault_before);
 
@@ -7897,6 +8253,8 @@ mod tests {
         harness.step();
         assert!(harness.state().canvas_text_edit_receiver.is_some());
         wait_for_canvas_text_edit_task(&mut harness);
+        assert!(!harness.state().vault_snapshot_lease_active());
+        assert!(harness.state().canvas_text_edit_preview.is_some());
 
         let actual_bytes = std::fs::read(vault_path.join("Boards/Idea.canvas")).unwrap();
         let actual: serde_json::Value =
@@ -7967,6 +8325,7 @@ mod tests {
             "the stale draft must not overwrite the external Canvas edit"
         );
         assert!(harness.state().canvas_text_edit_receiver.is_none());
+        assert!(harness.state().vault_snapshot_lease_active());
         assert!(
             harness
                 .state()
@@ -7998,6 +8357,7 @@ mod tests {
         assert!(harness.state().canvas_text_edit_receiver.is_some());
         wait_for_canvas_text_edit_task(&mut harness);
         assert!(!harness.state().canvas_text_edit_stale);
+        assert!(harness.state().vault_snapshot_lease_active());
         assert_eq!(
             harness
                 .state()
@@ -8909,6 +9269,7 @@ mod tests {
                 app.poll_vault_refresh_task(ui);
                 app.poll_note_preview_write_task(ui);
                 app.show_note_source_preview(ui, false);
+                app.poll_vault_change_hints(ui);
             },
             app,
         );
@@ -8940,9 +9301,21 @@ mod tests {
                 .and_then(|preview| preview.source_draft.as_deref()),
             Some(expected)
         );
+        assert!(harness.state().vault_snapshot_lease_active());
+        harness.state_mut().next_vault_reconciliation =
+            Some(Instant::now() - Duration::from_secs(1));
+        harness.step();
+        assert!(harness.state().vault_rescan_pending);
+        assert!(harness.state().vault_refresh_receiver.is_none());
+        assert_eq!(harness.state().vault_refresh_generation, 0);
+        assert!(harness.state().vault_snapshot_lease_active());
+
         harness.get_by_label("Save source edits").click();
         harness.step();
         assert!(harness.state().note_preview_write_receiver.is_some());
+        assert!(harness.state().vault_rescan_pending);
+        assert!(harness.state().vault_refresh_receiver.is_none());
+        assert_eq!(harness.state().vault_refresh_generation, 0);
         wait_for_note_preview_write(&mut harness);
 
         assert!(harness.state().note_preview_error.is_none());
@@ -8962,9 +9335,13 @@ mod tests {
         assert_eq!(preview.text.as_bytes(), expected.as_bytes());
         assert!(preview.revision_sha256.is_some());
         assert!(preview.source_draft.is_none());
+        assert!(!harness.state().vault_snapshot_lease_active());
+        assert!(!harness.state().vault_rescan_pending);
+        assert_eq!(harness.state().vault_refresh_generation, 1);
 
-        harness.state_mut().start_vault_refresh();
         wait_for_vault_refresh(&mut harness);
+        assert_eq!(harness.state().vault_refresh_generation, 1);
+        assert!(harness.state().vault_refresh_error.is_none());
         assert!(harness.state().note_source_preview.is_some());
 
         let external_bytes = b"# Later external source\r\n- [ ] Keep this version\r\n";
@@ -9021,6 +9398,7 @@ mod tests {
             .expect("source preview remains open")
             .source_draft = Some(draft.to_owned());
         harness.step();
+        assert!(harness.state().vault_snapshot_lease_active());
 
         harness.get_by_label("Live preview").click();
         harness.step();
@@ -9074,6 +9452,7 @@ mod tests {
             .as_ref()
             .expect("source preview remains open after cancel");
         assert!(preview.source_draft.is_none());
+        assert!(!harness.state().vault_snapshot_lease_active());
         assert_eq!(preview.text, source);
 
         harness.get_by_label("Reading").click();
@@ -9748,6 +10127,38 @@ mod tests {
         assert_eq!(
             existing_vault_tree_snapshot(&app_data_path),
             expected_app_data
+        );
+    }
+
+    #[test]
+    fn egui_defers_periodic_vault_reconciliation_while_canvas_path_is_focused() {
+        assert_canvas_refresh_defers_for_focused_field(
+            CanvasFocusTestField::Path,
+            VaultRescanOrigin::PeriodicTimer,
+        );
+    }
+
+    #[test]
+    fn egui_defers_periodic_vault_reconciliation_while_canvas_id_is_focused() {
+        assert_canvas_refresh_defers_for_focused_field(
+            CanvasFocusTestField::TextCardId,
+            VaultRescanOrigin::PeriodicTimer,
+        );
+    }
+
+    #[test]
+    fn egui_defers_watcher_vault_reconciliation_while_canvas_path_is_focused() {
+        assert_canvas_refresh_defers_for_focused_field(
+            CanvasFocusTestField::Path,
+            VaultRescanOrigin::FilesystemWatcher,
+        );
+    }
+
+    #[test]
+    fn egui_defers_watcher_vault_reconciliation_while_canvas_id_is_focused() {
+        assert_canvas_refresh_defers_for_focused_field(
+            CanvasFocusTestField::TextCardId,
+            VaultRescanOrigin::FilesystemWatcher,
         );
     }
 

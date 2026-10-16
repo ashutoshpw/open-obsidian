@@ -4,8 +4,8 @@
   "milestone_id": "R2.8.148-R3.16-LINUX-CANVAS-FULL-EFRAME-PERSISTENCE-ISOLATION",
   "name": "R3.16 Linux Canvas full eframe persistence isolation",
   "created_at": "2026-10-16T17:50:57Z",
-  "updated_at": "2026-10-16T18:01:55Z",
-  "status": "implementation complete locally; whole milestone approved by two independent reviewers; ready for one push after origin/main recheck",
+  "updated_at": "2026-10-16T18:34:51Z",
+  "status": "pushed once; exact-SHA CI batch in progress; Ubuntu round-trip failed; macOS round-trip active; origin/main held at submitted SHA.",
   "planning_base_sha": "146a13de133350ad398e5196ee1344dc343a1a72",
   "starting_sha": "146a13de133350ad398e5196ee1344dc343a1a72",
   "origin_main_sha_at_planning": "146a13de133350ad398e5196ee1344dc343a1a72",
@@ -55,9 +55,9 @@
   "implementation_started_at": "2026-10-16T17:55:27Z",
   "implementation_started_from_sha": "146a13de133350ad398e5196ee1344dc343a1a72",
   "implementation_complete": true,
-  "implementation_sha": null,
-  "submitted_sha": null,
-  "pushed_once": false,
+  "implementation_sha": "81abce92933ff79280768f63c14973a0299beada",
+  "submitted_sha": "81abce92933ff79280768f63c14973a0299beada",
+  "pushed_once": true,
   "trigger_evidence": {
     "attempt": 1,
     "submitted_sha": "146a13de133350ad398e5196ee1344dc343a1a72",
@@ -76,7 +76,66 @@
     },
     "cause_assessment": "The report supports the inference that enabled window persistence produced the window-only app.ron; the writer itself was not independently observed."
   },
-  "ci_attempt": null,
+  "ci_attempt": {
+    "attempt": 1,
+    "submitted_sha": "81abce92933ff79280768f63c14973a0299beada",
+    "evidence_path": ".agents/tasks/2026-10-07/evidence/r2.8.148-attempt-1-81abce92933ff79280768f63c14973a0299beada.json",
+    "run_ids": [
+      38944357341,
+      38944357377,
+      38944357363,
+      38944357491,
+      38944357493,
+      38944357709,
+      38944357762
+    ],
+    "status": "in_progress",
+    "workflow_counts": {
+      "observed": 7,
+      "terminal": 6,
+      "passed": 6,
+      "failed": 0,
+      "cancelled": 0,
+      "queued": 0,
+      "in_progress": 1
+    },
+    "job_counts": {
+      "observed": 20,
+      "terminal": 19,
+      "passed": 18,
+      "failed": 1,
+      "cancelled": 0,
+      "queued": 0,
+      "in_progress": 1
+    },
+    "all_required_jobs_terminal": false,
+    "artifact_inventory_complete": false,
+    "artifact_metadata_reconciled": false,
+    "artifacts_reconciled": false,
+    "roundtrip_report_payloads_reconciled": false,
+    "origin_main_sha_after_push": "81abce92933ff79280768f63c14973a0299beada",
+    "origin_main_verified_at": "2026-10-16T18:34:51Z",
+    "artifact_inventory_count": 15,
+    "available_non_preview_report_payload_count": 11,
+    "pending_roundtrip_artifact_count": 1,
+    "last_polled_at": "2026-10-16T18:34:51Z",
+    "completed_job_counts": {
+      "passed": 18,
+      "failed": 1,
+      "cancelled": 0
+    },
+    "active_job_ids": [
+      117119600815
+    ],
+    "queued_job_ids": [],
+    "failed_job_ids": [
+      117119600534
+    ],
+    "main_sha_held": true,
+    "status_at": "2026-10-16T18:34:51Z",
+    "downloaded_non_preview_artifact_count": 11,
+    "milestone_achieved": false
+  },
   "milestone_achieved": false,
   "local_executable_validation": false,
   "objective": "Repair the R3.15 Linux Canvas round-trip failure by suppressing both egui-memory and window persistence in the normal Linux Canvas edit child. Preserve the existing full eframe opt-out on the normal Windows child and Linux expected-abort canary, retain strict full app-data equality, and add the same opt-out to the normal Linux child.",
@@ -180,5 +239,50 @@
   "validation_policy": "Executable validation is permitted only in GitHub Actions after the one reviewed milestone push. Do not run local tests, builds, formatters, linters, validators, benchmarks, runtime probes, or application launches.",
   "ci_failure_policy": "Do not push a repair while any job from this attempt is active. Once the batch is terminal and evidence is reconciled, consolidate related fixes into one named, reviewed repair milestone and push it once. Rerun the same SHA only for a confirmed transient infrastructure failure without source changes.",
   "implementation_completed_at": "2026-10-16T18:01:55Z",
-  "whole_milestone_approved_at": "2026-10-16T18:01:55Z"
+  "whole_milestone_approved_at": "2026-10-16T18:01:55Z",
+  "pushed_at": null,
+  "pushed_at_note": "Push completed before the first exact-SHA workflow creation at 2026-10-16T18:03:05Z; exact push timestamp was not retained.",
+  "workflow_counts": {
+    "observed": 7,
+    "terminal": 6,
+    "passed": 6,
+    "failed": 0,
+    "cancelled": 0,
+    "queued": 0,
+    "in_progress": 1
+  },
+  "job_counts": {
+    "observed": 20,
+    "terminal": 19,
+    "passed": 18,
+    "failed": 1,
+    "cancelled": 0,
+    "queued": 0,
+    "in_progress": 1
+  },
+  "completed_job_counts": {
+    "passed": 18,
+    "failed": 1,
+    "cancelled": 0
+  },
+  "active_job_ids": [
+    117119600815
+  ],
+  "queued_job_ids": [],
+  "failed_job_ids": [
+    117119600534
+  ],
+  "all_required_jobs_terminal": false,
+  "artifact_inventory_count": 15,
+  "artifact_inventory_complete": false,
+  "artifact_metadata_reconciled": false,
+  "artifacts_reconciled": false,
+  "roundtrip_report_payloads_reconciled": false,
+  "main_sha_held": true,
+  "origin_main_sha_after_push": "81abce92933ff79280768f63c14973a0299beada",
+  "origin_main_verified_at": "2026-10-16T18:34:51Z",
+  "status_at": "2026-10-16T18:34:51Z",
+  "downloaded_non_preview_artifact_count": 11,
+  "available_non_preview_report_payload_count": 11,
+  "pending_roundtrip_artifact_count": 1
 }
