@@ -1247,6 +1247,10 @@ function openObsidianRefreshActivityChanged(
     || before.consumedResults.length !== after.consumedResults.length;
 }
 
+function openObsidianRefreshReceiverIsKnownIdle(diagnostics: OpenObsidianRefreshDiagnostics): boolean {
+  return diagnostics.receiverStates.at(-1)?.busy === false;
+}
+
 async function readOpenObsidianRefreshDiagnostics(
   logPath = join(reportDirectory, "openobsidian.log"),
 ): Promise<OpenObsidianRefreshDiagnostics> {
@@ -1297,10 +1301,13 @@ async function readCanvasTextEditFieldDiagnostic(
     const focused = value.match(/\bfocused=(true|false)/)?.[1];
     const hovered = value.match(/\bhovered=(true|false)/)?.[1];
     const arrowRightKeyEvent = value.match(/\barrow_right_key_event=(true|false)/)?.[1];
+    const tabKeyEvent = value.match(/\btab_key_event=(true|false)/)?.[1];
+    const pointerButtonPrimary = value.match(/\bpointer_button_primary=(true|false)/)?.[1];
     const empty = value.match(/\bempty=(true|false)/)?.[1];
     const valueBytes = value.match(/\bvalue_bytes=(\d+)/)?.[1];
     const valueSha256 = value.match(/\bvalue_sha256=([a-f0-9]{64})/)?.[1];
-    if (!enabled || !clicked || !focused || !arrowRightKeyEvent || empty === undefined || !valueBytes || !valueSha256) return null;
+    if (!enabled || !clicked || !focused || !arrowRightKeyEvent || !tabKeyEvent
+      || !pointerButtonPrimary || empty === undefined || !valueBytes || !valueSha256) return null;
     const rect = {
       left: Number(geometry[1]),
       top: Number(geometry[2]),
@@ -1324,6 +1331,8 @@ async function readCanvasTextEditFieldDiagnostic(
       focused: focused === "true",
       hovered: hovered === undefined ? null : hovered === "true",
       arrowRightKeyEvent: arrowRightKeyEvent === "true",
+      tabKeyEvent: tabKeyEvent === "true",
+      pointerButtonPrimary: pointerButtonPrimary === "true",
       empty: empty === "true",
       valueBytes: Number(valueBytes),
       valueSha256,
@@ -1334,8 +1343,10 @@ async function readCanvasTextEditFieldDiagnostic(
   const freshObservations = observations.filter((observation) => observation.line > afterLine);
   const clickEventObservations = freshObservations.filter((observation) => observation.clicked);
   const arrowRightEventObservations = freshObservations.filter((observation) => observation.arrowRightKeyEvent);
+  const tabKeyEventObservations = freshObservations.filter((observation) => observation.tabKeyEvent);
   const clickEventObservation = clickEventObservations[0] ?? null;
   const arrowRightEventObservation = arrowRightEventObservations[0] ?? null;
+  const tabKeyEventObservation = tabKeyEventObservations[0] ?? null;
   return {
     ...latest,
     clicked: clickEventObservation !== null,
@@ -1346,6 +1357,10 @@ async function readCanvasTextEditFieldDiagnostic(
     arrowRightEventLine: arrowRightEventObservation?.line ?? null,
     arrowRightEventObservation,
     arrowRightEventObservations,
+    tabKeyEvent: tabKeyEventObservation !== null,
+    tabKeyEventLine: tabKeyEventObservation?.line ?? null,
+    tabKeyEventObservation,
+    tabKeyEventObservations,
   };
 }
 
@@ -1362,6 +1377,8 @@ type CanvasTextEditFieldObservation = {
   focused: boolean;
   hovered: boolean | null;
   arrowRightKeyEvent: boolean;
+  tabKeyEvent: boolean;
+  pointerButtonPrimary: boolean;
   empty: boolean | null;
   valueBytes: number;
   valueSha256: string;
@@ -1374,6 +1391,9 @@ type CanvasTextEditFieldDiagnostic = CanvasTextEditFieldObservation & {
   arrowRightEventLine: number | null;
   arrowRightEventObservation: CanvasTextEditFieldObservation | null;
   arrowRightEventObservations: CanvasTextEditFieldObservation[];
+  tabKeyEventLine: number | null;
+  tabKeyEventObservation: CanvasTextEditFieldObservation | null;
+  tabKeyEventObservations: CanvasTextEditFieldObservation[];
 };
 
 
@@ -1392,6 +1412,261 @@ type CanvasFocusSnapshot = {
   };
   x11: ReturnType<typeof x11InteractionState>;
 };
+
+type CanvasFocusTraceFrame = {
+  line: number;
+  frameNr: number;
+  pathFocused: boolean;
+  siblingFocused: boolean;
+  pathEnabled: boolean;
+  siblingEnabled: boolean;
+  pathResponseId: string;
+  siblingResponseId: string;
+  pathRect: {left: number; top: number; right: number; bottom: number};
+  siblingRect: {left: number; top: number; right: number; bottom: number};
+  pixelsPerPoint: number;
+  pointer: {x: number; y: number} | null;
+  pointerButtonPrimary: boolean;
+  rawEventKinds: string[];
+  tabPressCount: number;
+  tabReleaseCount: number;
+  primaryPointerButtonEventCount: number;
+  pointerMoveEventCount: number;
+  otherEventCount: number;
+  pathEmpty: boolean;
+  pathValueBytes: number;
+  pathValueSha256: string;
+  siblingEmpty: boolean;
+  siblingValueBytes: number;
+  siblingValueSha256: string;
+};
+
+async function readCanvasFocusTraceFrames(
+  logPath: string,
+  fromFrameNr = -1,
+  throughFrameNr = Number.POSITIVE_INFINITY,
+): Promise<CanvasFocusTraceFrame[]> {
+  const log = await readFile(logPath, "utf8").catch(() => "");
+  const frames: CanvasFocusTraceFrame[] = [];
+  for (const [line, value] of log.split(/\r?\n/).entries()) {
+    if (!value.includes("OpenObsidian CI canvas-text-edit-focus-trace: ")) continue;
+    const readString = (name: string): string | null => value.match(new RegExp(`\\b${name}=([^,]+)`))?.[1]?.trim() ?? null;
+    const readNumber = (name: string): number | null => {
+      const raw = readString(name);
+      return raw !== null && /^\d+(?:\.\d+)?$/.test(raw) ? Number(raw) : null;
+    };
+    const readBoolean = (name: string): boolean | null => {
+      const raw = readString(name);
+      return raw === "true" ? true : raw === "false" ? false : null;
+    };
+    const frameNr = readNumber("frame_nr");
+    if (frameNr === null) return [];
+    if (frameNr < fromFrameNr || frameNr > throughFrameNr) continue;
+    const pathRectMatch = value.match(/\bpath_rect=\[\[\s*(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s*\]\s*-\s*\[\s*(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s*\]\]/);
+    const siblingRectMatch = value.match(/\bid_rect=\[\[\s*(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s*\]\s*-\s*\[\s*(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s*\]\]/);
+    const pointerMatch = value.match(/\bpointer=Some\(\[\s*(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s*\]\)/);
+    const pointerNone = /\bpointer=None\b/.test(value);
+    const pathEmpty = readBoolean("path_empty");
+    const siblingEmpty = readBoolean("id_empty");
+    const pathValueBytes = readNumber("path_value_bytes");
+    const siblingValueBytes = readNumber("id_value_bytes");
+    const pathValueSha256 = readString("path_value_sha256");
+    const siblingValueSha256 = readString("id_value_sha256");
+    const pathResponseId = readString("path_response_id");
+    const siblingResponseId = readString("id_response_id");
+    const rawEventKindsMatch = value.match(/\braw_event_kinds=\[([^\]]*)\]/);
+    let rawEventKinds: unknown;
+    try {
+      rawEventKinds = rawEventKindsMatch ? JSON.parse(`[${rawEventKindsMatch[1]}]`) : null;
+    } catch {
+      return [];
+    }
+    const pixelsPerPoint = readNumber("pixels_per_point");
+    const pathFocused = readBoolean("path_focused");
+    const siblingFocused = readBoolean("id_focused");
+    const pathEnabled = readBoolean("path_enabled");
+    const siblingEnabled = readBoolean("id_enabled");
+    const pointerButtonPrimary = readBoolean("pointer_button_primary");
+    const tabPressCount = readNumber("tab_press_count");
+    const tabReleaseCount = readNumber("tab_release_count");
+    const primaryPointerButtonEventCount = readNumber("primary_pointer_button_event_count");
+    const pointerMoveEventCount = readNumber("pointer_move_event_count");
+    const otherEventCount = readNumber("other_event_count");
+    if (!pathRectMatch || !siblingRectMatch || (!pointerMatch && !pointerNone)
+      || pathEmpty === null || siblingEmpty === null || pathValueBytes === null
+      || siblingValueBytes === null || !pathValueSha256 || !/^[a-f0-9]{64}$/.test(pathValueSha256)
+      || !siblingValueSha256 || !/^[a-f0-9]{64}$/.test(siblingValueSha256)
+      || !pathResponseId || !siblingResponseId || pixelsPerPoint === null || !(pixelsPerPoint > 0)
+      || pathFocused === null || siblingFocused === null || pathEnabled === null || siblingEnabled === null
+      || !Array.isArray(rawEventKinds) || !rawEventKinds.every((kind) => typeof kind === "string")
+      || pointerButtonPrimary === null || tabPressCount === null || tabReleaseCount === null
+      || primaryPointerButtonEventCount === null || pointerMoveEventCount === null || otherEventCount === null) {
+      return [];
+    }
+    frames.push({
+      line,
+      frameNr,
+      pathFocused,
+      siblingFocused,
+      pathEnabled,
+      siblingEnabled,
+      pathResponseId,
+      siblingResponseId,
+      pathRect: {left: Number(pathRectMatch[1]), top: Number(pathRectMatch[2]), right: Number(pathRectMatch[3]), bottom: Number(pathRectMatch[4])},
+      siblingRect: {left: Number(siblingRectMatch[1]), top: Number(siblingRectMatch[2]), right: Number(siblingRectMatch[3]), bottom: Number(siblingRectMatch[4])},
+      pixelsPerPoint,
+      pointer: pointerMatch ? {x: Number(pointerMatch[1]), y: Number(pointerMatch[2])} : null,
+      pointerButtonPrimary,
+      rawEventKinds,
+      tabPressCount,
+      tabReleaseCount,
+      primaryPointerButtonEventCount,
+      pointerMoveEventCount,
+      otherEventCount,
+      pathEmpty,
+      pathValueBytes,
+      pathValueSha256,
+      siblingEmpty,
+      siblingValueBytes,
+      siblingValueSha256,
+    });
+  }
+  return frames;
+}
+
+function verifyCanvasFocusTraceTransition(
+  baseline: CanvasFocusSnapshot,
+  afterTab: CanvasFocusSnapshot,
+  frames: CanvasFocusTraceFrame[],
+): {passed: boolean; failures: string[]; checks: Record<string, boolean>; transition_frame: number | null} {
+  const failures: string[] = [];
+  const addFailure = (name: string, passed: boolean) => {
+    if (!passed) failures.push(name);
+  };
+  const expectedFrameCount = afterTab.frame_nr - baseline.frame_nr + 1;
+  addFailure("post_tab_frame_advances", afterTab.frame_nr > baseline.frame_nr);
+  addFailure("trace_starts_at_baseline_frame", frames[0]?.frameNr === baseline.frame_nr);
+  addFailure("trace_ends_at_post_tab_snapshot_frame", frames.at(-1)?.frameNr === afterTab.frame_nr);
+  addFailure("trace_has_every_frame", expectedFrameCount > 1 && frames.length === expectedFrameCount);
+  addFailure("trace_lines_are_increasing", frames.every((frame, index) => index === 0 || frame.line > (frames[index - 1]?.line ?? -1)));
+  addFailure("trace_frame_numbers_are_contiguous", frames.every((frame, index) => frame.frameNr === baseline.frame_nr + index));
+
+  const stableFrameContent = (frame: CanvasFocusTraceFrame) => ({
+    pathEnabled: frame.pathEnabled,
+    siblingEnabled: frame.siblingEnabled,
+    pathResponseId: frame.pathResponseId,
+    siblingResponseId: frame.siblingResponseId,
+    pathRect: frame.pathRect,
+    siblingRect: frame.siblingRect,
+    pixelsPerPoint: frame.pixelsPerPoint,
+    pointer: frame.pointer,
+    pointerButtonPrimary: frame.pointerButtonPrimary,
+    pathEmpty: frame.pathEmpty,
+    pathValueBytes: frame.pathValueBytes,
+    pathValueSha256: frame.pathValueSha256,
+    siblingEmpty: frame.siblingEmpty,
+    siblingValueBytes: frame.siblingValueBytes,
+    siblingValueSha256: frame.siblingValueSha256,
+  });
+  const expectedStableContent = frames[0] ? stableFrameContent(frames[0]) : null;
+  addFailure("trace_content_tuple_is_stable_each_frame", expectedStableContent !== null
+    && frames.every((frame) => isDeepStrictEqual(stableFrameContent(frame), expectedStableContent)));
+
+  const rowMatchesSnapshot = (frame: CanvasFocusTraceFrame | undefined, snapshot: CanvasFocusSnapshot): boolean => Boolean(frame
+    && frame.pathFocused === snapshot.fields.path.focused
+    && frame.siblingFocused === snapshot.fields.id.focused
+    && frame.pathEnabled === snapshot.fields.path.enabled
+    && frame.siblingEnabled === snapshot.fields.id.enabled
+    && frame.pathResponseId === snapshot.fields.path.responseId
+    && frame.siblingResponseId === snapshot.fields.id.responseId
+    && isDeepStrictEqual(frame.pathRect, snapshot.fields.path.rect)
+    && isDeepStrictEqual(frame.siblingRect, snapshot.fields.id.rect)
+    && frame.pixelsPerPoint === snapshot.fields.path.pixelsPerPoint
+    && isDeepStrictEqual(frame.pointer, snapshot.pointer)
+    && frame.pointerButtonPrimary === snapshot.pointer_button_primary
+    && frame.pathEmpty === snapshot.fields.path.empty
+    && frame.pathValueBytes === snapshot.fields.path.valueBytes
+    && frame.pathValueSha256 === snapshot.fields.path.valueSha256
+    && frame.siblingEmpty === snapshot.fields.id.empty
+    && frame.siblingValueBytes === snapshot.fields.id.valueBytes
+    && frame.siblingValueSha256 === snapshot.fields.id.valueSha256);
+  addFailure("baseline_trace_matches_event_free_snapshot", rowMatchesSnapshot(frames[0], baseline));
+  addFailure("post_tab_trace_matches_event_free_snapshot", rowMatchesSnapshot(frames.at(-1), afterTab));
+  addFailure("baseline_focus_is_exact_path_only", baseline.fields.path.focused && !baseline.fields.id.focused);
+  addFailure("post_tab_focus_is_exact_id_only", !afterTab.fields.path.focused && afterTab.fields.id.focused);
+
+  const allowedEventKinds = new Set(["tab_press", "tab_release"]);
+  addFailure("trace_has_no_pointer_or_unexpected_events", frames.every((frame) => !frame.pointerButtonPrimary
+    && frame.primaryPointerButtonEventCount === 0
+    && frame.pointerMoveEventCount === 0
+    && frame.otherEventCount === 0
+    && frame.rawEventKinds.every((kind) => allowedEventKinds.has(kind))));
+  addFailure("tab_counts_match_event_identities", frames.every((frame) =>
+    frame.tabPressCount === frame.rawEventKinds.filter((kind) => kind.startsWith("tab_press")).length
+    && frame.tabReleaseCount === frame.rawEventKinds.filter((kind) => kind.startsWith("tab_release")).length));
+  const tabPressFrames = frames.filter((frame) => frame.tabPressCount > 0);
+  const tabReleaseFrames = frames.filter((frame) => frame.tabReleaseCount > 0);
+  addFailure("exactly_one_non_repeated_tab_press", tabPressFrames.length === 1
+    && tabPressFrames[0]?.rawEventKinds.filter((kind) => kind.startsWith("tab_press")).length === 1
+    && tabPressFrames[0]?.rawEventKinds.includes("tab_press"));
+  addFailure("exactly_one_tab_release", tabReleaseFrames.length === 1
+    && tabReleaseFrames[0]?.rawEventKinds.filter((kind) => kind.startsWith("tab_release")).length === 1
+    && tabReleaseFrames[0]?.rawEventKinds.includes("tab_release"));
+
+  const tabPressFrame = tabPressFrames[0];
+  const tabPressIndex = tabPressFrame ? frames.indexOf(tabPressFrame) : -1;
+  const priorFrame = tabPressIndex > 0 ? frames[tabPressIndex - 1] : undefined;
+  const releaseFrame = tabReleaseFrames[0];
+  const transitionOnTabPress = Boolean(tabPressFrame && priorFrame
+    && priorFrame.pathFocused && !priorFrame.siblingFocused
+    && !tabPressFrame.pathFocused && tabPressFrame.siblingFocused);
+  const pressEventIndex = tabPressFrame?.rawEventKinds.indexOf("tab_press") ?? -1;
+  const releaseEventIndex = tabPressFrame?.rawEventKinds.indexOf("tab_release") ?? -1;
+  const releaseFollowsPress = Boolean(tabPressFrame && releaseFrame
+    && (releaseFrame.frameNr > tabPressFrame.frameNr
+      || (releaseFrame.frameNr === tabPressFrame.frameNr
+        && pressEventIndex >= 0
+        && releaseEventIndex > pressEventIndex)));
+  addFailure("focus_changes_from_path_to_id_on_tab_press_frame", transitionOnTabPress);
+  const focusRemainsExactAfterTab = tabPressIndex >= 0 && frames.slice(tabPressIndex).every((frame) =>
+    !frame.pathFocused && frame.siblingFocused);
+  addFailure("no_focus_transition_before_tab_press", tabPressIndex > 0 && frames.slice(0, tabPressIndex)
+    .every((frame) => frame.pathFocused && !frame.siblingFocused));
+  addFailure("focus_stays_on_id_after_tab_press", focusRemainsExactAfterTab);
+  addFailure("release_follows_press", releaseFollowsPress);
+  addFailure("event_free_snapshot_follows_tab_release", Boolean(releaseFrame
+    && afterTab.frame_nr > releaseFrame.frameNr
+    && frames.at(-1)?.rawEventKinds.length === 0));
+
+  const checks = Object.fromEntries([
+    "post_tab_frame_advances",
+    "trace_starts_at_baseline_frame",
+    "trace_ends_at_post_tab_snapshot_frame",
+    "trace_has_every_frame",
+    "trace_lines_are_increasing",
+    "trace_frame_numbers_are_contiguous",
+    "trace_content_tuple_is_stable_each_frame",
+    "baseline_trace_matches_event_free_snapshot",
+    "post_tab_trace_matches_event_free_snapshot",
+    "baseline_focus_is_exact_path_only",
+    "post_tab_focus_is_exact_id_only",
+    "trace_has_no_pointer_or_unexpected_events",
+    "tab_counts_match_event_identities",
+    "exactly_one_non_repeated_tab_press",
+    "exactly_one_tab_release",
+    "focus_changes_from_path_to_id_on_tab_press_frame",
+    "no_focus_transition_before_tab_press",
+    "focus_stays_on_id_after_tab_press",
+    "release_follows_press",
+    "event_free_snapshot_follows_tab_release",
+  ].map((name) => [name, !failures.includes(name)]));
+  return {
+    passed: failures.length === 0,
+    failures,
+    checks,
+    transition_frame: transitionOnTabPress ? tabPressFrame?.frameNr ?? null : null,
+  };
+}
 
 class ExpectedCanvasAbortCanaryError extends Error {
   readonly code = "EXPECTED_CANVAS_ABORT_CANARY";
@@ -16459,6 +16734,9 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
     : diagnosticField === "id"
       ? "path"
       : null;
+  const refreshReceiverBusyOrUnknown = (diagnostics: OpenObsidianRefreshDiagnostics): boolean => safetyTracker?.expectedAbortCanary === true
+    ? !openObsidianRefreshReceiverIsKnownIdle(diagnostics)
+    : (diagnostics.receiverStates.at(-1)?.busy ?? false);
   const readCanvasFieldPair = async (afterLine: number, requestId?: string, onlyFrameNr?: number) => {
     if (!diagnosticField || !siblingDiagnosticField) return null;
     const [target, sibling] = await Promise.all([
@@ -16475,10 +16753,13 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
     const labelOcrFound = Boolean(layout.labelBoundsOcr);
     const screenshotSize = await pngDimensions(before.windowPngPath);
     const geometry = execFileSync("xdotool", ["getwindowgeometry", "--shell", windowId], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]});
-    const readGeometry = (key: string): number => Number(geometry.match(new RegExp(`^${key}=(\\d+)$`, "m"))?.[1] ?? NaN);
+    const readGeometry = (key: string): number => Number(geometry.match(new RegExp(`^${key}=(-?\\d+)$`, "m"))?.[1] ?? NaN);
+    const windowX = readGeometry("X");
+    const windowY = readGeometry("Y");
     const windowWidth = readGeometry("WIDTH");
     const windowHeight = readGeometry("HEIGHT");
-    if (!(windowWidth > 0 && windowHeight > 0 && screenshotSize.width > 0 && screenshotSize.height > 0)) {
+    if (!(Number.isFinite(windowX) && Number.isFinite(windowY)
+      && windowWidth > 0 && windowHeight > 0 && screenshotSize.width > 0 && screenshotSize.height > 0)) {
       throw new Error(`Could not map Linux Canvas input coordinates for ${controlName}: geometry=${geometry.trim()}; screenshot=${screenshotSize.width}x${screenshotSize.height}`);
     }
     if (!labelOcrFound) {
@@ -16492,7 +16773,8 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
     // its status line can move the form after the screenshot; discard those bounds.
     const refreshBeforeClick = await readOpenObsidianRefreshDiagnostics(logPath);
     if (openObsidianRefreshActivityChanged(refreshBeforeCapture, refreshBeforeClick)
-      || (refreshBeforeClick.receiverStates.at(-1)?.busy ?? false)) {
+      || refreshReceiverBusyOrUnknown(refreshBeforeCapture)
+      || refreshReceiverBusyOrUnknown(refreshBeforeClick)) {
       lastFailure = `vault refresh changed the form layout before attempt ${attempt}`;
       continue;
     }
@@ -16602,7 +16884,8 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
         }
         const refreshBeforeDispatch = await readOpenObsidianRefreshDiagnostics(logPath);
         const refreshChangedBeforeDispatch = openObsidianRefreshActivityChanged(refreshBeforeClick, refreshBeforeDispatch)
-          || (refreshBeforeDispatch.receiverStates.at(-1)?.busy ?? false);
+          || refreshReceiverBusyOrUnknown(refreshBeforeClick)
+          || refreshReceiverBusyOrUnknown(refreshBeforeDispatch);
         if (refreshChangedBeforeDispatch) {
           lastFailure = `vault refresh changed the Canvas layout after geometry capture and before click dispatch on attempt ${attempt}: target=${JSON.stringify(targetGeometry)}; sibling=${JSON.stringify(siblingGeometry)}`;
           continue;
@@ -16611,8 +16894,11 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
 
       xdotool("click", "--clearmodifiers", "1");
       if (diagnosticField) {
-        xdotool("key", "--clearmodifiers", "Right");
-        await delay(100);
+        const canaryClickOnlyBaseline = safetyTracker?.expectedAbortCanary === true;
+        if (!canaryClickOnlyBaseline) {
+          xdotool("key", "--clearmodifiers", "Right");
+          await delay(100);
+        }
         const focusAndSiblingAfterClick = await waitFor(
           `fresh Canvas target and sibling focus diagnostics after attempt ${attempt} click`,
           () => readCanvasFieldPair(geometryBaselineLine),
@@ -16627,14 +16913,20 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
         preEntrySiblingWidget = focusAndSiblingAfterClick?.sibling ?? null;
         const refreshImmediatelyBeforeEntry = await readOpenObsidianRefreshDiagnostics(logPath);
         const refreshChanged = openObsidianRefreshActivityChanged(refreshBeforeClick, refreshImmediatelyBeforeEntry)
-          || (refreshImmediatelyBeforeEntry.receiverStates.at(-1)?.busy ?? false);
+          || refreshReceiverBusyOrUnknown(refreshBeforeClick)
+          || refreshReceiverBusyOrUnknown(refreshImmediatelyBeforeEntry);
         refreshStableBeforeEntry = !refreshChanged;
         if (!preEntryTargetWidget
           || !preEntrySiblingWidget
           || preEntryTargetWidget.line <= geometryBaselineLine
           || preEntrySiblingWidget.line <= geometryBaselineLine
           || preEntryTargetWidget.clickEventLine === null
-          || preEntryTargetWidget.arrowRightEventLine === null
+          || preEntryTargetWidget.clickEventObservations.length !== 1
+          || (canaryClickOnlyBaseline
+            ? preEntryTargetWidget.arrowRightKeyEvent || preEntrySiblingWidget.arrowRightKeyEvent
+            : preEntryTargetWidget.arrowRightEventLine === null)
+          || preEntryTargetWidget.tabKeyEvent
+          || preEntrySiblingWidget.tabKeyEvent
           || !preEntryTargetWidget.enabled
           || !preEntryTargetWidget.focused
           || preEntrySiblingWidget.clicked
@@ -16848,7 +17140,8 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
               : await checkFreshFieldPair(stage, afterLine);
             const refresh = await readOpenObsidianRefreshDiagnostics(logPath);
             const refreshChanged = openObsidianRefreshActivityChanged(refreshBeforeClick, refresh)
-              || (refresh.receiverStates.at(-1)?.busy ?? false);
+              || refreshReceiverBusyOrUnknown(refreshBeforeClick)
+              || refreshReceiverBusyOrUnknown(refresh);
             const x11WindowFocused = !focusSnapshot || focusSnapshot.x11.focused_window_id === windowId;
             const primaryButtonReleased = !focusSnapshot || !focusSnapshot.pointer_button_primary;
             const expectedSha256 = expectedHash(expectedText);
@@ -16985,23 +17278,57 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
             }
           };
 
+          const compareRefreshDiagnostics = (
+            before: Awaited<ReturnType<typeof readOpenObsidianRefreshDiagnostics>>,
+            after: Awaited<ReturnType<typeof readOpenObsidianRefreshDiagnostics>>,
+          ) => {
+            const requestCountUnchanged = before.requests.length === after.requests.length;
+            const consumedResultCountUnchanged = before.consumedResults.length === after.consumedResults.length;
+            const beforeReceiverState = before.receiverStates.at(-1);
+            const afterReceiverState = after.receiverStates.at(-1);
+            const receiverStateObservationsPresent = beforeReceiverState !== undefined && afterReceiverState !== undefined;
+            const receiverIdle = receiverStateObservationsPresent
+              && beforeReceiverState.busy === false
+              && afterReceiverState.busy === false;
+            return {
+              before_request_count: before.requests.length,
+              after_request_count: after.requests.length,
+              request_count_unchanged: requestCountUnchanged,
+              before_consumed_result_count: before.consumedResults.length,
+              after_consumed_result_count: after.consumedResults.length,
+              consumed_result_count_unchanged: consumedResultCountUnchanged,
+              before_receiver_state_line: beforeReceiverState?.line ?? null,
+              before_receiver_busy: beforeReceiverState?.busy ?? null,
+              after_receiver_state_line: afterReceiverState?.line ?? null,
+              after_receiver_busy: afterReceiverState?.busy ?? null,
+              receiver_state_observations_present: receiverStateObservationsPresent,
+              receiver_idle: receiverIdle,
+              no_refresh_activity: !openObsidianRefreshActivityChanged(before, after),
+              passed: requestCountUnchanged && consumedResultCountUnchanged && receiverIdle,
+            };
+          };
           const capturePathFocusCheckpoint = async (
             stage: string,
             afterLine: number,
             afterFrameNr: number,
-          ): Promise<{snapshot: CanvasFocusSnapshot; refresh: Awaited<ReturnType<typeof readOpenObsidianRefreshDiagnostics>>}> => {
+          ): Promise<{
+            snapshot: CanvasFocusSnapshot;
+            refresh: Awaited<ReturnType<typeof readOpenObsidianRefreshDiagnostics>>;
+            refreshStable: boolean;
+            refreshStability: ReturnType<typeof compareRefreshDiagnostics>;
+          }> => {
             const snapshot = await requestCanvasFocusSnapshot(logPath, stage, afterLine, afterFrameNr);
             if (snapshot.monotonic_ms <= 0) {
               throw new Error(`Canvas focus checkpoint monotonic time must be app-relative and nonzero: stage=${stage}; observed_ms=${snapshot.monotonic_ms}`);
             }
             const refresh = await readOpenObsidianRefreshDiagnostics(logPath);
+            const refreshStability = compareRefreshDiagnostics(refreshBeforeClick, refresh);
             const previous = safetyTracker?.focusCheckpoints.at(-1);
             const previousMonotonicMs = typeof previous?.monotonic_ms === "number" ? previous.monotonic_ms : null;
             if (previousMonotonicMs !== null && snapshot.monotonic_ms <= previousMonotonicMs) {
               throw new Error(`Canvas focus checkpoint monotonic time did not advance: stage=${stage}; previous_ms=${previousMonotonicMs}; observed_ms=${snapshot.monotonic_ms}`);
             }
-            const refreshStable = !openObsidianRefreshActivityChanged(refreshBeforeClick, refresh)
-              && !(refresh.receiverStates.at(-1)?.busy ?? false);
+            const refreshStable = refreshStability.passed;
             const checkpoint = {
               stage,
               request_id: snapshot.request_id,
@@ -17015,10 +17342,11 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
               sibling: snapshot.fields[focusSiblingField],
               x11: snapshot.x11,
               refresh_stable: refreshStable,
+              refresh_stability: refreshStability,
               refresh,
             };
             safetyTracker?.focusCheckpoints.push(checkpoint);
-            return {snapshot, refresh};
+            return {snapshot, refresh, refreshStable, refreshStability};
           };
           const capturePreStagingRecoverySnapshot = async (
             stage: string,
@@ -17029,6 +17357,7 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
             const checkpoint = await capturePathFocusCheckpoint(stage, afterLine, afterFrameNr);
             const snapshot = checkpoint.snapshot;
             const refreshAfterCapture = await readOpenObsidianRefreshDiagnostics(logPath);
+            const refreshStabilityAfterCapture = compareRefreshDiagnostics(checkpoint.refresh, refreshAfterCapture);
             const windowGeometry = readX11WindowGeometry(windowId);
             const currentX11 = x11InteractionState();
             const rootPointer = parseX11RootPointer(currentX11.pointer);
@@ -17071,11 +17400,13 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
               && target.frameNr === snapshot.frame_nr
               && sibling.frameNr === snapshot.frame_nr
               && target.frameNr === sibling.frameNr;
-            const refreshStable = !openObsidianRefreshActivityChanged(refreshBeforeClick, checkpoint.refresh)
-              && checkpoint.refresh_stable
-              && !(checkpoint.refresh.receiverStates.at(-1)?.busy ?? false)
-              && !openObsidianRefreshActivityChanged(checkpoint.refresh, refreshAfterCapture)
-              && !(refreshAfterCapture.receiverStates.at(-1)?.busy ?? false);
+            const refreshStable = checkpoint.refreshStable && refreshStabilityAfterCapture.passed;
+            const refreshStability = {
+              before_to_checkpoint: checkpoint.refreshStability,
+              checkpoint_to_after_capture: refreshStabilityAfterCapture,
+              checkpoint_captured_refresh_stable: checkpoint.refreshStable,
+              aggregate_passed: refreshStable,
+            };
             const checks = {
               event_free_snapshot: snapshot.raw_events_empty,
               fields_paired_to_fresh_request_frame: fieldsPaired,
@@ -17093,6 +17424,10 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
               x11_pointer_unchanged_since_snapshot: snapshot.x11.pointer === currentX11.pointer,
               snapshot_window_focused: snapshot.x11.focused_window_id === windowId,
               current_window_focused: currentX11.focused_window_id === windowId,
+              window_geometry_unchanged: windowGeometry.x === windowX
+                && windowGeometry.y === windowY
+                && windowGeometry.width === windowWidth
+                && windowGeometry.height === windowHeight,
               window_size_unchanged: windowGeometry.width === windowWidth && windowGeometry.height === windowHeight,
               primary_button_released: !snapshot.pointer_button_primary,
               refresh_stable: refreshStable,
@@ -17102,7 +17437,8 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
             const refreshSignature = {
               request_count: refreshAfterCapture.requests.length,
               consumed_result_count: refreshAfterCapture.consumedResults.length,
-              receiver_busy: refreshAfterCapture.receiverStates.at(-1)?.busy ?? false,
+              receiver_state_observed: refreshAfterCapture.receiverStates.length > 0,
+              receiver_busy: refreshAfterCapture.receiverStates.at(-1)?.busy ?? null,
             };
             const contentSignature = {
               current_window_id: currentX11.focused_window_id,
@@ -17140,6 +17476,7 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
               checkpoint,
               snapshot,
               refresh_after_capture: refreshAfterCapture,
+              refresh_stability: refreshStability,
               current_x11: currentX11,
               root_pointer: rootPointer,
               window_geometry: windowGeometry,
@@ -17194,33 +17531,59 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
               if (!baseline) throw new Error("Canary pre-Tab focused baseline was not captured");
 
               const canaryInduction: Record<string, unknown> = {
-                status: "tab_dispatched",
+                status: "ready_to_dispatch_tab",
                 method: "xdotool key --clearmodifiers Tab",
                 pointer_repositioned: false,
                 baseline,
               };
               safetyTracker.preStagingFocusRecovery = {
-                status: "canary_focus_loss_induced",
+                status: "canary_focus_loss_induction_ready",
                 canary_focus_loss_induction: canaryInduction,
               };
               try {
                 xdotool("key", "--clearmodifiers", "Tab");
+                Object.assign(canaryInduction, {status: "tab_dispatched"});
+                safetyTracker.preStagingFocusRecovery = {
+                  status: "canary_focus_loss_induced",
+                  canary_focus_loss_induction: canaryInduction,
+                };
                 const afterTab = await capturePreStagingRecoverySnapshot(
                   "canary post-Tab induced focus loss",
                   expectedCurrentValue,
                   baseline.snapshot.line,
                   baseline.snapshot.frame_nr,
                 );
+                const focusTraceFrames = await readCanvasFocusTraceFrames(
+                  logPath,
+                  baseline.snapshot.frame_nr,
+                  afterTab.snapshot.frame_nr,
+                );
+                const focusTraceVerification = verifyCanvasFocusTraceTransition(
+                  baseline.snapshot,
+                  afterTab.snapshot,
+                  focusTraceFrames,
+                );
                 const exactInjectedFocus = !afterTab.focus_state.target_focused
                   && afterTab.focus_state.sibling_focused;
                 const contentUnchanged = isDeepStrictEqual(baseline.content_signature, afterTab.content_signature);
-                if (afterTab.failed_checks.length !== 0 || !exactInjectedFocus || !contentUnchanged) {
+                Object.assign(canaryInduction, {
+                  focus_transition_trace: {
+                    verification: focusTraceVerification,
+                    frames: focusTraceFrames,
+                  },
+                });
+                if (afterTab.failed_checks.length !== 0
+                  || !exactInjectedFocus
+                  || !contentUnchanged
+                  || !focusTraceVerification.passed) {
                   throw new Error("Canary Tab did not produce only the exact stationary focus transfer: "
                     + JSON.stringify({
                       failed_checks: afterTab.failed_checks,
                       focus_state: afterTab.focus_state,
                       exact_injected_focus: exactInjectedFocus,
                       content_unchanged: contentUnchanged,
+                      focus_trace_verification: focusTraceVerification,
+                      focus_trace_frames: focusTraceFrames,
                       baseline_content_signature: baseline.content_signature,
                       post_tab_content_signature: afterTab.content_signature,
                       after_tab: afterTab,
@@ -17228,7 +17591,7 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
                 }
                 Object.assign(canaryInduction, {
                   status: "passed",
-                  tab_dispatch_observed_by: "xdotool completed and the next fresh event-free request/frame showed path unfocused and ID focused",
+                  tab_dispatch_observed_by: "continuous per-frame focus trace recorded exactly one Tab press/release and the path-to-ID transition on the Tab press frame, followed by a later fresh event-free snapshot",
                   post_tab_snapshot: afterTab,
                   focus_transfer_exact: exactInjectedFocus,
                   stable_content_tuple: contentUnchanged,
@@ -17237,7 +17600,7 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
                   status: "canary_focus_loss_induced",
                   canary_focus_loss_induction: canaryInduction,
                 };
-                beforeClipboard = {snapshot: afterTab.snapshot, refresh: afterTab.checkpoint.refresh};
+                beforeClipboard = afterTab.checkpoint;
               } catch (error) {
                 Object.assign(canaryInduction, {
                   status: "failed_closed",
@@ -17601,6 +17964,8 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
                 beforeClipboard = {
                   snapshot: finalRecoverySnapshot.snapshot,
                   refresh: finalRecoverySnapshot.checkpoint.refresh,
+                  refreshStable: finalRecoverySnapshot.checkpoint.refreshStable,
+                  refreshStability: finalRecoverySnapshot.checkpoint.refreshStability,
                 };
                 safetyTracker.preStagingFocusRecovery = recoveryRecord;
               } catch (error) {
@@ -19158,6 +19523,8 @@ async function runOpenObsidianCanvasTextEdit(
     appEnv.WGPU_BACKEND = "gl";
     appEnv.OPENOBSIDIAN_CI_CANVAS_FOCUS_SNAPSHOT_REQUEST_FILE = linuxCanvasFocusSnapshotRequestFile;
   }
+  if (process.platform === "linux" && expectedAbortCanary) appEnv.OPENOBSIDIAN_CI_CANVAS_FOCUS_TRACE = "1";
+  else delete appEnv.OPENOBSIDIAN_CI_CANVAS_FOCUS_TRACE;
   const safetyTracker: CanvasInputSafetyTracker = {
     expectedAbortCanary,
     clipboardStaged: false,

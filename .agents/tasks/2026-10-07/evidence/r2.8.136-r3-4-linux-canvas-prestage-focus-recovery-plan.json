@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "R2.8.136-R3.4-LINUX-CANVAS-PRESTAGING-FOCUS-RECOVERY",
   "name": "Repair Linux Canvas path focus loss before first clipboard staging",
-  "status": "implementation-complete; independently reviewed; ready for one push; not pushed",
+  "status": "terminal CI failed; R3.4 unachieved",
   "starting_sha": "13b137db5adae44e80bb003971845d34453bc8f5",
   "planning_base_sha": "13b137db5adae44e80bb003971845d34453bc8f5",
   "goal_sha256": "f9e4fddd953eb784a5fb5bbe2358600ffaea0a359fe6a1d0b35c844a7ee9bc57",
@@ -70,7 +70,102 @@
   "plan_review_status": "approved by independent read-only implementation and canary reviews; no remaining concrete blockers",
   "implementation_review_status": "Approved by r34_final_source_review, c074_rust_gap_audit, linux_focus_repair_review, and r3_4_canary_audit; no remaining concrete blockers. Read-only source review only; no executable validation.",
   "implementation_reviewed_at": "2026-10-16T01:43:43Z",
-  "ci_dispatched": false,
-  "pushed_once": false,
-  "reviewed_at": "2026-10-16T01:43:43Z"
+  "ci_dispatched": true,
+  "pushed_once": true,
+  "submitted_sha": "84962b1b931250e7b15c934664ffe55d149c8bd5",
+  "submitted_at": "2026-10-16T01:45:15Z",
+  "ci_progress_evidence": "evidence/r2.8.136-r3-4-attempt-1-84962b1.json",
+  "latest_ci_snapshot_at": "2026-10-16T02:49:59Z",
+  "reviewed_at": "2026-10-16T01:43:43Z",
+  "ci_terminal_at": "2026-10-16T02:34:44Z",
+  "ci_evidence_file": "evidence/r2.8.136-r3-4-attempt-1-84962b1.json",
+  "milestone_achieved": false,
+  "subsequent_pushes": 0,
+  "origin_main_sha_at_reconciliation": "84962b1b931250e7b15c934664ffe55d149c8bd5",
+  "terminal_ci_reconciliation": {
+    "submitted_sha": "84962b1b931250e7b15c934664ffe55d149c8bd5",
+    "goal_sha256": "f9e4fddd953eb784a5fb5bbe2358600ffaea0a359fe6a1d0b35c844a7ee9bc57",
+    "required_workflows": {
+      "observed": 7,
+      "terminal": 7,
+      "passed": 6,
+      "failed": 1,
+      "cancelled": 0,
+      "queued": 0,
+      "in_progress": 0
+    },
+    "required_jobs": {
+      "observed": 20,
+      "terminal": 20,
+      "passed": 19,
+      "failed": 1,
+      "cancelled": 0,
+      "queued": 0,
+      "in_progress": 0
+    },
+    "workflow_runs": [
+      38836809564,
+      38836809608,
+      38836809779,
+      38836809780,
+      38836809806,
+      38836809821,
+      38836809869
+    ],
+    "failed_workflow": "Obsidian vault round-trip acceptance",
+    "failed_job_id": 116767661550,
+    "artifact_inventory_count": 16,
+    "roundtrip_report_sha256": {
+      "Linux": "c43ac9579055d409e276a96f5ec981c562b5e17db39937ba9379f354741e4e2c",
+      "macOS": "43a7a8d5a47128bf9dfd66ba38f4f968354bbb8ebacdf8d2f991130098107a69",
+      "Windows": "f67cc0fbaa20d395f8e4f1aec2d6d43aa28aece6543fbdccfaceedb154cdf984"
+    },
+    "milestone_achieved": false
+  },
+  "linux_failure_analysis": {
+    "stage": "isolated canary pre-Tab focused baseline",
+    "tab_dispatched": false,
+    "recovery_sequence_exercised": false,
+    "failed_guard_checks": [
+      "refresh_stable"
+    ],
+    "confirmed_refresh_guard_cause": {
+      "type": "static return-shape mismatch",
+      "detail": "capturePathFocusCheckpoint returns only {snapshot, refresh}; capturePreStagingRecoverySnapshot reads checkpoint.refresh_stable. That omitted property makes the outer refresh guard false even though the serialized inner checkpoint recorded refresh_stable=true."
+    },
+    "focus_state_at_frame_366": {
+      "path_target_focused": false,
+      "sibling_id_focused": true
+    },
+    "focus_transition_frames_362_to_366": "unexplained",
+    "clipboard_content_staged": false,
+    "preservation_verified": false,
+    "c07_4_capture_status": "not reached"
+  },
+  "platform_reference_capture_results": {
+    "Linux": {
+      "status": "not captured; round-trip failed before Tab",
+      "rust_parity_claimed": false
+    },
+    "macOS": {
+      "status": "captured-reference-only",
+      "scenarios": 10,
+      "first_open_all_passed": true,
+      "reopen_all_passed": true,
+      "comparable_pairs_all_passed": true,
+      "source_checkpoints": 28,
+      "source_checkpoint_matrix_complete": true,
+      "rust_parity_claimed": false
+    },
+    "Windows": {
+      "status": "captured-reference-only",
+      "scenarios": 10,
+      "first_open_all_passed": true,
+      "reopen_all_passed": true,
+      "comparable_pairs_all_passed": true,
+      "source_checkpoints": 28,
+      "source_checkpoint_matrix_complete": true,
+      "rust_parity_claimed": false
+    }
+  }
 }

@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "id": "R2.8.137-R3.5-LINUX-CANVAS-CANARY-BASELINE-TRACE-REPAIR",
+  "name": "Repair Linux Canvas canary baseline and focus-transition evidence",
+  "status": "implementation complete locally; independent source review complete; unpushed and no CI dispatched",
+  "starting_sha": "84962b1b931250e7b15c934664ffe55d149c8bd5",
+  "planning_base_sha": "84962b1b931250e7b15c934664ffe55d149c8bd5",
+  "goal_sha256": "f9e4fddd953eb784a5fb5bbe2358600ffaea0a359fe6a1d0b35c844a7ee9bc57",
+  "predecessor_ci_evidence": "evidence/r2.8.136-r3-4-attempt-1-84962b1.json",
+  "confirmed_failure": {
+    "workflow_run_id": 38836809564,
+    "job_id": 116767661550,
+    "job_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38836809564/job/116767661550",
+    "source_sha": "84962b1b931250e7b15c934664ffe55d149c8bd5",
+    "stage": "isolated Linux expected-abort canary pre-Tab baseline",
+    "observed": "The path field was focused after the click at frame 361 and remained focused after ArrowRight at frame 362. A fresh event-free snapshot at frame 366 showed focus on the sibling ID field. The canary failed closed before Tab, clipboard staging, paste, diagnostic pointer motion, or Save. The exact focus-transfer cause is unknown.",
+    "confirmed_harness_defect": "capturePathFocusCheckpoint stores refresh_stable in its tracked checkpoint but returns only snapshot and refresh. capturePreStagingRecoverySnapshot reads refresh_stable from the return value, so the aggregate guard receives undefined and fails even though captured refresh request/result counts are unchanged and all receivers are idle."
+  },
+  "bounded_outcome": "Fix the refresh-stability return contract and make the isolated Linux expected-abort canary prove a stable focused pre-Tab baseline, a controlled Tab-only focus transfer, and the existing guarded recovery through the final event-free pre-staging check. Keep all other workflow acceptance and safety gates intact.",
+  "scope": [
+    "Correct capturePathFocusCheckpoint's explicit return type and returned refresh-stability value. Record the before-to-checkpoint and checkpoint-to-after-capture request/result counts, busy states, individual comparisons, and aggregate result so a failed guard is diagnosable.",
+    "In the isolated expected-abort canary only, do not send the initial ArrowRight before the pre-Tab baseline. After the coordinate click, capture and require a fresh paired event-free snapshot showing path focused and ID unfocused. Keep the ordinary Linux Canvas entry path unchanged. If click-only does not establish the exact baseline, abort before Tab or clipboard staging.",
+    "Add canary-gated, per-frame path/ID focus diagnostics for the active Canvas edit form, including frame number, target/sibling focus, paired response IDs and values, raw input event identity, Tab press/release evidence with all modifier bits, and primary-button state. Record modified and repeated Tab events distinctly and reject them; reject modifier-change noise. Enable the trace only for the isolated canary invocation; do not log personal vault content.",
+    "Before Tab, require the complete existing event-free baseline: fields paired to one fresh request/frame; stable distinct response IDs; enabled controls; exact empty target bytes/hash and unchanged sibling bytes/hash; stable geometry and scale; current egui pointer mapped to X11 root coordinates and inside path/outside sibling; foreground OpenObsidian window; unchanged window geometry; released primary button; and stable refresh state. Dispatch exactly one Tab with no intervening delay, snapshot request, screenshot, pointer action, ArrowRight, or other input.",
+    "Correlate the per-frame trace from the pre-Tab baseline through the Tab-bearing frame. Require continuous frame records, no earlier focus transition, exactly one unmodified non-repeated Tab press and release, press-before-release order even within one frame, no modifier-change or pointer-button event, released primary button, and the path-focused/ID-unfocused to path-unfocused/ID-focused transition on the Tab frame. If any frame, event, modifier state, or transition is missing, duplicated, gapped, or out of order, fail closed before clipboard staging.",
+    "After the Tab event, require a later fresh advancing event-free snapshot with exactly path unfocused and ID focused. Require unchanged values/hashes, enabled state, IDs, rectangles, scale, pointer mapping, foreground window, window geometry, released button, and refresh tuple. The subsequent pre-staging guard must fail only its two expected focus predicates, making the existing one-attempt recovery eligible.",
+    "Preserve the existing two advancing stable event-free recovery snapshots, no pointer repositioning, current-position target click, fresh event-free post-click guard before ArrowRight, target-only ArrowRight event evidence, and final complete event-free pre-staging guard before xclip. Any other failed predicate aborts before clipboard staging, paste, pointer motion, or Save.",
+    "For canary refresh guards, require explicit latest receiver-state observations at both comparison endpoints and require both to be idle; missing observations fail closed. Apply the same known-idle requirement before click dispatch, immediately before entry, at each recovery checkpoint, and in paste guards.",
+    "Keep the expected-abort canary's post-staging recovery and synthetic-prefix abort. Require zero diagnostic pointer motions, zero Ctrl+V dispatches and completed paste stages, zero Save attempts, verified clipboard cleanup, request-marker removal, absent destination, and byte-identical vault/app-data/Canvas source snapshots.",
+    "Retain full round-trip and C07.4 reference-capture acceptance on Ubuntu, macOS, and Windows. C07.4 remains reference-only; do not claim Rust parity. Do not begin C07.4 Rust comparator work until Linux reference capture is reconciled.",
+    "Make related harness, diagnostic, workflow, plan, and evidence updates locally; complete whole-milestone source and tracker review before exactly one push to origin/main. Wait for all seven required workflows and twenty jobs on that exact SHA to become terminal and reconcile evidence before the next push. No local tests, builds, formatters, linters, application launches, or executable validation."
+  ],
+  "out_of_scope": [
+    "Inferring a cause for the R3.4 frame 362 to frame 366 focus transfer without new evidence.",
+    "Weakening the fresh event-free baseline, refresh, focus, geometry, pointer, clipboard, paste, explicit-save, source-hash, destination-absence, vault-snapshot, or app-data-snapshot checks.",
+    "Changing normal Linux field entry behavior, macOS or Windows input behavior, Rust comparator semantics, C07.4 parity, C07.5, C09.2, or unrelated application behavior.",
+    "Pushing partial work or dispatching CI for per-change feedback; overlapping another full CI batch while this milestone is pending."
+  ],
+  "implementation_acceptance": [
+    "Independent source review confirms the checkpoint return type contains the refresh-stability result and the aggregate predicate remains false for actual request/result changes, missing receiver-state observations, or any busy receiver; the report includes both endpoint observations and component comparisons.",
+    "The Linux canary proves a click-only event-free focused baseline before Tab, records continuous paired focus frames and all modifier bits, rejects modified/repeated Tab and modifier-change events, verifies press-before-release raw order, attributes the exact focus transition to one received Tab event, and captures a later advancing event-free snapshot with only the intended focus transfer and all other stable guards passing.",
+    "Linux recovery has exactly two advancing stable event-free pre-dispatch snapshots, one stationary current-position click, a passing event-free post-click guard before ArrowRight, target-only ArrowRight evidence, and a passing final event-free full guard before clipboard staging.",
+    "The expected-abort canary reaches only its synthetic-prefix abort after its recovery path; it records zero diagnostic motion, paste dispatch, completed paste stage, or Save; clipboard and marker cleanup succeed; destination stays absent; and source, vault, and app-data preservation evidence passes.",
+    "All seven required workflows and twenty jobs pass on the submitted SHA. Linux, macOS, and Windows round-trip reports are terminal; all ten C07.4 scenarios complete on first open and reopen for each platform, with reference-only status and no Rust parity claim.",
+    "No local executable validation is used; all executable acceptance evidence comes from GitHub Actions for the exact submitted SHA."
+  ],
+  "required_workflows": [
+    "OpenObsidian Rust CI",
+    "Rust migration inventory",
+    "Obsidian vault round-trip acceptance",
+    "OpenObsidian desktop build",
+    "OpenObsidian quality",
+    "OpenObsidian plugin renderer matrix",
+    "OpenObsidian loaded plugin workflows"
+  ],
+  "required_platforms": ["Ubuntu", "macOS", "Windows"],
+  "expected_jobs": 20,
+  "evidence_to_collect": [
+    "Stable milestone ID, starting SHA, goal SHA-256, implementation SHA, submitted SHA, and one-push record.",
+    "All seven exact-SHA workflow and twenty job IDs, URLs, conclusions, terminal statuses, and artifact links.",
+    "Refresh baseline/checkpoint/after-capture values, explicit before/after receiver-state observations, and individual predicate results; per-frame canary focus trace, Tab modifier bits, raw event order, and focus-transition correlation.",
+    "Linux canary recovery snapshots, click and ArrowRight observations, final pre-staging guard, synthetic abort, clipboard/marker cleanup, and preservation checks.",
+    "Round-trip report/archive hashes for all three operating systems; ten C07.4 first-open/reopen reference captures per OS; explicit no-Rust-parity status.",
+    "Independent source and tracker review records; no local validation results."
+  ],
+  "local_executable_validation": false,
+  "implementation_review_status": "complete; independent Rust event-trace and harness-refresh source reviews found no concrete remaining findings; no executable validation run",
+  "milestone_achieved": false,
+  "push_status": "not pushed; no CI dispatched"
+}
