@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
-  "status": "R3.19 is pushed at 57a28b2d371be576d1d4aebb1ea77d1b47b17fb9; exact-SHA CI has one terminal workflow failure, two workflows in progress, and four workflows passed. Full batch reconciliation is pending.",
-  "updated_at": "2026-10-16T22:38:17Z",
+  "status": "R3.19 is terminal-failed and fully reconciled on exact SHA 57a28b2d371be576d1d4aebb1ea77d1b47b17fb9. R3.20 implementation and integrated review are complete; the final exact-base/no-active-CI submission gate is pending.",
+  "updated_at": "2026-10-16T23:13:14Z",
   "branch": "codex/r3.3-tracker",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R3",
-  "last_reconciled_head": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
-  "current_milestone": "R2.8.151-R3.19-R3.18-CI-REPAIR submitted; exact-SHA batch in progress with an observed failure",
-  "next_action": "Keep origin/main at 57a28b2d371be576d1d4aebb1ea77d1b47b17fb9. Wait for Rust CI and round-trip acceptance to finish, then reconcile all seven workflows, jobs, and artifacts before any next push.",
-  "push_status": "R3.19 was pushed once by fast-forward to origin/main at 57a28b2d371be576d1d4aebb1ea77d1b47b17fb9. At 2026-10-16T22:38:17Z, four workflows passed, inventory failed on the goal SHA-256 traceability assertion, Rust CI and round-trip acceptance remained in progress, and their complete reconciliation is pending. Do not push a repair until all current exact-SHA jobs finish.",
+  "last_reconciled_head": "57a28b2d371be576d1d4aebb1ea77d1b47b17fb9",
+  "current_milestone": "R3.20 consolidated repair of terminal R3.19 exact-SHA CI failures; implementation and integrated review complete, final submission gate pending",
+  "next_action": "Verify live origin/main remains 57a28b2d371be576d1d4aebb1ea77d1b47b17fb9 and no exact-SHA CI batch is active, then push the reviewed R3.20 milestone once. Do not push partial work.",
+  "push_status": "R3.19 was pushed once by fast-forward to origin/main at 57a28b2d371be576d1d4aebb1ea77d1b47b17fb9. Its seven required workflows and 20 jobs are terminal: four workflows/13 jobs passed and three workflows/seven jobs failed. All 12 artifacts are accounted for; nine non-preview archives match API digests and three large previews are metadata-only. R3.20 is implemented and independently reviewed locally; the exact-base/no-active-batch gate remains before its one push.",
   "blockers": [
     "C07.3 pinned Obsidian reference capture passed all 14 scenarios on first open and reopen across Linux, macOS, and Windows at exact SHA 0a9cb9c00835881a7629c96721974dfa9461cc50; see evidence/r2.8.129-attempt-1-0a9cb9c.json. Rust parity remains pending. Separate mixed-worktree C07.3 edits remain local and are excluded from the C07.4 candidate; review and submit them separately. Do not claim a full-fixture membership oracle from reference UI results.",
     "R2.8.120 failed its terminal exact-SHA CI batch on 985af8aa18be53c285221b2ed21d4062e69b9f3d. Linux C07.3 table row diagnostics reject visible rows despite each uniquely matching an already captured fixture path; formula Kanban extraction records no card memberships although the screenshot shows the 5/4/4/0 cards. macOS display metrics failed before first-run picker interaction, and Windows stopped after picker closure when the host HWND changed. See evidence/r2.8.120-attempt-1-985af8a.json; keep C07.3 pending.",
@@ -92,17 +92,17 @@
         "OpenObsidian loaded plugin workflows"
       ],
       "implementation_sha": "37994bfb0cdea541f907a33b2c38527a411ca2c7",
-      "current_milestone": "R2.8.151-R3.19-R3.18-CI-REPAIR",
-      "milestone_status": "R3.19 implementation and integrated source review are complete locally; exact-base/no-active-CI submission gate pending. No local executable validation or push.",
-      "next_action": "Verify live origin/main equals candidate base 15fc2c10f87ada3ba9fb191e76206ce45acac74d and no required CI batch is active, then push this milestone exactly once. Reconcile all required jobs and artifacts on the submitted SHA before any later push.",
+      "current_milestone": "R3.20-R3.19-TERMINAL-CI-REPAIR",
+      "milestone_status": "R3.19 is terminal-failed and fully reconciled on exact SHA 57a28b2d371be576d1d4aebb1ea77d1b47b17fb9. R3.20 implementation and integrated review are complete; the final exact-base/no-active-CI submission gate is pending. No local executable validation or push.",
+      "next_action": "Verify origin/main still equals 57a28b2d371be576d1d4aebb1ea77d1b47b17fb9 and no exact-SHA CI batch is active before one R3.20 push. Reconcile all required jobs and artifacts before any later push.",
       "roundtrip_reports_reconciled": true,
       "roundtrip_report_hashes": {
         "Linux": "1f516637e066b81c3a52ebc63168565db68f47214bdcae60d99c7923e2ef4132",
         "Windows": "7746147c29f75904220854abd11ebcae2714e91cf462c2ec94e928dc9eb12db8",
         "macOS": "22e067108d9ceb05889ca6a13e9d0718eda62fbaa8904af898e4ccac66faca12"
       },
-      "current_ci_evidence": ".agents/tasks/2026-10-07/evidence/r2.8.150-r3-18-r3-17-ci-repair-candidate.json",
-      "updated_at": "2026-10-16T22:32:28Z"
+      "current_ci_evidence": ".agents/tasks/2026-10-07/evidence/r2.8.151-r3-19-r3-18-ci-repair-candidate.json",
+      "updated_at": "2026-10-16T23:13:14Z"
     },
     "R4": {
       "status": "pending",
@@ -124,9 +124,9 @@
       "required_ci": [],
       "implementation_sha": null
     },
-    "milestone_status": "R3.17 is terminal-failed and unachieved on exact SHA 37994bfb0cdea541f907a33b2c38527a411ca2c7: 4/7 workflows and 12/20 jobs passed; all workflows, jobs, and 12 artifact records are reconciled. R3.18 is approved by three independent reviewers and implementation is in progress locally.",
-    "next_action": "Continue the approved R3.18 scope, complete source review of the entire milestone, then recheck origin/main and active CI before its single push. Do not run local executable validation or dispatch CI for minor edits.",
-    "updated_at": "2026-10-16T21:24:08Z"
+    "milestone_status": "R3.19 is terminal-failed and fully reconciled on exact SHA 57a28b2d371be576d1d4aebb1ea77d1b47b17fb9: 4/7 workflows and 13/20 jobs passed; all workflows, jobs, and 12 artifact records are reconciled. R3.20 implementation and integrated review are complete; the final exact-base/no-active-CI submission gate is pending.",
+    "next_action": "Recheck origin/main and active CI before the single R3.20 push. Do not run local executable validation or dispatch CI for minor edits.",
+    "updated_at": "2026-10-16T23:13:14Z"
   },
   "completed_actions": [
     "Pushed reviewed C07.3 attempt 3 once to origin/main at 1ded8e1ac2237c7b61ca38b46e1d1d777d0225c5; recorded the initial exact-SHA status in .agents/tasks/2026-10-07/evidence/r2.8.127-attempt-3-1ded8e1.json. Keep origin/main fixed until all seven workflows and 20 jobs are terminal.",
@@ -43987,8 +43987,9 @@
     }
   },
   "current_requirement_count": 221,
-  "current_ci_attempt": {
+  "previous_ci_attempt": {
     "schema_version": 1,
+    "superseded_by": "R3.19 current_ci_batch; detailed R3.18 evidence is preserved here as history.",
     "milestone_id": "R3.18",
     "name": "R3.18 consolidated repair of R3.17 exact-SHA CI failures",
     "attempt": 1,
@@ -44822,31 +44823,29 @@
     "reconciled_at": "2026-10-16T22:02:47Z"
   },
   "planned_next_milestone": {
-    "id": "R2.8.151-R3.19-R3.18-CI-REPAIR",
-    "milestone_id": "R3.19",
-    "name": "R3.19 consolidated repair of R3.18 exact-SHA CI failures",
-    "status": "implementation_in_progress",
-    "plan": ".agents/tasks/2026-10-07/evidence/r2.8.151-r3-19-r3-18-ci-repair-candidate.json",
-    "candidate_base_sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
-    "depends_on": "R3.18 terminal-failed and fully reconciled on exact SHA 15fc2c10f87ada3ba9fb191e76206ce45acac74d.",
-    "reviewed_by": [
-      "r318_ui_ci_review",
-      "r318_watcher_review",
-      "r319_integrated_plan_review"
-    ],
-    "reviewed_at": "2026-10-16T22:07:10Z",
+    "id": "R3.20-R3.19-TERMINAL-CI-REPAIR",
+    "milestone_id": "R3.20",
+    "name": "R3.20 consolidated repair of R3.19 exact-SHA CI failures",
+    "status": "implementation_complete",
+    "plan": ".agents/tasks/2026-10-07/evidence/r3-20-r3-19-terminal-ci-repair.json",
+    "candidate_base_sha": "57a28b2d371be576d1d4aebb1ea77d1b47b17fb9",
+    "depends_on": "R3.19 terminal-failed and fully reconciled on exact SHA 57a28b2d371be576d1d4aebb1ea77d1b47b17fb9.",
+    "reviewed_by": ["r320_watcher_triage"],
+    "reviewed_at": "2026-10-16T22:57:36Z",
     "implementation_started": true,
-    "implementation_complete": false,
+    "implementation_started_at": "2026-10-16T22:58:10Z",
+    "implementation_complete": true,
     "local_executable_validation": false,
     "pushed_once": false,
     "milestone_achieved": false,
-    "next_action": "Review the independent UI and watcher implementation diffs, integrate them into the goal worktree, complete the remaining approved edits, and review the full milestone. No local executable validation or push.",
-    "implementation_started_at": "2026-10-16T22:07:44Z"
+    "implementation_reviewed_by": ["r320_ui_review", "r320_integrated_review"],
+    "implementation_reviewed_at": "2026-10-16T23:13:14Z",
+    "next_action": "Verify origin/main still equals the candidate base and no exact-SHA CI batch is active, then submit the reviewed milestone once. No local executable validation or partial push."
   },
   "planned_independent_milestone": {
-    "milestone": "unassigned until R3.17 CI is reconciled and C07.5 dependency sequencing is settled",
+    "milestone": "unassigned until R3.20 CI is reconciled and C07.5 dependency sequencing is settled",
     "name": "C09.2 native appearance root selection and CSS diagnostics",
-    "status": "Deferred while R3.19 is the active local repair. The C07.4 all-platform reference capture is reconciled, but Rust comparator parity remains pending with no parity claim. Reassess C09.2 after R3.19 exact-SHA CI is terminal and reconciled, and after the C07.5 no-follow API/libc dependency is accepted. Preserve the mixed-worktree draft separately.",
+    "status": "Deferred while R3.20 is the active local repair. The C07.4 all-platform reference capture is reconciled, but Rust comparator parity remains pending with no parity claim. Reassess C09.2 after R3.20 exact-SHA CI is terminal and reconciled, and after the C07.5 no-follow API/libc dependency is accepted. Preserve the mixed-worktree draft separately.",
     "deliverable": "Complete the current Rust appearance projection slice by making the selected .obsidian or .obsidian-* configuration root explicit in the native UI, applying supported appearance settings only from that root, distinguishing malformed/non-object appearance sources from missing files, and displaying bounded diagnostic summaries from discovered theme and snippet analysis. Keep CSS inert, preserve all vault bytes, and leave C09 pending until every remaining C09 acceptance item is satisfied.",
     "acceptance": [
       "List discovered configuration roots and provide an accessible, visible selector. Default deterministically to .obsidian when present, otherwise to the only discovered root; when multiple alternate roots exist without .obsidian, require an explicit selection before applying appearance. Keep the choice app-local and never write it into the vault.",
@@ -44871,7 +44870,7 @@
       "OpenObsidian plugin renderer matrix"
     ],
     "evidence": "Exact-SHA egui interaction reports and artifacts for selected-root projection, diagnostics, removed/non-directory root fallback, malformed/non-object and missing-selected-appearance reporting, CSS isolation, refresh and no-write behavior; fixture hashes and source-preservation records; all required workflow/job URLs and conclusions.",
-    "depends_on": "Reassess after R3.18 implementation review and its exact-SHA CI batch are complete and reconciled. C07.4 reference capture is complete/reconciled, while Rust comparator parity remains independently pending. C09.2 cannot be submitted until C07.5 VaultRoot::open_regular_file_nofollow and its target-scoped libc dependency are accepted or the dependency boundary is revised.",
+    "depends_on": "Reassess after the R3.20 implementation review and exact-SHA CI batch are complete and reconciled. C07.4 reference capture is complete/reconciled, while Rust comparator parity remains independently pending. C09.2 cannot be submitted until C07.5 VaultRoot::open_regular_file_nofollow and its target-scoped libc dependency are accepted or the dependency boundary is revised.",
     "static_reviews": {
       "status": "Read-only C09.2 review found no functional gap in the appearance UI, CSS caps or documentation, but found an isolation blocker: configuration.rs depends on the unsubmitted C07.5 VaultRoot::open_regular_file_nofollow API and target-scoped libc dependency. Reclassify/sequence this dependency before calling C09.2 implementation-complete. No local executable validation.",
       "findings": [
@@ -44882,14 +44881,14 @@
       ],
       "local_executable_validation": false
     },
-    "next_action": "Implement the reviewed R3.19 scope locally, independently review the integrated milestone, and push it once only after implementation completion and a final exact origin/main/no-active-CI gate. Run no local validation."
+    "next_action": "After the R3.20 exact-SHA CI batch is terminal and reconciled, reassess the C09.2 dependency boundary and prepare a fresh bounded plan. Run no local validation."
   },
   "planned_following_milestone": {
     "milestone": "C07.4 Rust JavaScript-number and locale comparator implementation",
     "name": "Implement the reference-captured C07.4 comparison contract in crates/doc",
-    "status": "Deferred while R3.19 is the active local repair. The C07.4 pinned-app reference capture is complete and reconciled; Rust comparator parity remains pending and unclaimed.",
+    "status": "Deferred while R3.20 is the active local repair. The C07.4 pinned-app reference capture is complete and reconciled; Rust comparator parity remains pending and unclaimed.",
     "deliverable": "Implement pinned-app JavaScript number conversion, identity/filter/sort/contains semantics and recorded locale collation policy with fixture-backed Rust parity.",
-    "depends_on": "The C07.4 all-platform pinned-app reference capture prerequisite is complete and reconciled. Schedule comparator implementation only after the R3.18 exact-SHA CI batch is terminal/reconciled and a fresh bounded plan is reviewed; Rust comparator parity remains pending until its own exact-SHA CI acceptance passes.",
+    "depends_on": "The C07.4 all-platform pinned-app reference capture prerequisite is complete and reconciled. Schedule comparator implementation only after the R3.20 exact-SHA CI batch is terminal/reconciled and a fresh bounded plan is reviewed; Rust comparator parity remains pending until its own exact-SHA CI acceptance passes.",
     "scope": [
       "In crates/doc, replace exact JSON integer comparison with a single JavaScript Number-compatible binary64 comparison/conversion path for captured numeric values and filter operands.",
       "Apply the captured numeric equality semantics consistently to scalar equality/relational filters, sorting, array contains, group identity, and any group labels whose rendering is part of observed behavior.",
@@ -44932,30 +44931,28 @@
       "For captured JSON, order is visible-column configuration and must not be projected into row sort; retain raw JSON and unknown root/view fields while projecting only supported evaluation fields.",
       "Legacy TypeScript uses distinct collation options for values and path ties; freeze the required locale/platform behavior from current all-OS capture before choosing a Rust collator."
     ],
-    "plan_review_status": "C07.4 comparator remains a placeholder and Rust parity remains pending. The reference capture is complete with source mutations recorded; prepare and review a fresh bounded comparator plan after R3.18 exact-SHA CI is terminal and reconciled.",
-    "next_action": "Implement the reviewed R3.19 scope locally, independently review the integrated milestone, and push it once only after implementation completion and a final exact origin/main/no-active-CI gate. Run no local validation."
+    "plan_review_status": "C07.4 comparator remains a placeholder and Rust parity remains pending. The reference capture is complete with source mutations recorded; prepare and review a fresh bounded comparator plan after R3.20 exact-SHA CI is terminal and reconciled.",
+    "next_action": "After the R3.20 exact-SHA CI batch is terminal and reconciled, review a fresh bounded C07.4 comparator plan. Run no local validation."
   },
   "current_repair_milestone": {
-    "id": "R2.8.151-R3.19-R3.18-CI-REPAIR",
-    "milestone_id": "R3.19",
-    "name": "R3.19 consolidated repair of R3.18 exact-SHA CI failures",
-    "status": "implementation_in_progress",
-    "plan": ".agents/tasks/2026-10-07/evidence/r2.8.151-r3-19-r3-18-ci-repair-candidate.json",
-    "candidate_base_sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
-    "depends_on": "R3.18 terminal-failed and fully reconciled on exact SHA 15fc2c10f87ada3ba9fb191e76206ce45acac74d.",
-    "reviewed_by": [
-      "r318_ui_ci_review",
-      "r318_watcher_review",
-      "r319_integrated_plan_review"
-    ],
-    "reviewed_at": "2026-10-16T22:07:10Z",
+    "id": "R3.20-R3.19-TERMINAL-CI-REPAIR",
+    "milestone_id": "R3.20",
+    "name": "R3.20 consolidated repair of R3.19 exact-SHA CI failures",
+    "status": "implementation_complete",
+    "plan": ".agents/tasks/2026-10-07/evidence/r3-20-r3-19-terminal-ci-repair.json",
+    "candidate_base_sha": "57a28b2d371be576d1d4aebb1ea77d1b47b17fb9",
+    "depends_on": "R3.19 terminal-failed and fully reconciled on exact SHA 57a28b2d371be576d1d4aebb1ea77d1b47b17fb9.",
+    "reviewed_by": ["r320_watcher_triage"],
+    "reviewed_at": "2026-10-16T22:57:36Z",
     "implementation_started": true,
-    "implementation_complete": false,
+    "implementation_started_at": "2026-10-16T22:58:10Z",
+    "implementation_complete": true,
     "local_executable_validation": false,
     "pushed_once": false,
     "milestone_achieved": false,
-    "next_action": "Review the independent UI and watcher implementation diffs, integrate them into the goal worktree, complete the remaining approved edits, and review the full milestone. No local executable validation or push.",
-    "implementation_started_at": "2026-10-16T22:07:44Z"
+    "implementation_reviewed_by": ["r320_ui_review", "r320_integrated_review"],
+    "implementation_reviewed_at": "2026-10-16T23:13:14Z",
+    "next_action": "Verify origin/main still equals the candidate base and no exact-SHA CI batch is active, then submit the reviewed milestone once. No local executable validation or partial push."
   },
   "current_ci_batch": {
     "milestone_id": "R3.19",
@@ -44965,17 +44962,26 @@
     "implementation_sha": "57a28b2d371be576d1d4aebb1ea77d1b47b17fb9",
     "submitted_sha": "57a28b2d371be576d1d4aebb1ea77d1b47b17fb9",
     "pushed_once": true,
-    "status": "in_progress_with_observed_failure",
+    "status": "terminal_failed_artifacts_reconciled",
     "triggered_at": "2026-10-16T22:36:18Z",
-    "last_polled_at": "2026-10-16T22:38:17Z",
+    "last_polled_at": "2026-10-16T22:49:55Z",
     "workflow_counts": {
       "observed": 7,
-      "terminal": 5,
+      "terminal": 7,
       "passed": 4,
-      "failed": 1,
+      "failed": 3,
       "cancelled": 0,
       "queued": 0,
-      "in_progress": 2
+      "in_progress": 0
+    },
+    "job_counts": {
+      "observed": 20,
+      "terminal": 20,
+      "passed": 13,
+      "failed": 7,
+      "cancelled": 0,
+      "queued": 0,
+      "in_progress": 0
     },
     "run_ids": [
       38976742999,
@@ -44993,6 +44999,7 @@
         "status": "completed",
         "conclusion": "failure",
         "sha": "57a28b2d371be576d1d4aebb1ea77d1b47b17fb9",
+        "job_ids": [117227888680],
         "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38976742999"
       },
       {
@@ -45001,6 +45008,7 @@
         "status": "completed",
         "conclusion": "success",
         "sha": "57a28b2d371be576d1d4aebb1ea77d1b47b17fb9",
+        "job_ids": [117227889945, 117227890161, 117227890179],
         "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38976743151"
       },
       {
@@ -45009,6 +45017,7 @@
         "status": "completed",
         "conclusion": "success",
         "sha": "57a28b2d371be576d1d4aebb1ea77d1b47b17fb9",
+        "job_ids": [117227889267, 117227889605, 117227889614],
         "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38976743088"
       },
       {
@@ -45017,14 +45026,16 @@
         "status": "completed",
         "conclusion": "success",
         "sha": "57a28b2d371be576d1d4aebb1ea77d1b47b17fb9",
+        "job_ids": [117227889349, 117227889685, 117227889706],
         "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38976743089"
       },
       {
         "name": "OpenObsidian Rust CI",
         "run_id": 38976743053,
-        "status": "in_progress",
-        "conclusion": null,
+        "status": "completed",
+        "conclusion": "failure",
         "sha": "57a28b2d371be576d1d4aebb1ea77d1b47b17fb9",
+        "job_ids": [117227889338, 117227889489, 117227889570, 117227889653],
         "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38976743053"
       },
       {
@@ -45033,14 +45044,16 @@
         "status": "completed",
         "conclusion": "success",
         "sha": "57a28b2d371be576d1d4aebb1ea77d1b47b17fb9",
+        "job_ids": [117227889818, 117227890088, 117227890129],
         "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38976743201"
       },
       {
         "name": "Obsidian vault round-trip acceptance",
         "run_id": 38976743025,
-        "status": "in_progress",
-        "conclusion": null,
+        "status": "completed",
+        "conclusion": "failure",
         "sha": "57a28b2d371be576d1d4aebb1ea77d1b47b17fb9",
+        "job_ids": [117227889392, 117227889408, 117227889461],
         "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38976743025"
       }
     ],
@@ -45050,22 +45063,51 @@
         "workflow": "Rust migration inventory",
         "status": "terminal_failure",
         "observed_error": "Mapping review must record the current Rust migration goal SHA-256",
-        "interpretation": "The goal file changed in this milestone, so the recorded goal hash may need a consolidated tracker update after the full batch finishes.",
-        "repair_deferred_until_batch_terminal": true
+        "interpretation": "The active mapping-review fingerprint was stale for the submitted goal. R3.20 synchronizes it with the current goal SHA and retains historical fingerprints."
       },
       {
         "run_id": 38976743053,
         "workflow": "OpenObsidian Rust CI",
-        "status": "in_progress_with_observed_failure",
-        "job": "rust (ubuntu-latest)",
-        "observed_step": "Check formatting failed while the workspace tests continued",
-        "repair_deferred_until_batch_terminal": true
+        "status": "terminal_failure",
+        "observed_failures": "Windows watcher unit test's final empty-poll assertion received a legitimate later batch; macOS UI test timed out before a watcher callback wake; Ubuntu reported eight rustfmt hunks. The minimum-supported Rust job passed.",
+        "repair_milestone": "R3.20"
+      },
+      {
+        "run_id": 38976743025,
+        "workflow": "Obsidian vault round-trip acceptance",
+        "status": "terminal_failure",
+        "observed_failures": "Linux, macOS, and Windows passed the external callback, changed snapshot probe, and correlated refresh, then timed out waiting for the unchanged-probe request ID because the main app environment omitted the existing watcher-hint request-file variable.",
+        "repair_milestone": "R3.20"
       }
     ],
-    "all_required_jobs_terminal": false,
-    "artifacts_reconciled": false,
+    "all_required_jobs_terminal": true,
+    "artifacts_reconciled": true,
+    "artifact_inventory_count": 12,
+    "downloaded_non_preview_artifact_count": 9,
+    "metadata_only_large_preview_count": 3,
+    "artifact_reconciliation_note": "All 12 artifact records are accounted for. Nine non-preview archives were downloaded and their SHA-256 digests match GitHub API digests; three large desktop preview archives remain metadata-only under policy. All loaded-plugin, renderer, and round-trip reports are tied to the exact run/SHA/platform and payload digests.",
     "evidence_path": ".agents/tasks/2026-10-07/evidence/r2.8.151-r3-19-r3-18-ci-repair-candidate.json"
   },
+  "current_ci_attempt": {
+    "schema_version": 1,
+    "milestone_id": "R3.19",
+    "name": "R3.19 consolidated repair of R3.18 exact-SHA CI failures",
+    "attempt": 1,
+    "base_sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+    "implementation_sha": "57a28b2d371be576d1d4aebb1ea77d1b47b17fb9",
+    "submitted_sha": "57a28b2d371be576d1d4aebb1ea77d1b47b17fb9",
+    "pushed_once": true,
+    "status": "terminal_failed_artifacts_reconciled",
+    "triggered_at": "2026-10-16T22:36:18Z",
+    "last_polled_at": "2026-10-16T22:49:55Z",
+    "workflow_counts": {"observed": 7, "terminal": 7, "passed": 4, "failed": 3, "cancelled": 0, "queued": 0, "in_progress": 0},
+    "job_counts": {"observed": 20, "terminal": 20, "passed": 13, "failed": 7, "cancelled": 0, "queued": 0, "in_progress": 0},
+    "run_ids": [38976742999, 38976743151, 38976743088, 38976743089, 38976743053, 38976743201, 38976743025],
+    "all_required_jobs_terminal": true,
+    "artifacts_reconciled": true,
+    "evidence_path": ".agents/tasks/2026-10-07/evidence/r2.8.151-r3-19-r3-18-ci-repair-candidate.json"
+  },
+  "active_ci_batch": null,
   "parallel_local_milestones": [
     {
       "id": "C06.2",
@@ -45173,28 +45215,27 @@
     }
   },
   "planned_repair_milestone": {
-    "id": "R2.8.151-R3.19-R3.18-CI-REPAIR",
-    "milestone_id": "R3.19",
-    "name": "R3.19 consolidated repair of R3.18 exact-SHA CI failures",
-    "status": "implementation_in_progress",
-    "plan": ".agents/tasks/2026-10-07/evidence/r2.8.151-r3-19-r3-18-ci-repair-candidate.json",
-    "candidate_base_sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
-    "depends_on": "R3.18 terminal-failed and fully reconciled on exact SHA 15fc2c10f87ada3ba9fb191e76206ce45acac74d.",
-    "reviewed_by": [
-      "r318_ui_ci_review",
-      "r318_watcher_review",
-      "r319_integrated_plan_review"
-    ],
-    "reviewed_at": "2026-10-16T22:07:10Z",
+    "id": "R3.20-R3.19-TERMINAL-CI-REPAIR",
+    "milestone_id": "R3.20",
+    "name": "R3.20 consolidated repair of R3.19 exact-SHA CI failures",
+    "status": "implementation_complete",
+    "plan": ".agents/tasks/2026-10-07/evidence/r3-20-r3-19-terminal-ci-repair.json",
+    "candidate_base_sha": "57a28b2d371be576d1d4aebb1ea77d1b47b17fb9",
+    "depends_on": "R3.19 terminal-failed and fully reconciled on exact SHA 57a28b2d371be576d1d4aebb1ea77d1b47b17fb9.",
+    "reviewed_by": ["r320_watcher_triage"],
+    "reviewed_at": "2026-10-16T22:57:36Z",
     "implementation_started": true,
-    "implementation_complete": false,
+    "implementation_started_at": "2026-10-16T22:58:10Z",
+    "implementation_complete": true,
     "local_executable_validation": false,
     "pushed_once": false,
     "milestone_achieved": false,
-    "next_action": "Review the independent UI and watcher implementation diffs, integrate them into the goal worktree, complete the remaining approved edits, and review the full milestone. No local executable validation or push.",
-    "implementation_started_at": "2026-10-16T22:07:44Z"
+    "implementation_reviewed_by": ["r320_ui_review", "r320_integrated_review"],
+    "implementation_reviewed_at": "2026-10-16T23:13:14Z",
+    "next_action": "Verify origin/main still equals the candidate base and no exact-SHA CI batch is active, then submit the reviewed milestone once. No local executable validation or partial push."
   },
-  "active_ci_batch": {
+  "previous_r3_18_ci_batch": {
+    "superseded_by": "R3.19 current_ci_batch; the R3.18 exact-SHA batch is terminal and reconciled.",
     "milestone_id": "R3.18",
     "name": "R3.18 consolidated repair of R3.17 exact-SHA CI failures",
     "attempt": 1,
@@ -46330,29 +46371,27 @@
     },
     "next_action": "This R3.11 plan is a historical terminal-failed record, superseded as the next milestone by R2.8.145/R3.13; retain its evidence and do not treat its old next-action as current."
   },
-  "goal_sha256": "eb70762b8507e93e8fb247d112230fe3d40d6fdc4d1d6408f24f20b01dc6feb3",
-  "planned_next_milestone_id": "R3.18",
+  "goal_sha256": "a9338a1c9f7c34f31c5a7bfdaa136ea5b51d5909cd5a2a53ca8e01d8e077fadf",
+  "planned_next_milestone_id": "R3.20",
   "planned_ci_repair_milestone": {
-    "id": "R2.8.151-R3.19-R3.18-CI-REPAIR",
-    "milestone_id": "R3.19",
-    "name": "R3.19 consolidated repair of R3.18 exact-SHA CI failures",
-    "status": "implementation_in_progress",
-    "plan": ".agents/tasks/2026-10-07/evidence/r2.8.151-r3-19-r3-18-ci-repair-candidate.json",
-    "candidate_base_sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
-    "depends_on": "R3.18 terminal-failed and fully reconciled on exact SHA 15fc2c10f87ada3ba9fb191e76206ce45acac74d.",
-    "reviewed_by": [
-      "r318_ui_ci_review",
-      "r318_watcher_review",
-      "r319_integrated_plan_review"
-    ],
-    "reviewed_at": "2026-10-16T22:07:10Z",
+    "id": "R3.20-R3.19-TERMINAL-CI-REPAIR",
+    "milestone_id": "R3.20",
+    "name": "R3.20 consolidated repair of R3.19 exact-SHA CI failures",
+    "status": "implementation_complete",
+    "plan": ".agents/tasks/2026-10-07/evidence/r3-20-r3-19-terminal-ci-repair.json",
+    "candidate_base_sha": "57a28b2d371be576d1d4aebb1ea77d1b47b17fb9",
+    "depends_on": "R3.19 terminal-failed and fully reconciled on exact SHA 57a28b2d371be576d1d4aebb1ea77d1b47b17fb9.",
+    "reviewed_by": ["r320_watcher_triage"],
+    "reviewed_at": "2026-10-16T22:57:36Z",
     "implementation_started": true,
-    "implementation_complete": false,
+    "implementation_started_at": "2026-10-16T22:58:10Z",
+    "implementation_complete": true,
     "local_executable_validation": false,
     "pushed_once": false,
     "milestone_achieved": false,
-    "next_action": "Review the independent UI and watcher implementation diffs, integrate them into the goal worktree, complete the remaining approved edits, and review the full milestone. No local executable validation or push.",
-    "implementation_started_at": "2026-10-16T22:07:44Z"
+    "implementation_reviewed_by": ["r320_ui_review", "r320_integrated_review"],
+    "implementation_reviewed_at": "2026-10-16T23:13:14Z",
+    "next_action": "Verify origin/main still equals the candidate base and no exact-SHA CI batch is active, then submit the reviewed milestone once. No local executable validation or partial push."
   },
   "previous_repair_milestone": {
     "id": "R2.8.149-R3.17-CANVAS-REFRESH-FOCUS-GUARD",
@@ -47118,7 +47157,7 @@
       "failed": 2
     }
   },
-  "planned_ci_repair_milestone_id": "R3.18",
+  "planned_ci_repair_milestone_id": "R3.20",
   "historical_ci_batches": [
     {
       "milestone": "R2.8.136-R3.4-LINUX-CANVAS-PRESTAGING-FOCUS-RECOVERY; attempt 1",
@@ -48399,32 +48438,30 @@
   ],
   "origin_main_sha_after_push": "57a28b2d371be576d1d4aebb1ea77d1b47b17fb9",
   "origin_main_sha": "57a28b2d371be576d1d4aebb1ea77d1b47b17fb9",
-  "origin_main_sha_verified_at": "2026-10-16T22:38:17Z",
+  "origin_main_sha_verified_at": "2026-10-16T22:49:55Z",
   "candidate_followup_plan": {
-    "id": "R2.8.151-R3.19-R3.18-CI-REPAIR",
-    "milestone_id": "R3.19",
-    "name": "R3.19 consolidated repair of R3.18 exact-SHA CI failures",
-    "status": "implementation_in_progress",
-    "plan": ".agents/tasks/2026-10-07/evidence/r2.8.151-r3-19-r3-18-ci-repair-candidate.json",
-    "candidate_base_sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
-    "depends_on": "R3.18 terminal-failed and fully reconciled on exact SHA 15fc2c10f87ada3ba9fb191e76206ce45acac74d.",
-    "reviewed_by": [
-      "r318_ui_ci_review",
-      "r318_watcher_review",
-      "r319_integrated_plan_review"
-    ],
-    "reviewed_at": "2026-10-16T22:07:10Z",
+    "id": "R3.20-R3.19-TERMINAL-CI-REPAIR",
+    "milestone_id": "R3.20",
+    "name": "R3.20 consolidated repair of R3.19 exact-SHA CI failures",
+    "status": "implementation_complete",
+    "plan": ".agents/tasks/2026-10-07/evidence/r3-20-r3-19-terminal-ci-repair.json",
+    "candidate_base_sha": "57a28b2d371be576d1d4aebb1ea77d1b47b17fb9",
+    "depends_on": "R3.19 terminal-failed and fully reconciled on exact SHA 57a28b2d371be576d1d4aebb1ea77d1b47b17fb9.",
+    "reviewed_by": ["r320_watcher_triage"],
+    "reviewed_at": "2026-10-16T22:57:36Z",
     "implementation_started": true,
-    "implementation_complete": false,
+    "implementation_started_at": "2026-10-16T22:58:10Z",
+    "implementation_complete": true,
     "local_executable_validation": false,
     "pushed_once": false,
     "milestone_achieved": false,
-    "next_action": "Review the independent UI and watcher implementation diffs, integrate them into the goal worktree, complete the remaining approved edits, and review the full milestone. No local executable validation or push.",
-    "implementation_started_at": "2026-10-16T22:07:44Z"
+    "implementation_reviewed_by": ["r320_ui_review", "r320_integrated_review"],
+    "implementation_reviewed_at": "2026-10-16T23:13:14Z",
+    "next_action": "Verify origin/main still equals the candidate base and no exact-SHA CI batch is active, then submit the reviewed milestone once. No local executable validation or partial push."
   },
   "origin_main_sha_before_push": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
   "last_submitted_head": "57a28b2d371be576d1d4aebb1ea77d1b47b17fb9",
-  "planned_repair_milestone_id": "R3.18",
+  "planned_repair_milestone_id": "R3.20",
   "origin_main_verified_at": "2026-10-16T22:38:17Z",
   "historical_repairs": [
     {

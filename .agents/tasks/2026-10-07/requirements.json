@@ -10523,7 +10523,7 @@
       "migration_acceptance": "Keep minor implementation, documentation, tests, fixes, and optional local commits grouped until a coherent, measurable milestone is complete and the full scope has been reviewed. A minor edit, formatting or lint correction, compiler fix, cleanup item, or evidence update does not trigger a push. Push origin/main once after implementation completion and whole-milestone review; that push starts one full exact-SHA GitHub Actions batch and marks implementation-complete / CI-pending. Keep origin/main at that SHA until every required job is terminal and all results and artifacts are reconciled, even if CI takes several hours; do not start another full batch meanwhile. If CI finds problems, let the full batch finish, group related findings into one reviewed repair milestone, and push that repair once. Mark achieved / CI-passed only after every required exact-SHA job passes and its evidence is reconciled.",
       "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
       "clause": "Use GitHub Actions as a milestone check, never as feedback for every minor edit. Keep related small changes and optional local commits together under a specific, measurable milestone. Complete and review the whole implementation first; only when no earlier CI batch is in flight, push the accumulated milestone to origin/main exactly once. The push starts its required CI and marks implementation-complete / CI-pending. It becomes achieved / CI-passed only after every required job passes for that exact SHA and evidence is reconciled. Keep origin/main at the submitted SHA through the potentially multi-hour batch; wait for terminal results before submitting the next milestone or a consolidated repair. Evidence-only and status-only updates stay local.",
-      "goal_sha256": "eb70762b8507e93e8fb247d112230fe3d40d6fdc4d1d6408f24f20b01dc6feb3"
+      "goal_sha256": "a9338a1c9f7c34f31c5a7bfdaa136ea5b51d5909cd5a2a53ca8e01d8e077fadf"
     },
     {
       "id": "MIG-003",
@@ -11281,10 +11281,10 @@
       "C07.8",
       "C07.9"
     ],
-    "goal_sha256": "eb70762b8507e93e8fb247d112230fe3d40d6fdc4d1d6408f24f20b01dc6feb3",
+    "goal_sha256": "a9338a1c9f7c34f31c5a7bfdaa136ea5b51d5909cd5a2a53ca8e01d8e077fadf",
     "policy": "Every inherited requirement was reviewed by ID and assigned a Rust owner, migration phase, acceptance criterion and retained/superseded/external disposition. Historical status/evidence remain preserved separately. Rust acceptance remains pending unless current exact-SHA migration evidence is attached; external items remain external_pending. Phase completion is milestone-level and does not auto-promote individual requirement rows; row status remains pending until that row\u2019s current exact-SHA Rust acceptance evidence is attached.",
-    "cadence_synced_at": "2026-10-16T21:24:08Z",
-    "cadence_sync_note": "Clarified that minor changes never trigger a push or CI dispatch: related work stays local under one named milestone until its measurable outcome is implemented and the whole milestone is reviewed, then it is pushed once when no earlier batch is active. Keep origin/main at the submitted SHA during the potentially multi-hour batch; exact-SHA success and reconciled evidence are required for achievement. This documentation/fingerprint sync does not change any CI outcome.",
+    "cadence_synced_at": "2026-10-16T22:49:55Z",
+    "cadence_sync_note": "Clarified the push gate: keep minor work local under a named milestone until its measurable implementation outcome is complete and reviewed, then push that milestone exactly once if no earlier CI batch is active. The push marks implementation-complete / CI-pending; achieved / CI-passed requires all required exact-SHA jobs and reconciled evidence. Keep origin/main at the submitted SHA through the potentially multi-hour batch and consolidate failures into a later repair milestone. Synchronized active goal fingerprints; this documentation change does not alter any CI outcome.",
     "reviewed_at": "2026-10-16T10:46:05Z",
     "previous_new_migration_requirement_count": 16,
     "post_r0_2_addition_count": 10,

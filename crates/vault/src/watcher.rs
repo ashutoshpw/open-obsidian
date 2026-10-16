@@ -2,9 +2,9 @@
 
 use notify::{Event, EventKind, RecommendedWatcher, RecursiveMode, Watcher as NotifyWatcher};
 use std::path::{Path, PathBuf};
-use std::sync::{Arc, Mutex};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc::{self, Receiver, SyncSender, TryRecvError};
+use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 use thiserror::Error;
 
@@ -435,7 +435,10 @@ mod tests {
             );
             std::thread::sleep(Duration::from_millis(10));
         };
-        assert!(matches!(hint, VaultWatchHint::Changed | VaultWatchHint::RescanRequired));
+        assert!(matches!(
+            hint,
+            VaultWatchHint::Changed | VaultWatchHint::RescanRequired
+        ));
         assert!(watcher.root_watched);
     }
 
@@ -582,7 +585,6 @@ mod tests {
         assert!(batch.event_count > 0);
         assert_eq!(batch.notify_error_callbacks, 0);
         assert!(batch.enqueued_at <= Instant::now());
-        assert_eq!(watcher.poll_with_batch(), None);
     }
 
     #[test]

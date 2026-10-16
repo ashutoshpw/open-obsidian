@@ -20,9 +20,8 @@ pub use openobsidian_vault::{
     VaultNoteEmbedDisposition, VaultNoteEmbedNode, VaultNoteEmbedReport, VaultNoteEmbedResolution,
     VaultReadPreview, VaultRenamePreview, VaultRenameRecoveryIssue, VaultRenameRecoveryReport,
     VaultRenameResult, VaultWatchError, VaultWatchEventBatch, VaultWatchHint, VaultWatchPoll,
-    VaultWatcher, VaultWriteRecoveryIssue,
-    VaultWriteRecoveryReport, VaultWriteRequest, VaultWriteResult, analyze_markdown_preview,
-    plan_history_retention,
+    VaultWatcher, VaultWriteRecoveryIssue, VaultWriteRecoveryReport, VaultWriteRequest,
+    VaultWriteResult, analyze_markdown_preview, plan_history_retention,
 };
 use openobsidian_vault::{VaultCreateRequest, VaultEntry, VaultRead, VaultStore};
 use std::path::{Path, PathBuf};

@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "plan_id": "R3.20-R3.19-TERMINAL-CI-REPAIR",
+  "milestone_id": "R3.20",
+  "name": "R3.20 consolidated repair of R3.19 exact-SHA CI failures",
+  "status": "implementation_complete",
+  "candidate_base_sha": "57a28b2d371be576d1d4aebb1ea77d1b47b17fb9",
+  "objective": "Repair the terminal R3.19 inventory, Rust formatting/test, and round-trip harness failures in one bounded milestone while preserving the real watcher callback path, exact request correlation, and strict cross-platform round-trip assertions.",
+  "source_ci_evidence": ".agents/tasks/2026-10-07/evidence/r2.8.151-r3-19-r3-18-ci-repair-candidate.json",
+  "observed_findings": [
+    "The exact-SHA Rust migration inventory run rejects the active mapping-review goal SHA because it does not match goal.md.",
+    "The Ubuntu Rust CI formatter reports eight layout hunks across crates/engine/src/lib.rs, crates/ui-egui/src/lib.rs, and crates/vault/src/watcher.rs.",
+    "The Windows watcher unit test receives a legitimate later OS callback as a new batch after its first batch has already been polled; the final expectation of no later event is timing-sensitive. The deterministic injected-callback test separately covers coalescing.",
+    "The macOS UI watcher regression test times out before receiving a notify callback wake. A bounded readiness sentinel could be mistaken for the target edit unless its callbacks are polled and settled separately; after the target write call begins, it must produce a distinct callback batch before the 60-second timer.",
+    "All three round-trip platforms pass the external filesystem callback, changed snapshot probe, and correlated refresh checks, then time out waiting for the unchanged-probe request ID. The main app environment omits the already-supported OPENOBSIDIAN_CI_FORCE_VAULT_WATCHER_HINT_REQUEST_FILE variable consumed by the UI."
+  ],
+  "scope": [
+    "Synchronize the current goal SHA in requirements.json mapping_review, MIG-002, and state.json while preserving historical SHA records.",
+    "Apply only the eight rustfmt layout changes reported by the R3.19 Ubuntu GitHub Actions log; do not run a local formatter.",
+    "Remove only the Windows real-notify unit test's final assertion that no later event remains after its first poll; retain assertions for the received callback batch and the deterministic injected-callback test's exact same-ID/count=2 coalescing proof.",
+    "Make the real-watcher UI test establish backend readiness on the same watcher with real sentinel create/remove events, poll and settle their callbacks and refresh work, drain their wake notifications, and establish a fresh baseline. Bound the entire readiness phase by one absolute 10-second deadline from the first sentinel mutation; fail on exhaustion without retrying or extending the deadline. Record the instant immediately before initiating the target note write, then require a distinct callback batch with a new ID and enqueue timestamp at or after that write-start instant, poll it within 15 seconds and before the 60-second timer, and correlate that target batch to the changed probe and full refresh.",
+    "Pass the existing watcher-hint request-file environment setting into the main round-trip app process so the unchanged snapshot probe is request-correlated on Linux, macOS, and Windows.",
+    "Preserve all later edit, rename, manual-refresh, persistence, first-open/reopen, quiet-window, and exact request-correlation scenarios in the round-trip harness."
+  ],
+  "out_of_scope": [
+    "Changing watcher production behavior, wake policy, batch lineage, request correlation, or the 60-second periodic reconciliation interval unless implementation review proves a narrowly necessary production defect and updates this plan before editing.",
+    "Increasing test or harness timeouts, using request_rescan/manual refresh/the periodic timer to establish watcher readiness, adding fixed sleeps as readiness substitutes, or weakening no-timer, unchanged-snapshot/no-refresh, event-lineage, or later round-trip assertions.",
+    "Removing CI coverage, changing compatibility claims, or introducing local executable validation."
+  ],
+  "implementation_criteria": [
+    "All scoped source, harness, and active tracker changes are complete and independently reviewed together as one milestone.",
+    "The goal SHA-256 is synchronized in all active inventory/state references; historical milestone hashes remain unchanged.",
+    "The source diff contains only CI-reported formatting hunks plus the bounded watcher test and harness fixes described above.",
+    "No local test, build, formatter, linter, validator, runtime probe, benchmark, or application launch is used as acceptance evidence."
+  ],
+  "required_workflows": [
+    "OpenObsidian Rust CI",
+    "Rust migration inventory",
+    "Obsidian vault round-trip acceptance",
+    "OpenObsidian desktop build",
+    "OpenObsidian quality",
+    "OpenObsidian plugin renderer matrix",
+    "OpenObsidian loaded plugin workflows"
+  ],
+  "ci_acceptance": [
+    "All required jobs pass on the same submitted SHA, including Rust CI on Ubuntu, macOS, Windows, and the minimum-supported Rust version.",
+    "Rust migration inventory passes the current goal fingerprint and existing requirement-count/mapping gates.",
+    "The Windows real-notify watcher test passes without asserting OS quiescence after its first poll, while the injected-callback test still proves exact stable coalescing behavior.",
+    "The UI real-watcher test settles readiness sentinel events within one absolute 10-second deadline, then proves the target edit produces a distinct callback batch enqueued at or after the target write-start instant, polls it within 15 seconds before the 60-second timer, and completes its correlated refresh with unchanged vault/app-data safety checks on all supported runners.",
+    "Linux, macOS, and Windows round-trip reports pass the strict unchanged-probe correlation and all subsequent edit, rename, persistence, reopen, and quiet-window scenarios.",
+    "Every artifact for the exact SHA is enumerated and reconciled by workflow/run/SHA, API size/digest, and payload identity under the established metadata-only preview policy."
+  ],
+  "submission_gate": "Keep the whole R3.20 milestone local until implementation criteria and independent whole-milestone review are complete. Verify live origin/main still equals candidate_base_sha and the R3.19 exact-SHA CI batch is fully terminal and reconciled. Then fast-forward the reviewed milestone to origin/main exactly once. Hold main at the submitted SHA until all required jobs and artifacts are reconciled; do not push during the batch.",
+  "review_status": "approved",
+  "reviewed_by": ["r320_watcher_triage"],
+  "reviewed_at": "2026-10-16T22:57:36Z",
+  "implementation_started": true,
+  "implementation_started_at": "2026-10-16T22:58:10Z",
+  "implementation_complete": true,
+  "implementation_review_status": "approved for one R3.20 push after the exact-base/no-active-CI gate",
+  "implementation_reviewed_by": ["r320_ui_review", "r320_integrated_review"],
+  "implementation_reviewed_at": "2026-10-16T23:13:14Z",
+  "local_executable_validation": false,
+  "pushed_once": false,
+  "milestone_achieved": false,
+  "next_action": "Verify origin/main still equals the candidate base and no exact-SHA CI batch is active, then fast-forward this reviewed milestone once to origin/main."
+}

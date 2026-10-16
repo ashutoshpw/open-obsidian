@@ -16641,6 +16641,7 @@ async function runOpenObsidian(noOpBaseline: SnapshotEntry[]): Promise<SnapshotE
     HOME: homeRoot,
   };
   appEnv.OPENOBSIDIAN_CI_VAULT_REFRESH_EXPECTED_PATH = externalRefreshMarkdownPath;
+  appEnv.OPENOBSIDIAN_CI_FORCE_VAULT_WATCHER_HINT_REQUEST_FILE = vaultWatcherHintRequestFile;
   let appDataRoot: string;
   if (process.platform === "win32") {
     appEnv.APPDATA = userConfigRoot;
