@@ -3,7 +3,7 @@
   "plan_id": "R2.8.151-R3.19-R3.18-CI-REPAIR",
   "milestone_id": "R3.19",
   "name": "R3.19 consolidated repair of R3.18 exact-SHA CI failures",
-  "status": "implementation complete / integrated review approved / exact-base gate passed; ready for one submission; unpushed",
+  "status": "submitted once / exact-SHA CI pending",
   "created_at": "2026-10-16T22:05:38Z",
   "candidate_base_sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
   "integrated_source_head": "1c863ab73b6d74df9dd5aa3df11fba399018b46a",
@@ -102,10 +102,10 @@
   "implementation_complete": true,
   "local_executable_validation": false,
   "local_check_deviation": "One agent accidentally ran git diff --check once in the watcher worktree. It was not used as acceptance evidence. No local tests, builds, formatters, linters, validators, benchmarks, runtime probes, or application launches were used.",
-  "pushed_once": false,
+  "pushed_once": true,
   "milestone_achieved": false,
-  "next_action": "Push this completed R3.19 milestone to origin/main once. Then hold main at the resulting SHA, record every exact-SHA workflow/job, and reconcile all results/artifacts before any next push.",
-  "updated_at": "2026-10-16T22:35:24Z",
+  "next_action": "Wait for all seven required workflows and every job on this exact SHA to become terminal, then reconcile their results and artifacts. Do not push another milestone while this batch is pending.",
+  "updated_at": "2026-10-16T22:36:29Z",
   "reviewed_at": "2026-10-16T22:32:28Z",
   "reviewed_by": [
     "r318_ui_ci_review",
@@ -146,5 +146,58 @@
       "disposition": "stale run from the original baseline SHA, outside the fully reconciled R3.18 exact-SHA batch; left untouched and not treated as an active batch for the current main SHA"
     },
     "decision": "Submit the fully implemented and independently reviewed R3.19 milestone once; do not submit another milestone until its exact-SHA CI batch is terminal and reconciled."
+  },
+  "implementation_sha": "57a28b2d371be576d1d4aebb1ea77d1b47b17fb9",
+  "submitted_sha": "57a28b2d371be576d1d4aebb1ea77d1b47b17fb9",
+  "push_url": "https://github.com/ashutoshpw/open-obsidian/commit/57a28b2d371be576d1d4aebb1ea77d1b47b17fb9",
+  "ci_acceptance": {
+    "status": "pending",
+    "exact_sha": "57a28b2d371be576d1d4aebb1ea77d1b47b17fb9",
+    "required_workflows": [
+      {
+        "workflow": "Rust migration inventory",
+        "run_id": 38976742999,
+        "status": "in_progress",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38976742999"
+      },
+      {
+        "workflow": "OpenObsidian loaded plugin workflows",
+        "run_id": 38976743151,
+        "status": "queued",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38976743151"
+      },
+      {
+        "workflow": "OpenObsidian plugin renderer matrix",
+        "run_id": 38976743088,
+        "status": "queued",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38976743088"
+      },
+      {
+        "workflow": "OpenObsidian desktop build",
+        "run_id": 38976743089,
+        "status": "queued",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38976743089"
+      },
+      {
+        "workflow": "OpenObsidian Rust CI",
+        "run_id": 38976743053,
+        "status": "queued",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38976743053"
+      },
+      {
+        "workflow": "OpenObsidian quality",
+        "run_id": 38976743201,
+        "status": "queued",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38976743201"
+      },
+      {
+        "workflow": "Obsidian vault round-trip acceptance",
+        "run_id": 38976743025,
+        "status": "queued",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38976743025"
+      }
+    ],
+    "all_terminal": false,
+    "all_artifacts_reconciled": false
   }
 }
