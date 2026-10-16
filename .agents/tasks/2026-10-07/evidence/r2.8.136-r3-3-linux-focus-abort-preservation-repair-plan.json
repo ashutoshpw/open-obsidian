@@ -1,0 +1,98 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.8.136-R3.3-LINUX-CANVAS-FOCUS-AND-ABORT-PRESERVATION-REPAIR",
+  "name": "Repair Linux Canvas focus handling and prove fail-closed abort preservation",
+  "status": "implementation complete / whole-milestone review approved / ready for one push",
+  "recorded_at": "2026-10-15T23:52:08Z",
+  "planning_base_sha": "ab220878eade34c1240154d940560f9702ad5c98",
+  "implementation_start_sha": "ab220878eade34c1240154d940560f9702ad5c98",
+  "goal_sha256": "680ef166e4ddf4bf35513c318f868d9942e2ba51e0600201423f83c1379e67f8",
+  "canonical_mapping_source": [
+    "goal.md",
+    "requirements.json"
+  ],
+  "bounded_outcome": "Submit one reviewed repair milestone covering the Ubuntu rustfmt failure, diagnosis and correction of the Linux Canvas path-field focus loss, and exact post-abort vault/app-data preservation evidence. Preserve the existing fail-closed motion, paste, and save guards and pass the full seven-workflow, 20-job batch on the single implementation SHA.",
+  "predecessor_ci_evidence": "evidence/r2.8.136-r3-2-attempt-1-ab22087.json",
+  "predecessor_ci_status": "Terminal on exact SHA ab220878eade34c1240154d940560f9702ad5c98: 7/7 workflows and 20/20 jobs terminal; 18 jobs passed and two Ubuntu jobs failed. Rust CI failed only at formatting; Ubuntu round-trip failed closed before pointer motion, paste, and save. Windows and macOS round-trip jobs passed.",
+  "scope": [
+    "Apply the Ubuntu rustfmt import grouping requested at crates/ui-egui/src/lib.rs:22; do not dispatch CI for this isolated edit.",
+    "Instrument the Linux Canvas path-field focus sequence with event-free checkpoints immediately before clipboard staging, immediately after staging, and after a 100 ms delay, all before any diagnostic pointer motion. Record advancing monotonic time, frame/request IDs, raw events, path and sibling ID widget IDs/focus/hover/rect/value hashes, pointer/button state, X11 focused window, and refresh state.",
+    "Initialize the Canvas focus snapshot monotonic clock at app startup so checkpoint times are comparable and nonzero from the first request. Diagnose the observed path-to-ID focus transition from the new checkpoints; do not assume xclip is causal. If evidence places the transition across clipboard staging, make target-field focus acquisition the final UI action after staging, then require a fresh event-free target-focused/sibling-unfocused snapshot before any motion or paste. If evidence places it elsewhere, make only the smallest correction supported by the checkpoints. Do not add unconditional request_focus() or otherwise hide the trigger. If the final focus guard fails, abort before motion, Ctrl+V, or Save and retain the evidence.",
+    "Before first Canvas field input, capture the complete seeded vault and isolated app-data baselines, the Canvas source bytes/hash, and destination absence. Track motion dispatch attempts, completed paste stages, and save_attempted explicitly; set save_attempted immediately before invoking Save Canvas text.",
+    "After any pre-save abort, allow the existing clipboard neutralization and request-marker cleanup to finish, close the app without further UI input, then capture complete post-abort vault and app-data snapshots, exact changed paths, source/destination bytes and hashes, and clipboard-clear/readback evidence. Persist the preservation record before rethrowing an unexpected failure; do not mask the original error if evidence collection fails.",
+    "Add a Linux-only deterministic expected-abort canary before the normal C06 edit. Run it in a separate app invocation with its own cloned fixture and isolated app-data roots. After staging the clipboard and completing the final real target click/ArrowRight, capture a fresh event-free snapshot and feed a deliberately mismatching nonempty prefix into the existing pre-motion guard. Tag only this expected guard abort with EXPECTED_CANVAS_ABORT_CANARY, and only when all non-synthetic focus, window, pointer, refresh, and sibling checks pass. Preserve the typed/tagged marker through the pointer-guard and clipboard-cleanup wrappers so the outer handler can catch only that exact marker; a cleanup failure or unrelated exception must remain a CI failure. The canary must dispatch zero diagnostic pointer motion, Ctrl+V, or Save, complete clipboard cleanup and empty-selection readback, terminate the app before post-abort snapshots, preserve exact vault/app-data snapshots and Canvas bytes, and leave the destination absent. Save its evidence in a separate report section; any unrelated exception, cleanup failure, snapshot difference, or missing marker fails CI. Do not use continue-on-error.",
+    "Keep the ordinary C06 Canvas edit and note-creation preservation checks intact on Ubuntu, macOS, and Windows. After the Linux C06 gate succeeds, require the existing ten C07.4 scenarios, first-open/reopen predicates, comparisons, complete source-checkpoint matrix, and applicable tie-order gates on all three operating systems. Retain pinned Obsidian mutation evidence and make no Rust parity claim from reference-only results.",
+    "Carry the clarified milestone-only push policy and exact goal hash through the migration tracker; goal, requirements mapping, and implementation remain local until the whole R3.3 milestone is complete and independently reviewed."
+  ],
+  "out_of_scope": [
+    "Changing Rust Canvas document semantics or C07.4 comparator behavior.",
+    "Weakening or bypassing field focus, exact request/frame, event-free snapshot, no-motion-before-guard, no-paste-before-guard, explicit-save, source-byte, destination, vault-snapshot, or app-data-snapshot checks.",
+    "Treating clipboard-clear command success alone as proof that the clipboard is empty; the canary requires readback evidence.",
+    "Changing macOS/Windows input methods or replacing their passing reference capture workflow.",
+    "C07.5, C09.2, unrelated feature work, or additional standalone CI submissions."
+  ],
+  "implementation_criteria": [
+    "The import change matches the exact rustfmt output identified by Ubuntu Rust CI.",
+    "Linux focus checkpoints are fresh, event-free, ordered, request-correlated, and record all requested widget/window/pointer/refresh fields with advancing app-relative monotonic timestamps.",
+    "Every Linux checkpoint records the observed target/sibling focus state. Before any diagnostic pointer motion or Ctrl+V, a fresh final checkpoint must prove the path field is the focused, enabled target, the sibling ID field is unfocused and unchanged, the X11 app window is active, the pointer button is released, and refresh is stable. Any failed final guard aborts before the corresponding input action.",
+    "The deterministic canary exercises the real pre-motion guard after clipboard staging, preserves the unique expected-abort marker through wrapper catches only for the intended synthetic mismatch, and records structured results for every pre-motion predicate proving the synthetic prefix mismatch is the sole failed predicate. It terminates the canary app and records zero motion dispatches, zero completed paste stages, and save_attempted=false.",
+    "Canary evidence includes full before/after vault and app-data snapshots and diffs, Canvas byte/hash equality, absent destination, successful clipboard neutralization plus empty readback, and a separate expected_abort_canary report section.",
+    "Any failed pre-save attempt records post-abort state before throwing. Exact preservation is claimed only when complete vault/app-data diffs are empty, Canvas bytes/hash match, destination remains absent, and no Save was attempted.",
+    "All existing normal C06 first-open, reopen, explicit-save, note-creation, and preservation checks remain intact across Linux, macOS, and Windows; all ten C07.4 scenarios and comparisons pass across all three OSes, including the macOS tie-order proof and existing `.base` mutation reporting."
+  ],
+  "ci_acceptance_criteria": [
+    "All seven required GitHub Actions workflows and all 20 expected jobs pass on the one submitted implementation SHA; no local executable validation is used.",
+    "Ubuntu Rust CI formatting passes, and the existing Ubuntu workspace tests, MSRV, macOS, and Windows Rust gates remain green.",
+    "The Linux expected-abort canary passes its marker, cleanup/readback, zero-dispatch, byte-preservation, snapshot-diff, and destination-absence assertions before the ordinary C06 edit runs in a fresh app process.",
+    "Ubuntu completes the normal Canvas edit and reaches C07.4; no unexplained path-to-ID focus transfer occurs. Any failed guard remains fail-closed and cannot dispatch motion, paste, or save.",
+    "Ubuntu, macOS, and Windows round-trip reports pass all ten C07.4 scenarios on first open and reopen, every existing comparison and platform-specific ordering gate, and the complete applicable source checkpoint matrix.",
+    "Artifacts retain focused checkpoint records, canary evidence, full preservation snapshots/diffs, clipboard readback, C07.4 predicate summaries, screenshots, source hashes, and pinned-app mutation observations. No Rust parity claim is introduced."
+  ],
+  "required_workflows": [
+    "OpenObsidian Rust CI",
+    "Rust migration inventory",
+    "Obsidian vault round-trip acceptance",
+    "OpenObsidian desktop build",
+    "OpenObsidian quality",
+    "OpenObsidian plugin renderer matrix",
+    "OpenObsidian loaded plugin workflows"
+  ],
+  "expected_jobs": 20,
+  "push_policy": "Keep minor related fixes and metadata local in this complete, named repair milestone. Do not create a task-sized milestone or push to trigger early CI. After implementation is complete and reviewed as a whole, push origin/main exactly once at one SHA. Hold main at that SHA while the full, potentially several-hour seven-workflow/20-job batch runs and reconcile every exact-SHA result before another milestone push.",
+  "local_executable_validation": false,
+  "ci_dispatched": false,
+  "plan_reviews": [
+    {
+      "reviewer": "tracker_nextstep_oct16",
+      "reviewed_at": "2026-10-15T23:58:05Z",
+      "status": "approved",
+      "findings": [
+        "The scope groups both terminal R3.2 failures with the missing post-abort preservation evidence.",
+        "The checkpoints and conditional focus reacquisition are evidence-driven; the canary stages the clipboard before its final click/ArrowRight and preserves a typed marker through cleanup wrappers.",
+        "The three-OS C07.4 gates, seven-workflow/20-job exact-SHA acceptance, goal hash, and milestone-only push cadence are consistent.",
+        "Implementation note: record structured results for every guard predicate and prove the synthetic prefix mismatch is the sole failed pre-motion predicate."
+      ],
+      "local_executable_validation": false
+    }
+  ],
+  "implementation_review": {
+    "status": "approved",
+    "recorded_at": "2026-10-16T00:17:53Z",
+    "reviewers": [
+      "linux_event_free_diagnostic",
+      "roundtrip_harness_r3_2",
+      "tracker_nextstep_oct16"
+    ],
+    "findings": [
+      "The Linux normal path now reacquires focus only when either post-staging checkpoint records target focus loss or sibling focus; the canary forces its final target click as required. The final snapshot remains guarded before motion or paste.",
+      "The expected-abort canary aborts in the first path field before Ctrl+V, verifies zero motion and paste dispatches, clears and reads back the clipboard, then captures full vault/app-data/source preservation after app termination.",
+      "Canary screenshots are separated from normal C06 screenshots; fixture clone/setup failures and evidence write failures cannot produce a passing tag; save_attempted is set immediately before invoking Save.",
+      "The macOS fallback screenshot names resolve within their helper and do not use an out-of-scope attempt variable.",
+      "The strict zero-app-data-change abort invariant matches the approved acceptance criteria."
+    ],
+    "local_executable_validation": false
+  },
+  "implementation_sha": null,
+  "submitted_sha": null,
+  "ci_evidence_file": null
+}
