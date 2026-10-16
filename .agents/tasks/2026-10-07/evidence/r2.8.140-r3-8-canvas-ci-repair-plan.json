@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "id": "R2.8.140-R3.8-CROSS-PLATFORM-CANVAS-CI-REPAIR",
+  "name": "Repair the grouped R3.7 cross-platform CI failures",
+  "status": "implementation-complete and independently source-reviewed by Linux, Windows, macOS, and integrated reviewers; ready for one exact-SHA milestone CI submission; no local executable validation",
+  "planning_base_sha": "261a5bec782f0ce5780b2f93695afbdba5dd0927",
+  "starting_sha": "261a5bec782f0ce5780b2f93695afbdba5dd0927",
+  "expected_starting_sha": "261a5bec782f0ce5780b2f93695afbdba5dd0927",
+  "origin_main_sha_at_planning": "261a5bec782f0ce5780b2f93695afbdba5dd0927",
+  "goal_sha256": "bfe0b0cf2d683d2e9864e8aa63f13a34c7b495a1a15cc0ecb50c58f3ecf857f7",
+  "predecessor_milestone": "R2.8.139-R3.7-CROSS-PLATFORM-CANVAS-APP-DATA-AND-REPORT-REPAIR",
+  "predecessor_sha": "261a5bec782f0ce5780b2f93695afbdba5dd0927",
+  "predecessor_evidence": "evidence/r2.8.139-r3-7-attempt-1-261a5be.json",
+  "predecessor_ci_result": {
+    "workflows": {"terminal": 7, "passed": 5, "failed": 2},
+    "jobs": {"terminal": 20, "passed": 14, "failed": 6},
+    "failed_job_ids": [116838190122, 116838190207, 116838190229, 116838204518, 116838204758, 116838204799],
+    "all_required_jobs_terminal": true,
+    "no_same_sha_rerun": true
+  },
+  "deliverable": "A single reviewed repair milestone resolving all R3.7 Rust CI and three-platform Canvas app-data failures while retaining strict app-data ownership checks, source-preserving Canvas behavior, privacy-safe reports, and all carried R3.5/R3.6/C07.4 acceptance.",
+  "scope": [
+    "Fix the cross-platform Clippy field_reassign_with_default finding by constructing eframe::NativeOptions with struct-update syntax while preserving normal product persistence defaults.",
+    "Linux only: move XDG_CONFIG_HOME and XDG_DATA_HOME to fresh run-scoped sibling scratch roots outside the primary monitored app-data tree and selected vault. Register the exact OpenObsidian config and eframe-data descendants separately under stable logical prefixes config/OpenObsidian and data/openobsidian before any snapshot; move the existing in-container data/openobsidian setup to the external XDG data root to prevent a logical-prefix collision. Resolve managed marker paths only through the exact registered config/OpenObsidian mapping, fail closed if it is absent or ambiguous, and read marker bytes through snapshotEntryAbsolutePath so marker hashes and exact-byte checks cover the external root. Canonicalize and inventory both XDG scratch roots and both monitored product roots, and prove each is disjoint from the primary app-data tree and selected vault before launch. Continue full recursive snapshots of the primary app-data tree and full union snapshots; retain exact marker and .ron path/content checks across the union, include every external app-owned root in forbidden-path checks, do not filter or allowlist GTK/cache changes, and clear Linux additional-root registrations and scratch directories during cleanup and failure cleanup.",
+    "Windows only: introduce OPENOBSIDIAN_CI_CANVAS_DISABLE_EFRAME_PERSISTENCE and activate it only when its value is exactly \"1\" for the normal Canvas text-edit child. The flag disables both NativeOptions.persist_window and App::persist_egui_memory. Allow it through launchLogged only for that Windows child, strip it from all other launches, log the effective policy, and preserve the Windows zero-app.ron invariant. Keep the existing macOS memory-only flag semantics and all ordinary product defaults unchanged; do not affect C07.4 reference scenarios.",
+    "macOS only: keep exact equality to the post-picker app-data baseline through field input, draft load, and draft editing. Because Canvas save runs on a Rayon task and the target file can be replaced before the committed journal record is appended, wait boundedly for the exact terminal success state before capturing the accepted post-save snapshot; reject missing/incomplete, prepared-only, failed, recovery_required, or conflict states. At that boundary, accept only the one write operation's exact journal and recovery artifacts. Treat its Rust ID as an opaque ASCII string matching the documented PID-nanoseconds-sequence shape; never convert the nanoseconds component to a JavaScript Number. Require exactly the new prepared/committed write rows with the same ID, exact field set, null errors, exact Canvas relative path, pre-save expected revision, and post-save next revision. Require previous/incoming manifests with the exact emitted field set and IDs; previous revision/length/hash match the pre-save Canvas, incoming revision/length/hash match the post-save Canvas, both expected_revision and current_revision equal the pre-save revision, and each manifest path resolves to the exact canonical regular non-symlink blob under the selected managed recovery root. Require the exact app-data delta for this operation only. After process close compare the complete tree to the validated post-save snapshot, not to the pre-save baseline. Preserve all unrelated app-data equality and eframe forbidden-path checks.",
+    "Keep journal lines, recovery manifests, recovery bytes, and source Canvas bytes in memory only for validation; transaction summaries and failure reports contain only operation state, relative paths, byte counts, hashes, and pass/fail summaries. Remove the standalone raw before/after/incorrect-output Canvas files from CI artifacts and sanitize note-creation validator errors so they never interpolate raw journal lines or manifest JSON. Existing UI evidence remains explicitly synthetic: generated fixture screenshots, OCR and field readbacks must never be sourced from or contain an external/personal vault. Failure reports retain complete structured before/after app-data snapshots and deltas without raw app-data contents.",
+    "Carry forward the user-approved goal.md CI cadence wording update in this grouped milestone; do not submit that documentation change as a standalone CI run."
+  ],
+  "out_of_scope": [
+    "Changing normal application persistence behavior or adding a product preference to disable it.",
+    "Allowlisting GTK, app.ron, journal, recovery, or other app-data paths broadly; any allowance must be limited to the exact owned root or exact successful operation described here.",
+    "Weakening app-data snapshots, marker checks, path confinement, vault hashes, report redaction, expected-abort clipboard/preservation checks, or C07.4 acceptance.",
+    "Using local tests, builds, formatting, Clippy, validators, runtime probes, or application launches for executable validation."
+  ],
+  "required_workflows": [
+    "OpenObsidian Rust CI",
+    "Rust migration inventory",
+    "Obsidian vault round-trip acceptance",
+    "OpenObsidian desktop build",
+    "OpenObsidian quality",
+    "OpenObsidian plugin renderer matrix",
+    "OpenObsidian loaded plugin workflows"
+  ],
+  "expected_jobs": 20,
+  "platforms": ["Ubuntu 24.04", "macOS latest", "Windows latest"],
+  "implementation_acceptance": [
+    "The NativeOptions initializer has no clippy::field_reassign_with_default warning; the supported MSRV and all three Rust CI platform jobs pass their exact-SHA checks.",
+    "Linux app-data warm-up, fresh canary, and post-close checks compare the full monitored root union. GTK config/data roots are outside that union, while config/OpenObsidian and data/openobsidian remain canonical, fully snapshotted, and covered by exact managed-marker and .ron checks. Root registration occurs before the baseline snapshot, the external marker resolver fails closed without its exact prefix mapping, and no GTK noise path is filtered or allowed.",
+    "Windows normal Canvas text-edit child reports OPENOBSIDIAN_CI_CANVAS_DISABLE_EFRAME_PERSISTENCE=1, maps it to persist_window=false and persist_egui_memory=false, and produces no app.ron anywhere in the monitored root union. The full-persistence flag is absent from all other launches; the macOS memory-only policy still has window persistence enabled; C07.4 app.ron behavior remains unchanged.",
+    "macOS pre-save snapshots remain byte-identical. The harness waits for successful terminal completion before accepting a post-save snapshot. Exactly one new write operation has only prepared then committed journal records with the exact emitted fields, null errors, the selected Canvas path, pre-save expected_revision and post-save next_revision. Exactly its previous/incoming blob and manifest records are present, confined, regular, and hash-verified against pre/post Canvas bytes; manifest field sets and ID/revision/length semantics match the Rust writer, including current_revision equal to the pre-save revision. All unrelated app-data paths remain unchanged, and the validated post-save state is unchanged after process close.",
+    "The explicit save changes only the selected Canvas file in the vault, matches the seed document with only the selected text field changed, and preserves sibling nodes, edges, unselected fields, and note count.",
+    "Failure and success app-data evidence expose no raw journal, manifest, Canvas, or recovery contents and preserve complete path/hash evidence; no standalone raw before/after/incorrect-output Canvas file or raw journal/manifest error detail is uploaded. Any UI screenshot/OCR/readback evidence comes only from the generated synthetic fixture, never a personal vault. All carried R3.5/R3.6 safeguards and all C07.4 scenarios on first-open/reopen remain covered without inferring Rust parity from reference-only results.",
+    "All seven required workflows and twenty jobs pass on one exact submitted SHA; the run IDs, job outcomes, artifact digests, and report hashes are reconciled before the milestone is marked achieved."
+  ],
+  "evidence_to_collect": [
+    "The reviewed implementation diff and exact implementation/submitted SHA, origin/main before and after the one milestone push, and confirmation no local executable validation ran.",
+    "All exact-SHA workflow/job outcomes and artifact API digests for seven workflows and twenty jobs.",
+    "Linux XDG scratch and app-owned root inventory with canonical/outside-vault/outside-primary-root checks, union snapshots, phase deltas, exact markers, and exact .ron policy results.",
+    "Windows effective runtime persistence marker, child-launch environment policy, all-root .ron inventory and zero-app.ron result.",
+    "macOS journal operation ID/state/path/revisions, recovery record metadata, before/after Canvas and artifact SHA-256 values, exact app-data path delta, and post-close equality; no raw contents.",
+    "Round-trip report hashes, downloaded round-trip archive hashes compared with GitHub API digests, and report privacy/structured-failure summaries."
+  ],
+  "local_executable_validation": false,
+  "implementation_sha": null,
+  "submitted_sha": null,
+  "pushed_once": false,
+  "all_required_jobs_terminal": false,
+  "review_findings": [
+    {"reviewer":"r38_linux_gtk_review","status":"approved","scope":"Linux external XDG roots, exact managed-root snapshot mapping, marker checks, collision avoidance, canonical containment and cleanup","resolution":"No blockers; implement the reviewed exact-root plan."},
+    {"reviewer":"r38_windows_eframe_review","status":"approved","scope":"Windows eframe persistence gates and child-only environment policy","resolution":"No blockers; exact-value flag disables both persistence channels while preserving ordinary defaults and macOS memory-only policy."},
+    {"reviewer":"r38_macos_recovery_review","status":"approved","scope":"macOS asynchronous write completion, exact journal/recovery acceptance, post-close comparison and report privacy","resolution":"Clarified journal acceptance uses expected_revision and next_revision; current_revision belongs to manifests."},
+    {"reviewer":"r38_linux_gtk_review","status":"approved","scope":"R3.8 implementation review of Linux XDG root isolation, exact marker mapping, complete union snapshots, forbidden-path checks, and cleanup","resolution":"No blockers. Preflight cleanup now clears both snapshot-root registrations and removes the XDG/Mesa scratch roots."},
+    {"reviewer":"r38_windows_eframe_review","status":"approved","scope":"R3.8 implementation review of Rust eframe persistence gates and Windows-only child environment policy","resolution":"No blockers. The exact-value flag disables both persistence channels only for the normal Windows Canvas child and preserves product defaults and macOS behavior."},
+    {"reviewer":"r38_macos_recovery_review","status":"approved","scope":"R3.8 implementation follow-up of macOS commit-gated write validation and Canvas/report privacy","resolution":"No blockers. Journal and manifest failures, wait timeouts, and reopen error paths expose summaries only; successful UI excerpts remain restricted to the generated synthetic fixture as specified by the plan."},
+    {"reviewer":"r38_integrated_review","status":"approved","scope":"Integrated R3.8 source review across Rust, Linux, Windows, macOS, cleanup, and report privacy","resolution":"No blockers. Latest summary-only timeout and reopen diagnostics do not change successful wait behavior."}
+  ]
+}

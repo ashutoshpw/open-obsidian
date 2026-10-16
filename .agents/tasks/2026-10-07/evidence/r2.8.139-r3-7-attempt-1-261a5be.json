@@ -1,0 +1,141 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.8.139-R3.7-CROSS-PLATFORM-CANVAS-APP-DATA-AND-REPORT-REPAIR",
+  "status": "terminal-failed and reconciled",
+  "source_sha": "261a5bec782f0ce5780b2f93695afbdba5dd0927",
+  "submitted_sha": "261a5bec782f0ce5780b2f93695afbdba5dd0927",
+  "origin_main_sha_after_reconciliation": "261a5bec782f0ce5780b2f93695afbdba5dd0927",
+  "workflows": {
+    "terminal": 7,
+    "passed": 5,
+    "failed": 2,
+    "jobs_terminal": 20,
+    "jobs_passed": 14,
+    "jobs_failed": 6,
+    "runs": [
+      {
+        "name": "OpenObsidian quality",
+        "run_id": 38859458172,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38859458172",
+        "conclusion": "success",
+        "jobs": [
+          {"id": 116838189643, "name": "ubuntu-latest", "conclusion": "success"},
+          {"id": 116838189814, "name": "windows-latest", "conclusion": "success"},
+          {"id": 116838189838, "name": "macos-latest", "conclusion": "success"}
+        ]
+      },
+      {
+        "name": "Rust migration inventory",
+        "run_id": 38859458202,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38859458202",
+        "conclusion": "success",
+        "jobs": [{"id": 116838189259, "name": "inventory", "conclusion": "success"}]
+      },
+      {
+        "name": "OpenObsidian loaded plugin workflows",
+        "run_id": 38859458225,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38859458225",
+        "conclusion": "success",
+        "jobs": [
+          {"id": 116838189911, "name": "windows-latest", "conclusion": "success"},
+          {"id": 116838190082, "name": "macos-latest", "conclusion": "success"},
+          {"id": 116838190099, "name": "ubuntu-latest", "conclusion": "success"}
+        ]
+      },
+      {
+        "name": "OpenObsidian Rust CI",
+        "run_id": 38859458233,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38859458233",
+        "conclusion": "failure",
+        "jobs": [
+          {"id": 116838190122, "name": "rust (ubuntu-latest)", "conclusion": "failure", "failure": "Clippy: clippy::field-reassign-with-default at crates/ui-egui/src/lib.rs; initialize NativeOptions with struct-update syntax."},
+          {"id": 116838190207, "name": "rust (macos-latest)", "conclusion": "failure", "failure": "Same Clippy field-reassign-with-default finding."},
+          {"id": 116838190229, "name": "rust (windows-latest)", "conclusion": "failure", "failure": "Same Clippy field-reassign-with-default finding."},
+          {"id": 116838190236, "name": "minimum supported Rust (1.95)", "conclusion": "success"}
+        ]
+      },
+      {
+        "name": "OpenObsidian desktop build",
+        "run_id": 38859458137,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38859458137",
+        "conclusion": "success",
+        "jobs": [
+          {"id": 116838189396, "name": "ubuntu-latest", "conclusion": "success"},
+          {"id": 116838189610, "name": "macos-latest", "conclusion": "success"},
+          {"id": 116838189675, "name": "windows-latest", "conclusion": "success"}
+        ]
+      },
+      {
+        "name": "OpenObsidian plugin renderer matrix",
+        "run_id": 38859458216,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38859458216",
+        "conclusion": "success",
+        "jobs": [
+          {"id": 116838189590, "name": "macos-latest", "conclusion": "success"},
+          {"id": 116838189693, "name": "windows-latest", "conclusion": "success"},
+          {"id": 116838189888, "name": "ubuntu-latest", "conclusion": "success"}
+        ]
+      },
+      {
+        "name": "Obsidian vault round-trip acceptance",
+        "run_id": 38859463157,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38859463157",
+        "conclusion": "failure",
+        "jobs": [
+          {"id": 116838204518, "name": "macOS round-trip", "conclusion": "failure", "failure": "After the explicitly successful Canvas save, exact app-data equality rejected the transaction journal and that operation's incoming/previous recovery records."},
+          {"id": 116838204758, "name": "Ubuntu round-trip", "conclusion": "failure", "failure": "GTK created config/gtk-4.0 and data/recently-used.xbel inside recursively monitored XDG roots; the exact app-owned bootstrap entries were otherwise expected."},
+          {"id": 116838204799, "name": "Windows round-trip", "conclusion": "failure", "failure": "The first app.ron appeared after Canvas draft editing and before Save; window persistence remained enabled for this Canvas CI child."}
+        ]
+      }
+    ]
+  },
+  "artifacts": [
+    {"id": 12029160170, "name": "loaded-plugin-workflows-Windows-261a5bec782f0ce5780b2f93695afbdba5dd0927", "size_bytes": 171471, "api_sha256": "b898a1d3289c9bd946159adc4f72a114621f6a069e32262e1e46317d51172581", "downloaded_and_compared_locally": false},
+    {"id": 12028611506, "name": "loaded-plugin-workflows-Linux-261a5bec782f0ce5780b2f93695afbdba5dd0927", "size_bytes": 171453, "api_sha256": "ee3ace9adb01d7db83e83f45503e72d49f584ae0def62313f63d28902d2cc6fa", "downloaded_and_compared_locally": false},
+    {"id": 12028152742, "name": "loaded-plugin-workflows-macOS-261a5bec782f0ce5780b2f93695afbdba5dd0927", "size_bytes": 171480, "api_sha256": "117fc9c17cc09eca215aeddd0ac31853735c5c9e6461b138bb381f462fb8fd03", "downloaded_and_compared_locally": false},
+    {"id": 12028626438, "name": "openobsidian-Windows-preview-261a5bec782f0ce5780b2f93695afbdba5dd0927", "size_bytes": 163006126, "api_sha256": "884c4c76c94278b05501cb4f4ab0133d1dea64eef2cc8d99ff86af8a46f04a21", "downloaded_and_compared_locally": false},
+    {"id": 12028596529, "name": "openobsidian-macOS-preview-261a5bec782f0ce5780b2f93695afbdba5dd0927", "size_bytes": 397395784, "api_sha256": "9afd299d9c4528dfcddef0575810c35f2709b92cc4318153ffbc688560b51e37", "downloaded_and_compared_locally": false},
+    {"id": 12028232266, "name": "openobsidian-Linux-preview-261a5bec782f0ce5780b2f93695afbdba5dd0927", "size_bytes": 125946850, "api_sha256": "00c3eb090efda29f6be5e97e32ad2282700e34234cf48e667ba86ed06ddc7c3f", "downloaded_and_compared_locally": false},
+    {"id": 12029025355, "name": "plugin-renderer-lifecycle-Linux-261a5bec782f0ce5780b2f93695afbdba5dd0927", "size_bytes": 3100, "api_sha256": "f0e4efe9973b8fb71aa611882511a05baad476a3b586599d0520d978fafa2b80", "downloaded_and_compared_locally": false},
+    {"id": 12028866345, "name": "plugin-renderer-lifecycle-macOS-261a5bec782f0ce5780b2f93695afbdba5dd0927", "size_bytes": 3100, "api_sha256": "b8ab5f6fdd1342785b048d101bb9da0121bf0e34bcad57b64d5a5894a594df4a", "downloaded_and_compared_locally": false},
+    {"id": 12027833621, "name": "plugin-renderer-lifecycle-Windows-261a5bec782f0ce5780b2f93695afbdba5dd0927", "size_bytes": 3104, "api_sha256": "19a4f011f85256b0a5bef7a95227076a11d8ec3100323557b945d56239be2fa4", "downloaded_and_compared_locally": false},
+    {"id": 12029221222, "name": "obsidian-vault-roundtrip-Linux-261a5bec782f0ce5780b2f93695afbdba5dd0927", "size_bytes": 8779766, "api_sha256": "ca057de2a2f22592ff86b0648c03fd700118139f2290b5d19edcf559cd808fd6", "downloaded_and_compared_locally": true, "local_archive_sha256": "ca057de2a2f22592ff86b0648c03fd700118139f2290b5d19edcf559cd808fd6", "report_sha256": "567586a6160d13a45d0857c2b210d9c1caeb584b63a4c1f7fc115d8d4a9354fd"},
+    {"id": 12029171081, "name": "obsidian-vault-roundtrip-Windows-261a5bec782f0ce5780b2f93695afbdba5dd0927", "size_bytes": 10512310, "api_sha256": "35df8bda30a3ede146f36618bae940c9397855f6848fbcf6b1d467cf23b8147e", "downloaded_and_compared_locally": true, "local_archive_sha256": "35df8bda30a3ede146f36618bae940c9397855f6848fbcf6b1d467cf23b8147e", "report_sha256": "e9f29b753ccd9e8265b37ced7f7204726bab5919708343f17e75a93e5e29ac63"},
+    {"id": 12028383553, "name": "obsidian-vault-roundtrip-macOS-261a5bec782f0ce5780b2f93695afbdba5dd0927", "size_bytes": 15095370, "api_sha256": "7dd07deaa8e6f2e0e0f2bdccc2bc3e21924149860fbf4a93f67fd6da39767c18", "downloaded_and_compared_locally": true, "local_archive_sha256": "7dd07deaa8e6f2e0e0f2bdccc2bc3e21924149860fbf4a93f67fd6da39767c18", "report_sha256": "b0a26461b8bc38dd08cd044adc2430085e2cf2e6af2ef233b58a93b2ad623676"}
+  ],
+  "failure_analysis": {
+    "rust_clippy": {
+      "jobs": [116838190122, 116838190207, 116838190229],
+      "cause": "NativeOptions::default() followed by assignment to persist_window triggers clippy::field-reassign-with-default with -D warnings.",
+      "planned_repair": "Use NativeOptions { persist_window: policy_value, ..Default::default() } while preserving current product defaults."
+    },
+    "linux_gtk": {
+      "job": 116838204758,
+      "unexpected_paths": ["config/gtk-4.0", "data/recently-used.xbel"],
+      "cause": "GTK and OpenObsidian shared XDG_CONFIG_HOME/XDG_DATA_HOME inside the strict recursive snapshot root.",
+      "planned_repair": "Move XDG config/data parent directories to canonical run-scoped scratch roots outside the monitored tree; register and snapshot the exact OpenObsidian-owned descendants under stable logical prefixes, retaining complete marker and .ron checks without path allowlists."
+    },
+    "windows_eframe": {
+      "job": 116838204799,
+      "first_changed_checkpoint": "after-draft-edit",
+      "save_attempted": false,
+      "cause": "A 2,937-byte app.ron appeared after Canvas text interaction while NativeOptions.persist_window remained true; the run is explicitly configured to reject every Windows app.ron.",
+      "planned_repair": "Add a distinct exact-value CI-only flag to disable both window and egui-memory persistence for only the normal Windows Canvas text-edit child; sanitize it from every other launch and retain the zero-app.ron policy."
+    },
+    "macos_save_recovery": {
+      "job": 116838204518,
+      "first_changed_checkpoint": "after-explicit-save",
+      "save_attempted": true,
+      "cause": "The authorized existing-Canvas write creates an append-only prepared/committed journal and exact incoming/previous recovery snapshots under the app-owned per-vault data root.",
+      "planned_repair": "Keep pre-save snapshots byte-identical. At the confirmed save boundary validate exactly one new write operation, its prepared/committed journal entries, the selected relative Canvas path, revisions, confined regular recovery files, manifests, and previous/incoming byte counts and SHA-256 values. Require exact post-save app-data delta and unchanged post-close state; do not serialize journal, manifest, or Canvas contents."
+    }
+  },
+  "local_executable_validation": false,
+  "batch_reconciled_at": "2026-10-16T06:30:31Z",
+  "notes": "All required workflows and all jobs are terminal on the exact submitted SHA. Round-trip archive SHA-256 values match GitHub artifact API digests. Quality, inventory, and Rust CI published no artifacts. No source changes or same-SHA reruns were made after the batch.",
+  "source_evidence": {
+    "linux_review": "r38_linux_gtk_review; audit-obsidian-vault-roundtrip.ts app-data root setup, snapshotAdditionalRoots, canvasManagedMarkerPaths, and validateCanvasEframeFiles; platform user_data Linux resolver.",
+    "windows_review": "r38_windows_eframe_review; crates/ui-egui/src/lib.rs runtime policy, launchLogged, Windows Canvas child launch, and zero-app.ron acceptance.",
+    "macos_review": "r38_macos_recovery_review; crates/vault/src/lib.rs write journal/recovery preservation; crates/vault/src/write_recovery.rs committed retention; crates/vault/src/history.rs retention; Canvas save call in crates/ui-egui/src/lib.rs."
+  }
+}

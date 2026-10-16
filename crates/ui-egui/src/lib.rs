@@ -46,11 +46,20 @@ const MAX_TRANSCLUSION_PREVIEW_BYTES: usize = MAX_NOTE_SOURCE_PREVIEW_BYTES;
 const VAULT_RECONCILIATION_INTERVAL: Duration = Duration::from_secs(60);
 const CI_CANVAS_DISABLE_EGUI_MEMORY_PERSISTENCE_ENV: &str =
     "OPENOBSIDIAN_CI_CANVAS_DISABLE_EGUI_MEMORY_PERSISTENCE";
+const CI_CANVAS_DISABLE_EFRAME_PERSISTENCE_ENV: &str =
+    "OPENOBSIDIAN_CI_CANVAS_DISABLE_EFRAME_PERSISTENCE";
 static CI_CANVAS_FOCUS_SNAPSHOT_START: OnceLock<Instant> = OnceLock::new();
 
 fn ci_canvas_egui_memory_persistence_disabled() -> bool {
     matches!(
         std::env::var(CI_CANVAS_DISABLE_EGUI_MEMORY_PERSISTENCE_ENV).as_deref(),
+        Ok("1")
+    )
+}
+
+fn ci_canvas_eframe_persistence_disabled() -> bool {
+    matches!(
+        std::env::var(CI_CANVAS_DISABLE_EFRAME_PERSISTENCE_ENV).as_deref(),
         Ok("1")
     )
 }
@@ -373,9 +382,16 @@ fn run_with_desktop_services_and_session_internal(
     if std::env::var_os("OPENOBSIDIAN_CI_CANVAS_FOCUS_SNAPSHOT_REQUEST_FILE").is_some() {
         let _ = CI_CANVAS_FOCUS_SNAPSHOT_START.set(Instant::now());
     }
-    let mut options = eframe::NativeOptions::default();
-    options.persist_window = true;
-    if ci_canvas_egui_memory_persistence_disabled() {
+    let eframe_persistence_disabled = ci_canvas_eframe_persistence_disabled();
+    let options = eframe::NativeOptions {
+        persist_window: !eframe_persistence_disabled,
+        ..eframe::NativeOptions::default()
+    };
+    if eframe_persistence_disabled {
+        eprintln!(
+            "OPENOBSIDIAN_CI_CANVAS_EFRAME_PERSISTENCE_POLICY_DISABLED=1;persist_egui_memory=false;persist_window=false"
+        );
+    } else if ci_canvas_egui_memory_persistence_disabled() {
         eprintln!(
             "OPENOBSIDIAN_CI_CANVAS_EGUI_MEMORY_POLICY_DISABLED=1;persist_egui_memory=false;persist_window=true"
         );
@@ -486,6 +502,7 @@ impl eframe::App for OpenObsidianApp {
 
     fn persist_egui_memory(&self) -> bool {
         !ci_canvas_egui_memory_persistence_disabled()
+            && !ci_canvas_eframe_persistence_disabled()
     }
 }
 

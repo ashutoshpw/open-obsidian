@@ -1272,6 +1272,34 @@ async function saveReportAfterStageFailure(stage: string, evidence: Record<strin
   }
 }
 
+function waitForValueSummary(value: unknown): unknown {
+  const summarizeField = (field: unknown): unknown => {
+    if (Buffer.isBuffer(field)) {
+      return {type: "Buffer", bytes: field.length, sha256: createHash("sha256").update(field).digest("hex")};
+    }
+    if (typeof field === "string") {
+      return {type: "string", bytes: Buffer.byteLength(field, "utf8"), sha256: createHash("sha256").update(field, "utf8").digest("hex")};
+    }
+    if (Array.isArray(field)) return {type: "array", length: field.length};
+    if (field === null || typeof field === "number" || typeof field === "boolean") return field;
+    if (typeof field === "object") return {type: "object", keys: Object.keys(field).sort()};
+    return {type: typeof field};
+  };
+  if (Buffer.isBuffer(value)) {
+    return {type: "Buffer", bytes: value.length, sha256: createHash("sha256").update(value).digest("hex")};
+  }
+  if (typeof value === "string") return summarizeField(value);
+  if (Array.isArray(value)) return {type: "array", length: value.length};
+  if (value === null || typeof value === "number" || typeof value === "boolean" || value === undefined) return value;
+  if (typeof value === "object") {
+    return {
+      type: "object",
+      fields: Object.fromEntries(Object.entries(value).map(([key, field]) => [key, summarizeField(field)])),
+    };
+  }
+  return {type: typeof value};
+}
+
 async function waitFor<T>(label: string, read: () => Promise<T>, predicate: (value: T) => boolean, timeoutMs = 120_000): Promise<T> {
   const deadline = Date.now() + timeoutMs;
   let last: T | undefined;
@@ -1282,8 +1310,8 @@ async function waitFor<T>(label: string, read: () => Promise<T>, predicate: (val
     const remainingMs = deadline - Date.now();
     if (remainingMs > 0) await delay(Math.min(500, remainingMs));
   }
-  const serializedLast = JSON.stringify(last);
-  throw new Error(`Timed out waiting for ${label}; last value=${(serializedLast ?? String(last)).slice(0, 2_000)}`);
+  const lastValueSummary = JSON.stringify(waitForValueSummary(last)) ?? String(last);
+  throw new Error(`Timed out waiting for ${label}; last value=${lastValueSummary.slice(0, 2_000)}`);
 }
 
 type OpenObsidianRefreshDiagnostics = {
@@ -2535,12 +2563,17 @@ function launchLogged(
   logPath: string,
   env: NodeJS.ProcessEnv,
   allowCanvasEguiMemoryPersistenceOptOut = false,
+  allowCanvasEframePersistenceOptOut = false,
 ): ChildProcess {
   const log = createWriteStream(logPath, {flags: "a"});
   const childEnv = {...env};
   if (!allowCanvasEguiMemoryPersistenceOptOut
     || childEnv.OPENOBSIDIAN_CI_CANVAS_DISABLE_EGUI_MEMORY_PERSISTENCE !== "1") {
     delete childEnv.OPENOBSIDIAN_CI_CANVAS_DISABLE_EGUI_MEMORY_PERSISTENCE;
+  }
+  if (!allowCanvasEframePersistenceOptOut
+    || childEnv.OPENOBSIDIAN_CI_CANVAS_DISABLE_EFRAME_PERSISTENCE !== "1") {
+    delete childEnv.OPENOBSIDIAN_CI_CANVAS_DISABLE_EFRAME_PERSISTENCE;
   }
   const child = spawn(command, args, {env: childEnv, stdio: ["ignore", "pipe", "pipe"]});
   child.stdout?.pipe(log, {end: false});
@@ -6130,7 +6163,6 @@ async function createCanvasReferenceFixture(): Promise<{bytes: number; sha256: s
   };
   for (const [path, bytes] of Object.entries(files)) await writeFile(join(canvasVaultRoot, path), bytes);
   const canvasHash = createHash("sha256").update(canvasBytes).digest("hex");
-  await writeFile(join(reportDirectory, "canvas-reference-seed.canvas"), canvasBytes);
   const canvasReport = report.canvas_reference_reopen as Record<string, unknown>;
   canvasReport.vault_name = canvasVaultName;
   canvasReport.vault_path = canvasVaultRoot;
@@ -11049,11 +11081,22 @@ function canvasManagedMarkerPaths(appDataRoot: string, managedUserDataRoot: stri
   vaultDirectory: string;
   vaultMarker: string;
 } {
-  const managedRootRelative = relative(appDataRoot, managedUserDataRoot);
-  if (managedRootRelative === ".." || managedRootRelative.startsWith(`..${sep}`) || isAbsolute(managedRootRelative)) {
-    throw new Error("OpenObsidian managed user-data root is outside the full app-data snapshot root");
+  let managedPrefix: string;
+  if (process.platform === "linux") {
+    const registeredMappings = (snapshotAdditionalRoots.get(resolve(appDataRoot)) ?? [])
+      .filter((additional) => additional.pathPrefix === "config/OpenObsidian");
+    if (registeredMappings.length !== 1
+      || resolve(registeredMappings[0]!.root) !== resolve(managedUserDataRoot)) {
+      throw new Error("Linux OpenObsidian managed user-data root lacks its unique exact config/OpenObsidian snapshot mapping");
+    }
+    managedPrefix = "config/OpenObsidian";
+  } else {
+    const managedRootRelative = relative(appDataRoot, managedUserDataRoot);
+    if (managedRootRelative === ".." || managedRootRelative.startsWith(`..${sep}`) || isAbsolute(managedRootRelative)) {
+      throw new Error("OpenObsidian managed user-data root is outside the full app-data snapshot root");
+    }
+    managedPrefix = managedRootRelative.split(sep).join("/");
   }
-  const managedPrefix = managedRootRelative.split(sep).join("/");
   const vaultId = canvasVaultDataId(vaultRoot);
   const vaultsDirectory = `${managedPrefix}/vaults`;
   const vaultDirectory = `${vaultsDirectory}/${vaultId}`;
@@ -11091,8 +11134,8 @@ async function validateCanvasManagedMarkerSnapshot(
       throw new Error(`${label} lacked the expected managed marker path or directory ${path}; found=${JSON.stringify(entry)}`);
     }
   }
-  const rootMarkerBytes = await readFile(join(appDataRoot, paths.rootMarker));
-  const vaultMarkerBytes = await readFile(join(appDataRoot, paths.vaultMarker));
+  const rootMarkerBytes = await readFile(snapshotEntryAbsolutePath(appDataRoot, paths.rootMarker));
+  const vaultMarkerBytes = await readFile(snapshotEntryAbsolutePath(appDataRoot, paths.vaultMarker));
   const rootMarkerEntry = snapshot.find((entry) => entry.path === paths.rootMarker);
   const vaultMarkerEntry = snapshot.find((entry) => entry.path === paths.vaultMarker);
   if (rootMarkerEntry?.bytes !== rootMarkerBytes.length
@@ -11318,6 +11361,7 @@ async function runLinuxCanvasAppDataWarmupCycle(
   seedSnapshot: SnapshotEntry[],
   expectedGeometry: string | undefined,
   inspectionEvidence: CanvasEframeInspectionEvidence[],
+  externalForbiddenPaths: string[],
 ): Promise<{
   preLaunch: SnapshotEntry[];
   postSetup: SnapshotEntry[];
@@ -11332,7 +11376,7 @@ async function runLinuxCanvasAppDataWarmupCycle(
   const canonicalVaultRoot = await realpath(selectedVaultRoot);
   const canonicalAppDataRoot = await realpath(appDataRoot);
   const canonicalManagedUserDataRoot = await realpath(managedUserDataRoot);
-  const forbiddenPaths = [selectedVaultRoot, resolve(selectedVaultRoot), canonicalVaultRoot, appDataRoot, resolve(appDataRoot), canonicalAppDataRoot, managedUserDataRoot, resolve(managedUserDataRoot), canonicalManagedUserDataRoot];
+  const forbiddenPaths = [selectedVaultRoot, resolve(selectedVaultRoot), canonicalVaultRoot, appDataRoot, resolve(appDataRoot), canonicalAppDataRoot, managedUserDataRoot, resolve(managedUserDataRoot), canonicalManagedUserDataRoot, ...externalForbiddenPaths];
   const preLaunch = await snapshotTree(appDataRoot);
   let preLaunchMarkersInitialized = false;
   try {
@@ -11585,14 +11629,19 @@ async function validateCanvasNoteCreationAppDataTransaction(
   const journalRecordsText = journalText.replace(/\r?\n$/, "");
   const journalLines = journalRecordsText.split(/\r?\n/);
   if (journalLines.length !== 2 || journalLines.some((line) => line.trim().length === 0)) {
-    throw new Error(`Canvas note creation journal must contain exactly two non-empty records: ${journalText.slice(0, 2_000)}`);
+    throw new Error("Canvas note creation journal must contain exactly two non-empty records");
   }
-  const journalRows = journalLines.map((line) => JSON.parse(line) as Record<string, unknown>);
+  let journalRows: Array<Record<string, unknown>>;
+  try {
+    journalRows = journalLines.map((line) => JSON.parse(line) as Record<string, unknown>);
+  } catch {
+    throw new Error("Canvas note creation journal records were not valid JSON");
+  }
   const expectedJournalKeys = ["error", "expected_revision", "id", "next_revision", "operation", "recorded_at", "relative_path", "state"].sort();
   if (journalRows.length !== 2 || journalRows.some((row) => (
     JSON.stringify(Object.keys(row).sort()) !== JSON.stringify(expectedJournalKeys)
   ))) {
-    throw new Error(`Canvas note creation journal must contain exactly two complete create records: ${journalText.slice(0, 2_000)}`);
+    throw new Error("Canvas note creation journal must contain exactly two complete create records");
   }
   const [prepared, committed] = journalRows;
   if (!prepared || !committed) throw new Error("Canvas note creation journal is missing a prepared or committed record");
@@ -11617,7 +11666,7 @@ async function validateCanvasNoteCreationAppDataTransaction(
     || !validTimestamp(prepared?.recorded_at)
     || !validTimestamp(committed?.recorded_at)
     || Number(committed.recorded_at) < Number(prepared.recorded_at)) {
-    throw new Error(`Canvas note creation journal records did not match the confirmed destination and bytes: ${journalText.slice(0, 2_000)}`);
+    throw new Error("Canvas note creation journal records did not match the confirmed destination and bytes");
   }
 
   const incomingName = `${operationId}-incoming`;
@@ -11651,7 +11700,12 @@ async function validateCanvasNoteCreationAppDataTransaction(
     || manifestEntry.sha256 !== createHash("sha256").update(manifestBytes).digest("hex")) {
     throw new Error("Canvas note creation recovery manifest does not match its app-data snapshot");
   }
-  const manifest = JSON.parse(manifestBytes.toString("utf8")) as Record<string, unknown>;
+  let manifest: Record<string, unknown>;
+  try {
+    manifest = JSON.parse(manifestBytes.toString("utf8")) as Record<string, unknown>;
+  } catch {
+    throw new Error("Canvas note creation recovery manifest was not valid JSON");
+  }
   const expectedManifestKeys = ["bytes", "captured_at", "current_revision", "expected_revision", "id", "path", "relative_path", "revision"].sort();
   const expectedIncomingPath = join(canonicalAppDataRoot, recoveryBytesPath);
   const normalizeRecoveryPath = (value: string): string => {
@@ -11670,7 +11724,7 @@ async function validateCanvasNoteCreationAppDataTransaction(
     || !validTimestamp(manifest.captured_at)
     || manifest.expected_revision !== null
     || manifest.current_revision !== null) {
-    throw new Error(`Canvas note creation recovery manifest did not match the confirmed transaction: ${manifestBytes.toString("utf8").slice(0, 2_000)}`);
+    throw new Error("Canvas note creation recovery manifest did not match the confirmed transaction");
   }
 
   return {
@@ -15933,7 +15987,7 @@ async function reopenInObsidian(
 
   const selectedVaultNameVisible = visible.title.includes("Roundtrip Fixture") || visible.body.includes("Roundtrip Fixture");
   if (!selectedVaultNameVisible) {
-    throw new Error(`Obsidian did not visibly identify the reopened vault name; title=${JSON.stringify(visible.title)} body=${JSON.stringify(visible.body.slice(0, 2_000))}`);
+    throw new Error(`Obsidian did not visibly identify the reopened vault name; title_bytes=${Buffer.byteLength(visible.title, "utf8")}; title_sha256=${createHash("sha256").update(visible.title, "utf8").digest("hex")}; body_bytes=${Buffer.byteLength(visible.body, "utf8")}; body_sha256=${createHash("sha256").update(visible.body, "utf8").digest("hex")}`);
   }
   reopen.selected_vault_name_visible = selectedVaultNameVisible;
   reopen.selected_vault_restored = authoredNoteVisible.editor.includes(noteMarker) && authoredNoteVisible.paths.includes(notePath);
@@ -16010,13 +16064,12 @@ async function verifyCanvasReferenceVisible(
     throw new Error(`${label}: Obsidian did not visibly render ${canvasMarker} and the ${canvasTargetPath} block subpath at ${canvasPath}`);
   }
   if (visible.body.includes("Unable to find")) {
-    throw new Error(`${label}: Obsidian could not resolve the Canvas file subpath: ${visible.body.slice(0, 2_000)}`);
+    throw new Error(`${label}: Obsidian could not resolve the Canvas file subpath; body_bytes=${Buffer.byteLength(visible.body, "utf8")}; body_sha256=${createHash("sha256").update(visible.body, "utf8").digest("hex")}`);
   }
   const bytes = await readFile(join(canvasVaultRoot, canvasPath));
   const sha256 = createHash("sha256").update(bytes).digest("hex");
   if (bytes.length !== expectedCanvas.bytes || sha256 !== expectedCanvas.sha256) {
-    await writeFile(join(reportDirectory, "canvas-reference-before-shutdown-check.canvas"), bytes);
-    throw new Error(`${label}: Obsidian changed Canvas fixture bytes before shutdown at ${canvasPath}`);
+    throw new Error(`${label}: Obsidian changed Canvas fixture bytes before shutdown at ${canvasPath}; bytes=${bytes.length}; sha256=${sha256}`);
   }
   await captureObsidianScreenshot(connection, screenshot);
   return {...visible, bytes: bytes.length, sha256};
@@ -16039,18 +16092,10 @@ async function assertCanvasReferenceSource(
   let actualDocument: unknown;
   try {
     actualDocument = JSON.parse(bytes.toString("utf8")) as unknown;
-  } catch (error) {
-    const evidenceFilename = stage.includes("first")
-      ? "canvas-reference-after-first-close.canvas"
-      : "canvas-reference-after-reopen-close.canvas";
-    await writeFile(join(reportDirectory, evidenceFilename), bytes);
-    throw new Error(`Obsidian left invalid Canvas JSON after ${stage}: ${error instanceof Error ? error.message : "unknown JSON parse error"}`);
+  } catch {
+    throw new Error(`Obsidian left invalid Canvas JSON after ${stage}; bytes=${bytes.length}; sha256=${sha256}`);
   }
   if (!isDeepStrictEqual(actualDocument, expectedDocument)) {
-    const evidenceFilename = stage.includes("first")
-      ? "canvas-reference-after-first-close.canvas"
-      : "canvas-reference-after-reopen-close.canvas";
-    await writeFile(join(reportDirectory, evidenceFilename), bytes);
     throw new Error(`Obsidian changed the expected Canvas data after ${stage}; got ${bytes.length} bytes / ${sha256}`);
   }
   return {
@@ -16066,8 +16111,6 @@ async function assertCanvasCreatedNoteSource(expectedBytes: Buffer, stage: strin
   const sha256 = createHash("sha256").update(bytes).digest("hex");
   const expectedSha256 = createHash("sha256").update(expectedBytes).digest("hex");
   if (!bytes.equals(expectedBytes)) {
-    const filename = stage.includes("first") ? "canvas-note-after-first-obsidian-close.md" : "canvas-note-after-reopen-obsidian-close.md";
-    await writeFile(join(reportDirectory, filename), bytes);
     throw new Error(`Obsidian changed the created Canvas note after ${stage}: expected ${expectedBytes.length} bytes / ${expectedSha256}, got ${bytes.length} bytes / ${sha256}`);
   }
   return {bytes: bytes.length, sha256};
@@ -16163,7 +16206,8 @@ async function verifyCanvasCreatedNoteVisible(
       + JSON.stringify(visible.active_file_path)
       + ", active_tree_path=" + JSON.stringify(visible.active_tree_path)
       + ", active_view_type=" + JSON.stringify(visible.active_view_type)
-      + ", active_view_text=" + JSON.stringify(visible.active_view_text.slice(0, 2_000)));
+      + `, active_view_text_bytes=${Buffer.byteLength(visible.active_view_text, "utf8")}`
+      + `, active_view_text_sha256=${createHash("sha256").update(visible.active_view_text, "utf8").digest("hex")}`);
   }
   await captureObsidianScreenshot(connection, screenshot);
   return visible;
@@ -21002,6 +21046,333 @@ function canvasDocumentMatchesExpectedTextEdit(actual: unknown, expected: Canvas
   return isDeepStrictEqual(actual, expected);
 }
 
+function canvasSnapshotEntry(snapshot: SnapshotEntry[], path: string): SnapshotEntry | undefined {
+  return snapshot.find((entry) => entry.path === path);
+}
+
+function canvasDecimalTimestamp(value: unknown): value is string {
+  return typeof value === "string" && /^\d{10,}$/.test(value);
+}
+
+function compareCanvasDecimalTimestamps(left: string, right: string): number {
+  if (left.length !== right.length) return left.length - right.length;
+  return left < right ? -1 : left > right ? 1 : 0;
+}
+
+function normalizeCanvasRecoveryPath(value: string): string {
+  const slashNormalized = value.replace(/\\/g, "/");
+  return process.platform === "win32"
+    ? slashNormalized.replace(/^\/\/\?\//, "").toLowerCase()
+    : slashNormalized;
+}
+
+async function validateMacCanvasWriteTransaction(
+  before: SnapshotEntry[],
+  after: SnapshotEntry[],
+  changes: Array<{path: string; before?: SnapshotEntry; after?: SnapshotEntry}>,
+  appDataRoot: string,
+  managedUserDataRoot: string,
+  canonicalManagedUserDataRoot: string,
+  vaultRoot: string,
+  canvasPath: string,
+  beforeCanvasBytes: Buffer,
+  afterCanvasBytes: Buffer,
+  baselineJournalBytes: Buffer,
+): Promise<Record<string, unknown>> {
+  const beforeRevision = createHash("sha256").update(beforeCanvasBytes).digest("hex");
+  const afterRevision = createHash("sha256").update(afterCanvasBytes).digest("hex");
+  const paths = canvasManagedMarkerPaths(appDataRoot, managedUserDataRoot, vaultRoot);
+  const journalPath = `${paths.vaultDirectory}/journal.jsonl`;
+  const recoveryDirectoryPath = `${paths.vaultDirectory}/recovery`;
+  const beforeJournalEntry = canvasSnapshotEntry(before, journalPath);
+  if (beforeJournalEntry && beforeJournalEntry.kind !== "file") {
+    throw new Error("macOS Canvas write transaction baseline journal was not a regular file");
+  }
+  if (!beforeJournalEntry && baselineJournalBytes.length !== 0) {
+    throw new Error("macOS Canvas write transaction journal baseline bytes had no matching snapshot entry");
+  }
+  if (beforeJournalEntry && (beforeJournalEntry.bytes !== baselineJournalBytes.length
+    || beforeJournalEntry.sha256 !== createHash("sha256").update(baselineJournalBytes).digest("hex"))) {
+    throw new Error("macOS Canvas write transaction journal baseline bytes differed from its snapshot");
+  }
+  if (baselineJournalBytes.length > 0 && baselineJournalBytes.at(-1) !== 0x0a) {
+    throw new Error("macOS Canvas write transaction journal baseline lacked its final record delimiter");
+  }
+  const beforeRecoveryDirectory = canvasSnapshotEntry(before, recoveryDirectoryPath);
+  if (beforeRecoveryDirectory && beforeRecoveryDirectory.kind !== "directory") {
+    throw new Error("macOS Canvas write transaction baseline recovery path was not a directory");
+  }
+  if (!beforeRecoveryDirectory && before.some((entry) => entry.path.startsWith(`${recoveryDirectoryPath}/`))) {
+    throw new Error("macOS Canvas write transaction baseline contained recovery children without their directory");
+  }
+
+  const afterJournalEntry = canvasSnapshotEntry(after, journalPath);
+  if (afterJournalEntry?.kind !== "file") throw new Error("macOS Canvas write transaction journal was missing from the accepted post-save snapshot");
+  const journalBytes = await readFile(snapshotEntryAbsolutePath(appDataRoot, journalPath));
+  if (afterJournalEntry.bytes !== journalBytes.length
+    || afterJournalEntry.sha256 !== createHash("sha256").update(journalBytes).digest("hex")
+    || journalBytes.length <= baselineJournalBytes.length
+    || !journalBytes.subarray(0, baselineJournalBytes.length).equals(baselineJournalBytes)) {
+    throw new Error("macOS Canvas write transaction journal did not preserve the exact baseline prefix and accepted snapshot hash");
+  }
+  const appendedJournalBytes = journalBytes.subarray(baselineJournalBytes.length);
+  if (!appendedJournalBytes.length || appendedJournalBytes.at(-1) !== 0x0a) {
+    throw new Error("macOS Canvas write transaction journal did not end with a complete record");
+  }
+  const appendedJournalText = appendedJournalBytes.toString("utf8");
+  if (!Buffer.from(appendedJournalText, "utf8").equals(appendedJournalBytes)) {
+    throw new Error("macOS Canvas write transaction journal appended bytes were not valid UTF-8");
+  }
+  const journalLines = appendedJournalText.slice(0, -1).split("\n");
+  if (journalLines.length !== 2 || journalLines.some((line) => line.length === 0)) {
+    throw new Error("macOS Canvas write transaction must append exactly two complete journal records");
+  }
+  let journalRows: Array<Record<string, unknown>>;
+  try {
+    journalRows = journalLines.map((line) => JSON.parse(line) as Record<string, unknown>);
+  } catch {
+    throw new Error("macOS Canvas write transaction appended journal records were not valid JSON");
+  }
+  const expectedJournalKeys = ["error", "expected_revision", "id", "next_revision", "operation", "recorded_at", "relative_path", "state"].sort();
+  if (journalRows.some((row) => JSON.stringify(Object.keys(row).sort()) !== JSON.stringify(expectedJournalKeys))) {
+    throw new Error("macOS Canvas write transaction journal record fields did not match the exact Rust writer schema");
+  }
+  const [prepared, committed] = journalRows;
+  if (!prepared || !committed) throw new Error("macOS Canvas write transaction lacked its prepared or committed journal record");
+  const operationId = typeof prepared.id === "string" ? prepared.id : "";
+  if (!/^\d+-\d+-\d+$/.test(operationId)
+    || committed.id !== operationId
+    || prepared.operation !== "write" || committed.operation !== "write"
+    || prepared.state !== "prepared" || committed.state !== "committed"
+    || prepared.relative_path !== canvasPath || committed.relative_path !== canvasPath
+    || prepared.expected_revision !== beforeRevision || committed.expected_revision !== beforeRevision
+    || prepared.next_revision !== afterRevision || committed.next_revision !== afterRevision
+    || prepared.error !== null || committed.error !== null
+    || !canvasDecimalTimestamp(prepared.recorded_at) || !canvasDecimalTimestamp(committed.recorded_at)
+    || compareCanvasDecimalTimestamps(committed.recorded_at, prepared.recorded_at) < 0) {
+    throw new Error("macOS Canvas write transaction journal records did not match the selected save and its pre/post revisions");
+  }
+  if (baselineJournalBytes.length > 0 && baselineJournalBytes.toString("utf8").includes(operationId)) {
+    throw new Error("macOS Canvas write transaction reused an operation ID already present in the baseline journal");
+  }
+
+  const recoveryDirectory = after.find((entry) => entry.path === recoveryDirectoryPath);
+  if (recoveryDirectory?.kind !== "directory") throw new Error("macOS Canvas write transaction recovery directory was missing");
+  const recoveryRoot = join(canonicalManagedUserDataRoot, "vaults", canvasVaultDataId(vaultRoot), "recovery");
+  const actualRecoveryDirectory = join(managedUserDataRoot, "vaults", canvasVaultDataId(vaultRoot), "recovery");
+  const recoveryDirectoryMetadata = await lstat(actualRecoveryDirectory);
+  if (recoveryDirectoryMetadata.isSymbolicLink() || !recoveryDirectoryMetadata.isDirectory()
+    || normalizeCanvasRecoveryPath(await realpath(actualRecoveryDirectory)) !== normalizeCanvasRecoveryPath(recoveryRoot)) {
+    throw new Error("macOS Canvas write transaction recovery directory was not the exact canonical managed recovery root");
+  }
+  const expectedArtifactNames = [
+    `${operationId}-previous`,
+    `${operationId}-incoming`,
+  ];
+  const recoveryRecords: Array<Record<string, unknown>> = [];
+  for (const [index, recordId] of expectedArtifactNames.entries()) {
+    const expectedRevision = index === 0 ? beforeRevision : afterRevision;
+    const expectedBytes = index === 0 ? beforeCanvasBytes : afterCanvasBytes;
+    const bytesName = `${recordId}.bin`;
+    const manifestName = `${recordId}.json`;
+    const bytesRelativePath = `${recoveryDirectoryPath}/${bytesName}`;
+    const manifestRelativePath = `${recoveryDirectoryPath}/${manifestName}`;
+    const bytesEntry = canvasSnapshotEntry(after, bytesRelativePath);
+    const manifestEntry = canvasSnapshotEntry(after, manifestRelativePath);
+    const absoluteBytesPath = join(actualRecoveryDirectory, bytesName);
+    const absoluteManifestPath = join(actualRecoveryDirectory, manifestName);
+    const expectedAbsoluteBytesPath = join(recoveryRoot, bytesName);
+    const bytesMetadata = await lstat(absoluteBytesPath);
+    const manifestMetadata = await lstat(absoluteManifestPath);
+    if (bytesMetadata.isSymbolicLink() || !bytesMetadata.isFile()
+      || manifestMetadata.isSymbolicLink() || !manifestMetadata.isFile()
+      || normalizeCanvasRecoveryPath(await realpath(absoluteBytesPath)) !== normalizeCanvasRecoveryPath(expectedAbsoluteBytesPath)
+      || normalizeCanvasRecoveryPath(await realpath(absoluteManifestPath)) !== normalizeCanvasRecoveryPath(join(recoveryRoot, manifestName))) {
+      throw new Error("macOS Canvas write transaction recovery records were not confined regular files under the canonical recovery root");
+    }
+    const preservedBytes = await readFile(absoluteBytesPath);
+    if (bytesEntry?.kind !== "file" || !preservedBytes.equals(expectedBytes)
+      || bytesEntry.bytes !== preservedBytes.length
+      || bytesEntry.sha256 !== expectedRevision
+      || createHash("sha256").update(preservedBytes).digest("hex") !== expectedRevision) {
+      throw new Error("macOS Canvas write transaction recovery blob did not match the pre-save or post-save Canvas bytes");
+    }
+    const manifestBytes = await readFile(absoluteManifestPath);
+    if (manifestEntry?.kind !== "file" || manifestEntry.bytes !== manifestBytes.length
+      || manifestEntry.sha256 !== createHash("sha256").update(manifestBytes).digest("hex")) {
+      throw new Error("macOS Canvas write transaction recovery manifest did not match its accepted snapshot metadata");
+    }
+    let manifest: Record<string, unknown>;
+    try {
+      manifest = JSON.parse(manifestBytes.toString("utf8")) as Record<string, unknown>;
+    } catch {
+      throw new Error("macOS Canvas write transaction recovery manifest was not valid JSON");
+    }
+    const expectedManifestKeys = ["bytes", "captured_at", "current_revision", "expected_revision", "id", "path", "relative_path", "revision"].sort();
+    if (JSON.stringify(Object.keys(manifest).sort()) !== JSON.stringify(expectedManifestKeys)
+      || manifest.id !== recordId
+      || manifest.relative_path !== canvasPath
+      || manifest.revision !== expectedRevision
+      || manifest.bytes !== expectedBytes.length
+      || manifest.path !== expectedAbsoluteBytesPath
+      || !canvasDecimalTimestamp(manifest.captured_at)
+      || manifest.expected_revision !== beforeRevision
+      || manifest.current_revision !== beforeRevision) {
+      throw new Error("macOS Canvas write transaction recovery manifest did not match the exact writer schema and pre/post Canvas state");
+    }
+    recoveryRecords.push({
+      id: recordId,
+      bytes_path: bytesRelativePath,
+      manifest_path: manifestRelativePath,
+      revision: expectedRevision,
+      bytes: expectedBytes.length,
+      sha256: expectedRevision,
+      manifest_sha256: manifestEntry.sha256,
+      canonical_confined_regular_files: true,
+      manifest_fields_exact: true,
+    });
+  }
+
+  const expectedChangedPaths = new Set([
+    journalPath,
+    ...(!beforeRecoveryDirectory ? [recoveryDirectoryPath] : []),
+    `${recoveryDirectoryPath}/${operationId}-previous.bin`,
+    `${recoveryDirectoryPath}/${operationId}-previous.json`,
+    `${recoveryDirectoryPath}/${operationId}-incoming.bin`,
+    `${recoveryDirectoryPath}/${operationId}-incoming.json`,
+  ]);
+  const actualChanges = changedPaths(before, after);
+  if (!isDeepStrictEqual(changes, actualChanges)
+    || actualChanges.length !== expectedChangedPaths.size
+    || actualChanges.some((change) => !expectedChangedPaths.has(change.path))) {
+    throw new Error("macOS Canvas write transaction changed app-data paths outside its exact journal and recovery artifacts");
+  }
+  for (const change of actualChanges) {
+    if (change.path === journalPath) {
+      if (change.after?.kind !== "file") throw new Error("macOS Canvas write transaction journal delta was not a regular file");
+      continue;
+    }
+    if (change.path === recoveryDirectoryPath) {
+      if (change.before !== undefined || change.after?.kind !== "directory") {
+        throw new Error("macOS Canvas write transaction recovery-directory delta was not an exact new directory");
+      }
+      continue;
+    }
+    if (change.before !== undefined || change.after?.kind !== "file") {
+      throw new Error("macOS Canvas write transaction recovery artifacts were not exact new regular files");
+    }
+  }
+  return {
+    status: "committed",
+    operation_id: operationId,
+    operation: "write",
+    relative_path: canvasPath,
+    prepared_then_committed: true,
+    journal_rows: 2,
+    journal_fields_exact: true,
+    expected_revision: beforeRevision,
+    next_revision: afterRevision,
+    recorded_at_decimal_strings_compared_without_number_conversion: true,
+    recovery_root: "managed OpenObsidian vault recovery directory",
+    recovery_records: recoveryRecords,
+    exact_app_data_changes: actualChanges.map((change) => change.path),
+    baseline_journal_prefix_preserved: true,
+  };
+}
+
+async function waitForMacCanvasWriteTransaction(
+  before: SnapshotEntry[],
+  baselineJournalBytes: Buffer,
+  appDataRoot: string,
+  managedUserDataRoot: string,
+  canonicalManagedUserDataRoot: string,
+  vaultRoot: string,
+  canvasPath: string,
+  beforeCanvasBytes: Buffer,
+  afterCanvasBytes: Buffer,
+): Promise<{snapshot: SnapshotEntry[]; transaction: Record<string, unknown>}> {
+  const journalPath = `${canvasManagedMarkerPaths(appDataRoot, managedUserDataRoot, vaultRoot).vaultDirectory}/journal.jsonl`;
+  const absoluteJournalPath = snapshotEntryAbsolutePath(appDataRoot, journalPath);
+  const beforeRevision = createHash("sha256").update(beforeCanvasBytes).digest("hex");
+  const afterRevision = createHash("sha256").update(afterCanvasBytes).digest("hex");
+  const deadline = Date.now() + 20_000;
+  let lastObservedState = "journal_missing";
+  while (Date.now() < deadline) {
+    let journalBytes: Buffer | null = null;
+    try {
+      const metadata = await lstat(absoluteJournalPath);
+      if (metadata.isSymbolicLink() || !metadata.isFile()) {
+        throw new Error("macOS Canvas write transaction journal path was not a regular file");
+      }
+      journalBytes = await readFile(absoluteJournalPath);
+    } catch (error) {
+      if (!(error instanceof Error && "code" in error && error.code === "ENOENT")) throw error;
+    }
+    if (journalBytes && journalBytes.length < baselineJournalBytes.length) {
+      throw new Error("macOS Canvas write transaction journal shrank below its exact pre-save prefix");
+    }
+    if (journalBytes && !journalBytes.subarray(0, baselineJournalBytes.length).equals(baselineJournalBytes)) {
+      throw new Error("macOS Canvas write transaction journal no longer begins with its exact pre-save prefix");
+    }
+    const appendedBytes = journalBytes?.subarray(baselineJournalBytes.length) ?? Buffer.alloc(0);
+    if (appendedBytes.length === 0) {
+      lastObservedState = journalBytes ? "no_new_journal_record" : "journal_missing";
+    } else if (appendedBytes.at(-1) !== 0x0a) {
+      lastObservedState = "incomplete_record";
+    } else {
+      const appendedText = appendedBytes.toString("utf8");
+      if (!Buffer.from(appendedText, "utf8").equals(appendedBytes)) {
+        throw new Error("macOS Canvas write transaction journal appended bytes were not valid UTF-8");
+      }
+      const lines = appendedText.slice(0, -1).split("\n");
+      let rows: Array<Record<string, unknown>>;
+      try {
+        rows = lines.map((line) => JSON.parse(line) as Record<string, unknown>);
+      } catch {
+        throw new Error("macOS Canvas write transaction journal contains a complete invalid JSON record");
+      }
+      const states = rows.map((row) => row.state);
+      if (states.some((state) => state === "failed" || state === "recovery_required" || state === "conflict")) {
+        throw new Error("macOS Canvas write transaction ended in a rejected terminal state");
+      }
+      if (rows.length === 1 && rows[0]?.state === "prepared"
+        && rows[0]?.operation === "write"
+        && rows[0]?.relative_path === canvasPath
+        && rows[0]?.expected_revision === beforeRevision
+        && rows[0]?.next_revision === afterRevision
+        && rows[0]?.error === null) {
+        lastObservedState = "prepared_only";
+      } else if (rows.length === 2 && rows[0]?.state === "prepared" && rows[1]?.state === "committed"
+        && rows[0]?.id === rows[1]?.id) {
+        const snapshot = await snapshotTree(appDataRoot);
+        const stableJournalBytes = await readFile(absoluteJournalPath);
+        if (!stableJournalBytes.equals(journalBytes)) {
+          lastObservedState = "journal_changed_during_post_commit_snapshot";
+        } else {
+          const transaction = await validateMacCanvasWriteTransaction(
+            before,
+            snapshot,
+            changedPaths(before, snapshot),
+            appDataRoot,
+            managedUserDataRoot,
+            canonicalManagedUserDataRoot,
+            vaultRoot,
+            canvasPath,
+            beforeCanvasBytes,
+            afterCanvasBytes,
+            baselineJournalBytes,
+          );
+          return {snapshot, transaction};
+        }
+      } else {
+        throw new Error("macOS Canvas write transaction had an invalid journal state sequence");
+      }
+    }
+    await delay(250);
+  }
+  throw new Error(`Timed out waiting for the Canvas write journal to reach exact prepared/committed terminal success; last_state=${lastObservedState}`);
+}
+
 async function runOpenObsidianCanvasTextEdit(
   seedSnapshot: SnapshotEntry[],
   expectedSeedCanvas: {bytes: number; sha256: string},
@@ -21025,6 +21396,8 @@ async function runOpenObsidianCanvasTextEdit(
   const logPath = join(reportDirectory, logName);
   const appDataContainer = join(workDirectory, `openobsidian-${runName}-app-data`);
   const userConfigRoot = join(appDataContainer, "config");
+  const linuxXdgConfigRoot = join(workDirectory, `openobsidian-${runName}-xdg-config-scratch`);
+  const linuxXdgDataRoot = join(workDirectory, `openobsidian-${runName}-xdg-data-scratch`);
   const homeRoot = process.platform === "win32"
     ? join(workDirectory, `openobsidian-${runName}-user-profile-scratch`)
     : join(appDataContainer, "home");
@@ -21033,9 +21406,21 @@ async function runOpenObsidianCanvasTextEdit(
     : join(appDataContainer, "local-data");
   const mesaShaderCacheRoot = join(workDirectory, `openobsidian-${runName}-mesa-shader-cache-scratch`);
   const appEnv: NodeJS.ProcessEnv = {...process.env, HOME: homeRoot};
+  delete appEnv.OPENOBSIDIAN_CI_CANVAS_DISABLE_EFRAME_PERSISTENCE;
   const appDataRoot = appDataContainer;
   const expectedEframeAppRonPath = expectedCanvasEframeAppRonRelativePath(process.platform);
   const windowsAdditionalAppDataRoots: SnapshotAdditionalRoot[] = [];
+  const linuxAdditionalAppDataRoots: SnapshotAdditionalRoot[] = [
+    {pathPrefix: "config/OpenObsidian", root: join(linuxXdgConfigRoot, "OpenObsidian")},
+    {pathPrefix: "data/openobsidian", root: join(linuxXdgDataRoot, "openobsidian")},
+  ];
+  const linuxXdgScratchRoots = [
+    {name: "XDG_CONFIG_HOME", root: linuxXdgConfigRoot},
+    {name: "XDG_DATA_HOME", root: linuxXdgDataRoot},
+  ];
+  const additionalAppDataRoots = process.platform === "win32"
+    ? windowsAdditionalAppDataRoots
+    : process.platform === "linux" ? linuxAdditionalAppDataRoots : [];
   canvasAppDataSnapshotRoots.add(resolve(appDataRoot));
   let managedUserDataRoot: string;
   if (process.platform === "win32") {
@@ -21055,15 +21440,15 @@ async function runOpenObsidianCanvasTextEdit(
     appEnv.XDG_STATE_HOME = join(appDataContainer, "state");
     managedUserDataRoot = join(homeRoot, "Library", "Application Support", "OpenObsidian");
   } else {
-    appEnv.XDG_CONFIG_HOME = userConfigRoot;
+    appEnv.XDG_CONFIG_HOME = linuxXdgConfigRoot;
     appEnv.XDG_CACHE_HOME = join(appDataContainer, "cache");
-    appEnv.XDG_DATA_HOME = join(appDataContainer, "data");
+    appEnv.XDG_DATA_HOME = linuxXdgDataRoot;
     appEnv.XDG_STATE_HOME = join(appDataContainer, "state");
     appEnv.LIBGL_ALWAYS_SOFTWARE = "1";
     appEnv.WGPU_BACKEND = "gl";
     appEnv.MESA_SHADER_CACHE_DIR = mesaShaderCacheRoot;
     appEnv.OPENOBSIDIAN_CI_CANVAS_FOCUS_SNAPSHOT_REQUEST_FILE = linuxCanvasFocusSnapshotRequestFile;
-    managedUserDataRoot = join(userConfigRoot, "OpenObsidian");
+    managedUserDataRoot = join(linuxXdgConfigRoot, "OpenObsidian");
   }
   if (process.platform === "darwin" && !expectedAbortCanary) {
     appEnv.OPENOBSIDIAN_CI_CANVAS_DISABLE_EGUI_MEMORY_PERSISTENCE = "1";
@@ -21071,6 +21456,8 @@ async function runOpenObsidianCanvasTextEdit(
   } else {
     delete appEnv.OPENOBSIDIAN_CI_CANVAS_DISABLE_EGUI_MEMORY_PERSISTENCE;
   }
+  const windowsPersistenceOptOut = process.platform === "win32" && !expectedAbortCanary;
+  if (windowsPersistenceOptOut) appEnv.OPENOBSIDIAN_CI_CANVAS_DISABLE_EFRAME_PERSISTENCE = "1";
   if (process.platform === "linux" && expectedAbortCanary) appEnv.OPENOBSIDIAN_CI_CANVAS_FOCUS_TRACE = "1";
   else delete appEnv.OPENOBSIDIAN_CI_CANVAS_FOCUS_TRACE;
   const safetyTracker: CanvasInputSafetyTracker = {
@@ -21106,6 +21493,20 @@ async function runOpenObsidianCanvasTextEdit(
       monitored: true,
       canonical_outside_app_data_and_vault: null,
     })),
+    linux_external_app_owned_roots: process.platform === "linux" ? linuxAdditionalAppDataRoots.map((root) => ({
+      path_prefix: root.pathPrefix,
+      configured_root: root.root,
+      canonical_root: null,
+      monitored: true,
+      canonical_outside_app_data_and_vault: null,
+    })) : [],
+    linux_xdg_scratch_roots: process.platform === "linux" ? linuxXdgScratchRoots.map((root) => ({
+      name: root.name,
+      configured_root: root.root,
+      canonical_root: null,
+      monitored: false,
+      canonical_outside_app_data_and_vault: null,
+    })) : [],
     windows_precreated_empty_app_owned_directories: process.platform === "win32" ? [{
       path_prefix: "external/userprofile-roaming/OpenObsidian/data",
       configured_path: join(windowsAdditionalAppDataRoots[0]!.root, "data"),
@@ -21116,6 +21517,17 @@ async function runOpenObsidianCanvasTextEdit(
       {name: "USERPROFILE", configured_root: homeRoot, canonical_root: null, monitored: false, canonical_outside_app_data_and_vault: null},
       {name: "LOCALAPPDATA", configured_root: localDataRoot, canonical_root: null, monitored: false, canonical_outside_app_data_and_vault: null},
     ] : [],
+    windows_canvas_persistence_profile: windowsPersistenceOptOut ? {
+      environment_flag: "OPENOBSIDIAN_CI_CANVAS_DISABLE_EFRAME_PERSISTENCE",
+      environment_value: appEnv.OPENOBSIDIAN_CI_CANVAS_DISABLE_EFRAME_PERSISTENCE,
+      expected_persist_egui_memory: false,
+      expected_persist_window: false,
+      expected_runtime_log_marker: "OPENOBSIDIAN_CI_CANVAS_EFRAME_PERSISTENCE_POLICY_DISABLED=1;persist_egui_memory=false;persist_window=false",
+      app_ron_expectation: "none in the complete app-data snapshot root union",
+    } : {
+      status: "not_applicable",
+      reason: "The full eframe-persistence opt-out is restricted to the normal Windows Canvas text-edit child.",
+    },
     mesa_shader_cache_scratch: process.platform === "linux" ? {
       configured_root: mesaShaderCacheRoot,
       canonical_root: null,
@@ -21144,9 +21556,13 @@ async function runOpenObsidianCanvasTextEdit(
     status: "not_applicable",
     reason: "The egui-memory opt-out is restricted to the normal macOS Canvas text-edit profile.",
   };
+  editReport.app_data_windows_persistence_profile = appDataRootInventory.windows_canvas_persistence_profile;
   let canonicalVaultForAppData = "";
   let canonicalAppDataRootForAppData = "";
   let canonicalManagedUserDataRoot = "";
+  let canonicalLinuxXdgConfigRoot = "";
+  let canonicalLinuxXdgDataRoot = "";
+  let canonicalLinuxEframeDataRoot = "";
   let appDataSnapshotBeforeAnyLaunch: SnapshotEntry[] = [];
   let appDataSnapshotBeforeAnyLaunchCaptured = false;
   let appDataPreflightStage = "prepare_app_data_roots";
@@ -21157,7 +21573,15 @@ async function runOpenObsidianCanvasTextEdit(
       await rm(homeRoot, {recursive: true, force: true});
       await rm(localDataRoot, {recursive: true, force: true});
     }
-    if (process.platform === "linux") await rm(mesaShaderCacheRoot, {recursive: true, force: true});
+    if (process.platform === "linux") {
+      snapshotAdditionalRoots.delete(resolve(appDataRoot));
+      canvasAppDataSnapshotRoots.delete(resolve(appDataRoot));
+      await Promise.all([
+        rm(linuxXdgConfigRoot, {recursive: true, force: true}),
+        rm(linuxXdgDataRoot, {recursive: true, force: true}),
+        rm(mesaShaderCacheRoot, {recursive: true, force: true}),
+      ]);
+    }
     await mkdir(join(homeRoot, "Desktop"), {recursive: true});
     await mkdir(appDataContainer, {recursive: true});
     editReport.app_data_root_exists_pre_launch = true;
@@ -21165,14 +21589,16 @@ async function runOpenObsidianCanvasTextEdit(
     editReport.managed_user_data_root_exists_pre_launch = true;
     await mkdir(localDataRoot, {recursive: true});
     await mkdir(join(appDataContainer, "cache"), {recursive: true});
-    await mkdir(join(appDataContainer, "data", "openobsidian"), {recursive: true});
+    if (process.platform !== "linux") {
+      await mkdir(join(appDataContainer, "data", "openobsidian"), {recursive: true});
+    }
     await mkdir(join(appDataContainer, "state"), {recursive: true});
     await mkdir(join(homeRoot, "Library", "Application Support", "OpenObsidian"), {recursive: true});
+    for (const additional of additionalAppDataRoots) await mkdir(additional.root, {recursive: true});
     if (process.platform === "win32") {
-      for (const additional of windowsAdditionalAppDataRoots) await mkdir(additional.root, {recursive: true});
       await mkdir(join(windowsAdditionalAppDataRoots[0]!.root, "data"), {recursive: true});
-      snapshotAdditionalRoots.set(resolve(appDataRoot), windowsAdditionalAppDataRoots);
     }
+    if (additionalAppDataRoots.length > 0) snapshotAdditionalRoots.set(resolve(appDataRoot), additionalAppDataRoots);
     if (process.platform === "linux") await mkdir(mesaShaderCacheRoot, {recursive: true});
     if (process.platform === "win32") {
       appDataRootInventory.windows_precreated_empty_app_owned_directories = [{
@@ -21214,11 +21640,16 @@ async function runOpenObsidianCanvasTextEdit(
           && !childRelativeToParent.startsWith(`..${sep}`)
           && !isAbsolute(childRelativeToParent));
     };
-    const canonicalExternalAppDataRoots = await Promise.all(windowsAdditionalAppDataRoots.map(async (additional) => ({
+    const canonicalWindowsAdditionalAppDataRoots = await Promise.all(windowsAdditionalAppDataRoots.map(async (additional) => ({
       path_prefix: additional.pathPrefix,
       configured_root: additional.root,
       canonical_root: await realpath(additional.root),
     })));
+    const canonicalLinuxAdditionalAppDataRoots = process.platform === "linux" ? await Promise.all(linuxAdditionalAppDataRoots.map(async (additional) => ({
+      path_prefix: additional.pathPrefix,
+      configured_root: additional.root,
+      canonical_root: await realpath(additional.root),
+    }))) : [];
     const canonicalScratchRoots = process.platform === "win32"
       ? await Promise.all([
         {name: "USERPROFILE", root: homeRoot},
@@ -21228,23 +21659,60 @@ async function runOpenObsidianCanvasTextEdit(
         configured_root: scratch.root,
         canonical_root: await realpath(scratch.root),
       })))
-      : [];
+      : process.platform === "linux"
+        ? await Promise.all(linuxXdgScratchRoots.map(async (scratch) => ({
+          name: scratch.name,
+          configured_root: scratch.root,
+          canonical_root: await realpath(scratch.root),
+        })))
+        : [];
+    if (process.platform === "linux") {
+      canonicalLinuxXdgConfigRoot = canonicalScratchRoots.find((root) => root.name === "XDG_CONFIG_HOME")?.canonical_root ?? "";
+      canonicalLinuxXdgDataRoot = canonicalScratchRoots.find((root) => root.name === "XDG_DATA_HOME")?.canonical_root ?? "";
+      const canonicalLinuxConfigProductRoot = canonicalLinuxAdditionalAppDataRoots.find((root) => root.path_prefix === "config/OpenObsidian")?.canonical_root ?? "";
+      canonicalLinuxEframeDataRoot = canonicalLinuxAdditionalAppDataRoots.find((root) => root.path_prefix === "data/openobsidian")?.canonical_root ?? "";
+      if (!canonicalLinuxXdgConfigRoot || !canonicalLinuxXdgDataRoot || !canonicalLinuxConfigProductRoot || !canonicalLinuxEframeDataRoot) {
+        throw new Error("Linux XDG roots and both product-owned snapshot roots must all canonicalize before launch");
+      }
+      if (resolve(canonicalLinuxConfigProductRoot) !== resolve(canonicalLinuxXdgConfigRoot, "OpenObsidian")
+        || resolve(canonicalLinuxEframeDataRoot) !== resolve(canonicalLinuxXdgDataRoot, "openobsidian")) {
+        throw new Error("Linux monitored product roots must resolve to the exact OpenObsidian descendants of their XDG scratch roots");
+      }
+      if (pathIsInside(canonicalLinuxXdgConfigRoot, canonicalLinuxXdgDataRoot)
+        || pathIsInside(canonicalLinuxXdgDataRoot, canonicalLinuxXdgConfigRoot)) {
+        throw new Error("Linux XDG config and data scratch roots must be distinct, non-nested sibling roots");
+      }
+    }
+    const canonicalExternalAppDataRoots = [
+      ...canonicalWindowsAdditionalAppDataRoots,
+      ...canonicalLinuxAdditionalAppDataRoots,
+    ];
     const allExternalRoots = [
       ...canonicalExternalAppDataRoots.map((root) => ({name: root.path_prefix, canonical: root.canonical_root})),
       ...canonicalScratchRoots.map((root) => ({name: root.name, canonical: root.canonical_root})),
       ...(process.platform === "linux" ? [{name: "MESA_SHADER_CACHE_DIR", canonical: await realpath(mesaShaderCacheRoot)}] : []),
     ];
     Object.assign(appDataRootInventory, {
-      windows_external_app_owned_roots: canonicalExternalAppDataRoots.map((root) => ({
+      windows_external_app_owned_roots: canonicalWindowsAdditionalAppDataRoots.map((root) => ({
         ...root,
         monitored: true,
         canonical_outside_app_data_and_vault: false,
       })),
-      windows_shell_scratch_roots: canonicalScratchRoots.map((root) => ({
+      linux_external_app_owned_roots: canonicalLinuxAdditionalAppDataRoots.map((root) => ({
+        ...root,
+        monitored: true,
+        canonical_outside_app_data_and_vault: false,
+      })),
+      windows_shell_scratch_roots: process.platform === "win32" ? canonicalScratchRoots.map((root) => ({
         ...root,
         monitored: false,
         canonical_outside_app_data_and_vault: false,
-      })),
+      })) : [],
+      linux_xdg_scratch_roots: process.platform === "linux" ? canonicalScratchRoots.map((root) => ({
+        ...root,
+        monitored: false,
+        canonical_outside_app_data_and_vault: false,
+      })) : [],
       mesa_shader_cache_scratch: process.platform === "linux" ? {
         configured_root: mesaShaderCacheRoot,
         canonical_root: (allExternalRoots.find((root) => root.name === "MESA_SHADER_CACHE_DIR"))?.canonical ?? null,
@@ -21273,16 +21741,26 @@ async function runOpenObsidianCanvasTextEdit(
         canonical_root: canonicalManagedUserDataRoot,
         monitored: true,
       } : null,
-      windows_external_app_owned_roots: canonicalExternalAppDataRoots.map((root) => ({
+      windows_external_app_owned_roots: canonicalWindowsAdditionalAppDataRoots.map((root) => ({
         ...root,
         monitored: true,
         canonical_outside_app_data_and_vault: true,
       })),
-      windows_shell_scratch_roots: canonicalScratchRoots.map((root) => ({
+      linux_external_app_owned_roots: canonicalLinuxAdditionalAppDataRoots.map((root) => ({
+        ...root,
+        monitored: true,
+        canonical_outside_app_data_and_vault: true,
+      })),
+      windows_shell_scratch_roots: process.platform === "win32" ? canonicalScratchRoots.map((root) => ({
         ...root,
         monitored: false,
         canonical_outside_app_data_and_vault: true,
-      })),
+      })) : [],
+      linux_xdg_scratch_roots: process.platform === "linux" ? canonicalScratchRoots.map((root) => ({
+        ...root,
+        monitored: false,
+        canonical_outside_app_data_and_vault: true,
+      })) : [],
       mesa_shader_cache_scratch: process.platform === "linux" ? {
         configured_root: mesaShaderCacheRoot,
         canonical_root: (allExternalRoots.find((root) => root.name === "MESA_SHADER_CACHE_DIR"))?.canonical ?? null,
@@ -21302,7 +21780,8 @@ async function runOpenObsidianCanvasTextEdit(
     editReport.vault_root = selectedVaultRoot;
     editReport.source_canvas_path = canvasPath;
     editReport.source_text_node_id = "text-1";
-    editReport.edited_text = canvasEditedText;
+    editReport.edited_text_bytes = Buffer.byteLength(canvasEditedText, "utf8");
+    editReport.edited_text_sha256 = createHash("sha256").update(canvasEditedText, "utf8").digest("hex");
     editReport.accessible_labels = [
       "Edit Canvas text card",
       "Canvas edit path",
@@ -21356,8 +21835,23 @@ async function runOpenObsidianCanvasTextEdit(
     } catch (reportError) {
       editReport.app_data_failure_evidence_report_write_error = reportError instanceof Error ? reportError.message : String(reportError);
     }
+    snapshotAdditionalRoots.delete(resolve(appDataRoot));
+    canvasAppDataSnapshotRoots.delete(resolve(appDataRoot));
+    if (process.platform === "linux") {
+      await Promise.all([
+        rm(linuxXdgConfigRoot, {recursive: true, force: true}),
+        rm(linuxXdgDataRoot, {recursive: true, force: true}),
+        rm(mesaShaderCacheRoot, {recursive: true, force: true}),
+      ]).catch(() => undefined);
+    }
     throw preflightError;
   }
+  const linuxExternalForbiddenPaths = process.platform === "linux" ? [
+    canonicalLinuxXdgConfigRoot,
+    canonicalLinuxXdgDataRoot,
+    canonicalManagedUserDataRoot,
+    canonicalLinuxEframeDataRoot,
+  ] : [];
   const screenshots: Record<string, string> = {};
   let child: ChildProcess | undefined;
   let window: {window_id: string; title: string; geometry: string} | undefined;
@@ -21368,6 +21862,9 @@ async function runOpenObsidianCanvasTextEdit(
   let appDataSnapshotPostSelection: SnapshotEntry[] | null = null;
   let appDataSnapshotPostPicker: SnapshotEntry[] | null = null;
   let appDataSnapshotAfterCanvasSetup: SnapshotEntry[] | null = null;
+  let appDataSnapshotAfterAcceptedSave: SnapshotEntry[] | null = null;
+  let appDataSnapshotAfterClose: SnapshotEntry[] | null = null;
+  let macCanvasJournalBaselineBytes = Buffer.alloc(0);
   let startupAppDataChanges: Array<{path: string; before?: SnapshotEntry; after?: SnapshotEntry}> = [];
   let linuxWarmupGeometry: string | undefined;
   const pickerAppDataCapture: {
@@ -21418,6 +21915,7 @@ async function runOpenObsidianCanvasTextEdit(
             seedSnapshot,
             linuxWarmupGeometry,
             eframeInspectionEvidence,
+            linuxExternalForbiddenPaths,
           );
         } catch (warmupError) {
           warmupCycles.push({
@@ -21474,12 +21972,19 @@ async function runOpenObsidianCanvasTextEdit(
       appDataRoot,
       appDataSnapshotBeforeActualLaunch,
       `${process.platform} Canvas app-data before actual process launch`,
-      [selectedVaultRoot, resolve(selectedVaultRoot), canonicalVaultForAppData, appDataRoot, resolve(appDataRoot), canonicalAppDataRootForAppData, managedUserDataRoot, resolve(managedUserDataRoot), canonicalManagedUserDataRoot],
+      [selectedVaultRoot, resolve(selectedVaultRoot), canonicalVaultForAppData, appDataRoot, resolve(appDataRoot), canonicalAppDataRootForAppData, managedUserDataRoot, resolve(managedUserDataRoot), canonicalManagedUserDataRoot, ...linuxExternalForbiddenPaths],
       expectedEframeAppRonPath,
       eframeInspectionEvidence,
     );
     editReport.app_data_snapshot_pre_launch = appDataSnapshotBeforeActualLaunch;
-    child = launchLogged(openObsidianBinary, [], logPath, appEnv, process.platform === "darwin" && !expectedAbortCanary);
+    child = launchLogged(
+      openObsidianBinary,
+      [],
+      logPath,
+      appEnv,
+      process.platform === "darwin" && !expectedAbortCanary,
+      windowsPersistenceOptOut,
+    );
     editReport.pid = child.pid ?? null;
     await delay(1_000);
     if (child.exitCode !== null || child.signalCode !== null) {
@@ -21523,6 +22028,23 @@ async function runOpenObsidianCanvasTextEdit(
         && appEnv.OPENOBSIDIAN_CI_CANVAS_DISABLE_EGUI_MEMORY_PERSISTENCE === "1";
       if (!persistenceProfile.runtime_policy_mapping_passed) {
         throw new Error("macOS Canvas runtime did not confirm the exact env flag disables egui-memory persistence while window persistence remains enabled");
+      }
+    }
+    if (windowsPersistenceOptOut) {
+      const persistenceProfile = editReport.app_data_windows_persistence_profile as Record<string, unknown>;
+      const expectedMarker = String(persistenceProfile.expected_runtime_log_marker);
+      const startupLog = await waitFor(
+        "OpenObsidian to report the isolated Windows eframe-persistence policy",
+        async () => await readFile(logPath, "utf8"),
+        (contents) => contents.includes(expectedMarker),
+        10_000,
+      );
+      persistenceProfile.runtime_log_marker_observed = startupLog.includes(expectedMarker);
+      persistenceProfile.runtime_log_path = logName;
+      persistenceProfile.runtime_policy_mapping_passed = persistenceProfile.runtime_log_marker_observed === true
+        && appEnv.OPENOBSIDIAN_CI_CANVAS_DISABLE_EFRAME_PERSISTENCE === "1";
+      if (!persistenceProfile.runtime_policy_mapping_passed) {
+        throw new Error("Windows Canvas runtime did not confirm the exact env flag disables both eframe persistence channels");
       }
     }
     if (process.platform === "darwin") {
@@ -21679,7 +22201,7 @@ async function runOpenObsidianCanvasTextEdit(
         {
           allowManagedBootstrap: false,
           allowEframeAppRon: true,
-          forbiddenPaths: [selectedVaultRoot, resolve(selectedVaultRoot), canonicalVault, appDataRoot, resolve(appDataRoot), canonicalAppData, managedUserDataRoot, resolve(managedUserDataRoot), canonicalManagedUserDataRoot],
+          forbiddenPaths: [selectedVaultRoot, resolve(selectedVaultRoot), canonicalVault, appDataRoot, resolve(appDataRoot), canonicalAppData, managedUserDataRoot, resolve(managedUserDataRoot), canonicalManagedUserDataRoot, ...linuxExternalForbiddenPaths],
           expectedEframeAppRonRelativePath: expectedEframeAppRonPath,
           inspectionEvidence: eframeInspectionEvidence,
         },
@@ -21706,7 +22228,7 @@ async function runOpenObsidianCanvasTextEdit(
         appDataRoot,
         appDataSnapshotPrePicker,
         `${process.platform} Canvas app-data at pre-editor-setup boundary`,
-        [selectedVaultRoot, resolve(selectedVaultRoot), canonicalVault, appDataRoot, resolve(appDataRoot), canonicalAppData, managedUserDataRoot, resolve(managedUserDataRoot), canonicalManagedUserDataRoot],
+        [selectedVaultRoot, resolve(selectedVaultRoot), canonicalVault, appDataRoot, resolve(appDataRoot), canonicalAppData, managedUserDataRoot, resolve(managedUserDataRoot), canonicalManagedUserDataRoot, ...linuxExternalForbiddenPaths],
         expectedEframeAppRonPath,
         eframeInspectionEvidence,
       );
@@ -21751,7 +22273,7 @@ async function runOpenObsidianCanvasTextEdit(
     if (process.platform !== "darwin") {
       editReport.app_data_changes_pre_picker_to_post_picker_setup = prePickerToPostPickerChanges;
     }
-    const forbiddenAppDataPaths = [selectedVaultRoot, resolve(selectedVaultRoot), canonicalVault, appDataRoot, resolve(appDataRoot), canonicalAppData, managedUserDataRoot, resolve(managedUserDataRoot), canonicalManagedUserDataRoot];
+    const forbiddenAppDataPaths = [selectedVaultRoot, resolve(selectedVaultRoot), canonicalVault, appDataRoot, resolve(appDataRoot), canonicalAppData, managedUserDataRoot, resolve(managedUserDataRoot), canonicalManagedUserDataRoot, ...linuxExternalForbiddenPaths];
     if (process.platform === "darwin") {
       const panelOpenToPostSelectionChanges = changedPaths(appDataSnapshotPickerOpen ?? [], appDataSnapshotPostPicker ?? []);
       editReport.app_data_changes_panel_open_to_settled_vault_selection = panelOpenToPostSelectionChanges;
@@ -21833,6 +22355,25 @@ async function runOpenObsidianCanvasTextEdit(
       expectedEframeAppRonPath,
       eframeInspectionEvidence,
     );
+    if (process.platform === "darwin") {
+      const journalPath = `${canvasManagedMarkerPaths(appDataRoot, managedUserDataRoot, selectedVaultRoot).vaultDirectory}/journal.jsonl`;
+      const journalEntry = canvasSnapshotEntry(appDataBeforeFieldInput, journalPath);
+      if (journalEntry) {
+        if (journalEntry.kind !== "file") {
+          throw new Error("macOS Canvas app-data pre-save journal baseline was not a regular file");
+        }
+        const absoluteJournalPath = snapshotEntryAbsolutePath(appDataRoot, journalPath);
+        const journalMetadata = await lstat(absoluteJournalPath);
+        if (journalMetadata.isSymbolicLink() || !journalMetadata.isFile()) {
+          throw new Error("macOS Canvas app-data pre-save journal baseline was not a regular file");
+        }
+        macCanvasJournalBaselineBytes = await readFile(absoluteJournalPath);
+        if (journalEntry.bytes !== macCanvasJournalBaselineBytes.length
+          || journalEntry.sha256 !== createHash("sha256").update(macCanvasJournalBaselineBytes).digest("hex")) {
+          throw new Error("macOS Canvas app-data pre-save journal baseline bytes differed from their snapshot");
+        }
+      }
+    }
     safetyTracker.baseline = {
       vaultRoot: selectedVaultRoot,
       appDataRoot,
@@ -21856,7 +22397,7 @@ async function runOpenObsidianCanvasTextEdit(
         appDataRoot,
         current,
         `${process.platform} Canvas app-data at ${stage}`,
-        [selectedVaultRoot, resolve(selectedVaultRoot), appDataRoot, canonicalAppData, managedUserDataRoot, resolve(managedUserDataRoot)],
+        [selectedVaultRoot, resolve(selectedVaultRoot), appDataRoot, canonicalAppData, managedUserDataRoot, resolve(managedUserDataRoot), ...linuxExternalForbiddenPaths],
         expectedEframeAppRonPath,
         eframeInspectionEvidence,
       );
@@ -21969,11 +22510,10 @@ async function runOpenObsidianCanvasTextEdit(
     let savedDocument: unknown;
     try {
       savedDocument = JSON.parse(savedCanvasBytes.toString("utf8")) as unknown;
-    } catch (error) {
-      throw new Error(`Saved Canvas text edit was not valid JSON: ${error instanceof Error ? error.message : "unknown parse error"}`);
+    } catch {
+      throw new Error("Saved Canvas text edit was not valid JSON");
     }
     if (!canvasDocumentMatchesExpectedTextEdit(savedDocument, expectedEditedDocument)) {
-      await writeFile(join(reportDirectory, `${artifactPrefix}-incorrect-output.canvas`), savedCanvasBytes);
       throw new Error("Saved Canvas JSON did not equal the seed document with only text-1.text changed");
     }
     const afterSave = await snapshotTree(selectedVaultRoot);
@@ -21986,7 +22526,41 @@ async function runOpenObsidianCanvasTextEdit(
       || countMarkdownFiles(afterSave) !== countMarkdownFiles(afterDraft)) {
       throw new Error("Saving the native Canvas text card created or changed a Markdown note");
     }
-    await assertAppDataMatchesPostPickerBaseline("after-explicit-save");
+    if (process.platform === "darwin") {
+      const acceptedSave = await waitForMacCanvasWriteTransaction(
+        appDataBeforeFieldInput,
+        macCanvasJournalBaselineBytes,
+        appDataRoot,
+        managedUserDataRoot,
+        canonicalManagedUserDataRoot,
+        selectedVaultRoot,
+        canvasPath,
+        canvasBytesBefore,
+        savedCanvasBytes,
+      );
+      appDataSnapshotAfterAcceptedSave = acceptedSave.snapshot;
+      editReport.app_data_snapshot_after_explicit_save = acceptedSave.snapshot;
+      editReport.app_data_changes_for_accepted_write_transaction = changedPaths(appDataBeforeFieldInput, acceptedSave.snapshot);
+      editReport.app_data_mac_write_transaction = acceptedSave.transaction;
+      await validateCanvasManagedMarkerSnapshot(
+        appDataRoot,
+        managedUserDataRoot,
+        selectedVaultRoot,
+        acceptedSave.snapshot,
+        "macOS Canvas app-data after exact committed write transaction",
+      );
+      await validateCanvasEframeFiles(
+        appDataRoot,
+        acceptedSave.snapshot,
+        "macOS Canvas app-data after exact committed write transaction",
+        forbiddenAppDataPaths,
+        expectedEframeAppRonPath,
+        eframeInspectionEvidence,
+      );
+    } else {
+      appDataSnapshotAfterAcceptedSave = await assertAppDataMatchesPostPickerBaseline("after-explicit-save");
+      editReport.app_data_snapshot_after_explicit_save = appDataSnapshotAfterAcceptedSave;
+    }
     const allNonTargetDataPreserved = isDeepStrictEqual(savedDocument, expectedEditedDocument)
       && expectedEditedDocument.nodes.some((node) => node.id === "file-1")
       && expectedEditedDocument.nodes.some((node) => node.id === "group-1")
@@ -22023,21 +22597,46 @@ async function runOpenObsidianCanvasTextEdit(
     snapshots.canvas_text_edit_after = afterSave;
     await writeFile(join(reportDirectory, `${artifactPrefix}-before.json`), `${JSON.stringify(beforeEdit, null, 2)}\n`);
     await writeFile(join(reportDirectory, `${artifactPrefix}-after.json`), `${JSON.stringify(afterSave, null, 2)}\n`);
-    await writeFile(join(reportDirectory, `${artifactPrefix}-source-before.canvas`), canvasBytesBefore);
-    await writeFile(join(reportDirectory, `${artifactPrefix}-source-after.canvas`), savedCanvasBytes);
     editReport.artifacts = {
       openobsidian_log: logName,
       before_snapshot: `${artifactPrefix}-before.json`,
       after_snapshot: `${artifactPrefix}-after.json`,
-      source_before: `${artifactPrefix}-source-before.canvas`,
-      source_after: `${artifactPrefix}-source-after.canvas`,
     };
     await saveReport();
 
     await delay(1_000);
     await stopProcess(child);
     child = undefined;
-    const appDataAfterClose = await assertAppDataMatchesPostPickerBaseline("after-process-close");
+    let appDataAfterClose: SnapshotEntry[];
+    if (process.platform === "darwin") {
+      appDataAfterClose = await snapshotTree(appDataRoot);
+      appDataSnapshotAfterClose = appDataAfterClose;
+      if (!appDataSnapshotAfterAcceptedSave) {
+        throw new Error("macOS Canvas accepted post-save app-data snapshot was missing before process-close comparison");
+      }
+      const closeChanges = changedPaths(appDataSnapshotAfterAcceptedSave, appDataAfterClose);
+      if (closeChanges.length > 0) {
+        throw new Error(`macOS Canvas app data changed after the validated committed write transaction and process close: ${JSON.stringify(closeChanges).slice(0, 6_000)}`);
+      }
+      await validateCanvasManagedMarkerSnapshot(
+        appDataRoot,
+        managedUserDataRoot,
+        selectedVaultRoot,
+        appDataAfterClose,
+        "macOS Canvas app-data after process close",
+      );
+      await validateCanvasEframeFiles(
+        appDataRoot,
+        appDataAfterClose,
+        "macOS Canvas app-data after process close",
+        forbiddenAppDataPaths,
+        expectedEframeAppRonPath,
+        eframeInspectionEvidence,
+      );
+    } else {
+      appDataAfterClose = await assertAppDataMatchesPostPickerBaseline("after-process-close");
+      appDataSnapshotAfterClose = appDataAfterClose;
+    }
     if (process.platform === "darwin") {
       const closeInspection = eframeInspectionEvidence.at(-1);
       const appRonInspection = closeInspection?.checked_files.find((entry) => entry.path === expectedEframeAppRonPath);
@@ -22052,13 +22651,23 @@ async function runOpenObsidianCanvasTextEdit(
         throw new Error("macOS Canvas post-close app.ron did not contain only the expected window persistence section");
       }
     }
-    const appDataChangesAfterClose = changedPaths(appDataBeforeFieldInput, appDataAfterClose);
+    if (windowsPersistenceOptOut) {
+      const closeInspection = eframeInspectionEvidence.at(-1);
+      const persistenceProfile = editReport.app_data_windows_persistence_profile as Record<string, unknown>;
+      persistenceProfile.final_observed_app_ron_entries = closeInspection?.observed_app_ron_entries ?? [];
+      persistenceProfile.final_no_app_ron_passed = closeInspection?.result === "passed"
+        && closeInspection.observed_app_ron_entries.length === 0;
+      if (!persistenceProfile.final_no_app_ron_passed) {
+        throw new Error("Windows Canvas post-close app-data union contained an app.ron file or lacked a passing full-root inspection");
+      }
+    }
+    const appDataChangesAfterClose = changedPaths(appDataSnapshotAfterAcceptedSave ?? appDataBeforeFieldInput, appDataAfterClose);
     if (appDataChangesAfterClose.length > 0) {
-      throw new Error(`OpenObsidian changed app data after the settled post-picker baseline and close: ${JSON.stringify(appDataChangesAfterClose).slice(0, 6_000)}`);
+      throw new Error(`OpenObsidian changed app data after the accepted post-save snapshot and close: ${JSON.stringify(appDataChangesAfterClose).slice(0, 6_000)}`);
     }
     editReport.app_data_snapshot_after_close = appDataAfterClose;
-    editReport.app_data_changes_from_post_picker_baseline_through_close = appDataChangesAfterClose;
-    editReport.app_data_unchanged_from_post_picker_baseline_through_close = true;
+    editReport.app_data_changes_from_accepted_post_save_snapshot_through_close = appDataChangesAfterClose;
+    editReport.app_data_unchanged_from_accepted_post_save_snapshot_through_close = true;
     editReport.app_data_eframe_app_ron_inspections_complete = eframeInspectionEvidence.length > 0
       && eframeInspectionEvidence.every((inspection) => inspection.result === "passed");
     if (!editReport.app_data_eframe_app_ron_inspections_complete) {
@@ -22091,6 +22700,8 @@ async function runOpenObsidianCanvasTextEdit(
       post_picker: appDataSnapshotPostPicker,
       after_canvas_editor_setup: appDataSnapshotAfterCanvasSetup,
       post_picker_input_baseline: safetyTracker.baseline?.appDataSnapshot ?? null,
+      after_accepted_save: appDataSnapshotAfterAcceptedSave,
+      after_process_close: appDataSnapshotAfterClose,
     };
     const appDataFailureDeltas: Record<string, Array<{path: string; before?: SnapshotEntry; after?: SnapshotEntry}> | null> = {
       before_launch_to_actual_launch: changedPaths(appDataSnapshotBeforeAnyLaunch, appDataSnapshotBeforeActualLaunch),
@@ -22108,6 +22719,12 @@ async function runOpenObsidianCanvasTextEdit(
         : null,
       post_picker_to_editor_setup: appDataSnapshotPostPicker && appDataSnapshotAfterCanvasSetup
         ? changedPaths(appDataSnapshotPostPicker, appDataSnapshotAfterCanvasSetup)
+        : null,
+      input_baseline_to_accepted_save: safetyTracker.baseline?.appDataSnapshot && appDataSnapshotAfterAcceptedSave
+        ? changedPaths(safetyTracker.baseline.appDataSnapshot, appDataSnapshotAfterAcceptedSave)
+        : null,
+      accepted_save_to_process_close: appDataSnapshotAfterAcceptedSave && appDataSnapshotAfterClose
+        ? changedPaths(appDataSnapshotAfterAcceptedSave, appDataSnapshotAfterClose)
         : null,
     };
     editReport.app_data_failure_evidence = {
@@ -22220,7 +22837,7 @@ async function runOpenObsidianCanvasTextEdit(
             baseline.appDataRoot,
             postAbortAppData,
             `${process.platform} Canvas app-data after abort and process termination`,
-            [baseline.vaultRoot, resolve(baseline.vaultRoot), canonicalVaultForAppData, baseline.appDataRoot, resolve(baseline.appDataRoot), canonicalAppDataRootForAppData, managedUserDataRoot, resolve(managedUserDataRoot), canonicalManagedUserDataRoot],
+            [baseline.vaultRoot, resolve(baseline.vaultRoot), canonicalVaultForAppData, baseline.appDataRoot, resolve(baseline.appDataRoot), canonicalAppDataRootForAppData, managedUserDataRoot, resolve(managedUserDataRoot), canonicalManagedUserDataRoot, ...linuxExternalForbiddenPaths],
             expectedEframeAppRonPath,
             eframeInspectionEvidence,
           );
@@ -22294,15 +22911,11 @@ async function runOpenObsidianCanvasTextEdit(
         if (postAbortVault) await writeFile(join(reportDirectory, `${artifactPrefix}-abort-vault-after.json`), `${JSON.stringify(postAbortVault, null, 2)}\n`);
         await writeFile(join(reportDirectory, `${artifactPrefix}-abort-app-data-before.json`), `${JSON.stringify(baseline.appDataSnapshot, null, 2)}\n`);
         if (postAbortAppData) await writeFile(join(reportDirectory, `${artifactPrefix}-abort-app-data-after.json`), `${JSON.stringify(postAbortAppData, null, 2)}\n`);
-        await writeFile(join(reportDirectory, `${artifactPrefix}-abort-source-before.canvas`), baseline.canvasBytes);
-        if (postAbortCanvasBytes) await writeFile(join(reportDirectory, `${artifactPrefix}-abort-source-after.canvas`), postAbortCanvasBytes);
         preservationRecord.artifacts = {
           vault_before: `${artifactPrefix}-abort-vault-before.json`,
           vault_after: postAbortVault ? `${artifactPrefix}-abort-vault-after.json` : null,
           app_data_before: `${artifactPrefix}-abort-app-data-before.json`,
           app_data_after: postAbortAppData ? `${artifactPrefix}-abort-app-data-after.json` : null,
-          canvas_source_before: `${artifactPrefix}-abort-source-before.canvas`,
-          canvas_source_after: postAbortCanvasBytes ? `${artifactPrefix}-abort-source-after.canvas` : null,
         };
       } catch (artifactError) {
         preservationRecord.artifact_write_error = artifactError instanceof Error ? artifactError.message : String(artifactError);
@@ -22401,9 +23014,15 @@ async function runOpenObsidianCanvasTextEdit(
         rm(homeRoot, {recursive: true, force: true}),
         rm(localDataRoot, {recursive: true, force: true}),
       ]).then(() => undefined, () => undefined);
-      snapshotAdditionalRoots.delete(resolve(appDataRoot));
     }
-    if (process.platform === "linux") await rm(mesaShaderCacheRoot, {recursive: true, force: true}).catch(() => undefined);
+    if (process.platform === "linux") {
+      await Promise.all([
+        rm(linuxXdgConfigRoot, {recursive: true, force: true}),
+        rm(linuxXdgDataRoot, {recursive: true, force: true}),
+        rm(mesaShaderCacheRoot, {recursive: true, force: true}),
+      ]).catch(() => undefined);
+    }
+    snapshotAdditionalRoots.delete(resolve(appDataRoot));
     canvasAppDataSnapshotRoots.delete(resolve(appDataRoot));
     canvasEframeMemoryPolicyByRoot.delete(resolve(appDataRoot));
   }
@@ -22446,7 +23065,6 @@ async function runOpenObsidianCanvasNoteCreation(
   noteReport.output_path = canvasNotePath;
   noteReport.expected_note_bytes = expectedNoteBytes.length;
   noteReport.expected_note_sha256 = expectedNoteSha256;
-  noteReport.expected_note_text = expectedText;
   noteReport.body_is_exact_canvas_text = true;
   noteReport.accessible_labels = [
     "Create note from Canvas text card",
@@ -22651,7 +23269,6 @@ async function runOpenObsidianCanvasNoteCreation(
       throw new Error(`OpenObsidian did not create the confirmed Canvas note at ${canvasNotePath}`);
     }
     if (!confirmedBytes.equals(expectedNoteBytes)) {
-      await writeFile(join(reportDirectory, "canvas-note-creation-incorrect-output.md"), confirmedBytes);
       throw new Error(`Created Canvas note bytes differ from the exact text card body: expected ${expectedNoteBytes.length} bytes / ${expectedNoteSha256}, got ${confirmedBytes.length} bytes / ${createHash("sha256").update(confirmedBytes).digest("hex")}`);
     }
     const afterCreate = await snapshotTree(canvasVaultRoot);
@@ -22662,7 +23279,6 @@ async function runOpenObsidianCanvasNoteCreation(
     const canvasBytesAfter = await readFile(join(canvasVaultRoot, canvasPath));
     const canvasHashAfter = createHash("sha256").update(canvasBytesAfter).digest("hex");
     if (canvasBytesAfter.length !== expectedCanvas.bytes || canvasHashAfter !== expectedCanvas.sha256) {
-      await writeFile(join(reportDirectory, "canvas-note-creation-changed-source.canvas"), canvasBytesAfter);
       throw new Error("Explicit Canvas note creation changed the Canvas source bytes");
     }
     noteReport.status = "passed";
@@ -22682,14 +23298,10 @@ async function runOpenObsidianCanvasNoteCreation(
     snapshots.canvas_note_creation_after = afterCreate;
     await writeFile(join(reportDirectory, "canvas-note-creation-before.json"), `${JSON.stringify(noteBefore, null, 2)}\n`);
     await writeFile(join(reportDirectory, "canvas-note-creation-after.json"), `${JSON.stringify(afterCreate, null, 2)}\n`);
-    await writeFile(join(reportDirectory, "canvas-note-creation-source.canvas"), canvasBytesAfter);
-    await writeFile(join(reportDirectory, "canvas-note-creation-note.md"), confirmedBytes);
     noteReport.artifacts = {
       openobsidian_log: "openobsidian-canvas-note-create.log",
       before_snapshot: "canvas-note-creation-before.json",
       after_snapshot: "canvas-note-creation-after.json",
-      source_canvas_bytes: "canvas-note-creation-source.canvas",
-      created_note_bytes: "canvas-note-creation-note.md",
     };
     await saveReport();
 
@@ -22803,7 +23415,8 @@ async function runCanvasReferenceProbe(): Promise<void> {
     const editedSnapshot = textEdit.snapshot;
     snapshots.canvas_reference_after_native_text_edit = editedSnapshot;
     canvasReport.source_after_native_text_edit = expectedCanvas;
-    canvasReport.edited_text = canvasEditedText;
+    canvasReport.edited_text_bytes = Buffer.byteLength(canvasEditedText, "utf8");
+    canvasReport.edited_text_sha256 = createHash("sha256").update(canvasEditedText, "utf8").digest("hex");
     const expectedCreatedNoteBytes = Buffer.from(canvasEditedText, "utf8");
     const postCreateBaseline = await runOpenObsidianCanvasNoteCreation(editedSnapshot, expectedCanvas, canvasEditedText);
     snapshots.canvas_reference_after_native_note_creation = postCreateBaseline;
