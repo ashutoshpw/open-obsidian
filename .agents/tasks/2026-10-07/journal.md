@@ -8955,3 +8955,40 @@ Fast-forwarded origin/main once from 15fc2c10f87ada3ba9fb191e76206ce45acac74d to
 ## 2026-10-16T22:38:17Z — R3.19 CI first failures observed; batch remains active
 
 The exact-SHA batch for 57a28b2d371be576d1d4aebb1ea77d1b47b17fb9 has four successful workflows, one terminal failure, and two workflows still running. Inventory run 38976742999 failed because the migration mapping does not record the current goal SHA-256; this is consistent with the goal edit included in the milestone. Rust CI run 38976743053 has an observed Ubuntu formatting-step failure while workspace tests continue. Rust CI and the three-platform round-trip run 38976743025 are still active. No repair or additional push before every current job is terminal; results and artifacts remain unreconciled.
+
+
+## 2026-10-16T23:14:51Z — R3.20 submitted; exact-SHA CI pending
+
+Fast-forwarded `origin/main` once from `57a28b2d371be576d1d4aebb1ea77d1b47b17fb9` to `a0049c751d82540a9eca12e5323c05c673beacf9` after the reviewed R3.20 milestone passed the exact-base/no-active-batch gate. All seven required workflows were created for this SHA (run IDs: 38980385480, 38980385534, 38980385570, 38980385525, 38980385557, 38980385628, 38980385558).
+
+At the 2026-10-16T23:19:42Z poll, five workflows and 13/20 jobs had passed. Rust CI had three failed platform jobs and its Rust 1.95 MSRV job was running; all three Obsidian round-trip jobs were still running. The shared Rust compile failure is unresolved type inference for `target_batches` in the watcher UI test; Ubuntu also reported six formatter hunks in that test. See `.agents/tasks/2026-10-07/evidence/r3-20-r3-19-terminal-ci-repair-ci.json` for exact run/job URLs, observations and artifact API metadata.
+
+Nine artifacts from the three completed artifact-producing workflows have API IDs, sizes, digests and expiration timestamps recorded. Payload checks are pending, and all three large desktop preview archives follow the metadata-only policy. Keep `origin/main` at `a0049c751d82540a9eca12e5323c05c673beacf9` until all required workflows/jobs are terminal and every artifact/result is reconciled. No local product tests, builds, formatters, or application runs were used.
+
+
+## 2026-10-16T23:22:53Z — R3.20 CI partial failures; one platform job remains active
+
+The exact-SHA batch for `a0049c751d82540a9eca12e5323c05c673beacf9` now has six terminal workflows: inventory, desktop build, quality, renderer matrix, and loaded-plugin workflows passed; Rust CI failed. Rust CI is terminal-failed on all four jobs, including MSRV, with the same E0282 type-inference error for `target_batches` in `crates/ui-egui/src/lib.rs:11171`. Ubuntu also reports six rustfmt hunks in the watcher-test region.
+
+The round-trip workflow remains active. Linux and Windows jobs have failed and emitted report artifacts; macOS is still running. CI evidence currently contains API metadata for eleven artifacts, with payload digest checks still pending. See `.agents/tasks/2026-10-07/evidence/r3-20-r3-19-terminal-ci-repair-ci.json` for run/job URLs, current findings, and artifact IDs/digests. Keep `origin/main` at `a0049c751d82540a9eca12e5323c05c673beacf9` until the macOS job and every other required result/artifact are reconciled. No repair, local executable validation, or additional push has started.
+
+
+## 2026-10-16T23:26:31Z — R3.20 exact-SHA CI terminal and artifacts reconciled
+
+All seven required workflows and all 20 jobs for `a0049c751d82540a9eca12e5323c05c673beacf9` are terminal: five workflows and 13 jobs passed; Rust CI and vault round-trip failed, with seven failed jobs. Rust CI failed on all four jobs with E0282 for `target_batches` at `crates/ui-egui/src/lib.rs:11171`; Ubuntu also reported six rustfmt hunks. Linux, macOS, and Windows round-trip reports each timed out waiting for their exact request-correlated unchanged snapshot probe (`last value=null`). Their logs show the earlier real callback, changed snapshot probe, and full refresh succeeded with `timer_due_before_poll=false`; no unchanged request reached the app.
+
+All 12 GitHub artifact records are reconciled. Nine non-preview archives were downloaded and each archive SHA-256 matches GitHub API metadata; the three large desktop previews remain metadata-only. All three round-trip report payloads identify the exact submitted SHA/run and incomplete C07 reference capture; no Rust parity is claimed. Loaded-plugin artifact payloads remain `partial` despite passing workflow jobs. macOS app-data changes on preview close are within the reported eframe UI-state exception and did not fail the preview policy. See `.agents/tasks/2026-10-07/evidence/r3-20-r3-19-terminal-ci-repair-ci.json` for runs, jobs, artifact digests, payload findings, and report IDs.
+
+Read-only source/log triage identified an idle-frame gap for the unchanged-probe request: the harness writes its marker and polls logs for 30 seconds, but the app reads it only during an egui update frame scheduled 60 seconds later after the manual refresh. The R3.21 repair plan proposes waking one frame with a platform-native pointer move that sends no button event, while preserving the 60-second reconciliation timer and strict unchanged/no-refresh assertions. The plan is `.agents/tasks/2026-10-07/evidence/r3-21-r3-20-terminal-ci-repair.json`; independent review approved it at 2026-10-16T23:26:31Z. Implementation is now in progress locally; no R3.21 push has occurred, and `origin/main` remains at the R3.20 submitted SHA.
+
+## 2026-10-16T23:33:44Z — R3.21 implementation started; milestone-only push rule clarified
+
+Clarified the goal's submission rule: minor edits stay local; one complete, reviewed milestone is pushed to `origin/main` once to start its CI batch; keep `main` at that exact SHA until the potentially multi-hour required batch is terminal and reconciled. Updated the R3.21 plan and began its locally batched repair from `a0049c751d82540a9eca12e5323c05c673beacf9`. The Rust diff contains the explicit `VaultWatchEventBatch` vector type and six CI-reported formatting fixes. The round-trip harness now prepares a guarded, button-free platform pointer wake after the request marker and receives the child/window identity at the probe call site; exact rescan, hint, unchanged probe and no-refresh assertions remain. R3.21 is not complete or pushed; independent whole-milestone review is pending. No local executable validation, commit, or push was performed.
+
+## 2026-10-16T23:39:58Z — R3.21 review follow-up
+
+Read-only whole-milestone review found tracker and evidence gaps; corrected them locally. The active goal fingerprint now matches `requirements.json` and `state.json`; the R3.20 batch and R3.21 implementation status are consistent in the root, phase and five active milestone summaries, and deferred planner summaries now point behind R3.21 while retaining the C07.5 dependency. Added the required `timer_due_before_poll=false` assertion and made macOS visibility/foreground receipt fields honestly null; bounded the per-platform wake commands and retained the unchanged 30-second probe observation window. The independent Rust review confirms the explicit `VaultWatchEventBatch` type and exactly six CI-requested rustfmt changes. No local executable validation, commit, or push occurred; final whole-milestone approval is pending.
+
+## 2026-10-16T23:42:05Z — R3.21 whole-milestone review approved
+
+The integrated review approved the complete R3.21 diff for one milestone push after synchronizing the root and generic phase timestamps with the R3 phase. The independent Rust review confirmed the explicit watcher batch type and exactly six CI-requested rustfmt changes; the round-trip review confirmed the guarded, bounded, motion-only wake and preserved probe assertions. R3.21 is implementation-complete and reviewed locally, but remains unpushed and is not CI-accepted. The final exact-base/no-active-batch preflight remains before the single push. No local executable validation was run.

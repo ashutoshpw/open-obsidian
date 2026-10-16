@@ -3,7 +3,7 @@
   "plan_id": "R3.20-R3.19-TERMINAL-CI-REPAIR",
   "milestone_id": "R3.20",
   "name": "R3.20 consolidated repair of R3.19 exact-SHA CI failures",
-  "status": "implementation_complete",
+  "status": "terminal_failed_artifacts_reconciled",
   "candidate_base_sha": "57a28b2d371be576d1d4aebb1ea77d1b47b17fb9",
   "objective": "Repair the terminal R3.19 inventory, Rust formatting/test, and round-trip harness failures in one bounded milestone while preserving the real watcher callback path, exact request correlation, and strict cross-platform round-trip assertions.",
   "source_ci_evidence": ".agents/tasks/2026-10-07/evidence/r2.8.151-r3-19-r3-18-ci-repair-candidate.json",
@@ -52,16 +52,62 @@
   ],
   "submission_gate": "Keep the whole R3.20 milestone local until implementation criteria and independent whole-milestone review are complete. Verify live origin/main still equals candidate_base_sha and the R3.19 exact-SHA CI batch is fully terminal and reconciled. Then fast-forward the reviewed milestone to origin/main exactly once. Hold main at the submitted SHA until all required jobs and artifacts are reconciled; do not push during the batch.",
   "review_status": "approved",
-  "reviewed_by": ["r320_watcher_triage"],
+  "reviewed_by": [
+    "r320_watcher_triage"
+  ],
   "reviewed_at": "2026-10-16T22:57:36Z",
   "implementation_started": true,
   "implementation_started_at": "2026-10-16T22:58:10Z",
   "implementation_complete": true,
   "implementation_review_status": "approved for one R3.20 push after the exact-base/no-active-CI gate",
-  "implementation_reviewed_by": ["r320_ui_review", "r320_integrated_review"],
+  "implementation_reviewed_by": [
+    "r320_ui_review",
+    "r320_integrated_review"
+  ],
   "implementation_reviewed_at": "2026-10-16T23:13:14Z",
   "local_executable_validation": false,
-  "pushed_once": false,
+  "pushed_once": true,
   "milestone_achieved": false,
-  "next_action": "Verify origin/main still equals the candidate base and no exact-SHA CI batch is active, then fast-forward this reviewed milestone once to origin/main."
+  "next_action": "Keep origin/main at a0049c751d82540a9eca12e5323c05c673beacf9. R3.20 is terminal-failed and fully reconciled. Review and implement the bounded R3.21 Rust CI and unchanged-probe wake-up repair locally, then push once only after whole-milestone review.",
+  "implementation_status": "implementation_complete",
+  "submitted_sha": "a0049c751d82540a9eca12e5323c05c673beacf9",
+  "submitted_at": "2026-10-16T23:14:51Z",
+  "ci_evidence": ".agents/tasks/2026-10-07/evidence/r3-20-r3-19-terminal-ci-repair-ci.json",
+  "ci_status": "terminal_failed_artifacts_reconciled",
+  "ci_run_ids": [
+    38980385480,
+    38980385534,
+    38980385570,
+    38980385525,
+    38980385557,
+    38980385628,
+    38980385558
+  ],
+  "ci_workflow_counts": {
+    "observed": 7,
+    "terminal": 7,
+    "passed": 5,
+    "failed": 2,
+    "cancelled": 0,
+    "queued": 0,
+    "in_progress": 0
+  },
+  "ci_job_counts": {
+    "observed": 20,
+    "terminal": 20,
+    "passed": 13,
+    "failed": 7,
+    "cancelled": 0,
+    "queued": 0,
+    "in_progress": 0
+  },
+  "ci_last_polled_at": "2026-10-16T23:26:31Z",
+  "ci_findings_summary": "Terminal failed on exact SHA a0049c751d82540a9eca12e5323c05c673beacf9: five of seven workflows and 13 of 20 jobs passed. All four Rust CI jobs failed with E0282 for target_batches type inference; Ubuntu also reported six rustfmt hunks. All three round-trip jobs timed out waiting for the request-correlated unchanged snapshot probe (last value=null); earlier changed watcher callback/probe/refresh succeeded. All seven workflows, 20 jobs, and 12 artifacts are terminal/reconciled; nine non-preview archive digests match GitHub API metadata and three large previews remain metadata-only.",
+  "ci_artifact_reconciliation": {
+    "artifact_records_observed": 12,
+    "artifact_records_reconciled": 12,
+    "downloaded_non_preview_archives": 9,
+    "api_digest_matches": 9,
+    "large_desktop_previews_metadata_only": 3
+  }
 }

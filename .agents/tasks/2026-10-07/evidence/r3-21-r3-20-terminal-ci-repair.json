@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "plan_id": "R3.21-R3.20-TERMINAL-CI-REPAIR",
+  "milestone_id": "R3.21",
+  "name": "R3.21 Rust CI and unchanged watcher-probe wake-up repair",
+  "status": "implementation_complete_pending_ci",
+  "candidate_base_sha": "a0049c751d82540a9eca12e5323c05c673beacf9",
+  "predecessor_ci_evidence": ".agents/tasks/2026-10-07/evidence/r3-20-r3-19-terminal-ci-repair-ci.json",
+  "objective": "Repair all terminal R3.20 exact-SHA CI failures in one bounded milestone: restore Rust CI compilation/formatting and make the unchanged watcher-probe request reach the idle OpenObsidian UI on Linux, macOS, and Windows without changing reconciliation behavior or weakening assertions.",
+  "scope": [
+    "In crates/ui-egui/src/lib.rs, add the explicit VaultWatchEventBatch element type to target_batches to resolve E0282, and apply only the six rustfmt hunks reported by the R3.20 Ubuntu CI log.",
+    "In the round-trip CI harness, after atomically writing the unchanged-probe request marker, dispatch two distinct harmless platform-native pointer-move events inside the OpenObsidian client window (neutral point, then wake point) so a fresh UI frame reads the marker. Send no pointer button events and make no vault or app-data edits.",
+    "Record the wake event platform, window/client coordinates, visibility/foreground receipt where available, and zero button events in the round-trip report; the exact request-correlated watcher-rescan log entry and subsequent unchanged probe remain the proof that the app consumed the request.",
+    "Clarify the milestone-only submission cadence in goal.md and synchronize its fingerprint in requirements/state. Update migration state, journal, and evidence locally with R3.20 terminal job/artifact reconciliation and the complete R3.21 plan/review/implementation status."
+  ],
+  "out_of_scope": [
+    "Changing watcher production behavior, notification policy, request correlation, batch lineage, or the 60-second reconciliation timer.",
+    "Adding a polling timer, forcing manual refresh, extending the existing probe timeout, changing the unchanged-snapshot/no-refresh conditions, or weakening callback/refresh correlation.",
+    "Changing unrelated watcher tests, app behavior, feature requirements, compatibility claims, workflows, or artifact policy.",
+    "Running local tests, builds, formatters, linters, validators, runtime probes, benchmarks, or application launches as acceptance."
+  ],
+  "implementation_criteria": [
+    "The `target_batches` inference failure is fixed by an explicit Vec<VaultWatchEventBatch> type and the source diff contains only the six CI-reported formatter hunks in that watcher test block.",
+    "The unchanged-probe harness writes its existing request marker, then dispatches two distinct native pointer-move events to safe coordinates inside the visible target window. Linux uses motion-only xdotool commands; macOS posts only CGEventType.mouseMoved; Windows verifies OpenObsidian is visible/foreground, SetCursorPos succeeds, and GetCursorPos matches each requested client-area point. No button-down/up API is called.",
+    "The app consumes the marker in a UI update frame, requests the existing watcher rescan and a repaint, then observes the watcher callback/probe on the current or a subsequent frame. Require the exact request ID through the watcher-rescan log, watcher hint, and unchanged probe; do not require the full chain in one frame.",
+    "The 60-second periodic reconciliation timer, 30-second helper timeout, and all strict no-refresh assertions stay unchanged; the wake produces no vault or app-data edits.",
+    "Bound native wake helper invocations with command timeouts. Report platform visibility/foreground only when actually measured; use null for those fields on macOS until the harness can verify them.",
+    "The goal and requirements tracker record the same milestone-only cadence and current goal fingerprint: minor edits stay local; one complete, reviewed milestone is pushed once; origin/main remains at that submitted SHA throughout the potentially multi-hour required CI batch.",
+    "The complete source and tracker diff is independently reviewed as one milestone before submission; no local executable validation is used."
+  ],
+  "required_workflows": [
+    "OpenObsidian Rust CI",
+    "Rust migration inventory",
+    "Obsidian vault round-trip acceptance",
+    "OpenObsidian desktop build",
+    "OpenObsidian quality",
+    "OpenObsidian plugin renderer matrix",
+    "OpenObsidian loaded plugin workflows"
+  ],
+  "ci_acceptance": [
+    "Every required job passes on the same submitted SHA, including Rust CI on Linux, macOS, Windows, and Rust 1.95.",
+    "Linux, macOS, and Windows each record the unchanged-probe request ID, a motion-only wake with distinct coordinates, the app consuming the marker, a watcher hint before its scheduled probe, an unchanged result equal to the baseline full-vault revision, and a quiet interval without a correlated full refresh.",
+    "The report records zero pointer button events and the watcher diagnostics continue to show timer_due_before_poll=false; on Windows the request is sent only after visibility/foreground and cursor-position checks pass.",
+    "All existing later note edit, rename, persistence, reopen, and quiet-window round-trip scenarios pass unchanged.",
+    "All required exact-SHA artifacts are enumerated and reconciled by workflow/run/SHA, API size/digest, and payload identity using the metadata-only policy for large desktop previews."
+  ],
+  "submission_gate": "Keep R3.21 local until the bounded implementation is complete and independently reviewed as a whole. Immediately before submission, verify origin/main still equals a0049c751d82540a9eca12e5323c05c673beacf9 and R3.20 has all jobs and artifacts terminal/reconciled. Then fast-forward the reviewed milestone to origin/main exactly once. Hold main at the submitted SHA until all seven workflows, all jobs, and artifacts are reconciled; do not push minor edits or status-only updates.",
+  "local_executable_validation": false,
+  "implementation_started": true,
+  "implementation_started_at": "2026-10-16T23:30:06Z",
+  "implementation_started_from_sha": "a0049c751d82540a9eca12e5323c05c673beacf9",
+  "implementation_complete": true,
+  "implementation_review_status": "Approved as a complete milestone by r320_integrated_review, r320_roundtrip_repair_analysis, and a590_attempt3_rust_ci; ready for one push after exact-base/no-active-batch preflight.",
+  "pushed_once": false,
+  "milestone_achieved": false,
+  "next_action": "Pass the exact-base/no-active-batch preflight, commit the reviewed milestone locally, and push it once to origin/main. Then hold main at the submitted SHA until all required workflows, jobs, and artifacts are terminal and reconciled.",
+  "reviewed_by": [
+    "r320_integrated_review",
+    "r320_roundtrip_repair_analysis",
+    "a590_attempt3_rust_ci"
+  ],
+  "reviewed_at": "2026-10-16T23:42:05Z",
+  "implementation_completed_at": "2026-10-16T23:42:05Z",
+  "implementation_reviewed_by": [
+    "r320_integrated_review",
+    "r320_roundtrip_repair_analysis",
+    "a590_attempt3_rust_ci"
+  ],
+  "implementation_reviewed_at": "2026-10-16T23:42:38Z"
+}

@@ -10929,9 +10929,8 @@ mod tests {
             readiness_deadline: Instant,
             readiness_batch_ids: &mut Vec<u64>,
         ) {
-            let expected_status = format!(
-                "Note list refreshed: {expected_note_count} Markdown files found."
-            );
+            let expected_status =
+                format!("Note list refreshed: {expected_note_count} Markdown files found.");
             let mut phase_batch_seen = false;
             loop {
                 let remaining = readiness_deadline.saturating_duration_since(Instant::now());
@@ -10998,8 +10997,8 @@ mod tests {
                     && state.vault_refresh_status.as_deref() == Some(expected_status.as_str())
                     && note_count == expected_note_count;
                 if transition_ready {
-                    let quiet_deadline = quiet_until
-                        .get_or_insert_with(|| Instant::now() + quiet_window);
+                    let quiet_deadline =
+                        quiet_until.get_or_insert_with(|| Instant::now() + quiet_window);
                     if Instant::now() >= *quiet_deadline {
                         let mut drained_wake = false;
                         loop {
@@ -11135,7 +11134,10 @@ mod tests {
             &mut readiness_batch_ids,
         );
 
-        assert!(!sentinel_path.exists(), "readiness sentinel is removed before baseline");
+        assert!(
+            !sentinel_path.exists(),
+            "readiness sentinel is removed before baseline"
+        );
         assert!(!readiness_batch_ids.is_empty());
         assert!(matches!(wake_receiver.try_recv(), Err(TryRecvError::Empty)));
         let baseline_wake_count = wake_count.load(Ordering::Relaxed);
@@ -11168,7 +11170,7 @@ mod tests {
             callback_woke_at < periodic_reconciliation_deadline,
             "the notify callback wake occurred before the periodic timer"
         );
-        let mut target_batches = Vec::new();
+        let mut target_batches: Vec<VaultWatchEventBatch> = Vec::new();
         let mut target_request_id: Option<String> = None;
         let mut target_probe_batch_seen = false;
         let mut target_refresh_batch_seen = false;
@@ -11210,8 +11212,7 @@ mod tests {
                     "the watcher event reached the UI before the periodic timer"
                 );
                 assert!(batch.event_count > 0);
-                if let Some(existing) = target_batches.iter_mut().find(|seen| seen.id == batch.id)
-                {
+                if let Some(existing) = target_batches.iter_mut().find(|seen| seen.id == batch.id) {
                     existing.event_count = existing.event_count.max(batch.event_count);
                 } else {
                     target_batches.push(*batch);
@@ -11219,7 +11220,10 @@ mod tests {
             }
 
             if let Some(target_batch) = target_batches.first() {
-                if state.vault_rescan_event_batches.iter().any(|batch| batch.id == target_batch.id)
+                if state
+                    .vault_rescan_event_batches
+                    .iter()
+                    .any(|batch| batch.id == target_batch.id)
                     && let Some(request_id) = state.vault_rescan_request_id.as_deref()
                 {
                     if let Some(previous) = &target_request_id {
@@ -11290,8 +11294,8 @@ mod tests {
                 && target_refresh_batch_seen
                 && !target_batches.is_empty();
             if reconciliation_settled && target_reconciled {
-                let quiet_until = target_quiet_until
-                    .get_or_insert_with(|| Instant::now() + target_quiet_window);
+                let quiet_until =
+                    target_quiet_until.get_or_insert_with(|| Instant::now() + target_quiet_window);
                 if Instant::now() >= *quiet_until {
                     let mut drained_wake = false;
                     loop {

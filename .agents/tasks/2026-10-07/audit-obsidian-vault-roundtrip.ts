@@ -1324,6 +1324,7 @@ type OpenObsidianRefreshDiagnostics = {
   consumedResults: Array<{succeeded: boolean; snapshotStable: boolean | null; revisionSha256: string | null; entries: number | null; line: number; requestId: string | null; expectedPathVisible: boolean | null; watcherEventBatches: WatcherEventBatch[] | null}>;
   snapshotProbes: Array<{phase: "scheduled" | "result"; requestId: string | null; outcome: "unchanged" | "changed" | "error" | null; revisionSha256: string | null; baselineRevisionSha256: string | null; line: number; watcherEventBatches: WatcherEventBatch[] | null}>;
   watcherCallbacks: Array<WatcherEventBatch & {line: number; callbackKind: string | null}>;
+  watcherRescanRequests: Array<{requestId: string | null; line: number}>;
   watcherHints: Array<{hint: string; requestId: string | null; line: number; eventBatchId: string | null; eventCount: number | null; callbackToPollMs: number | null; notifyErrorCallbacks: number | null; timerDueBeforePoll: boolean | null}>;
   receiverStates: Array<{busy: boolean; refreshBusy: boolean; snapshotProbeBusy: boolean; line: number}>;
 };
@@ -1401,10 +1402,16 @@ async function readOpenObsidianRefreshDiagnostics(
     consumedResults: [],
     snapshotProbes: [],
     watcherCallbacks: [],
+    watcherRescanRequests: [],
     watcherHints: [],
     receiverStates: [],
   };
   for (const [line, value] of log.split(/\r?\n/).entries()) {
+    const watcherRescanRequest = value.match(/OpenObsidian CI vault watcher rescan requested: request_id=([^,\s]+)/);
+    if (watcherRescanRequest) diagnostics.watcherRescanRequests.push({
+      requestId: watcherRescanRequest[1] ?? null,
+      line,
+    });
     const request = value.match(/OpenObsidian CI vault refresh request: source=([a-z_]+)/);
     if (request) {
       const frameNr = value.match(/\bframe_nr=(\d+)/)?.[1];
@@ -2804,24 +2811,239 @@ async function writeAtomicRequestMarker(path: string, requestId: string): Promis
 
 let unchangedWatcherProbeSequence = 0;
 
+type WatcherProbePointerPoint = {x: number; y: number};
+
+type WatcherProbeWakeReceipt = {
+  platform: "linux" | "darwin" | "win32";
+  target_window_id: string | null;
+  target_process_id: number | null;
+  coordinate_space: "x11_window" | "quartz_screen_points" | "windows_client_screen_pixels";
+  points: WatcherProbePointerPoint[];
+  target_visible: boolean | null;
+  target_foreground: boolean | null;
+  button_event_count: 0;
+};
+
+type WatcherProbeWakePlan = {
+  platform: "linux" | "darwin" | "win32";
+  target_window_id: string | null;
+  coordinate_space: WatcherProbeWakeReceipt["coordinate_space"];
+  dispatch: () => Promise<WatcherProbeWakeReceipt>;
+};
+
+const watcherProbeWakeCommandTimeoutMs = 10_000;
+
+async function prepareWatcherProbePointerWake(
+  child: ChildProcess,
+  windowId: string,
+): Promise<WatcherProbeWakePlan> {
+  if (process.platform === "linux") {
+    const runXdotoolWakeCommand = (args: string[]): string => execFileSync("xdotool", args, {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "pipe"],
+      timeout: watcherProbeWakeCommandTimeoutMs,
+    }).trim();
+    const visibleWindowIds = runXdotoolWakeCommand(["search", "--onlyvisible", "--name", "."])
+      .split(/\r?\n/)
+      .filter((candidate) => /^\d+$/.test(candidate));
+    if (!visibleWindowIds.includes(windowId)) {
+      throw new Error(`OpenObsidian window ${windowId} is not visible before the unchanged-probe wake`);
+    }
+    const geometryOutput = runXdotoolWakeCommand(["getwindowgeometry", "--shell", windowId]);
+    const readGeometry = (key: string): number => {
+      const value = geometryOutput.match(new RegExp(`^${key}=(-?\\d+)$`, "m"))?.[1];
+      return value === undefined ? NaN : Number(value);
+    };
+    const geometry = {
+      x: readGeometry("X"),
+      y: readGeometry("Y"),
+      width: readGeometry("WIDTH"),
+      height: readGeometry("HEIGHT"),
+    };
+    if (![geometry.x, geometry.y, geometry.width, geometry.height].every(Number.isFinite)
+      || geometry.width < 3 || geometry.height < 2) {
+      throw new Error(`OpenObsidian client window is too small or unavailable for a distinct pointer wake: ${JSON.stringify({geometry, geometryOutput})}`);
+    }
+    runXdotoolWakeCommand(["windowraise", windowId]);
+    runXdotoolWakeCommand(["windowfocus", "--sync", windowId]);
+    return {
+      platform: "linux",
+      target_window_id: windowId,
+      coordinate_space: "x11_window",
+      dispatch: async () => {
+        const points = [{x: 1, y: 1}, {x: 2, y: 1}];
+        for (const point of points) {
+          runXdotoolWakeCommand(["mousemove", "--sync", "--window", windowId, String(point.x), String(point.y)]);
+        }
+        const visibleAfterWake = runXdotoolWakeCommand(["search", "--onlyvisible", "--name", "."])
+          .split(/\r?\n/)
+          .filter((candidate) => /^\d+$/.test(candidate));
+        const targetVisible = visibleAfterWake.includes(windowId);
+        const targetForeground = runXdotoolWakeCommand(["getwindowfocus"]) === windowId;
+        if (!targetVisible || !targetForeground) {
+          throw new Error(`OpenObsidian lost visibility or focus during the unchanged-probe pointer wake: ${JSON.stringify({targetVisible, targetForeground, windowId})}`);
+        }
+        return {
+          platform: "linux",
+          target_window_id: windowId,
+          target_process_id: null,
+          coordinate_space: "x11_window",
+          points,
+          target_visible: targetVisible,
+          target_foreground: targetForeground,
+          button_event_count: 0,
+        };
+      },
+    };
+  }
+
+  if (process.platform === "darwin") {
+    await focusOpenObsidian(child, watcherProbeWakeCommandTimeoutMs);
+    const window = macOSOpenObsidianWindowBounds(child, watcherProbeWakeCommandTimeoutMs);
+    const titlebarHeight = 32;
+    const points = [
+      {x: window.x + 5, y: window.y + titlebarHeight + 5},
+      {x: window.x + 6, y: window.y + titlebarHeight + 5},
+    ];
+    if (window.width < 7 || window.height <= titlebarHeight + 5) {
+      throw new Error(`OpenObsidian window is too small for a distinct pointer wake: ${JSON.stringify(window)}`);
+    }
+    return {
+      platform: "darwin",
+      target_window_id: null,
+      coordinate_space: "quartz_screen_points",
+      dispatch: async () => {
+        for (const point of points) {
+          await postMacOsPointerEvent(point.x, point.y, false, watcherProbeWakeCommandTimeoutMs);
+        }
+        return {
+          platform: "darwin",
+          target_window_id: null,
+          target_process_id: child.pid ?? null,
+          coordinate_space: "quartz_screen_points",
+          points,
+          target_visible: null,
+          target_foreground: null,
+          button_event_count: 0,
+        };
+      },
+    };
+  }
+
+  if (process.platform === "win32") {
+    await focusOpenObsidian(child, watcherProbeWakeCommandTimeoutMs);
+    const window = windowsTopLevelWindowInventory(watcherProbeWakeCommandTimeoutMs).find((candidate) => (
+      candidate.process_id === (child.pid ?? -1)
+        && candidate.native_window_handle > 0
+        && !candidate.is_offscreen
+    ));
+    if (!window) throw new Error("OpenObsidian has no visible Windows main window for the unchanged-probe wake");
+    const windowHandle = window.native_window_handle;
+    return {
+      platform: "win32",
+      target_window_id: String(windowHandle),
+      coordinate_space: "windows_client_screen_pixels",
+      dispatch: async () => {
+        const script = `
+          $ErrorActionPreference = "Stop"
+          Add-Type -TypeDefinition @'
+            using System;
+            using System.Runtime.InteropServices;
+            using System.Threading;
+            [StructLayout(LayoutKind.Sequential)] public struct OpenObsidianWakeRect { public int Left; public int Top; public int Right; public int Bottom; }
+            [StructLayout(LayoutKind.Sequential)] public struct OpenObsidianWakePoint { public int X; public int Y; }
+            public static class OpenObsidianWatcherProbeWake {
+              [DllImport("user32.dll")] public static extern bool IsWindowVisible(IntPtr handle);
+              [DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow();
+              [DllImport("user32.dll")] public static extern bool GetClientRect(IntPtr handle, out OpenObsidianWakeRect rect);
+              [DllImport("user32.dll")] public static extern bool ClientToScreen(IntPtr handle, ref OpenObsidianWakePoint point);
+              [DllImport("user32.dll")] public static extern bool SetCursorPos(int x, int y);
+              [DllImport("user32.dll")] public static extern bool GetCursorPos(out OpenObsidianWakePoint point);
+              public static string Move(long rawHandle) {
+                IntPtr handle = new IntPtr(rawHandle);
+                if (!IsWindowVisible(handle)) throw new Exception("OpenObsidian target window is not visible");
+                if (GetForegroundWindow() != handle) throw new Exception("OpenObsidian is not the foreground window");
+                OpenObsidianWakeRect rect;
+                if (!GetClientRect(handle, out rect) || rect.Right - rect.Left < 3 || rect.Bottom - rect.Top < 2) throw new Exception("OpenObsidian client area is unavailable or too small");
+                OpenObsidianWakePoint first = new OpenObsidianWakePoint { X = rect.Left + 1, Y = rect.Top + 1 };
+                OpenObsidianWakePoint second = new OpenObsidianWakePoint { X = rect.Left + 2, Y = rect.Top + 1 };
+                if (!ClientToScreen(handle, ref first) || !ClientToScreen(handle, ref second)) throw new Exception("Could not map OpenObsidian client coordinates to screen pixels");
+                OpenObsidianWakePoint[] points = new OpenObsidianWakePoint[] { first, second };
+                foreach (OpenObsidianWakePoint point in points) {
+                  if (!SetCursorPos(point.X, point.Y)) throw new Exception("SetCursorPos failed for OpenObsidian watcher wake");
+                  Thread.Sleep(25);
+                  OpenObsidianWakePoint actual;
+                  if (!GetCursorPos(out actual) || actual.X != point.X || actual.Y != point.Y) throw new Exception("Windows cursor position did not reach the requested OpenObsidian point");
+                }
+                if (!IsWindowVisible(handle) || GetForegroundWindow() != handle) throw new Exception("OpenObsidian lost visibility or foreground during the watcher wake");
+                return first.X + "," + first.Y + ";" + second.X + "," + second.Y;
+              }
+            }
+'@
+          [OpenObsidianWatcherProbeWake]::Move([long]${windowHandle})
+        `;
+        const output = execFileSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", script], {
+          encoding: "utf8",
+          stdio: ["ignore", "pipe", "pipe"],
+          timeout: watcherProbeWakeCommandTimeoutMs,
+        }).trim();
+        const points = output.split(";").map((pair) => {
+          const [x, y] = pair.split(",").map(Number);
+          if (!Number.isSafeInteger(x) || !Number.isSafeInteger(y)) {
+            throw new Error(`Windows pointer wake returned invalid client-screen coordinates: ${output}`);
+          }
+          return {x, y};
+        });
+        if (points.length !== 2 || points[0]?.x === points[1]?.x && points[0]?.y === points[1]?.y) {
+          throw new Error(`Windows pointer wake did not report two distinct positions: ${output}`);
+        }
+        return {
+          platform: "win32",
+          target_window_id: String(windowHandle),
+          target_process_id: child.pid ?? null,
+          coordinate_space: "windows_client_screen_pixels",
+          points,
+          target_visible: true,
+          target_foreground: true,
+          button_event_count: 0,
+        };
+      },
+    };
+  }
+
+  throw new Error(`A button-free OpenObsidian pointer wake is not configured for ${process.platform}`);
+}
+
 async function requireUnchangedWatcherSnapshotProbe(
   logPath: string,
   requestFile: string,
   baselineRevisionSha256: string,
+  child: ChildProcess,
+  windowId: string,
 ): Promise<Record<string, unknown>> {
   const requestId = `${process.pid}-${Date.now()}-unchanged-${++unchangedWatcherProbeSequence}`;
+  const wakePlan = await prepareWatcherProbePointerWake(child, windowId);
   const temporaryPath = await writeAtomicRequestMarker(requestFile, requestId);
+  let wakeReceipt: WatcherProbeWakeReceipt;
   let observation: {
+    watcherRescanRequest: OpenObsidianRefreshDiagnostics["watcherRescanRequests"][number];
     watcherHint: OpenObsidianRefreshDiagnostics["watcherHints"][number];
     scheduled: OpenObsidianRefreshDiagnostics["snapshotProbes"][number];
     result: OpenObsidianRefreshDiagnostics["snapshotProbes"][number];
     diagnostics: OpenObsidianRefreshDiagnostics;
   } | null = null;
   try {
+    const externalRefresh = (report.openobsidian_open as Record<string, unknown>).external_note_refresh as Record<string, unknown>;
+    externalRefresh.unchanged_probe_request = {request_id: requestId, request_marker_written: true};
+    await saveReport();
+    wakeReceipt = await wakePlan.dispatch();
+    externalRefresh.unchanged_probe_wake = wakeReceipt;
+    await saveReport();
     const value = await waitFor(
       `the request-correlated unchanged vault snapshot probe ${requestId}`,
       async () => {
         const diagnostics = await readOpenObsidianRefreshDiagnostics(logPath);
+        const watcherRescanRequest = diagnostics.watcherRescanRequests.find((item) => item.requestId === requestId);
         const watcherHint = diagnostics.watcherHints.find((item) => item.requestId === requestId);
         const scheduled = diagnostics.snapshotProbes.find((item) => (
           item.phase === "scheduled" && item.requestId === requestId
@@ -2829,13 +3051,15 @@ async function requireUnchangedWatcherSnapshotProbe(
         const result = diagnostics.snapshotProbes.find((item) => (
           item.phase === "result" && item.requestId === requestId
         ));
-        if (!watcherHint || !scheduled || !result) return null;
-        if (watcherHint.line >= scheduled.line
+        if (!watcherRescanRequest || !watcherHint || !scheduled || !result) return null;
+        if (watcherRescanRequest.line >= watcherHint.line
+          || watcherHint.line >= scheduled.line
           || scheduled.line >= result.line
+          || watcherHint.timerDueBeforePoll !== false
           || result.outcome !== "unchanged"
           || scheduled.baselineRevisionSha256 !== baselineRevisionSha256
           || result.revisionSha256 !== baselineRevisionSha256) {
-          throw new Error(`Forced watcher hint did not produce an unchanged full-vault snapshot probe: ${JSON.stringify({watcherHint, scheduled, result, baselineRevisionSha256})}`);
+          throw new Error(`Forced watcher hint did not produce an unchanged full-vault snapshot probe: ${JSON.stringify({watcherRescanRequest, watcherHint, scheduled, result, baselineRevisionSha256})}`);
         }
         const correlatedRequests = diagnostics.requests.filter((request) => request.requestId === requestId);
         const correlatedResults = diagnostics.consumedResults.filter((result) => result.requestId === requestId);
@@ -2843,7 +3067,7 @@ async function requireUnchangedWatcherSnapshotProbe(
           throw new Error(`An unchanged watcher snapshot probe triggered a correlated full refresh: ${JSON.stringify({requestId, correlatedRequests, correlatedResults})}`);
         }
         assertVaultSnapshotProbeCorrelation(diagnostics);
-        return {watcherHint, scheduled, result, diagnostics};
+        return {watcherRescanRequest, watcherHint, scheduled, result, diagnostics};
       },
       (candidate) => candidate !== null,
       30_000,
@@ -2864,6 +3088,7 @@ async function requireUnchangedWatcherSnapshotProbe(
     async () => {
       const diagnostics = await readOpenObsidianRefreshDiagnostics(logPath);
       const counts = JSON.stringify({
+        watcherRescanRequestCount: diagnostics.watcherRescanRequests.filter((item) => item.requestId === requestId).length,
         watcherHints: diagnostics.watcherHints.filter((item) => item.requestId === requestId).length,
         snapshotProbes: diagnostics.snapshotProbes.filter((item) => item.requestId === requestId).length,
         correlatedRequestCount: diagnostics.requests.filter((item) => item.requestId === requestId).length,
@@ -2886,6 +3111,7 @@ async function requireUnchangedWatcherSnapshotProbe(
   );
   if (quiet.diagnostics.requests.some((item) => item.requestId === requestId)
     || quiet.diagnostics.consumedResults.some((item) => item.requestId === requestId)
+    || quiet.diagnostics.watcherRescanRequests.filter((item) => item.requestId === requestId).length !== 1
     || quiet.diagnostics.watcherHints.filter((item) => item.requestId === requestId).length !== 1
     || quiet.diagnostics.snapshotProbes.filter((probe) => probe.requestId === requestId).length !== 2
     || !quiet.noRefreshRequest || !quiet.noRefreshResult) {
@@ -2893,6 +3119,8 @@ async function requireUnchangedWatcherSnapshotProbe(
   }
   return {
     request_id: requestId,
+    wake_event: wakeReceipt,
+    watcher_rescan_request: observed.watcherRescanRequest,
     watcher_hint: observed.watcherHint,
     scheduled_probe: observed.scheduled,
     probe_result: observed.result,
@@ -4355,7 +4583,7 @@ type WindowsTopLevelWindow = {
   read_error?: string;
 };
 
-function windowsTopLevelWindowInventory(): WindowsTopLevelWindow[] {
+function windowsTopLevelWindowInventory(timeoutMs?: number): WindowsTopLevelWindow[] {
   const script = `
     $ErrorActionPreference = "Stop"
     Add-Type -AssemblyName UIAutomationClient
@@ -4395,7 +4623,11 @@ function windowsTopLevelWindowInventory(): WindowsTopLevelWindow[] {
     }
     ConvertTo-Json -InputObject @($windows) -Depth 3 -Compress
   `;
-  const output = execFileSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", script], {encoding: "utf8", stdio: ["ignore", "pipe", "pipe"]}).trim();
+  const output = execFileSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", script], {
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "pipe"],
+    ...(timeoutMs === undefined ? {} : {timeout: Math.max(1, timeoutMs)}),
+  }).trim();
   if (!output || output === "null") throw new Error("Windows top-level UIA inventory returned no JSON window list");
   let value: unknown;
   try {
@@ -15414,6 +15646,8 @@ async function runReferenceExternalNoteRefresh(
     join(reportDirectory, "openobsidian.log"),
     vaultWatcherHintRequestFile,
     creationRevision,
+    child,
+    window.window_id,
   );
   const refreshedList = await waitFor("OpenObsidian to finish refreshing its note list after external creation", async () => {
     await delay(350);

@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
-  "status": "R3.19 is terminal-failed and fully reconciled on exact SHA 57a28b2d371be576d1d4aebb1ea77d1b47b17fb9. R3.20 implementation and integrated review are complete; the final exact-base/no-active-CI submission gate is pending.",
-  "updated_at": "2026-10-16T23:13:14Z",
+  "status": "R3.20 is terminal-failed and fully reconciled on exact SHA a0049c751d82540a9eca12e5323c05c673beacf9. R3.21 implementation is complete and independently reviewed locally; the single milestone push awaits the final exact-base/no-active-CI preflight.",
+  "updated_at": "2026-10-16T23:42:38Z",
   "branch": "codex/r3.3-tracker",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R3",
-  "last_reconciled_head": "57a28b2d371be576d1d4aebb1ea77d1b47b17fb9",
-  "current_milestone": "R3.20 consolidated repair of terminal R3.19 exact-SHA CI failures; implementation and integrated review complete, final submission gate pending",
-  "next_action": "Verify live origin/main remains 57a28b2d371be576d1d4aebb1ea77d1b47b17fb9 and no exact-SHA CI batch is active, then push the reviewed R3.20 milestone once. Do not push partial work.",
-  "push_status": "R3.19 was pushed once by fast-forward to origin/main at 57a28b2d371be576d1d4aebb1ea77d1b47b17fb9. Its seven required workflows and 20 jobs are terminal: four workflows/13 jobs passed and three workflows/seven jobs failed. All 12 artifacts are accounted for; nine non-preview archives match API digests and three large previews are metadata-only. R3.20 is implemented and independently reviewed locally; the exact-base/no-active-batch gate remains before its one push.",
+  "last_reconciled_head": "a0049c751d82540a9eca12e5323c05c673beacf9",
+  "current_milestone": "R3.21 Rust CI and unchanged watcher-probe wake-up repair; implementation complete and reviewed locally, single milestone push pending preflight",
+  "next_action": "Confirm origin/main still equals a0049c751d82540a9eca12e5323c05c673beacf9 and no exact-SHA CI batch is active, then commit and push the complete R3.21 milestone once. Hold main at its submitted SHA through the full required CI batch.",
+  "push_status": "R3.20 is terminal-failed and fully reconciled on exact SHA a0049c751d82540a9eca12e5323c05c673beacf9 (7 workflows, 20 jobs, 12 artifacts accounted for). R3.21 is complete and approved locally, remains unpushed, and is ready for one milestone push after final preflight. No minor-change or status-only push.",
   "blockers": [
     "C07.3 pinned Obsidian reference capture passed all 14 scenarios on first open and reopen across Linux, macOS, and Windows at exact SHA 0a9cb9c00835881a7629c96721974dfa9461cc50; see evidence/r2.8.129-attempt-1-0a9cb9c.json. Rust parity remains pending. Separate mixed-worktree C07.3 edits remain local and are excluded from the C07.4 candidate; review and submit them separately. Do not claim a full-fixture membership oracle from reference UI results.",
     "R2.8.120 failed its terminal exact-SHA CI batch on 985af8aa18be53c285221b2ed21d4062e69b9f3d. Linux C07.3 table row diagnostics reject visible rows despite each uniquely matching an already captured fixture path; formula Kanban extraction records no card memberships although the screenshot shows the 5/4/4/0 cards. macOS display metrics failed before first-run picker interaction, and Windows stopped after picker closure when the host HWND changed. See evidence/r2.8.120-attempt-1-985af8a.json; keep C07.3 pending.",
@@ -78,7 +78,7 @@
       ],
       "implementation_sha": "15ee500b04be9acef86a1b5fbf3d1e0ccb5bf7b7",
       "next_action": "R3.11 is terminal-failed and fully report-reconciled on exact SHA 7f2dd3efd47ce1df3f14fb9cf07519afc408ca6b. Keep origin/main pinned. Freshly review R3.12 revision 5: preserve all Mac fixture completeness and per-phase enumeration-stability predicates, remove only the hardcoded creation-order equality, retain raw tie-order evidence, and strictly compare pinned view outputs; also review the bounded Linux crop repair. No implementation, commit, or push until the complete milestone is reviewed.",
-      "implementation_sha_note": "15ee500b04be9acef86a1b5fbf3d1e0ccb5bf7b7 is the last accepted R2 Rust implementation milestone (R2.8.114); R2.8.115–R2.8.121 are reference-capture/harness work, and R2.8.119, R2.8.120 and R2.8.121 failed."
+      "implementation_sha_note": "15ee500b04be9acef86a1b5fbf3d1e0ccb5bf7b7 is the last accepted R2 Rust implementation milestone (R2.8.114); R2.8.115\u2013R2.8.121 are reference-capture/harness work, and R2.8.119, R2.8.120 and R2.8.121 failed."
     },
     "R3": {
       "status": "in_progress",
@@ -91,18 +91,18 @@
         "OpenObsidian plugin renderer matrix",
         "OpenObsidian loaded plugin workflows"
       ],
-      "implementation_sha": "37994bfb0cdea541f907a33b2c38527a411ca2c7",
-      "current_milestone": "R3.20-R3.19-TERMINAL-CI-REPAIR",
-      "milestone_status": "R3.19 is terminal-failed and fully reconciled on exact SHA 57a28b2d371be576d1d4aebb1ea77d1b47b17fb9. R3.20 implementation and integrated review are complete; the final exact-base/no-active-CI submission gate is pending. No local executable validation or push.",
-      "next_action": "Verify origin/main still equals 57a28b2d371be576d1d4aebb1ea77d1b47b17fb9 and no exact-SHA CI batch is active before one R3.20 push. Reconcile all required jobs and artifacts before any later push.",
+      "implementation_sha": "a0049c751d82540a9eca12e5323c05c673beacf9",
+      "current_milestone": "R3.21 Rust CI and unchanged watcher-probe wake-up repair; implementation complete and reviewed locally, single milestone push pending preflight",
+      "milestone_status": "R3.20 terminal-failed and fully reconciled on exact SHA a0049c751d82540a9eca12e5323c05c673beacf9 (7/7 workflows, 20/20 jobs, 12/12 artifacts); R3.21 implementation is complete and independently reviewed locally, unpushed, with one push pending final preflight.",
+      "next_action": "Confirm origin/main still equals a0049c751d82540a9eca12e5323c05c673beacf9 and no exact-SHA CI batch is active, then commit and push the complete R3.21 milestone once. Hold main at its submitted SHA through the full required CI batch.",
       "roundtrip_reports_reconciled": true,
       "roundtrip_report_hashes": {
         "Linux": "1f516637e066b81c3a52ebc63168565db68f47214bdcae60d99c7923e2ef4132",
         "Windows": "7746147c29f75904220854abd11ebcae2714e91cf462c2ec94e928dc9eb12db8",
         "macOS": "22e067108d9ceb05889ca6a13e9d0718eda62fbaa8904af898e4ccac66faca12"
       },
-      "current_ci_evidence": ".agents/tasks/2026-10-07/evidence/r2.8.151-r3-19-r3-18-ci-repair-candidate.json",
-      "updated_at": "2026-10-16T23:13:14Z"
+      "current_ci_evidence": ".agents/tasks/2026-10-07/evidence/r3-20-r3-19-terminal-ci-repair-ci.json",
+      "updated_at": "2026-10-16T23:42:38Z"
     },
     "R4": {
       "status": "pending",
@@ -124,9 +124,9 @@
       "required_ci": [],
       "implementation_sha": null
     },
-    "milestone_status": "R3.19 is terminal-failed and fully reconciled on exact SHA 57a28b2d371be576d1d4aebb1ea77d1b47b17fb9: 4/7 workflows and 13/20 jobs passed; all workflows, jobs, and 12 artifact records are reconciled. R3.20 implementation and integrated review are complete; the final exact-base/no-active-CI submission gate is pending.",
-    "next_action": "Recheck origin/main and active CI before the single R3.20 push. Do not run local executable validation or dispatch CI for minor edits.",
-    "updated_at": "2026-10-16T23:13:14Z"
+    "milestone_status": "R3.20 is terminal-failed and fully reconciled on exact SHA a0049c751d82540a9eca12e5323c05c673beacf9: all 7 workflows, 20 jobs and 12 artifacts are accounted for. R3.21 implementation is now in progress locally, unpushed, with whole-milestone review pending.",
+    "next_action": "Finish the R3.21 implementation and tracker updates locally, obtain independent whole-milestone review, then submit it once to origin/main after confirming no full CI batch is active. Keep origin/main at a0049c751d82540a9eca12e5323c05c673beacf9 until submission.",
+    "updated_at": "2026-10-16T23:42:38Z"
   },
   "completed_actions": [
     "Pushed reviewed C07.3 attempt 3 once to origin/main at 1ded8e1ac2237c7b61ca38b46e1d1d777d0225c5; recorded the initial exact-SHA status in .agents/tasks/2026-10-07/evidence/r2.8.127-attempt-3-1ded8e1.json. Keep origin/main fixed until all seven workflows and 20 jobs are terminal.",
@@ -143,10 +143,10 @@
     "Pushed the completed R2.8.100 repair batch to origin/main as f41b46f5f668e306b475fc305c475f09d76cd79d after confirming the remote remained on 0ac90e2. The repair batch includes the CI-requested formatter correction, bounded Windows attachment-preview diagnostics, the goal's milestone push policy, and attempt 1 evidence; unfinished C07 implementation stayed local. Seven exact-SHA workflows were queued or in progress at capture. No local executable validation was run.",
     "Reconciled R2.8.100 attempt 1 on exact SHA 0ac90e2dcbda516271c041853236215d6f08a605 after all seven required workflows reached terminal state. Rust CI failed Ubuntu formatting and Windows was cancelled after the attachment-preview test stalled; the other 16 jobs passed. All 13 artifact IDs, sizes, archive digests, and expirations returned by the exact-run artifact API are in evidence/r2.8.100-attempt-1-0ac90e2.json. The run is not accepted. No local executable validation was run.",
     "Committed only the CI-directed formatting correction in crates/testkit/src/lib.rs as d6d4661fdcf139ab1459ff97f94675d9befa26ff on local main. origin/main remains at the active run SHA 0ac90e2dcbda516271c041853236215d6f08a605; no push or local validation occurred.",
-    "Read-only R3 audit expanded C07.7–C07.9 for typed Table summaries/displayName semantics, per-layout settings and documented Kanban actions/restrictions, and live this.file context including sidebar file switches. Added pinned Obsidian 1.14.4 references. C07.2 source review found the invalid-direction fixture assumed an unverified first-seen fallback; marked reference_status pending and moved that order to a provisional implementation_observation so it is not treated as compatibility evidence.",
+    "Read-only R3 audit expanded C07.7\u2013C07.9 for typed Table summaries/displayName semantics, per-layout settings and documented Kanban actions/restrictions, and live this.file context including sidebar file switches. Added pinned Obsidian 1.14.4 references. C07.2 source review found the invalid-direction fixture assumed an unverified first-seen fallback; marked reference_status pending and moved that order to a provisional implementation_observation so it is not treated as compatibility evidence.",
     "Clarified C07.2 probe acceptance: a no-transition result counts as invalid-direction fallback evidence only after the exact target .base is active; failed selection is recorded as a probe failure.",
     "Parallel read-only audits confirmed formula-derived Kanban grouping is supported by the pinned Obsidian 1.14.4 release docs, surfaced the exact C07.5 inventory/source/metadata caps and omission semantics, and pinned unsupported-filter row behavior as a reference question. C07.5 now names crates/vault inventory co-ownership and file.file/file.properties types; C07.3/C07.6 share a formula dependency/groupOrder fixture. The pushed C08 slice at 0ac90e2 had no high-confidence source-review defect. No local executable validation was run.",
-    "Delegated parallel read-only reviews of the C07.2 Obsidian probe, C07.3 groupOrder design, C07.4 comparator semantics, C07.5 vault metadata APIs, C07.6 expression semantics, and active R2.8.100 CI. Tightened the uncommitted C07.2 invalid-direction probe to record settled state samples, require actual target selection for acceptance, and retain no-transition observations through reopen. Expanded C07.3–C07.6 acceptance for typed group identity/labels and malformed fallbacks, JavaScript number/locale policy, bounded all-file inventories, honest timestamp availability, indexed Markdown metadata, deterministic formula dependencies, and unsupported-filter diagnostics; added the checksum-pinned Obsidian release reference to R2 C07.2–C07.6. These edits remain local behind R2.8.100 attempt 1; no local executable validation was run.",
+    "Delegated parallel read-only reviews of the C07.2 Obsidian probe, C07.3 groupOrder design, C07.4 comparator semantics, C07.5 vault metadata APIs, C07.6 expression semantics, and active R2.8.100 CI. Tightened the uncommitted C07.2 invalid-direction probe to record settled state samples, require actual target selection for acceptance, and retain no-transition observations through reopen. Expanded C07.3\u2013C07.6 acceptance for typed group identity/labels and malformed fallbacks, JavaScript number/locale policy, bounded all-file inventories, honest timestamp availability, indexed Markdown metadata, deterministic formula dependencies, and unsupported-filter diagnostics; added the checksum-pinned Obsidian release reference to R2 C07.2\u2013C07.6. These edits remain local behind R2.8.100 attempt 1; no local executable validation was run.",
     "R2.8.99 attempt 3 accepted on exact source SHA b0ea75d06f3e2565b8c5dad706708561ec5190b4 after all seven required GitHub Actions workflows and all 20 jobs passed. Rust CI passed on Rust 1.95 and Ubuntu/Windows/macOS; Obsidian 1.14.4 vault round-trip passed on Linux/Windows/macOS. All 16 artifact IDs, sizes, SHA-256 digests, and expirations are recorded in evidence/r2.8.99-attempt-3-b0ea75d.json. No local project validation was run.",
     "C06.1 and C07.1 were reconciled as passing against accepted exact-SHA evidence: C06.1 uses R2.8.95 attempt 6 SHA adc1ddce142f41dd250c37722ed8b48b9194bd5c; C07.1 uses R2.8.99 attempt 3 SHA b0ea75d06f3e2565b8c5dad706708561ec5190b4. R2.8.98 attempt 5 was excluded because its evidence says the C07.1 UI work was outside that SHA. C06 stays pending because full file/web/link/group/edge editing and rich-fixture reference-app reopen coverage remain incomplete. C07 stays pending because locale sort, groupBy.direction, and JavaScript numeric behavior above 2^53 remain bounded. No local validation was run.",
     "R2.8.99 attempt 2 completed, not accepted, on exact SHA 18c13710a5973ef6628585c391a4d033ca9fb8fe. Inventory, quality, desktop build, plugin renderer, and loaded-plugin workflows passed. Rust CI failed on four jobs because of the embedded Bases panel test; Linux round-trip failed an OCR spelling check while macOS and Windows passed. Exact job results and all 12 artifact IDs, sizes, SHA-256 digests, and expirations are recorded in evidence/r2.8.99-attempt-2-18c1371.json. No local executable validation was run.",
@@ -353,8 +353,8 @@
     "R2.6.65 attempt 9 on 7c29a1a: Rust CI and all six companion workflows passed; native folder selection/cancellation failed on all platforms. CI identified an unresolved selected path on Ubuntu, an unconfirmed native-panel Open action on macOS, and PowerShell quoting failure on Windows. Evidence: evidence/r2.6.65-cancellation-attempt-9-7c29a1a.json.",
     "R2.6.65 attempt 10 on exact SHA f32dd3d: Rust CI, quality, desktop build, plugin renderer, loaded-plugin workflows and inventory passed. Windows passed native picker cancellation and vault/app-data snapshot checks; Ubuntu could not canonicalize the selected vault (ENOENT), and macOS did not expose the Open button to the current accessibility lookup. Evidence: evidence/r2.6.65-cancellation-attempt-10-f32dd3d.json.",
     "R2.6.65 attempt 11 on exact SHA 678c11d: Rust CI and all six companion workflows passed. The initial native round-trip failed on all platforms; a same-SHA Windows rerun passed selection, cancellation, snapshots and Obsidian reopen. Linux confirmed the focused path but failed canonicalization after Return; macOS exposed the Open panel window but not the nested Open button. Evidence: evidence/r2.6.65-cancellation-attempt-11-678c11d.json.",
-    "R2.6.65 attempt 12 on exact SHA 790f365: the six non-round-trip workflows passed; native round-trip failed on all platforms. Linux clicked below Zenity’s visible OK button, macOS waited for app.ron before opening the cancellation picker, and Windows did not open the second picker. Evidence: evidence/r2.6.65-cancellation-attempt-12-790f365.json.",
-    "R2.6.65 attempt 13 on exact SHA be878dc: Rust CI and all six companion workflows passed. Native cancellation/reopen passed on macOS and on the same-SHA Windows rerun; Ubuntu clicked Zenity’s visible OK button but selected-vault canonicalization failed (ENOENT). Evidence: evidence/r2.6.65-cancellation-attempt-13-be878dc.json.",
+    "R2.6.65 attempt 12 on exact SHA 790f365: the six non-round-trip workflows passed; native round-trip failed on all platforms. Linux clicked below Zenity\u2019s visible OK button, macOS waited for app.ron before opening the cancellation picker, and Windows did not open the second picker. Evidence: evidence/r2.6.65-cancellation-attempt-12-790f365.json.",
+    "R2.6.65 attempt 13 on exact SHA be878dc: Rust CI and all six companion workflows passed. Native cancellation/reopen passed on macOS and on the same-SHA Windows rerun; Ubuntu clicked Zenity\u2019s visible OK button but selected-vault canonicalization failed (ENOENT). Evidence: evidence/r2.6.65-cancellation-attempt-13-be878dc.json.",
     "R2.6.65 attempt 14 on exact SHA d7a666f: Rust CI and all six companion workflows passed. Native selection/cancellation/snapshots/reopen passed on macOS and Windows; Ubuntu still failed selected-vault canonicalization (ENOENT) after clearing the Ctrl+L location entry. Evidence: evidence/r2.6.65-cancellation-attempt-14-d7a666f.json.",
     "R2.6.65 attempt 15 on exact SHA 5a4ae4e: initial round-trip failed on all three platforms; same-SHA macOS attempt 2 and Windows attempt 3 passed native cancellation, snapshots and Obsidian reopen. Ubuntu failed path canonicalization after typed location text contained extra trailing characters. Rust CI and all six companion workflows passed. Evidence: evidence/r2.6.65-cancellation-attempt-15-5a4ae4e.json.",
     "R2.6.65 attempt 20 on exact SHA 2e8447c: Rust CI and all six companion workflows passed, as did applicable native parallel groups. Windows and macOS passed cancellation, snapshots and Obsidian reopen; Ubuntu displayed the selected fixture but egui did not receive the second Open vault click. Evidence: evidence/r2.6.65-cancellation-attempt-20-2e8447c.json.",
@@ -407,7 +407,7 @@
     "R2.8.92 accepted on exact source SHA 1a025db5ef713eb6e89c4f7654e97e125af9d992 after all seven workflows passed; structured tracker status reconciled in this checkpoint. See evidence/r2.8.92-attempt-2-1a025db.json.",
     "R2.8.93 attempt 1 completed on exact source SHA 392014b2481975adfc7e07a7c8aff3ad3648e3eb: six workflows passed and Rust CI failed only Ubuntu formatting. Full workflow/job/artifact evidence is in evidence/r2.8.93-attempt-1-392014b.json; exact correction prepared for the next push.",
     "R2.8.95 attempt 3 completed on exact SHA a0053ac932b5aa55c18df7e30ccfdf5d45604583 and is not accepted. Quality, desktop build, plugin renderer, and loaded-plugin workflows passed. Inventory failed on five changed Electron file hashes; Rust CI passed Rust 1.95 and failed test-only cmp_owned comparisons on Ubuntu/macOS/Windows; the three-platform Obsidian round-trip failed on UI automation. macOS clicked the wrapped New Markdown path field about 15 pixels high after a vault-refresh status shifted the form, overwriting the Canvas path and leaving Preview disabled. Exact workflow/job IDs, 12 artifact IDs, sizes, and digests are in evidence/r2.8.95-attempt-3-a0053ac.json. No local tests, builds, formatters, linters, validators, or app launches were run.",
-    "R2.8.95 attempt 4 ran on exact source SHA b14b10c7dd4678f03a4ecf1a10b571d3321693fb and is not accepted. Inventory, desktop build, plugin renderer, loaded-plugin workflows, and Rust CI passed (including Rust 1.95 and all three OSes). Quality failed on all three OSes because Knip reported unlisted pbcopy. The Obsidian 1.14.4 round-trip passed on Linux; macOS exact clipboard readback and screenshot showed the expected Markdown destination but OCR read the .md suffix as “mq”, blocking preview before note creation; Windows exact readback stopped at 28 characters of the expected 32-character prefix while editing an unsaved draft, before Canvas Save. Exact run/job IDs and 12 artifact IDs, sizes and digests are recorded in evidence/r2.8.95-attempt-4-b14b10c.json. Focused attempt 5 fixes are prepared; no local tests, builds, formatters, linters, validators or application launches were run.",
+    "R2.8.95 attempt 4 ran on exact source SHA b14b10c7dd4678f03a4ecf1a10b571d3321693fb and is not accepted. Inventory, desktop build, plugin renderer, loaded-plugin workflows, and Rust CI passed (including Rust 1.95 and all three OSes). Quality failed on all three OSes because Knip reported unlisted pbcopy. The Obsidian 1.14.4 round-trip passed on Linux; macOS exact clipboard readback and screenshot showed the expected Markdown destination but OCR read the .md suffix as \u201cmq\u201d, blocking preview before note creation; Windows exact readback stopped at 28 characters of the expected 32-character prefix while editing an unsaved draft, before Canvas Save. Exact run/job IDs and 12 artifact IDs, sizes and digests are recorded in evidence/r2.8.95-attempt-4-b14b10c.json. Focused attempt 5 fixes are prepared; no local tests, builds, formatters, linters, validators or application launches were run.",
     "R2.8.98 attempt 3 on exact SHA 8bbcaaffbf4247786e87b3065549fe67881a6e1c completed and is not accepted. Six required workflows passed; Rust CI failed on MSRV 1.95, Ubuntu, Windows, and macOS because the selector fixture placed a JSON formula at the root rather than inside the selected view (114 passed, 1 failed per job), and Ubuntu also reported four rustfmt-only layout differences. The focused attempt 4 source correction is prepared. Exact jobs and all 12 artifact IDs/sizes/digests are in evidence/r2.8.98-attempt-3-8bbcaaf.json. No local validation was run.",
     "R2.8.98 attempt 4 on exact SHA 1d096a859c9d95cb0d6c047cd3cb25c858b35310 completed and is not accepted. Inventory, quality, desktop build, loaded plugins, plugin renderer, and Linux/Windows/macOS Obsidian round-trip passed; Rust CI passed MSRV 1.95 and workspace tests but failed Clippy on large_enum_variant and let_and_return on Ubuntu/macOS/Windows. Focused correction boxes BaseFileEvaluation in the asynchronous message and returns the view-label match directly. All exact jobs and 12 artifact IDs/sizes/digests are in evidence/r2.8.98-attempt-4-1d096a8.json. No local validation was run.",
     "R2.8.102 attempt 1 reconciled at exact SHA 636b8fbe935b4225ef724d1fa56df3a7d92c4d49: six required workflows passed, while all three Obsidian round-trip jobs failed after Obsidian normalized noncanonical Ascending.base YAML. ASC/DESC multi-table observations matched across platforms; omitted/invalid and reopen capture remain incomplete. Full job/artifact evidence is evidence/r2.8.102-attempt-1-636b8fb.json.",
@@ -2519,7 +2519,7 @@
       "conclusion": "success"
     },
     {
-      "name": "OpenObsidian Rust CI — R2.6.3 acceptance record",
+      "name": "OpenObsidian Rust CI \u2014 R2.6.3 acceptance record",
       "run_id": 37721508959,
       "head_sha": "ba556c94ba1017ec6103417d104d8e5565f8523b",
       "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37721508959",
@@ -2527,7 +2527,7 @@
       "conclusion": "success"
     },
     {
-      "name": "Rust migration inventory — R2.6.3 acceptance record",
+      "name": "Rust migration inventory \u2014 R2.6.3 acceptance record",
       "run_id": 37721508917,
       "head_sha": "ba556c94ba1017ec6103417d104d8e5565f8523b",
       "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37721508917",
@@ -2535,7 +2535,7 @@
       "conclusion": "success"
     },
     {
-      "name": "OpenObsidian quality — R2.6.3 acceptance record",
+      "name": "OpenObsidian quality \u2014 R2.6.3 acceptance record",
       "run_id": 37721508969,
       "head_sha": "ba556c94ba1017ec6103417d104d8e5565f8523b",
       "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37721508969",
@@ -2543,7 +2543,7 @@
       "conclusion": "success"
     },
     {
-      "name": "OpenObsidian desktop build — R2.6.3 acceptance record",
+      "name": "OpenObsidian desktop build \u2014 R2.6.3 acceptance record",
       "run_id": 37721508982,
       "head_sha": "ba556c94ba1017ec6103417d104d8e5565f8523b",
       "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37721508982",
@@ -2551,7 +2551,7 @@
       "conclusion": "success"
     },
     {
-      "name": "OpenObsidian plugin renderer matrix — R2.6.3 acceptance record",
+      "name": "OpenObsidian plugin renderer matrix \u2014 R2.6.3 acceptance record",
       "run_id": 37721508946,
       "head_sha": "ba556c94ba1017ec6103417d104d8e5565f8523b",
       "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37721508946",
@@ -2559,7 +2559,7 @@
       "conclusion": "success"
     },
     {
-      "name": "OpenObsidian loaded plugin workflows — R2.6.3 acceptance record",
+      "name": "OpenObsidian loaded plugin workflows \u2014 R2.6.3 acceptance record",
       "run_id": 37721508954,
       "head_sha": "ba556c94ba1017ec6103417d104d8e5565f8523b",
       "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37721508954",
@@ -2567,7 +2567,7 @@
       "conclusion": "success"
     },
     {
-      "name": "OpenObsidian Rust CI — R2.6.4 first source attempt",
+      "name": "OpenObsidian Rust CI \u2014 R2.6.4 first source attempt",
       "run_id": 37721968241,
       "head_sha": "c250d741201d99fdd152c3e2ee8c87b430e26e8b",
       "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37721968241",
@@ -2575,7 +2575,7 @@
       "conclusion": "failure"
     },
     {
-      "name": "Rust migration inventory — R2.6.4 first source attempt",
+      "name": "Rust migration inventory \u2014 R2.6.4 first source attempt",
       "run_id": 37721968264,
       "head_sha": "c250d741201d99fdd152c3e2ee8c87b430e26e8b",
       "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37721968264",
@@ -2583,7 +2583,7 @@
       "conclusion": "success"
     },
     {
-      "name": "OpenObsidian quality — R2.6.4 first source attempt",
+      "name": "OpenObsidian quality \u2014 R2.6.4 first source attempt",
       "run_id": 37721968253,
       "head_sha": "c250d741201d99fdd152c3e2ee8c87b430e26e8b",
       "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37721968253",
@@ -2591,7 +2591,7 @@
       "conclusion": "success"
     },
     {
-      "name": "OpenObsidian desktop build — R2.6.4 first source attempt",
+      "name": "OpenObsidian desktop build \u2014 R2.6.4 first source attempt",
       "run_id": 37721968268,
       "head_sha": "c250d741201d99fdd152c3e2ee8c87b430e26e8b",
       "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37721968268",
@@ -2599,7 +2599,7 @@
       "conclusion": "success"
     },
     {
-      "name": "OpenObsidian plugin renderer matrix — R2.6.4 first source attempt",
+      "name": "OpenObsidian plugin renderer matrix \u2014 R2.6.4 first source attempt",
       "run_id": 37721968230,
       "head_sha": "c250d741201d99fdd152c3e2ee8c87b430e26e8b",
       "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37721968230",
@@ -2607,7 +2607,7 @@
       "conclusion": "success"
     },
     {
-      "name": "OpenObsidian loaded plugin workflows — R2.6.4 first source attempt",
+      "name": "OpenObsidian loaded plugin workflows \u2014 R2.6.4 first source attempt",
       "run_id": 37721968229,
       "head_sha": "c250d741201d99fdd152c3e2ee8c87b430e26e8b",
       "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37721968229",
@@ -29903,7 +29903,7 @@
             "loaded_plugin_workflows": 37866205571
           },
           "finding": "Pinned Obsidian 1.14.4 authored Untitled.md with the expected attachment embed. OpenObsidian showed the selected vault and two-note count; its managed app-data directory was outside the vault and unchanged. Reopening restored the note and listed Assets/roundtrip image.png. All 22 vault entries matched before/after OpenObsidian and after Obsidian reopen, with no workspace-state changes.",
-          "correction": "Read the exact embed from the reopened note source and verify the attachment path in Obsidian’s expanded file tree; capture the reopened UI screenshot. The earlier innerText expectation incorrectly treated live-preview text as Markdown source.",
+          "correction": "Read the exact embed from the reopened note source and verify the attachment path in Obsidian\u2019s expanded file tree; capture the reopened UI screenshot. The earlier innerText expectation incorrectly treated live-preview text as Markdown source.",
           "evidence": "evidence/r2.6.48-roundtrip-ci-3b621df.json"
         }
       ],
@@ -30783,7 +30783,7 @@
         }
       ],
       "accepted_slice": [
-        "The Unicode and space-containing Guides/日本語 intro.md path remains canonical when selected on all three OSes.",
+        "The Unicode and space-containing Guides/\u65e5\u672c\u8a9e intro.md path remains canonical when selected on all three OSes.",
         "Selection clears prior link/embed/preview/error/texture state and displays the selected source byte-for-byte, including its UTF-8 BOM and CRLF bytes.",
         "Full vault and separate app-data snapshots remain unchanged through selection, preview, and UI teardown."
       ],
@@ -31334,7 +31334,7 @@
         {
           "source_sha": "790f36544b29731d48478d43948214d92af32106",
           "attempt": 12,
-          "conclusion": "The six non-round-trip workflows passed: Rust CI, quality, desktop build, plugin renderer, loaded-plugin workflows, and inventory. Their native parallel groups passed. The native round-trip failed on all three platforms: Linux clicked below Zenity’s visible OK button; macOS waited for app.ron before opening the cancellation picker, though prior artifacts show eframe creates it after the picker opens; Windows reported Open vault disabled and opened no cancellation picker. Windows had passed an earlier same-SHA rerun, so this remains intermittent.",
+          "conclusion": "The six non-round-trip workflows passed: Rust CI, quality, desktop build, plugin renderer, loaded-plugin workflows, and inventory. Their native parallel groups passed. The native round-trip failed on all three platforms: Linux clicked below Zenity\u2019s visible OK button; macOS waited for app.ron before opening the cancellation picker, though prior artifacts show eframe creates it after the picker opens; Windows reported Open vault disabled and opened no cancellation picker. Windows had passed an earlier same-SHA rerun, so this remains intermittent.",
           "workflows": {
             "obsidian_vault_roundtrip": 37924569487,
             "rust_ci": 37924569448,
@@ -31364,12 +31364,12 @@
             }
           },
           "evidence": "evidence/r2.6.65-cancellation-attempt-12-790f365.json",
-          "correction": "Click Linux’s visible OK button after the focused full-path entry. On macOS, open the native picker first, then settle and snapshot eframe app.ron before Escape; verify that it contains only eframe window/UI state and no vault or app-data paths. Keep Windows code unchanged pending a fresh exact-SHA result."
+          "correction": "Click Linux\u2019s visible OK button after the focused full-path entry. On macOS, open the native picker first, then settle and snapshot eframe app.ron before Escape; verify that it contains only eframe window/UI state and no vault or app-data paths. Keep Windows code unchanged pending a fresh exact-SHA result."
         },
         {
           "source_sha": "be878dc5836726c2eac6cc7e75bf533cc6a34018",
           "attempt": 13,
-          "conclusion": "Rust CI and all six companion workflows passed. Native cancellation/reopen passed on macOS and on the same-SHA Windows rerun; the initial Windows job failed to open the cancellation picker, and Ubuntu failed selected-vault canonicalization (ENOENT) after clicking Zenity’s visible OK button.",
+          "conclusion": "Rust CI and all six companion workflows passed. Native cancellation/reopen passed on macOS and on the same-SHA Windows rerun; the initial Windows job failed to open the cancellation picker, and Ubuntu failed selected-vault canonicalization (ENOENT) after clicking Zenity\u2019s visible OK button.",
           "workflows": {
             "obsidian_vault_roundtrip": 37926559925,
             "rust_ci": 37926559989,
@@ -31853,7 +31853,7 @@
       "evidence": "evidence/r2.6.66-attempt-4-9b08663.json",
       "scope": "Verify that read-only link resolution and note-embed preview do not expose Markdown files outside an opened vault.",
       "acceptance": [
-        "A nested note’s relative Markdown link and embed to a sibling outside-vault file remain unresolved with no resolved target.",
+        "A nested note\u2019s relative Markdown link and embed to a sibling outside-vault file remain unresolved with no resolved target.",
         "The embed is not rendered, and outside-target contents do not appear in the UI report.",
         "Vault, app-data, and outside-target bytes remain unchanged after link resolution and UI teardown on Ubuntu, macOS, and Windows.",
         "The focused egui test and all required companion workflows pass on the exact implementation SHA in GitHub Actions; broader C01/C01.2 requirements remain pending."
@@ -36556,7 +36556,7 @@
               "artifact_id": 11686484970
             }
           },
-          "finding": "Linux OCR missed the visible refresh control; Windows tried the refresh control while disabled and OCR missed the visible menu option; macOS OCR did not match the path-specific preview-close anchor containing Ω."
+          "finding": "Linux OCR missed the visible refresh control; Windows tried the refresh control while disabled and OCR missed the visible menu option; macOS OCR did not match the path-specific preview-close anchor containing \u03a9."
         },
         {
           "source_sha": "4fa4fdf5e3b588341e1f2aa044513833b12f068e",
@@ -39236,7 +39236,7 @@
             "rust_ci": 38195087211,
             "vault_roundtrip": 38195087228
           },
-          "finding": "Six required workflows passed. The Windows Obsidian round-trip passed. Linux reached the final Canvas confirmation screen, but the exact OCR predicate read “text” as “bext” and timed out. macOS reached review, then accessibility could not locate Confirm and create note and OCR could not find the button; no note was written. Both platforms reported no vault mismatch. See evidence/r2.8.94-attempt-7-6505a8b.json for exact run/job IDs and artifact digests. No local executable validation ran."
+          "finding": "Six required workflows passed. The Windows Obsidian round-trip passed. Linux reached the final Canvas confirmation screen, but the exact OCR predicate read \u201ctext\u201d as \u201cbext\u201d and timed out. macOS reached review, then accessibility could not locate Confirm and create note and OCR could not find the button; no note was written. Both platforms reported no vault mismatch. See evidence/r2.8.94-attempt-7-6505a8b.json for exact run/job IDs and artifact digests. No local executable validation ran."
         },
         {
           "attempt": 8,
@@ -39599,7 +39599,7 @@
             "loaded_plugins": 38220445101,
             "inventory": 38220445135
           },
-          "finding": "Attempt 3 completed on the exact source SHA. Inventory, quality, desktop build, plugin renderer, loaded-plugin workflows, and Obsidian vault round-trip passed. Rust CI failed on Rust 1.95, macOS, Ubuntu, and Windows: each job reported 114 passed and 1 failed in tests::egui_bases_selectors_use_exact_paths_and_source_view_indices because the expected visible label “Boards/Tasks.base: Unsupported Bases formula: date(today)” was absent. The JSON fixture placed formulas at the document root, while JSON Bases formulas are read from individual views; the correction moves the formula into the selected first view. Ubuntu also reported four rustfmt layout differences in crates/ui-egui/src/lib.rs, all corrected in the current focused source diff. Exact job results and all 12 artifact IDs, sizes, archive SHA-256 digests, and expirations are recorded in the attempt evidence. No local validation was run."
+          "finding": "Attempt 3 completed on the exact source SHA. Inventory, quality, desktop build, plugin renderer, loaded-plugin workflows, and Obsidian vault round-trip passed. Rust CI failed on Rust 1.95, macOS, Ubuntu, and Windows: each job reported 114 passed and 1 failed in tests::egui_bases_selectors_use_exact_paths_and_source_view_indices because the expected visible label \u201cBoards/Tasks.base: Unsupported Bases formula: date(today)\u201d was absent. The JSON fixture placed formulas at the document root, while JSON Bases formulas are read from individual views; the correction moves the formula into the selected first view. Ubuntu also reported four rustfmt layout differences in crates/ui-egui/src/lib.rs, all corrected in the current focused source diff. Exact job results and all 12 artifact IDs, sizes, archive SHA-256 digests, and expirations are recorded in the attempt evidence. No local validation was run."
         },
         {
           "attempt": 4,
@@ -39674,7 +39674,7 @@
             "rust_ci": 38225556463,
             "vault_roundtrip": 38225556423
           },
-          "finding": "All seven exact-SHA workflows are terminal. Inventory, quality, desktop build, plugin renderer, and loaded-plugin workflows passed. Rust CI failed on all four jobs due to the new embedded Bases UI test selecting a stale view result on MSRV/Ubuntu/macOS, the slash-separated Windows fixture path, and Ubuntu rustfmt diffs. Round-trip passed on Windows and macOS but Ubuntu OCR missed “found” when it read “Faund”; the Linux artifact confirms the three-note refresh. All 12 artifact IDs, sizes, SHA-256 digests, and expirations are recorded in the attempt evidence. Corrections are prepared for a fresh CI attempt; no local validation was run."
+          "finding": "All seven exact-SHA workflows are terminal. Inventory, quality, desktop build, plugin renderer, and loaded-plugin workflows passed. Rust CI failed on all four jobs due to the new embedded Bases UI test selecting a stale view result on MSRV/Ubuntu/macOS, the slash-separated Windows fixture path, and Ubuntu rustfmt diffs. Round-trip passed on Windows and macOS but Ubuntu OCR missed \u201cfound\u201d when it read \u201cFaund\u201d; the Linux artifact confirms the three-note refresh. All 12 artifact IDs, sizes, SHA-256 digests, and expirations are recorded in the attempt evidence. Corrections are prepared for a fresh CI attempt; no local validation was run."
         },
         {
           "attempt": 2,
@@ -39944,7 +39944,7 @@
         "Retain the canonical native YAML seeds and strict source hashes; no .base or note source changes during first open, tab changes, reopen, or shutdown.",
         "For ASC and DESC, capture all ten seeded paths, every group including None with all four .base rows, and per-group row order from all visible Bases table roots on first open and reopen across Linux, macOS, and Windows.",
         "For the missing-direction native-YAML mapping, require the exact target .base to be selected and active as a Bases view; require settled state on first open and reopen; capture the `.bases-error` parse rejection, body, DOM diagnostics, screenshot, and empty group/row result; and require that error observation to be stable across reopen. Do not infer a default order.",
-        "After the omitted parse rejection, continue to SIDEWAYS and preserve the pinned app’s actual selected path, view type, settled body/notices, group/row observation, and screenshot on first open and reopen; do not assume fallback behavior.",
+        "After the omitted parse rejection, continue to SIDEWAYS and preserve the pinned app\u2019s actual selected path, view type, settled body/notices, group/row observation, and screenshot on first open and reopen; do not assume fallback behavior.",
         "Compare explicit ASC/DESC group and row order across reopen; compare the omitted parse-error state in its separate error-stability result; and compare unsupported-direction observations without asserting a fallback. Save every completed observation before opening the next case and retain source hashes at each boundary.",
         "All seven required GitHub Actions workflows pass on the exact pushed SHA and artifacts contain the three-platform reference reports. Executable validation runs only in GitHub Actions; do not push minor progress while building this milestone.",
         "goal.md explicitly says not to push after every minor change and to make one accumulated origin/main push after the named milestone implementation and CI-ready acceptance package are complete; keep the pushed SHA fixed until all required CI workflows finish."
@@ -42832,7 +42832,7 @@
             "status": "uncommitted; follow-up repair milestone planned after terminal R2.8.124 CI",
             "changes": [
               "Remove the second Return in macOS Go to Folder; retain exact AX panel identity, bounded Vision controls, and explicit enabled Open click.",
-              "Resolve the count-check column from the current group heading, read its count from that heading’s unique column-header count element, and require the live column/header to remain connected and match the captured column identity. Record count descendants, element class/text/bounds, both ordinals, connectivity, and heading containment on failure. The exact prior mismatch cause remains unproven."
+              "Resolve the count-check column from the current group heading, read its count from that heading\u2019s unique column-header count element, and require the live column/header to remain connected and match the captured column identity. Record count descendants, element class/text/bounds, both ordinals, connectivity, and heading containment on failure. The exact prior mismatch cause remains unproven."
             ],
             "local_executable_validation": false
           }
@@ -42844,7 +42844,7 @@
       "status": "failed / CI-terminal",
       "starting_sha": "d609d3400d622deca105bfc0ddb11e6eef19e781",
       "scope": "Repair the terminal R2.8.124 macOS picker dismissal and the cross-platform formula-dependent Kanban count gate in one bounded, reviewable round-trip harness milestone.",
-      "deliverable": "A fail-closed macOS Go to Folder flow that keeps the exact picker available for its explicit accessibility-verified Open click, plus a Kanban count check tied to the current group heading’s owning column/header with diagnostics that identify the exact column and count evidence. Preserve the exact-card-surface title-range fallback and all existing path, ownership, sweep, and reopen checks.",
+      "deliverable": "A fail-closed macOS Go to Folder flow that keeps the exact picker available for its explicit accessibility-verified Open click, plus a Kanban count check tied to the current group heading\u2019s owning column/header with diagnostics that identify the exact column and count evidence. Preserve the exact-card-surface title-range fallback and all existing path, ownership, sweep, and reopen checks.",
       "acceptance": [
         "On macOS, path entry leaves the same unique AX panel identity open; accessibility-bounded Vision confirms unique Cancel/Open controls before the explicit enabled Open click, and existing closure/cancel gates pass.",
         "On Windows and Linux, formula-dependent Kanban first-open and reopen each record all 13 unique paths in the expected 5/4/4/0 groups; each displayed header count equals its exact group membership, and the connected current heading-owned column/header matches its captured identity and has exactly one count element.",
@@ -42871,7 +42871,7 @@
         "status": "implementation-complete; independent static review complete; ready for one milestone submission",
         "changes": [
           "Remove the second Return from the macOS Go to Folder AppleScript path entry sequence.",
-          "Resolve the count-check column from its current heading, scope count lookup to that heading’s column header, require connected current/captured identity agreement, and include counts/identity/bounds in mismatch evidence."
+          "Resolve the count-check column from its current heading, scope count lookup to that heading\u2019s column header, require connected current/captured identity agreement, and include counts/identity/bounds in mismatch evidence."
         ],
         "local_executable_validation": false
       },
@@ -43989,22 +43989,21 @@
   "current_requirement_count": 221,
   "previous_ci_attempt": {
     "schema_version": 1,
-    "superseded_by": "R3.19 current_ci_batch; detailed R3.18 evidence is preserved here as history.",
-    "milestone_id": "R3.18",
-    "name": "R3.18 consolidated repair of R3.17 exact-SHA CI failures",
+    "milestone_id": "R3.19",
+    "name": "R3.19 consolidated repair of R3.18 exact-SHA CI failures",
     "attempt": 1,
-    "base_sha": "37994bfb0cdea541f907a33b2c38527a411ca2c7",
-    "implementation_sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
-    "submitted_sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+    "base_sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+    "implementation_sha": "57a28b2d371be576d1d4aebb1ea77d1b47b17fb9",
+    "submitted_sha": "57a28b2d371be576d1d4aebb1ea77d1b47b17fb9",
     "pushed_once": true,
     "status": "terminal_failed_artifacts_reconciled",
-    "triggered_at": "2026-10-16T21:47:45Z",
-    "last_polled_at": "2026-10-16T22:02:47Z",
+    "triggered_at": "2026-10-16T22:36:18Z",
+    "last_polled_at": "2026-10-16T22:49:55Z",
     "workflow_counts": {
       "observed": 7,
       "terminal": 7,
-      "passed": 5,
-      "failed": 2,
+      "passed": 4,
+      "failed": 3,
       "cancelled": 0,
       "queued": 0,
       "in_progress": 0
@@ -44019,833 +44018,62 @@
       "in_progress": 0
     },
     "run_ids": [
-      38971746806,
-      38971746799,
-      38971746893,
-      38971746857,
-      38971746956,
-      38971746972,
-      38971746871
+      38976742999,
+      38976743151,
+      38976743088,
+      38976743089,
+      38976743053,
+      38976743201,
+      38976743025
     ],
-    "workflow_runs": [
-      {
-        "name": "OpenObsidian Rust CI",
-        "run_id": 38971746806,
-        "status": "completed",
-        "conclusion": "failure",
-        "sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
-        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746806"
-      },
-      {
-        "name": "OpenObsidian loaded plugin workflows",
-        "run_id": 38971746799,
-        "status": "completed",
-        "conclusion": "success",
-        "sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
-        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746799"
-      },
-      {
-        "name": "Obsidian vault round-trip acceptance",
-        "run_id": 38971746893,
-        "status": "completed",
-        "conclusion": "failure",
-        "sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
-        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746893"
-      },
-      {
-        "name": "OpenObsidian desktop build",
-        "run_id": 38971746857,
-        "status": "completed",
-        "conclusion": "success",
-        "sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
-        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746857"
-      },
-      {
-        "name": "OpenObsidian quality",
-        "run_id": 38971746956,
-        "status": "completed",
-        "conclusion": "success",
-        "sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
-        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746956"
-      },
-      {
-        "name": "OpenObsidian plugin renderer matrix",
-        "run_id": 38971746972,
-        "status": "completed",
-        "conclusion": "success",
-        "sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
-        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746972"
-      },
-      {
-        "name": "Rust migration inventory",
-        "run_id": 38971746871,
-        "status": "completed",
-        "conclusion": "success",
-        "sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
-        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746871"
-      }
-    ],
-    "jobs": [
-      {
-        "run_id": 38971746806,
-        "job_id": 117211507802,
-        "name": "rust (macos-latest)",
-        "status": "completed",
-        "conclusion": "failure",
-        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746806/job/117211507802"
-      },
-      {
-        "run_id": 38971746806,
-        "job_id": 117211508069,
-        "name": "minimum supported Rust (1.95)",
-        "status": "completed",
-        "conclusion": "failure",
-        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746806/job/117211508069"
-      },
-      {
-        "run_id": 38971746806,
-        "job_id": 117211508123,
-        "name": "rust (ubuntu-latest)",
-        "status": "completed",
-        "conclusion": "failure",
-        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746806/job/117211508123"
-      },
-      {
-        "run_id": 38971746806,
-        "job_id": 117211508179,
-        "name": "rust (windows-latest)",
-        "status": "completed",
-        "conclusion": "failure",
-        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746806/job/117211508179"
-      },
-      {
-        "run_id": 38971746799,
-        "job_id": 117211508533,
-        "name": "ubuntu-latest",
-        "status": "completed",
-        "conclusion": "success",
-        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746799/job/117211508533"
-      },
-      {
-        "run_id": 38971746799,
-        "job_id": 117211508931,
-        "name": "windows-latest",
-        "status": "completed",
-        "conclusion": "success",
-        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746799/job/117211508931"
-      },
-      {
-        "run_id": 38971746799,
-        "job_id": 117211508983,
-        "name": "macos-latest",
-        "status": "completed",
-        "conclusion": "success",
-        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746799/job/117211508983"
-      },
-      {
-        "run_id": 38971746893,
-        "job_id": 117211508553,
-        "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04",
-        "status": "completed",
-        "conclusion": "failure",
-        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746893/job/117211508553"
-      },
-      {
-        "run_id": 38971746893,
-        "job_id": 117211508867,
-        "name": "Obsidian 1.14.4 vault round-trip on macos-latest",
-        "status": "completed",
-        "conclusion": "failure",
-        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746893/job/117211508867"
-      },
-      {
-        "run_id": 38971746893,
-        "job_id": 117211508955,
-        "name": "Obsidian 1.14.4 vault round-trip on windows-latest",
-        "status": "completed",
-        "conclusion": "failure",
-        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746893/job/117211508955"
-      },
-      {
-        "run_id": 38971746857,
-        "job_id": 117211508367,
-        "name": "ubuntu-latest",
-        "status": "completed",
-        "conclusion": "success",
-        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746857/job/117211508367"
-      },
-      {
-        "run_id": 38971746857,
-        "job_id": 117211508627,
-        "name": "windows-latest",
-        "status": "completed",
-        "conclusion": "success",
-        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746857/job/117211508627"
-      },
-      {
-        "run_id": 38971746857,
-        "job_id": 117211508647,
-        "name": "macos-latest",
-        "status": "completed",
-        "conclusion": "success",
-        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746857/job/117211508647"
-      },
-      {
-        "run_id": 38971746956,
-        "job_id": 117211508561,
-        "name": "windows-latest",
-        "status": "completed",
-        "conclusion": "success",
-        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746956/job/117211508561"
-      },
-      {
-        "run_id": 38971746956,
-        "job_id": 117211508829,
-        "name": "ubuntu-latest",
-        "status": "completed",
-        "conclusion": "success",
-        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746956/job/117211508829"
-      },
-      {
-        "run_id": 38971746956,
-        "job_id": 117211508965,
-        "name": "macos-latest",
-        "status": "completed",
-        "conclusion": "success",
-        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746956/job/117211508965"
-      },
-      {
-        "run_id": 38971746972,
-        "job_id": 117211509248,
-        "name": "macos-latest",
-        "status": "completed",
-        "conclusion": "success",
-        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746972/job/117211509248"
-      },
-      {
-        "run_id": 38971746972,
-        "job_id": 117211509271,
-        "name": "windows-latest",
-        "status": "completed",
-        "conclusion": "success",
-        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746972/job/117211509271"
-      },
-      {
-        "run_id": 38971746972,
-        "job_id": 117211509740,
-        "name": "ubuntu-latest",
-        "status": "completed",
-        "conclusion": "success",
-        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746972/job/117211509740"
-      },
-      {
-        "run_id": 38971746871,
-        "job_id": 117211508418,
-        "name": "inventory",
-        "status": "completed",
-        "conclusion": "success",
-        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746871/job/117211508418"
-      }
-    ],
-    "failed_jobs": [
-      {
-        "run_id": 38971746806,
-        "job_id": 117211507802,
-        "name": "rust (macos-latest)",
-        "status": "completed",
-        "conclusion": "failure",
-        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746806/job/117211507802",
-        "failed_step": "Run workspace tests",
-        "log_findings": [
-          "Two failures: egui_defers_an_unstable_refresh_retry_until_a_later_trigger at crates/ui-egui/src/lib.rs:10906 (vault_snapshot_probe_receiver was None), and egui_stale_source_edit_preserves_external_note_and_disables_retry at line 10286 (multiple Markdown source draft nodes)."
-        ]
-      },
-      {
-        "run_id": 38971746806,
-        "job_id": 117211508123,
-        "name": "rust (ubuntu-latest)",
-        "status": "completed",
-        "conclusion": "failure",
-        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746806/job/117211508123",
-        "failed_step": "Check formatting; Run workspace tests",
-        "log_findings": [
-          "cargo fmt --all -- --check reports diffs in crates/ui-egui/src/lib.rs at lines 862, 4492, 4512, 4555, 4822, 5284, 5306, 5325, 10834, 10924, 10962, 10991, 11036, 11050, 11061, 11132, and 11253, plus crates/vault/src/watcher.rs:309.",
-          "The same two UI tests failed as on macOS."
-        ]
-      },
-      {
-        "run_id": 38971746806,
-        "job_id": 117211508179,
-        "name": "rust (windows-latest)",
-        "status": "completed",
-        "conclusion": "failure",
-        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746806/job/117211508179",
-        "failed_step": "Run Windows workspace tests",
-        "log_findings": [
-          "egui_stale_source_edit_preserves_external_note_and_disables_retry failed at crates/ui-egui/src/lib.rs:10286 due to multiple Markdown source draft nodes; 122 passed, 1 failed, 1 filtered."
-        ]
-      },
-      {
-        "run_id": 38971746806,
-        "job_id": 117211508069,
-        "name": "minimum supported Rust (1.95)",
-        "status": "completed",
-        "conclusion": "failure",
-        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746806/job/117211508069",
-        "failed_step": "Run locked workspace tests at the declared MSRV",
-        "log_findings": [
-          "Toolchain setup succeeded with rustc 1.95.0; 122 passed and the same two UI tests failed as on macOS and Ubuntu."
-        ]
-      },
-      {
-        "run_id": 38971746893,
-        "job_id": 117211508553,
-        "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04",
-        "status": "completed",
-        "conclusion": "failure",
-        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746893/job/117211508553",
-        "failed_step": "Author, open, snapshot, and reopen the same vault",
-        "log_findings": [
-          "Timed out waiting for a post-edit changed watcher snapshot probe and correlated full refresh; last value=null. This occurred after creation of After refresh.md, before later external edits/rename."
-        ]
-      },
-      {
-        "run_id": 38971746893,
-        "job_id": 117211508867,
-        "name": "Obsidian 1.14.4 vault round-trip on macos-latest",
-        "status": "completed",
-        "conclusion": "failure",
-        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746893/job/117211508867",
-        "failed_step": "Author, open, snapshot, and reopen the same vault",
-        "log_findings": [
-          "Timed out waiting for a post-edit changed watcher snapshot probe and correlated full refresh; last value=null. Failure occurred at first post-creation watcher reconciliation, before in-place edit or rename."
-        ]
-      },
-      {
-        "run_id": 38971746893,
-        "job_id": 117211508955,
-        "name": "Obsidian 1.14.4 vault round-trip on windows-latest",
-        "status": "completed",
-        "conclusion": "failure",
-        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746893/job/117211508955",
-        "failed_step": "Author, open, snapshot, and reopen the same vault",
-        "log_findings": [
-          "Timed out waiting for a post-edit changed watcher snapshot probe and correlated full refresh; last value=null. Failure occurred at first watcher reconciliation after external note creation."
-        ]
-      }
-    ],
-    "failed_job_ids": [
-      117211507802,
-      117211508123,
-      117211508179,
-      117211508069,
-      117211508553,
-      117211508867,
-      117211508955
-    ],
-    "active_job_ids": [],
-    "queued_job_ids": [],
-    "artifact_inventory_count": 12,
-    "artifact_inventory_complete": true,
-    "artifacts_reconciled": true,
-    "roundtrip_report_payloads_reconciled": true,
     "all_required_jobs_terminal": true,
-    "milestone_achieved": false,
-    "origin_main_sha_before_push": "37994bfb0cdea541f907a33b2c38527a411ca2c7",
-    "origin_main_sha_after_push": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
-    "origin_main_verified_at": "2026-10-16T21:48:50Z",
-    "main_sha_held": true,
-    "evidence": ".agents/tasks/2026-10-07/evidence/r2.8.150-r3-18-r3-17-ci-repair-candidate.json",
-    "local_executable_validation": false,
-    "artifacts": [
-      {
-        "run_id": 38971746893,
-        "artifact_id": 12077522504,
-        "name": "obsidian-vault-roundtrip-Linux-15fc2c10f87ada3ba9fb191e76206ce45acac74d",
-        "size_in_bytes": 2590805,
-        "digest": "sha256:ee3db46bc81e608c938536d35af66ef323e068eefa47a50cab3cec18d6d9af59",
-        "expired": false,
-        "kind": "roundtrip-report",
-        "platform": "Linux",
-        "downloaded": true,
-        "archive_sha256_verified": true,
-        "report_sha256": "1f516637e066b81c3a52ebc63168565db68f47214bdcae60d99c7923e2ef4132",
-        "source_sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
-        "archive_sha256": "ee3db46bc81e608c938536d35af66ef323e068eefa47a50cab3cec18d6d9af59",
-        "payload_status": "reconciled",
-        "report_status": "failed",
-        "identity_verified": true,
-        "failure": "Timed out waiting for a post-edit changed watcher snapshot probe and correlated full refresh; last value=null.",
-        "failure_stage": "after external creation of After refresh.md, before in-place edit and rename"
-      },
-      {
-        "run_id": 38971746893,
-        "artifact_id": 12076883582,
-        "name": "obsidian-vault-roundtrip-macOS-15fc2c10f87ada3ba9fb191e76206ce45acac74d",
-        "size_in_bytes": 3635273,
-        "digest": "sha256:4b1c871224ded37a8786a9c31b04efad8f9d658c5d5b535af446b3b965cdd41b",
-        "expired": false,
-        "kind": "roundtrip-report",
-        "platform": "macOS",
-        "downloaded": true,
-        "archive_sha256_verified": true,
-        "report_sha256": "22e067108d9ceb05889ca6a13e9d0718eda62fbaa8904af898e4ccac66faca12",
-        "source_sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
-        "archive_sha256": "4b1c871224ded37a8786a9c31b04efad8f9d658c5d5b535af446b3b965cdd41b",
-        "payload_status": "reconciled",
-        "report_status": "failed",
-        "identity_verified": true,
-        "failure": "Timed out waiting for a post-edit changed watcher snapshot probe and correlated full refresh; last value=null.",
-        "failure_stage": "after external creation of After refresh.md, before in-place edit and rename"
-      },
-      {
-        "run_id": 38971746893,
-        "artifact_id": 12076873273,
-        "name": "obsidian-vault-roundtrip-Windows-15fc2c10f87ada3ba9fb191e76206ce45acac74d",
-        "size_in_bytes": 2842372,
-        "digest": "sha256:32d97778566fe56297ce0b04457e66dc55b3d6e1125f8c21f5b70e5749436484",
-        "expired": false,
-        "kind": "roundtrip-report",
-        "platform": "Windows",
-        "downloaded": true,
-        "archive_sha256_verified": true,
-        "report_sha256": "7746147c29f75904220854abd11ebcae2714e91cf462c2ec94e928dc9eb12db8",
-        "source_sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
-        "archive_sha256": "32d97778566fe56297ce0b04457e66dc55b3d6e1125f8c21f5b70e5749436484",
-        "payload_status": "reconciled",
-        "report_status": "failed",
-        "identity_verified": true,
-        "failure": "Timed out waiting for a post-edit changed watcher snapshot probe and correlated full refresh; last value=null.",
-        "failure_stage": "after external creation of After refresh.md, before in-place edit and rename"
-      },
-      {
-        "run_id": 38971746857,
-        "artifact_id": 12076717642,
-        "name": "openobsidian-Linux-preview-15fc2c10f87ada3ba9fb191e76206ce45acac74d",
-        "size_in_bytes": 125946850,
-        "digest": "sha256:31af9cda2fa37a09146547445dba3f46e5873dc94033245a29c2a3985d2fc2bd",
-        "expired": false,
-        "kind": "desktop-preview",
-        "platform": "Linux",
-        "downloaded": false,
-        "archive_sha256_verified": false,
-        "payload_status": "metadata_only_per_policy",
-        "source_sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
-        "expires_at": "2027-01-14"
-      },
-      {
-        "run_id": 38971746857,
-        "artifact_id": 12076284748,
-        "name": "openobsidian-macOS-preview-15fc2c10f87ada3ba9fb191e76206ce45acac74d",
-        "size_in_bytes": 397395784,
-        "digest": "sha256:c05a3bd8c428e012c762e7e62c5061f5dd7e64da08912f2b0231fd902cd64a00",
-        "expired": false,
-        "kind": "desktop-preview",
-        "platform": "macOS",
-        "downloaded": false,
-        "archive_sha256_verified": false,
-        "payload_status": "metadata_only_per_policy",
-        "source_sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
-        "expires_at": "2027-01-14"
-      },
-      {
-        "run_id": 38971746857,
-        "artifact_id": 12077586920,
-        "name": "openobsidian-Windows-preview-15fc2c10f87ada3ba9fb191e76206ce45acac74d",
-        "size_in_bytes": 163006126,
-        "digest": "sha256:5132470ffb6a049ccd3ae4318c0c024abef4690ca47c1243f53662e31e29cd25",
-        "expired": false,
-        "kind": "desktop-preview",
-        "platform": "Windows",
-        "downloaded": false,
-        "archive_sha256_verified": false,
-        "payload_status": "metadata_only_per_policy",
-        "source_sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
-        "expires_at": "2027-01-14"
-      },
-      {
-        "run_id": 38971746972,
-        "artifact_id": 12076623151,
-        "name": "plugin-renderer-lifecycle-Linux-15fc2c10f87ada3ba9fb191e76206ce45acac74d",
-        "size_in_bytes": 3100,
-        "digest": "sha256:2ca932adc3738dde0183ba19dd4bcce5a0e7782663b5593aca5e14e169aa803d",
-        "expired": false,
-        "kind": "plugin-renderer-report",
-        "platform": "Linux",
-        "downloaded": true,
-        "archive_sha256_verified": true,
-        "source_sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
-        "archive_sha256": "2ca932adc3738dde0183ba19dd4bcce5a0e7782663b5593aca5e14e169aa803d",
-        "report_sha256": "ed6d318114dce8586b80491d3b3235a8c214ae1f962f1e251cce658909bc7e2c",
-        "payload_status": "reconciled",
-        "report_status": "renderer_matrix_success",
-        "record_count": 28,
-        "platform_reports_byte_identical": true,
-        "record_status_counts": {
-          "renderer-loaded": 4,
-          "renderer-denied": 23,
-          "not-applicable": 1
-        },
-        "integrity_status_counts": {
-          "passed": 27,
-          "not-applicable": 1
-        },
-        "execution_status_counts": {
-          "renderer-wrapper": 27,
-          "not-executed": 1
-        },
-        "identity_note": "JSONL omits run/SHA/platform; exact run and SHA are established by Actions artifact metadata and SHA-bearing artifact names; member filename identifies platform."
-      },
-      {
-        "run_id": 38971746972,
-        "artifact_id": 12076618141,
-        "name": "plugin-renderer-lifecycle-Windows-15fc2c10f87ada3ba9fb191e76206ce45acac74d",
-        "size_in_bytes": 3104,
-        "digest": "sha256:0ebcf9c30aaa32b8b81e57df4e2aed2ad06ff97aea7d923b8fca6fa691786d2a",
-        "expired": false,
-        "kind": "plugin-renderer-report",
-        "platform": "Windows",
-        "downloaded": true,
-        "archive_sha256_verified": true,
-        "source_sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
-        "archive_sha256": "0ebcf9c30aaa32b8b81e57df4e2aed2ad06ff97aea7d923b8fca6fa691786d2a",
-        "report_sha256": "ed6d318114dce8586b80491d3b3235a8c214ae1f962f1e251cce658909bc7e2c",
-        "payload_status": "reconciled",
-        "report_status": "renderer_matrix_success",
-        "record_count": 28,
-        "platform_reports_byte_identical": true,
-        "record_status_counts": {
-          "renderer-loaded": 4,
-          "renderer-denied": 23,
-          "not-applicable": 1
-        },
-        "integrity_status_counts": {
-          "passed": 27,
-          "not-applicable": 1
-        },
-        "execution_status_counts": {
-          "renderer-wrapper": 27,
-          "not-executed": 1
-        },
-        "identity_note": "JSONL omits run/SHA/platform; exact run and SHA are established by Actions artifact metadata and SHA-bearing artifact names; member filename identifies platform."
-      },
-      {
-        "run_id": 38971746972,
-        "artifact_id": 12076254738,
-        "name": "plugin-renderer-lifecycle-macOS-15fc2c10f87ada3ba9fb191e76206ce45acac74d",
-        "size_in_bytes": 3100,
-        "digest": "sha256:10921bf1aa8abfffbbcb0e94c70ab0fd53d26e475c8e42438f9481adc5d9ba5b",
-        "expired": false,
-        "kind": "plugin-renderer-report",
-        "platform": "macOS",
-        "downloaded": true,
-        "archive_sha256_verified": true,
-        "source_sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
-        "archive_sha256": "10921bf1aa8abfffbbcb0e94c70ab0fd53d26e475c8e42438f9481adc5d9ba5b",
-        "report_sha256": "ed6d318114dce8586b80491d3b3235a8c214ae1f962f1e251cce658909bc7e2c",
-        "payload_status": "reconciled",
-        "report_status": "renderer_matrix_success",
-        "record_count": 28,
-        "platform_reports_byte_identical": true,
-        "record_status_counts": {
-          "renderer-loaded": 4,
-          "renderer-denied": 23,
-          "not-applicable": 1
-        },
-        "integrity_status_counts": {
-          "passed": 27,
-          "not-applicable": 1
-        },
-        "execution_status_counts": {
-          "renderer-wrapper": 27,
-          "not-executed": 1
-        },
-        "identity_note": "JSONL omits run/SHA/platform; exact run and SHA are established by Actions artifact metadata and SHA-bearing artifact names; member filename identifies platform."
-      },
-      {
-        "run_id": 38971746799,
-        "artifact_id": 12077146695,
-        "name": "loaded-plugin-workflows-Linux-15fc2c10f87ada3ba9fb191e76206ce45acac74d",
-        "size_in_bytes": 171483,
-        "digest": "sha256:ad65e96470590773967b66f9bc3f2665b8ef182db9b093c75b1c5b455ef0545e",
-        "expired": false,
-        "kind": "loaded-plugin-report",
-        "platform": "Linux",
-        "downloaded": true,
-        "archive_sha256_verified": true,
-        "source_sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
-        "archive_sha256": "ad65e96470590773967b66f9bc3f2665b8ef182db9b093c75b1c5b455ef0545e",
-        "report_sha256": "3db1a0b39b82c2e9c23fb78f6abdfe29f17db318658114357d989518a0f79ded",
-        "payload_status": "reconciled",
-        "report_status": "partial",
-        "paths": 328,
-        "complete_count": 11,
-        "complete_ids": [
-          "PC04",
-          "PC07",
-          "PC08",
-          "PC17",
-          "PC19",
-          "PC20",
-          "PC21",
-          "PC22",
-          "PC23",
-          "PC24",
-          "PC25"
-        ],
-        "partial_count": 10,
-        "partial_ids": [
-          "PC02",
-          "PC03",
-          "PC05",
-          "PC06",
-          "PC09",
-          "PC10",
-          "PC11",
-          "PC12",
-          "PC14",
-          "PC15"
-        ],
-        "compatibility_promoted": false,
-        "integrity_checks": "passed",
-        "source_tree_head": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
-        "source_tree_sha256": "4600e18c0209f1bcc69c1cbc84385609d9a520b421bd839a94a520b68efbc6fe",
-        "platform_runtime": "linux / x64 / Electron 44.3.0 / xvfb-run"
-      },
-      {
-        "run_id": 38971746799,
-        "artifact_id": 12076667980,
-        "name": "loaded-plugin-workflows-macOS-15fc2c10f87ada3ba9fb191e76206ce45acac74d",
-        "size_in_bytes": 171496,
-        "digest": "sha256:1407e91e0c990d2d5e687b7f0c63e94e68e45aedadd4fb970e2a2fa34c3039b9",
-        "expired": false,
-        "kind": "loaded-plugin-report",
-        "platform": "macOS",
-        "downloaded": true,
-        "archive_sha256_verified": true,
-        "source_sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
-        "archive_sha256": "1407e91e0c990d2d5e687b7f0c63e94e68e45aedadd4fb970e2a2fa34c3039b9",
-        "report_sha256": "8ce1536dffd44b7e9ce55aea00fa28c9e61f9d7224e55b1d7409da36d8139bd4",
-        "payload_status": "reconciled",
-        "report_status": "partial",
-        "paths": 328,
-        "complete_count": 11,
-        "complete_ids": [
-          "PC04",
-          "PC07",
-          "PC08",
-          "PC17",
-          "PC19",
-          "PC20",
-          "PC21",
-          "PC22",
-          "PC23",
-          "PC24",
-          "PC25"
-        ],
-        "partial_count": 10,
-        "partial_ids": [
-          "PC02",
-          "PC03",
-          "PC05",
-          "PC06",
-          "PC09",
-          "PC10",
-          "PC11",
-          "PC12",
-          "PC14",
-          "PC15"
-        ],
-        "compatibility_promoted": false,
-        "integrity_checks": "passed",
-        "source_tree_head": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
-        "source_tree_sha256": "a9ac6810f6678c44041587cff0ccbdd90b817e1f49a9fd306264f916dc829131",
-        "platform_runtime": "darwin / arm64 / Electron 44.3.0 / xvfb-run"
-      },
-      {
-        "run_id": 38971746799,
-        "artifact_id": 12076414402,
-        "name": "loaded-plugin-workflows-Windows-15fc2c10f87ada3ba9fb191e76206ce45acac74d",
-        "size_in_bytes": 171472,
-        "digest": "sha256:438110fb632673742d8825d9b65be7eea33849f94bc1d8a62b8de90d6b7e8ffb",
-        "expired": false,
-        "kind": "loaded-plugin-report",
-        "platform": "Windows",
-        "downloaded": true,
-        "archive_sha256_verified": true,
-        "source_sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
-        "archive_sha256": "438110fb632673742d8825d9b65be7eea33849f94bc1d8a62b8de90d6b7e8ffb",
-        "report_sha256": "6c66cda95c883f58e066a7b860d47ce8ff9601c9029b91bf9cbc4b395feb0700",
-        "payload_status": "reconciled",
-        "report_status": "partial",
-        "paths": 328,
-        "complete_count": 11,
-        "complete_ids": [
-          "PC04",
-          "PC07",
-          "PC08",
-          "PC17",
-          "PC19",
-          "PC20",
-          "PC21",
-          "PC22",
-          "PC23",
-          "PC24",
-          "PC25"
-        ],
-        "partial_count": 10,
-        "partial_ids": [
-          "PC02",
-          "PC03",
-          "PC05",
-          "PC06",
-          "PC09",
-          "PC10",
-          "PC11",
-          "PC12",
-          "PC14",
-          "PC15"
-        ],
-        "compatibility_promoted": false,
-        "integrity_checks": "passed",
-        "source_tree_head": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
-        "source_tree_sha256": "3d25ee25985155c61cf305f91d465edc98b271317f67cf669fc8d336dc5d5075",
-        "platform_runtime": "win32 / x64 / Electron 44.3.0 / xvfb-run"
-      }
-    ],
-    "artifact_reconciliation": {
-      "status": "Complete: all 12 Actions artifact records are tied to exact runs and SHA; nine report archives were downloaded and matched by API size/digest and report identity; three large desktop previews remain metadata-only under the existing policy.",
-      "workflow_run_ids_checked": [
-        38971746806,
-        38971746799,
-        38971746893,
-        38971746857,
-        38971746956,
-        38971746972,
-        38971746871
-      ],
-      "metadata_record_count": 12,
-      "archive_payloads_downloaded_and_hash_verified": 9,
-      "report_payloads_identity_reconciled": 9,
-      "metadata_only_preview_count": 3,
-      "plugin_renderer_reports": {
-        "run_id": 38971746972,
-        "artifact_ids": [
-          12076623151,
-          12076618141,
-          12076254738
-        ],
-        "payload_reconciliation": "verified",
-        "archive_hashes_match_actions_api": true,
-        "report_sha256_by_platform": {
-          "Linux": "ed6d318114dce8586b80491d3b3235a8c214ae1f962f1e251cce658909bc7e2c",
-          "Windows": "ed6d318114dce8586b80491d3b3235a8c214ae1f962f1e251cce658909bc7e2c",
-          "macOS": "ed6d318114dce8586b80491d3b3235a8c214ae1f962f1e251cce658909bc7e2c"
-        },
-        "records_per_platform": 28,
-        "reports_byte_identical": true,
-        "identity_caveat": "JSONL omits run/SHA/platform; Actions artifact metadata, SHA-bearing names, and platform member filenames establish identity."
-      },
-      "loaded_plugin_workflow_reports": {
-        "run_id": 38971746799,
-        "artifact_ids": [
-          12077146695,
-          12076667980,
-          12076414402
-        ],
-        "payload_reconciliation": "verified",
-        "archive_hashes_match_actions_api": true,
-        "report_sha256_by_platform": {
-          "Linux": "3db1a0b39b82c2e9c23fb78f6abdfe29f17db318658114357d989518a0f79ded",
-          "macOS": "8ce1536dffd44b7e9ce55aea00fa28c9e61f9d7224e55b1d7409da36d8139bd4",
-          "Windows": "6c66cda95c883f58e066a7b860d47ce8ff9601c9029b91bf9cbc4b395feb0700"
-        },
-        "source_tree_head": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
-        "source_tree_paths_per_platform": 328,
-        "report_status": "partial",
-        "complete_count_per_platform": 11,
-        "partial_count_per_platform": 10,
-        "compatibility_promoted": false,
-        "integrity_checks": "passed"
-      },
-      "roundtrip_reports": {
-        "artifact_ids": [
-          12077522504,
-          12076883582,
-          12076873273
-        ],
-        "hashes_and_sizes_match_actions_api": true,
-        "embedded_source_sha_run_attempt_platform_match": true,
-        "platform_statuses": {
-          "Linux": "failed",
-          "Windows": "failed",
-          "macOS": "failed"
-        },
-        "report_sha256": {
-          "Linux": "1f516637e066b81c3a52ebc63168565db68f47214bdcae60d99c7923e2ef4132",
-          "macOS": "22e067108d9ceb05889ca6a13e9d0718eda62fbaa8904af898e4ccac66faca12",
-          "Windows": "7746147c29f75904220854abd11ebcae2714e91cf462c2ec94e928dc9eb12db8"
-        },
-        "error": "Timed out waiting for a post-edit changed watcher snapshot probe and correlated full refresh; last value=null.",
-        "stage": "after external creation of After refresh.md, before in-place edit and rename",
-        "watch_error": null,
-        "observation": "No watcher hint, snapshot probe, reconciliation request, or consumed result appears after file creation in any platform log. Reports do not prove whether the notify callback fired or whether egui polled the hint."
-      },
-      "metadata_only_previews": {
-        "artifact_ids": [
-          12076717642,
-          12076284748,
-          12077586920
-        ],
-        "sizes_in_bytes": [
-          125946850,
-          397395784,
-          163006126
-        ],
-        "api_digests": {
-          "Linux": "sha256:31af9cda2fa37a09146547445dba3f46e5873dc94033245a29c2a3985d2fc2bd",
-          "macOS": "sha256:c05a3bd8c428e012c762e7e62c5061f5dd7e64da08912f2b0231fd902cd64a00",
-          "Windows": "sha256:5132470ffb6a049ccd3ae4318c0c024abef4690ca47c1243f53662e31e29cd25"
-        },
-        "api_digests_recorded": true,
-        "payloads_downloaded": false,
-        "expires_at": "2027-01-14"
-      }
-    },
-    "observed_at": "2026-10-16T21:58:02Z",
-    "updated_at": "2026-10-16T21:58:02Z",
-    "required_workflow_count": 7,
-    "required_job_count": 20,
-    "evidence_path": ".agents/tasks/2026-10-07/evidence/r2.8.150-r3-18-r3-17-ci-repair-candidate.json",
-    "reconciled_workflow_counts": null,
-    "reconciled_job_counts": null,
-    "failure_inspection": "All seven workflows and twenty jobs are terminal on exact SHA 15fc2c10f87ada3ba9fb191e76206ce45acac74d: five workflows and thirteen jobs passed; Rust CI and round-trip acceptance failed. Both UI tests failed on macOS, Ubuntu, and Rust 1.95; Windows failed only the stale-source test. The unstable-retry test is not reported as a Windows failure; the separate attachment-preview test is filtered from the Windows workspace command and runs in its own step. Ubuntu also reports rustfmt differences. All three round-trip reports stop at first post-creation watcher reconciliation. Static review confirms an unasserted ambiguous accessible-label lookup and a transient asynchronous receiver assertion. A likely watcher cause is that channel notification delivery does not wake the idle egui loop (which may wait 60 seconds between repaints while the harness waits 30 seconds), but artifacts cannot prove that cause. All 12 artifacts are reconciled; partial loaded-plugin reports promote no compatibility status.",
-    "reconciled_at": "2026-10-16T22:02:47Z"
+    "artifacts_reconciled": true,
+    "evidence_path": ".agents/tasks/2026-10-07/evidence/r2.8.151-r3-19-r3-18-ci-repair-candidate.json"
   },
   "planned_next_milestone": {
-    "id": "R3.20-R3.19-TERMINAL-CI-REPAIR",
-    "milestone_id": "R3.20",
-    "name": "R3.20 consolidated repair of R3.19 exact-SHA CI failures",
-    "status": "implementation_complete",
-    "plan": ".agents/tasks/2026-10-07/evidence/r3-20-r3-19-terminal-ci-repair.json",
-    "candidate_base_sha": "57a28b2d371be576d1d4aebb1ea77d1b47b17fb9",
-    "depends_on": "R3.19 terminal-failed and fully reconciled on exact SHA 57a28b2d371be576d1d4aebb1ea77d1b47b17fb9.",
-    "reviewed_by": ["r320_watcher_triage"],
-    "reviewed_at": "2026-10-16T22:57:36Z",
+    "id": "R3.21-R3.20-TERMINAL-CI-REPAIR",
+    "milestone_id": "R3.21",
+    "name": "R3.21 Rust CI and unchanged watcher-probe wake-up repair",
+    "status": "implementation_complete_pending_ci",
+    "plan": ".agents/tasks/2026-10-07/evidence/r3-21-r3-20-terminal-ci-repair.json",
+    "candidate_base_sha": "a0049c751d82540a9eca12e5323c05c673beacf9",
+    "depends_on": "R3.20 exact-SHA CI is terminal-failed and all workflows, jobs, and artifacts are reconciled on a0049c751d82540a9eca12e5323c05c673beacf9.",
+    "reviewed_by": [
+      "r320_integrated_review",
+      "r320_roundtrip_repair_analysis",
+      "a590_attempt3_rust_ci"
+    ],
+    "reviewed_at": "2026-10-16T23:42:05Z",
     "implementation_started": true,
-    "implementation_started_at": "2026-10-16T22:58:10Z",
+    "implementation_started_at": "2026-10-16T23:30:06Z",
+    "implementation_started_from_sha": "a0049c751d82540a9eca12e5323c05c673beacf9",
     "implementation_complete": true,
     "local_executable_validation": false,
     "pushed_once": false,
     "milestone_achieved": false,
-    "implementation_reviewed_by": ["r320_ui_review", "r320_integrated_review"],
-    "implementation_reviewed_at": "2026-10-16T23:13:14Z",
-    "next_action": "Verify origin/main still equals the candidate base and no exact-SHA CI batch is active, then submit the reviewed milestone once. No local executable validation or partial push."
+    "implementation_review_status": "Approved as a complete milestone by r320_integrated_review, r320_roundtrip_repair_analysis, and a590_attempt3_rust_ci; ready for one push after exact-base/no-active-batch preflight.",
+    "next_action": "Confirm origin/main still equals a0049c751d82540a9eca12e5323c05c673beacf9 and no exact-SHA CI batch is active, then commit and push the complete R3.21 milestone once. Hold main at its submitted SHA through the full required CI batch.",
+    "submitted_sha": null,
+    "ci_evidence": null,
+    "ci_status": null,
+    "ci_run_ids": [],
+    "ci_workflow_counts": null,
+    "ci_job_counts": null,
+    "submitted_at": null,
+    "ci_last_polled_at": null,
+    "ci_findings_summary": null,
+    "implementation_completed_at": "2026-10-16T23:42:05Z",
+    "implementation_reviewed_by": [
+      "r320_integrated_review",
+      "r320_roundtrip_repair_analysis",
+      "a590_attempt3_rust_ci"
+    ],
+    "implementation_reviewed_at": "2026-10-16T23:42:38Z"
   },
   "planned_independent_milestone": {
-    "milestone": "unassigned until R3.20 CI is reconciled and C07.5 dependency sequencing is settled",
+    "milestone": "unassigned until R3.21 CI is reconciled and C07.5 dependency sequencing is settled",
     "name": "C09.2 native appearance root selection and CSS diagnostics",
-    "status": "Deferred while R3.20 is the active local repair. The C07.4 all-platform reference capture is reconciled, but Rust comparator parity remains pending with no parity claim. Reassess C09.2 after R3.20 exact-SHA CI is terminal and reconciled, and after the C07.5 no-follow API/libc dependency is accepted. Preserve the mixed-worktree draft separately.",
+    "status": "Deferred behind the active R3.21 repair and its exact-SHA CI batch. The C07.4 all-platform reference capture is reconciled, but Rust comparator parity remains pending with no parity claim. Reassess C09.2 after R3.21 CI is terminal and reconciled, and after the C07.5 no-follow API/libc dependency is accepted. Preserve the mixed-worktree draft separately.",
     "deliverable": "Complete the current Rust appearance projection slice by making the selected .obsidian or .obsidian-* configuration root explicit in the native UI, applying supported appearance settings only from that root, distinguishing malformed/non-object appearance sources from missing files, and displaying bounded diagnostic summaries from discovered theme and snippet analysis. Keep CSS inert, preserve all vault bytes, and leave C09 pending until every remaining C09 acceptance item is satisfied.",
     "acceptance": [
       "List discovered configuration roots and provide an accessible, visible selector. Default deterministically to .obsidian when present, otherwise to the only discovered root; when multiple alternate roots exist without .obsidian, require an explicit selection before applying appearance. Keep the choice app-local and never write it into the vault.",
@@ -44870,25 +44098,25 @@
       "OpenObsidian plugin renderer matrix"
     ],
     "evidence": "Exact-SHA egui interaction reports and artifacts for selected-root projection, diagnostics, removed/non-directory root fallback, malformed/non-object and missing-selected-appearance reporting, CSS isolation, refresh and no-write behavior; fixture hashes and source-preservation records; all required workflow/job URLs and conclusions.",
-    "depends_on": "Reassess after the R3.20 implementation review and exact-SHA CI batch are complete and reconciled. C07.4 reference capture is complete/reconciled, while Rust comparator parity remains independently pending. C09.2 cannot be submitted until C07.5 VaultRoot::open_regular_file_nofollow and its target-scoped libc dependency are accepted or the dependency boundary is revised.",
+    "depends_on": "Reassess after the R3.21 implementation review and exact-SHA CI batch are complete and reconciled. C07.4 reference capture is complete/reconciled, while Rust comparator parity remains independently pending. C09.2 cannot be submitted until C07.5 VaultRoot::open_regular_file_nofollow and its target-scoped libc dependency are accepted or the dependency boundary is revised.",
     "static_reviews": {
       "status": "Read-only C09.2 review found no functional gap in the appearance UI, CSS caps or documentation, but found an isolation blocker: configuration.rs depends on the unsubmitted C07.5 VaultRoot::open_regular_file_nofollow API and target-scoped libc dependency. Reclassify/sequence this dependency before calling C09.2 implementation-complete. No local executable validation.",
       "findings": [
         "The native appearance UI, configuration-root selection/defaults, selected-root-only projection, malformed/non-object source diagnostics, CSS analysis/resource caps, refresh invalidation and no-write interaction coverage match the bounded R2.8.128 acceptance. Broader C09 work remains incomplete, and exact-SHA CI has not started.",
-        "A fixture-backed egui case removes the selected mobile root appearance.json while retaining CSS and a different root’s settings; it checks system appearance, no cross-root borrowing, continued CSS diagnostics, and no writes. Resource caps are explicitly scoped to CSS traversal; recursive JSON inventory bounds remain separate parent-C09 work.",
+        "A fixture-backed egui case removes the selected mobile root appearance.json while retaining CSS and a different root\u2019s settings; it checks system appearance, no cross-root borrowing, continued CSS diagnostics, and no writes. Resource caps are explicitly scoped to CSS traversal; recursive JSON inventory bounds remain separate parent-C09 work.",
         "Added parser and egui coverage for 65 unique privileged selectors over the 64-example cap, asserting truncation, a failed precheck, an inconclusive UI message, and no clean/blocker summary. The directory-cap UI case now splits entries across themes and snippets, exceeds their shared per-root budget, and asserts lower-bound match reporting. Aggregate analysis-output wording now says estimated. Independent source review found no blocker; no local executable validation occurred.",
         "C09.2 currently calls VaultRoot::open_regular_file_nofollow at crates/vault/src/configuration.rs:683; this method and its Unix libc dependency are only present in unsubmitted C07.5 changes. C09.2 cannot be submitted independently until C07.5 passes or the dependency boundary is changed. C07.5 workflow/fixture additions must stay out of the later C09.2 batch."
       ],
       "local_executable_validation": false
     },
-    "next_action": "After the R3.20 exact-SHA CI batch is terminal and reconciled, reassess the C09.2 dependency boundary and prepare a fresh bounded plan. Run no local validation."
+    "next_action": "After R3.21 exact-SHA CI is terminal and reconciled, reassess the C09.2 dependency boundary and prepare a fresh bounded plan only when C07.5's no-follow API/libc dependency is accepted. Run no local validation."
   },
   "planned_following_milestone": {
     "milestone": "C07.4 Rust JavaScript-number and locale comparator implementation",
     "name": "Implement the reference-captured C07.4 comparison contract in crates/doc",
-    "status": "Deferred while R3.20 is the active local repair. The C07.4 pinned-app reference capture is complete and reconciled; Rust comparator parity remains pending and unclaimed.",
+    "status": "Deferred behind the active R3.21 repair and its exact-SHA CI batch. The C07.4 pinned-app reference capture is complete and reconciled; Rust comparator parity remains pending and unclaimed.",
     "deliverable": "Implement pinned-app JavaScript number conversion, identity/filter/sort/contains semantics and recorded locale collation policy with fixture-backed Rust parity.",
-    "depends_on": "The C07.4 all-platform pinned-app reference capture prerequisite is complete and reconciled. Schedule comparator implementation only after the R3.20 exact-SHA CI batch is terminal/reconciled and a fresh bounded plan is reviewed; Rust comparator parity remains pending until its own exact-SHA CI acceptance passes.",
+    "depends_on": "The C07.4 all-platform pinned-app reference capture prerequisite is complete and reconciled. Schedule comparator implementation only after the R3.21 exact-SHA CI batch is terminal/reconciled and a fresh bounded plan is reviewed; Rust comparator parity remains pending until its own exact-SHA CI acceptance passes.",
     "scope": [
       "In crates/doc, replace exact JSON integer comparison with a single JavaScript Number-compatible binary64 comparison/conversion path for captured numeric values and filter operands.",
       "Apply the captured numeric equality semantics consistently to scalar equality/relational filters, sorting, array contains, group identity, and any group labels whose rendering is part of observed behavior.",
@@ -44931,45 +44159,66 @@
       "For captured JSON, order is visible-column configuration and must not be projected into row sort; retain raw JSON and unknown root/view fields while projecting only supported evaluation fields.",
       "Legacy TypeScript uses distinct collation options for values and path ties; freeze the required locale/platform behavior from current all-OS capture before choosing a Rust collator."
     ],
-    "plan_review_status": "C07.4 comparator remains a placeholder and Rust parity remains pending. The reference capture is complete with source mutations recorded; prepare and review a fresh bounded comparator plan after R3.20 exact-SHA CI is terminal and reconciled.",
-    "next_action": "After the R3.20 exact-SHA CI batch is terminal and reconciled, review a fresh bounded C07.4 comparator plan. Run no local validation."
+    "plan_review_status": "C07.4 comparator remains a placeholder and Rust parity remains pending. The reference capture is complete with source mutations recorded; prepare and review a fresh bounded comparator plan after R3.21 exact-SHA CI is terminal and reconciled.",
+    "next_action": "After the R3.21 exact-SHA CI batch is terminal and reconciled, review a fresh bounded C07.4 comparator plan. Run no local validation."
   },
   "current_repair_milestone": {
-    "id": "R3.20-R3.19-TERMINAL-CI-REPAIR",
-    "milestone_id": "R3.20",
-    "name": "R3.20 consolidated repair of R3.19 exact-SHA CI failures",
-    "status": "implementation_complete",
-    "plan": ".agents/tasks/2026-10-07/evidence/r3-20-r3-19-terminal-ci-repair.json",
-    "candidate_base_sha": "57a28b2d371be576d1d4aebb1ea77d1b47b17fb9",
-    "depends_on": "R3.19 terminal-failed and fully reconciled on exact SHA 57a28b2d371be576d1d4aebb1ea77d1b47b17fb9.",
-    "reviewed_by": ["r320_watcher_triage"],
-    "reviewed_at": "2026-10-16T22:57:36Z",
+    "id": "R3.21-R3.20-TERMINAL-CI-REPAIR",
+    "milestone_id": "R3.21",
+    "name": "R3.21 Rust CI and unchanged watcher-probe wake-up repair",
+    "status": "implementation_complete_pending_ci",
+    "plan": ".agents/tasks/2026-10-07/evidence/r3-21-r3-20-terminal-ci-repair.json",
+    "candidate_base_sha": "a0049c751d82540a9eca12e5323c05c673beacf9",
+    "depends_on": "R3.20 exact-SHA CI is terminal-failed and all workflows, jobs, and artifacts are reconciled on a0049c751d82540a9eca12e5323c05c673beacf9.",
+    "reviewed_by": [
+      "r320_integrated_review",
+      "r320_roundtrip_repair_analysis",
+      "a590_attempt3_rust_ci"
+    ],
+    "reviewed_at": "2026-10-16T23:42:05Z",
     "implementation_started": true,
-    "implementation_started_at": "2026-10-16T22:58:10Z",
+    "implementation_started_at": "2026-10-16T23:30:06Z",
+    "implementation_started_from_sha": "a0049c751d82540a9eca12e5323c05c673beacf9",
     "implementation_complete": true,
     "local_executable_validation": false,
     "pushed_once": false,
     "milestone_achieved": false,
-    "implementation_reviewed_by": ["r320_ui_review", "r320_integrated_review"],
-    "implementation_reviewed_at": "2026-10-16T23:13:14Z",
-    "next_action": "Verify origin/main still equals the candidate base and no exact-SHA CI batch is active, then submit the reviewed milestone once. No local executable validation or partial push."
+    "implementation_review_status": "Approved as a complete milestone by r320_integrated_review, r320_roundtrip_repair_analysis, and a590_attempt3_rust_ci; ready for one push after exact-base/no-active-batch preflight.",
+    "next_action": "Confirm origin/main still equals a0049c751d82540a9eca12e5323c05c673beacf9 and no exact-SHA CI batch is active, then commit and push the complete R3.21 milestone once. Hold main at its submitted SHA through the full required CI batch.",
+    "submitted_sha": null,
+    "ci_evidence": null,
+    "ci_status": null,
+    "ci_run_ids": [],
+    "ci_workflow_counts": null,
+    "ci_job_counts": null,
+    "submitted_at": null,
+    "ci_last_polled_at": null,
+    "ci_findings_summary": null,
+    "implementation_completed_at": "2026-10-16T23:42:05Z",
+    "implementation_reviewed_by": [
+      "r320_integrated_review",
+      "r320_roundtrip_repair_analysis",
+      "a590_attempt3_rust_ci"
+    ],
+    "implementation_reviewed_at": "2026-10-16T23:42:38Z"
   },
   "current_ci_batch": {
-    "milestone_id": "R3.19",
-    "name": "R3.19 consolidated repair of R3.18 exact-SHA CI failures",
+    "schema_version": 1,
+    "milestone_id": "R3.20",
+    "name": "R3.20 consolidated repair of R3.19 exact-SHA CI failures",
     "attempt": 1,
-    "base_sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
-    "implementation_sha": "57a28b2d371be576d1d4aebb1ea77d1b47b17fb9",
-    "submitted_sha": "57a28b2d371be576d1d4aebb1ea77d1b47b17fb9",
+    "base_sha": "57a28b2d371be576d1d4aebb1ea77d1b47b17fb9",
+    "implementation_sha": "a0049c751d82540a9eca12e5323c05c673beacf9",
+    "submitted_sha": "a0049c751d82540a9eca12e5323c05c673beacf9",
     "pushed_once": true,
     "status": "terminal_failed_artifacts_reconciled",
-    "triggered_at": "2026-10-16T22:36:18Z",
-    "last_polled_at": "2026-10-16T22:49:55Z",
+    "triggered_at": "2026-10-16T23:14:51Z",
+    "last_polled_at": "2026-10-16T23:26:31Z",
     "workflow_counts": {
       "observed": 7,
       "terminal": 7,
-      "passed": 4,
-      "failed": 3,
+      "passed": 5,
+      "failed": 2,
       "cancelled": 0,
       "queued": 0,
       "in_progress": 0
@@ -44984,128 +44233,332 @@
       "in_progress": 0
     },
     "run_ids": [
-      38976742999,
-      38976743151,
-      38976743088,
-      38976743089,
-      38976743053,
-      38976743201,
-      38976743025
+      38980385480,
+      38980385534,
+      38980385570,
+      38980385525,
+      38980385557,
+      38980385628,
+      38980385558
     ],
+    "all_required_jobs_terminal": true,
+    "artifacts_reconciled": true,
+    "evidence_path": ".agents/tasks/2026-10-07/evidence/r3-20-r3-19-terminal-ci-repair-ci.json",
     "workflow_runs": [
       {
-        "name": "Rust migration inventory",
-        "run_id": 38976742999,
-        "status": "completed",
-        "conclusion": "failure",
-        "sha": "57a28b2d371be576d1d4aebb1ea77d1b47b17fb9",
-        "job_ids": [117227888680],
-        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38976742999"
-      },
-      {
-        "name": "OpenObsidian loaded plugin workflows",
-        "run_id": 38976743151,
-        "status": "completed",
-        "conclusion": "success",
-        "sha": "57a28b2d371be576d1d4aebb1ea77d1b47b17fb9",
-        "job_ids": [117227889945, 117227890161, 117227890179],
-        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38976743151"
-      },
-      {
-        "name": "OpenObsidian plugin renderer matrix",
-        "run_id": 38976743088,
-        "status": "completed",
-        "conclusion": "success",
-        "sha": "57a28b2d371be576d1d4aebb1ea77d1b47b17fb9",
-        "job_ids": [117227889267, 117227889605, 117227889614],
-        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38976743088"
-      },
-      {
-        "name": "OpenObsidian desktop build",
-        "run_id": 38976743089,
-        "status": "completed",
-        "conclusion": "success",
-        "sha": "57a28b2d371be576d1d4aebb1ea77d1b47b17fb9",
-        "job_ids": [117227889349, 117227889685, 117227889706],
-        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38976743089"
-      },
-      {
         "name": "OpenObsidian Rust CI",
-        "run_id": 38976743053,
+        "run_id": 38980385480,
         "status": "completed",
         "conclusion": "failure",
-        "sha": "57a28b2d371be576d1d4aebb1ea77d1b47b17fb9",
-        "job_ids": [117227889338, 117227889489, 117227889570, 117227889653],
-        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38976743053"
+        "sha": "a0049c751d82540a9eca12e5323c05c673beacf9",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38980385480",
+        "jobs": [
+          {
+            "job_id": 117239616363,
+            "name": "minimum supported Rust (1.95)",
+            "status": "completed",
+            "conclusion": "failure",
+            "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38980385480/job/117239616363"
+          },
+          {
+            "job_id": 117239616548,
+            "name": "rust (windows-latest)",
+            "status": "completed",
+            "conclusion": "failure",
+            "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38980385480/job/117239616548"
+          },
+          {
+            "job_id": 117239616636,
+            "name": "rust (macos-latest)",
+            "status": "completed",
+            "conclusion": "failure",
+            "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38980385480/job/117239616636"
+          },
+          {
+            "job_id": 117239616768,
+            "name": "rust (ubuntu-latest)",
+            "status": "completed",
+            "conclusion": "failure",
+            "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38980385480/job/117239616768"
+          }
+        ]
       },
       {
-        "name": "OpenObsidian quality",
-        "run_id": 38976743201,
+        "name": "Rust migration inventory",
+        "run_id": 38980385534,
         "status": "completed",
         "conclusion": "success",
-        "sha": "57a28b2d371be576d1d4aebb1ea77d1b47b17fb9",
-        "job_ids": [117227889818, 117227890088, 117227890129],
-        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38976743201"
+        "sha": "a0049c751d82540a9eca12e5323c05c673beacf9",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38980385534",
+        "jobs": [
+          {
+            "job_id": 117239616632,
+            "name": "inventory",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38980385534/job/117239616632"
+          }
+        ]
       },
       {
         "name": "Obsidian vault round-trip acceptance",
-        "run_id": 38976743025,
+        "run_id": 38980385570,
         "status": "completed",
         "conclusion": "failure",
-        "sha": "57a28b2d371be576d1d4aebb1ea77d1b47b17fb9",
-        "job_ids": [117227889392, 117227889408, 117227889461],
-        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38976743025"
-      }
-    ],
-    "observed_findings": [
-      {
-        "run_id": 38976742999,
-        "workflow": "Rust migration inventory",
-        "status": "terminal_failure",
-        "observed_error": "Mapping review must record the current Rust migration goal SHA-256",
-        "interpretation": "The active mapping-review fingerprint was stale for the submitted goal. R3.20 synchronizes it with the current goal SHA and retains historical fingerprints."
+        "sha": "a0049c751d82540a9eca12e5323c05c673beacf9",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38980385570",
+        "jobs": [
+          {
+            "job_id": 117239617344,
+            "name": "Obsidian 1.14.4 vault round-trip on macos-latest",
+            "status": "completed",
+            "conclusion": "failure",
+            "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38980385570/job/117239617344"
+          },
+          {
+            "job_id": 117239617475,
+            "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04",
+            "status": "completed",
+            "conclusion": "failure",
+            "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38980385570/job/117239617475"
+          },
+          {
+            "job_id": 117239617506,
+            "name": "Obsidian 1.14.4 vault round-trip on windows-latest",
+            "status": "completed",
+            "conclusion": "failure",
+            "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38980385570/job/117239617506"
+          }
+        ]
       },
       {
-        "run_id": 38976743053,
-        "workflow": "OpenObsidian Rust CI",
-        "status": "terminal_failure",
-        "observed_failures": "Windows watcher unit test's final empty-poll assertion received a legitimate later batch; macOS UI test timed out before a watcher callback wake; Ubuntu reported eight rustfmt hunks. The minimum-supported Rust job passed.",
-        "repair_milestone": "R3.20"
+        "name": "OpenObsidian desktop build",
+        "run_id": 38980385525,
+        "status": "completed",
+        "conclusion": "success",
+        "sha": "a0049c751d82540a9eca12e5323c05c673beacf9",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38980385525",
+        "jobs": [
+          {
+            "job_id": 117239616558,
+            "name": "windows-latest",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38980385525/job/117239616558"
+          },
+          {
+            "job_id": 117239616897,
+            "name": "ubuntu-latest",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38980385525/job/117239616897"
+          },
+          {
+            "job_id": 117239617034,
+            "name": "macos-latest",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38980385525/job/117239617034"
+          }
+        ]
       },
       {
-        "run_id": 38976743025,
-        "workflow": "Obsidian vault round-trip acceptance",
-        "status": "terminal_failure",
-        "observed_failures": "Linux, macOS, and Windows passed the external callback, changed snapshot probe, and correlated refresh, then timed out waiting for the unchanged-probe request ID because the main app environment omitted the existing watcher-hint request-file variable.",
-        "repair_milestone": "R3.20"
+        "name": "OpenObsidian quality",
+        "run_id": 38980385557,
+        "status": "completed",
+        "conclusion": "success",
+        "sha": "a0049c751d82540a9eca12e5323c05c673beacf9",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38980385557",
+        "jobs": [
+          {
+            "job_id": 117239617161,
+            "name": "macos-latest",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38980385557/job/117239617161"
+          },
+          {
+            "job_id": 117239617428,
+            "name": "ubuntu-latest",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38980385557/job/117239617428"
+          },
+          {
+            "job_id": 117239617606,
+            "name": "windows-latest",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38980385557/job/117239617606"
+          }
+        ]
+      },
+      {
+        "name": "OpenObsidian plugin renderer matrix",
+        "run_id": 38980385628,
+        "status": "completed",
+        "conclusion": "success",
+        "sha": "a0049c751d82540a9eca12e5323c05c673beacf9",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38980385628",
+        "jobs": [
+          {
+            "job_id": 117239617318,
+            "name": "windows-latest",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38980385628/job/117239617318"
+          },
+          {
+            "job_id": 117239617633,
+            "name": "ubuntu-latest",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38980385628/job/117239617633"
+          },
+          {
+            "job_id": 117239617697,
+            "name": "macos-latest",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38980385628/job/117239617697"
+          }
+        ]
+      },
+      {
+        "name": "OpenObsidian loaded plugin workflows",
+        "run_id": 38980385558,
+        "status": "completed",
+        "conclusion": "success",
+        "sha": "a0049c751d82540a9eca12e5323c05c673beacf9",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38980385558",
+        "jobs": [
+          {
+            "job_id": 117239617186,
+            "name": "ubuntu-latest",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38980385558/job/117239617186"
+          },
+          {
+            "job_id": 117239617342,
+            "name": "windows-latest",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38980385558/job/117239617342"
+          },
+          {
+            "job_id": 117239617363,
+            "name": "macos-latest",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38980385558/job/117239617363"
+          }
+        ]
       }
     ],
-    "all_required_jobs_terminal": true,
-    "artifacts_reconciled": true,
-    "artifact_inventory_count": 12,
-    "downloaded_non_preview_artifact_count": 9,
-    "metadata_only_large_preview_count": 3,
-    "artifact_reconciliation_note": "All 12 artifact records are accounted for. Nine non-preview archives were downloaded and their SHA-256 digests match GitHub API digests; three large desktop preview archives remain metadata-only under policy. All loaded-plugin, renderer, and round-trip reports are tied to the exact run/SHA/platform and payload digests.",
-    "evidence_path": ".agents/tasks/2026-10-07/evidence/r2.8.151-r3-19-r3-18-ci-repair-candidate.json"
+    "failed_jobs": [
+      {
+        "run_id": 38980385480,
+        "job_id": 117239616363,
+        "name": "minimum supported Rust (1.95)",
+        "status": "completed",
+        "conclusion": "failure",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38980385480/job/117239616363"
+      },
+      {
+        "run_id": 38980385480,
+        "job_id": 117239616548,
+        "name": "rust (windows-latest)",
+        "status": "completed",
+        "conclusion": "failure",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38980385480/job/117239616548"
+      },
+      {
+        "run_id": 38980385480,
+        "job_id": 117239616636,
+        "name": "rust (macos-latest)",
+        "status": "completed",
+        "conclusion": "failure",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38980385480/job/117239616636"
+      },
+      {
+        "run_id": 38980385480,
+        "job_id": 117239616768,
+        "name": "rust (ubuntu-latest)",
+        "status": "completed",
+        "conclusion": "failure",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38980385480/job/117239616768"
+      },
+      {
+        "run_id": 38980385570,
+        "job_id": 117239617344,
+        "name": "Obsidian 1.14.4 vault round-trip on macos-latest",
+        "status": "completed",
+        "conclusion": "failure",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38980385570/job/117239617344"
+      },
+      {
+        "run_id": 38980385570,
+        "job_id": 117239617475,
+        "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04",
+        "status": "completed",
+        "conclusion": "failure",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38980385570/job/117239617475"
+      },
+      {
+        "run_id": 38980385570,
+        "job_id": 117239617506,
+        "name": "Obsidian 1.14.4 vault round-trip on windows-latest",
+        "status": "completed",
+        "conclusion": "failure",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38980385570/job/117239617506"
+      }
+    ],
+    "artifact_records_observed": 12
   },
   "current_ci_attempt": {
     "schema_version": 1,
-    "milestone_id": "R3.19",
-    "name": "R3.19 consolidated repair of R3.18 exact-SHA CI failures",
+    "milestone_id": "R3.20",
+    "name": "R3.20 consolidated repair of R3.19 exact-SHA CI failures",
     "attempt": 1,
-    "base_sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
-    "implementation_sha": "57a28b2d371be576d1d4aebb1ea77d1b47b17fb9",
-    "submitted_sha": "57a28b2d371be576d1d4aebb1ea77d1b47b17fb9",
+    "base_sha": "57a28b2d371be576d1d4aebb1ea77d1b47b17fb9",
+    "implementation_sha": "a0049c751d82540a9eca12e5323c05c673beacf9",
+    "submitted_sha": "a0049c751d82540a9eca12e5323c05c673beacf9",
     "pushed_once": true,
     "status": "terminal_failed_artifacts_reconciled",
-    "triggered_at": "2026-10-16T22:36:18Z",
-    "last_polled_at": "2026-10-16T22:49:55Z",
-    "workflow_counts": {"observed": 7, "terminal": 7, "passed": 4, "failed": 3, "cancelled": 0, "queued": 0, "in_progress": 0},
-    "job_counts": {"observed": 20, "terminal": 20, "passed": 13, "failed": 7, "cancelled": 0, "queued": 0, "in_progress": 0},
-    "run_ids": [38976742999, 38976743151, 38976743088, 38976743089, 38976743053, 38976743201, 38976743025],
+    "triggered_at": "2026-10-16T23:14:51Z",
+    "last_polled_at": "2026-10-16T23:26:31Z",
+    "workflow_counts": {
+      "observed": 7,
+      "terminal": 7,
+      "passed": 5,
+      "failed": 2,
+      "cancelled": 0,
+      "queued": 0,
+      "in_progress": 0
+    },
+    "job_counts": {
+      "observed": 20,
+      "terminal": 20,
+      "passed": 13,
+      "failed": 7,
+      "cancelled": 0,
+      "queued": 0,
+      "in_progress": 0
+    },
+    "run_ids": [
+      38980385480,
+      38980385534,
+      38980385570,
+      38980385525,
+      38980385557,
+      38980385628,
+      38980385558
+    ],
     "all_required_jobs_terminal": true,
     "artifacts_reconciled": true,
-    "evidence_path": ".agents/tasks/2026-10-07/evidence/r2.8.151-r3-19-r3-18-ci-repair-candidate.json"
+    "evidence_path": ".agents/tasks/2026-10-07/evidence/r3-20-r3-19-terminal-ci-repair-ci.json",
+    "artifact_records_observed": 12
   },
   "active_ci_batch": null,
   "parallel_local_milestones": [
@@ -45215,24 +44668,44 @@
     }
   },
   "planned_repair_milestone": {
-    "id": "R3.20-R3.19-TERMINAL-CI-REPAIR",
-    "milestone_id": "R3.20",
-    "name": "R3.20 consolidated repair of R3.19 exact-SHA CI failures",
-    "status": "implementation_complete",
-    "plan": ".agents/tasks/2026-10-07/evidence/r3-20-r3-19-terminal-ci-repair.json",
-    "candidate_base_sha": "57a28b2d371be576d1d4aebb1ea77d1b47b17fb9",
-    "depends_on": "R3.19 terminal-failed and fully reconciled on exact SHA 57a28b2d371be576d1d4aebb1ea77d1b47b17fb9.",
-    "reviewed_by": ["r320_watcher_triage"],
-    "reviewed_at": "2026-10-16T22:57:36Z",
+    "id": "R3.21-R3.20-TERMINAL-CI-REPAIR",
+    "milestone_id": "R3.21",
+    "name": "R3.21 Rust CI and unchanged watcher-probe wake-up repair",
+    "status": "implementation_complete_pending_ci",
+    "plan": ".agents/tasks/2026-10-07/evidence/r3-21-r3-20-terminal-ci-repair.json",
+    "candidate_base_sha": "a0049c751d82540a9eca12e5323c05c673beacf9",
+    "depends_on": "R3.20 exact-SHA CI is terminal-failed and all workflows, jobs, and artifacts are reconciled on a0049c751d82540a9eca12e5323c05c673beacf9.",
+    "reviewed_by": [
+      "r320_integrated_review",
+      "r320_roundtrip_repair_analysis",
+      "a590_attempt3_rust_ci"
+    ],
+    "reviewed_at": "2026-10-16T23:42:05Z",
     "implementation_started": true,
-    "implementation_started_at": "2026-10-16T22:58:10Z",
+    "implementation_started_at": "2026-10-16T23:30:06Z",
+    "implementation_started_from_sha": "a0049c751d82540a9eca12e5323c05c673beacf9",
     "implementation_complete": true,
     "local_executable_validation": false,
     "pushed_once": false,
     "milestone_achieved": false,
-    "implementation_reviewed_by": ["r320_ui_review", "r320_integrated_review"],
-    "implementation_reviewed_at": "2026-10-16T23:13:14Z",
-    "next_action": "Verify origin/main still equals the candidate base and no exact-SHA CI batch is active, then submit the reviewed milestone once. No local executable validation or partial push."
+    "implementation_review_status": "Approved as a complete milestone by r320_integrated_review, r320_roundtrip_repair_analysis, and a590_attempt3_rust_ci; ready for one push after exact-base/no-active-batch preflight.",
+    "next_action": "Confirm origin/main still equals a0049c751d82540a9eca12e5323c05c673beacf9 and no exact-SHA CI batch is active, then commit and push the complete R3.21 milestone once. Hold main at its submitted SHA through the full required CI batch.",
+    "submitted_sha": null,
+    "ci_evidence": null,
+    "ci_status": null,
+    "ci_run_ids": [],
+    "ci_workflow_counts": null,
+    "ci_job_counts": null,
+    "submitted_at": null,
+    "ci_last_polled_at": null,
+    "ci_findings_summary": null,
+    "implementation_completed_at": "2026-10-16T23:42:05Z",
+    "implementation_reviewed_by": [
+      "r320_integrated_review",
+      "r320_roundtrip_repair_analysis",
+      "a590_attempt3_rust_ci"
+    ],
+    "implementation_reviewed_at": "2026-10-16T23:42:38Z"
   },
   "previous_r3_18_ci_batch": {
     "superseded_by": "R3.19 current_ci_batch; the R3.18 exact-SHA batch is terminal and reconciled.",
@@ -45994,7 +45467,7 @@
     "main_sha_held": true,
     "evidence": ".agents/tasks/2026-10-07/evidence/r2.8.149-attempt-1-37994bfb.json",
     "local_executable_validation": false,
-    "failure_inspection": "Read-only GitHub log inspection identifies two migration inventory assertion messages: mapping review count must include inherited requirements and goal-level MIG rows; new migration requirement count must match goal-level MIG rows. Static inspection of the CI validator shows it defines the goal-specific MIG set as MIG-001 through MIG-016 and bases these counts on those rows. Current requirement metadata records 221 reviewed rows and 25 new rows (including the C06/C07 decompositions). Determine the intended inventory count contract after all jobs and artifacts are terminal; do not edit or rerun during this batch. No local inventory validator was run. Read-only GitHub job metadata now also records failures in Windows workspace tests, Ubuntu formatting/workspace tests, and macOS workspace tests for run 38959159282. The Rust CI workflow is still in progress because its minimum-supported-Rust job remains active; GitHub has not exposed failure logs until that workflow is terminal. Do not diagnose these step failures or repair them until logs and the full batch are reconciled. Read-only GitHub job logs are now available. Windows and macOS each fail egui_stale_source_edit_preserves_external_note_and_disables_retry at crates/ui-egui/src/lib.rs:9716 because preview.text remains the original source rather than the edited text; external vault bytes and conflict-history error checks passed. Ubuntu additionally fails rustfmt, which reports differences at lines 4337, 4350, 4420, 4887, 4977, 6682, 6689, 6727, 6734, 6749, and 6761. All three platforms fail the same four periodic/watcher × path/ID Canvas deferral tests at line 6688 because vault_rescan_pending is false. These are observed assertions, not a confirmed root cause; defer diagnosis/repairs until the complete batch is terminal. Read-only GitHub job metadata now also confirms Linux round-trip job 117169550924 failed during “Author, open, snapshot, and reopen the same vault”; its report/snapshot/log artifact 12071658643 is available for later reconciliation. Mac and Windows round-trip jobs and the minimum-supported-Rust job remain active; do not submit repairs before those jobs and the full artifact inventory are terminal. Windows round-trip job 117169550793 is now also terminal-failed during “Author, open, snapshot, and reopen the same vault”; report/snapshot/log artifact 12072865131 is available for reconciliation. Only Rust 1.95 and macOS round-trip remain active. Linux round-trip artifact 12071658643 was downloaded read-only by a reviewer; its archive SHA-256 matches the Actions API digest and the embedded report identity matches run 38959159363, attempt 1, and the submitted SHA. It reports a Canvas edit-path canary failure: after three attempts the target-field click was rejected for stale/ambiguous pointer geometry, leaving the field empty/unfocused; no persistence/reopen failure is reported. Rust 1.95 job 117169549820 has now also completed as failed; its logs are being inspected. The macOS round-trip is the only active job. Windows round-trip artifact 12072865131 was downloaded read-only; its SHA-256 matches the Actions API digest and report identity matches run 38959159363, attempt 1, runner Windows, and the submitted SHA. The report identifies an extra/un-correlated watcher refresh during deferral: request 4524-1792181326733-1 at line 186/frame 651 plus vault-rescan-1 at line 198/frame 652. The Rust 1.95 job failed in its locked workspace-test step with 115 passed and the same five UI tests failing; toolchain setup succeeded and no separate MSRV incompatibility was reported. Mac round-trip remains active. macOS round-trip job 117169550437 is terminal-failed. Artifact 12072706086 was downloaded read-only; the archive digest matches Actions metadata and report identity matches run 38959159363, attempt 1, runner macOS, and submitted SHA. It reports an additional/un-correlated refresh during deferred reconciliation: request 4218-1792181518355-1 at line 356/frame 973 and vault-rescan-1 at line 368/frame 974, the same duplicate/unrelated-refresh category as Windows. All 20 jobs are now terminal; preserve this failed SHA and finish complete artifact reconciliation before preparing a repair milestone. Terminal API enumeration across all seven workflow runs confirms exactly 12 artifacts: three plugin-renderer reports, three large desktop previews, three loaded-plugin workflow reports, and three platform round-trip reports. No artifacts were produced by Rust CI, quality, or migration inventory. The three previews remain metadata-only under the established policy. The round-trip reports have matching archive digests and exact-SHA identities. Six small plugin/loaded-plugin report archives still need payload-level reconciliation. Full artifact reconciliation is complete: all 12 artifacts from the seven required workflow runs are accounted for. Nine non-preview report archives were downloaded and their byte sizes/SHA-256 values match the Actions API. All three round-trip report identities match the exact submitted SHA, attempt 1, platform, run, and API digest; they report Linux Canvas edit-path pointer/readback failure and Windows/macOS duplicate/un-correlated watcher refreshes. Three renderer reports each contain 28 records (4 loaded, 23 denied, 1 not applicable) and are associated by GitHub metadata with the correct successful run/SHA/attempt because payloads omit those identifiers. Three loaded-plugin reports embed the exact source-tree head and platform, match archive hashes, but each is partial and explicitly does not promote compatibility. Three large desktop previews remain metadata-only under existing policy. All required jobs are terminal; R3.17 remains failed and not achieved.",
+    "failure_inspection": "Read-only GitHub log inspection identifies two migration inventory assertion messages: mapping review count must include inherited requirements and goal-level MIG rows; new migration requirement count must match goal-level MIG rows. Static inspection of the CI validator shows it defines the goal-specific MIG set as MIG-001 through MIG-016 and bases these counts on those rows. Current requirement metadata records 221 reviewed rows and 25 new rows (including the C06/C07 decompositions). Determine the intended inventory count contract after all jobs and artifacts are terminal; do not edit or rerun during this batch. No local inventory validator was run. Read-only GitHub job metadata now also records failures in Windows workspace tests, Ubuntu formatting/workspace tests, and macOS workspace tests for run 38959159282. The Rust CI workflow is still in progress because its minimum-supported-Rust job remains active; GitHub has not exposed failure logs until that workflow is terminal. Do not diagnose these step failures or repair them until logs and the full batch are reconciled. Read-only GitHub job logs are now available. Windows and macOS each fail egui_stale_source_edit_preserves_external_note_and_disables_retry at crates/ui-egui/src/lib.rs:9716 because preview.text remains the original source rather than the edited text; external vault bytes and conflict-history error checks passed. Ubuntu additionally fails rustfmt, which reports differences at lines 4337, 4350, 4420, 4887, 4977, 6682, 6689, 6727, 6734, 6749, and 6761. All three platforms fail the same four periodic/watcher \u00d7 path/ID Canvas deferral tests at line 6688 because vault_rescan_pending is false. These are observed assertions, not a confirmed root cause; defer diagnosis/repairs until the complete batch is terminal. Read-only GitHub job metadata now also confirms Linux round-trip job 117169550924 failed during \u201cAuthor, open, snapshot, and reopen the same vault\u201d; its report/snapshot/log artifact 12071658643 is available for later reconciliation. Mac and Windows round-trip jobs and the minimum-supported-Rust job remain active; do not submit repairs before those jobs and the full artifact inventory are terminal. Windows round-trip job 117169550793 is now also terminal-failed during \u201cAuthor, open, snapshot, and reopen the same vault\u201d; report/snapshot/log artifact 12072865131 is available for reconciliation. Only Rust 1.95 and macOS round-trip remain active. Linux round-trip artifact 12071658643 was downloaded read-only by a reviewer; its archive SHA-256 matches the Actions API digest and the embedded report identity matches run 38959159363, attempt 1, and the submitted SHA. It reports a Canvas edit-path canary failure: after three attempts the target-field click was rejected for stale/ambiguous pointer geometry, leaving the field empty/unfocused; no persistence/reopen failure is reported. Rust 1.95 job 117169549820 has now also completed as failed; its logs are being inspected. The macOS round-trip is the only active job. Windows round-trip artifact 12072865131 was downloaded read-only; its SHA-256 matches the Actions API digest and report identity matches run 38959159363, attempt 1, runner Windows, and the submitted SHA. The report identifies an extra/un-correlated watcher refresh during deferral: request 4524-1792181326733-1 at line 186/frame 651 plus vault-rescan-1 at line 198/frame 652. The Rust 1.95 job failed in its locked workspace-test step with 115 passed and the same five UI tests failing; toolchain setup succeeded and no separate MSRV incompatibility was reported. Mac round-trip remains active. macOS round-trip job 117169550437 is terminal-failed. Artifact 12072706086 was downloaded read-only; the archive digest matches Actions metadata and report identity matches run 38959159363, attempt 1, runner macOS, and submitted SHA. It reports an additional/un-correlated refresh during deferred reconciliation: request 4218-1792181518355-1 at line 356/frame 973 and vault-rescan-1 at line 368/frame 974, the same duplicate/unrelated-refresh category as Windows. All 20 jobs are now terminal; preserve this failed SHA and finish complete artifact reconciliation before preparing a repair milestone. Terminal API enumeration across all seven workflow runs confirms exactly 12 artifacts: three plugin-renderer reports, three large desktop previews, three loaded-plugin workflow reports, and three platform round-trip reports. No artifacts were produced by Rust CI, quality, or migration inventory. The three previews remain metadata-only under the established policy. The round-trip reports have matching archive digests and exact-SHA identities. Six small plugin/loaded-plugin report archives still need payload-level reconciliation. Full artifact reconciliation is complete: all 12 artifacts from the seven required workflow runs are accounted for. Nine non-preview report archives were downloaded and their byte sizes/SHA-256 values match the Actions API. All three round-trip report identities match the exact submitted SHA, attempt 1, platform, run, and API digest; they report Linux Canvas edit-path pointer/readback failure and Windows/macOS duplicate/un-correlated watcher refreshes. Three renderer reports each contain 28 records (4 loaded, 23 denied, 1 not applicable) and are associated by GitHub metadata with the correct successful run/SHA/attempt because payloads omit those identifiers. Three loaded-plugin reports embed the exact source-tree head and platform, match archive hashes, but each is partial and explicitly does not promote compatibility. Three large desktop previews remain metadata-only under existing policy. All required jobs are terminal; R3.17 remains failed and not achieved.",
     "artifacts": [
       {
         "run_id": 38959159298,
@@ -46371,27 +45844,47 @@
     },
     "next_action": "This R3.11 plan is a historical terminal-failed record, superseded as the next milestone by R2.8.145/R3.13; retain its evidence and do not treat its old next-action as current."
   },
-  "goal_sha256": "a9338a1c9f7c34f31c5a7bfdaa136ea5b51d5909cd5a2a53ca8e01d8e077fadf",
-  "planned_next_milestone_id": "R3.20",
+  "goal_sha256": "58442ab7a57b13248f988ee2d0d04f4bfdf65efca03b47e651dab6ceb25ae760",
+  "planned_next_milestone_id": "R3.21",
   "planned_ci_repair_milestone": {
-    "id": "R3.20-R3.19-TERMINAL-CI-REPAIR",
-    "milestone_id": "R3.20",
-    "name": "R3.20 consolidated repair of R3.19 exact-SHA CI failures",
-    "status": "implementation_complete",
-    "plan": ".agents/tasks/2026-10-07/evidence/r3-20-r3-19-terminal-ci-repair.json",
-    "candidate_base_sha": "57a28b2d371be576d1d4aebb1ea77d1b47b17fb9",
-    "depends_on": "R3.19 terminal-failed and fully reconciled on exact SHA 57a28b2d371be576d1d4aebb1ea77d1b47b17fb9.",
-    "reviewed_by": ["r320_watcher_triage"],
-    "reviewed_at": "2026-10-16T22:57:36Z",
+    "id": "R3.21-R3.20-TERMINAL-CI-REPAIR",
+    "milestone_id": "R3.21",
+    "name": "R3.21 Rust CI and unchanged watcher-probe wake-up repair",
+    "status": "implementation_complete_pending_ci",
+    "plan": ".agents/tasks/2026-10-07/evidence/r3-21-r3-20-terminal-ci-repair.json",
+    "candidate_base_sha": "a0049c751d82540a9eca12e5323c05c673beacf9",
+    "depends_on": "R3.20 exact-SHA CI is terminal-failed and all workflows, jobs, and artifacts are reconciled on a0049c751d82540a9eca12e5323c05c673beacf9.",
+    "reviewed_by": [
+      "r320_integrated_review",
+      "r320_roundtrip_repair_analysis",
+      "a590_attempt3_rust_ci"
+    ],
+    "reviewed_at": "2026-10-16T23:42:05Z",
     "implementation_started": true,
-    "implementation_started_at": "2026-10-16T22:58:10Z",
+    "implementation_started_at": "2026-10-16T23:30:06Z",
+    "implementation_started_from_sha": "a0049c751d82540a9eca12e5323c05c673beacf9",
     "implementation_complete": true,
     "local_executable_validation": false,
     "pushed_once": false,
     "milestone_achieved": false,
-    "implementation_reviewed_by": ["r320_ui_review", "r320_integrated_review"],
-    "implementation_reviewed_at": "2026-10-16T23:13:14Z",
-    "next_action": "Verify origin/main still equals the candidate base and no exact-SHA CI batch is active, then submit the reviewed milestone once. No local executable validation or partial push."
+    "implementation_review_status": "Approved as a complete milestone by r320_integrated_review, r320_roundtrip_repair_analysis, and a590_attempt3_rust_ci; ready for one push after exact-base/no-active-batch preflight.",
+    "next_action": "Confirm origin/main still equals a0049c751d82540a9eca12e5323c05c673beacf9 and no exact-SHA CI batch is active, then commit and push the complete R3.21 milestone once. Hold main at its submitted SHA through the full required CI batch.",
+    "submitted_sha": null,
+    "ci_evidence": null,
+    "ci_status": null,
+    "ci_run_ids": [],
+    "ci_workflow_counts": null,
+    "ci_job_counts": null,
+    "submitted_at": null,
+    "ci_last_polled_at": null,
+    "ci_findings_summary": null,
+    "implementation_completed_at": "2026-10-16T23:42:05Z",
+    "implementation_reviewed_by": [
+      "r320_integrated_review",
+      "r320_roundtrip_repair_analysis",
+      "a590_attempt3_rust_ci"
+    ],
+    "implementation_reviewed_at": "2026-10-16T23:42:38Z"
   },
   "previous_repair_milestone": {
     "id": "R2.8.149-R3.17-CANVAS-REFRESH-FOCUS-GUARD",
@@ -46808,7 +46301,7 @@
           "failed_step": "Run locked workspace tests at the declared MSRV",
           "test_summary": "115 passed, five failed in openobsidian_ui_egui: the same four Canvas deferral assertions and stale-source preview assertion seen on the platform jobs.",
           "log_findings": [
-            "Four periodic/watcher × path/ID Canvas deferral tests fail because vault_rescan_pending is false at crates/ui-egui/src/lib.rs:6688.",
+            "Four periodic/watcher \u00d7 path/ID Canvas deferral tests fail because vault_rescan_pending is false at crates/ui-egui/src/lib.rs:6688.",
             "egui_stale_source_edit_preserves_external_note_and_disables_retry fails at crates/ui-egui/src/lib.rs:9716 because preview.text remains original instead of the expected edited source.",
             "Toolchain setup succeeds; no separate Rust 1.95 incompatibility is reported."
           ]
@@ -46948,7 +46441,7 @@
       "all_required_jobs_terminal": true,
       "milestone_achieved": false,
       "local_executable_validation": false,
-      "failure_inspection": "Read-only GitHub log inspection identifies two migration inventory assertion messages: mapping review count must include inherited requirements and goal-level MIG rows; new migration requirement count must match goal-level MIG rows. Static inspection of the CI validator shows it defines the goal-specific MIG set as MIG-001 through MIG-016 and bases these counts on those rows. Current requirement metadata records 221 reviewed rows and 25 new rows (including the C06/C07 decompositions). Determine the intended inventory count contract after all jobs and artifacts are terminal; do not edit or rerun during this batch. No local inventory validator was run. Read-only GitHub job metadata now also records failures in Windows workspace tests, Ubuntu formatting/workspace tests, and macOS workspace tests for run 38959159282. The Rust CI workflow is still in progress because its minimum-supported-Rust job remains active; GitHub has not exposed failure logs until that workflow is terminal. Do not diagnose these step failures or repair them until logs and the full batch are reconciled. Read-only GitHub job logs are now available. Windows and macOS each fail egui_stale_source_edit_preserves_external_note_and_disables_retry at crates/ui-egui/src/lib.rs:9716 because preview.text remains the original source rather than the edited text; external vault bytes and conflict-history error checks passed. Ubuntu additionally fails rustfmt, which reports differences at lines 4337, 4350, 4420, 4887, 4977, 6682, 6689, 6727, 6734, 6749, and 6761. All three platforms fail the same four periodic/watcher × path/ID Canvas deferral tests at line 6688 because vault_rescan_pending is false. These are observed assertions, not a confirmed root cause; defer diagnosis/repairs until the complete batch is terminal. Read-only GitHub job metadata now also confirms Linux round-trip job 117169550924 failed during “Author, open, snapshot, and reopen the same vault”; its report/snapshot/log artifact 12071658643 is available for later reconciliation. Mac and Windows round-trip jobs and the minimum-supported-Rust job remain active; do not submit repairs before those jobs and the full artifact inventory are terminal. Windows round-trip job 117169550793 is now also terminal-failed during “Author, open, snapshot, and reopen the same vault”; report/snapshot/log artifact 12072865131 is available for reconciliation. Only Rust 1.95 and macOS round-trip remain active. Linux round-trip artifact 12071658643 was downloaded read-only by a reviewer; its archive SHA-256 matches the Actions API digest and the embedded report identity matches run 38959159363, attempt 1, and the submitted SHA. It reports a Canvas edit-path canary failure: after three attempts the target-field click was rejected for stale/ambiguous pointer geometry, leaving the field empty/unfocused; no persistence/reopen failure is reported. Rust 1.95 job 117169549820 has now also completed as failed; its logs are being inspected. The macOS round-trip is the only active job. Windows round-trip artifact 12072865131 was downloaded read-only; its SHA-256 matches the Actions API digest and report identity matches run 38959159363, attempt 1, runner Windows, and the submitted SHA. The report identifies an extra/un-correlated watcher refresh during deferral: request 4524-1792181326733-1 at line 186/frame 651 plus vault-rescan-1 at line 198/frame 652. The Rust 1.95 job failed in its locked workspace-test step with 115 passed and the same five UI tests failing; toolchain setup succeeded and no separate MSRV incompatibility was reported. Mac round-trip remains active. macOS round-trip job 117169550437 is terminal-failed. Artifact 12072706086 was downloaded read-only; the archive digest matches Actions metadata and report identity matches run 38959159363, attempt 1, runner macOS, and submitted SHA. It reports an additional/un-correlated refresh during deferred reconciliation: request 4218-1792181518355-1 at line 356/frame 973 and vault-rescan-1 at line 368/frame 974, the same duplicate/unrelated-refresh category as Windows. All 20 jobs are now terminal; preserve this failed SHA and finish complete artifact reconciliation before preparing a repair milestone. Terminal API enumeration across all seven workflow runs confirms exactly 12 artifacts: three plugin-renderer reports, three large desktop previews, three loaded-plugin workflow reports, and three platform round-trip reports. No artifacts were produced by Rust CI, quality, or migration inventory. The three previews remain metadata-only under the established policy. The round-trip reports have matching archive digests and exact-SHA identities. Six small plugin/loaded-plugin report archives still need payload-level reconciliation. Full artifact reconciliation is complete: all 12 artifacts from the seven required workflow runs are accounted for. Nine non-preview report archives were downloaded and their byte sizes/SHA-256 values match the Actions API. All three round-trip report identities match the exact submitted SHA, attempt 1, platform, run, and API digest; they report Linux Canvas edit-path pointer/readback failure and Windows/macOS duplicate/un-correlated watcher refreshes. Three renderer reports each contain 28 records (4 loaded, 23 denied, 1 not applicable) and are associated by GitHub metadata with the correct successful run/SHA/attempt because payloads omit those identifiers. Three loaded-plugin reports embed the exact source-tree head and platform, match archive hashes, but each is partial and explicitly does not promote compatibility. Three large desktop previews remain metadata-only under existing policy. All required jobs are terminal; R3.17 remains failed and not achieved.",
+      "failure_inspection": "Read-only GitHub log inspection identifies two migration inventory assertion messages: mapping review count must include inherited requirements and goal-level MIG rows; new migration requirement count must match goal-level MIG rows. Static inspection of the CI validator shows it defines the goal-specific MIG set as MIG-001 through MIG-016 and bases these counts on those rows. Current requirement metadata records 221 reviewed rows and 25 new rows (including the C06/C07 decompositions). Determine the intended inventory count contract after all jobs and artifacts are terminal; do not edit or rerun during this batch. No local inventory validator was run. Read-only GitHub job metadata now also records failures in Windows workspace tests, Ubuntu formatting/workspace tests, and macOS workspace tests for run 38959159282. The Rust CI workflow is still in progress because its minimum-supported-Rust job remains active; GitHub has not exposed failure logs until that workflow is terminal. Do not diagnose these step failures or repair them until logs and the full batch are reconciled. Read-only GitHub job logs are now available. Windows and macOS each fail egui_stale_source_edit_preserves_external_note_and_disables_retry at crates/ui-egui/src/lib.rs:9716 because preview.text remains the original source rather than the edited text; external vault bytes and conflict-history error checks passed. Ubuntu additionally fails rustfmt, which reports differences at lines 4337, 4350, 4420, 4887, 4977, 6682, 6689, 6727, 6734, 6749, and 6761. All three platforms fail the same four periodic/watcher \u00d7 path/ID Canvas deferral tests at line 6688 because vault_rescan_pending is false. These are observed assertions, not a confirmed root cause; defer diagnosis/repairs until the complete batch is terminal. Read-only GitHub job metadata now also confirms Linux round-trip job 117169550924 failed during \u201cAuthor, open, snapshot, and reopen the same vault\u201d; its report/snapshot/log artifact 12071658643 is available for later reconciliation. Mac and Windows round-trip jobs and the minimum-supported-Rust job remain active; do not submit repairs before those jobs and the full artifact inventory are terminal. Windows round-trip job 117169550793 is now also terminal-failed during \u201cAuthor, open, snapshot, and reopen the same vault\u201d; report/snapshot/log artifact 12072865131 is available for reconciliation. Only Rust 1.95 and macOS round-trip remain active. Linux round-trip artifact 12071658643 was downloaded read-only by a reviewer; its archive SHA-256 matches the Actions API digest and the embedded report identity matches run 38959159363, attempt 1, and the submitted SHA. It reports a Canvas edit-path canary failure: after three attempts the target-field click was rejected for stale/ambiguous pointer geometry, leaving the field empty/unfocused; no persistence/reopen failure is reported. Rust 1.95 job 117169549820 has now also completed as failed; its logs are being inspected. The macOS round-trip is the only active job. Windows round-trip artifact 12072865131 was downloaded read-only; its SHA-256 matches the Actions API digest and report identity matches run 38959159363, attempt 1, runner Windows, and the submitted SHA. The report identifies an extra/un-correlated watcher refresh during deferral: request 4524-1792181326733-1 at line 186/frame 651 plus vault-rescan-1 at line 198/frame 652. The Rust 1.95 job failed in its locked workspace-test step with 115 passed and the same five UI tests failing; toolchain setup succeeded and no separate MSRV incompatibility was reported. Mac round-trip remains active. macOS round-trip job 117169550437 is terminal-failed. Artifact 12072706086 was downloaded read-only; the archive digest matches Actions metadata and report identity matches run 38959159363, attempt 1, runner macOS, and submitted SHA. It reports an additional/un-correlated refresh during deferred reconciliation: request 4218-1792181518355-1 at line 356/frame 973 and vault-rescan-1 at line 368/frame 974, the same duplicate/unrelated-refresh category as Windows. All 20 jobs are now terminal; preserve this failed SHA and finish complete artifact reconciliation before preparing a repair milestone. Terminal API enumeration across all seven workflow runs confirms exactly 12 artifacts: three plugin-renderer reports, three large desktop previews, three loaded-plugin workflow reports, and three platform round-trip reports. No artifacts were produced by Rust CI, quality, or migration inventory. The three previews remain metadata-only under the established policy. The round-trip reports have matching archive digests and exact-SHA identities. Six small plugin/loaded-plugin report archives still need payload-level reconciliation. Full artifact reconciliation is complete: all 12 artifacts from the seven required workflow runs are accounted for. Nine non-preview report archives were downloaded and their byte sizes/SHA-256 values match the Actions API. All three round-trip report identities match the exact submitted SHA, attempt 1, platform, run, and API digest; they report Linux Canvas edit-path pointer/readback failure and Windows/macOS duplicate/un-correlated watcher refreshes. Three renderer reports each contain 28 records (4 loaded, 23 denied, 1 not applicable) and are associated by GitHub metadata with the correct successful run/SHA/attempt because payloads omit those identifiers. Three loaded-plugin reports embed the exact source-tree head and platform, match archive hashes, but each is partial and explicitly does not promote compatibility. Three large desktop previews remain metadata-only under existing policy. All required jobs are terminal; R3.17 remains failed and not achieved.",
       "artifact_reconciliation": {
         "status": "Complete; three large desktop preview archives remain metadata-only under the existing policy.",
         "workflow_run_ids_checked": [
@@ -47157,7 +46650,7 @@
       "failed": 2
     }
   },
-  "planned_ci_repair_milestone_id": "R3.20",
+  "planned_ci_repair_milestone_id": "R3.21",
   "historical_ci_batches": [
     {
       "milestone": "R2.8.136-R3.4-LINUX-CANVAS-PRESTAGING-FOCUS-RECOVERY; attempt 1",
@@ -47541,7 +47034,7 @@
           "platform": "Ubuntu",
           "artifact_id": 12065606078,
           "source_sha": "81abce92933ff79280768f63c14973a0299beada",
-          "summary": "The Linux ID value itself read back exactly as `text-1`. The screenshot-readback helper rejected its post-capture diagnostic snapshot: a watcher refresh began between focused field frames and the diagnostic sample; a later frame showed both fields disabled/unfocused and shifted from y=79–98 to y=110–129. The helper rejected the geometry/focus correlation before OCR. This explains the observed mismatch but does not establish what triggered the refresh or its precise timing relative to pixel capture. No save or vault write was attempted; the destination remained absent and pre-save abort preservation passed. The full eframe persistence-off marker and runtime mapping passed, but the after-field-input app-data checkpoint was not captured.",
+          "summary": "The Linux ID value itself read back exactly as `text-1`. The screenshot-readback helper rejected its post-capture diagnostic snapshot: a watcher refresh began between focused field frames and the diagnostic sample; a later frame showed both fields disabled/unfocused and shifted from y=79\u201398 to y=110\u2013129. The helper rejected the geometry/focus correlation before OCR. This explains the observed mismatch but does not establish what triggered the refresh or its precise timing relative to pixel capture. No save or vault write was attempted; the destination remained absent and pre-save abort preservation passed. The full eframe persistence-off marker and runtime mapping passed, but the after-field-input app-data checkpoint was not captured.",
           "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38944357363/job/117119600534"
         }
       ],
@@ -48436,33 +47929,53 @@
       "pending_roundtrip_artifact_count": 0
     }
   ],
-  "origin_main_sha_after_push": "57a28b2d371be576d1d4aebb1ea77d1b47b17fb9",
-  "origin_main_sha": "57a28b2d371be576d1d4aebb1ea77d1b47b17fb9",
-  "origin_main_sha_verified_at": "2026-10-16T22:49:55Z",
+  "origin_main_sha_after_push": "a0049c751d82540a9eca12e5323c05c673beacf9",
+  "origin_main_sha": "a0049c751d82540a9eca12e5323c05c673beacf9",
+  "origin_main_sha_verified_at": "2026-10-16T23:26:31Z",
   "candidate_followup_plan": {
-    "id": "R3.20-R3.19-TERMINAL-CI-REPAIR",
-    "milestone_id": "R3.20",
-    "name": "R3.20 consolidated repair of R3.19 exact-SHA CI failures",
-    "status": "implementation_complete",
-    "plan": ".agents/tasks/2026-10-07/evidence/r3-20-r3-19-terminal-ci-repair.json",
-    "candidate_base_sha": "57a28b2d371be576d1d4aebb1ea77d1b47b17fb9",
-    "depends_on": "R3.19 terminal-failed and fully reconciled on exact SHA 57a28b2d371be576d1d4aebb1ea77d1b47b17fb9.",
-    "reviewed_by": ["r320_watcher_triage"],
-    "reviewed_at": "2026-10-16T22:57:36Z",
+    "id": "R3.21-R3.20-TERMINAL-CI-REPAIR",
+    "milestone_id": "R3.21",
+    "name": "R3.21 Rust CI and unchanged watcher-probe wake-up repair",
+    "status": "implementation_complete_pending_ci",
+    "plan": ".agents/tasks/2026-10-07/evidence/r3-21-r3-20-terminal-ci-repair.json",
+    "candidate_base_sha": "a0049c751d82540a9eca12e5323c05c673beacf9",
+    "depends_on": "R3.20 exact-SHA CI is terminal-failed and all workflows, jobs, and artifacts are reconciled on a0049c751d82540a9eca12e5323c05c673beacf9.",
+    "reviewed_by": [
+      "r320_integrated_review",
+      "r320_roundtrip_repair_analysis",
+      "a590_attempt3_rust_ci"
+    ],
+    "reviewed_at": "2026-10-16T23:42:05Z",
     "implementation_started": true,
-    "implementation_started_at": "2026-10-16T22:58:10Z",
+    "implementation_started_at": "2026-10-16T23:30:06Z",
+    "implementation_started_from_sha": "a0049c751d82540a9eca12e5323c05c673beacf9",
     "implementation_complete": true,
     "local_executable_validation": false,
     "pushed_once": false,
     "milestone_achieved": false,
-    "implementation_reviewed_by": ["r320_ui_review", "r320_integrated_review"],
-    "implementation_reviewed_at": "2026-10-16T23:13:14Z",
-    "next_action": "Verify origin/main still equals the candidate base and no exact-SHA CI batch is active, then submit the reviewed milestone once. No local executable validation or partial push."
+    "implementation_review_status": "Approved as a complete milestone by r320_integrated_review, r320_roundtrip_repair_analysis, and a590_attempt3_rust_ci; ready for one push after exact-base/no-active-batch preflight.",
+    "next_action": "Confirm origin/main still equals a0049c751d82540a9eca12e5323c05c673beacf9 and no exact-SHA CI batch is active, then commit and push the complete R3.21 milestone once. Hold main at its submitted SHA through the full required CI batch.",
+    "submitted_sha": null,
+    "ci_evidence": null,
+    "ci_status": null,
+    "ci_run_ids": [],
+    "ci_workflow_counts": null,
+    "ci_job_counts": null,
+    "submitted_at": null,
+    "ci_last_polled_at": null,
+    "ci_findings_summary": null,
+    "implementation_completed_at": "2026-10-16T23:42:05Z",
+    "implementation_reviewed_by": [
+      "r320_integrated_review",
+      "r320_roundtrip_repair_analysis",
+      "a590_attempt3_rust_ci"
+    ],
+    "implementation_reviewed_at": "2026-10-16T23:42:38Z"
   },
-  "origin_main_sha_before_push": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
-  "last_submitted_head": "57a28b2d371be576d1d4aebb1ea77d1b47b17fb9",
-  "planned_repair_milestone_id": "R3.20",
-  "origin_main_verified_at": "2026-10-16T22:38:17Z",
+  "origin_main_sha_before_push": "57a28b2d371be576d1d4aebb1ea77d1b47b17fb9",
+  "last_submitted_head": "a0049c751d82540a9eca12e5323c05c673beacf9",
+  "planned_repair_milestone_id": "R3.21",
+  "origin_main_verified_at": "2026-10-16T23:26:31Z",
   "historical_repairs": [
     {
       "id": "R2.8.148-R3.16-LINUX-CANVAS-FULL-EFRAME-PERSISTENCE-ISOLATION",
@@ -48620,5 +48133,840 @@
       "failed": 7
     },
     "artifacts_reconciled": true
+  },
+  "previous_r3_18_ci_attempt": {
+    "schema_version": 1,
+    "superseded_by": "R3.19 current_ci_batch; detailed R3.18 evidence is preserved here as history.",
+    "milestone_id": "R3.18",
+    "name": "R3.18 consolidated repair of R3.17 exact-SHA CI failures",
+    "attempt": 1,
+    "base_sha": "37994bfb0cdea541f907a33b2c38527a411ca2c7",
+    "implementation_sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+    "submitted_sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+    "pushed_once": true,
+    "status": "terminal_failed_artifacts_reconciled",
+    "triggered_at": "2026-10-16T21:47:45Z",
+    "last_polled_at": "2026-10-16T22:02:47Z",
+    "workflow_counts": {
+      "observed": 7,
+      "terminal": 7,
+      "passed": 5,
+      "failed": 2,
+      "cancelled": 0,
+      "queued": 0,
+      "in_progress": 0
+    },
+    "job_counts": {
+      "observed": 20,
+      "terminal": 20,
+      "passed": 13,
+      "failed": 7,
+      "cancelled": 0,
+      "queued": 0,
+      "in_progress": 0
+    },
+    "run_ids": [
+      38971746806,
+      38971746799,
+      38971746893,
+      38971746857,
+      38971746956,
+      38971746972,
+      38971746871
+    ],
+    "workflow_runs": [
+      {
+        "name": "OpenObsidian Rust CI",
+        "run_id": 38971746806,
+        "status": "completed",
+        "conclusion": "failure",
+        "sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746806"
+      },
+      {
+        "name": "OpenObsidian loaded plugin workflows",
+        "run_id": 38971746799,
+        "status": "completed",
+        "conclusion": "success",
+        "sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746799"
+      },
+      {
+        "name": "Obsidian vault round-trip acceptance",
+        "run_id": 38971746893,
+        "status": "completed",
+        "conclusion": "failure",
+        "sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746893"
+      },
+      {
+        "name": "OpenObsidian desktop build",
+        "run_id": 38971746857,
+        "status": "completed",
+        "conclusion": "success",
+        "sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746857"
+      },
+      {
+        "name": "OpenObsidian quality",
+        "run_id": 38971746956,
+        "status": "completed",
+        "conclusion": "success",
+        "sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746956"
+      },
+      {
+        "name": "OpenObsidian plugin renderer matrix",
+        "run_id": 38971746972,
+        "status": "completed",
+        "conclusion": "success",
+        "sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746972"
+      },
+      {
+        "name": "Rust migration inventory",
+        "run_id": 38971746871,
+        "status": "completed",
+        "conclusion": "success",
+        "sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746871"
+      }
+    ],
+    "jobs": [
+      {
+        "run_id": 38971746806,
+        "job_id": 117211507802,
+        "name": "rust (macos-latest)",
+        "status": "completed",
+        "conclusion": "failure",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746806/job/117211507802"
+      },
+      {
+        "run_id": 38971746806,
+        "job_id": 117211508069,
+        "name": "minimum supported Rust (1.95)",
+        "status": "completed",
+        "conclusion": "failure",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746806/job/117211508069"
+      },
+      {
+        "run_id": 38971746806,
+        "job_id": 117211508123,
+        "name": "rust (ubuntu-latest)",
+        "status": "completed",
+        "conclusion": "failure",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746806/job/117211508123"
+      },
+      {
+        "run_id": 38971746806,
+        "job_id": 117211508179,
+        "name": "rust (windows-latest)",
+        "status": "completed",
+        "conclusion": "failure",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746806/job/117211508179"
+      },
+      {
+        "run_id": 38971746799,
+        "job_id": 117211508533,
+        "name": "ubuntu-latest",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746799/job/117211508533"
+      },
+      {
+        "run_id": 38971746799,
+        "job_id": 117211508931,
+        "name": "windows-latest",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746799/job/117211508931"
+      },
+      {
+        "run_id": 38971746799,
+        "job_id": 117211508983,
+        "name": "macos-latest",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746799/job/117211508983"
+      },
+      {
+        "run_id": 38971746893,
+        "job_id": 117211508553,
+        "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04",
+        "status": "completed",
+        "conclusion": "failure",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746893/job/117211508553"
+      },
+      {
+        "run_id": 38971746893,
+        "job_id": 117211508867,
+        "name": "Obsidian 1.14.4 vault round-trip on macos-latest",
+        "status": "completed",
+        "conclusion": "failure",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746893/job/117211508867"
+      },
+      {
+        "run_id": 38971746893,
+        "job_id": 117211508955,
+        "name": "Obsidian 1.14.4 vault round-trip on windows-latest",
+        "status": "completed",
+        "conclusion": "failure",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746893/job/117211508955"
+      },
+      {
+        "run_id": 38971746857,
+        "job_id": 117211508367,
+        "name": "ubuntu-latest",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746857/job/117211508367"
+      },
+      {
+        "run_id": 38971746857,
+        "job_id": 117211508627,
+        "name": "windows-latest",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746857/job/117211508627"
+      },
+      {
+        "run_id": 38971746857,
+        "job_id": 117211508647,
+        "name": "macos-latest",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746857/job/117211508647"
+      },
+      {
+        "run_id": 38971746956,
+        "job_id": 117211508561,
+        "name": "windows-latest",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746956/job/117211508561"
+      },
+      {
+        "run_id": 38971746956,
+        "job_id": 117211508829,
+        "name": "ubuntu-latest",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746956/job/117211508829"
+      },
+      {
+        "run_id": 38971746956,
+        "job_id": 117211508965,
+        "name": "macos-latest",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746956/job/117211508965"
+      },
+      {
+        "run_id": 38971746972,
+        "job_id": 117211509248,
+        "name": "macos-latest",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746972/job/117211509248"
+      },
+      {
+        "run_id": 38971746972,
+        "job_id": 117211509271,
+        "name": "windows-latest",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746972/job/117211509271"
+      },
+      {
+        "run_id": 38971746972,
+        "job_id": 117211509740,
+        "name": "ubuntu-latest",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746972/job/117211509740"
+      },
+      {
+        "run_id": 38971746871,
+        "job_id": 117211508418,
+        "name": "inventory",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746871/job/117211508418"
+      }
+    ],
+    "failed_jobs": [
+      {
+        "run_id": 38971746806,
+        "job_id": 117211507802,
+        "name": "rust (macos-latest)",
+        "status": "completed",
+        "conclusion": "failure",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746806/job/117211507802",
+        "failed_step": "Run workspace tests",
+        "log_findings": [
+          "Two failures: egui_defers_an_unstable_refresh_retry_until_a_later_trigger at crates/ui-egui/src/lib.rs:10906 (vault_snapshot_probe_receiver was None), and egui_stale_source_edit_preserves_external_note_and_disables_retry at line 10286 (multiple Markdown source draft nodes)."
+        ]
+      },
+      {
+        "run_id": 38971746806,
+        "job_id": 117211508123,
+        "name": "rust (ubuntu-latest)",
+        "status": "completed",
+        "conclusion": "failure",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746806/job/117211508123",
+        "failed_step": "Check formatting; Run workspace tests",
+        "log_findings": [
+          "cargo fmt --all -- --check reports diffs in crates/ui-egui/src/lib.rs at lines 862, 4492, 4512, 4555, 4822, 5284, 5306, 5325, 10834, 10924, 10962, 10991, 11036, 11050, 11061, 11132, and 11253, plus crates/vault/src/watcher.rs:309.",
+          "The same two UI tests failed as on macOS."
+        ]
+      },
+      {
+        "run_id": 38971746806,
+        "job_id": 117211508179,
+        "name": "rust (windows-latest)",
+        "status": "completed",
+        "conclusion": "failure",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746806/job/117211508179",
+        "failed_step": "Run Windows workspace tests",
+        "log_findings": [
+          "egui_stale_source_edit_preserves_external_note_and_disables_retry failed at crates/ui-egui/src/lib.rs:10286 due to multiple Markdown source draft nodes; 122 passed, 1 failed, 1 filtered."
+        ]
+      },
+      {
+        "run_id": 38971746806,
+        "job_id": 117211508069,
+        "name": "minimum supported Rust (1.95)",
+        "status": "completed",
+        "conclusion": "failure",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746806/job/117211508069",
+        "failed_step": "Run locked workspace tests at the declared MSRV",
+        "log_findings": [
+          "Toolchain setup succeeded with rustc 1.95.0; 122 passed and the same two UI tests failed as on macOS and Ubuntu."
+        ]
+      },
+      {
+        "run_id": 38971746893,
+        "job_id": 117211508553,
+        "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04",
+        "status": "completed",
+        "conclusion": "failure",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746893/job/117211508553",
+        "failed_step": "Author, open, snapshot, and reopen the same vault",
+        "log_findings": [
+          "Timed out waiting for a post-edit changed watcher snapshot probe and correlated full refresh; last value=null. This occurred after creation of After refresh.md, before later external edits/rename."
+        ]
+      },
+      {
+        "run_id": 38971746893,
+        "job_id": 117211508867,
+        "name": "Obsidian 1.14.4 vault round-trip on macos-latest",
+        "status": "completed",
+        "conclusion": "failure",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746893/job/117211508867",
+        "failed_step": "Author, open, snapshot, and reopen the same vault",
+        "log_findings": [
+          "Timed out waiting for a post-edit changed watcher snapshot probe and correlated full refresh; last value=null. Failure occurred at first post-creation watcher reconciliation, before in-place edit or rename."
+        ]
+      },
+      {
+        "run_id": 38971746893,
+        "job_id": 117211508955,
+        "name": "Obsidian 1.14.4 vault round-trip on windows-latest",
+        "status": "completed",
+        "conclusion": "failure",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38971746893/job/117211508955",
+        "failed_step": "Author, open, snapshot, and reopen the same vault",
+        "log_findings": [
+          "Timed out waiting for a post-edit changed watcher snapshot probe and correlated full refresh; last value=null. Failure occurred at first watcher reconciliation after external note creation."
+        ]
+      }
+    ],
+    "failed_job_ids": [
+      117211507802,
+      117211508123,
+      117211508179,
+      117211508069,
+      117211508553,
+      117211508867,
+      117211508955
+    ],
+    "active_job_ids": [],
+    "queued_job_ids": [],
+    "artifact_inventory_count": 12,
+    "artifact_inventory_complete": true,
+    "artifacts_reconciled": true,
+    "roundtrip_report_payloads_reconciled": true,
+    "all_required_jobs_terminal": true,
+    "milestone_achieved": false,
+    "origin_main_sha_before_push": "37994bfb0cdea541f907a33b2c38527a411ca2c7",
+    "origin_main_sha_after_push": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+    "origin_main_verified_at": "2026-10-16T21:48:50Z",
+    "main_sha_held": true,
+    "evidence": ".agents/tasks/2026-10-07/evidence/r2.8.150-r3-18-r3-17-ci-repair-candidate.json",
+    "local_executable_validation": false,
+    "artifacts": [
+      {
+        "run_id": 38971746893,
+        "artifact_id": 12077522504,
+        "name": "obsidian-vault-roundtrip-Linux-15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+        "size_in_bytes": 2590805,
+        "digest": "sha256:ee3db46bc81e608c938536d35af66ef323e068eefa47a50cab3cec18d6d9af59",
+        "expired": false,
+        "kind": "roundtrip-report",
+        "platform": "Linux",
+        "downloaded": true,
+        "archive_sha256_verified": true,
+        "report_sha256": "1f516637e066b81c3a52ebc63168565db68f47214bdcae60d99c7923e2ef4132",
+        "source_sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+        "archive_sha256": "ee3db46bc81e608c938536d35af66ef323e068eefa47a50cab3cec18d6d9af59",
+        "payload_status": "reconciled",
+        "report_status": "failed",
+        "identity_verified": true,
+        "failure": "Timed out waiting for a post-edit changed watcher snapshot probe and correlated full refresh; last value=null.",
+        "failure_stage": "after external creation of After refresh.md, before in-place edit and rename"
+      },
+      {
+        "run_id": 38971746893,
+        "artifact_id": 12076883582,
+        "name": "obsidian-vault-roundtrip-macOS-15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+        "size_in_bytes": 3635273,
+        "digest": "sha256:4b1c871224ded37a8786a9c31b04efad8f9d658c5d5b535af446b3b965cdd41b",
+        "expired": false,
+        "kind": "roundtrip-report",
+        "platform": "macOS",
+        "downloaded": true,
+        "archive_sha256_verified": true,
+        "report_sha256": "22e067108d9ceb05889ca6a13e9d0718eda62fbaa8904af898e4ccac66faca12",
+        "source_sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+        "archive_sha256": "4b1c871224ded37a8786a9c31b04efad8f9d658c5d5b535af446b3b965cdd41b",
+        "payload_status": "reconciled",
+        "report_status": "failed",
+        "identity_verified": true,
+        "failure": "Timed out waiting for a post-edit changed watcher snapshot probe and correlated full refresh; last value=null.",
+        "failure_stage": "after external creation of After refresh.md, before in-place edit and rename"
+      },
+      {
+        "run_id": 38971746893,
+        "artifact_id": 12076873273,
+        "name": "obsidian-vault-roundtrip-Windows-15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+        "size_in_bytes": 2842372,
+        "digest": "sha256:32d97778566fe56297ce0b04457e66dc55b3d6e1125f8c21f5b70e5749436484",
+        "expired": false,
+        "kind": "roundtrip-report",
+        "platform": "Windows",
+        "downloaded": true,
+        "archive_sha256_verified": true,
+        "report_sha256": "7746147c29f75904220854abd11ebcae2714e91cf462c2ec94e928dc9eb12db8",
+        "source_sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+        "archive_sha256": "32d97778566fe56297ce0b04457e66dc55b3d6e1125f8c21f5b70e5749436484",
+        "payload_status": "reconciled",
+        "report_status": "failed",
+        "identity_verified": true,
+        "failure": "Timed out waiting for a post-edit changed watcher snapshot probe and correlated full refresh; last value=null.",
+        "failure_stage": "after external creation of After refresh.md, before in-place edit and rename"
+      },
+      {
+        "run_id": 38971746857,
+        "artifact_id": 12076717642,
+        "name": "openobsidian-Linux-preview-15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+        "size_in_bytes": 125946850,
+        "digest": "sha256:31af9cda2fa37a09146547445dba3f46e5873dc94033245a29c2a3985d2fc2bd",
+        "expired": false,
+        "kind": "desktop-preview",
+        "platform": "Linux",
+        "downloaded": false,
+        "archive_sha256_verified": false,
+        "payload_status": "metadata_only_per_policy",
+        "source_sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+        "expires_at": "2027-01-14"
+      },
+      {
+        "run_id": 38971746857,
+        "artifact_id": 12076284748,
+        "name": "openobsidian-macOS-preview-15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+        "size_in_bytes": 397395784,
+        "digest": "sha256:c05a3bd8c428e012c762e7e62c5061f5dd7e64da08912f2b0231fd902cd64a00",
+        "expired": false,
+        "kind": "desktop-preview",
+        "platform": "macOS",
+        "downloaded": false,
+        "archive_sha256_verified": false,
+        "payload_status": "metadata_only_per_policy",
+        "source_sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+        "expires_at": "2027-01-14"
+      },
+      {
+        "run_id": 38971746857,
+        "artifact_id": 12077586920,
+        "name": "openobsidian-Windows-preview-15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+        "size_in_bytes": 163006126,
+        "digest": "sha256:5132470ffb6a049ccd3ae4318c0c024abef4690ca47c1243f53662e31e29cd25",
+        "expired": false,
+        "kind": "desktop-preview",
+        "platform": "Windows",
+        "downloaded": false,
+        "archive_sha256_verified": false,
+        "payload_status": "metadata_only_per_policy",
+        "source_sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+        "expires_at": "2027-01-14"
+      },
+      {
+        "run_id": 38971746972,
+        "artifact_id": 12076623151,
+        "name": "plugin-renderer-lifecycle-Linux-15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+        "size_in_bytes": 3100,
+        "digest": "sha256:2ca932adc3738dde0183ba19dd4bcce5a0e7782663b5593aca5e14e169aa803d",
+        "expired": false,
+        "kind": "plugin-renderer-report",
+        "platform": "Linux",
+        "downloaded": true,
+        "archive_sha256_verified": true,
+        "source_sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+        "archive_sha256": "2ca932adc3738dde0183ba19dd4bcce5a0e7782663b5593aca5e14e169aa803d",
+        "report_sha256": "ed6d318114dce8586b80491d3b3235a8c214ae1f962f1e251cce658909bc7e2c",
+        "payload_status": "reconciled",
+        "report_status": "renderer_matrix_success",
+        "record_count": 28,
+        "platform_reports_byte_identical": true,
+        "record_status_counts": {
+          "renderer-loaded": 4,
+          "renderer-denied": 23,
+          "not-applicable": 1
+        },
+        "integrity_status_counts": {
+          "passed": 27,
+          "not-applicable": 1
+        },
+        "execution_status_counts": {
+          "renderer-wrapper": 27,
+          "not-executed": 1
+        },
+        "identity_note": "JSONL omits run/SHA/platform; exact run and SHA are established by Actions artifact metadata and SHA-bearing artifact names; member filename identifies platform."
+      },
+      {
+        "run_id": 38971746972,
+        "artifact_id": 12076618141,
+        "name": "plugin-renderer-lifecycle-Windows-15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+        "size_in_bytes": 3104,
+        "digest": "sha256:0ebcf9c30aaa32b8b81e57df4e2aed2ad06ff97aea7d923b8fca6fa691786d2a",
+        "expired": false,
+        "kind": "plugin-renderer-report",
+        "platform": "Windows",
+        "downloaded": true,
+        "archive_sha256_verified": true,
+        "source_sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+        "archive_sha256": "0ebcf9c30aaa32b8b81e57df4e2aed2ad06ff97aea7d923b8fca6fa691786d2a",
+        "report_sha256": "ed6d318114dce8586b80491d3b3235a8c214ae1f962f1e251cce658909bc7e2c",
+        "payload_status": "reconciled",
+        "report_status": "renderer_matrix_success",
+        "record_count": 28,
+        "platform_reports_byte_identical": true,
+        "record_status_counts": {
+          "renderer-loaded": 4,
+          "renderer-denied": 23,
+          "not-applicable": 1
+        },
+        "integrity_status_counts": {
+          "passed": 27,
+          "not-applicable": 1
+        },
+        "execution_status_counts": {
+          "renderer-wrapper": 27,
+          "not-executed": 1
+        },
+        "identity_note": "JSONL omits run/SHA/platform; exact run and SHA are established by Actions artifact metadata and SHA-bearing artifact names; member filename identifies platform."
+      },
+      {
+        "run_id": 38971746972,
+        "artifact_id": 12076254738,
+        "name": "plugin-renderer-lifecycle-macOS-15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+        "size_in_bytes": 3100,
+        "digest": "sha256:10921bf1aa8abfffbbcb0e94c70ab0fd53d26e475c8e42438f9481adc5d9ba5b",
+        "expired": false,
+        "kind": "plugin-renderer-report",
+        "platform": "macOS",
+        "downloaded": true,
+        "archive_sha256_verified": true,
+        "source_sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+        "archive_sha256": "10921bf1aa8abfffbbcb0e94c70ab0fd53d26e475c8e42438f9481adc5d9ba5b",
+        "report_sha256": "ed6d318114dce8586b80491d3b3235a8c214ae1f962f1e251cce658909bc7e2c",
+        "payload_status": "reconciled",
+        "report_status": "renderer_matrix_success",
+        "record_count": 28,
+        "platform_reports_byte_identical": true,
+        "record_status_counts": {
+          "renderer-loaded": 4,
+          "renderer-denied": 23,
+          "not-applicable": 1
+        },
+        "integrity_status_counts": {
+          "passed": 27,
+          "not-applicable": 1
+        },
+        "execution_status_counts": {
+          "renderer-wrapper": 27,
+          "not-executed": 1
+        },
+        "identity_note": "JSONL omits run/SHA/platform; exact run and SHA are established by Actions artifact metadata and SHA-bearing artifact names; member filename identifies platform."
+      },
+      {
+        "run_id": 38971746799,
+        "artifact_id": 12077146695,
+        "name": "loaded-plugin-workflows-Linux-15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+        "size_in_bytes": 171483,
+        "digest": "sha256:ad65e96470590773967b66f9bc3f2665b8ef182db9b093c75b1c5b455ef0545e",
+        "expired": false,
+        "kind": "loaded-plugin-report",
+        "platform": "Linux",
+        "downloaded": true,
+        "archive_sha256_verified": true,
+        "source_sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+        "archive_sha256": "ad65e96470590773967b66f9bc3f2665b8ef182db9b093c75b1c5b455ef0545e",
+        "report_sha256": "3db1a0b39b82c2e9c23fb78f6abdfe29f17db318658114357d989518a0f79ded",
+        "payload_status": "reconciled",
+        "report_status": "partial",
+        "paths": 328,
+        "complete_count": 11,
+        "complete_ids": [
+          "PC04",
+          "PC07",
+          "PC08",
+          "PC17",
+          "PC19",
+          "PC20",
+          "PC21",
+          "PC22",
+          "PC23",
+          "PC24",
+          "PC25"
+        ],
+        "partial_count": 10,
+        "partial_ids": [
+          "PC02",
+          "PC03",
+          "PC05",
+          "PC06",
+          "PC09",
+          "PC10",
+          "PC11",
+          "PC12",
+          "PC14",
+          "PC15"
+        ],
+        "compatibility_promoted": false,
+        "integrity_checks": "passed",
+        "source_tree_head": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+        "source_tree_sha256": "4600e18c0209f1bcc69c1cbc84385609d9a520b421bd839a94a520b68efbc6fe",
+        "platform_runtime": "linux / x64 / Electron 44.3.0 / xvfb-run"
+      },
+      {
+        "run_id": 38971746799,
+        "artifact_id": 12076667980,
+        "name": "loaded-plugin-workflows-macOS-15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+        "size_in_bytes": 171496,
+        "digest": "sha256:1407e91e0c990d2d5e687b7f0c63e94e68e45aedadd4fb970e2a2fa34c3039b9",
+        "expired": false,
+        "kind": "loaded-plugin-report",
+        "platform": "macOS",
+        "downloaded": true,
+        "archive_sha256_verified": true,
+        "source_sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+        "archive_sha256": "1407e91e0c990d2d5e687b7f0c63e94e68e45aedadd4fb970e2a2fa34c3039b9",
+        "report_sha256": "8ce1536dffd44b7e9ce55aea00fa28c9e61f9d7224e55b1d7409da36d8139bd4",
+        "payload_status": "reconciled",
+        "report_status": "partial",
+        "paths": 328,
+        "complete_count": 11,
+        "complete_ids": [
+          "PC04",
+          "PC07",
+          "PC08",
+          "PC17",
+          "PC19",
+          "PC20",
+          "PC21",
+          "PC22",
+          "PC23",
+          "PC24",
+          "PC25"
+        ],
+        "partial_count": 10,
+        "partial_ids": [
+          "PC02",
+          "PC03",
+          "PC05",
+          "PC06",
+          "PC09",
+          "PC10",
+          "PC11",
+          "PC12",
+          "PC14",
+          "PC15"
+        ],
+        "compatibility_promoted": false,
+        "integrity_checks": "passed",
+        "source_tree_head": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+        "source_tree_sha256": "a9ac6810f6678c44041587cff0ccbdd90b817e1f49a9fd306264f916dc829131",
+        "platform_runtime": "darwin / arm64 / Electron 44.3.0 / xvfb-run"
+      },
+      {
+        "run_id": 38971746799,
+        "artifact_id": 12076414402,
+        "name": "loaded-plugin-workflows-Windows-15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+        "size_in_bytes": 171472,
+        "digest": "sha256:438110fb632673742d8825d9b65be7eea33849f94bc1d8a62b8de90d6b7e8ffb",
+        "expired": false,
+        "kind": "loaded-plugin-report",
+        "platform": "Windows",
+        "downloaded": true,
+        "archive_sha256_verified": true,
+        "source_sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+        "archive_sha256": "438110fb632673742d8825d9b65be7eea33849f94bc1d8a62b8de90d6b7e8ffb",
+        "report_sha256": "6c66cda95c883f58e066a7b860d47ce8ff9601c9029b91bf9cbc4b395feb0700",
+        "payload_status": "reconciled",
+        "report_status": "partial",
+        "paths": 328,
+        "complete_count": 11,
+        "complete_ids": [
+          "PC04",
+          "PC07",
+          "PC08",
+          "PC17",
+          "PC19",
+          "PC20",
+          "PC21",
+          "PC22",
+          "PC23",
+          "PC24",
+          "PC25"
+        ],
+        "partial_count": 10,
+        "partial_ids": [
+          "PC02",
+          "PC03",
+          "PC05",
+          "PC06",
+          "PC09",
+          "PC10",
+          "PC11",
+          "PC12",
+          "PC14",
+          "PC15"
+        ],
+        "compatibility_promoted": false,
+        "integrity_checks": "passed",
+        "source_tree_head": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+        "source_tree_sha256": "3d25ee25985155c61cf305f91d465edc98b271317f67cf669fc8d336dc5d5075",
+        "platform_runtime": "win32 / x64 / Electron 44.3.0 / xvfb-run"
+      }
+    ],
+    "artifact_reconciliation": {
+      "status": "Complete: all 12 Actions artifact records are tied to exact runs and SHA; nine report archives were downloaded and matched by API size/digest and report identity; three large desktop previews remain metadata-only under the existing policy.",
+      "workflow_run_ids_checked": [
+        38971746806,
+        38971746799,
+        38971746893,
+        38971746857,
+        38971746956,
+        38971746972,
+        38971746871
+      ],
+      "metadata_record_count": 12,
+      "archive_payloads_downloaded_and_hash_verified": 9,
+      "report_payloads_identity_reconciled": 9,
+      "metadata_only_preview_count": 3,
+      "plugin_renderer_reports": {
+        "run_id": 38971746972,
+        "artifact_ids": [
+          12076623151,
+          12076618141,
+          12076254738
+        ],
+        "payload_reconciliation": "verified",
+        "archive_hashes_match_actions_api": true,
+        "report_sha256_by_platform": {
+          "Linux": "ed6d318114dce8586b80491d3b3235a8c214ae1f962f1e251cce658909bc7e2c",
+          "Windows": "ed6d318114dce8586b80491d3b3235a8c214ae1f962f1e251cce658909bc7e2c",
+          "macOS": "ed6d318114dce8586b80491d3b3235a8c214ae1f962f1e251cce658909bc7e2c"
+        },
+        "records_per_platform": 28,
+        "reports_byte_identical": true,
+        "identity_caveat": "JSONL omits run/SHA/platform; Actions artifact metadata, SHA-bearing names, and platform member filenames establish identity."
+      },
+      "loaded_plugin_workflow_reports": {
+        "run_id": 38971746799,
+        "artifact_ids": [
+          12077146695,
+          12076667980,
+          12076414402
+        ],
+        "payload_reconciliation": "verified",
+        "archive_hashes_match_actions_api": true,
+        "report_sha256_by_platform": {
+          "Linux": "3db1a0b39b82c2e9c23fb78f6abdfe29f17db318658114357d989518a0f79ded",
+          "macOS": "8ce1536dffd44b7e9ce55aea00fa28c9e61f9d7224e55b1d7409da36d8139bd4",
+          "Windows": "6c66cda95c883f58e066a7b860d47ce8ff9601c9029b91bf9cbc4b395feb0700"
+        },
+        "source_tree_head": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+        "source_tree_paths_per_platform": 328,
+        "report_status": "partial",
+        "complete_count_per_platform": 11,
+        "partial_count_per_platform": 10,
+        "compatibility_promoted": false,
+        "integrity_checks": "passed"
+      },
+      "roundtrip_reports": {
+        "artifact_ids": [
+          12077522504,
+          12076883582,
+          12076873273
+        ],
+        "hashes_and_sizes_match_actions_api": true,
+        "embedded_source_sha_run_attempt_platform_match": true,
+        "platform_statuses": {
+          "Linux": "failed",
+          "Windows": "failed",
+          "macOS": "failed"
+        },
+        "report_sha256": {
+          "Linux": "1f516637e066b81c3a52ebc63168565db68f47214bdcae60d99c7923e2ef4132",
+          "macOS": "22e067108d9ceb05889ca6a13e9d0718eda62fbaa8904af898e4ccac66faca12",
+          "Windows": "7746147c29f75904220854abd11ebcae2714e91cf462c2ec94e928dc9eb12db8"
+        },
+        "error": "Timed out waiting for a post-edit changed watcher snapshot probe and correlated full refresh; last value=null.",
+        "stage": "after external creation of After refresh.md, before in-place edit and rename",
+        "watch_error": null,
+        "observation": "No watcher hint, snapshot probe, reconciliation request, or consumed result appears after file creation in any platform log. Reports do not prove whether the notify callback fired or whether egui polled the hint."
+      },
+      "metadata_only_previews": {
+        "artifact_ids": [
+          12076717642,
+          12076284748,
+          12077586920
+        ],
+        "sizes_in_bytes": [
+          125946850,
+          397395784,
+          163006126
+        ],
+        "api_digests": {
+          "Linux": "sha256:31af9cda2fa37a09146547445dba3f46e5873dc94033245a29c2a3985d2fc2bd",
+          "macOS": "sha256:c05a3bd8c428e012c762e7e62c5061f5dd7e64da08912f2b0231fd902cd64a00",
+          "Windows": "sha256:5132470ffb6a049ccd3ae4318c0c024abef4690ca47c1243f53662e31e29cd25"
+        },
+        "api_digests_recorded": true,
+        "payloads_downloaded": false,
+        "expires_at": "2027-01-14"
+      }
+    },
+    "observed_at": "2026-10-16T21:58:02Z",
+    "updated_at": "2026-10-16T21:58:02Z",
+    "required_workflow_count": 7,
+    "required_job_count": 20,
+    "evidence_path": ".agents/tasks/2026-10-07/evidence/r2.8.150-r3-18-r3-17-ci-repair-candidate.json",
+    "reconciled_workflow_counts": null,
+    "reconciled_job_counts": null,
+    "failure_inspection": "All seven workflows and twenty jobs are terminal on exact SHA 15fc2c10f87ada3ba9fb191e76206ce45acac74d: five workflows and thirteen jobs passed; Rust CI and round-trip acceptance failed. Both UI tests failed on macOS, Ubuntu, and Rust 1.95; Windows failed only the stale-source test. The unstable-retry test is not reported as a Windows failure; the separate attachment-preview test is filtered from the Windows workspace command and runs in its own step. Ubuntu also reports rustfmt differences. All three round-trip reports stop at first post-creation watcher reconciliation. Static review confirms an unasserted ambiguous accessible-label lookup and a transient asynchronous receiver assertion. A likely watcher cause is that channel notification delivery does not wake the idle egui loop (which may wait 60 seconds between repaints while the harness waits 30 seconds), but artifacts cannot prove that cause. All 12 artifacts are reconciled; partial loaded-plugin reports promote no compatibility status.",
+    "reconciled_at": "2026-10-16T22:02:47Z"
   }
 }

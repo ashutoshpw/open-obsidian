@@ -10523,7 +10523,7 @@
       "migration_acceptance": "Keep minor implementation, documentation, tests, fixes, and optional local commits grouped until a coherent, measurable milestone is complete and the full scope has been reviewed. A minor edit, formatting or lint correction, compiler fix, cleanup item, or evidence update does not trigger a push. Push origin/main once after implementation completion and whole-milestone review; that push starts one full exact-SHA GitHub Actions batch and marks implementation-complete / CI-pending. Keep origin/main at that SHA until every required job is terminal and all results and artifacts are reconciled, even if CI takes several hours; do not start another full batch meanwhile. If CI finds problems, let the full batch finish, group related findings into one reviewed repair milestone, and push that repair once. Mark achieved / CI-passed only after every required exact-SHA job passes and its evidence is reconciled.",
       "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
       "clause": "Use GitHub Actions as a milestone check, never as feedback for every minor edit. Keep related small changes and optional local commits together under a specific, measurable milestone. Complete and review the whole implementation first; only when no earlier CI batch is in flight, push the accumulated milestone to origin/main exactly once. The push starts its required CI and marks implementation-complete / CI-pending. It becomes achieved / CI-passed only after every required job passes for that exact SHA and evidence is reconciled. Keep origin/main at the submitted SHA through the potentially multi-hour batch; wait for terminal results before submitting the next milestone or a consolidated repair. Evidence-only and status-only updates stay local.",
-      "goal_sha256": "a9338a1c9f7c34f31c5a7bfdaa136ea5b51d5909cd5a2a53ca8e01d8e077fadf"
+      "goal_sha256": "58442ab7a57b13248f988ee2d0d04f4bfdf65efca03b47e651dab6ceb25ae760"
     },
     {
       "id": "MIG-003",
@@ -11281,10 +11281,10 @@
       "C07.8",
       "C07.9"
     ],
-    "goal_sha256": "a9338a1c9f7c34f31c5a7bfdaa136ea5b51d5909cd5a2a53ca8e01d8e077fadf",
+    "goal_sha256": "58442ab7a57b13248f988ee2d0d04f4bfdf65efca03b47e651dab6ceb25ae760",
     "policy": "Every inherited requirement was reviewed by ID and assigned a Rust owner, migration phase, acceptance criterion and retained/superseded/external disposition. Historical status/evidence remain preserved separately. Rust acceptance remains pending unless current exact-SHA migration evidence is attached; external items remain external_pending. Phase completion is milestone-level and does not auto-promote individual requirement rows; row status remains pending until that row\u2019s current exact-SHA Rust acceptance evidence is attached.",
-    "cadence_synced_at": "2026-10-16T22:49:55Z",
-    "cadence_sync_note": "Clarified the push gate: keep minor work local under a named milestone until its measurable implementation outcome is complete and reviewed, then push that milestone exactly once if no earlier CI batch is active. The push marks implementation-complete / CI-pending; achieved / CI-passed requires all required exact-SHA jobs and reconciled evidence. Keep origin/main at the submitted SHA through the potentially multi-hour batch and consolidate failures into a later repair milestone. Synchronized active goal fingerprints; this documentation change does not alter any CI outcome.",
+    "cadence_synced_at": "2026-10-16T23:33:44Z",
+    "cadence_sync_note": "Clarified that GitHub CI is a milestone boundary, not feedback for every minor edit. Keep related changes local; after the complete outcome is reviewed, push one accumulated milestone SHA to origin/main exactly once when no earlier CI batch is in flight. Keep main at that exact SHA through the potentially multi-hour batch, reconcile every required result and artifact, and consolidate failures into a later repair milestone. Implementation-complete / CI-pending is distinct from achieved / CI-passed. Synchronized active goal fingerprints; no CI outcome changed.",
     "reviewed_at": "2026-10-16T10:46:05Z",
     "previous_new_migration_requirement_count": 16,
     "post_r0_2_addition_count": 10,
