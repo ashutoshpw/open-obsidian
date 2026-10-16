@@ -2,7 +2,7 @@
   "schema_version": 1,
   "milestone_id": "R2.8.145-R3.13-C07.4-ID-READBACK-REPAIR",
   "name": "R3.13 C07.4 Canvas ID readback and CI audit repair",
-  "status": "implementation-complete / whole-milestone review approved / ready for one push",
+  "status": "implementation-complete / whole-milestone review approved / submitted once to origin/main / exact-SHA CI terminal failed on Linux; all results and artifacts reconciled; milestone unachieved",
   "starting_sha": "ad983495302c8d7d52701eb2b698087c4013fbe0",
   "origin_main_sha_at_planning": "ad983495302c8d7d52701eb2b698087c4013fbe0",
   "planning_date": "2026-10-16",
@@ -125,5 +125,52 @@
         "finding": "The Linux paired geometry repair, distinct note-create diagnostic identity, focus/value evidence, exact Vision fallback, changed-path scope, and seven-workflow/20-job boundary are bounded and evidence-based."
       }
     ]
+  },
+  "pushed_once": true,
+  "submitted_sha": "89da1495fac160fc77029ea4ad60c9c47724148b",
+  "submitted_at": "2026-10-16T13:47:59Z",
+  "run_ids": [
+    38910654749,
+    38910654728,
+    38910654956,
+    38910654750,
+    38910654912,
+    38910655002,
+    38910654687
+  ],
+  "ci_attempt_evidence": "evidence/r2.8.145-attempt-1-89da149.json",
+  "ci_status_at": "2026-10-16T14:58:29Z",
+  "origin_main_sha_after_push": "89da1495fac160fc77029ea4ad60c9c47724148b",
+  "origin_main_verified_at": "2026-10-16T14:06:48 UTC",
+  "terminal_ci": {
+    "workflow_counts": {
+      "observed": 7,
+      "terminal": 7,
+      "passed": 6,
+      "failed": 1,
+      "cancelled": 0,
+      "queued": 0,
+      "in_progress": 0
+    },
+    "job_counts": {
+      "observed": 20,
+      "terminal": 20,
+      "passed": 19,
+      "failed": 1,
+      "cancelled": 0,
+      "queued": 0,
+      "in_progress": 0
+    },
+    "failed_job_ids": [
+      117005348184
+    ],
+    "all_required_jobs_terminal": true,
+    "artifact_count": 16,
+    "artifact_inventory_complete": true,
+    "artifacts_reconciled": true,
+    "roundtrip_report_payloads_reconciled": true,
+    "evidence": "evidence/r2.8.145-attempt-1-89da149.json",
+    "origin_main_sha": "89da1495fac160fc77029ea4ad60c9c47724148b",
+    "milestone_achieved": false
   }
 }

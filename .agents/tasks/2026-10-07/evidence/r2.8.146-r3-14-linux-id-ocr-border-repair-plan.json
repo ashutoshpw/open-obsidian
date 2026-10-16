@@ -1,0 +1,132 @@
+{
+  "schema_version": 1,
+  "milestone_id": "R2.8.146-R3.14-C07.4-LINUX-ID-OCR-BORDER-REPAIR",
+  "name": "R3.14 Linux Canvas ID OCR border-exclusion repair",
+  "parent_milestone": "R2.8.145-R3.13-C07.4-ID-READBACK-REPAIR",
+  "planning_date": "2026-10-16",
+  "status": "implementation complete / whole-milestone review approved / ready for one push",
+  "planning_base_sha": "89da1495fac160fc77029ea4ad60c9c47724148b",
+  "starting_sha": "89da1495fac160fc77029ea4ad60c9c47724148b",
+  "source_failure": {
+    "workflow_run_id": 38910654749,
+    "job_id": 117005348184,
+    "job_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38910654749/job/117005348184",
+    "evidence": "evidence/r2.8.145-attempt-1-89da149.json",
+    "source_sha": "89da1495fac160fc77029ea4ad60c9c47724148b",
+    "finding": "Linux paired-geometry field state matched the expected six-byte Canvas text-card ID, while the exact target-widget crop included its right border and Tesseract returned `text-1 |`. The screenshot shows `text-1`; no paste or save was attempted. Linux C07.4 is incomplete."
+  },
+  "scope": {
+    "in_scope": [
+      "In captureLinuxCanvasReadbackScreenshot, inset the right edge of the Linux paired-geometry crop by exactly two screenshot pixels only when targetFieldName is `id`. Keep the crop fully inside the target widget and window and continue checking that it is disjoint from the sibling widget, label, and helper text.",
+      "Record `right_edge_inset_screenshot_pixels: 2` for the target ID crop in its evidence; record `0` for the path crop. Keep the path-target crop unchanged.",
+      "Keep canvasInputOcrMatches and canvasInputOcrHasExactLine strict and unchanged. Preserve exact expected-value matching, paired target/sibling field bytes and hashes, fresh positions, frame/log correlation, focus, event-free snapshots, idle refresh, screenshot mapping, geometry bounds, clipboard cleanup, and no-save behavior.",
+      "Update only the migration attempt evidence, the active R3.14 plan, state.json, requirements.json C07.4 blocker/evidence pointers, and journal entries needed to carry the reconciled R3.13 result and this repair milestone. Do not change the goal wording or its hash."
+    ],
+    "out_of_scope": [
+      "Any generic OCR normalization or relaxation, including stripping a trailing pipe; field-state evidence alone still cannot satisfy visual readback.",
+      "Changes to path-field capture, macOS Vision behavior, Windows input behavior, Canvas event dispatch, paste/save sequencing, product UI behavior, or other migration features.",
+      "Rust C07.4 comparator implementation, locale behavior, fixture semantics, or parity claims.",
+      "Local tests, builds, formatting, linting, validators, runtime probes, or application launches."
+    ]
+  },
+  "outcome": "Complete the Linux Canvas text-card ID visual readback that failed on the reconciled R2.8.145 SHA by excluding the target widget's right border from only that ID crop, while retaining the existing strict OCR matcher and every target-state and geometry guard. Then capture the complete C07.4 reference matrix on Linux, macOS, and Windows on one exact SHA; reference capture remains separate from Rust parity.",
+  "implementation_acceptance": [
+    "Only the Linux paired-geometry target ID crop receives a two-screenshot-pixel right-edge inset; the path crop and all non-Linux paths remain unchanged.",
+    "The report records the ID-only inset, crop bounds within the target widget/window, and crop separation from sibling, header, label, and helper text.",
+    "The Linux report shows the exact expected `text-1` value from the target-anchored OCR crop and the paired field-state byte count/hash; no border character is part of the OCR result. Generic exact matching is unchanged.",
+    "If the exact target OCR or any existing freshness, focus, event, refresh, mapping, geometry, sibling, clipboard, or no-save gate fails, the operation remains fail-closed before paste/save.",
+    "Linux, macOS, and Windows round-trip reports name the submitted source SHA and complete all ten C07.4 first-open/reopen/comparable pairs, all 28 source checkpoints per platform, and exact reseed checks. Preserve the already passing macOS and Windows capture behavior; report pinned-app source rewrites accurately and keep `rust_parity_claimed=false`.",
+    "An independent whole-milestone review confirms the only source change is the bounded Linux ID crop inset and its evidence field, with no matcher or safety-gate relaxation."
+  ],
+  "required_workflows": [
+    {"name": "Rust migration inventory", "platforms": ["ubuntu-latest"], "expected_jobs": 1},
+    {"name": "OpenObsidian Rust CI", "platforms": ["ubuntu-latest", "macos-latest", "windows-latest", "minimum supported Rust 1.95"], "expected_jobs": 4},
+    {"name": "Obsidian vault round-trip acceptance", "platforms": ["ubuntu-24.04", "macos-latest", "windows-latest"], "expected_jobs": 3},
+    {"name": "OpenObsidian desktop build", "platforms": ["ubuntu-latest", "macos-latest", "windows-latest"], "expected_jobs": 3},
+    {"name": "OpenObsidian quality", "platforms": ["ubuntu-latest", "macos-latest", "windows-latest"], "expected_jobs": 3},
+    {"name": "OpenObsidian plugin renderer matrix", "platforms": ["ubuntu-latest", "macos-latest", "windows-latest"], "expected_jobs": 3},
+    {"name": "OpenObsidian loaded plugin workflows", "platforms": ["ubuntu-latest", "macos-latest", "windows-latest"], "expected_jobs": 3}
+  ],
+  "github_ci_acceptance": [
+    "Push the complete, reviewed R3.14 milestone once to origin/main; do not push per edit or start overlapping CI batches. Hold origin/main at the submitted SHA until all seven required workflows and all 20 jobs are terminal and their artifacts/reports are reconciled, even if the run takes several hours.",
+    "All 20 required jobs pass on the exact SHA, including the Linux Canvas ID readback and the three-platform C07.4 capture; no failed, canceled, skipped, missing, or disabled job is accepted.",
+    "Reconcile all artifact IDs/names/API digests/expiry metadata and all three round-trip report payload hashes, sizes, source SHAs, source checkpoints, reseed checks, and reference-mutation records. Record any partial plugin-feasibility evidence without promoting compatibility or parity.",
+    "Run all executable validation only in GitHub Actions. Do not use local tests, builds, formatters, linters, validators, runtime probes, or app launches as acceptance evidence."
+  ],
+  "changed_paths": [
+    ".agents/tasks/2026-10-07/audit-obsidian-vault-roundtrip.ts",
+    ".agents/tasks/2026-10-07/evidence/r2.8.146-r3-14-linux-id-ocr-border-repair-plan.json",
+    ".agents/tasks/2026-10-07/evidence/r2.8.146-attempt-1-<submitted-sha>.json",
+    ".agents/tasks/2026-10-07/evidence/r2.8.145-attempt-1-89da149.json",
+    ".agents/tasks/2026-10-07/evidence/r2.8.145-r3-13-c07-4-id-readback-repair-plan.json",
+    ".agents/tasks/2026-10-07/state.json",
+    ".agents/tasks/2026-10-07/requirements.json",
+    ".agents/tasks/2026-10-07/journal.md"
+  ],
+  "push_policy": "Keep all minor edits and local commits inside this named milestone. Submit the complete reviewed milestone to origin/main once, then keep that SHA fixed until the entire required exact-SHA CI batch is terminal and reconciled. No standalone status/evidence push and no per-change CI push. No local executable validation.",
+  "reviews": {
+    "independent_scope_reviews_required": 2,
+    "implementation_hold_until_approved": true,
+    "review_status": "approved by two independent scope reviews after tracker corrections",
+    "review_results": [
+      {
+        "reviewer": "r314_scope_review_a",
+        "status": "approved",
+        "finding": "The two-pixel inset is bounded to the Linux ID crop; the strict matcher and existing safety gates remain unchanged. Suggested an explicit screenshot-pixel evidence field."
+      },
+      {
+        "reviewer": "r314_tracker_review_b",
+        "status": "changes requested",
+        "finding": "Add both reconciled R3.13 predecessor evidence paths to changed_paths and replace the stale R3.12 C07.4 blocker/evidence pointer before submission."
+      },
+      {
+        "reviewer": "r314_tracker_review_b",
+        "status": "approved after correction",
+        "finding": "Both predecessor evidence paths are allowlisted and the C07.4 requirement now records terminal R3.13 evidence, keeps capture pending, and leaves Rust parity unclaimed. No remaining blockers."
+      },
+      {
+        "reviewer": "r314_scope_review_a",
+        "status": "approved after correction",
+        "finding": "The explicit 2-pixel ID / 0-pixel path evidence field makes the bounded crop change auditable; scope and acceptance remain limited to Linux ID readback and preserved guards. Update the current R3 phase state pointer before submission."
+      }
+    ],
+    "whole_milestone_review_required": true
+  },
+  "whole_milestone_review_status": "approved",
+  "whole_milestone_review_results": [
+    {
+      "reviewer": "r314_scope_review_a",
+      "status": "approved",
+      "finding": "The only source change is the Linux paired-geometry crop: ID uses a two-screenshot-pixel right inset, path uses zero, and evidence records the value. Existing bounds/readback/safety guards remain, and strict OCR matchers are unchanged. No source blocker."
+    },
+    {
+      "reviewer": "r314_tracker_review_b",
+      "status": "approved",
+      "finding": "The changed paths match the R3.14 allowlist; root and R3 pointers show local-complete/review-approved with origin/main held at 89da149. The comparator remains pending, C07.4 parity is unclaimed, and the CI-only milestone-push cadence is consistent. No tests or validators were run."
+    },
+    {
+      "reviewer": "r314_tracker_review_b",
+      "status": "approved after final pointer correction",
+      "finding": "Fresh read-only re-review confirmed both stale current-state review-pending pointers now say review-approved / one push ready, the changed paths match the allowlist, origin/main remains at 89da1495fac160fc77029ea4ad60c9c47724148b, R3.13 is terminal/reconciled, and no R3.14 CI is in flight. No tests, validators, or executable validation were run."
+    }
+  ],
+  "implementation_started": true,
+  "implementation_sha": null,
+  "pushed_once": false,
+  "evidence_basis": {
+    "prior_terminal_attempt": "evidence/r2.8.145-attempt-1-89da149.json",
+    "prior_plan": "evidence/r2.8.145-r3-13-c07-4-id-readback-repair-plan.json",
+    "prior_sha": "89da1495fac160fc77029ea4ad60c9c47724148b",
+    "prior_ci": {
+      "workflows_terminal": 7,
+      "workflows_passed": 6,
+      "workflows_failed": 1,
+      "jobs_terminal": 20,
+      "jobs_passed": 19,
+      "jobs_failed": 1,
+      "artifacts_reconciled": 16,
+      "roundtrip_reports_reconciled": 3
+    },
+    "root_cause": "The Linux target-widget crop reaches the widget's right border; the exact OCR returns a border pipe after the correct six-byte field value. The strict matcher and field-state gates behave as specified."
+  }
+}

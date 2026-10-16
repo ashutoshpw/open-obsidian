@@ -17737,10 +17737,11 @@ async function captureLinuxCanvasReadbackScreenshot(
   });
   const targetRectPixels = toScreenshotPixels(afterFields.target);
   const siblingRectPixels = toScreenshotPixels(afterFields.sibling);
+  const rightEdgeInsetScreenshotPixels = targetFieldName === "id" ? 2 : 0;
   const cropBounds = {
     left: Math.ceil(targetRectPixels.left),
     top: Math.ceil(targetRectPixels.top),
-    width: Math.floor(targetRectPixels.right) - Math.ceil(targetRectPixels.left),
+    width: Math.floor(targetRectPixels.right) - rightEdgeInsetScreenshotPixels - Math.ceil(targetRectPixels.left),
     height: Math.floor(targetRectPixels.bottom) - Math.ceil(targetRectPixels.top),
   };
   const cropRight = cropBounds.left + cropBounds.width;
@@ -17826,6 +17827,7 @@ async function captureLinuxCanvasReadbackScreenshot(
     sibling_widget_rect_logical: afterFields.sibling.rect,
     target_widget_rect_pixels: targetRectPixels,
     sibling_widget_rect_pixels: siblingRectPixels,
+    right_edge_inset_screenshot_pixels: rightEdgeInsetScreenshotPixels,
     crop_bounds: cropBounds,
     crop_inside_target_widget_rect: cropInsideTarget,
     crop_inside_window: cropInsideWindow,
@@ -20435,6 +20437,8 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
               && (pasteLayout.readbackGeometry as Record<string, unknown>).crop_disjoint_from_sibling === true
               && (pasteLayout.readbackGeometry as Record<string, unknown>).crop_disjoint_from_instruction_header === true
               && (pasteLayout.readbackGeometry as Record<string, unknown>).crop_disjoint_from_field_label === true
+              && (pasteLayout.readbackGeometry as Record<string, unknown>).right_edge_inset_screenshot_pixels
+                === (diagnosticField === "id" ? 2 : 0)
               && (pasteLayout.readbackGeometry as Record<string, unknown>).helper_text_excluded_by_target_widget_containment === true;
             if (linuxReadbackGeometry && !linuxWidgetGeometryCropIsValid) {
               throw new LinuxCanvasReadbackGuardError(`Linux target-widget crop failed its post-capture layout checks: ${JSON.stringify({
