@@ -8331,3 +8331,111 @@ The source change and tracker updates remain local. R3.11 is not pushed; no loca
 Independent source and tracker reviews approved the full local R3.11 batch. The source diff is limited to enabling the existing trace for normal Linux Canvas text-edit children; expected-abort tracing remains, warmups remain untraced, non-Linux runs remain untraced, and no input or safety guard changed. The C07.4 requirement and R3 phase pointers now reflect the terminal R3.10 result. The R3.11 plan names all seven workflows and the 20 expected jobs, requires 28 checkpoints on each OS plus the macOS-only reopen preselection check, and records the exact-SHA submission gates.
 
 The complete reviewed batch is ready for one push from starting SHA `3d16c073fe276c1e32b91d868da73b26ad7acb17`. No local tests, builds, formatters, linters, validators, benchmarks, or application launches were used.
+
+
+## R3.11 submitted once; exact-SHA CI in progress — 2026-10-16T10:48:32Z
+
+Pushed R3.11 once as `7f2dd3efd47ce1df3f14fb9cf07519afc408ca6b` from R3.10 base `3d16c073fe276c1e32b91d868da73b26ad7acb17`. `origin/main` was read-only verified at the submitted SHA. All seven required push-triggered workflows were found on that exact SHA: `38889434821, 38889434953, 38889434873, 38889434706, 38889434762, 38889434759, 38889434771`. The initial snapshot is 4/7 workflows terminal, 4 passed; 12/20 jobs terminal, 12 passed, 0 queued, and 8 running. The inventory workflow passed; no failure has been reported.
+
+GitHub currently lists 9 API artifacts, recorded provisionally in `evidence/r2.8.143-r3-11-attempt-1-7f2dd3e.json`. The full workflow/job batch and per-platform round-trip artifacts remain pending. Hold `origin/main` at `7f2dd3efd47ce1df3f14fb9cf07519afc408ca6b` until every required job is terminal and its artifacts/reports are reconciled. No local executable validation was run.
+
+
+## R3.11 exact-SHA CI progress — 2026-10-16T10:51:31Z
+
+Refreshed all seven push-triggered runs on `7f2dd3efd47ce1df3f14fb9cf07519afc408ca6b`. 5/7 workflows and 15/20 jobs are terminal; 5 workflows and 15 jobs passed, with 0 failed, 0 queued, and 5 running. Five jobs remain active: the three platform round-trip jobs, minimum supported Rust, and Windows Rust CI; Ubuntu and macOS Rust jobs passed. GitHub lists 12 artifacts, but inventory remains provisional. `origin/main` remains `7f2dd3efd47ce1df3f14fb9cf07519afc408ca6b`. No new push or local executable validation was performed.
+
+
+## R3.11 exact-SHA CI progress — 2026-10-16T10:55:58Z
+
+Refreshed all seven exact-SHA workflow runs and all 20 individual job records on `7f2dd3efd47ce1df3f14fb9cf07519afc408ca6b`. 6/7 workflows and 17/20 jobs are terminal; 6 workflows and 17 jobs passed, with 0 failed, 0 queued, and 3 running. Active jobs: Obsidian 1.14.4 vault round-trip on ubuntu-24.04 (116935062474), Obsidian 1.14.4 vault round-trip on macos-latest (116935062753), Obsidian 1.14.4 vault round-trip on windows-latest (116935062848). GitHub lists 13 API artifact records, but the inventory remains provisional while the three round-trip jobs run. `origin/main` remains `7f2dd3efd47ce1df3f14fb9cf07519afc408ca6b`. No new push or local executable validation was performed.
+
+
+## R3.11 exact-SHA CI progress — 2026-10-16T10:58:19Z
+
+Refreshed every workflow run and job for `7f2dd3efd47ce1df3f14fb9cf07519afc408ca6b`. 6/7 workflows are terminal (6 passed; the round-trip workflow is still running). 18/20 jobs are terminal: 17 passed, 1 failed, 0 queued, 2 running. Linux round-trip job 116935062474 failed in the author/open/snapshot/reopen step; its job record and run remain under read-only failure analysis while macOS and Windows continue. 14 API artifacts are listed, including newly uploaded R3.11 Rust evidence; the three-platform round-trip reports are still pending. `origin/main` remains `7f2dd3efd47ce1df3f14fb9cf07519afc408ca6b`. No new push or local executable validation was performed.
+
+
+## R3.11 live CI refresh — 2026-10-16T11:04:00Z
+
+GitHub Actions confirms 6/7 workflows terminal and successful, with the round-trip workflow still running; 18/20 jobs are terminal (17 passed, 1 failed, 2 running). Linux job [116935062474](https://github.com/ashutoshpw/open-obsidian/actions/runs/38889434821/job/116935062474) failed after the target field-state SHA/byte count matched but fresh target-field screenshot OCR did not confirm the exact value. The Linux artifact is API record 12042315299 (13,731,668 bytes; uploaded archive digest `sha256:7a8a0a3a82e80df1e109f40932f0107b3cd29a72a0ffccebd518975d3a7fcabc`); its report is 1,616,582 bytes with SHA-256 `72a803d739d9999c2c8c0a3353b6e69614cb50459746c64e8498821d5b720028` and source SHA `7f2dd3efd47ce1df3f14fb9cf07519afc408ca6b`. The expected-abort canary passed, clipboard and request marker cleanup passed, and no save was attempted. The screenshot crop visibly contains the target text, but automated OCR failed closed; the cause is not confirmed. macOS job 116935062753 and Windows job 116935062848 remain active. GitHub API confirms `origin/main` remains `7f2dd3efd47ce1df3f14fb9cf07519afc408ca6b`. Keep the current batch open; no source change, rerun, new push, or local executable validation was made.
+
+
+## R3.11 live CI refresh — 2026-10-16T11:10:20Z
+
+GitHub Actions confirms 6/7 workflows terminal and successful, while the round-trip workflow remains in progress. 19/20 jobs are terminal: 18 passed, the Linux job 116935062474 failed target-field OCR after exact field-state SHA/byte-count confirmation, and macOS job 116935062753 remains active. Windows job [116935062848](https://github.com/ashutoshpw/open-obsidian/actions/runs/38889434821/job/116935062848) passed; its log reports C07 capture complete and C07.4 capture=true. Windows artifact 12041354115 is 22,800,252 bytes with uploaded archive digest `sha256:81a8abaab8135261703fa59f4098a0b0864d4738adbd3b28a47cf337a2b3ab33`, matching the GitHub artifact API. The Windows report itself remains unextracted and unreconciled. API artifact inventory is 15 records and remains provisional until macOS finishes. GitHub API confirmed `origin/main` remains `7f2dd3efd47ce1df3f14fb9cf07519afc408ca6b` at 2026-10-16T11:10:20Z; no new push or local executable validation was performed.
+
+
+## R3.11 exact-SHA CI refresh and contingent repair planning — 2026-10-16T11:23:35Z
+
+Refreshed all seven workflow runs and all 20 round-trip job records for exact SHA 7f2dd3efd47ce1df3f14fb9cf07519afc408ca6b. Six of seven workflows are terminal and successful; the Obsidian round-trip workflow is still active. Nineteen of 20 jobs are terminal: 18 passed, Linux job [116935062474](https://github.com/ashutoshpw/open-obsidian/actions/runs/38889434821/job/116935062474) failed exact target-field screenshot OCR after the expected field-state bytes/SHA matched, and macOS job [116935062753](https://github.com/ashutoshpw/open-obsidian/actions/runs/38889434821/job/116935062753) remains active in the author/open/snapshot/reopen step. Windows job [116935062848](https://github.com/ashutoshpw/open-obsidian/actions/runs/38889434821/job/116935062848) passed; its report remains unreconciled. GitHub lists 15 API artifacts across the seven runs, including Linux and Windows round-trip archives; inventory remains provisional until macOS completes and the reports are reconciled. The exact GitHub main SHA remains 7f2dd3efd47ce1df3f14fb9cf07519afc408ca6b.
+
+Recorded a provisional, not-yet-reviewed R3.12 crop/readback repair plan at evidence/r2.8.144-r3-12-linux-canvas-exact-readback-plan.json. It ties a bounded target-only screenshot crop to fresh paired field geometry and exact OCR while preserving all existing focus, paste, cleanup, no-save, reopen, and preservation checks. Its scope must be revised after the macOS and Windows report review. No source implementation, local executable validation, rerun, or push occurred.
+
+
+## R3.11 live status refresh and R3.12 plan review — 2026-10-16T11:35:20Z
+
+GitHub Actions API confirms all seven R3.11 workflow runs target exact SHA `7f2dd3efd47ce1df3f14fb9cf07519afc408ca6b`: six workflows and 18 of 20 jobs passed; Linux round-trip job `116935062474` failed and macOS job `116935062753` remains in progress. Windows round-trip job `116935062848` passed. The exact `main` branch ref still points to `7f2dd3efd47ce1df3f14fb9cf07519afc408ca6b`. The round-trip run has Linux artifact `12042315299` and Windows artifact `12041354115`; no macOS report artifact exists yet. The full run currently lists 15 artifacts, and the batch is not terminal or reconciled.
+
+Read-only artifact inspection confirms the Linux report's 20-byte target field SHA matched the requested path, while the saved screenshot visibly contains that value and complete normalized OCR still failed. The report identifies a `label-offset-fallback` crop at `(113,73)` sized `250x32`; the crop clips helper text and the sibling label. This is a confirmed crop-design defect and plausible OCR contributor, not a proven sole cause. Existing cleanup and no-save protections passed, with pre-save vault/app-data preservation intact. Windows archive digest matches the GitHub artifact API digest, but its report payload/hash remains unreconciled. Do not treat C07.4 as a successful platform capture or Rust parity.
+
+Two independent read-only reviews approved the provisional R3.12 plan after adding explicit screenshot/capture-to-diagnostic bracketing, ID/timing/mapping evidence, and fail-closed behavior when correlation or state stability is unavailable. The canary wording now matches the source counters: zero diagnostic pointer-motion dispatches after clipboard staging, zero paste/save, exactly one initial target click and one stationary recovery click. Implementation remains held until R3.11 is terminal and all platform artifacts are reconciled. `origin/main` remains pinned; no source implementation, push, or local executable validation occurred.
+
+
+## Goal cadence synchronized to active tracker — 2026-10-16T11:36:49Z
+
+Applied the latest goal wording to the active R3.11 worktree: minor edits stay local, and one push to `origin/main` submits a complete, predeclared, reviewed milestone. Do not push another milestone or start another full CI batch until every required job completes and its results/artifacts are reconciled, even if that takes several hours. Updated MIG-002 and both current goal-hash records to `10218894a6187c8c47526cbe51e7e9493a74be2d128ea8b0289e06e8512eeff5`. This is a local governance/tracker update; no source implementation, push, or local executable validation occurred.
+
+
+## R3.11 status re-poll — 2026-10-16T11:37:42Z
+
+A fresh GitHub API poll again confirms all six non-round-trip workflows passed on `7f2dd3efd47ce1df3f14fb9cf07519afc408ca6b` and `origin/main` remains at that SHA. The round-trip workflow `38889434821` is still in progress: Linux job `116935062474` failed, Windows `116935062848` passed, and macOS `116935062753` remains in its author/open/snapshot/reopen step. Two round-trip artifacts are listed (Linux and Windows); no Mac artifact exists yet. Keep the batch open and the branch pinned. No source changes, push, or local executable validation.
+
+
+## R3.11 Windows job-log reconciliation — 2026-10-16T11:39:19Z
+
+Fetched the terminal Windows job log for job `116935062848`. It reports round-trip acceptance passed, C07 reference capture completed, and C07.4 captured=true on exact SHA `7f2dd3efd47ce1df3f14fb9cf07519afc408ca6b`; it also records pinned-app source mutation C07.2=true/C07.3=false. Windows artifact `12041354115` has size 22,800,252 bytes and archive SHA-256 `81a8abaab8135261703fa59f4098a0b0864d4738adbd3b28a47cf337a2b3ab33`, matching GitHub API metadata. The report payload/hash itself remains unreconciled. macOS job `116935062753` is still active, so the full R3.11 batch remains open and origin/main stays pinned. No source change or local executable validation.
+
+
+## R3.11 terminal CI reconciliation; R3.12 widened to all-platform capture repair — 2026-10-16T11:52:19Z
+
+Refreshed exact-SHA R3.11 status for `7f2dd3efd47ce1df3f14fb9cf07519afc408ca6b`: all 7 workflows and 20 jobs are terminal, with 6 workflows/18 jobs passed and 1 workflow/2 jobs failed. All 16 artifact records are inventoried; the Linux, Windows, and macOS round-trip archive digests match GitHub API/upload metadata. Linux report payload and hash are reconciled (report SHA-256 `72a803d739d9999c2c8c0a3353b6e69614cb50459746c64e8498821d5b720028`, source SHA `7f2dd3efd47ce1df3f14fb9cf07519afc408ca6b`). Linux failed strict screenshot OCR after exact field-state confirmation; its crop design defect is confirmed, while sole root cause is not.
+
+Windows round-trip job `116935062848` passed and its log reports C07.4 capture complete. macOS job `116935062753` failed: all 10 first-open predicates passed, all 10 reopen predicates and comparable pairs failed, the checkpoint matrix was complete, and pre-reopen reseed hashes matched; reopened source hashes differed from the seed. The Windows and macOS report payloads and source SHA values remain unknown because available GitHub MCP artifact downloads expose opaque ZIP references without bytes or a supported reader. Do not infer a shared Linux/macOS cause or use post-reopen source-hash inequality alone as a gate.
+
+Revised the provisional R3.12 plan at `evidence/r2.8.144-r3-12-c07-4-all-platform-capture-repair-plan.json` to cover the independent Linux OCR/crop and macOS reopen failures while preserving the ten scenarios, checkpoint matrix, exact reseed and acceptance protections. The prior independent approvals were for Linux-only scope and are superseded; a fresh review is pending. Keep source implementation held until Mac/Windows report evidence is reconciled or a bounded CI evidence-emission path is separately planned and reviewed. `origin/main` remains pinned to `7f2dd3efd47ce1df3f14fb9cf07519afc408ca6b`; no new push or local executable validation occurred.
+
+
+## R3.11 round-trip report payloads reconciled; R3.12 harness scope revised — 2026-10-16T11:59:02Z
+
+A read-only download through the GitHub artifact signed URLs resolved the prior payload-access blocker. The Windows archive digest is `sha256:81a8abaab8135261703fa59f4098a0b0864d4738adbd3b28a47cf337a2b3ab33`; its report is 69,906,106 bytes, SHA-256 `bff1b6ac3520fb1cc7f5fab95d1ca64e24c5800509938076872e1c60c090601f`, source SHA `7f2dd3efd47ce1df3f14fb9cf07519afc408ca6b`, status passed. Windows C07.4 is capture-only: all ten first-open/reopen/comparable pairs and all 28 checkpoints pass; post-reopen Obsidian source rewrites are recorded, with no Rust parity claim.
+
+The macOS archive digest is `sha256:940154ee3ff21a5971c9bfa703ae93ed45e8101dab326df6785a7866f65d1789`; its report is 70,001,075 bytes, SHA-256 `c23bcc9c497ee709d805e64ff01a5cb41d1be8e8b67dea0bdd87d075a0f6f5e4`, same source SHA, status failed. All ten first-open predicates pass. For the first nine scenarios the selections, visible row paths/order, counts, and groups match after reopen; the only projection difference is global `renderer.vault_file_tie_seed_order` (`z-last,a-first` first open; `a-first,z-last` reopen). The tenth equal-key path-tie scenario was never selected on reopen: its two-read preselection gate made 23 read pairs and consistently observed `a-first,z-last`, while the gate expected `z-last,a-first`, leaving `Bases/09 Natural numeric text.base` active. Thus the measured mismatch is in the capture/fixture order contract, and the first nine failures are not visible-result regressions. The deeper reason the app's runtime file enumeration differs between phases remains unconfirmed. All 28 checkpoints are complete and the exact pre-reopen reseed passed; later source rewrites are recorded.
+
+Revised the provisional R3.12 plan to revision 3 with full report hashes/findings and a candidate harness-only Mac order contract: preserve raw phase order, use a stable exact-set/two-read gate for each phase, capture the equal-key view, compare its semantic output, and keep Linux OCR/crop repair independent. The proposed acceptance boundary requires fresh independent review before implementation. No source changes, local executable validation, commit, or push occurred; `origin/main` remains pinned to `7f2dd3efd47ce1df3f14fb9cf07519afc408ca6b`.
+
+
+## R3.12 plan revision 6 after source-predicate audit — 2026-10-16T12:05:55Z
+
+Independent review of revision 5 found one remaining Mac reopen creation-order assertion in `pathTieSeedOrderDisambiguates`, separate from the preselection helper. Read-only source inspection confirmed that predicate still requires `[z-last.md,a-first.md]` after selecting the tie scenario. The reconciled Mac report shows first-open Bases/10 passed with seed order `[z-last.md,a-first.md]` and visible ordered rows `[a-first.md,z-last.md]`; Mac reopen stably observed runtime tie order `[a-first.md,z-last.md]` across 23 paired preselection reads but did not select Bases/10. The deeper cause of the phase-order change remains unconfirmed.
+
+Revised the provisional R3.12 plan to revision 6: remove the creation-order equality from the preselection check and the local tie-scenario predicate on macOS reopen only; retain that equality on first-open and Linux/Windows reopen. Keep the exact fixture set, stable fixture/tie/whole-vault enumeration, raw order evidence, strict `[a-first.md,z-last.md]` rows in both Mac phases, every other scenario predicate, and the independent Linux crop repair. Two fresh independent reviews are pending. No source edit, executable validation, commit, or push occurred; `origin/main` remains pinned to `7f2dd3efd47ce1df3f14fb9cf07519afc408ca6b`.
+
+
+## R3.12 revision 6 approved for bounded implementation — 2026-10-16T12:08:29Z
+
+Two independent read-only reviewers approved revision 6. The Mac creation-order equality remains for first-open on every OS and Linux/Windows reopen; only the Mac reopen `text-equal-key-path-tie` local predicate and its preselection equality are removed. The complete 23-note fixture set, exact two tie paths, stable two-read fixture/tie/whole-vault enumeration, raw order observations, strict other predicates, and `[a-first.md,z-last.md]` visible rows in both Mac phases remain required. The Linux target-only crop, strict full-value OCR, capture correlation, no-save/canary, cleanup and snapshot guards remain intact. Reviewers specifically require implementation to pin the exact tie rows within each phase rather than rely only on cross-phase equality.
+
+Released the implementation hold for R3.12 revision 6 only. Source implementation may begin; no local executable validation, commit, or push has occurred. `origin/main` remains pinned at `7f2dd3efd47ce1df3f14fb9cf07519afc408ca6b`.
+
+
+## C07.4 requirement synchronized with approved R3.12 contract — 2026-10-16T12:08:29Z
+
+Updated the C07.4 requirement to record the approved Mac tie-order boundary: keep the seeded creation-order assertion on first-open for all OSes and Linux/Windows reopen; on Mac reopen retain stable exact-set/two-read enumeration and raw order, but do not require runtime order to equal fixture creation order. Require the tie view and exact `[a-first.md,z-last.md]` rows in both Mac phases, exclude only the global process-phase order diagnostic from semantic cross-phase comparison, and keep every other predicate strict. The requirement now records that R3.12 revision 6 is approved and implementation is in progress; it remains Pending until exact-SHA CI passes.
+
+## R3.12 revision 6 implementation complete; exact-SHA CI pending — 2026-10-16T12:38:33Z
+
+Implemented the approved Linux target-only Canvas readback crop and macOS reopen tie-capture repair. Linux readback now correlates fresh paired widget/focus diagnostics to the screenshot, verifies stable geometry and event-free/idleness guards, derives an inner crop within the target widget, and retains strict full-value OCR plus fail-closed/no-save/canary handling. macOS reopen now requires the exact fixture/tie path sets and stable enumeration without imposing creation order; the exact `[a-first.md,z-last.md]` visible tie rows are required in both Mac phases. Raw order evidence remains available, and only the Mac process-phase tie-order diagnostic is excluded from semantic cross-phase comparison. Linux/Windows predicates remain unchanged.
+
+Two scoped read-only reviews and an independent whole-source review found no remaining blocker. Updated the goal's push policy to state that minor edits stay local, one full push submits a predeclared completed and reviewed milestone, and `origin/main` remains fixed until the complete multi-hour CI batch and evidence reconciliation finish. Synchronized the current goal hash (`92409372d9cb637cf8bb08603293b4b473a593fc82b8beacce93f309c68e5a1e`) in state and requirements. No local test, build, formatter, linter, validator, benchmark, runtime probe, or application launch was run.
+
+R3.12 is implementation-complete / CI-pending, not achieved. `origin/main` remains at `7f2dd3efd47ce1df3f14fb9cf07519afc408ca6b`; this milestone has not been pushed and C07.4 remains pending. Next: submit the complete reviewed milestone once, then hold its exact SHA through all seven required workflows and 20 jobs and reconcile every result and artifact before another full batch.

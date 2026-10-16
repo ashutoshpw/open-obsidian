@@ -1,0 +1,228 @@
+{
+  "schema_version": 1,
+  "milestone_id": "R2.8.144-R3.12-C07.4-ALL-PLATFORM-CAPTURE-REPAIR",
+  "id": "R2.8.144-R3.12-C07.4-ALL-PLATFORM-CAPTURE-REPAIR",
+  "name": "Repair Linux Canvas exact readback and macOS C07.4 reopen capture",
+  "created_at": "2026-10-16T11:23:35Z",
+  "status": "Approved revision 6 after two independent read-only reviews. Source implementation may begin within the bounded Mac reopen and Linux crop scope; implementation must add an explicit expected-row check for the Mac tie view in each phase.",
+  "plan_review_status": "Approved revision 6 by two independent read-only reviewers; implement only the Mac reopen tie-predicate repair and bounded Linux target-only OCR crop repair in this milestone.",
+  "independent_review": {
+    "review_type": "read-only safety and scope review",
+    "review_result": "Initial read-only review found no safety or scope blocker and confirmed accurate normalized OCR wording, pre-save preservation and intended post-save change, terminal macOS/Windows evidence disposition, and implementation hold pending R3.11 reconciliation. Follow-up reviewers requested explicit screenshot-to-diagnostic capture bracketing/ID correlation and exact canary pointer-dispatch wording; both refinements were added and independently confirmed precise and within the existing no-write/fail-closed boundary.",
+    "reviewed_at": "2026-10-16T11:24:00Z",
+    "follow_up_review_requested_at": "2026-10-16T11:31:36Z",
+    "follow_up_reviewed_at": "2026-10-16T11:34:36Z",
+    "follow_up_result": "Confirmed the screenshot capture is explicitly bracketed and correlated to fresh diagnostics, with IDs/timing/mapping recorded and failure closed on missing correlation or changed state. Confirmed the canary allows the existing initial target click and stationary recovery click but requires zero diagnostic pointer-motion dispatches after clipboard staging, zero paste, and zero Save Canvas; no safety or scope blocker remains.",
+    "scope_change_effect": "Prior reviews through revision 5 do not approve revision 6. One revision 5 reviewer found the remaining local pathTieSeedOrderDisambiguates creation-order assertion; source inspection confirmed it, so fresh review is required.",
+    "current_review_status": "approved revision 6; implementation may begin",
+    "prior_review_scope": "Revision 5 retained the 23-note fixture set, stable fixture/tie/whole-vault enumeration, exact tie path set, and strict visible-row contract. A follow-up source audit found that pathTieSeedOrderDisambiguates independently hardcodes creation order for every tie scenario; revision 6 removes that equality only for macOS reopen and keeps first-open/other-platform assertions.",
+    "evidence_reconciled_at": "2026-10-16T11:59:02Z",
+    "revision_5_review_results": {
+      "plan_audit": "Approved revision 5 as preserving enumeration and semantic-result gates.",
+      "scope_audit": "Found a remaining creation-order equality in pathTieSeedOrderDisambiguates that would still reject macOS reopen after Bases/10 is selected.",
+      "source_reconciliation": "Confirmed in audit-obsidian-vault-roundtrip.ts: the local tie predicate requires [z-last.md,a-first.md] on all phases, while the reconciled Mac reopen preselection stably reports [a-first.md,z-last.md]. The Mac report records first-open Bases/10 rows [a-first.md,z-last.md] and seed order [z-last.md,a-first.md].",
+      "resolution": "Revision 6 scopes the equality removal to the Mac reopen tie scenario, retains it for first-open and non-Mac reopen, and retains strict [a-first.md,z-last.md] visible rows."
+    },
+    "revision_6_review_requested_at": "2026-10-16T12:03:52Z",
+    "revision_6_reviewed_at": "2026-10-16T12:08:29Z",
+    "revision_6_reviews": {
+      "plan_audit": "Approved. Retain pathTieSeedOrderDisambiguates equality for first-open on all platforms and Linux/Windows reopen; remove it only for the Mac reopen text-equal-key-path-tie case. Preserve complete fixture set, stable fixture/tie/whole-vault enumerations, exact tie paths, raw order, and strict pinned rows. No scope/safety blocker.",
+      "scope_audit": "Approved. Same narrow predicate boundary and all Linux fail-closed/canary/no-write guards remain. No scope/safety blocker.",
+      "implementation_precision": "The source currently has no direct expectedRowPaths pin for the tie scenario. The plan requires adding the exact [a-first.md,z-last.md] ordered row check separately in each Mac phase, not relying only on cross-phase equality."
+    },
+    "implementation_hold_released_for": "R2.8.144-R3.12-C07.4-ALL-PLATFORM-CAPTURE-REPAIR, revision 6 only"
+  },
+  "planning_base_sha": "7f2dd3efd47ce1df3f14fb9cf07519afc408ca6b",
+  "starting_sha": "7f2dd3efd47ce1df3f14fb9cf07519afc408ca6b",
+  "implementation_sha": null,
+  "submitted_sha": null,
+  "pushed_once": false,
+  "objective": "Repair the Linux Canvas target-field screenshot readback design defect and the macOS C07.4 harness seed-order/runtime-enumeration mismatch, then capture all ten pinned Obsidian C07.4 scenarios on Linux, macOS, and Windows without changing product comparators, weakening scenario outcomes, or claiming Rust parity.",
+  "batch_dependency": {
+    "milestone": "R2.8.143-R3.11-LINUX-CANVAS-FOCUS-C07.4-REFERENCE",
+    "sha": "7f2dd3efd47ce1df3f14fb9cf07519afc408ca6b",
+    "workflow_run_id": 38889434821,
+    "status_at_plan_time": "Terminal failed on exact SHA 7f2dd3efd47ce1df3f14fb9cf07519afc408ca6b: 7/7 workflows and 20/20 jobs terminal; 6 workflows/18 jobs passed, 1 workflow/2 jobs failed. All 16 artifacts and all three round-trip report payloads are reconciled; Linux strict screenshot OCR and macOS C07.4 capture failed; Windows C07.4 passed.",
+    "must_be_true_before_implementation": [
+      "R3.11 is terminal on the exact submitted SHA and all seven workflow/20 job conclusions are recorded.",
+      "The 16-record artifact metadata inventory is complete; all three round-trip archive digests match GitHub API/upload metadata and all three report payload hashes/source SHAs/statuses are reconciled.",
+      "Keep the Linux screenshot crop/OCR failure separate from the macOS capture-contract mismatch; do not infer a shared cause.",
+      "For macOS, preserve the exact report facts: first nine semantic outputs match; only the global renderer.vault_file_tie_seed_order diagnostic differs across phases; the stable preselection enumeration is [a-first,z-last] while the gate expects [z-last,a-first], and the equal-key target is never selected.",
+      "Revision 6 is approved by two independent read-only reviewers. Retain raw first-open/reopen order observations and do not skip the tie scenario, fabricate a pass, or change product/comparator behavior.",
+      "Keep origin/main at 7f2dd3efd47ce1df3f14fb9cf07519afc408ca6b until the complete reviewed R3.12 repair milestone is implemented and submitted once."
+    ],
+    "workflow_counts": {
+      "observed": 7,
+      "terminal": 7,
+      "passed": 6,
+      "failed": 1,
+      "queued": 0,
+      "in_progress": 0
+    },
+    "job_counts": {
+      "observed": 20,
+      "terminal": 20,
+      "passed": 18,
+      "failed": 2,
+      "queued": 0,
+      "in_progress": 0
+    },
+    "reports_reconciled_at": "2026-10-16T11:59:02Z"
+  },
+  "source_findings": {
+    "linux_job_id": 116935062474,
+    "linux_artifact_id": 12042315299,
+    "linux_artifact_sha256": "7a8a0a3a82e80df1e109f40932f0107b3cd29a72a0ffccebd518975d3a7fcabc",
+    "linux_report_sha256": "72a803d739d9999c2c8c0a3353b6e69614cb50459746c64e8498821d5b720028",
+    "linux_report_source_sha": "7f2dd3efd47ce1df3f14fb9cf07519afc408ca6b",
+    "observed_failure": "The target field state matched the expected 20-byte value and SHA, paired target/sibling/focus and refresh checks passed, and three fresh screenshot probes were captured; exact full-value OCR failed closed. Clipboard neutralization and request-marker cleanup passed, the expected-abort canary passed, and no save was attempted.",
+    "candidate_crop_observation": "The report identifies source=label-offset-fallback and a 250x32 crop at left=113, top=73 in the 800x600 screenshot. Same-run paired diagnostics place the target field at approximately x=121.7..351.7, y=79..98 and the sibling at x=504.2..664.2, y=79..98. The saved screenshot visibly contains the exact expected path; the fixed crop starts above the target field and reaches the beginning of the sibling label, so clipped helper text and sibling-label pixels are confirmed crop contamination. This is a definite crop-design weakness and plausible OCR contributor, but root cause is not proven because the report records only limited per-probe OCR output and no OCR tool versions.",
+    "harness_design_gap": "Linux uses coordinateSpace=window, while target-field candidate extraction is currently gated on coordinateSpace=desktop. The crop therefore falls back to a fixed label offset and is checked for generic bounds, not target-rectangle containment or sibling/helper exclusion. The report lacks screenshot-bracketed target/sibling geometry, focus/value/refresh snapshots, per-probe/per-PSM OCR results, and Tesseract/ImageMagick versions.",
+    "windows_job_id": 116935062848,
+    "windows_artifact_id": 12041354115,
+    "windows_job_conclusion": "Terminal Windows job and report passed on source SHA 7f2dd3efd47ce1df3f14fb9cf07519afc408ca6b. C07.4 is captured-reference-only; all ten first-open/reopen/comparable pairs and all 28 checkpoints pass. Report SHA-256 bff1b6ac3520fb1cc7f5fab95d1ca64e24c5800509938076872e1c60c090601f.",
+    "macos_job_id": 116935062753,
+    "macos_status_at_plan_time": "terminal failure; full report reconciled at 2026-10-16T11:59:02Z",
+    "windows_report_payload_reconciled": true,
+    "macos_artifact_id": 12043617432,
+    "macos_artifact_size_bytes": 32611372,
+    "macos_artifact_api_digest": "sha256:940154ee3ff21a5971c9bfa703ae93ed45e8101dab326df6785a7866f65d1789",
+    "macos_job_conclusion": "failure",
+    "macos_observed_failure": "The reconciled macOS report shows 10/10 first-open predicates passed. For the first nine scenarios, selected views, visible rows/order, counts, and groups match across reopen; each comparable-projection mismatch is only renderer.vault_file_tie_seed_order ([z-last.md,a-first.md] first-open; [a-first.md,z-last.md] reopen). The first-open Bases/10 equal-key tie scenario passed with renderer/path tie seed order [z-last.md,a-first.md] and visible rows [a-first.md,z-last.md]. On reopen, the requested Bases/10 scenario was not selected: its two-read preselection gate made 23 paired reads, stably observing the exact two tie paths in [a-first.md,z-last.md] order, while requiring [z-last.md,a-first.md]; it left Bases/09 active. The source also has a second hardcoded [z-last.md,a-first.md] equality in pathTieSeedOrderDisambiguates, which would reject Mac reopen even after the preselection gate is fixed. The 28 checkpoint matrix and exact reseed passed; source rewrites after reopen are recorded.",
+    "macos_report_payload_reconciled": true,
+    "macos_root_cause": "Confirmed harness contract mismatches: the cross-phase projection treats a process-phase app.vault enumeration diagnostic as part of each rendered view, and both Mac reopen gates require creation order [z-last.md,a-first.md] despite the stable reopen runtime order [a-first.md,z-last.md]. The deeper reason the app enumeration order changes between phases remains unconfirmed. The first-open tie view demonstrates the expected visible outcome: seed enumeration [z-last.md,a-first.md], rows [a-first.md,z-last.md]. No visible first-nine result difference is observed.",
+    "artifact_access_audit": "The GitHub MCP initially returned opaque ZIP file references, but its signed artifact URLs were readable with read-only curl; unzip exposed the report member and Python zipfile/hashlib reconciled its bytes and SHA-256. Both Mac and Windows reports are now reconciled.",
+    "windows_report_bytes": 69906106,
+    "windows_report_sha256": "bff1b6ac3520fb1cc7f5fab95d1ca64e24c5800509938076872e1c60c090601f",
+    "windows_report_source_sha": "7f2dd3efd47ce1df3f14fb9cf07519afc408ca6b",
+    "windows_report_status": "passed",
+    "windows_c07_4_observed": "Report status passed on source SHA 7f2dd3efd47ce1df3f14fb9cf07519afc408ca6b. C07.4 is captured-reference-only: all ten first-open, reopen, and comparable-pair predicates passed; all 28 source checkpoints are complete and pre-reopen source reseed hashes match. Post-reopen source hashes differ from the seed and pinned Obsidian source rewrites are recorded; this is not a C07.4 failure. C07.2=true, C07.3=false, C07.4=true, aggregate source-mutation evidence=true; rust_parity_claimed=false.",
+    "windows_all_ten_first_open_reopen_pairs_passed": true,
+    "windows_source_checkpoint_count": 28,
+    "windows_reopen_seed_hashes_match": true,
+    "windows_reopen_source_hashes_match_seed": false,
+    "windows_rust_parity_claimed": false,
+    "macos_report_bytes": 70001075,
+    "macos_report_sha256": "c23bcc9c497ee709d805e64ff01a5cb41d1be8e8b67dea0bdd87d075a0f6f5e4",
+    "macos_report_source_sha": "7f2dd3efd47ce1df3f14fb9cf07519afc408ca6b",
+    "macos_report_status": "failed",
+    "macos_c07_4_first_open_all_ten_passed": true,
+    "macos_c07_4_reopen_all_ten_passed": false,
+    "macos_c07_4_comparable_pairs_all_ten_passed": false,
+    "macos_source_checkpoint_count": 28,
+    "macos_reopen_seed_hashes_match": true,
+    "macos_reopen_source_hashes_match_seed": false,
+    "macos_first_nine_semantic_projections_match": true,
+    "macos_first_nine_projection_only_difference": "renderer.vault_file_tie_seed_order: first-open [z-last.md,a-first.md], reopen [a-first.md,z-last.md].",
+    "macos_equal_key_tie_reopen_gate": {
+      "stable_read_pairs": 23,
+      "two_reads_agree": true,
+      "expected_order": [
+        "Notes/Text/Ties/z-last.md",
+        "Notes/Text/Ties/a-first.md"
+      ],
+      "observed_order": [
+        "Notes/Text/Ties/a-first.md",
+        "Notes/Text/Ties/z-last.md"
+      ],
+      "target_selected": false,
+      "active_path_after_failure": "Bases/09 Natural numeric text.base"
+    },
+    "macos_underlying_reason_for_phase_order_change": "Unconfirmed; the report establishes a first-open/reopen runtime order difference and a hardcoded expected-order mismatch, not its deeper cause.",
+    "macos_first_open_tie_seed_order": [
+      "Notes/Text/Ties/z-last.md",
+      "Notes/Text/Ties/a-first.md"
+    ],
+    "macos_first_open_tie_ordered_rows": [
+      "Notes/Text/Ties/a-first.md",
+      "Notes/Text/Ties/z-last.md"
+    ],
+    "macos_first_open_tie_scenario_passed": true,
+    "macos_reopen_tie_preselection_order": [
+      "Notes/Text/Ties/a-first.md",
+      "Notes/Text/Ties/z-last.md"
+    ],
+    "macos_reopen_tie_scenario_was_selected": false,
+    "macos_reopen_local_tie_predicate_source": "audit-obsidian-vault-roundtrip.ts pathTieSeedOrderDisambiguates; it requires the hardcoded creation order on both first-open and reopen."
+  },
+  "scope": {
+    "included": [
+      "Keep the bounded Linux repair: derive the exact-value screenshot crop from fresh target TextEdit geometry and a verified logical-point to screenshot-pixel mapping.",
+      "Bracket each Linux readback screenshot with correlated fresh target/sibling diagnostics and fail closed if target, sibling, focus, refresh, frame/request IDs, timing, or geometry is stale or changes.",
+      "Constrain the Linux crop to the exact target TextEdit widget rectangle derived from fresh paired diagnostics and verified point-to-pixel mapping, with no pixels outside the target widget; prove it excludes the sibling field and helper text. Retain only the complete full-value OCR matcher under documented normalization.",
+      "Preserve the Linux three-probe readback, paired field-state SHA/byte count, expected-abort protections, cleanup, and no-save behavior.",
+      "Keep raw macOS first-open/reopen projections and renderer.vault_file_tie_seed_order values verbatim. Scope the repair to the C07.4 capture harness/fixture contract, not product or Rust comparator code.",
+      "Retain all ten scenarios, all 28 checkpoints per OS, the exact pre-reopen seed hash check, complete raw projections, locale and comparator probes, and recorded Obsidian source rewrites.",
+      "Complete all ten C07.4 reference captures on Linux, macOS, and Windows with rust_parity_claimed=false.",
+      "Apply one reviewed Mac comparison-contract clarification to all ten Mac scenarios: retain renderer.vault_file_tie_seed_order verbatim in each raw phase observation, but exclude only this global phase-level diagnostic from macOS cross-phase semantic view comparison. Keep every other existing Mac projection field and view-result comparison strict; retain strict full-field comparisons on Linux and Windows.",
+      "Before the Mac reopen tie-view selection, retain all existing preselection gates: complete 23-note fixture path set, stable fixture path enumeration, stable exact two-path tie order, stable whole-vault enumeration, and exact tie-path set across two consecutive reads. Record first-open seed creation order separately from actual per-phase runtime order. On Mac reopen, do not require runtime order to equal creation order or first-open order; first-open and Linux/Windows reopen retain the existing creation-order predicate.",
+      "Capture the equal-key Bases/10 view in both Mac phases and require ordered result paths [Notes/Text/Ties/a-first.md, Notes/Text/Ties/z-last.md] in each phase and equality across phases; fail closed on any incomplete or different result."
+    ],
+    "excluded": [
+      "C07.4 Rust comparator implementation or any Rust parity claim.",
+      "Changes to Canvas input/paste sequence, focus recovery, save/write behavior, or the no-save guard.",
+      "Relaxing exact OCR, numeric/text view results, result counts, groups, checkpoint completeness, source preservation, or the expected equal-key tie-view rows.",
+      "Dropping or rewriting raw renderer.vault_file_tie_seed_order evidence; skipping the equal-key scenario; treating incomplete capture as passed; or excluding any other renderer/runtime field from comparison.",
+      "Changes to Windows behavior; its reconciled report passes all ten C07.4 first-open/reopen pairs.",
+      "Unrelated UI, vault, plugin, appearance, packaging, or documentation work."
+    ]
+  },
+  "acceptance": [
+    "On Linux, the screenshot crop is the exact target TextEdit widget rectangle derived from the same fresh diagnostics and verified logical-point to screenshot-pixel mapping; it is valid, target-only, inside the captured window, and excludes the sibling field and helper text.",
+    "Fresh paired diagnostics bracket and correlate each screenshot capture with IDs, timing, mapping, stable geometry, exact target bytes/SHA, target focus, sibling non-focus, and stable refresh; any stale, ambiguous, unmappable, or changed observation fails closed before save.",
+    "The expected Linux Canvas path is confirmed from a fresh target-only screenshot by the complete full-value OCR matcher under the existing normalization; exact field-state SHA/byte count remains separate corroborating evidence.",
+    "The Linux expected-abort canary retains the established zero post-staging pointer-motion dispatches, zero Ctrl+V/paste, zero Save Canvas attempts, one initial target click and one stationary recovery click; cleanup and exact vault/app-data preservation pass.",
+    "Before source edits, independently review and approve the Mac comparison-contract change: retain raw per-phase vault_file_tie_seed_order; preserve the complete 23-note fixture set, exact tie-path set, and stable two-read fixture/tie/whole-vault enumeration; remove the creation-order equality [z-last,a-first] from both Mac reopen gates only for the Mac reopen tie scenario; retain it on first-open across platforms and Linux/Windows reopen; exclude only the global order diagnostic from cross-phase semantic view comparison; keep every other projected field strict.",
+    "Capture the equal-key Bases/10 view in both Mac phases; require the ordered result paths [Notes/Text/Ties/a-first.md, Notes/Text/Ties/z-last.md] in each and strict equality across phases. Do not skip the view or allowlist an incomplete capture.",
+    "The regular Linux flow preserves vault/app-data snapshots through input, load and draft editing; only explicit save may produce the intended Canvas-file change, followed by transaction, close/reopen and preservation checks.",
+    "All ten C07.4 semantic view captures pass first-open, reopen, and strict comparable-pair predicates across Linux, macOS, and Windows; 28 source checkpoints per OS, exact reseed before reopen, per-phase stable exact tie-path enumeration, and the pinned tie-view rows pass.",
+    "Record all pinned-app source rewrites at checkpoints, including reopen_source_hashes_match_seed=false where observed; do not treat post-reopen source equality as an acceptance condition or claim Rust parity.",
+    "The same submitted SHA passes required C07.4 capture on all three platforms, and all seven required workflows and all 20 jobs pass on the exact implementation SHA; all artifact metadata and readable report/archive hashes are reconciled.",
+    "No local tests, builds, formatters, linters, validators, benchmarks, runtime probes, or application launches are used as acceptance evidence."
+  ],
+  "required_workflows": [
+    "Rust migration inventory",
+    "OpenObsidian Rust CI",
+    "Obsidian vault round-trip acceptance",
+    "OpenObsidian desktop build",
+    "OpenObsidian quality",
+    "OpenObsidian plugin renderer matrix",
+    "OpenObsidian loaded plugin workflows"
+  ],
+  "required_job_count": 20,
+  "platforms": [
+    "Ubuntu 24.04",
+    "macOS latest",
+    "Windows latest"
+  ],
+  "validation_policy": "GitHub Actions only. Source, Git, tracker, job, and artifact inspection is permitted; executable validation is not run locally.",
+  "submission_policy": "The Windows and macOS reports are reconciled to source SHA 7f2dd3efd47ce1df3f14fb9cf07519afc408ca6b. Hold source implementation until an independent reviewer approves the explicit all-ten-scenario Mac comparison-contract clarification and the combined Linux/macOS repair scope. Then complete and review the full repair milestone, push it once, and hold origin/main until every required workflow/job is terminal and all artifacts/reports are reconciled.",
+  "revised_at": "2026-10-16T12:05:55Z",
+  "revision": 6,
+  "review_required_reason": "Revision 5 review identified that the source has a second creation-order equality in pathTieSeedOrderDisambiguates after selection. Revision 6 scopes removal to the macOS reopen tie scenario only, because the reconciled report establishes stable runtime order [a-first,z-last] there. It preserves first-open and non-Mac order assertions, all completeness/stability checks, the strict [a-first,z-last] visible-row output, and all other predicates.",
+  "macos_comparison_contract_change": {
+    "change_type": "explicit capture/comparison contract change; product and Rust comparator semantics remain unchanged",
+    "raw_evidence": "Retain exact renderer.vault_file_tie_seed_order, fixture creation order, full observations, and source hashes separately for each phase; do not normalize or overwrite them.",
+    "per_phase_order_gate": "On macOS reopen, retain all existing preselection gates: complete expected 23-note fixture path set; stable fixture path enumeration across two reads; stable exact two tie-path set and order across the reads; stable whole-vault enumeration across the reads. Remove only equality to creation order [z-last,a-first] in that Mac reopen gate; record actual ordered paths. Preserve the creation-order equality for first-open and Linux/Windows reopen.",
+    "cross_phase_comparison": "For all ten Mac scenarios compare selected target path, active Bases view, result count, ordered row occurrences, group membership/order, and every existing renderer/runtime probe except the global renderer.vault_file_tie_seed_order diagnostic. Keep every other existing Mac comparison strict. Linux and Windows cross-phase projections remain fully strict, including this diagnostic.",
+    "tie_view_expected_rows": [
+      "Notes/Text/Ties/a-first.md",
+      "Notes/Text/Ties/z-last.md"
+    ],
+    "tie_view_gate": "Capture Bases/10 in both Mac phases. Require both ordered row outputs to equal [Notes/Text/Ties/a-first.md, Notes/Text/Ties/z-last.md] and require cross-phase equality. First-open retains the observed seed order [z-last.md,a-first.md] and its creation-order assertion. Mac reopen must pass the stable exact-set/two-read preselection gate and preserve raw runtime order, without requiring it to match creation order. Fail closed on missing selection, incomplete rows, or any different visible order.",
+    "no_allowlisting": "Do not skip the tie scenario, accept an incomplete observation, alter expected view rows, change product/comparator code, or claim parity.",
+    "mac_reopen_tie_predicate": "The source pathTieSeedOrderDisambiguates predicate currently requires renderer.vault_file_tie_seed_order=[z-last.md,a-first.md] for every tie scenario and every stage. Keep that equality for first-open on all platforms and for Linux/Windows reopen. On macOS reopen for text-equal-key-path-tie only, replace the equality with the already-required passing stable preselection gate and exact two-path set; retain all other local completeness, selection, extraction, count, row, renderer metadata and no-error predicates. Record the raw runtime diagnostic unchanged.",
+    "first_open_tie_evidence": {
+      "renderer_tie_seed_order": [
+        "Notes/Text/Ties/z-last.md",
+        "Notes/Text/Ties/a-first.md"
+      ],
+      "ordered_visible_rows": [
+        "Notes/Text/Ties/a-first.md",
+        "Notes/Text/Ties/z-last.md"
+      ],
+      "source": "reconciled macOS report, SHA-256 c23bcc9c497ee709d805e64ff01a5cb41d1be8e8b67dea0bdd87d075a0f6f5e4"
+    }
+  },
+  "implementation_crop_boundary": "Use the exact integer pixel rectangle fully contained in the target widget (ceil left/top, floor right/bottom); add no outward padding. This keeps labels/helper content and the sibling outside the OCR crop while retaining the full target control."
+}

@@ -4,13 +4,13 @@
   "id": "R2.8.143-R3.11-LINUX-CANVAS-FOCUS-C07.4-REFERENCE",
   "name": "R3.11 Linux Canvas focus trace and all-platform C07.4 reference capture",
   "created_at": "2026-10-16T10:39:18Z",
-  "status": "implementation complete and reviewed; ready for single push",
+  "status": "CI terminal failed on exact SHA 7f2dd3efd47ce1df3f14fb9cf07519afc408ca6b: 7/7 workflows terminal (6 passed, 1 failed); 20/20 jobs terminal (18 passed, 2 failed). All 16 artifacts and all three round-trip report payloads are reconciled; Linux OCR and macOS C07.4 capture failed.",
   "plan_review_status": "approved by independent source and tracker reviews",
   "planning_base_sha": "3d16c073fe276c1e32b91d868da73b26ad7acb17",
   "starting_sha": "3d16c073fe276c1e32b91d868da73b26ad7acb17",
-  "implementation_sha": null,
-  "submitted_sha": null,
-  "pushed_once": false,
+  "implementation_sha": "7f2dd3efd47ce1df3f14fb9cf07519afc408ca6b",
+  "submitted_sha": "7f2dd3efd47ce1df3f14fb9cf07519afc408ca6b",
+  "pushed_once": true,
   "objective": "Repair the missing Linux normal-child Canvas focus trace so the round-trip harness can safely complete text editing, then capture the pinned Obsidian C07.4 reference contract across Linux, macOS, and Windows on one exact SHA. This is reference capture only; it does not implement or claim Rust comparator parity.",
   "source_findings": {
     "r3_10_sha": "3d16c073fe276c1e32b91d868da73b26ad7acb17",
@@ -93,7 +93,78 @@
     ".agents/tasks/2026-10-07/evidence/r2.8.142-r3-10-windows-linux-canvas-repair-plan.json",
     ".agents/tasks/2026-10-07/evidence/r2.8.142-r3-10-attempt-1-3d16c07.json"
   ],
-  "execution_result": null,
+  "execution_result": {
+    "observed_at": "2026-10-16T11:59:02Z",
+    "implementation_sha": "7f2dd3efd47ce1df3f14fb9cf07519afc408ca6b",
+    "status": "terminal_failed",
+    "milestone_achieved": false,
+    "workflow_counts": {
+      "observed": 7,
+      "terminal": 7,
+      "passed": 6,
+      "failed": 1,
+      "cancelled": 0,
+      "queued": 0,
+      "in_progress": 0
+    },
+    "job_counts": {
+      "observed": 20,
+      "terminal": 20,
+      "passed": 18,
+      "failed": 2,
+      "cancelled": 0,
+      "queued": 0,
+      "in_progress": 0
+    },
+    "run_ids": [
+      38889434821,
+      38889434953,
+      38889434873,
+      38889434706,
+      38889434762,
+      38889434759,
+      38889434771
+    ],
+    "artifact_inventory_count": 16,
+    "artifact_inventory_complete": true,
+    "artifact_metadata_reconciled": true,
+    "roundtrip_archive_digests_reconciled": true,
+    "roundtrip_report_payloads_reconciled": true,
+    "origin_main_sha": "7f2dd3efd47ce1df3f14fb9cf07519afc408ca6b",
+    "origin_main_verified_at": "2026-10-16T11:59:02Z",
+    "active_job_ids": [],
+    "queued_job_ids": [],
+    "all_required_jobs_terminal": true,
+    "failed_job_ids": [
+      116935062474,
+      116935062753
+    ],
+    "linux_report_reconciled": true,
+    "windows_report_reconciled": false,
+    "macos_report_reconciled": false,
+    "evidence": "evidence/r2.8.143-r3-11-attempt-1-7f2dd3e.json",
+    "roundtrip_reports": {
+      "Linux": {
+        "report_sha256": "72a803d739d9999c2c8c0a3353b6e69614cb50459746c64e8498821d5b720028",
+        "source_sha": "7f2dd3efd47ce1df3f14fb9cf07519afc408ca6b",
+        "status": "failed",
+        "payload_reconciled": true
+      },
+      "Windows": {
+        "report_sha256": "bff1b6ac3520fb1cc7f5fab95d1ca64e24c5800509938076872e1c60c090601f",
+        "source_sha": "7f2dd3efd47ce1df3f14fb9cf07519afc408ca6b",
+        "status": "passed",
+        "payload_reconciled": true
+      },
+      "macOS": {
+        "report_sha256": "c23bcc9c497ee709d805e64ff01a5cb41d1be8e8b67dea0bdd87d075a0f6f5e4",
+        "source_sha": "7f2dd3efd47ce1df3f14fb9cf07519afc408ca6b",
+        "status": "failed",
+        "payload_reconciled": true,
+        "c07_4_note": "First-nine semantic outputs match; global tie enumeration metadata differs. Equal-key reopen gate fails before selection on stable actual order [a-first,z-last] vs expected [z-last,a-first]."
+      }
+    }
+  },
   "required_jobs": [
     {
       "workflow": "Rust migration inventory",
@@ -159,5 +230,38 @@
     }
   ],
   "required_job_matrix_source": "Expected workflow/job names are derived from the reconciled R3.10 exact-SHA evidence at evidence/r2.8.142-r3-10-attempt-1-3d16c07.json (runs and jobs). On R3.11, enumerate every actual job for its submitted SHA; any missing, skipped, disabled, or non-triggered expected check is non-passing under goal.md.",
-  "reviewed_at": "2026-10-16T10:46:05Z"
+  "reviewed_at": "2026-10-16T10:46:05Z",
+  "origin_main_sha_before_push": "3d16c073fe276c1e32b91d868da73b26ad7acb17",
+  "origin_main_sha_after_push": "7f2dd3efd47ce1df3f14fb9cf07519afc408ca6b",
+  "origin_main_verified_at": "2026-10-16T10:58:19Z",
+  "run_ids": [
+    38889434821,
+    38889434953,
+    38889434873,
+    38889434706,
+    38889434762,
+    38889434759,
+    38889434771
+  ],
+  "workflow_counts": {
+    "observed": 7,
+    "terminal": 6,
+    "passed": 6,
+    "failed": 0,
+    "cancelled": 0,
+    "queued": 0,
+    "in_progress": 1
+  },
+  "job_counts": {
+    "observed": 20,
+    "terminal": 18,
+    "passed": 17,
+    "failed": 1,
+    "cancelled": 0,
+    "queued": 0,
+    "in_progress": 2
+  },
+  "artifact_inventory_count": 14,
+  "artifact_inventory_complete": false,
+  "ci_attempt_evidence": "evidence/r2.8.143-r3-11-attempt-1-7f2dd3e.json"
 }

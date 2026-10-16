@@ -145,6 +145,7 @@ type CanvasInputSafetyTracker = {
   saveAttempted: boolean;
   clipboardCleanup: Record<string, unknown> | null;
   requestMarkerCleanup: Record<string, unknown> | null;
+  readbackCaptureCorrelations: Array<Record<string, unknown>>;
   focusCheckpoints: Array<Record<string, unknown>>;
   guardFailures: Array<Record<string, unknown>>;
   preStagingFocusRecovery: Record<string, unknown> | null;
@@ -16260,8 +16261,8 @@ type CanvasInputFieldLayout = {
   labelBoundsImage: OcrWordBounds;
   fieldTextBoundsOcr: OcrWordBounds | null;
   fieldCenter: {x: number; y: number};
-  fieldPositionSource: "visible-field-text-ocr" | "label-offset-fallback" | "label-anchored-readback-crop";
-  fieldTextOcrSource: "full-screenshot-ocr" | "focused-processed-crop-tesseract" | "focused-vision-crop" | "label-offset-fallback";
+  fieldPositionSource: "visible-field-text-ocr" | "label-offset-fallback" | "label-anchored-readback-crop" | "verified-widget-geometry";
+  fieldTextOcrSource: "full-screenshot-ocr" | "focused-processed-crop-tesseract" | "focused-vision-crop" | "label-offset-fallback" | "paired-widget-geometry";
   fieldSearchCrop: {
     rawCropPath: string;
     ocrCropPath: string;
@@ -16299,7 +16300,31 @@ type CanvasInputFieldLayout = {
   fieldSearchFailure: string;
   cropBounds: {left: number; top: number; width: number; height: number};
   coordinateSpace: "window" | "desktop";
+  readbackGeometry: Record<string, unknown> | null;
 };
+
+type CanvasInputReadbackGeometry = {
+  fieldCenter: {x: number; y: number};
+  cropBounds: CanvasInputFieldLayout["cropBounds"];
+  evidence: Record<string, unknown>;
+};
+
+type LinuxCanvasWindowGeometry = {x: number; y: number; width: number; height: number};
+
+type LinuxCanvasReadbackCapture = {
+  screenshot: Awaited<ReturnType<typeof captureOpenObsidianScreenshot>>;
+  readbackGeometry: CanvasInputReadbackGeometry;
+};
+
+class LinuxCanvasReadbackGuardError extends Error {
+  readonly evidence: Record<string, unknown> | null;
+
+  constructor(message: string, evidence: Record<string, unknown> | null = null) {
+    super(message);
+    this.name = "LinuxCanvasReadbackGuardError";
+    this.evidence = evidence;
+  }
+}
 
 type CanvasInputLabelVisionCandidateDiagnostic = {
   text: string;
@@ -17448,12 +17473,371 @@ function evaluateCanvasEditTextCardIdTesseractFieldPass(
   };
 }
 
+function readLinuxCanvasWindowGeometry(windowId: string): LinuxCanvasWindowGeometry {
+  const geometry = execFileSync("xdotool", ["getwindowgeometry", "--shell", windowId], {
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "ignore"],
+  });
+  const read = (key: string): number => Number(geometry.match(new RegExp(`^${key}=(-?\\d+)$`, "m"))?.[1] ?? NaN);
+  const result = {x: read("X"), y: read("Y"), width: read("WIDTH"), height: read("HEIGHT")};
+  if (!(Number.isFinite(result.x) && Number.isFinite(result.y)
+    && Number.isFinite(result.width) && result.width > 0
+    && Number.isFinite(result.height) && result.height > 0)) {
+    throw new LinuxCanvasReadbackGuardError(`Could not read valid Linux Canvas window geometry: ${geometry.trim()}`);
+  }
+  return result;
+}
+
+async function captureLinuxCanvasReadbackScreenshot(
+  windowId: string,
+  child: ChildProcess,
+  screenshotName: string,
+  logPath: string,
+  targetFieldName: "path" | "id",
+  siblingFieldName: "path" | "id",
+  baselineTarget: CanvasTextEditFieldObservation,
+  baselineSibling: CanvasTextEditFieldObservation,
+  expectedTargetValue: {bytes: number; sha256: string},
+  expectedSiblingValue: {bytes: number; sha256: string},
+  refreshBaseline: OpenObsidianRefreshDiagnostics,
+): Promise<LinuxCanvasReadbackCapture> {
+  const reject = (reason: string, details: Record<string, unknown> = {}): never => {
+    throw new LinuxCanvasReadbackGuardError(`${reason}; evidence=${JSON.stringify(details)}`, details);
+  };
+  const requestSnapshot = async (
+    stage: string,
+    afterLine: number,
+    afterFrameNr: number,
+    traceFromFrameNr?: number,
+  ): Promise<CanvasFocusSnapshot> => {
+    try {
+      return await requestCanvasFocusSnapshot(logPath, stage, afterLine, afterFrameNr, traceFromFrameNr);
+    } catch (error) {
+      reject(`Could not establish a fresh Linux ${targetFieldName} OCR snapshot (${stage})`, {
+        after_line: afterLine,
+        after_frame_nr: afterFrameNr,
+        detail: error instanceof Error ? error.message : String(error),
+      });
+    }
+  };
+  if (process.platform !== "linux") reject("Linux widget geometry was requested on a non-Linux platform");
+  if (baselineTarget.frameNr !== baselineSibling.frameNr
+    || baselineTarget.responseId === baselineSibling.responseId
+    || baselineTarget.pixelsPerPointBits !== baselineSibling.pixelsPerPointBits
+    || baselineTarget.valueBytes !== expectedTargetValue.bytes
+    || baselineTarget.valueSha256 !== expectedTargetValue.sha256
+    || baselineSibling.valueBytes !== expectedSiblingValue.bytes
+    || baselineSibling.valueSha256 !== expectedSiblingValue.sha256) {
+    reject("The baseline target/sibling diagnostics do not match the expected stable readback state", {
+      target: baselineTarget,
+      sibling: baselineSibling,
+      expected_target: expectedTargetValue,
+      expected_sibling: expectedSiblingValue,
+    });
+  }
+  const baselineLine = Math.max(baselineTarget.line, baselineSibling.line);
+  const refreshBefore = await readOpenObsidianRefreshDiagnostics(logPath);
+  if (openObsidianRefreshActivityChanged(refreshBaseline, refreshBefore)
+    || !openObsidianRefreshReceiverIsKnownIdle(refreshBefore)) {
+    reject("Vault refresh was not stable and idle before the Linux readback screenshot", {
+      baseline: refreshBaseline,
+      before: refreshBefore,
+    });
+  }
+
+  const beforeSnapshot = await requestSnapshot(
+    `Linux ${targetFieldName} OCR screenshot pre-capture`,
+    baselineLine,
+    baselineTarget.frameNr,
+  );
+  const validateSnapshotFields = (snapshot: CanvasFocusSnapshot, label: string): {
+    target: CanvasTextEditFieldObservation;
+    sibling: CanvasTextEditFieldObservation;
+  } => {
+    const target = snapshot.fields[targetFieldName];
+    const sibling = snapshot.fields[siblingFieldName];
+    const fieldsAreCorrelated = target.requestId === snapshot.request_id
+      && sibling.requestId === snapshot.request_id
+      && target.frameNr === snapshot.frame_nr
+      && sibling.frameNr === snapshot.frame_nr
+      && target.line > snapshot.line
+      && sibling.line > snapshot.line
+      && target.responseId !== sibling.responseId
+      && target.responseId === baselineTarget.responseId
+      && sibling.responseId === baselineSibling.responseId
+      && isDeepStrictEqual(target.rawRect, baselineTarget.rawRect)
+      && isDeepStrictEqual(sibling.rawRect, baselineSibling.rawRect)
+      && target.pixelsPerPointBits === baselineTarget.pixelsPerPointBits
+      && sibling.pixelsPerPointBits === baselineSibling.pixelsPerPointBits
+      && target.pixelsPerPointBits === sibling.pixelsPerPointBits;
+    const valuesAreExact = target.valueBytes === expectedTargetValue.bytes
+      && target.valueSha256 === expectedTargetValue.sha256
+      && target.empty === false
+      && sibling.valueBytes === expectedSiblingValue.bytes
+      && sibling.valueSha256 === expectedSiblingValue.sha256;
+    const focusIsExact = target.enabled && target.focused
+      && sibling.enabled && !sibling.focused
+      && !target.clicked && !sibling.clicked
+      && !target.pointerButtonPrimary && !sibling.pointerButtonPrimary
+      && !target.arrowRightKeyEvent && !sibling.arrowRightKeyEvent
+      && !target.tabKeyEvent && !sibling.tabKeyEvent;
+    const snapshotIsEventFree = snapshot.raw_events_empty
+      && snapshot.trace.frameNr === snapshot.frame_nr
+      && snapshot.trace.rawEvents.length === 0
+      && snapshot.trace.pointerMoveEventCount === 0
+      && snapshot.trace.primaryPointerButtonEventCount === 0
+      && snapshot.trace.otherEventCount === 0
+      && canvasTraceModifiersClear(snapshot.trace.currentModifiers)
+      && !snapshot.pointer_button_primary
+      && snapshot.x11.focused_window_id === windowId;
+    if (!fieldsAreCorrelated || !valuesAreExact || !focusIsExact || !snapshotIsEventFree) {
+      reject(`The ${label} Linux target/sibling snapshot failed correlation, value, focus, or event-free checks`, {
+        snapshot: {
+          request_id: snapshot.request_id,
+          line: snapshot.line,
+          frame_nr: snapshot.frame_nr,
+          monotonic_ms: snapshot.monotonic_ms,
+          pointer: snapshot.pointer,
+          pointer_raw: snapshot.pointer_raw,
+          pointer_button_primary: snapshot.pointer_button_primary,
+          raw_events_empty: snapshot.raw_events_empty,
+          x11: snapshot.x11,
+          trace: snapshot.trace,
+        },
+        target,
+        sibling,
+        checks: {fieldsAreCorrelated, valuesAreExact, focusIsExact, snapshotIsEventFree},
+      });
+    }
+    return {target, sibling};
+  };
+  const beforeFields = validateSnapshotFields(beforeSnapshot, "pre-capture");
+  const windowGeometryBefore = readLinuxCanvasWindowGeometry(windowId);
+  const captureStartedAtMs = Date.now();
+  const screenshot = await captureOpenObsidianScreenshot(windowId, child, screenshotName);
+  const captureFinishedAtMs = Date.now();
+  const windowGeometryAfter = readLinuxCanvasWindowGeometry(windowId);
+  const afterSnapshot = await requestSnapshot(
+    `Linux ${targetFieldName} OCR screenshot post-capture`,
+    beforeSnapshot.line,
+    beforeSnapshot.frame_nr,
+    beforeSnapshot.frame_nr,
+  );
+  const afterFields = validateSnapshotFields(afterSnapshot, "post-capture");
+  const refreshAfter = await readOpenObsidianRefreshDiagnostics(logPath);
+  const refreshChangedDuringCapture = openObsidianRefreshActivityChanged(refreshBefore, refreshAfter)
+    || !openObsidianRefreshReceiverIsKnownIdle(refreshAfter)
+    || refreshAfter.receiverStates.some((state) => state.busy
+      && state.line >= beforeSnapshot.line
+      && state.line <= afterSnapshot.line);
+  const traceWasEventFree = afterSnapshot.trace_frames.length > 0
+    && canvasTraceFramesCoverRange(afterSnapshot.trace_frames, beforeSnapshot.frame_nr, afterSnapshot.frame_nr)
+    && afterSnapshot.trace_frames.every((frame) => frame.rawEvents.length === 0
+      && frame.pointerMoveEventCount === 0
+      && frame.primaryPointerButtonEventCount === 0
+      && frame.otherEventCount === 0
+      && frame.tabPressCount === 0
+      && frame.tabReleaseCount === 0
+      && canvasTraceModifiersClear(frame.currentModifiers));
+  const snapshotStateIsStable = beforeSnapshot.request_id !== afterSnapshot.request_id
+    && afterSnapshot.frame_nr > beforeSnapshot.frame_nr
+    && afterSnapshot.monotonic_ms > beforeSnapshot.monotonic_ms
+    && isDeepStrictEqual(beforeSnapshot.pointer_raw, afterSnapshot.pointer_raw)
+    && beforeSnapshot.pointer_button_primary === afterSnapshot.pointer_button_primary
+    && beforeSnapshot.x11.focused_window_id === afterSnapshot.x11.focused_window_id
+    && beforeSnapshot.x11.focused_window_title === afterSnapshot.x11.focused_window_title
+    && beforeSnapshot.x11.pointer === afterSnapshot.x11.pointer
+    && isDeepStrictEqual(beforeFields.target.rawRect, afterFields.target.rawRect)
+    && isDeepStrictEqual(beforeFields.sibling.rawRect, afterFields.sibling.rawRect)
+    && beforeFields.target.responseId === afterFields.target.responseId
+    && beforeFields.sibling.responseId === afterFields.sibling.responseId
+    && beforeFields.target.pixelsPerPointBits === afterFields.target.pixelsPerPointBits
+    && beforeFields.sibling.pixelsPerPointBits === afterFields.sibling.pixelsPerPointBits;
+  const windowGeometryIsStable = isDeepStrictEqual(windowGeometryBefore, windowGeometryAfter);
+  if (refreshChangedDuringCapture || !traceWasEventFree || !snapshotStateIsStable || !windowGeometryIsStable) {
+    reject("Linux readback screenshot was not bracketed by stable, event-free diagnostics", {
+      refresh_before: refreshBefore,
+      refresh_after: refreshAfter,
+      refresh_changed: refreshChangedDuringCapture,
+      trace_was_event_free: traceWasEventFree,
+      snapshot_state_is_stable: snapshotStateIsStable,
+      window_geometry_is_stable: windowGeometryIsStable,
+      window_geometry_before: windowGeometryBefore,
+      window_geometry_after: windowGeometryAfter,
+      before_snapshot: {
+        request_id: beforeSnapshot.request_id,
+        line: beforeSnapshot.line,
+        frame_nr: beforeSnapshot.frame_nr,
+        monotonic_ms: beforeSnapshot.monotonic_ms,
+        pointer: beforeSnapshot.pointer,
+        pointer_raw: beforeSnapshot.pointer_raw,
+        x11: beforeSnapshot.x11,
+        target: beforeFields.target,
+        sibling: beforeFields.sibling,
+      },
+      after_snapshot: {
+        request_id: afterSnapshot.request_id,
+        line: afterSnapshot.line,
+        frame_nr: afterSnapshot.frame_nr,
+        monotonic_ms: afterSnapshot.monotonic_ms,
+        pointer: afterSnapshot.pointer,
+        pointer_raw: afterSnapshot.pointer_raw,
+        x11: afterSnapshot.x11,
+        target: afterFields.target,
+        sibling: afterFields.sibling,
+      },
+      after_trace_frames: afterSnapshot.trace_frames,
+    });
+  }
+
+  const screenshotDimensions = await pngDimensions(screenshot.windowPngPath);
+  if (screenshotDimensions.width !== windowGeometryBefore.width
+    || screenshotDimensions.height !== windowGeometryBefore.height
+    || captureFinishedAtMs < captureStartedAtMs) {
+    reject("Linux readback screenshot has no verified window-to-pixel mapping", {
+      window_geometry: windowGeometryBefore,
+      screenshot_dimensions: screenshotDimensions,
+      capture_started_at_ms: captureStartedAtMs,
+      capture_finished_at_ms: captureFinishedAtMs,
+    });
+  }
+  const screenshotScale = {
+    x: screenshotDimensions.width / windowGeometryBefore.width,
+    y: screenshotDimensions.height / windowGeometryBefore.height,
+  };
+  const pixelsPerPoint = afterFields.target.pixelsPerPoint;
+  if (!(Number.isFinite(pixelsPerPoint) && pixelsPerPoint > 0)
+    || afterFields.target.pixelsPerPointBits !== afterFields.sibling.pixelsPerPointBits) {
+    reject("Linux readback target/sibling pixels-per-point mapping is invalid", {
+      target_pixels_per_point: afterFields.target.pixelsPerPoint,
+      target_pixels_per_point_bits: afterFields.target.pixelsPerPointBits,
+      sibling_pixels_per_point_bits: afterFields.sibling.pixelsPerPointBits,
+    });
+  }
+  const toScreenshotPixels = (field: CanvasTextEditFieldObservation) => ({
+    left: field.rect.left * pixelsPerPoint * screenshotScale.x,
+    top: field.rect.top * pixelsPerPoint * screenshotScale.y,
+    right: field.rect.right * pixelsPerPoint * screenshotScale.x,
+    bottom: field.rect.bottom * pixelsPerPoint * screenshotScale.y,
+  });
+  const targetRectPixels = toScreenshotPixels(afterFields.target);
+  const siblingRectPixels = toScreenshotPixels(afterFields.sibling);
+  const cropBounds = {
+    left: Math.ceil(targetRectPixels.left),
+    top: Math.ceil(targetRectPixels.top),
+    width: Math.floor(targetRectPixels.right) - Math.ceil(targetRectPixels.left),
+    height: Math.floor(targetRectPixels.bottom) - Math.ceil(targetRectPixels.top),
+  };
+  const cropRight = cropBounds.left + cropBounds.width;
+  const cropBottom = cropBounds.top + cropBounds.height;
+  const cropInsideTarget = cropBounds.width > 0 && cropBounds.height > 0
+    && cropBounds.left >= targetRectPixels.left
+    && cropBounds.top >= targetRectPixels.top
+    && cropRight <= targetRectPixels.right
+    && cropBottom <= targetRectPixels.bottom;
+  const cropInsideWindow = cropBounds.left >= 0 && cropBounds.top >= 0
+    && cropRight <= screenshotDimensions.width && cropBottom <= screenshotDimensions.height;
+  const cropIntersectsSibling = cropBounds.left < siblingRectPixels.right
+    && cropRight > siblingRectPixels.left
+    && cropBounds.top < siblingRectPixels.bottom
+    && cropBottom > siblingRectPixels.top;
+  if (!cropInsideTarget || !cropInsideWindow || cropIntersectsSibling) {
+    reject("Linux OCR crop is clipped, outside the target widget/window, or overlaps its sibling", {
+      crop_bounds: cropBounds,
+      target_widget_rect_pixels: targetRectPixels,
+      sibling_widget_rect_pixels: siblingRectPixels,
+      screenshot_dimensions: screenshotDimensions,
+      checks: {cropInsideTarget, cropInsideWindow, cropIntersectsSibling},
+    });
+  }
+  const snapshotSummary = (snapshot: CanvasFocusSnapshot, target: CanvasTextEditFieldObservation, sibling: CanvasTextEditFieldObservation) => ({
+    request_id: snapshot.request_id,
+    line: snapshot.line,
+    frame_nr: snapshot.frame_nr,
+    monotonic_ms: snapshot.monotonic_ms,
+    raw_events_empty: snapshot.raw_events_empty,
+    pointer: snapshot.pointer,
+    pointer_raw: snapshot.pointer_raw,
+    pointer_button_primary: snapshot.pointer_button_primary,
+    x11: snapshot.x11,
+    target: {
+      line: target.line,
+      frame_nr: target.frameNr,
+      request_id: target.requestId,
+      response_id: target.responseId,
+      rect: target.rect,
+      raw_rect: target.rawRect,
+      pixels_per_point_bits: target.pixelsPerPointBits,
+      enabled: target.enabled,
+      focused: target.focused,
+      value_bytes: target.valueBytes,
+      value_sha256: target.valueSha256,
+      pointer_button_primary: target.pointerButtonPrimary,
+    },
+    sibling: {
+      line: sibling.line,
+      frame_nr: sibling.frameNr,
+      request_id: sibling.requestId,
+      response_id: sibling.responseId,
+      rect: sibling.rect,
+      raw_rect: sibling.rawRect,
+      pixels_per_point_bits: sibling.pixelsPerPointBits,
+      enabled: sibling.enabled,
+      focused: sibling.focused,
+      value_bytes: sibling.valueBytes,
+      value_sha256: sibling.valueSha256,
+      pointer_button_primary: sibling.pointerButtonPrimary,
+    },
+  });
+  const evidence: Record<string, unknown> = {
+    status: "verified",
+    target_field: targetFieldName,
+    sibling_field: siblingFieldName,
+    screenshot: relative(reportDirectory, screenshot.windowPngPath),
+    screenshot_dimensions: screenshotDimensions,
+    coordinate_space: "window",
+    window_geometry_before: windowGeometryBefore,
+    window_geometry_after: windowGeometryAfter,
+    screenshot_scale: screenshotScale,
+    logical_point_to_screenshot_scale: {x: pixelsPerPoint * screenshotScale.x, y: pixelsPerPoint * screenshotScale.y},
+    pixels_per_point: pixelsPerPoint,
+    pixels_per_point_bits: afterFields.target.pixelsPerPointBits,
+    capture_wall_clock_ms: {started: captureStartedAtMs, finished: captureFinishedAtMs},
+    refresh_stable_idle: true,
+    event_free_trace_frames: afterSnapshot.trace_frames.map((frame) => frame.frameNr),
+    before_snapshot: snapshotSummary(beforeSnapshot, beforeFields.target, beforeFields.sibling),
+    after_snapshot: snapshotSummary(afterSnapshot, afterFields.target, afterFields.sibling),
+    target_widget_rect_logical: afterFields.target.rect,
+    sibling_widget_rect_logical: afterFields.sibling.rect,
+    target_widget_rect_pixels: targetRectPixels,
+    sibling_widget_rect_pixels: siblingRectPixels,
+    crop_bounds: cropBounds,
+    crop_inside_target_widget_rect: cropInsideTarget,
+    crop_inside_window: cropInsideWindow,
+    crop_disjoint_from_sibling: !cropIntersectsSibling,
+    helper_text_excluded_by_target_widget_containment: cropInsideTarget,
+    outside_target_padding_pixels: 0,
+  };
+  return {
+    screenshot,
+    readbackGeometry: {
+      fieldCenter: {
+        x: (targetRectPixels.left + targetRectPixels.right) / 2,
+        y: (targetRectPixels.top + targetRectPixels.bottom) / 2,
+      },
+      cropBounds,
+      evidence,
+    },
+  };
+}
+
 async function locateCanvasTextInput(
   capture: Awaited<ReturnType<typeof captureOpenObsidianScreenshot>>,
   controlName: string,
   expectedInputValue?: string,
   allowLabelAnchoredReadbackCrop = false,
   macOSChild?: ChildProcess,
+  readbackGeometry?: CanvasInputReadbackGeometry,
 ): Promise<CanvasInputFieldLayout> {
   const coordinateSpace = process.platform === "darwin" ? "desktop" : "window";
   const imagePath = coordinateSpace === "desktop" ? capture.pngPath : capture.windowPngPath;
@@ -17486,6 +17870,7 @@ async function locateCanvasTextInput(
   const targetFieldText = controlName === "Canvas text draft"
     ? undefined
     : expectedInputValue ?? canvasInputHintValues[controlName];
+  let instructionBoundsOcr: OcrWordBounds | null = null;
   let labelBoundsOcr: OcrWordBounds | null = null;
   let fieldSearchLabelBoundsOcr: OcrWordBounds | null = null;
   let fieldTextBoundsOcr: OcrWordBounds | null = null;
@@ -17661,6 +18046,7 @@ async function locateCanvasTextInput(
         ?? findOcrPhraseBounds(tsv, "Preview and confirm", 0)
         ?? findOcrPhraseBounds(tsv, "Load one", 0);
       if (!instructionBounds) continue;
+      instructionBoundsOcr ??= instructionBounds;
       const candidateFormRowMinimumTop = instructionBounds.top + instructionBounds.height;
       let candidateLabelBounds: OcrWordBounds | null = null;
       for (const labelPhrase of labelPhrases) {
@@ -17748,25 +18134,70 @@ async function locateCanvasTextInput(
     height: Math.max(1, Math.round(labelBoundsOcr.height / scaleY)),
   };
   const rowOffset = controlName === "New Markdown path" ? 22 : controlName === "Canvas text draft" ? 66 : 0;
-  const centerX = fieldTextBoundsOcr
+  const centerX = readbackGeometry?.fieldCenter.x ?? (fieldTextBoundsOcr
     ? Math.round((fieldTextBoundsOcr.left + fieldTextBoundsOcr.width / 2) / scaleX)
-    : Math.round(labelBoundsImage.left + canvasInputLabelXOffset(controlName));
-  const centerY = fieldTextBoundsOcr
+    : Math.round(labelBoundsImage.left + canvasInputLabelXOffset(controlName)));
+  const centerY = readbackGeometry?.fieldCenter.y ?? (fieldTextBoundsOcr
     ? Math.round((fieldTextBoundsOcr.top + fieldTextBoundsOcr.height / 2) / scaleY)
-    : Math.round(labelBoundsImage.top + labelBoundsImage.height / 2 + rowOffset);
+    : Math.round(labelBoundsImage.top + labelBoundsImage.height / 2 + rowOffset));
   const cropWidth = canvasInputCropWidth(controlName);
   const cropHeight = controlName === "Canvas text draft" ? 72 : 32;
-  const cropBounds = {
-    left: Math.max(0, Math.min(imageDimensions.width - 1, Math.round(centerX - cropWidth / 2))),
-    top: Math.max(0, Math.min(imageDimensions.height - 1, Math.round(centerY - cropHeight / 2))),
-    width: 0,
-    height: 0,
-  };
-  cropBounds.width = Math.min(cropWidth, imageDimensions.width - cropBounds.left);
-  cropBounds.height = Math.min(cropHeight, imageDimensions.height - cropBounds.top);
+  const cropBounds = readbackGeometry
+    ? {...readbackGeometry.cropBounds}
+    : {
+      left: Math.max(0, Math.min(imageDimensions.width - 1, Math.round(centerX - cropWidth / 2))),
+      top: Math.max(0, Math.min(imageDimensions.height - 1, Math.round(centerY - cropHeight / 2))),
+      width: 0,
+      height: 0,
+    };
+  if (!readbackGeometry) {
+    cropBounds.width = Math.min(cropWidth, imageDimensions.width - cropBounds.left);
+    cropBounds.height = Math.min(cropHeight, imageDimensions.height - cropBounds.top);
+  }
   if (centerX < 0 || centerX >= imageDimensions.width || centerY < 0 || centerY >= imageDimensions.height
     || cropBounds.width <= 0 || cropBounds.height <= 0) {
     throw new Error(`The measured ${controlName} field center is outside the screenshot: center=(${centerX},${centerY}), image=${imageDimensions.width}x${imageDimensions.height}`);
+  }
+  if (readbackGeometry) {
+    if (!instructionBoundsOcr) {
+      throw new LinuxCanvasReadbackGuardError(
+        `Linux target-widget crop could not establish visible helper/instruction bounds: ${controlName}`,
+        readbackGeometry.evidence,
+      );
+    }
+    const instructionBoundsImage = {
+      left: Math.floor(instructionBoundsOcr.left / scaleX),
+      top: Math.floor(instructionBoundsOcr.top / scaleY),
+      right: Math.ceil((instructionBoundsOcr.left + instructionBoundsOcr.width) / scaleX),
+      bottom: Math.ceil((instructionBoundsOcr.top + instructionBoundsOcr.height) / scaleY),
+    };
+    const cropRight = cropBounds.left + cropBounds.width;
+    const cropBottom = cropBounds.top + cropBounds.height;
+    const cropIntersectsInstruction = cropBounds.left < instructionBoundsImage.right
+      && cropRight > instructionBoundsImage.left
+      && cropBounds.top < instructionBoundsImage.bottom
+      && cropBottom > instructionBoundsImage.top;
+    const cropIntersectsLabel = cropBounds.left < labelBoundsImage.left + labelBoundsImage.width
+      && cropRight > labelBoundsImage.left
+      && cropBounds.top < labelBoundsImage.top + labelBoundsImage.height
+      && cropBottom > labelBoundsImage.top;
+    Object.assign(readbackGeometry.evidence, {
+      instruction_bounds_ocr: instructionBoundsOcr,
+      instruction_bounds_image: instructionBoundsImage,
+      crop_disjoint_from_instruction_header: !cropIntersectsInstruction,
+      crop_disjoint_from_field_label: !cropIntersectsLabel,
+      helper_text_excluded_by_target_widget_containment: !cropIntersectsInstruction && !cropIntersectsLabel,
+    });
+    if (cropIntersectsInstruction || cropIntersectsLabel) {
+      const evidence = {
+        ...readbackGeometry.evidence,
+        controlName,
+        crop_bounds: cropBounds,
+        instruction_bounds_image: instructionBoundsImage,
+        label_bounds_image: labelBoundsImage,
+      };
+      throw new LinuxCanvasReadbackGuardError(`Linux OCR crop overlaps the visible helper/header or field label: ${JSON.stringify(evidence)}`, evidence);
+    }
   }
   if (strictMacOSCanvasEditId && strictMacOSWindowMapping) {
     const windowBounds = strictMacOSWindowMapping.windowBoundsImage;
@@ -17788,18 +18219,23 @@ async function locateCanvasTextInput(
     labelBoundsImage,
     fieldTextBoundsOcr,
     fieldCenter: {x: centerX, y: centerY},
-    fieldPositionSource: fieldTextBoundsOcr
+    fieldPositionSource: readbackGeometry
+      ? "verified-widget-geometry"
+      : fieldTextBoundsOcr
       ? "visible-field-text-ocr"
       : labelAnchoredReadbackCropUsed
         ? "label-anchored-readback-crop"
         : "label-offset-fallback",
-    fieldTextOcrSource: fieldTextBoundsOcr ? fieldTextOcrSource : "label-offset-fallback",
+    fieldTextOcrSource: readbackGeometry
+      ? "paired-widget-geometry"
+      : fieldTextBoundsOcr ? fieldTextOcrSource : "label-offset-fallback",
     fieldSearchCrop,
     labelVision,
     macOSOCRDiagnostics,
     fieldSearchFailure,
     cropBounds,
     coordinateSpace,
+    readbackGeometry: readbackGeometry?.evidence ?? null,
   };
 }
 
@@ -17808,10 +18244,12 @@ async function readCanvasInputScreenshotValue(
   controlName: string,
   expectedValue: string,
   macOSChild?: ChildProcess,
+  readbackGeometry?: CanvasInputReadbackGeometry,
 ): Promise<{
   exact: boolean;
   exactLine: boolean;
   text: string;
+  tesseractPasses: Array<{pageSegmentationMode: string; text: string}>;
   cropPath: string;
   layout: CanvasInputFieldLayout;
   visionText: string;
@@ -17820,7 +18258,7 @@ async function readCanvasInputScreenshotValue(
   visionExact: boolean;
   visionError: string;
 }> {
-  const layout = await locateCanvasTextInput(capture, controlName, expectedValue, process.platform === "darwin", macOSChild);
+  const layout = await locateCanvasTextInput(capture, controlName, expectedValue, process.platform === "darwin", macOSChild, readbackGeometry);
   const cropPath = join(reportDirectory, `openobsidian-canvas-input-${controlName.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${Date.now()}-ocr.png`);
   const {left, top, width, height} = layout.cropBounds;
   const imageMagick = process.platform === "linux" ? "convert" : "magick";
@@ -17837,7 +18275,18 @@ async function readCanvasInputScreenshotValue(
     "1%x3%",
     cropPath,
   ], {stdio: "ignore"});
-  const text = runTesseractOcr(cropPath, ["7", "6"]);
+  const tesseractPasses = process.platform === "linux" && readbackGeometry
+    ? ["7", "6"].map((pageSegmentationMode) => ({
+      pageSegmentationMode,
+      text: execFileSync("tesseract", [cropPath, "stdout", "--psm", pageSegmentationMode], {
+        encoding: "utf8",
+        stdio: ["ignore", "pipe", "ignore"],
+      }).trim(),
+    }))
+    : [];
+  const text = tesseractPasses.length > 0
+    ? tesseractPasses.map((pass) => pass.text).filter(Boolean).join("\n")
+    : runTesseractOcr(cropPath, ["7", "6"]);
   const tesseractExact = canvasInputOcrMatches(text, controlName, expectedValue);
   let visionCandidates: MacOSVisionTextCandidate[] = [];
   const visionAttempted = process.platform === "darwin" && !tesseractExact;
@@ -17862,6 +18311,7 @@ async function readCanvasInputScreenshotValue(
     exact: tesseractExact || visionExact,
     exactLine,
     text,
+    tesseractPasses,
     cropPath,
     layout,
     visionText: visionCandidates.map((candidate) => candidate.text).join("\n"),
@@ -19893,23 +20343,68 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
         let exactTargetVisualReadback = false;
         let targetVisualReadbackAttempts = 0;
         for (let visualProbe = 1; visualProbe <= 3; visualProbe += 1) {
+          const linuxTargetOnlyReadback = process.platform === "linux"
+            && diagnosticField === "path"
+            && siblingDiagnosticField === "id";
+          const readbackScreenshotName = `${inputScreenshotPrefix}-${fileSafeName}-field-readback-${attempt}-${visualProbe}`;
+          const expectedLinuxWindowScreenshotPath = linuxTargetOnlyReadback
+            ? join(reportDirectory, `${readbackScreenshotName}-window.png`)
+            : null;
+          let linuxReadbackGeometry: CanvasInputReadbackGeometry | undefined;
+          targetReadbackScreenshot = null;
+          targetVisualReadback = null;
+          targetVisualReadbackError = "";
           try {
             targetVisualReadbackAttempts = visualProbe;
-            targetReadbackScreenshot = await captureOpenObsidianScreenshot(
-              windowId,
-              child,
-              `${inputScreenshotPrefix}-${fileSafeName}-field-readback-${attempt}-${visualProbe}`,
-            );
+            if (linuxTargetOnlyReadback) {
+              if (!siblingFieldStateReadback || !preEntrySiblingWidget) {
+                throw new LinuxCanvasReadbackGuardError("Linux target-only OCR requires fresh path and sibling-ID field diagnostics");
+              }
+              const pairedCapture = await captureLinuxCanvasReadbackScreenshot(
+                windowId,
+                child,
+                readbackScreenshotName,
+                logPath,
+                diagnosticField,
+                siblingDiagnosticField,
+                fieldStateReadback,
+                siblingFieldStateReadback,
+                {bytes: expectedValueBytes, sha256: expectedValueSha256},
+                {bytes: preEntrySiblingWidget.valueBytes, sha256: preEntrySiblingWidget.valueSha256},
+                refreshAfterEntry,
+              );
+              targetReadbackScreenshot = pairedCapture.screenshot;
+              linuxReadbackGeometry = pairedCapture.readbackGeometry;
+              safetyTracker?.readbackCaptureCorrelations.push(pairedCapture.readbackGeometry.evidence);
+            } else {
+              targetReadbackScreenshot = await captureOpenObsidianScreenshot(
+                windowId,
+                child,
+                readbackScreenshotName,
+              );
+            }
             targetVisualReadback = await readCanvasInputScreenshotValue(
               targetReadbackScreenshot,
               controlName,
               value,
+              undefined,
+              linuxReadbackGeometry,
             );
+            if (linuxReadbackGeometry?.evidence) {
+              Object.assign(linuxReadbackGeometry.evidence, {
+                tesseract_passes: targetVisualReadback.tesseractPasses,
+                exact_complete_value_match: targetVisualReadback.exact,
+                exact_line_match: targetVisualReadback.exactLine,
+                combined_ocr_text: targetVisualReadback.text,
+                crop: relative(reportDirectory, targetVisualReadback.cropPath),
+              });
+            }
             const pasteLayout = targetVisualReadback.layout;
-            const linuxLabelOffsetCropIsValid = process.platform === "linux"
+            const linuxWidgetGeometryCropIsValid = process.platform === "linux"
               && pasteLayout.coordinateSpace === "window"
-              && pasteLayout.fieldPositionSource === "label-offset-fallback"
+              && pasteLayout.fieldPositionSource === "verified-widget-geometry"
               && Boolean(pasteLayout.labelBoundsOcr.text.trim())
+              && pasteLayout.readbackGeometry !== null
               && pasteLayout.cropBounds.width > 0
               && pasteLayout.cropBounds.height > 0
               && pasteLayout.cropBounds.left >= 0
@@ -19919,16 +20414,85 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
               && pasteLayout.fieldCenter.x >= 0
               && pasteLayout.fieldCenter.y >= 0
               && pasteLayout.fieldCenter.x < pasteLayout.imageDimensions.width
-              && pasteLayout.fieldCenter.y < pasteLayout.imageDimensions.height;
+              && pasteLayout.fieldCenter.y < pasteLayout.imageDimensions.height
+              && (pasteLayout.readbackGeometry as Record<string, unknown>).crop_inside_target_widget_rect === true
+              && (pasteLayout.readbackGeometry as Record<string, unknown>).crop_inside_window === true
+              && (pasteLayout.readbackGeometry as Record<string, unknown>).crop_disjoint_from_sibling === true
+              && (pasteLayout.readbackGeometry as Record<string, unknown>).crop_disjoint_from_instruction_header === true
+              && (pasteLayout.readbackGeometry as Record<string, unknown>).crop_disjoint_from_field_label === true
+              && (pasteLayout.readbackGeometry as Record<string, unknown>).helper_text_excluded_by_target_widget_containment === true;
+            if (linuxReadbackGeometry && !linuxWidgetGeometryCropIsValid) {
+              throw new LinuxCanvasReadbackGuardError(`Linux target-widget crop failed its post-capture layout checks: ${JSON.stringify({
+                source: pasteLayout.fieldPositionSource,
+                crop_bounds: pasteLayout.cropBounds,
+                image_dimensions: pasteLayout.imageDimensions,
+                readback_geometry: pasteLayout.readbackGeometry,
+              })}`);
+            }
             const fieldPositionIsTargetAnchored = pasteLayout.fieldPositionSource === "visible-field-text-ocr"
               || pasteLayout.fieldPositionSource === "label-anchored-readback-crop"
-              || linuxLabelOffsetCropIsValid;
+              || linuxWidgetGeometryCropIsValid;
             exactTargetVisualReadback = targetVisualReadback.exact && fieldPositionIsTargetAnchored;
             targetVisualReadbackError = exactTargetVisualReadback
               ? ""
               : `fresh target-field crop did not confirm the exact typed value; exact=${targetVisualReadback.exact}; source=${targetVisualReadback.layout.fieldPositionSource}; OCR=${JSON.stringify(targetVisualReadback.text)}`;
           } catch (error) {
             targetVisualReadbackError = error instanceof Error ? error.message : String(error);
+            const screenshotPathCandidate = targetReadbackScreenshot?.windowPngPath
+              ?? expectedLinuxWindowScreenshotPath;
+            const screenshotPathExists = screenshotPathCandidate
+              ? await lstat(screenshotPathCandidate).then((entry) => entry.isFile()).catch(() => false)
+              : false;
+            const screenshotEvidence = {
+              window_screenshot_path: screenshotPathCandidate
+                ? relative(reportDirectory, screenshotPathCandidate)
+                : null,
+              window_screenshot_path_exists: screenshotPathExists,
+            };
+            const guardEvidence = error instanceof LinuxCanvasReadbackGuardError
+              ? {...(error.evidence ?? {}), ...screenshotEvidence}
+              : null;
+            if (error instanceof LinuxCanvasReadbackGuardError) {
+              if (linuxReadbackGeometry?.evidence) {
+                Object.assign(linuxReadbackGeometry.evidence, {
+                  status: "rejected",
+                  probe: visualProbe,
+                  guard_error: targetVisualReadbackError,
+                  guard_evidence: guardEvidence,
+                  ...screenshotEvidence,
+                });
+              } else {
+                safetyTracker?.readbackCaptureCorrelations.push({
+                  status: "rejected",
+                  stage: "screenshot_or_geometry_before_helper_return",
+                  probe: visualProbe,
+                  error: targetVisualReadbackError,
+                  ...screenshotEvidence,
+                  guard_evidence: guardEvidence,
+                  target_field: diagnosticField,
+                  sibling_field: siblingDiagnosticField,
+                });
+              }
+              throw error;
+            }
+            if (linuxReadbackGeometry?.evidence) {
+              Object.assign(linuxReadbackGeometry.evidence, {
+                status: "ocr_failed",
+                probe: visualProbe,
+                ocr_error: targetVisualReadbackError,
+                ...screenshotEvidence,
+              });
+            } else if (linuxTargetOnlyReadback) {
+              safetyTracker?.readbackCaptureCorrelations.push({
+                status: "capture_failed",
+                stage: "screenshot_or_geometry_before_helper_return",
+                probe: visualProbe,
+                error: targetVisualReadbackError,
+                ...screenshotEvidence,
+                target_field: diagnosticField,
+                sibling_field: siblingDiagnosticField,
+              });
+            }
           }
           if (exactTargetVisualReadback) break;
           if (visualProbe < 3) await delay(150);
@@ -20007,7 +20571,9 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
             field_value_bytes: fieldStateReadback.valueBytes,
             expected_value_sha256: expectedValueSha256,
             field_value_sha256: fieldStateReadback.valueSha256,
-            readback_source: "CI-gated egui field-state SHA-256 plus exact OCR from a fresh crop anchored to the same visible field label",
+            readback_source: process.platform === "linux" && diagnosticField === "path"
+              ? "CI-gated egui field-state SHA-256 plus exact OCR from a target-only crop derived from fresh paired TextEdit geometry and a verified screenshot mapping"
+              : "CI-gated egui field-state SHA-256 plus exact OCR from a fresh crop anchored to the same visible field label",
             readback_ocr: targetVisualReadback?.text ?? "",
             visual_ocr_exact: targetVisualReadback?.exact ?? false,
             visual_ocr_is_diagnostic: false,
@@ -20039,16 +20605,21 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
               exact: targetVisualReadback?.exact ?? false,
               exact_line: targetVisualReadback?.exactLine ?? false,
               text: targetVisualReadback?.text ?? "",
+              tesseract_passes: targetVisualReadback?.tesseractPasses ?? [],
               field_position_source: targetVisualReadback?.layout.fieldPositionSource ?? null,
               coordinate_space: targetVisualReadback?.layout.coordinateSpace ?? null,
               label_bounds_ocr: targetVisualReadback?.layout.labelBoundsOcr ?? null,
               crop_bounds: targetVisualReadback?.layout.cropBounds ?? null,
+              readback_geometry: targetVisualReadback?.layout.readbackGeometry ?? null,
               image_dimensions: targetVisualReadback?.layout.imageDimensions ?? null,
               field_center: targetVisualReadback?.layout.fieldCenter ?? null,
               screenshot: targetReadbackScreenshot ? relative(reportDirectory, targetReadbackScreenshot.windowPngPath) : null,
               crop: targetVisualReadback ? relative(reportDirectory, targetVisualReadback.cropPath) : null,
             },
-            position_source: "fresh visible label bounds after a stable vault-refresh window",
+            position_source: process.platform === "linux" && diagnosticField === "path"
+              ? "fresh paired target/sibling TextEdit geometry bracketed around a stable event-free screenshot"
+              : "fresh visible label bounds after a stable vault-refresh window",
+            readback_capture_correlations: safetyTracker?.readbackCaptureCorrelations ?? [],
             ocr_label_found: labelOcrFound,
             verification_attempts: targetVisualReadbackAttempts,
             position_attempts: attempt,
@@ -21485,6 +22056,7 @@ async function runOpenObsidianCanvasTextEdit(
     saveAttempted: false,
     clipboardCleanup: null,
     requestMarkerCleanup: null,
+    readbackCaptureCorrelations: [],
     focusCheckpoints: [],
     guardFailures: [],
     preStagingFocusRecovery: null,
@@ -22629,6 +23201,7 @@ async function runOpenObsidianCanvasTextEdit(
     editReport.save_attempted = safetyTracker.saveAttempted;
     editReport.clipboard_cleanup = safetyTracker.clipboardCleanup;
     editReport.request_marker_cleanup = safetyTracker.requestMarkerCleanup;
+    editReport.readback_capture_correlations = safetyTracker.readbackCaptureCorrelations;
     editReport.interactions = interactions;
     editReport.screenshots = screenshots;
     editReport.vault_snapshot_after_save = afterSave;
@@ -22791,6 +23364,7 @@ async function runOpenObsidianCanvasTextEdit(
     editReport.initial_coordinate_click_trace = safetyTracker.initialCoordinateClickTrace;
     editReport.completed_paste_stages = safetyTracker.completedPasteStages;
     editReport.save_attempted = safetyTracker.saveAttempted;
+    editReport.readback_capture_correlations = safetyTracker.readbackCaptureCorrelations;
     const expectedCanaryMarker = error instanceof ExpectedCanvasAbortCanaryError
       && error.code === "EXPECTED_CANVAS_ABORT_CANARY";
     let canaryPassed = false;
@@ -26068,6 +26642,17 @@ function c074ComparableObservation(observation: Record<string, unknown>): Record
   };
 }
 
+function c074SemanticComparisonProjection(
+  projection: Record<string, unknown>,
+  excludeMacTieSeedOrder: boolean,
+): Record<string, unknown> {
+  if (!excludeMacTieSeedOrder) return projection;
+  const renderer = projection.renderer as Record<string, unknown>;
+  const semanticRenderer = {...renderer};
+  delete semanticRenderer.vault_file_tie_seed_order;
+  return {...projection, renderer: semanticRenderer};
+}
+
 async function captureC074SourceCheckpoint(
   stage: string,
   setup: {sourceFiles: Record<string, Buffer>; sourceHashes: Record<string, GroupOrderSourceHash>},
@@ -26257,12 +26842,13 @@ async function captureStableC074TiePathEnumeration(
   stage: string,
 ): Promise<Record<string, unknown>> {
   const expectedPathSet = [...expectedNotePaths].sort();
-  const expectedTieOrder = ["Notes/Text/Ties/z-last.md", "Notes/Text/Ties/a-first.md"];
+  const expectedTiePathSet = ["Notes/Text/Ties/a-first.md", "Notes/Text/Ties/z-last.md"];
   type StablePair = {
     first: C074TiePathEnumerationRead;
     second: C074TiePathEnumerationRead;
     fixture_path_set_complete: boolean;
     enumeration_order_stable: boolean;
+    tie_path_set_complete: boolean;
     tie_order_stable: boolean;
     vault_path_enumeration_stable: boolean;
   };
@@ -26283,6 +26869,8 @@ async function captureStableC074TiePathEnumeration(
           fixture_path_set_complete: isDeepStrictEqual(first.fixture_path_set, expectedPathSet)
             && isDeepStrictEqual(second.fixture_path_set, expectedPathSet),
           enumeration_order_stable: isDeepStrictEqual(first.fixture_paths_in_order, second.fixture_paths_in_order),
+          tie_path_set_complete: isDeepStrictEqual([...first.tie_paths_in_order].sort(), expectedTiePathSet)
+            && isDeepStrictEqual([...second.tie_paths_in_order].sort(), expectedTiePathSet),
           tie_order_stable: isDeepStrictEqual(first.tie_paths_in_order, second.tie_paths_in_order),
           vault_path_enumeration_stable: isDeepStrictEqual(first.paths_in_order, second.paths_in_order),
         };
@@ -26291,10 +26879,9 @@ async function captureStableC074TiePathEnumeration(
       },
       (value) => value.fixture_path_set_complete
         && value.enumeration_order_stable
+        && value.tie_path_set_complete
         && value.tie_order_stable
-        && value.vault_path_enumeration_stable
-        && isDeepStrictEqual(value.first.tie_paths_in_order, expectedTieOrder)
-        && isDeepStrictEqual(value.second.tie_paths_in_order, expectedTieOrder),
+        && value.vault_path_enumeration_stable,
       15_000,
     );
   } catch (error) {
@@ -26303,20 +26890,19 @@ async function captureStableC074TiePathEnumeration(
   const passed = lastPair !== null
     && lastPair.fixture_path_set_complete
     && lastPair.enumeration_order_stable
+    && lastPair.tie_path_set_complete
     && lastPair.tie_order_stable
-    && lastPair.vault_path_enumeration_stable
-    && isDeepStrictEqual(lastPair.first.tie_paths_in_order, expectedTieOrder)
-    && isDeepStrictEqual(lastPair.second.tie_paths_in_order, expectedTieOrder);
+    && lastPair.vault_path_enumeration_stable;
   return {
     stage,
     captured_at: new Date().toISOString(),
     required_settled_reads: 2,
     read_pair_attempts: readPairAttempts,
     expected_fixture_path_set: expectedPathSet,
-    expected_tie_path_order: expectedTieOrder,
+    expected_tie_path_set: expectedTiePathSet,
     ...(lastPair ?? {}),
     passed,
-    failure: passed ? null : failureMessage ?? "settled enumeration reads did not produce the required stable reverse tie order",
+    failure: passed ? null : failureMessage ?? "settled enumeration reads did not produce a complete fixture set and stable exact tie path set/order",
   };
 }
 
@@ -26407,11 +26993,17 @@ async function captureC074Scenario(
   const uniquePaths = [...new Set(occurrencePaths)].sort();
   const visiblePaths = observation.visible_fixture_path_links.map((entry) => entry.path);
   const resultCountMatchesOccurrences = observation.result_count !== null && observation.result_count === occurrences.length;
-  const expectedRowPaths = scenario.id === "numeric-group-identity"
-    ? fixture.notes.filter((note) => note.path.startsWith("Notes/Numbers/")).map((note) => note.path).sort()
-    : null;
-  const expectedRowPathsComplete = expectedRowPaths === null
-    || (occurrences.length === expectedRowPaths.length && isDeepStrictEqual(uniquePaths, expectedRowPaths));
+  const requireMacTieRowOrder = process.platform === "darwin" && scenario.id === "text-equal-key-path-tie";
+  const expectedRowPaths = requireMacTieRowOrder
+    ? ["Notes/Text/Ties/a-first.md", "Notes/Text/Ties/z-last.md"]
+    : scenario.id === "numeric-group-identity"
+      ? fixture.notes.filter((note) => note.path.startsWith("Notes/Numbers/")).map((note) => note.path).sort()
+      : null;
+  const expectedRowPathsComplete = requireMacTieRowOrder
+    ? expectedRowPaths !== null && occurrencePaths.length === expectedRowPaths.length
+      && isDeepStrictEqual(occurrencePaths, expectedRowPaths)
+    : expectedRowPaths === null
+      || (occurrences.length === expectedRowPaths.length && isDeepStrictEqual(uniquePaths, expectedRowPaths));
   const observedDomOrdinals = observation.visible_fixture_path_links.map((entry) => entry.result_order_ordinal).sort((left, right) => left - right);
   const domOrdinalsComplete = isDeepStrictEqual(observedDomOrdinals, observation.visible_fixture_path_links.map((_entry, index) => index));
   const resultCountEvidence = observation.result_count_evidence;
@@ -26526,9 +27118,14 @@ async function captureC074Scenario(
   const rendererDiagnosticsComplete = numberProbesComplete && numberIdentityProbesComplete
     && textComparisonProbesComplete && diagnosticsMetadataComplete && runnerMetadataComplete;
   const tieSeedOrder = renderer.vault_file_tie_seed_order as string[];
-  const pathTieSeedOrderDisambiguates = scenario.id !== "text-equal-key-path-tie"
-    || (isDeepStrictEqual(tieSeedOrder, ["Notes/Text/Ties/z-last.md", "Notes/Text/Ties/a-first.md"])
-      && (!requiresMacOSReopenTiePathEnumeration || tiePathEnumerationBeforeSelection?.passed === true));
+  const expectedTieSeedOrder = ["Notes/Text/Ties/z-last.md", "Notes/Text/Ties/a-first.md"];
+  const pathTieSeedOrderMatchesCreationOrder = scenario.id !== "text-equal-key-path-tie"
+    ? null
+    : isDeepStrictEqual(tieSeedOrder, expectedTieSeedOrder);
+  const pathTieOrderContractPassed = scenario.id !== "text-equal-key-path-tie"
+    || (requiresMacOSReopenTiePathEnumeration
+      ? tiePathEnumerationBeforeSelection?.passed === true
+      : pathTieSeedOrderMatchesCreationOrder === true);
   const complete = observation.requested_file_path === scenario.base_path
     && observation.selection_succeeded
     && observation.active_file_path === scenario.base_path
@@ -26555,7 +27152,7 @@ async function captureC074Scenario(
     && observation.visible_error_texts.length === 0
     && frontmatterPropertiesComplete
     && rendererDiagnosticsComplete
-    && pathTieSeedOrderDisambiguates;
+    && pathTieOrderContractPassed;
   const result = {
     stage,
     scenario_id: scenario.id,
@@ -26619,7 +27216,8 @@ async function captureC074Scenario(
     renderer_metadata_complete: diagnosticsMetadataComplete,
     runner_metadata_complete: runnerMetadataComplete,
     path_tie_seed_order: tieSeedOrder,
-    path_tie_seed_order_disambiguates: pathTieSeedOrderDisambiguates,
+    path_tie_seed_order_matches_creation_order: pathTieSeedOrderMatchesCreationOrder,
+    path_tie_order_contract_passed: pathTieOrderContractPassed,
     reopen_preselection_tie_path_enumeration: tiePathEnumerationBeforeSelection,
     reopen_preselection_tie_path_enumeration_required: requiresMacOSReopenTiePathEnumeration,
     reopen_preselection_tie_path_enumeration_passed: !requiresMacOSReopenTiePathEnumeration
@@ -26668,7 +27266,8 @@ async function captureC074Scenario(
       renderer_metadata_complete: diagnosticsMetadataComplete,
       runner_metadata_complete: runnerMetadataComplete,
       renderer_diagnostics_complete: rendererDiagnosticsComplete,
-      tie_seed_order_disambiguates: pathTieSeedOrderDisambiguates,
+      tie_seed_order_matches_creation_order: pathTieSeedOrderMatchesCreationOrder,
+      tie_order_contract_passed: pathTieOrderContractPassed,
       reopen_preselection_tie_enumeration_required: requiresMacOSReopenTiePathEnumeration,
       reopen_preselection_tie_enumeration_passed: !requiresMacOSReopenTiePathEnumeration
         || tiePathEnumerationBeforeSelection?.passed === true,
@@ -26903,6 +27502,8 @@ async function runBasesNumberReferenceProbe(): Promise<void> {
     basesReport.reopen_source_hashes_match_seed = isDeepStrictEqual(fixtureSetup.sourceHashes, reopenAfterShutdown.source_hashes);
     basesReport.reopen_source_mutation_observed = reopenAfterShutdown.changed_sources_from_seed.length > 0;
 
+    const excludeMacTieSeedOrderFromSemanticComparison = process.platform === "darwin";
+    basesReport.scenario_comparison_semantics = "Each first-open/reopen pair must pass its stage completeness gates and match under strict projection equality. On macOS only, semantic pair comparison excludes renderer.vault_file_tie_seed_order; that raw diagnostic remains in both recorded projections, and every other projected field remains strict.";
     const scenarioAcceptance: Record<string, boolean> = {};
     for (const scenario of fixture.scenarios) {
       const entry = scenarioReport.find((candidate) => candidate.id === scenario.id)!;
@@ -26910,14 +27511,24 @@ async function runBasesNumberReferenceProbe(): Promise<void> {
       const reopenObservation = reopenedObservations[scenario.id];
       const firstComplete = firstObservation?.complete === true;
       const reopenComplete = reopenObservation?.complete === true;
+      const firstOpenProjection = firstComplete ? c074ComparableObservation(firstObservation) : null;
+      const reopenProjection = reopenComplete ? c074ComparableObservation(reopenObservation) : null;
+      const firstOpenSemanticProjection = firstOpenProjection === null ? null
+        : c074SemanticComparisonProjection(firstOpenProjection, excludeMacTieSeedOrderFromSemanticComparison);
+      const reopenSemanticProjection = reopenProjection === null ? null
+        : c074SemanticComparisonProjection(reopenProjection, excludeMacTieSeedOrderFromSemanticComparison);
       const comparable = firstComplete && reopenComplete
-        && isDeepStrictEqual(c074ComparableObservation(firstObservation), c074ComparableObservation(reopenObservation));
+        && firstOpenSemanticProjection !== null && reopenSemanticProjection !== null
+        && isDeepStrictEqual(firstOpenSemanticProjection, reopenSemanticProjection);
       entry.comparison = {
         first_open_complete: firstComplete,
         reopen_complete: reopenComplete,
         stable_across_reopen: comparable,
-        first_open_projection: firstComplete ? c074ComparableObservation(firstObservation) : null,
-        reopen_projection: reopenComplete ? c074ComparableObservation(reopenObservation) : null,
+        semantic_comparison_excluded_fields: excludeMacTieSeedOrderFromSemanticComparison
+          ? ["renderer.vault_file_tie_seed_order"]
+          : [],
+        first_open_projection: firstOpenProjection,
+        reopen_projection: reopenProjection,
       };
       scenarioAcceptance[scenario.id] = firstComplete && reopenComplete && comparable;
     }

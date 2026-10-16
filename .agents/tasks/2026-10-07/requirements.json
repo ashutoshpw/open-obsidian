@@ -3409,7 +3409,7 @@
       "checkpoint": "P3.1",
       "owner": "vault-filesystem",
       "mandatory": true,
-      "acceptance_criteria": "Before Rust comparator implementation, capture and reconcile pinned Obsidian 1.14.4 behavior for all ten C07.4 scenarios on first open and reopen across Linux, macOS, and Windows. Require 28 source checkpoints per OS and complete checkpoint matrices; `reopen_seed_hashes_match=true` after reseeding; report first-open/reopen source hashes and changed bytes without requiring Obsidian to preserve its own rewritten sources. Require the tie-seed-order predicate on every OS and the additional stable preselection enumeration on macOS reopen only. Freeze the runner-default locale policy and keep capture-only results separate from Rust parity. After capture, implement and fixture-check JavaScript Number conversion/equality/ordering, filtering, contains, grouping, and observed locale/tie semantics; keep unsupported behavior pending and the C07 parent open.",
+      "acceptance_criteria": "Before Rust comparator implementation, capture and reconcile pinned Obsidian 1.14.4 behavior for all ten C07.4 scenarios on first open and reopen across Linux, macOS, and Windows. Require 28 source checkpoints per OS and complete checkpoint matrices; `reopen_seed_hashes_match=true` after reseeding; report first-open/reopen source hashes and changed bytes without requiring Obsidian to preserve its own rewritten sources. Keep the creation-order tie-seed predicate on first-open across all OSes and on Linux/Windows reopen. For the Mac reopen tie scenario, retain the raw runtime order, require the exact 23-note fixture set, exact two tie paths, and stable fixture/tie/whole-vault enumeration across two reads without requiring the runtime order to equal creation order. Require the Bases/10 tie view to be captured in both Mac phases with exactly `[Notes/Text/Ties/a-first.md, Notes/Text/Ties/z-last.md]` ordered rows in each and strict equality across phases; exclude only the global process-phase tie-order diagnostic from Mac semantic cross-phase comparison; Linux and Windows remain strict on this diagnostic. Freeze the runner-default locale policy and keep capture-only results separate from Rust parity. After capture, implement and fixture-check JavaScript Number conversion/equality/ordering, filtering, contains, grouping, and observed locale/tie semantics; keep unsupported behavior pending and the C07 parent open.",
       "fixture_ids": [
         "fixture:c07-bases",
         "fixture:c07-number-reference"
@@ -3435,10 +3435,12 @@
       "evidence_paths": [
         ".agents/tasks/2026-10-07/evidence/r2.8.142-r3-10-attempt-1-3d16c07.json",
         ".agents/tasks/2026-10-07/evidence/r2.8.142-r3-10-windows-linux-canvas-repair-plan.json",
-        ".agents/tasks/2026-10-07/evidence/r2.8.143-r3-11-linux-canvas-focus-c07-4-reference-plan.json"
+        ".agents/tasks/2026-10-07/evidence/r2.8.143-r3-11-linux-canvas-focus-c07-4-reference-plan.json",
+        ".agents/tasks/2026-10-07/evidence/r2.8.143-r3-11-attempt-1-7f2dd3e.json",
+        ".agents/tasks/2026-10-07/evidence/r2.8.144-r3-12-c07-4-all-platform-capture-repair-plan.json"
       ],
       "tested_source_tree": null,
-      "blocker": "R3.10 on exact SHA 3d16c073fe276c1e32b91d868da73b26ad7acb17 is terminal failed: Linux round-trip job 116909896430 stopped before C07.4, while macOS and Windows captured all ten first-open/reopen/comparable scenarios with 28 source checkpoints and complete matrices. R3.11 must recapture all ten scenarios on all three OSes, with the reseed, tie, locale, and mutation evidence gates, before Rust comparator work starts. No Rust parity is claimed.",
+      "blocker": "R3.11 is terminal-failed on exact SHA 7f2dd3efd47ce1df3f14fb9cf07519afc408ca6b: 7/7 workflows and 20/20 jobs terminal, with 6 workflows/18 jobs passed and Linux 116935062474 plus macOS 116935062753 failed. Linux report 72a803d739d9999c2c8c0a3353b6e69614cb50459746c4e8498821d5b720028 confirms exact field-state bytes/SHA but strict screenshot OCR failed after a contaminated fallback crop; no save was attempted. The macOS report c23bcc9c497ee709d805e64ff01a5cb41d1be8e8b67dea0bdd87d075a0f6f5e4 shows first-open Bases/10 passed with seed order [z-last,a-first] and rows [a-first,z-last]. Mac reopen stably observed [a-first,z-last] across 23 paired preselection reads but did not select the tie view because two source predicates required creation order. Windows report bff1b6ac3520fb1cc7f5fab95d1ca64e24c5800509938076872e1c60c090601f passes all 10 C07.4 pairs. All 16 artifacts and all three report payload hashes/source SHAs/statuses are reconciled. R3.12 revision 6 is approved by two independent plan reviewers; implementation is complete and independently reviewed, with one full exact-SHA GitHub Actions batch pending after milestone submission. C07.4 remains pending and no Rust parity is claimed.",
       "gate_class": "implementation",
       "decision_id": "D03",
       "legacy_status": "implemented",
@@ -3455,9 +3457,9 @@
       "runtime_override": "Compatibility is defined by checksum-pinned Obsidian 1.14.4 assets in .agents/tasks/2026-10-07/obsidian-reference-pin.json and the recorded locale/OS policy; C07.2 intentionally covers a smaller comparator slice only.",
       "migration_disposition": "retained",
       "migration_acceptance": "Implement the pinned-app captured comparison contract in crates/doc using the explicit runner-default locale policy. Exercise the production parse/evaluate path on captured source bytes, preserve exact Rust input bytes and unknown fields, compare fixture outcomes on the three-OS GitHub Actions matrix, and do not claim parity until exact-SHA required CI passes.",
-      "evidence": "Current partial reference evidence: evidence/r2.8.142-r3-10-attempt-1-3d16c07.json (Windows and macOS passed all ten first-open/reopen/comparable scenarios; Linux stopped before C07.4). Required completion plan: evidence/r2.8.143-r3-11-linux-canvas-focus-c07-4-reference-plan.json. Rust parity remains unclaimed.",
-      "blockers": "R3.10 Linux round-trip job 116909896430 failed before clipboard staging and C07.4; Linux reference capture remains absent. Complete R3.11 all-platform capture and exact-SHA CI before Rust comparator implementation.",
-      "notes": "R3.10 macOS and Windows report captured all ten C07.4 scenarios with all 28 source checkpoints and complete matrices. Pinned Obsidian source rewrites are reported as reference observations; they do not show Rust source mutation or parity. Requirement remains pending until Linux capture completes and Rust implementation passes its own acceptance."
+      "evidence": "Terminal R3.11 exact-SHA reports: Linux report SHA-256 72a803d739d9999c2c8c0a3353b6e69614cb50459746c64e8498821d5b720028, Windows report SHA-256 bff1b6ac3520fb1cc7f5fab95d1ca64e24c5800509938076872e1c60c090601f, macOS report SHA-256 c23bcc9c497ee709d805e64ff01a5cb41d1be8e8b67dea0bdd87d075a0f6f5e4; all report source SHA 7f2dd3efd47ce1df3f14fb9cf07519afc408ca6b. Archive/API digests and report payload hashes are recorded in evidence/r2.8.143-r3-11-attempt-1-7f2dd3e.json.",
+      "blockers": "R3.11 exact-SHA CI failed on Linux screenshot OCR and macOS C07.4 capture harness order checks. Windows C07.4 passes all ten first-open/reopen pairs. Mac report proves first-nine semantic projections match but their global tie-order diagnostic differs; the equal-key scenario stops before selection due the two hardcoded creation-order predicates. R3.12 revision 6 source changes are implemented and independently reviewed. The full exact-SHA seven-workflow/20-job GitHub Actions batch remains required; C07.4 stays pending until it passes.",
+      "notes": "No shared Linux/macOS cause is inferred. Mac and Windows reports are read and reconciled via signed artifact URLs. Windows/macOS post-reopen source mutation is recorded behavior, not an acceptance gate by itself. The revision 6 Mac capture contract preserves raw runtime order, strict visible rows, and all other predicates. Rust parity remains unclaimed."
     },
     {
       "id": "C07.5",
@@ -10458,6 +10460,16 @@
           "kind": "rust-migration-goal",
           "version": "2026-10-16-assigned-worktree-submission-flow",
           "sha256": "c0be89ea6705ca5b05c6589c14ffa38ebe7358e3671f39543429f3866df6eaf3"
+        },
+        {
+          "kind": "rust-migration-goal",
+          "version": "2026-10-16-no-minor-push-before-reviewed-milestone",
+          "sha256": "10218894a6187c8c47526cbe51e7e9493a74be2d128ea8b0289e06e8512eeff5"
+        },
+        {
+          "kind": "rust-migration-goal",
+          "version": "2026-10-16-one-batch-per-reviewed-milestone",
+          "sha256": "92409372d9cb637cf8bb08603293b4b473a593fc82b8beacce93f309c68e5a1e"
         }
       ],
       "applicable_platforms": [
@@ -10481,7 +10493,7 @@
       "migration_acceptance": "Keep minor implementation, documentation, tests, fixes, and optional local commits grouped until a coherent, measurable milestone is complete and the full scope has been reviewed. A minor edit, formatting/lint correction, compiler fix, cleanup item, or evidence update does not trigger a push. Push origin/main once after implementation completion and whole-milestone review; that push starts the full exact-SHA GitHub Actions batch and marks implementation-complete / CI-pending. Keep origin/main at that SHA until every required job is terminal and evidence is reconciled, even if CI takes several hours; do not start another full batch meanwhile. If CI finds problems, let the full batch finish, group related findings into one reviewed repair milestone, and push that repair once. Mark achieved / CI-passed only after every required exact-SHA job passes and its evidence is reconciled.",
       "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
       "clause": "Do not push to origin/main for every minor change or to obtain early CI feedback. Keep implementation, documentation, tests, fixes, and optional local commits together until a named milestone has a coherent outcome, its full implementation scope is complete, and the accumulated work has been reviewed. Push that milestone once to start its full GitHub Actions batch; the push marks implementation-complete / CI-pending, not achieved. A single edit, test, formatting/lint correction, compiler fix, cleanup item, or evidence update is not a milestone. Do not split one coherent outcome into micro-milestones or combine unrelated work. Cross-platform CI may take several hours, so keep origin/main at the submitted SHA until every required job is terminal and its evidence is reconciled. If CI finds issues, wait for the batch to finish and group related corrections into one complete, reviewed repair milestone before its single push. Evidence-only and status-only updates stay local for the next substantive milestone.",
-      "goal_sha256": "ab0accd0549e31c977ba1f6e6eb8bf9c0f722663da9dc7e761db28ecb35543fd"
+      "goal_sha256": "92409372d9cb637cf8bb08603293b4b473a593fc82b8beacce93f309c68e5a1e"
     },
     {
       "id": "MIG-003",
@@ -11230,10 +11242,10 @@
     "post_r0_2_additions": [
       "MIG-016: maintain current, accurate documentation throughout migration and audit it at cutover."
     ],
-    "goal_sha256": "ab0accd0549e31c977ba1f6e6eb8bf9c0f722663da9dc7e761db28ecb35543fd",
+    "goal_sha256": "92409372d9cb637cf8bb08603293b4b473a593fc82b8beacce93f309c68e5a1e",
     "policy": "Every inherited requirement was reviewed by ID and assigned a Rust owner, migration phase, acceptance criterion and retained/superseded/external disposition. Historical status/evidence remain preserved separately. Rust acceptance remains pending unless current exact-SHA migration evidence is attached; external items remain external_pending.",
-    "cadence_synced_at": "2026-10-16T10:39:18Z",
-    "cadence_sync_note": "MIG-002 and its goal hash were synchronized with the clarified push-after-complete-and-reviewed-milestone rule. Existing requirement ownership mapping remains unchanged.",
+    "cadence_synced_at": "2026-10-16T12:38:59Z",
+    "cadence_sync_note": "Synchronized the current goal text and hash. Do not push or trigger CI for minor edits; batch related work under a predeclared, measurable milestone and push once after implementation and whole-milestone review. Keep origin/main fixed at that SHA through the full multi-hour CI batch and evidence reconciliation. C07.4 remains pending until exact-SHA CI passes.",
     "reviewed_at": "2026-10-16T10:46:05Z"
   }
 }
