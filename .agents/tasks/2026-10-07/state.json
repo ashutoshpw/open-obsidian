@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
-  "status": "R3.9 is terminal failed and fully reconciled on exact SHA 49ef8e8ecfa60b9de245a8b62ffe26aadf17bab7. R3.10 implementation and whole-milestone review are complete locally; one CI-triggering push is next.",
-  "updated_at": "2026-10-16T09:35:33Z",
+  "status": "R3.10 terminal failed and fully reconciled on 3d16c073fe276c1e32b91d868da73b26ad7acb17. R3.11 implementation is complete and independently reviewed locally; origin/main remains at the starting SHA, no CI batch is in flight, and the next action is its single milestone push.",
+  "updated_at": "2026-10-16T10:46:05Z",
   "branch": "codex/r3.3-tracker",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R3",
-  "last_reconciled_head": "49ef8e8ecfa60b9de245a8b62ffe26aadf17bab7",
-  "current_milestone": "R3.10 Windows and Linux Canvas round-trip repair is implemented and reviewed locally; ready for one push from base 49ef8e8ecfa60b9de245a8b62ffe26aadf17bab7.",
-  "next_action": "Create the single R3.10 milestone commit and push it once to origin/main to start the seven-workflow/20-job GitHub CI batch; hold main until every exact-SHA job is terminal and artifacts are reconciled. Do not run local executable validation.",
-  "push_status": "origin/main remains at 49ef8e8ecfa60b9de245a8b62ffe26aadf17bab7. R3.10 has passed whole-milestone review locally and will be committed and pushed once; hold main at its submitted SHA through terminal exact-SHA CI and artifact reconciliation.",
+  "last_reconciled_head": "3d16c073fe276c1e32b91d868da73b26ad7acb17",
+  "current_milestone": "Terminal failed on exact SHA 3d16c073fe276c1e32b91d868da73b26ad7acb17: 7/7 workflows terminal (6 passed, 1 failed); 20/20 jobs terminal (19 passed, 1 failed). Linux round-trip failed before clipboard staging; Windows and macOS round-trip jobs passed. All 16 API artifact records and all three round-trip archive/report hashes are reconciled. Next: R3.11 Linux focus-trace repair plus all-platform C07.4 reference capture; Rust parity remains blocked until that capture passes.",
+  "next_action": "Read-only confirm origin/main still equals R3.11 starting SHA 3d16c073fe276c1e32b91d868da73b26ad7acb17, then commit and push this complete R3.11 milestone once. After push, reconcile the exact submitted SHA and wait for all seven workflows and twenty jobs.",
+  "push_status": "R3.10 was pushed once to origin/main as 3d16c073fe276c1e32b91d868da73b26ad7acb17; all required CI is terminal and evidence is reconciled. origin/main was read-only verified at 3d16c073fe276c1e32b91d868da73b26ad7acb17 on 2026-10-16T10:39:18Z. No batch is in flight; do not push the next milestone before R3.11 implementation is complete and reviewed.",
   "blockers": [
     "C07.3 pinned Obsidian reference capture passed all 14 scenarios on first open and reopen across Linux, macOS, and Windows at exact SHA 0a9cb9c00835881a7629c96721974dfa9461cc50; see evidence/r2.8.129-attempt-1-0a9cb9c.json. Rust parity remains pending. Separate mixed-worktree C07.3 edits remain local and are excluded from the C07.4 candidate; review and submit them separately. Do not claim a full-fixture membership oracle from reference UI results.",
     "R2.8.120 failed its terminal exact-SHA CI batch on 985af8aa18be53c285221b2ed21d4062e69b9f3d. Linux C07.3 table row diagnostics reject visible rows despite each uniquely matching an already captured fixture path; formula Kanban extraction records no card memberships although the screenshot shows the 5/4/4/0 cards. macOS display metrics failed before first-run picker interaction, and Windows stopped after picker closure when the host HWND changed. See evidence/r2.8.120-attempt-1-985af8a.json; keep C07.3 pending.",
@@ -33,7 +33,8 @@
     "R3.9 Windows round-trip job 116883381204 failed on exact SHA 49ef8e8ecfa60b9de245a8b62ffe26aadf17bab7: Canvas write transaction recovery manifest did not match the exact writer schema and pre/post Canvas state. Artifact 12034257976 archive SHA-256 matches the API digest; report SHA-256 4dd7bdf4725c1c0c9aff50906e89e22f72d95d8ea3353ab562d4bfafc206ec83. Full CI batch remains active.",
     "R3.9 Linux round-trip job 116883381665 failed on exact SHA 49ef8e8ecfa60b9de245a8b62ffe26aadf17bab7: expected-abort guard itself was correct and vault/Canvas, clipboard, cleanup, and no-motion/paste/save checks passed, but preservation rejected new data/openobsidian/app.ron in post-abort app-data. Artifact 12034748511 archive SHA-256 matches the API digest; report SHA-256 12b0ba1533ec9a415615a7ac4f59f1a4073ebfec997d6775e90aa0d3f125a8be. macOS remains active; no repair before the batch ends.",
     "R3.9 Windows artifact review at 2026-10-16T08:45:06Z: failure occurs at the grouped exact recovery-manifest predicate; a raw Windows path spelling comparison is plausible but unconfirmed because the report has no field-level flags or raw manifests. All eight pre-save eframe inspections passed and no post-save/close snapshot was accepted. Do not change source before the active batch is terminal.",
-    "R3.9 Linux artifact/source review at 2026-10-16T08:47:10Z: the only post-abort app-data change is a newly created data/openobsidian/app.ron; the expected abort, zero motion/paste/save, cleanup, unchanged vault/Canvas, and eframe inspection passed. The existing persistence-disable env flag is only enabled for non-canary Windows runs. Candidate after terminal CI: enable it only for Linux expected-abort canary; retain strict snapshot equality. Not implemented."
+    "R3.9 Linux artifact/source review at 2026-10-16T08:47:10Z: the only post-abort app-data change is a newly created data/openobsidian/app.ron; the expected abort, zero motion/paste/save, cleanup, unchanged vault/Canvas, and eframe inspection passed. The existing persistence-disable env flag is only enabled for non-canary Windows runs. Candidate after terminal CI: enable it only for Linux expected-abort canary; retain strict snapshot equality. Not implemented.",
+    "R3.10 terminal failure: Linux Canvas round-trip job 116909896430 failed before clipboard staging because the normal child disabled the per-frame trace required by the focus-snapshot parser. Focus-transfer timing and cause remain unconfirmed. This blocks C07.4 Rust implementation until R3.11 completes and reconciles all-platform reference capture."
   ],
   "phases": {
     "R0": {
@@ -72,7 +73,7 @@
         "plugin-renderer"
       ],
       "implementation_sha": "15ee500b04be9acef86a1b5fbf3d1e0ccb5bf7b7",
-      "next_action": "R3.1 was submitted once to origin/main at exact SHA 4ab6cf6fd3602fa9e15bc0d58e9b2ecc8a3bb349. Rust migration inventory and plugin renderer passed; the other five workflows and 12 jobs remain active. Hold origin/main until all 20 jobs are terminal and evidence is reconciled. After this batch, capture Linux C07.4 reference behavior before changing Rust comparator semantics.",
+      "next_action": "R3.10 at 3d16c073fe276c1e32b91d868da73b26ad7acb17 is terminal failed and fully reconciled; no CI is in flight. R3.11 is the next planned milestone from this SHA. Complete and review the whole Linux focus-trace plus all-platform C07.4 reference-capture outcome before one push. Rust C07.4 implementation remains blocked until that capture succeeds.",
       "implementation_sha_note": "15ee500b04be9acef86a1b5fbf3d1e0ccb5bf7b7 is the last accepted R2 Rust implementation milestone (R2.8.114); R2.8.115–R2.8.121 are reference-capture/harness work, and R2.8.119, R2.8.120 and R2.8.121 failed."
     },
     "R3": {
@@ -87,8 +88,8 @@
         "OpenObsidian loaded plugin workflows"
       ],
       "implementation_sha": null,
-      "current_milestone": "R2.8.141-R3.9-CROSS-PLATFORM-CANVAS-CI-FAILURE-REPAIR",
-      "milestone_status": "Submitted once as 49ef8e8ecfa60b9de245a8b62ffe26aadf17bab7; at 2026-10-16T08:41:03Z, 6/7 workflows terminal-success, 17/20 jobs passed, 2 failed, and macOS round-trip job 116883381483 remains active. Hold origin/main until full terminal evidence reconciliation."
+      "current_milestone": "R2.8.143-R3.11-LINUX-CANVAS-FOCUS-C07.4-REFERENCE",
+      "milestone_status": "R3.10 is terminal failed and fully reconciled on 3d16c073fe276c1e32b91d868da73b26ad7acb17 (7/7 workflows, 20/20 jobs terminal; 19 passed, Linux round-trip failed). R3.11 source implementation is complete locally; final whole-milestone tracker review is pending and no R3.11 CI batch is in flight. R3.11 is not submitted; push only after full accumulated review."
     },
     "R4": {
       "status": "pending",
@@ -429,7 +430,8 @@
     "R3.3 exact-SHA batch at 13b137db5adae44e80bb003971845d34453bc8f5 reached terminal status: 6/7 workflows and 19/20 jobs passed. Ubuntu round-trip job 116742545673 failed before C07.4 at the Canvas path pre-staging focus guard; macOS and Windows passed all ten C07.4 reference scenarios on first open/reopen, including the macOS tie preselection gate. Reconciled all 16 archive digests, all three round-trip reports, and the Linux failed-step log; Rust parity remains unclaimed. Carried goal cadence update (SHA-256 8a469b3058cbba979c59e231b1d9d7c54bdddd1c4c683384ceef4ffea1d4979e) into the clean tracker. Drafted R3.4 as a local, unimplemented repair milestone.",
     "2026-10-16T04:13:52Z: R3.5 reconciled terminal on 7e40c10aaf5b28bb52cd98eadf53ebc59447a91f: 7/7 workflows and 20/20 jobs terminal, 6 workflows/19 jobs pass, Ubuntu round-trip job 116791400916 is the sole failure, all 16 artifacts and all three report hashes reconciled. Synced goal cadence SHA c2c1c5f3e68e5ae779e999cadc597ee52da6017fcb62cee6c94467a2d139d9d7 into requirements/MIG-002 and the active R3.6 plan; no push or local executable validation.",
     "R3.8 exact-SHA CI batch reconciled at 586b3f42aafe4e1ffeb47e7a145c2f62881fd9a3: 7 workflows/20 jobs terminal, 16 passed and 4 failed; 14 artifact metadata entries recorded and three round-trip reports verified. Defined R2.8.141 grouped repair plan; no local executable validation or follow-up push.",
-    "Checked origin/main read-only at 2026-10-16T08:14:12Z; it still points to 586b3f42aafe4e1ffeb47e7a145c2f62881fd9a3, matching the fully reconciled R3.8 source SHA."
+    "Checked origin/main read-only at 2026-10-16T08:14:12Z; it still points to 586b3f42aafe4e1ffeb47e7a145c2f62881fd9a3, matching the fully reconciled R3.8 source SHA.",
+    "2026-10-16T10:39:18Z: R3.10 terminal evidence reconciled on 3d16c073fe276c1e32b91d868da73b26ad7acb17: 7/7 workflows and 20/20 jobs terminal, 6 workflows/19 jobs passed, Linux job 116909896430 failed before clipboard staging; all 16 API artifacts and all three round-trip archive/report hashes reconciled; origin/main verified at the same SHA. Goal push cadence and MIG-002 hash synchronized locally. R3.11 planned from this SHA; source edits not started."
   ],
   "ci_results": [
     {
@@ -27078,6 +27080,56 @@
           "artifact_count": 0
         }
       ]
+    },
+    {
+      "milestone": "R2.8.142-R3.10-WINDOWS-LINUX-CANVAS-ROUNDTRIP-REPAIR",
+      "attempt": 1,
+      "sha": "3d16c073fe276c1e32b91d868da73b26ad7acb17",
+      "workflow_run_ids": [
+        38881754019,
+        38881754052,
+        38881754055,
+        38881754009,
+        38881754011,
+        38881754214,
+        38881754010
+      ],
+      "observed_at": "2026-10-16T10:39:18Z",
+      "completed_at": "2026-10-16T10:30:10Z",
+      "status": "Terminal failed on exact SHA 3d16c073fe276c1e32b91d868da73b26ad7acb17: 7/7 workflows terminal (6 passed, 1 failed); 20/20 jobs terminal (19 passed, 1 failed). Linux round-trip failed before clipboard staging; Windows and macOS round-trip jobs passed. All 16 API artifact records and all three round-trip archive/report hashes are reconciled.",
+      "workflow_counts": {
+        "observed": 7,
+        "terminal": 7,
+        "passed": 6,
+        "failed": 1,
+        "cancelled": 0,
+        "queued": 0,
+        "in_progress": 0
+      },
+      "job_counts": {
+        "observed": 20,
+        "terminal": 20,
+        "passed": 19,
+        "failed": 1,
+        "cancelled": 0,
+        "queued": 0,
+        "in_progress": 0
+      },
+      "failed_jobs": [
+        {
+          "job_id": 116909896430,
+          "platform": "ubuntu-24.04",
+          "workflow_run_id": 38881754055,
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38881754055/job/116909896430",
+          "failure": "Normal Linux Canvas text edit timed out waiting for a fresh event-free focus snapshot before clipboard staging. The normal child had no focus trace; frame 364 reports path focused=false and ID focused=true. The time and cause of focus transfer are unconfirmed. Clipboard was not staged; no motion or save was attempted."
+        }
+      ],
+      "evidence": "evidence/r2.8.142-r3-10-attempt-1-3d16c07.json",
+      "artifact_inventory_count": 16,
+      "artifact_inventory_complete": true,
+      "all_required_jobs_terminal": true,
+      "origin_main_sha": "3d16c073fe276c1e32b91d868da73b26ad7acb17",
+      "local_executable_validation": false
     }
   ],
   "milestones": {
@@ -43560,18 +43612,18 @@
   },
   "current_requirement_count": 221,
   "current_ci_attempt": {
-    "milestone": "R2.8.141-R3.9-CROSS-PLATFORM-CANVAS-CI-FAILURE-REPAIR",
+    "milestone": "R2.8.142-R3.10-WINDOWS-LINUX-CANVAS-ROUNDTRIP-REPAIR",
     "attempt": 1,
-    "sha": "49ef8e8ecfa60b9de245a8b62ffe26aadf17bab7",
-    "status": "Terminal failed on exact SHA 49ef8e8ecfa60b9de245a8b62ffe26aadf17bab7: 7/7 workflows terminal (6 passed, 1 failed); 20/20 jobs terminal (18 passed, 2 failed). macOS round-trip passed; Windows and Linux round-trip failed. All 16 artifact records and all three round-trip archive/report digests are reconciled.",
+    "sha": "3d16c073fe276c1e32b91d868da73b26ad7acb17",
+    "status": "Terminal failed on exact SHA 3d16c073fe276c1e32b91d868da73b26ad7acb17: 7/7 workflows terminal (6 passed, 1 failed); 20/20 jobs terminal (19 passed, 1 failed). Linux round-trip failed before clipboard staging; Windows and macOS round-trip jobs passed. All 16 API artifact records and all three round-trip archive/report hashes are reconciled.",
     "run_ids": [
-      38873637568,
-      38873637484,
-      38873637483,
-      38873637531,
-      38873637951,
-      38873637704,
-      38873637958
+      38881754019,
+      38881754052,
+      38881754055,
+      38881754009,
+      38881754011,
+      38881754214,
+      38881754010
     ],
     "workflow_counts": {
       "observed": 7,
@@ -43585,53 +43637,54 @@
     "job_counts": {
       "observed": 20,
       "terminal": 20,
-      "passed": 18,
-      "failed": 2,
+      "passed": 19,
+      "failed": 1,
       "cancelled": 0,
       "queued": 0,
       "in_progress": 0
     },
     "failed_job_ids": [
-      116883381204,
-      116883381665
+      116909896430
     ],
     "queued_job_ids": [],
-    "active_job_ids": [
-      116883381483
-    ],
+    "active_job_ids": [],
     "all_required_jobs_terminal": true,
     "artifacts_reconciled": true,
-    "evidence": "evidence/r2.8.141-r3-9-attempt-1-49ef8e8.json",
-    "updated_at": "2026-10-16T08:41:03Z",
+    "artifact_inventory_count": 16,
+    "evidence": "evidence/r2.8.142-r3-10-attempt-1-3d16c07.json",
+    "terminal_at": "2026-10-16T10:39:18Z",
     "local_executable_validation": false
   },
   "planned_next_milestone": {
-    "id": "R2.8.142-R3.10-WINDOWS-LINUX-CANVAS-ROUNDTRIP-REPAIR",
-    "name": "R3.10 Windows and Linux Canvas round-trip repair",
-    "status": "Implementation and whole-milestone review complete locally; ready for one CI-triggering push; no R3.10 CI submission yet.",
-    "planning_base_sha": "49ef8e8ecfa60b9de245a8b62ffe26aadf17bab7",
-    "starting_sha": "49ef8e8ecfa60b9de245a8b62ffe26aadf17bab7",
-    "objective": "Repair the two terminal R3.9 round-trip failures as one complete milestone: preserve exact Windows Canvas recovery-manifest and process-close acceptance while accounting for Windows canonical path spelling; keep the Linux expected-abort canary from creating app-owned eframe persistence while preserving strict full app-data equality and all canary safety checks.",
+    "id": "R2.8.143-R3.11-LINUX-CANVAS-FOCUS-C07.4-REFERENCE",
+    "name": "R3.11 Linux Canvas focus trace and all-platform C07.4 reference capture",
+    "status": "implementation complete and reviewed; ready for single push",
+    "planning_base_sha": "3d16c073fe276c1e32b91d868da73b26ad7acb17",
+    "starting_sha": "3d16c073fe276c1e32b91d868da73b26ad7acb17",
+    "objective": "Enable the existing Linux per-frame focus trace for the normal Canvas text-edit child so the fresh event-free focus snapshot can be evaluated under the existing guards, then complete the pinned Obsidian C07.4 reference-only capture on Linux, macOS, and Windows on one exact implementation SHA.",
     "scope": {
       "included": [
-        "Windows Canvas transaction recovery manifest and state acceptance: compare the serialized canonical artifact path using the existing Windows path normalizer, retain exact schema/revision/byte checks, canonical root confinement, regular-file checks, unchanged pre-save state, and accepted post-save/process-close equality; include failed-field diagnostics without dumping path values.",
-        "Linux expected-abort canary: disable eframe persistence only for that child using the existing environment flag, require the Rust runtime policy marker, and retain exact full-root app-data equality with no allowlist or shifted snapshot boundary.",
-        "Keep ordinary Linux Canvas workflow persistence behavior unchanged; preserve the existing Windows persistence profile and all macOS acceptance.",
-        "Reconcile all 16 GitHub API artifact metadata records, plus the three round-trip archive/API digests, report hashes, report source SHAs, and exact-SHA workflow results in tracker evidence."
+        "Enable the existing focus trace for the normal Linux Canvas text-edit child; retain the expected-abort canary trace policy. Warmup children remain explicitly untraced, and non-Linux behavior is unchanged.",
+        "Keep the input sequence unchanged; do not infer that ArrowRight caused the observed focus transfer.",
+        "Keep fresh event-free snapshot checks, target/sibling pairing, focus recovery bounds, fail-closed paste guards, expected-abort canary checks, clipboard cleanup, and save/reopen acceptance intact.",
+        "Capture all ten C07.4 scenarios on first open and reopen on Linux, macOS, and Windows, with 28 source checkpoints per platform, the tie-seed-order predicate on all platforms, the additional stable preselection enumeration on macOS reopen only, explicit source-mutation observations, and reference-only status.",
+        "Carry the goal cadence update and terminal R3.10 tracker/evidence reconciliation locally into this substantive milestone; do not submit evidence/status updates alone."
       ],
       "excluded": [
-        "The separate dirty root checkout C07.3/C07.5/C09.2 changes and stale evidence; do not transplant or merge them.",
-        "Unrelated Bases, appearance, plugin, or vault migration work.",
-        "Allowlisting app.ron, weakening manifest/schema/revision/hash checks, moving preservation snapshots after shutdown, or relaxing canary guards."
+        "Rust C07.4 comparator implementation, fixture parity claims, or behavior changes to crates/doc.",
+        "Changing the Canvas input sequence, removing trace requirements, weakening focus/paste/preservation guards, or inferring focus-loss causality without evidence.",
+        "Unrelated Bases, appearance, plugin, vault, packaging, or migration work; no dirty-checkout changes are transplanted."
       ]
     },
     "acceptance": [
-      "A whole-source and tracker review approves the complete R3.10 milestone before its single push.",
-      "All seven required GitHub Actions workflows and all 20 required jobs pass for the exact R3.10 SHA.",
-      "Windows Canvas write transaction has exactly the expected prepared/committed journal entries, exact recovery bytes and manifests, confined regular files, unchanged pre-save state, and process-close state equal to the accepted post-save snapshot.",
-      "Linux expected-abort canary proves the synthetic target-value mismatch is its sole failed predicate; it dispatches no pointer motion, Ctrl+V, completed paste, or save; cleanup and process exit succeed; vault and full app-data snapshots remain identical, with no new app.ron.",
-      "The eframe persistence opt-out is scoped only to the Linux expected-abort canary and its runtime marker is present; normal Linux and macOS workflows retain their established policies.",
-      "All 16 GitHub API artifact metadata records, plus the three round-trip archive/API digests and report source SHAs, are reconciled."
+      "Independent whole-source and tracker review approves the complete R3.11 scope before its single push; the implementation is complete and reviewed before CI starts.",
+      "For each normal Linux Canvas text-edit focus snapshot, a covering same-frame trace and paired target/sibling diagnostics are present. If the initial focus guard fails, only the existing bounded recovery may proceed; recovery must satisfy all existing freshness, event-free, target-focus, sibling-preservation, refresh, pointer, and control predicates. Incomplete focus evidence or recovery fails closed before clipboard staging, Ctrl+V, or save; trace availability alone does not authorize input.",
+      "Linux Canvas text edit, transaction/save, close/reopen, and vault/app-data preservation pass on the exact SHA. The expected-abort canary proves the synthetic target-value mismatch is its sole expected failed pre-motion predicate, performs no motion/paste/save, cleans request/clipboard markers, terminates cleanly, and preserves exact vault and app-data snapshots.",
+      "All ten C07.4 scenarios pass first-open, reopen, and comparable-pair predicates on Linux, macOS, and Windows for the same exact implementation SHA; each platform has a complete 28-checkpoint source matrix and the tie-seed-order predicate. The additional stable preselection enumeration is required on macOS reopen only.",
+      "The harness reseeds the exact C07.4 fixture before reopen and reports reopen_seed_hashes_match=true. Record first-open and reopen source hashes and changed bytes at each checkpoint. Pinned-app source rewrites are captured reference observations; do not require post-reopen files to remain equal to seed or treat rewrites as Rust preservation evidence.",
+      "C07.4 reports retain runner-default locale policy, source mutation observations and limitations, captured-reference-only status, and rust_parity_claimed=false; reference-app rewrites are not misreported as Rust preservation or parity.",
+      "All seven required workflows and all 20 jobs pass on the exact implementation SHA. Reconcile exact run/job URLs, platform results, every API artifact metadata record, all three round-trip archive digests, report hashes, report source SHAs, origin/main before submission, and origin/main after submission.",
+      "No local tests, builds, formatters, linters, validators, benchmarks, or app launches are used as acceptance evidence; GitHub Actions is the only validation environment."
     ],
     "required_workflows": [
       "Rust migration inventory",
@@ -43643,34 +43696,88 @@
       "OpenObsidian loaded plugin workflows"
     ],
     "required_job_count": 20,
-    "plan": "evidence/r2.8.142-r3-10-windows-linux-canvas-repair-plan.json",
-    "evidence": "evidence/r2.8.141-r3-9-attempt-1-49ef8e8.json",
     "platforms": [
       "Ubuntu 24.04",
       "macOS latest",
       "Windows latest"
     ],
+    "evidence": "Exact-SHA run/job URLs and conclusions; all GitHub API artifact IDs/names/sizes/digests; Linux/macOS/Windows round-trip report/archive hashes; 28 C07.4 source checkpoints per platform; source mutation and reopen seed hashes; focus trace/recovery and canary safety summaries; origin/main SHA before and after the push.",
+    "plan": "evidence/r2.8.143-r3-11-linux-canvas-focus-c07-4-reference-plan.json",
+    "ci_attempt_evidence": "evidence/r2.8.143-r3-11-attempt-1-<sha>.json",
     "local_executable_validation": false,
-    "implementation": {
-      "base_sha": "49ef8e8ecfa60b9de245a8b62ffe26aadf17bab7",
-      "files": [
-        ".agents/tasks/2026-10-07/audit-obsidian-vault-roundtrip.ts"
-      ],
-      "changes": [
-        "Compare Windows recovery manifest paths through the existing Windows canonical-path normalizer while retaining exact manifest schema, revision, size, hash, journal, confinement, and process-close checks.",
-        "Report failed manifest field labels only; reject non-object JSON roots with a schema_root label.",
-        "Enable the existing full eframe-persistence opt-out only for the Linux expected-abort child after standard warm-up and prelaunch inspection; require its runtime marker and keep complete app-data snapshot equality.",
-        "Keep ordinary Linux, Windows, and macOS persistence behavior unchanged outside the named Linux canary scope."
-      ],
-      "windows_root_cause": "Unconfirmed; the next round-trip report will identify failed manifest field labels without exposing values.",
-      "linux_baseline_evidence": "R3.9 Linux report shows no app.ron in the stabilized prelaunch snapshot or prior phase inspections; the only app.ron was created at canary shutdown.",
-      "independent_review": "Read-only Windows and Linux source reviews approved the bounded changes; a follow-up review approved the non-object manifest root guard. Tracker review identified and the local tracker updates reconcile stale R3.9 terminal fields."
-    }
+    "pushed_once": false,
+    "submitted_sha": null,
+    "required_jobs": [
+      {
+        "workflow": "Rust migration inventory",
+        "job_names": [
+          "inventory"
+        ],
+        "count": 1
+      },
+      {
+        "workflow": "OpenObsidian Rust CI",
+        "job_names": [
+          "rust (ubuntu-latest)",
+          "rust (windows-latest)",
+          "minimum supported Rust (1.95)",
+          "rust (macos-latest)"
+        ],
+        "count": 4
+      },
+      {
+        "workflow": "Obsidian vault round-trip acceptance",
+        "job_names": [
+          "Obsidian 1.14.4 vault round-trip on ubuntu-24.04",
+          "Obsidian 1.14.4 vault round-trip on macos-latest",
+          "Obsidian 1.14.4 vault round-trip on windows-latest"
+        ],
+        "count": 3
+      },
+      {
+        "workflow": "OpenObsidian desktop build",
+        "job_names": [
+          "windows-latest",
+          "ubuntu-latest",
+          "macos-latest"
+        ],
+        "count": 3
+      },
+      {
+        "workflow": "OpenObsidian quality",
+        "job_names": [
+          "macos-latest",
+          "ubuntu-latest",
+          "windows-latest"
+        ],
+        "count": 3
+      },
+      {
+        "workflow": "OpenObsidian plugin renderer matrix",
+        "job_names": [
+          "macos-latest",
+          "windows-latest",
+          "ubuntu-latest"
+        ],
+        "count": 3
+      },
+      {
+        "workflow": "OpenObsidian loaded plugin workflows",
+        "job_names": [
+          "macos-latest",
+          "ubuntu-latest",
+          "windows-latest"
+        ],
+        "count": 3
+      }
+    ],
+    "required_job_matrix_source": "evidence/r2.8.142-r3-10-attempt-1-3d16c07.json; the submitted SHA must enumerate all required workflow jobs and any missing/skipped/disabled/not-triggered check is non-passing.",
+    "plan_review_status": "approved by independent source and tracker reviews"
   },
   "planned_independent_milestone": {
     "milestone": "unassigned until C07.5/C07.4 sequencing is settled",
     "name": "C09.2 native appearance root selection and CSS diagnostics",
-    "status": "Implementation drafted locally, but C09.2 cannot be built or submitted independently until the C07.5 no-follow file API it calls is accepted on main; keep the worktree unsubmitted and preserve separate C07.5/C09.2 milestone boundaries.",
+    "status": "Deferred and non-actionable from the authoritative worktree: the C09.2 draft depends on C07.5 no-follow APIs and changes available only in the separate dirty/stale checkout. Preserve that work there; do not transplant it or schedule it ahead of the current R3.11 and C07.4 dependency chain.",
     "deliverable": "Complete the current Rust appearance projection slice by making the selected .obsidian or .obsidian-* configuration root explicit in the native UI, applying supported appearance settings only from that root, distinguishing malformed/non-object appearance sources from missing files, and displaying bounded diagnostic summaries from discovered theme and snippet analysis. Keep CSS inert, preserve all vault bytes, and leave C09 pending until every remaining C09 acceptance item is satisfied.",
     "acceptance": [
       "List discovered configuration roots and provide an accessible, visible selector. Default deterministically to .obsidian when present, otherwise to the only discovered root; when multiple alternate roots exist without .obsidian, require an explicit selection before applying appearance. Keep the choice app-local and never write it into the vault.",
@@ -43695,7 +43802,7 @@
       "OpenObsidian plugin renderer matrix"
     ],
     "evidence": "Exact-SHA egui interaction reports and artifacts for selected-root projection, diagnostics, removed/non-directory root fallback, malformed/non-object and missing-selected-appearance reporting, CSS isolation, refresh and no-write behavior; fixture hashes and source-preservation records; all required workflow/job URLs and conclusions.",
-    "depends_on": "Finish and reconcile the active R2.8.127 attempt-3 exact-SHA CI batch first. C09.2 currently calls VaultRoot::open_regular_file_nofollow from crates/vault/src/configuration.rs; that API and its Unix libc dependency exist only in unsubmitted C07.5 changes. Submit C07.5 as its own complete milestone, including the shared vault API, and require its exact-SHA CI to pass before submitting C09.2 separately. Exclude the C09.2 fixture and workflow step from C07.5, and exclude C07.3/C07.5 harness changes from C09.2.",
+    "depends_on": "Reassess after the authoritative worktree reaches the required C07.5 dependency milestone; stale root-checkout source/evidence is not a basis for implementation or submission.",
     "static_reviews": {
       "status": "Read-only C09.2 review found no functional gap in the appearance UI, CSS caps or documentation, but found an isolation blocker: configuration.rs depends on the unsubmitted C07.5 VaultRoot::open_regular_file_nofollow API and target-scoped libc dependency. Reclassify/sequence this dependency before calling C09.2 implementation-complete. No local executable validation.",
       "findings": [
@@ -43710,9 +43817,9 @@
   "planned_following_milestone": {
     "milestone": "C07.4 Rust JavaScript-number and locale comparator implementation",
     "name": "Implement the reference-captured C07.4 comparison contract in crates/doc",
-    "status": "planned placeholder; blocked because R3.4 failed before Linux C07.4 reference capture and remains unachieved",
+    "status": "planned placeholder; blocked until R3.11 completes all-platform C07.4 reference-only capture and exact-SHA CI.",
     "deliverable": "Implement pinned-app JavaScript number conversion, identity/filter/sort/contains semantics and recorded locale collation policy with fixture-backed Rust parity.",
-    "depends_on": "R3.4 at 84962b1b931250e7b15c934664ffe55d149c8bd5 reached terminal CI failure. macOS and Windows captured all ten C07.4 reference scenarios, but Linux failed before Tab and did not reach C07.4; reconcile a follow-up Linux repair and all-platform evidence before Rust comparator implementation.",
+    "depends_on": "R3.11 must pass the complete Linux, macOS, and Windows first-open/reopen capture for all ten scenarios, 28 source checkpoints per OS, the all-OS tie-seed-order predicate, and the additional stable preselection enumeration on macOS reopen, with artifacts/reports reconciled and rust_parity_claimed=false. Only then may the separate Rust comparator milestone begin.",
     "scope": [
       "In crates/doc, replace exact JSON integer comparison with a single JavaScript Number-compatible binary64 comparison/conversion path for captured numeric values and filter operands.",
       "Apply the captured numeric equality semantics consistently to scalar equality/relational filters, sorting, array contains, group identity, and any group labels whose rendering is part of observed behavior.",
@@ -43758,18 +43865,104 @@
     "plan_review_status": "Two read-only audits agree that this remains a placeholder pending terminal R3.3 artifacts. The production parser/evaluator path is specified: bounded support for captured versionless Obsidian JSON, exact raw-source preservation, and evaluation through EngineSession::evaluate_base_file. Freeze scenario outcomes, locale policy, tie precondition, hashes, starting SHA and exact CI gate only after the active reference batch is terminal and reconciled."
   },
   "current_repair_milestone": {
-    "id": "R2.8.141-R3.9-CROSS-PLATFORM-CANVAS-CI-FAILURE-REPAIR",
-    "name": "Repair the grouped R3.8 inventory, formatting, and Canvas CI failures",
-    "status": "Terminal failed on exact SHA 49ef8e8ecfa60b9de245a8b62ffe26aadf17bab7: 7/7 workflows terminal (6 passed, 1 failed); 20/20 jobs terminal (18 passed, 2 failed). macOS round-trip passed; Windows and Linux round-trip failed. All 16 artifact records and all three round-trip archive/report digests are reconciled.",
-    "plan": "evidence/r2.8.141-r3-9-canvas-ci-failure-repair-plan.json",
-    "evidence": "evidence/r2.8.141-r3-9-attempt-1-49ef8e8.json",
-    "starting_sha": "586b3f42aafe4e1ffeb47e7a145c2f62881fd9a3",
-    "implementation_sha": "49ef8e8ecfa60b9de245a8b62ffe26aadf17bab7",
-    "submitted_sha": "49ef8e8ecfa60b9de245a8b62ffe26aadf17bab7",
-    "pushed_once": true,
-    "all_required_jobs_terminal": true,
+    "schema_version": 1,
+    "milestone_id": "R2.8.142-R3.10-WINDOWS-LINUX-CANVAS-ROUNDTRIP-REPAIR",
+    "milestone": "R3.10 Windows and Linux Canvas round-trip repair",
+    "status": "Terminal failed on exact SHA 3d16c073fe276c1e32b91d868da73b26ad7acb17: 7/7 workflows terminal (6 passed, 1 failed); 20/20 jobs terminal (19 passed, 1 failed). Linux round-trip failed before clipboard staging; Windows and macOS round-trip jobs passed. All 16 API artifact records and all three round-trip archive/report hashes are reconciled. R3.10 is not achieved because the required Linux round-trip job failed.",
+    "planning_base_sha": "49ef8e8ecfa60b9de245a8b62ffe26aadf17bab7",
+    "starting_sha": "49ef8e8ecfa60b9de245a8b62ffe26aadf17bab7",
+    "objective": "Repair the two terminal R3.9 round-trip failures as one complete milestone: preserve exact Windows Canvas recovery-manifest and process-close acceptance while accounting for Windows canonical path spelling; keep the Linux expected-abort canary from creating app-owned eframe persistence while preserving strict full app-data equality and all canary safety checks.",
+    "source_findings": {
+      "windows": {
+        "job_id": 116883381204,
+        "report_status": "failed",
+        "report_sha256": "4dd7bdf4725c1c0c9aff50906e89e22f72d95d8ea3353ab562d4bfafc206ec83",
+        "report_bytes": 436125,
+        "vault_snapshot_count": 17,
+        "error": "Canvas write transaction recovery manifest did not match the exact writer schema and pre/post Canvas state.",
+        "root_cause": "The report does not expose raw manifest values or field-level flags. Static source inspection shows Rust serializes a canonicalized PathBuf with to_string_lossy(), while the harness uses raw string equality for manifest.path and already normalizes Windows canonical paths for confinement. A Windows extended-length prefix or equivalent spelling difference is plausible but remains unconfirmed.",
+        "archive_sha256": "b4f606ddbf38bbe3b79e71c9b26d4b27814cb0f767aca565549cac801ec1b341"
+      },
+      "linux": {
+        "job_id": 116883381665,
+        "report_status": "failed",
+        "report_sha256": "12b0ba1533ec9a415615a7ac4f59f1a4073ebfec997d6775e90aa0d3f125a8be",
+        "report_bytes": 960377,
+        "vault_snapshot_count": 19,
+        "finding": "The expected-abort guard was the sole failed predicate; there was no pointer motion, Ctrl+V, completed paste, or save; cleanup, process exit, vault and Canvas preservation passed. Strict app-data equality failed because shutdown created data/openobsidian/app.ron (2631 bytes; SHA-256 df5fb43653f671f2b37af7806a4fc6823273bcb8e482fc86719e42b8687818bb).",
+        "source_candidate": "The existing OPENOBSIDIAN_CI_CANVAS_DISABLE_EFRAME_PERSISTENCE flag disables both persisted egui memory and window state and emits a runtime marker. Scope that existing flag to the Linux expected-abort child and keep strict equality.",
+        "archive_sha256": "6f8dde225a4c913f7e8bf1fea6c68c004f357a52ed0e2c0fb2662325e3034613",
+        "warmup_baseline": "The R3.9 report contains no data/openobsidian/app.ron in the stabilized prelaunch snapshot or any earlier phase inspection; the only app.ron appeared in the post-termination snapshot."
+      },
+      "macos": {
+        "job_id": 116883381483,
+        "report_status": "passed",
+        "report_sha256": "d52a03f25592b458ddd3208668f8567ad902ccd684ef9c829b4bb097c31b60f8",
+        "report_bytes": 70003278,
+        "vault_snapshot_count": 66,
+        "archive_sha256": "192f27f2a5683ed9614bbbd75084aebe3993b3e435a9cb730695301f01f3f048"
+      }
+    },
+    "scope": {
+      "included": [
+        "Windows Canvas transaction recovery manifest and state acceptance: compare the serialized canonical artifact path using the existing Windows path normalizer, retain exact schema/revision/byte checks, canonical root confinement, regular-file checks, unchanged pre-save state, and accepted post-save/process-close equality; include failed-field diagnostics without dumping path values.",
+        "Linux expected-abort canary: disable eframe persistence only for that child using the existing environment flag, require the Rust runtime policy marker, and retain exact full-root app-data equality with no allowlist or shifted snapshot boundary.",
+        "Keep ordinary Linux Canvas workflow persistence behavior unchanged; preserve the existing Windows persistence profile and all macOS acceptance.",
+        "Reconcile all 16 GitHub API artifact metadata records, plus the three round-trip archive/API digests, report hashes, report source SHAs, and exact-SHA workflow results in tracker evidence."
+      ],
+      "excluded": [
+        "The separate dirty root checkout C07.3/C07.5/C09.2 changes and stale evidence; do not transplant or merge them.",
+        "Unrelated Bases, appearance, plugin, or vault migration work.",
+        "Allowlisting app.ron, weakening manifest/schema/revision/hash checks, moving preservation snapshots after shutdown, or relaxing canary guards."
+      ]
+    },
+    "acceptance": [
+      "A whole-source and tracker review approves the complete R3.10 milestone before its single push.",
+      "All seven required GitHub Actions workflows and all 20 required jobs pass for the exact R3.10 SHA.",
+      "Windows Canvas write transaction has exactly the expected prepared/committed journal entries, exact recovery bytes and manifests, confined regular files, unchanged pre-save state, and process-close state equal to the accepted post-save snapshot.",
+      "Linux expected-abort canary proves the synthetic target-value mismatch is its sole failed predicate; it dispatches no pointer motion, Ctrl+V, completed paste, or save; cleanup and process exit succeed; vault and full app-data snapshots remain identical, with no new app.ron.",
+      "The eframe persistence opt-out is scoped only to the Linux expected-abort canary and its runtime marker is present; normal Linux and macOS workflows retain their established policies.",
+      "All 16 GitHub API artifact metadata records, plus the three round-trip archive/API digests and report source SHAs, are reconciled."
+    ],
+    "required_workflows": [
+      "Rust migration inventory",
+      "OpenObsidian Rust CI",
+      "Obsidian vault round-trip acceptance",
+      "OpenObsidian desktop build",
+      "OpenObsidian quality",
+      "OpenObsidian plugin renderer matrix",
+      "OpenObsidian loaded plugin workflows"
+    ],
+    "required_job_count": 20,
+    "validation_policy": "GitHub Actions only. Do not run local tests, builds, formatters, linters, validators, runtime probes, or application launches. Keep all work local until the named milestone is complete and reviewed; push once, then hold origin/main at its submitted SHA until all jobs and artifacts are reconciled.",
+    "evidence": "evidence/r2.8.142-r3-10-attempt-1-3d16c07.json",
+    "platforms": [
+      "Ubuntu 24.04",
+      "macOS latest",
+      "Windows latest"
+    ],
+    "implementation": {
+      "base_sha": "49ef8e8ecfa60b9de245a8b62ffe26aadf17bab7",
+      "files": [
+        ".agents/tasks/2026-10-07/audit-obsidian-vault-roundtrip.ts"
+      ],
+      "changes": [
+        "Compare Windows recovery manifest paths through the existing Windows canonical-path normalizer while retaining exact manifest schema, revision, size, hash, journal, confinement, and process-close checks.",
+        "Report failed manifest field labels only; reject non-object JSON roots with a schema_root label.",
+        "Enable the existing full eframe-persistence opt-out only for the Linux expected-abort child after standard warm-up and prelaunch inspection; require its runtime marker and keep complete app-data snapshot equality.",
+        "Keep ordinary Linux, Windows, and macOS persistence behavior unchanged outside the named Linux canary scope."
+      ],
+      "windows_root_cause": "Unconfirmed; the next round-trip report will identify failed manifest field labels without exposing values.",
+      "linux_baseline_evidence": "R3.9 Linux report shows no app.ron in the stabilized prelaunch snapshot or prior phase inspections; the only app.ron was created at canary shutdown.",
+      "independent_review": "Read-only Windows and Linux source reviews approved the bounded changes; a follow-up review approved the non-object manifest root guard. Tracker review identified and the local tracker updates reconcile stale R3.9 terminal fields."
+    },
     "local_executable_validation": false,
-    "terminal_at": "2026-10-16T09:20:49Z",
+    "implementation_sha": "3d16c073fe276c1e32b91d868da73b26ad7acb17",
+    "submitted_sha": "3d16c073fe276c1e32b91d868da73b26ad7acb17",
+    "pushed_once": true,
+    "origin_main_sha_after_push": "3d16c073fe276c1e32b91d868da73b26ad7acb17",
+    "origin_main_verified_at": "2026-10-16T10:34:36Z",
+    "ci_attempt_evidence": "evidence/r2.8.142-r3-10-attempt-1-3d16c07.json",
     "workflow_counts": {
       "observed": 7,
       "terminal": 7,
@@ -43782,31 +43975,134 @@
     "job_counts": {
       "observed": 20,
       "terminal": 20,
-      "passed": 18,
-      "failed": 2,
+      "passed": 19,
+      "failed": 1,
       "cancelled": 0,
       "queued": 0,
       "in_progress": 0
     },
+    "all_required_jobs_terminal": true,
+    "artifact_inventory_count": 16,
+    "artifact_inventory_complete": true,
+    "first_workflow_run_created_at": "2026-10-16T09:37:43Z",
     "failed_job_ids": [
-      116883381204,
-      116883381665
+      116909896430
     ],
-    "run_ids": [
-      38873637568,
-      38873637484,
-      38873637483,
-      38873637531,
-      38873637951,
-      38873637704,
-      38873637958
-    ],
-    "origin_main_sha_after_push": "49ef8e8ecfa60b9de245a8b62ffe26aadf17bab7",
-    "artifact_reconciliation": "Windows and Linux failure archives/reports reconciled; macOS job and full batch artifact inventory pending."
+    "linux_roundtrip_report": {
+      "platform": "Linux",
+      "artifact_id": 12037878616,
+      "artifact_name": "obsidian-vault-roundtrip-Linux-3d16c073fe276c1e32b91d868da73b26ad7acb17",
+      "artifact_size_bytes": 12889539,
+      "artifact_api_digest": "sha256:230ab84a9abd3d9891001727c6d2e3e9d25d01f37cec205ed74adf181d1061e3",
+      "artifact_workflow_run_id": 38881754055,
+      "report_file": "obsidian-vault-roundtrip-report.json",
+      "report_bytes": 1025220,
+      "report_sha256": "8abaa3e3d6369c017b659db2385bf0cacf88eec65e1cbff335ca841d1642732d",
+      "report_status": "failed",
+      "report_source_sha": "3d16c073fe276c1e32b91d868da73b26ad7acb17",
+      "canvas_expected_abort_canary_status": "passed",
+      "linux_persistence_runtime_marker_observed": true,
+      "linux_persistence_policy_mapping_passed": true,
+      "canary_full_app_data_unchanged": true,
+      "canary_preservation_verified": true,
+      "normal_canvas_text_edit_status": "failed",
+      "failure": "Linux Canvas field input failed before first-character sentinel clipboard staging: timed out waiting for a fresh event-free Canvas focus snapshot; clipboard was not staged; request marker cleanup succeeded.",
+      "failure_cause": "Unconfirmed; the expected-abort persistence change is explicitly disabled for the normal Linux text-edit child."
+    },
+    "execution_result": {
+      "observed_at": "2026-10-16T10:34:36Z",
+      "implementation_sha": "3d16c073fe276c1e32b91d868da73b26ad7acb17",
+      "status": "failed",
+      "milestone_achieved": false,
+      "workflow_counts": {
+        "observed": 7,
+        "terminal": 7,
+        "passed": 6,
+        "failed": 1,
+        "cancelled": 0,
+        "queued": 0,
+        "in_progress": 0
+      },
+      "job_counts": {
+        "observed": 20,
+        "terminal": 20,
+        "passed": 19,
+        "failed": 1,
+        "cancelled": 0,
+        "queued": 0,
+        "in_progress": 0
+      },
+      "failed_job_ids": [
+        116909896430
+      ],
+      "linux_failure": "Normal Linux Canvas text edit timed out before clipboard staging because the normal child disabled OPENOBSIDIAN_CI_CANVAS_FOCUS_TRACE while readCanvasFocusSnapshot requires a covering trace. The request marker was consumed; frame 364 recorded path focused=false and ID focused=true. The exact focus-transfer moment is unconfirmed.",
+      "windows_roundtrip": "passed; report, archive digest, recovery manifest, transaction, close snapshot, and vault preservation reconciled.",
+      "macos_roundtrip": {
+        "platform": "macOS",
+        "artifact_id": 12040805734,
+        "artifact_name": "obsidian-vault-roundtrip-macOS-3d16c073fe276c1e32b91d868da73b26ad7acb17",
+        "artifact_size_bytes": 32551198,
+        "artifact_api_digest": "sha256:97689a55e99948b15ae688c6db35e4bc5a5b9913b4927656764a74ae84aa9a67",
+        "artifact_workflow_run_id": 38881754055,
+        "roundtrip_job_id": 116909896087,
+        "archive_sha256": "97689a55e99948b15ae688c6db35e4bc5a5b9913b4927656764a74ae84aa9a67",
+        "report_file": "obsidian-vault-roundtrip-report.json",
+        "report_bytes": 70015440,
+        "report_sha256": "33c60d140725d637ff8bebd87fe1fedb6c05995c48b102ce413a7f9a6b1d5e29",
+        "report_status": "passed",
+        "report_source_sha": "3d16c073fe276c1e32b91d868da73b26ad7acb17",
+        "vault_snapshot_count": 66,
+        "canvas_reference_reopen_status": "passed",
+        "c07_4_capture_status": "captured-reference-only",
+        "c07_4_observed_scenario_count": 10,
+        "c07_4_required_scenario_count": 10,
+        "c07_4_all_first_open_predicates_passed": true,
+        "c07_4_all_reopen_predicates_passed": true,
+        "c07_4_all_comparable_pairs_passed": true,
+        "c07_4_source_checkpoint_matrix_complete": true,
+        "c07_4_reference_source_mutation_observed": true,
+        "rust_parity_claimed": false
+      },
+      "artifact_inventory_count": 16,
+      "artifact_inventory_complete": true,
+      "origin_main_sha": "3d16c073fe276c1e32b91d868da73b26ad7acb17"
+    },
+    "id": "R2.8.142-R3.10-WINDOWS-LINUX-CANVAS-ROUNDTRIP-REPAIR",
+    "plan": "evidence/r2.8.142-r3-10-windows-linux-canvas-repair-plan.json",
+    "terminal_at": "2026-10-16T10:34:36Z",
+    "linux_failure": "Normal Linux Canvas text edit timed out before clipboard staging because the normal child disabled OPENOBSIDIAN_CI_CANVAS_FOCUS_TRACE while readCanvasFocusSnapshot requires a covering trace. The request marker was consumed; frame 364 recorded path focused=false and ID focused=true. The exact focus-transfer moment is unconfirmed.",
+    "windows_roundtrip": "passed; report, archive digest, recovery manifest, transaction, close snapshot, and vault preservation reconciled.",
+    "macos_roundtrip": {
+      "platform": "macOS",
+      "artifact_id": 12040805734,
+      "artifact_name": "obsidian-vault-roundtrip-macOS-3d16c073fe276c1e32b91d868da73b26ad7acb17",
+      "artifact_size_bytes": 32551198,
+      "artifact_api_digest": "sha256:97689a55e99948b15ae688c6db35e4bc5a5b9913b4927656764a74ae84aa9a67",
+      "artifact_workflow_run_id": 38881754055,
+      "roundtrip_job_id": 116909896087,
+      "archive_sha256": "97689a55e99948b15ae688c6db35e4bc5a5b9913b4927656764a74ae84aa9a67",
+      "report_file": "obsidian-vault-roundtrip-report.json",
+      "report_bytes": 70015440,
+      "report_sha256": "33c60d140725d637ff8bebd87fe1fedb6c05995c48b102ce413a7f9a6b1d5e29",
+      "report_status": "passed",
+      "report_source_sha": "3d16c073fe276c1e32b91d868da73b26ad7acb17",
+      "vault_snapshot_count": 66,
+      "canvas_reference_reopen_status": "passed",
+      "c07_4_capture_status": "captured-reference-only",
+      "c07_4_observed_scenario_count": 10,
+      "c07_4_required_scenario_count": 10,
+      "c07_4_all_first_open_predicates_passed": true,
+      "c07_4_all_reopen_predicates_passed": true,
+      "c07_4_all_comparable_pairs_passed": true,
+      "c07_4_source_checkpoint_matrix_complete": true,
+      "c07_4_reference_source_mutation_observed": true,
+      "rust_parity_claimed": false
+    }
   },
   "current_ci_batch": {
-    "sha": "49ef8e8ecfa60b9de245a8b62ffe26aadf17bab7",
-    "status": "Terminal failed on exact SHA 49ef8e8ecfa60b9de245a8b62ffe26aadf17bab7: 7/7 workflows terminal (6 passed, 1 failed); 20/20 jobs terminal (18 passed, 2 failed). macOS round-trip passed; Windows and Linux round-trip failed. All 16 artifact records and all three round-trip archive/report digests are reconciled.",
+    "milestone": "R2.8.142-R3.10-WINDOWS-LINUX-CANVAS-ROUNDTRIP-REPAIR; attempt 1",
+    "sha": "3d16c073fe276c1e32b91d868da73b26ad7acb17",
+    "status": "Terminal failed on exact SHA 3d16c073fe276c1e32b91d868da73b26ad7acb17: 7/7 workflows terminal (6 passed, 1 failed); 20/20 jobs terminal (19 passed, 1 failed). Linux round-trip failed before clipboard staging; Windows and macOS round-trip jobs passed. All 16 API artifact records and all three round-trip archive/report hashes are reconciled.",
     "workflow_counts": {
       "observed": 7,
       "terminal": 7,
@@ -43819,38 +44115,41 @@
     "job_counts": {
       "observed": 20,
       "terminal": 20,
-      "passed": 18,
-      "failed": 2,
+      "passed": 19,
+      "failed": 1,
       "cancelled": 0,
       "queued": 0,
       "in_progress": 0
     },
     "run_ids": [
-      38873637568,
-      38873637484,
-      38873637483,
-      38873637531,
-      38873637951,
-      38873637704,
-      38873637958
+      38881754019,
+      38881754052,
+      38881754055,
+      38881754009,
+      38881754011,
+      38881754214,
+      38881754010
     ],
-    "failed_job_ids": [
-      116883381204,
-      116883381665
-    ],
-    "all_required_jobs_terminal": true,
-    "evidence": "evidence/r2.8.141-r3-9-attempt-1-49ef8e8.json",
-    "artifacts_reconciled": true,
-    "artifact_count": 16,
-    "terminal_at": "2026-10-16T09:20:49Z",
     "active_job_ids": [],
     "queued_job_ids": [],
+    "all_required_jobs_terminal": true,
+    "evidence": "evidence/r2.8.142-r3-10-attempt-1-3d16c07.json",
+    "artifacts_reconciled": true,
+    "artifact_count": 16,
+    "required_workflows": 7,
+    "required_jobs": 20,
     "main_sha_held": true,
-    "origin_main_sha": "49ef8e8ecfa60b9de245a8b62ffe26aadf17bab7",
+    "origin_main_sha": "3d16c073fe276c1e32b91d868da73b26ad7acb17",
+    "origin_main_verified_at": "2026-10-16T10:39:18Z",
+    "first_workflow_run_created_at": "2026-10-16T09:37:43Z",
     "completed_job_counts": {
-      "passed": 18,
-      "failed": 2
-    }
+      "passed": 19,
+      "failed": 1
+    },
+    "failed_job_ids": [
+      116909896430
+    ],
+    "status_at": "2026-10-16T10:39:18Z"
   },
   "parallel_local_milestones": [
     {
@@ -44019,7 +44318,8 @@
     "milestone_achieved": false,
     "artifact_reconciliation": "All 16 artifact archive digests and three round-trip report hashes recorded; Linux recovery branch not exercised."
   },
-  "active_ci_batch": {
+  "active_ci_batch": null,
+  "previous_ci_batch": {
     "sha": "49ef8e8ecfa60b9de245a8b62ffe26aadf17bab7",
     "status": "Terminal failed on exact SHA 49ef8e8ecfa60b9de245a8b62ffe26aadf17bab7: 7/7 workflows terminal (6 passed, 1 failed); 20/20 jobs terminal (18 passed, 2 failed). macOS round-trip passed; Windows and Linux round-trip failed. All 16 artifact records and all three round-trip archive/report digests are reconciled.",
     "workflow_counts": {
@@ -44058,77 +44358,14 @@
     "artifacts_reconciled": true,
     "artifact_count": 16,
     "terminal_at": "2026-10-16T09:20:49Z",
-    "milestone": "R2.8.141-R3.9-CROSS-PLATFORM-CANVAS-CI-FAILURE-REPAIR; attempt 1",
-    "started_at": "2026-10-16T08:25:54Z",
-    "required_workflows": 7,
-    "required_jobs": 20,
     "active_job_ids": [],
     "queued_job_ids": [],
+    "main_sha_held": true,
+    "origin_main_sha": "49ef8e8ecfa60b9de245a8b62ffe26aadf17bab7",
     "completed_job_counts": {
       "passed": 18,
       "failed": 2
-    },
-    "main_sha_held": true,
-    "origin_main_sha": "49ef8e8ecfa60b9de245a8b62ffe26aadf17bab7"
-  },
-  "previous_ci_batch": {
-    "milestone": "R2.8.136-R3.4-LINUX-CANVAS-PRESTAGING-FOCUS-RECOVERY; attempt 1",
-    "sha": "84962b1b931250e7b15c934664ffe55d149c8bd5",
-    "started_at": "2026-10-16T01:45:15Z",
-    "status": "Terminal exact-SHA CI failed, observed 2026-10-16T02:49:59Z: all seven workflows and 20 jobs terminal; six workflows and 19 jobs passed; Ubuntu round-trip failed before Tab.",
-    "required_workflows": 7,
-    "required_jobs": 20,
-    "run_ids": [
-      38836809564,
-      38836809608,
-      38836809779,
-      38836809780,
-      38836809806,
-      38836809821,
-      38836809869
-    ],
-    "status_snapshot_at": "2026-10-16T02:49:59Z",
-    "completed_workflows": 7,
-    "passed_workflows": 6,
-    "failed_workflows": 1,
-    "workflows_in_progress": 0,
-    "workflows_queued": 0,
-    "completed_jobs": 20,
-    "jobs_passed": 19,
-    "jobs_failed": 1,
-    "jobs_in_progress": 0,
-    "jobs_queued": 0,
-    "main_sha_held": true,
-    "failed_job_ids": [
-      116767661550
-    ],
-    "queued_job_ids": [],
-    "active_job_ids": [],
-    "workflow_counts": {
-      "observed": 7,
-      "terminal": 7,
-      "passed": 6,
-      "failed": 1,
-      "cancelled": 0,
-      "queued": 0,
-      "in_progress": 0
-    },
-    "job_counts": {
-      "observed": 20,
-      "terminal": 20,
-      "passed": 19,
-      "failed": 1,
-      "cancelled": 0,
-      "queued": 0,
-      "in_progress": 0
-    },
-    "evidence": "evidence/r2.8.136-r3-4-attempt-1-84962b1.json",
-    "all_jobs_terminal": true,
-    "in_flight": false,
-    "failure_logs_available": true,
-    "partial_artifact_reconciliation": "All terminal artifact inventories, archive/report hashes, workflow/job IDs and failure analysis are recorded in evidence/r2.8.136-r3-4-attempt-1-84962b1.json. Linux failed before Tab; no recovery sequence ran. macOS and Windows captured all ten C07.4 reference scenarios; R3.4 remains unachieved.",
-    "terminal_at": "2026-10-16T02:34:44Z",
-    "updated_at": "2026-10-16T02:49:59Z"
+    }
   },
   "prior_repair_milestone": {
     "id": "R2.8.136-R3.2-C07.4-REOPEN-TIE-ORDER-AND-LINUX-CANVAS-FOCUS-REPAIR",
@@ -44328,47 +44565,28 @@
     },
     "next_action": "R3.3 implementation and whole-milestone review are complete locally; create local commit(s), push once to origin/main, then hold the exact SHA through terminal CI."
   },
-  "goal_sha256": "bfe0b0cf2d683d2e9864e8aa63f13a34c7b495a1a15cc0ecb50c58f3ecf857f7",
-  "planned_next_milestone_id": "R2.8.142-R3.10-WINDOWS-LINUX-CANVAS-ROUNDTRIP-REPAIR",
+  "goal_sha256": "ab0accd0549e31c977ba1f6e6eb8bf9c0f722663da9dc7e761db28ecb35543fd",
+  "planned_next_milestone_id": "R2.8.143-R3.11-LINUX-CANVAS-FOCUS-C07.4-REFERENCE",
   "planned_ci_repair_milestone": {
+    "id": "R2.8.143-R3.11-LINUX-CANVAS-FOCUS-C07.4-REFERENCE",
+    "name": "R3.11 Linux Canvas focus trace and all-platform C07.4 reference capture",
+    "status": "implementation complete and reviewed; ready for single push",
+    "plan": "evidence/r2.8.143-r3-11-linux-canvas-focus-c07-4-reference-plan.json",
+    "starting_sha": "3d16c073fe276c1e32b91d868da73b26ad7acb17"
+  },
+  "previous_repair_milestone": {
     "id": "R2.8.141-R3.9-CROSS-PLATFORM-CANVAS-CI-FAILURE-REPAIR",
     "name": "Repair the grouped R3.8 inventory, formatting, and Canvas CI failures",
     "status": "Terminal failed on exact SHA 49ef8e8ecfa60b9de245a8b62ffe26aadf17bab7: 7/7 workflows terminal (6 passed, 1 failed); 20/20 jobs terminal (18 passed, 2 failed). macOS round-trip passed; Windows and Linux round-trip failed. All 16 artifact records and all three round-trip archive/report digests are reconciled.",
     "plan": "evidence/r2.8.141-r3-9-canvas-ci-failure-repair-plan.json",
-    "planning_base_sha": "586b3f42aafe4e1ffeb47e7a145c2f62881fd9a3",
+    "evidence": "evidence/r2.8.141-r3-9-attempt-1-49ef8e8.json",
     "starting_sha": "586b3f42aafe4e1ffeb47e7a145c2f62881fd9a3",
-    "expected_starting_sha": "586b3f42aafe4e1ffeb47e7a145c2f62881fd9a3",
-    "goal_sha256": "bfe0b0cf2d683d2e9864e8aa63f13a34c7b495a1a15cc0ecb50c58f3ecf857f7",
-    "predecessor_sha": "586b3f42aafe4e1ffeb47e7a145c2f62881fd9a3",
-    "predecessor_evidence": "evidence/r2.8.140-r3-8-attempt-1-586b3f4.json",
-    "required_workflows": [
-      "OpenObsidian Rust CI",
-      "Rust migration inventory",
-      "Obsidian vault round-trip acceptance",
-      "OpenObsidian desktop build",
-      "OpenObsidian quality",
-      "OpenObsidian plugin renderer matrix",
-      "OpenObsidian loaded plugin workflows"
-    ],
-    "expected_jobs": 20,
-    "platforms": [
-      "Ubuntu 24.04",
-      "macOS latest",
-      "Windows latest"
-    ],
     "implementation_sha": "49ef8e8ecfa60b9de245a8b62ffe26aadf17bab7",
     "submitted_sha": "49ef8e8ecfa60b9de245a8b62ffe26aadf17bab7",
     "pushed_once": true,
     "all_required_jobs_terminal": true,
-    "ci_attempt_evidence": "evidence/r2.8.141-r3-9-attempt-1-49ef8e8.json",
     "local_executable_validation": false,
-    "deliverable": "Resolve the inventory hash, Ubuntu formatting, Linux canary, and Windows Canvas transaction failures in one reviewed milestone while retaining strict app-data ownership, privacy and carried acceptance.",
-    "acceptance": [
-      "The Rust migration inventory validates the exact active goal SHA, and Ubuntu Rust CI passes Check formatting without behavioral changes.",
-      "Linux expected-abort evidence proves the injected mismatch is the sole failed predicate; the post-staging canary ArrowRight is suppressed while normal focus recovery and separately guarded pre-staging recovery remain; no motion, paste, or save follows a failed guard.",
-      "Windows accepts only the exact successful prepared/committed Canvas write transaction and confined/hash-verified recovery artifacts; close equals the accepted full-root snapshot; strict pre-save checks and the no-app.ron invariant pass.",
-      "All seven required workflows and all twenty jobs pass on the same exact submitted SHA, with reports and artifact digests reconciled before the milestone is achieved."
-    ],
+    "terminal_at": "2026-10-16T09:20:49Z",
     "workflow_counts": {
       "observed": 7,
       "terminal": 7,
@@ -44386,6 +44604,81 @@
       "cancelled": 0,
       "queued": 0,
       "in_progress": 0
-    }
-  }
+    },
+    "failed_job_ids": [
+      116883381204,
+      116883381665
+    ],
+    "run_ids": [
+      38873637568,
+      38873637484,
+      38873637483,
+      38873637531,
+      38873637951,
+      38873637704,
+      38873637958
+    ],
+    "origin_main_sha_after_push": "49ef8e8ecfa60b9de245a8b62ffe26aadf17bab7",
+    "artifact_reconciliation": "Windows and Linux failure archives/reports reconciled; macOS job and full batch artifact inventory pending."
+  },
+  "older_ci_batch": {
+    "milestone": "R2.8.136-R3.4-LINUX-CANVAS-PRESTAGING-FOCUS-RECOVERY; attempt 1",
+    "sha": "84962b1b931250e7b15c934664ffe55d149c8bd5",
+    "started_at": "2026-10-16T01:45:15Z",
+    "status": "Terminal exact-SHA CI failed, observed 2026-10-16T02:49:59Z: all seven workflows and 20 jobs terminal; six workflows and 19 jobs passed; Ubuntu round-trip failed before Tab.",
+    "required_workflows": 7,
+    "required_jobs": 20,
+    "run_ids": [
+      38836809564,
+      38836809608,
+      38836809779,
+      38836809780,
+      38836809806,
+      38836809821,
+      38836809869
+    ],
+    "status_snapshot_at": "2026-10-16T02:49:59Z",
+    "completed_workflows": 7,
+    "passed_workflows": 6,
+    "failed_workflows": 1,
+    "workflows_in_progress": 0,
+    "workflows_queued": 0,
+    "completed_jobs": 20,
+    "jobs_passed": 19,
+    "jobs_failed": 1,
+    "jobs_in_progress": 0,
+    "jobs_queued": 0,
+    "main_sha_held": true,
+    "failed_job_ids": [
+      116767661550
+    ],
+    "queued_job_ids": [],
+    "active_job_ids": [],
+    "workflow_counts": {
+      "observed": 7,
+      "terminal": 7,
+      "passed": 6,
+      "failed": 1,
+      "cancelled": 0,
+      "queued": 0,
+      "in_progress": 0
+    },
+    "job_counts": {
+      "observed": 20,
+      "terminal": 20,
+      "passed": 19,
+      "failed": 1,
+      "cancelled": 0,
+      "queued": 0,
+      "in_progress": 0
+    },
+    "evidence": "evidence/r2.8.136-r3-4-attempt-1-84962b1.json",
+    "all_jobs_terminal": true,
+    "in_flight": false,
+    "failure_logs_available": true,
+    "partial_artifact_reconciliation": "All terminal artifact inventories, archive/report hashes, workflow/job IDs and failure analysis are recorded in evidence/r2.8.136-r3-4-attempt-1-84962b1.json. Linux failed before Tab; no recovery sequence ran. macOS and Windows captured all ten C07.4 reference scenarios; R3.4 remains unachieved.",
+    "terminal_at": "2026-10-16T02:34:44Z",
+    "updated_at": "2026-10-16T02:49:59Z"
+  },
+  "planned_ci_repair_milestone_id": "R2.8.143-R3.11-LINUX-CANVAS-FOCUS-C07.4-REFERENCE"
 }

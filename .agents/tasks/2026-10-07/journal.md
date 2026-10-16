@@ -8261,3 +8261,73 @@ Implemented the bounded Windows/Linux round-trip repairs locally on `49ef8e8ecfa
 For the Linux expected-abort canary only, the harness now enables the existing eframe-persistence opt-out after the standard warm-up and prelaunch inspection, passes it through the explicit launcher allowance, requires the runtime marker, and validates post-termination app-data under the disabled persistence policy. The canary still requires exact full-root app-data and vault equality, unchanged Canvas bytes, no new `app.ron`, and all existing input, cleanup, and termination checks. The R3.9 report confirms the stabilized prelaunch root had no `data/openobsidian/app.ron`; its only appearance was at shutdown. Ordinary Linux, Windows, and macOS launch policies remain unchanged.
 
 Independent read-only source and tracker reviews approved the bounded changes. The tracker review identified stale R3.9 terminal summary fields; they are reconciled to 7/7 workflows and 20/20 jobs terminal, 6 workflows and 18 jobs passed, 2 failed jobs, and all 16 API artifacts accounted for. R3.10 acceptance now names all three platforms and distinguishes the 16 API artifact records from the three downloaded round-trip archive digests. No local tests, builds, formatters, linters, validators, or app launches were run. R3.10 remains local pending final whole-milestone review and one CI-triggering push.
+
+
+## R3.10 submitted once; exact-SHA CI in progress — 2026-10-16T09:39:43Z
+
+Committed and pushed R3.10 once as `3d16c073fe276c1e32b91d868da73b26ad7acb17` (`R2.8.142: repair Canvas round-trip CI`) from predecessor `49ef8e8ecfa60b9de245a8b62ffe26aadf17bab7`. GitHub created all seven required workflow runs on the exact submitted SHA; `origin/main` was verified at the same SHA. The inventory, quality, desktop build, loaded-plugin workflows, and plugin renderer matrix have passed. Rust CI and Obsidian vault round-trip acceptance remain in progress. At this snapshot, 13/20 jobs passed and seven remain active; no failures are reported.
+
+GitHub currently lists nine artifacts for this SHA. Their IDs, API digests, sizes, names, workflow associations, and timestamps are recorded in [R3.10 attempt 1 evidence](evidence/r2.8.142-r3-10-attempt-1-3d16c07.json). The artifact inventory is provisional until all workflows finish. Hold `origin/main` at `3d16c073fe276c1e32b91d868da73b26ad7acb17`; all further progress checks are read-only and no local executable validation is used.
+
+
+## R3.10 CI progress — 2026-10-16T09:43:07Z
+
+The Rust migration inventory, desktop build, loaded-plugin workflows, plugin renderer matrix, and quality workflows are terminal-success on exact SHA `3d16c073fe276c1e32b91d868da73b26ad7acb17`. Rust CI and the three-platform vault round-trip workflow remain in progress. Fifteen of twenty jobs have passed; five remain active and none has failed. `origin/main` was rechecked at the submitted SHA. GitHub currently lists twelve API artifacts for the SHA, including the Linux/macOS Rust plugin-runtime evidence and preview builds; the complete metadata list and digests are recorded in the attempt evidence and remain provisional until all workflows finish. Keep the submitted SHA held; no tests or executable validation were run locally.
+
+
+## R3.10 CI progress — 2026-10-16T09:45:11Z
+
+The Rust Windows job has passed, bringing R3.10 to 16/20 terminal-success jobs. Rust minimum-supported-version 1.95 and all three vault round-trip platform jobs remain active; the inventory, quality, desktop, loaded-plugin, and renderer workflows are terminal-success. GitHub lists thirteen artifacts for the exact SHA, including all three platform `rust-plugin-runtime` reports. Their API metadata and digests are recorded in the attempt evidence; the inventory remains provisional until round-trip and Rust CI complete. `origin/main` remains at `3d16c073fe276c1e32b91d868da73b26ad7acb17`.
+
+
+## R3.10 CI progress — 2026-10-16T09:47:48Z
+
+OpenObsidian Rust CI is now terminal-success on exact SHA `3d16c073fe276c1e32b91d868da73b26ad7acb17`, including its Ubuntu, Windows, macOS, and Rust 1.95 jobs. Six of seven workflows and 17/20 jobs have passed. All three Obsidian vault round-trip jobs remain active; no failures have been reported. GitHub lists thirteen artifacts for the SHA, and `origin/main` remains at the submitted commit. The artifact inventory stays provisional until the round-trip workflow finishes.
+
+
+## R3.10 Linux round-trip failure — 2026-10-16T09:50:12Z
+
+The Linux round-trip job `116909896430` failed while its Windows and macOS jobs remain active. Its report is 1,025,220 bytes, SHA-256 `8abaa3e3d6369c017b659db2385bf0cacf88eec65e1cbff335ca841d1642732d`, and source SHA matches the submitted `3d16c073fe276c1e32b91d868da73b26ad7acb17`. The expected-abort canary passed: the Linux eframe opt-out marker and policy mapping were observed, post-abort full app-data equality passed, and all abort-preservation predicates passed. The normal Linux Canvas text-edit then failed before clipboard staging because the fresh event-free focus snapshot timed out; clipboard staging did not occur and the request marker was removed. This is outside the canary and the failure cause remains unconfirmed. The artifact API record is `12037878616` (12,889,539 bytes; digest `sha256:230ab84a9abd3d9891001727c6d2e3e9d25d01f37cec205ed74adf181d1061e3`). `origin/main` remains held at the submitted SHA. Do not repair or push until the entire CI batch is terminal.
+
+
+## R3.10 Windows round-trip passed — 2026-10-16T09:59:52Z
+
+Windows round-trip job `116909896444` passed on exact SHA `3d16c073fe276c1e32b91d868da73b26ad7acb17`. Its 22,851,661-byte artifact (ID `12039050626`) has API digest `sha256:5a0a017b4a2b37be1951934d6e4f5062e58b46a80d119835cb81e46d11d8ce26`, matching the downloaded archive SHA-256. The 69,906,392-byte report SHA-256 is `85779df4eb9520e44b6f0ea8f06852451dd70809c82594e2999ad9d6a998e2b3` and its source SHA matches the submission. Canvas editing passed; the write transaction was committed with two exact journal rows, both manifest checks and confined recovery-file checks passed, the accepted post-save app-data snapshot matched through close, and the vault was unchanged after close. R3.10 now has 18/20 jobs passed, one Linux failure, and only the macOS round-trip job `116909896087` active. The six other workflows are terminal-success; the artifact inventory has 15 of the 16 expected records. Hold `origin/main` until macOS completes and all reports/artifacts are reconciled.
+
+
+## R3.10 Linux focus-snapshot diagnosis — 2026-10-16T10:13:13Z
+
+Read-only review of the Linux report, raw input log, and harness source narrowed the normal Canvas timeout. The normal Linux child removes `OPENOBSIDIAN_CI_CANVAS_FOCUS_TRACE`, while `readCanvasFocusSnapshot` rejects snapshots without a covering trace. The raw log nevertheless records the consumed request marker and paired fields at frame 364; path focus is false and ID focus is true. Frame 356 shows path focus after the click; frame 357 records `ArrowRight` on the empty path while it still appears focused. The exact moment focus transfers is unconfirmed. This explains `last value=null` and also exposes the separate target-focus failure the missing trace concealed. The next repair should enable diagnostic tracing for this normal child and avoid the unnecessary `ArrowRight` on an empty field, preserving the fresh event-free fail-closed guard before clipboard staging. No clipboard, motion, or save was dispatched. The expected-abort canary and its strict app-data preservation checks passed. Keep the change unimplemented and unpushed until the macOS job and the complete R3.10 batch are terminal.
+
+## R3.10 artifact recheck and Linux focus-causality correction — 2026-10-16T10:23:52Z
+
+Read-only comparison of all 15 currently listed GitHub API artifact records against the R3.10 attempt evidence found exact matches for ID, name, size, digest, workflow run, and submitted head SHA. The records cover all artifacts from the six terminal-success workflows and the Linux/Windows round-trip jobs; the macOS round-trip artifact is not listed yet, so the expected 16-record inventory remains incomplete. The macOS job `116909896087` is still active, and `origin/main` remains at `3d16c073fe276c1e32b91d868da73b26ad7acb17`.
+
+Correction to the Linux diagnosis above: the evidence shows the path field focused at frame 357 and unfocused at frame 364, but does not identify when or why focus moved. `ArrowRight` is correlated with the later focus change, not established as its cause. Keep the input sequence unchanged in the repair candidate. The supported candidate is to enable `OPENOBSIDIAN_CI_CANVAS_FOCUS_TRACE` for the normal Linux text-edit child so the existing fresh event-free snapshot parser can observe the target/sibling state and the existing fail-closed guard/recovery path can be evaluated before any clipboard staging.
+
+
+## R3.10 terminal reconciliation and R3.11 plan — 2026-10-16T10:39:18Z
+
+R3.10 is terminal failed on exact SHA `3d16c073fe276c1e32b91d868da73b26ad7acb17`: all seven required workflows and all 20 jobs are terminal; six workflows and 19 jobs passed, while Linux round-trip job `116909896430` failed before clipboard staging. Windows and macOS round-trip passed. All 16 GitHub API artifact records and the three platform archive/report hashes are reconciled in `evidence/r2.8.142-r3-10-attempt-1-3d16c07.json`. `origin/main` was read-only verified at `3d16c073fe276c1e32b91d868da73b26ad7acb17`; no batch is in flight. R3.10 is not achieved.
+
+Linux's normal Canvas text-edit child disabled `OPENOBSIDIAN_CI_CANVAS_FOCUS_TRACE`, although the fresh focus snapshot parser requires a covering trace. The request marker was consumed; frame 364 recorded path focus false and ID focus true. The exact focus-transfer moment and cause remain unconfirmed, so the input sequence is unchanged and ArrowRight is not treated as causal. macOS and Windows captured all ten C07.4 scenarios on first open/reopen with comparable pairs; these reports are reference-only, include pinned-app source mutations, and claim no Rust parity. Linux C07.4 is still missing.
+
+Updated `goal.md` to require one push only after a named milestone's full implementation is complete and reviewed; minor edits and CI fixes stay local, the push starts CI, and `origin/main` remains pinned until the full required batch is terminal and reconciled, even when CI takes several hours. Synchronized MIG-002 and the goal SHA `ab0accd0549e31c977ba1f6e6eb8bf9c0f722663da9dc7e761db28ecb35543fd` in `requirements.json`. These documentation and evidence updates remain local and will travel with the next substantive milestone.
+
+Defined `R2.8.143-R3.11-LINUX-CANVAS-FOCUS-C07.4-REFERENCE` in `evidence/r2.8.143-r3-11-linux-canvas-focus-c07-4-reference-plan.json` from `3d16c073fe276c1e32b91d868da73b26ad7acb17` before implementation. It combines the bounded Linux focus-trace repair with all-platform C07.4 reference-only capture because the Linux round-trip path blocks that later capture. Rust comparator work, changes to the input sequence, relaxed guards, and unrelated work are excluded. Plan review is pending; no R3.11 source edit, commit, push, local executable validation, or CI dispatch has occurred.
+
+
+## R3.11 bounded local implementation — 2026-10-16T10:42:07Z
+
+Implemented the reviewed one-line harness change in `.agents/tasks/2026-10-07/audit-obsidian-vault-roundtrip.ts`: the main Linux Canvas text-edit child now enables the existing focus trace for both normal text edit and the expected-abort path. Linux warmup children still clear the flag; non-Linux children still clear it. No input, recovery, snapshot, paste, canary, save, or preservation guard changed. Two independent source reviews approved the bounded diff.
+
+The independent tracker review also found stale C07.4 and phase pointers. Updated the C07.4 requirement to record that R3.10 Windows and macOS captured all ten scenarios while Linux stopped before C07.4, retained Pending/no-parity status, and now requires 28 checkpoints per OS, seed equality after reseeding, all-OS tie-seed ordering, and the extra stable preselection check only on macOS reopen. The R3 phase pointer now names R3.11. The plan records origin/main verification before and after submission.
+
+The source change and tracker updates remain local. R3.11 is not pushed; no local executable validation or CI was run. Final whole-milestone review is pending.
+
+
+## R3.11 whole-milestone review complete — 2026-10-16T10:46:05Z
+
+Independent source and tracker reviews approved the full local R3.11 batch. The source diff is limited to enabling the existing trace for normal Linux Canvas text-edit children; expected-abort tracing remains, warmups remain untraced, non-Linux runs remain untraced, and no input or safety guard changed. The C07.4 requirement and R3 phase pointers now reflect the terminal R3.10 result. The R3.11 plan names all seven workflows and the 20 expected jobs, requires 28 checkpoints on each OS plus the macOS-only reopen preselection check, and records the exact-SHA submission gates.
+
+The complete reviewed batch is ready for one push from starting SHA `3d16c073fe276c1e32b91d868da73b26ad7acb17`. No local tests, builds, formatters, linters, validators, benchmarks, or application launches were used.

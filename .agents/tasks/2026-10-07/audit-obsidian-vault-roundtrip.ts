@@ -21470,7 +21470,7 @@ async function runOpenObsidianCanvasTextEdit(
   const windowsPersistenceOptOut = process.platform === "win32" && !expectedAbortCanary;
   const linuxExpectedAbortPersistenceOptOut = process.platform === "linux" && expectedAbortCanary;
   if (windowsPersistenceOptOut) appEnv.OPENOBSIDIAN_CI_CANVAS_DISABLE_EFRAME_PERSISTENCE = "1";
-  if (process.platform === "linux" && expectedAbortCanary) appEnv.OPENOBSIDIAN_CI_CANVAS_FOCUS_TRACE = "1";
+  if (process.platform === "linux") appEnv.OPENOBSIDIAN_CI_CANVAS_FOCUS_TRACE = "1";
   else delete appEnv.OPENOBSIDIAN_CI_CANVAS_FOCUS_TRACE;
   const safetyTracker: CanvasInputSafetyTracker = {
     expectedAbortCanary,

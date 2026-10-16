@@ -1,0 +1,163 @@
+{
+  "schema_version": 1,
+  "milestone_id": "R2.8.143-R3.11-LINUX-CANVAS-FOCUS-C07.4-REFERENCE",
+  "id": "R2.8.143-R3.11-LINUX-CANVAS-FOCUS-C07.4-REFERENCE",
+  "name": "R3.11 Linux Canvas focus trace and all-platform C07.4 reference capture",
+  "created_at": "2026-10-16T10:39:18Z",
+  "status": "implementation complete and reviewed; ready for single push",
+  "plan_review_status": "approved by independent source and tracker reviews",
+  "planning_base_sha": "3d16c073fe276c1e32b91d868da73b26ad7acb17",
+  "starting_sha": "3d16c073fe276c1e32b91d868da73b26ad7acb17",
+  "implementation_sha": null,
+  "submitted_sha": null,
+  "pushed_once": false,
+  "objective": "Repair the missing Linux normal-child Canvas focus trace so the round-trip harness can safely complete text editing, then capture the pinned Obsidian C07.4 reference contract across Linux, macOS, and Windows on one exact SHA. This is reference capture only; it does not implement or claim Rust comparator parity.",
+  "source_findings": {
+    "r3_10_sha": "3d16c073fe276c1e32b91d868da73b26ad7acb17",
+    "r3_10_status": "Terminal failed on exact SHA 3d16c073fe276c1e32b91d868da73b26ad7acb17: 7/7 workflows terminal (6 passed, 1 failed); 20/20 jobs terminal (19 passed, 1 failed). Linux round-trip failed before clipboard staging; Windows and macOS round-trip jobs passed. All 16 API artifact records and all three round-trip archive/report hashes are reconciled.",
+    "linux_job_id": 116909896430,
+    "linux_report": "evidence/r2.8.142-r3-10-attempt-1-3d16c07.json",
+    "supported_cause": "The normal Linux child removes OPENOBSIDIAN_CI_CANVAS_FOCUS_TRACE while readCanvasFocusSnapshot requires a covering per-frame trace; the consumed request frame recorded path focused=false and ID focused=true.",
+    "uncertainty": "The exact focus-transfer frame and cause are unconfirmed. ArrowRight is correlated with later focus loss only; the input sequence remains unchanged.",
+    "bounded_candidate": "Enable the existing focus trace only for Linux Canvas text-edit children, leaving warmup children explicitly untraced and other platforms unchanged.",
+    "capture_dependency": "The Linux Canvas text-edit/round-trip flow precedes C07.4 capture; the Linux R3.10 failure stopped before clipboard staging and C07.4."
+  },
+  "scope": {
+    "included": [
+      "Enable the existing focus trace for the normal Linux Canvas text-edit child; retain the expected-abort canary trace policy. Warmup children remain explicitly untraced, and non-Linux behavior is unchanged.",
+      "Preserve the current input sequence and existing fresh event-free snapshot parser, request marker, per-frame trace coverage, target/sibling checks, bounded recovery behavior, fail-closed pre-staging guard, expected-abort canary, clipboard cleanup, save/reopen, and preservation checks.",
+      "Run the full pinned Obsidian C07.4 first-open/reopen reference capture on all three OSes for all ten scenarios, including 28 source checkpoints per platform, the tie-seed-order predicate on all platforms, and the additional stable preselection enumeration on macOS reopen only.",
+      "Record source mutations as reference behavior, retain the runner-default locale policy, and keep C07.4 capture-only with rust_parity_claimed=false.",
+      "Carry the updated goal cadence, requirements MIG-002/hash synchronization, and terminal R3.10 plan/evidence/state/journal reconciliation in this next substantive milestone."
+    ],
+    "excluded": [
+      "Rust C07.4 comparator implementation, Rust parity fixtures/results, or changes to crates/doc.",
+      "Removing or weakening the trace requirement, snapshot freshness/event-free checks, target/sibling pairing, focus recovery bounds, paste/canary guards, transaction checks, or preservation predicates.",
+      "Changing the Linux Canvas input sequence or claiming ArrowRight caused focus loss without evidence.",
+      "Unrelated Bases, appearance, plugin, vault, packaging, or migration work; no source changes from the separate dirty checkout."
+    ]
+  },
+  "implementation": {
+    "status": "implementation complete; whole-source and tracker reviews passed",
+    "base_sha": "3d16c073fe276c1e32b91d868da73b26ad7acb17",
+    "files": [
+      ".agents/tasks/2026-10-07/audit-obsidian-vault-roundtrip.ts"
+    ],
+    "changes": [
+      "Enable OPENOBSIDIAN_CI_CANVAS_FOCUS_TRACE for Linux Canvas text-edit children; the expected-abort policy is retained, warmup children still clear the flag, and non-Linux children still clear it."
+    ],
+    "local_executable_validation": false,
+    "submitted_sha": null,
+    "pushed_once": false
+  },
+  "acceptance": [
+    "Independent whole-source and tracker review approves the complete R3.11 scope before its single push; the implementation is complete and reviewed before CI starts.",
+    "For each normal Linux Canvas text-edit focus snapshot, a covering same-frame trace and paired target/sibling diagnostics are present. If the initial focus guard fails, only the existing bounded recovery may proceed; recovery must satisfy all existing freshness, event-free, target-focus, sibling-preservation, refresh, pointer, and control predicates. Incomplete focus evidence or recovery fails closed before clipboard staging, Ctrl+V, or save; trace availability alone does not authorize input.",
+    "Linux Canvas text edit, transaction/save, close/reopen, and vault/app-data preservation pass on the exact SHA. The expected-abort canary proves the synthetic target-value mismatch is its sole expected failed pre-motion predicate, performs no motion/paste/save, cleans request/clipboard markers, terminates cleanly, and preserves exact vault and app-data snapshots.",
+    "All ten C07.4 scenarios pass first-open, reopen, and comparable-pair predicates on Linux, macOS, and Windows for the same exact implementation SHA; each platform has a complete 28-checkpoint source matrix and the tie-seed-order predicate. The additional stable preselection enumeration is required on macOS reopen only.",
+    "The harness reseeds the exact C07.4 fixture before reopen and reports reopen_seed_hashes_match=true. Record first-open and reopen source hashes and changed bytes at each checkpoint. Pinned-app source rewrites are captured reference observations; do not require post-reopen files to remain equal to seed or treat rewrites as Rust preservation evidence.",
+    "C07.4 reports retain runner-default locale policy, source mutation observations and limitations, captured-reference-only status, and rust_parity_claimed=false; reference-app rewrites are not misreported as Rust preservation or parity.",
+    "All seven required workflows and all 20 jobs pass on the exact implementation SHA. Reconcile exact run/job URLs, platform results, every API artifact metadata record, all three round-trip archive digests, report hashes, report source SHAs, origin/main before submission, and origin/main after submission.",
+    "No local tests, builds, formatters, linters, validators, benchmarks, or app launches are used as acceptance evidence; GitHub Actions is the only validation environment."
+  ],
+  "required_workflows": [
+    "Rust migration inventory",
+    "OpenObsidian Rust CI",
+    "Obsidian vault round-trip acceptance",
+    "OpenObsidian desktop build",
+    "OpenObsidian quality",
+    "OpenObsidian plugin renderer matrix",
+    "OpenObsidian loaded plugin workflows"
+  ],
+  "required_job_count": 20,
+  "platforms": [
+    "Ubuntu 24.04",
+    "macOS latest",
+    "Windows latest"
+  ],
+  "evidence_to_collect": [
+    "All exact-SHA workflow run IDs/URLs and terminal job conclusions.",
+    "GitHub API artifact IDs, names, sizes, digests, run IDs, and head SHAs for the full batch.",
+    "Per-platform round-trip archive SHA-256 and report SHA-256/source SHA/status.",
+    "Read-only origin/main SHA before push, confirming the R3.10 starting SHA; after the single push, confirm origin/main equals the R3.11 submitted SHA.",
+    "Linux normal-child focus trace coverage, paired field snapshot, guard/recovery outcomes, clipboard-stage authorization, and fail-closed behavior.",
+    "Linux expected-abort canary sole-mismatch predicate, no-motion/no-paste/no-save checks, cleanup, termination, and exact vault/app-data preservation.",
+    "C07.4 first-open/reopen/comparable outcomes; 28 source checkpoint hashes and changed bytes per OS; reopen seed hash equality; tie-seed-order predicate on all OSes and additional stable preselection on macOS reopen; locale policy; explicit no-parity status."
+  ],
+  "validation_policy": "GitHub Actions only. Do not run local tests, builds, formatters, linters, validators, benchmarks, runtime probes, or application launches. Read-only source, Git, tracker, and artifact inspection is permitted.",
+  "goal_and_evidence_changes_to_carry": [
+    ".agents/tasks/2026-10-07/goal.md",
+    ".agents/tasks/2026-10-07/requirements.json",
+    ".agents/tasks/2026-10-07/state.json",
+    ".agents/tasks/2026-10-07/journal.md",
+    ".agents/tasks/2026-10-07/evidence/r2.8.142-r3-10-windows-linux-canvas-repair-plan.json",
+    ".agents/tasks/2026-10-07/evidence/r2.8.142-r3-10-attempt-1-3d16c07.json"
+  ],
+  "execution_result": null,
+  "required_jobs": [
+    {
+      "workflow": "Rust migration inventory",
+      "job_names": [
+        "inventory"
+      ],
+      "count": 1
+    },
+    {
+      "workflow": "OpenObsidian Rust CI",
+      "job_names": [
+        "rust (ubuntu-latest)",
+        "rust (windows-latest)",
+        "minimum supported Rust (1.95)",
+        "rust (macos-latest)"
+      ],
+      "count": 4
+    },
+    {
+      "workflow": "Obsidian vault round-trip acceptance",
+      "job_names": [
+        "Obsidian 1.14.4 vault round-trip on ubuntu-24.04",
+        "Obsidian 1.14.4 vault round-trip on macos-latest",
+        "Obsidian 1.14.4 vault round-trip on windows-latest"
+      ],
+      "count": 3
+    },
+    {
+      "workflow": "OpenObsidian desktop build",
+      "job_names": [
+        "windows-latest",
+        "ubuntu-latest",
+        "macos-latest"
+      ],
+      "count": 3
+    },
+    {
+      "workflow": "OpenObsidian quality",
+      "job_names": [
+        "macos-latest",
+        "ubuntu-latest",
+        "windows-latest"
+      ],
+      "count": 3
+    },
+    {
+      "workflow": "OpenObsidian plugin renderer matrix",
+      "job_names": [
+        "macos-latest",
+        "windows-latest",
+        "ubuntu-latest"
+      ],
+      "count": 3
+    },
+    {
+      "workflow": "OpenObsidian loaded plugin workflows",
+      "job_names": [
+        "macos-latest",
+        "ubuntu-latest",
+        "windows-latest"
+      ],
+      "count": 3
+    }
+  ],
+  "required_job_matrix_source": "Expected workflow/job names are derived from the reconciled R3.10 exact-SHA evidence at evidence/r2.8.142-r3-10-attempt-1-3d16c07.json (runs and jobs). On R3.11, enumerate every actual job for its submitted SHA; any missing, skipped, disabled, or non-triggered expected check is non-passing under goal.md.",
+  "reviewed_at": "2026-10-16T10:46:05Z"
+}
