@@ -1,0 +1,184 @@
+{
+  "schema_version": 1,
+  "id": "R2.8.148-R3.16-LINUX-CANVAS-FULL-EFRAME-PERSISTENCE-ISOLATION",
+  "milestone_id": "R2.8.148-R3.16-LINUX-CANVAS-FULL-EFRAME-PERSISTENCE-ISOLATION",
+  "name": "R3.16 Linux Canvas full eframe persistence isolation",
+  "created_at": "2026-10-16T17:50:57Z",
+  "updated_at": "2026-10-16T18:01:55Z",
+  "status": "implementation complete locally; whole milestone approved by two independent reviewers; ready for one push after origin/main recheck",
+  "planning_base_sha": "146a13de133350ad398e5196ee1344dc343a1a72",
+  "starting_sha": "146a13de133350ad398e5196ee1344dc343a1a72",
+  "origin_main_sha_at_planning": "146a13de133350ad398e5196ee1344dc343a1a72",
+  "plan_revision": 2,
+  "plan_review_status": "approved by linux_persistence_source_review and r314_repair_scope_review",
+  "whole_milestone_review_status": "approved by linux_persistence_source_review and r314_repair_scope_review",
+  "reviews": [
+    {
+      "reviewer": "linux_persistence_source_review",
+      "reviewed_revision": 2,
+      "status": "approved",
+      "reviewed_at": "2026-10-16T17:55:27Z",
+      "findings": "Confirmed existing full opt-outs for the normal Windows child and Linux expected-abort canary remain unchanged; normal Linux receives explicit launchLogged authorization; exact marker is required before window focus and input; strict equality and GitHub Actions-only validation gates remain measurable."
+    },
+    {
+      "reviewer": "r314_repair_scope_review",
+      "reviewed_revision": 2,
+      "status": "approved",
+      "reviewed_at": "2026-10-16T17:55:27Z",
+      "findings": "Confirmed C07.4 evidence_paths/blocker point to the terminal R3.15 attempt and R3.16 plan while C07.4 remains pending and parity unclaimed; failure evidence and R3.14 carry are consistent; seven workflows/20 jobs, single-push cadence, origin recheck/no-overlap, and GitHub Actions-only validation are coherent."
+    }
+  ],
+  "whole_milestone_reviews": [
+    {
+      "reviewer": "r314_repair_scope_review",
+      "reviewed_revision": 2,
+      "status": "changes requested",
+      "reviewed_at": "2026-10-16T17:59:50Z",
+      "findings": "The active phases.R3 and adjacent phase-level fields still described R3.15 as ready to push against 67f5e6c, and planned_following_milestone/current C07.4 planning still described R3.15 as a future repair. Synced these pointers to terminal R3.15 evidence and the active R3.16 review state; updated the deferred C09.2 dependency-chain reference."
+    },
+    {
+      "reviewer": "r314_repair_scope_review",
+      "reviewed_revision": 2,
+      "status": "approved",
+      "reviewed_at": "2026-10-16T18:01:55Z",
+      "findings": "Confirmed the corrected .phases.R3 pointers identify terminal R3.15 evidence and the current R3.16 milestone; planned C07.4 remains gated on R3.16 CI and complete all-platform reference capture; C09.2 remains deferred behind sequencing and C07.5. The harness, tracker, predecessor evidence, and one-push GitHub Actions-only gates are consistent."
+    },
+    {
+      "reviewer": "linux_persistence_source_review",
+      "reviewed_revision": 2,
+      "status": "approved",
+      "reviewed_at": "2026-10-16T18:01:55Z",
+      "findings": "Confirmed the corrected implementation limits the full eframe opt-out to the normal Linux Canvas child, checks the exact marker before focus/input, preserves strict full-tree app-data equality and existing Windows/expected-abort opt-outs, and synchronizes state, C07.4, predecessor evidence, cadence, and GitHub Actions-only validation."
+    }
+  ],
+  "implementation_started": true,
+  "implementation_started_at": "2026-10-16T17:55:27Z",
+  "implementation_started_from_sha": "146a13de133350ad398e5196ee1344dc343a1a72",
+  "implementation_complete": true,
+  "implementation_sha": null,
+  "submitted_sha": null,
+  "pushed_once": false,
+  "trigger_evidence": {
+    "attempt": 1,
+    "submitted_sha": "146a13de133350ad398e5196ee1344dc343a1a72",
+    "evidence_path": ".agents/tasks/2026-10-07/evidence/r2.8.147-attempt-1-146a13de133350ad398e5196ee1344dc343a1a72.json",
+    "workflow_run_id": 38935182534,
+    "failed_job_id": 117088775346,
+    "failed_job_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38935182534/job/117088775346",
+    "artifact_id": 12061406931,
+    "report_sha256": "81b635231c0bc7aae3968e510ce0cb3b58c826ae52aafc2af60688f81583fc17",
+    "failure": "Ubuntu vault round-trip failed at after-field-input: strict app-data equality found a new 181-byte data/openobsidian/app.ron with SHA-256 2752da1d06113f89c4f39c17ccfbfec0cb49e35b122b025e884b7d235868b31f.",
+    "observations": {
+      "runtime_marker": "persist_egui_memory=false;persist_window=true",
+      "window_section_present": true,
+      "egui_section_present": false,
+      "same_hash_after_process_termination": true
+    },
+    "cause_assessment": "The report supports the inference that enabled window persistence produced the window-only app.ron; the writer itself was not independently observed."
+  },
+  "ci_attempt": null,
+  "milestone_achieved": false,
+  "local_executable_validation": false,
+  "objective": "Repair the R3.15 Linux Canvas round-trip failure by suppressing both egui-memory and window persistence in the normal Linux Canvas edit child. Preserve the existing full eframe opt-out on the normal Windows child and Linux expected-abort canary, retain strict full app-data equality, and add the same opt-out to the normal Linux child.",
+  "evidence_basis": [
+    "R3.15 exact-SHA CI is terminal and reconciled: 7/7 workflows and 20/20 jobs terminal; 6 workflows and 19 jobs passed, with the sole Ubuntu round-trip failure.",
+    "The Linux report records the exact runtime policy marker persist_egui_memory=false; persist_window=true.",
+    "The new 181-byte data/openobsidian/app.ron appears after field input and remains unchanged after process termination.",
+    "The final app.ron inspection passes the exact path check and records window_section_present=true, egui_section_present=false, and no forbidden-path leak. This supports the inference that enabled window persistence generated the window-only file.",
+    "The Rust UI already supports OPENOBSIDIAN_CI_CANVAS_DISABLE_EFRAME_PERSISTENCE=1 and reports persist_egui_memory=false;persist_window=false. Confirm this existing mapping during source review before implementation."
+  ],
+  "implementation_change_description": [
+    "In the round-trip harness, replace the egui-memory-only environment flag on the normal Linux Canvas edit child with the existing full eframe persistence opt-out, and explicitly authorize that flag through launchLogged for this child.",
+    "Record the full-policy expected marker and require OPENOBSIDIAN_CI_CANVAS_EFRAME_PERSISTENCE_POLICY_DISABLED=1;persist_egui_memory=false;persist_window=false before the Linux child receives window focus or any input action.",
+    "Preserve the existing full opt-out unchanged for the normal Windows Canvas child and Linux expected-abort canary. The full opt-out is permitted only for those existing children plus the normal Linux Canvas edit child added by R3.16; keep it off warm-ups, macOS, production, and unrelated launches.",
+    "Synchronize requirements.json C07.4 evidence_paths and blocker text with the terminal R3.15 attempt and this R3.16 plan; keep C07.4 pending and Rust parity unclaimed.",
+    "Retain the exact full app-data tree comparison at every existing checkpoint; do not allowlist app.ron or move the post-picker baseline."
+  ],
+  "implementation_files": [
+    ".agents/tasks/2026-10-07/audit-obsidian-vault-roundtrip.ts"
+  ],
+  "tracker_files": [
+    ".agents/tasks/2026-10-07/audit-obsidian-vault-roundtrip.ts",
+    ".agents/tasks/2026-10-07/requirements.json",
+    ".agents/tasks/2026-10-07/state.json",
+    ".agents/tasks/2026-10-07/journal.md",
+    ".agents/tasks/2026-10-07/goal.md",
+    ".agents/tasks/2026-10-07/evidence/r2.8.148-r3-16-linux-canvas-full-eframe-persistence-isolation-plan.json",
+    ".agents/tasks/2026-10-07/evidence/r2.8.148-attempt-1-<full-submitted-sha>.json",
+    ".agents/tasks/2026-10-07/evidence/r2.8.147-attempt-1-146a13de133350ad398e5196ee1344dc343a1a72.json",
+    ".agents/tasks/2026-10-07/evidence/r2.8.147-r3-15-linux-canvas-egui-persistence-isolation-plan.json",
+    ".agents/tasks/2026-10-07/evidence/r2.8.146-attempt-1-67f5e6c.json",
+    ".agents/tasks/2026-10-07/evidence/r2.8.146-r3-14-linux-id-ocr-border-repair-plan.json"
+  ],
+  "terminal_predecessor_evidence_paths": [
+    ".agents/tasks/2026-10-07/evidence/r2.8.147-attempt-1-146a13de133350ad398e5196ee1344dc343a1a72.json",
+    ".agents/tasks/2026-10-07/evidence/r2.8.147-r3-15-linux-canvas-egui-persistence-isolation-plan.json",
+    ".agents/tasks/2026-10-07/evidence/r2.8.146-attempt-1-67f5e6c.json",
+    ".agents/tasks/2026-10-07/evidence/r2.8.146-r3-14-linux-id-ocr-border-repair-plan.json"
+  ],
+  "in_scope": [
+    "Change the persistence policy only for the normal Linux Canvas edit child, after default-persistence warm-up and a fresh prelaunch app-data snapshot/inspection.",
+    "Use the existing full eframe opt-out environment variable, explicitly authorize it for the normal Linux child in launchLogged, and require the exact runtime marker before window focus and before any input action.",
+    "Preserve unchanged the existing full-opt-out uses for the normal Windows child and Linux expected-abort canary; do not pass the flag to warm-ups, macOS, or unrelated/production launches.",
+    "Keep the full app-data baseline and equality checks unchanged, including after field input, save/abort boundaries, and process termination.",
+    "Retain all existing vault, source, destination, exact readback, clipboard, no-save, cleanup, reopen, C07.2/C07.3/C07.4 reference-capture, and report checks.",
+    "Carry the fully reconciled R3.14 and R3.15 CI evidence in the next substantive milestone.",
+    "Update the C07.4 row in requirements.json with the R3.15 terminal attempt and R3.16 plan evidence paths and current blocker while preserving status=pending and rust_parity_claimed=false."
+  ],
+  "excluded": [
+    "No app-data allowlist, baseline shift, or acceptance reduction.",
+    "No persistence policy change to default warm-ups, the existing Linux expected-abort or normal Windows full-opt-out behavior, macOS, or production launches.",
+    "No product UI/storage behavior change or Rust parity/compatibility status promotion.",
+    "No per-change push or CI dispatch; no local test/build/format/lint/validation command."
+  ],
+  "implementation_criteria": [
+    "The only behavioral source change is the normal Linux Canvas edit child’s CI launch environment, launchLogged authorization, pre-focus marker check, and matching report expectations; existing full-opt-out uses for the normal Windows child and Linux expected-abort canary remain unchanged. Any additional source scope requires a plan revision and fresh review before implementation.",
+    "The default-persistence warm-up still runs before enabling the full opt-out, and prelaunch checks still inspect the same canonical app-data root.",
+    "The runtime marker proves persist_egui_memory=false and persist_window=false before Linux window focus and before the first input action.",
+    "The app-data tree exactly matches the settled post-picker baseline at every checkpoint and through process termination; no new app.ron or other path appears.",
+    "All existing exact field readbacks and vault/source/no-save/clipboard/reopen guards remain intact.",
+    "The normal Linux Canvas child is explicitly authorized for the opt-out; existing normal Windows and Linux expected-abort uses remain unchanged, and no warm-up, macOS, production, or unrelated launch receives it.",
+    "R3.14 and R3.15 predecessor status/evidence remains accurate; R3.15 stays terminal-failed and unachieved. requirements.json C07.4 links the R3.15 attempt and R3.16 plan, remains pending, and claims no Rust parity.",
+    "The committed goal retains the user-requested milestone-only push cadence and GitHub Actions-only validation."
+  ],
+  "acceptance": [
+    "Two independent read-only reviewers approve the revised plan before implementation; the whole milestone is independently reviewed before its single push.",
+    "All seven required GitHub Actions workflows and all 20 required jobs pass on the exact submitted SHA.",
+    "The Linux report observes the exact full persistence marker before window focus and input, and full app-data equality at every checkpoint, including after field input and process termination.",
+    "Linux Canvas field readbacks, C07.4 matrix, source/destination/no-save, clipboard, cleanup, and reopen gates pass.",
+    "Existing Windows and macOS round-trip acceptance passes without changing their existing policy.",
+    "Linux C07.2/C07.3/C07.4 reference capture remains reference-only; C07.3/C07.4 Rust status remains pending and rust_parity_claimed=false.",
+    "All 16 artifact metadata records and all non-preview report payloads are reconciled for the exact SHA; preview artifacts remain metadata-reconciled if intentionally not downloaded.",
+    "No requirement or compatibility status is promoted solely from this persistence repair."
+  ],
+  "required_workflows": [
+    "Rust migration inventory",
+    "OpenObsidian Rust CI",
+    "Obsidian vault round-trip acceptance",
+    "OpenObsidian desktop build",
+    "OpenObsidian quality",
+    "OpenObsidian plugin renderer matrix",
+    "OpenObsidian loaded plugin workflows"
+  ],
+  "required_job_count": 20,
+  "platforms": [
+    "ubuntu-24.04",
+    "macos-latest",
+    "windows-latest",
+    "minimum supported Rust 1.95"
+  ],
+  "attempt_evidence_path_template": ".agents/tasks/2026-10-07/evidence/r2.8.148-attempt-1-<full-submitted-sha>.json",
+  "goal_policy_path": ".agents/tasks/2026-10-07/goal.md",
+  "goal_policy_reason": "The goal already states one push after a complete, reviewed milestone, no per-change CI, and holding origin/main until the multi-hour exact-SHA batch and artifacts are reconciled; keep status updates local.",
+  "pre_push_gate": [
+    "R3.15 exact-SHA CI is terminal-failed and all seven workflows, 20 jobs, 16 artifact records, and 12 non-preview payloads are reconciled; no prior job remains active.",
+    "Immediately before submission, read origin/main and require 146a13de133350ad398e5196ee1344dc343a1a72; if it advanced, reconcile the new base and repeat independent review.",
+    "Complete every R3.16 implementation criterion and whole-milestone review with the complete required workflow set.",
+    "Push the complete R3.16 milestone to origin/main exactly once; do not push for an individual edit or per-change CI feedback.",
+    "After that push, keep origin/main at the submitted SHA until all required jobs are terminal and all metadata/report payloads are reconciled."
+  ],
+  "validation_policy": "Executable validation is permitted only in GitHub Actions after the one reviewed milestone push. Do not run local tests, builds, formatters, linters, validators, benchmarks, runtime probes, or application launches.",
+  "ci_failure_policy": "Do not push a repair while any job from this attempt is active. Once the batch is terminal and evidence is reconciled, consolidate related fixes into one named, reviewed repair milestone and push it once. Rerun the same SHA only for a confirmed transient infrastructure failure without source changes.",
+  "implementation_completed_at": "2026-10-16T18:01:55Z",
+  "whole_milestone_approved_at": "2026-10-16T18:01:55Z"
+}

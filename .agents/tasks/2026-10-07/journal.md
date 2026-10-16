@@ -8619,3 +8619,75 @@ Both independent reviewers approved the corrected R3.15 source and tracker diff.
 ## R3.15 reviewed base rechecked — 2026-10-16T16:50:21Z
 
 Immediately before submission, origin/main was rechecked read-only and still points to the reviewed R3.15 starting SHA 67f5e6c1bedbcfc0fc645a5652a1a23419750ab3. The prior R3.14 exact-SHA batch is terminal and reconciled with no active jobs. R3.15 is ready for one commit and one push; no local executable validation was run.
+
+
+## R3.15 pushed once; exact-SHA CI running — 2026-10-16T16:55:06Z
+
+The complete reviewed R3.15 milestone was pushed once to `origin/main` at 146a13de133350ad398e5196ee1344dc343a1a72 (base 67f5e6c1bedbcfc0fc645a5652a1a23419750ab3); a read-only remote check confirms `origin/main` remains at the submitted SHA. All seven required workflow runs target this exact SHA. Current snapshot: 5/7 workflows terminal and passing; 2 in progress; 15/20 jobs passed and 5 in progress; no failures or queued jobs. Twelve artifact metadata records are visible across four workflows; the inventory, round-trip, and quality workflows have no artifacts in this snapshot. Artifact inventory and payload reconciliation remain pending until the full batch is terminal. Keep status/evidence changes local and do not push another batch while these checks run. The goal cadence at line 91 explicitly batches minor work under one meaningful, reviewed milestone and accounts for the multi-hour CI duration. No local executable validation was run.
+
+
+## R3.15 CI progress snapshot — 2026-10-16T16:58:44Z
+
+Read-only GitHub refresh confirms all seven workflows target 146a13de133350ad398e5196ee1344dc343a1a72; 5/7 workflows are terminal and passing, with 2 in progress. 16/20 jobs have passed, 4 remain active, and there are no failed or queued jobs. 13 artifact metadata records are visible; final inventory and payload reconciliation remain pending. origin/main is still 146a13de133350ad398e5196ee1344dc343a1a72. No second push or local executable validation occurred.
+
+
+## R3.15 CI progress snapshot — 2026-10-16T17:01:39Z
+
+Read-only GitHub refresh confirms all seven workflows target 146a13de133350ad398e5196ee1344dc343a1a72; 6/7 workflows are terminal and passing, with 1 in progress. 17/20 jobs have passed, 3 remain active, and no jobs have failed or queued. 13 artifact metadata records are visible; final inventory and payload reconciliation remain pending. origin/main remains 146a13de133350ad398e5196ee1344dc343a1a72. No second push or local executable validation occurred.
+
+
+## R3.15 Linux round-trip failure recorded — 2026-10-16T17:05:44Z
+
+The Ubuntu round-trip job failed at step 15; Windows and macOS are still running. Its uploaded Linux report artifact (ID 12061406931) targets 146a13de133350ad398e5196ee1344dc343a1a72; the downloaded report is 2325482 bytes with SHA-256 81b635231c0bc7aae3968e510ce0cb3b58c826ae52aafc2af60688f81583fc17. The report records a new 181-byte data/openobsidian/app.ron after the settled post-picker baseline at after-field-input, while the runtime marker says persist_egui_memory=false and persist_window=true. The exact observed failure is recorded without assigning an unproven cause. Current batch snapshot: 6/7 workflows terminal; 17 jobs passed, 1 failed, and 2 active; 14 artifact records visible. Keep origin/main fixed until the remaining jobs and all payloads are reconciled; no repair push is prepared or triggered yet.
+
+
+## R3.15 Windows round-trip report reconciled — 2026-10-16T17:11:30Z
+
+The Windows exact-SHA round-trip job completed successfully. Its report is 69918541 bytes, SHA-256 27c5df2d47de485b65ef045874994a8afe6ae89baf3a772d11e7cb56398a19a6, and records source SHA 146a13de133350ad398e5196ee1344dc343a1a72, run ID 38935182534, attempt 1, status passed, and unchanged Windows app-data through the picker-baseline checks. The Linux report remains failed at app.ron creation after field input. The macOS job is still active. Current batch: 6/7 workflows terminal; 18 passed jobs, 1 failed, 1 running; 15 artifact records visible. No second push or local executable validation occurred.
+
+
+## R3.15 exact-SHA CI terminal-failed and reconciled — 2026-10-16T17:47:47Z
+
+All seven required workflows and all 20 jobs are terminal on 146a13de133350ad398e5196ee1344dc343a1a72: six workflows and 19 jobs passed; the sole failure is Ubuntu vault round-trip job 117088775346. Windows/macOS round-trip passed. Linux report records app.ron creation after field input despite the egui-memory opt-out; see .agents/tasks/2026-10-07/evidence/r2.8.147-attempt-1-146a13de133350ad398e5196ee1344dc343a1a72.json.
+
+All 16 artifact metadata records are source-SHA verified. All 12 non-preview archive digests match GitHub API digests, and all 12 payload reports are hashed/reconciled. Four preview binaries remain intentionally undownloaded with metadata retained. Runtime results remain feasibility-only/Pending, loaded-plugin reports remain partial, and no compatibility status was promoted. R3.15 is terminal-failed/unachieved. Keep origin/main at 146a13de133350ad398e5196ee1344dc343a1a72; prepare one bounded repair milestone locally and push it once only after implementation and whole-diff review. No local executable validation was run.
+
+
+## R3.15 Linux persistence cause narrowed by report inspection — 2026-10-16T17:49:00Z
+
+The Linux round-trip report’s final app.ron inspection passed with the exact expected path and records `window_section_present=true`, `egui_section_present=false`, and no forbidden-path leak. The report also confirms `persist_egui_memory=false; persist_window=true`; the 181-byte app.ron was absent at the input baseline, appeared at after-field-input, and retained the same hash after process termination. This is consistent with window persistence creating the window-only file, while egui memory remained disabled. The strict full-tree assertion remains valid; no app-data allowlist or baseline shift is warranted. The next bounded repair should use the existing full eframe persistence opt-out for only the normal Linux Canvas edit child, preserving other profiles and all vault/input/save gates. This interpretation is marked as inference based on the report, not an independently observed writer event. No source edits, executable checks, or push occurred.
+
+
+## R3.16 repair plan drafted — 2026-10-16T17:50:57Z
+
+R3.15 is terminal-failed and all evidence is reconciled. The Linux report’s passing final app.ron inspection shows a window-only file (window section present, egui section absent) under persist_window=true; the new file causes the strict baseline equality failure. Drafted .agents/tasks/2026-10-07/evidence/r2.8.148-r3-16-linux-canvas-full-eframe-persistence-isolation-plan.json to use the already-supported full eframe persistence opt-out only for the normal Linux Canvas edit child. The default-persistence warm-ups, expected-abort child, Windows/macOS children, strict full-tree gate, and all existing vault/input/save checks remain unchanged. origin/main was rechecked at 146a13de133350ad398e5196ee1344dc343a1a72. The R3.16 plan awaits two independent read-only reviews; no implementation change or push has occurred.
+
+
+## R3.16 plan revision 2 addresses independent review findings — 2026-10-16T17:53:19Z
+
+Both independent plan reviewers found that the existing harness already permits the full eframe opt-out for the normal Windows Canvas child and the Linux expected-abort canary, and that launchLogged requires its explicit allow flag. Revised the plan to add authorization only for the normal Linux child while preserving those existing uses, and to require the full-policy runtime marker before Linux window focus and input. Updated requirements.json C07.4 evidence paths and blocker with the terminal R3.15 attempt and R3.16 plan while keeping C07.4 pending and Rust parity unclaimed. Added structured trigger evidence with the exact SHA, failed job, artifact, report hash, app.ron facts, and inference caveat. Plan revision 2 awaits two fresh independent reviews; implementation has not started. No executable validation, commit, or push occurred; origin/main remains at 146a13de133350ad398e5196ee1344dc343a1a72.
+
+
+## R3.16 plan revision 2 approved; implementation started — 2026-10-16T17:55:27Z
+
+Both independent reviewers approved plan revision 2. The source review confirmed that existing full eframe opt-outs for the normal Windows child and Linux expected-abort canary stay unchanged, normal Linux gets explicit launchLogged authorization, and the full-policy runtime marker must be checked before Linux window focus and input. The tracker review confirmed C07.4 points to the reconciled R3.15 attempt and R3.16 plan while remaining pending with no parity claim. Implementing the bounded harness and tracker change locally; whole-milestone review and one push are still required. No local executable validation, commit, or push occurred.
+
+
+## R3.16 bounded harness implementation completed locally — 2026-10-16T17:55:27Z
+
+Changed only the normal Linux Canvas edit child to set OPENOBSIDIAN_CI_CANVAS_DISABLE_EFRAME_PERSISTENCE=1 and explicitly allow the full opt-out in launchLogged. The existing normal Windows and Linux expected-abort opt-outs remain intact. Updated the Linux report profile to require both persist_egui_memory=false and persist_window=false, and moved its exact startup-marker check before xdotool windowfocus. C07.4 remains pending with Rust parity unclaimed. Manually reviewed the focused source diff; no local tests, builds, formatters, linters, validators, runtime probes, or launches were run. Implementation and tracker changes remain local pending two independent whole-milestone reviews; no commit or push occurred.
+
+
+## R3.16 implementation and tracker sync complete; whole-milestone review pending — 2026-10-16T17:56:33Z
+
+Completed the approved R3.16 source and C07.4 tracker changes. The normal Linux child now opts out of both eframe persistence channels, records the exact full-policy runtime marker and checks it before window focus; Windows and expected-abort opt-out scopes remain unchanged, and the strict app-data equality gate is intact. Updated the plan, state, and requirement blocker to reflect completed local work. This is not yet marked implementation-complete because the two independent whole-milestone reviews have not finished. No executable validation, commit, or push occurred; origin/main remains at 146a13de133350ad398e5196ee1344dc343a1a72.
+
+
+## R3.16 whole-milestone review found stale phase pointers — 2026-10-16T17:59:50Z
+
+A whole-milestone reviewer found duplicate active state fields that still described R3.15 as ready to push against its R3.14 base, plus a planned C07.4 milestone that described R3.15 as a future repair. Corrected the R3 phase and adjacent phase-level status/next-action/evidence/report-hash fields to terminal R3.15 and current R3.16; updated the downstream C07.4 and deferred C09.2 dependency descriptions. R3.16 implementation remains local and not marked implementation-complete; fresh independent whole-milestone reviews are required after these state changes. No executable validation, commit, or push occurred.
+
+
+## R3.16 whole-milestone review approved — 2026-10-16T18:01:55Z
+
+Two independent reviewers approved the corrected complete R3.16 source and tracker diff. The reviews confirmed the Linux-only added opt-out, pre-focus marker check, strict app-data equality, unchanged Windows/expected-abort opt-outs, exact R3.15 predecessor evidence, C07.4 pending status, and GitHub Actions-only milestone cadence. A stale phase R3 and downstream C07.4/C09.2 dependency metadata was corrected and re-reviewed. The R3.16 milestone is implementation-complete locally and awaits a fresh origin/main recheck before its single push. No local executable validation was run.

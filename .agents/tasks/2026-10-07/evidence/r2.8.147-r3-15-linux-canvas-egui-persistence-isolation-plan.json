@@ -4,32 +4,29 @@
   "id": "R2.8.147-R3.15-LINUX-CANVAS-EGUI-PERSISTENCE-ISOLATION",
   "name": "R3.15 Linux Canvas egui persistence isolation",
   "created_at": "2026-10-16T16:32:00Z",
-  "status": "implementation complete locally; whole-milestone review approved; ready for one push",
+  "status": "terminal CI failure; R3.15 unachieved; all workflows/jobs terminal and evidence reconciled",
   "planning_base_sha": "67f5e6c1bedbcfc0fc645a5652a1a23419750ab3",
   "starting_sha": "67f5e6c1bedbcfc0fc645a5652a1a23419750ab3",
   "origin_main_sha_at_planning": "67f5e6c1bedbcfc0fc645a5652a1a23419750ab3",
   "objective": "Repair the Linux Canvas text-edit round-trip app-data failure by applying the existing egui-memory-only persistence opt-out to the normal Linux Canvas edit child, while retaining window persistence and every strict app-data, vault, field-readback, and no-save gate. The cause of app.ron creation is not proven; this is a bounded policy experiment, not a root-cause claim.",
   "trigger_evidence": {
-    "milestone": "R2.8.146-R3.14-C07.4-LINUX-ID-OCR-BORDER-REPAIR",
-    "implementation_sha": "67f5e6c1bedbcfc0fc645a5652a1a23419750ab3",
-    "evidence": "evidence/r2.8.146-attempt-1-67f5e6c.json",
-    "linux_artifact_id": 12055224607,
-    "linux_job_id": 117048213425,
-    "linux_report_sha256": "ecf425b5a17d8242c45bfcf842af57d2a5b36773f7782aba5aa21541b253672f",
-    "failure_stage": "after-field-input",
-    "app_data_delta": {
-      "path": "data/openobsidian/app.ron",
-      "bytes": 2825,
-      "sha256": "918f9c6c3dc4b2438af2c53e8585a8064dd01d7909ccb99f919709a284c06106"
-    },
-    "passed_before_failure": [
-      "exact Canvas path readback",
-      "exact Canvas ID readback",
-      "vault no-write checks"
+    "pushed_once": true,
+    "submitted_sha": "146a13de133350ad398e5196ee1344dc343a1a72",
+    "origin_main_sha_after_push": "146a13de133350ad398e5196ee1344dc343a1a72",
+    "origin_main_sha_verified_at": "2026-10-16T17:47:47Z",
+    "first_workflow_run_created_at": "2026-10-16T16:51:23Z",
+    "workflow_run_ids": [
+      38935182543,
+      38935182525,
+      38935182534,
+      38935182650,
+      38935182526,
+      38935182593,
+      38935182656
     ],
-    "save_attempted": false,
-    "cause": "unproven; the report does not identify egui-memory persistence vs window persistence or delayed eframe save",
-    "comparison_evidence": "macOS at the same submitted SHA passed with egui memory persistence disabled, window persistence retained, and strict full app-data equality."
+    "attempt_evidence": ".agents/tasks/2026-10-07/evidence/r2.8.147-attempt-1-146a13de133350ad398e5196ee1344dc343a1a72.json",
+    "terminal_status": "terminal_failed",
+    "milestone_achieved": false
   },
   "in_scope": [
     "Only the harness normal Linux Canvas text-edit child receives OPENOBSIDIAN_CI_CANVAS_DISABLE_EGUI_MEMORY_PERSISTENCE=1.",
@@ -102,10 +99,10 @@
   "implementation_review_status": "approved by two independent whole-milestone reviewers",
   "implementation_complete": true,
   "local_executable_validation": false,
-  "pushed_once": false,
+  "pushed_once": true,
   "milestone_achieved": false,
   "plan_revision": 7,
-  "updated_at": "2026-10-16T16:49:46Z",
+  "updated_at": "2026-10-16T17:47:47Z",
   "attempt_evidence_path_template": ".agents/tasks/2026-10-07/evidence/r2.8.147-attempt-1-<submitted-sha>.json; replace placeholder with the full exact submitted SHA before recording the CI result.",
   "pre_push_gate": [
     "R3.14 exact-SHA CI is terminal and all required workflow/job/artifact/report evidence is reconciled; no prior CI batch is active.",
@@ -203,5 +200,36 @@
   "terminal_predecessor_evidence_paths": [
     ".agents/tasks/2026-10-07/evidence/r2.8.146-attempt-1-67f5e6c.json",
     ".agents/tasks/2026-10-07/evidence/r2.8.146-r3-14-linux-id-ocr-border-repair-plan.json"
-  ]
+  ],
+  "submitted_sha": "146a13de133350ad398e5196ee1344dc343a1a72",
+  "implementation_sha": "146a13de133350ad398e5196ee1344dc343a1a72",
+  "ci_attempt": {
+    "attempt": 1,
+    "evidence": ".agents/tasks/2026-10-07/evidence/r2.8.147-attempt-1-146a13de133350ad398e5196ee1344dc343a1a72.json",
+    "submitted_sha": "146a13de133350ad398e5196ee1344dc343a1a72",
+    "status": "terminal_failed",
+    "workflow_counts": {
+      "observed": 7,
+      "terminal": 7,
+      "passed": 6,
+      "failed": 1,
+      "cancelled": 0,
+      "queued": 0,
+      "in_progress": 0
+    },
+    "job_counts": {
+      "observed": 20,
+      "terminal": 20,
+      "passed": 19,
+      "failed": 1,
+      "cancelled": 0,
+      "queued": 0,
+      "in_progress": 0
+    },
+    "artifact_inventory_count": 16,
+    "artifact_metadata_reconciled": true,
+    "artifacts_reconciled": true,
+    "roundtrip_report_payloads_reconciled": true,
+    "updated_at": "2026-10-16T17:47:47Z"
+  }
 }
