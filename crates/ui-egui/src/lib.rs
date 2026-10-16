@@ -45,6 +45,96 @@ const BASES_TRUNCATION_MARKER: &str = "… [truncated]";
 const MAX_TRANSCLUSION_PREVIEW_BYTES: usize = MAX_NOTE_SOURCE_PREVIEW_BYTES;
 const VAULT_RECONCILIATION_INTERVAL: Duration = Duration::from_secs(60);
 static CI_CANVAS_FOCUS_SNAPSHOT_START: OnceLock<Instant> = OnceLock::new();
+
+fn ci_canvas_focus_modifiers_json(modifiers: eframe::egui::Modifiers) -> String {
+    format!(
+        "{{\"alt\":{},\"ctrl\":{},\"shift\":{},\"mac_cmd\":{},\"command\":{}}}",
+        modifiers.alt, modifiers.ctrl, modifiers.shift, modifiers.mac_cmd, modifiers.command,
+    )
+}
+
+fn ci_canvas_focus_pointer_button_name(button: eframe::egui::PointerButton) -> &'static str {
+    match button {
+        eframe::egui::PointerButton::Primary => "primary",
+        eframe::egui::PointerButton::Secondary => "secondary",
+        eframe::egui::PointerButton::Middle => "middle",
+        eframe::egui::PointerButton::Extra1 => "extra1",
+        eframe::egui::PointerButton::Extra2 => "extra2",
+    }
+}
+
+fn ci_canvas_focus_raw_event_record(
+    event_index: usize,
+    event: &eframe::egui::Event,
+) -> String {
+    use eframe::egui::Event;
+
+    match event {
+        Event::PointerButton {
+            pos,
+            button,
+            pressed,
+            modifiers,
+        } => format!(
+            "{{\"event_index\":{event_index},\"kind\":\"pointer_button\",\"button\":\"{}\",\"pressed\":{pressed},\"position\":[\"{:?}\",\"{:?}\"],\"modifiers\":{}}}",
+            ci_canvas_focus_pointer_button_name(*button),
+            pos.x,
+            pos.y,
+            ci_canvas_focus_modifiers_json(*modifiers),
+        ),
+        Event::PointerMoved(pos) => format!(
+            "{{\"event_index\":{event_index},\"kind\":\"pointer_moved\",\"position\":[\"{:?}\",\"{:?}\"]}}",
+            pos.x, pos.y,
+        ),
+        Event::WindowFocused(focused) => format!(
+            "{{\"event_index\":{event_index},\"kind\":\"window_focused\",\"focused\":{focused}}}"
+        ),
+        Event::ModifiersChanged(modifiers) => format!(
+            "{{\"event_index\":{event_index},\"kind\":\"modifiers_changed\",\"modifiers\":{}}}",
+            ci_canvas_focus_modifiers_json(*modifiers),
+        ),
+        Event::Key {
+            pressed,
+            repeat,
+            modifiers,
+            ..
+        } => format!(
+            "{{\"event_index\":{event_index},\"kind\":\"key\",\"pressed\":{pressed},\"repeat\":{repeat},\"modifiers\":{}}}",
+            ci_canvas_focus_modifiers_json(*modifiers),
+        ),
+        Event::MouseMoved(delta) => format!(
+            "{{\"event_index\":{event_index},\"kind\":\"mouse_moved\",\"delta\":[\"{:?}\",\"{:?}\"]}}",
+            delta.x, delta.y,
+        ),
+        Event::Touch { pos, .. } => format!(
+            "{{\"event_index\":{event_index},\"kind\":\"touch\",\"position\":[\"{:?}\",\"{:?}\"]}}",
+            pos.x, pos.y,
+        ),
+        Event::MouseWheel { modifiers, .. } => format!(
+            "{{\"event_index\":{event_index},\"kind\":\"mouse_wheel\",\"modifiers\":{}}}",
+            ci_canvas_focus_modifiers_json(*modifiers),
+        ),
+        Event::PointerGone => {
+            format!("{{\"event_index\":{event_index},\"kind\":\"pointer_gone\"}}")
+        }
+        Event::Zoom(_) => format!("{{\"event_index\":{event_index},\"kind\":\"zoom\"}}"),
+        Event::Rotate(_) => {
+            format!("{{\"event_index\":{event_index},\"kind\":\"rotate\"}}")
+        }
+        Event::Ime(_) => format!("{{\"event_index\":{event_index},\"kind\":\"ime\"}}"),
+        Event::Text(_) => format!("{{\"event_index\":{event_index},\"kind\":\"text\"}}"),
+        Event::Paste(_) => format!("{{\"event_index\":{event_index},\"kind\":\"paste\"}}"),
+        Event::Copy => format!("{{\"event_index\":{event_index},\"kind\":\"copy\"}}"),
+        Event::Cut => format!("{{\"event_index\":{event_index},\"kind\":\"cut\"}}"),
+        Event::AccessKitActionRequest(_) => {
+            format!("{{\"event_index\":{event_index},\"kind\":\"accesskit_action\"}}")
+        }
+        Event::Screenshot { .. } => {
+            format!("{{\"event_index\":{event_index},\"kind\":\"screenshot\"}}")
+        }
+    }
+}
+
 #[cfg(test)]
 const C03_RENAME_FIXTURE: &str = include_str!("../../../fixtures/rename-plan.json");
 #[cfg(test)]
@@ -2129,16 +2219,19 @@ impl OpenObsidianApp {
                 .labelled_by(node_label.id);
             inputs_changed |= node_input.changed();
             let frame_nr = ui.ctx().cumulative_frame_nr();
+            let pixels_per_point = ui.ctx().pixels_per_point();
+            let pixels_per_point_bits = pixels_per_point.to_bits();
             let pointer = ui.input(|input| input.pointer.hover_pos());
             let pointer_button_primary = ui.input(|input| {
                 input
                     .pointer
                     .button_down(eframe::egui::PointerButton::Primary)
             });
+            let current_modifiers = ui.input(|input| input.modifiers);
             let focus_trace_enabled = std::env::var_os("OPENOBSIDIAN_CI_CANVAS_FOCUS_TRACE").is_some();
             let diagnostics_enabled = std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some();
             let has_raw_events = ui.input(|input| !input.raw.events.is_empty());
-            let (tab_press_count, tab_release_count, primary_pointer_button_event_count, pointer_move_event_count, other_event_count, raw_event_kinds) =
+            let (tab_press_count, tab_release_count, primary_pointer_button_event_count, pointer_move_event_count, other_event_count, raw_event_kinds, raw_event_records) =
                 if focus_trace_enabled || (diagnostics_enabled && has_raw_events) {
                     ui.input(|input| {
                         let mut tab_press_count = 0;
@@ -2147,7 +2240,12 @@ impl OpenObsidianApp {
                         let mut pointer_move_event_count = 0;
                         let mut other_event_count = 0;
                         let mut raw_event_kinds = Vec::new();
-                        for event in &input.raw.events {
+                        let mut raw_event_records = Vec::new();
+                        for (event_index, event) in input.raw.events.iter().enumerate() {
+                            if focus_trace_enabled {
+                                raw_event_records
+                                    .push(ci_canvas_focus_raw_event_record(event_index, event));
+                            }
                             match event {
                                 eframe::egui::Event::Key {
                                     key: eframe::egui::Key::Tab,
@@ -2225,12 +2323,15 @@ impl OpenObsidianApp {
                             pointer_move_event_count,
                             other_event_count,
                             raw_event_kinds,
+                            raw_event_records,
                         )
                     })
                 } else {
-                    (0, 0, 0, 0, 0, Vec::new())
+                    (0, 0, 0, 0, 0, Vec::new(), Vec::new())
                 };
             if focus_trace_enabled {
+                let current_modifiers_json = ci_canvas_focus_modifiers_json(current_modifiers);
+                let raw_events_json = raw_event_records.join(",");
                 let path_value_sha256 = format!(
                     "{:x}",
                     Sha256::digest(self.canvas_text_edit_path.as_bytes())
@@ -2240,14 +2341,13 @@ impl OpenObsidianApp {
                     Sha256::digest(self.canvas_text_edit_node_id.as_bytes())
                 );
                 eprintln!(
-                    "OpenObsidian CI canvas-text-edit-focus-trace: frame_nr={frame_nr}, path_focused={}, id_focused={}, path_enabled={target_fields_enabled}, id_enabled={target_fields_enabled}, path_response_id={:?}, id_response_id={:?}, path_rect={:?}, id_rect={:?}, pixels_per_point={:.2}, pointer={pointer:?}, pointer_button_primary={pointer_button_primary}, raw_event_kinds={raw_event_kinds:?}, tab_press_count={tab_press_count}, tab_release_count={tab_release_count}, primary_pointer_button_event_count={primary_pointer_button_event_count}, pointer_move_event_count={pointer_move_event_count}, other_event_count={other_event_count}, path_empty={}, path_value_bytes={}, path_value_sha256={path_value_sha256}, id_empty={}, id_value_bytes={}, id_value_sha256={node_value_sha256}",
+                    "OpenObsidian CI canvas-text-edit-focus-trace: frame_nr={frame_nr}, path_focused={}, id_focused={}, path_enabled={target_fields_enabled}, id_enabled={target_fields_enabled}, path_response_id={:?}, id_response_id={:?}, path_rect={:?}, id_rect={:?}, pixels_per_point={pixels_per_point:.2}, pixels_per_point_bits=0x{pixels_per_point_bits:08x}, pointer={pointer:?}, pointer_button_primary={pointer_button_primary}, current_modifiers={current_modifiers_json}, raw_events=[{raw_events_json}], raw_event_kinds={raw_event_kinds:?}, tab_press_count={tab_press_count}, tab_release_count={tab_release_count}, primary_pointer_button_event_count={primary_pointer_button_event_count}, pointer_move_event_count={pointer_move_event_count}, other_event_count={other_event_count}, path_empty={}, path_value_bytes={}, path_value_sha256={path_value_sha256}, id_empty={}, id_value_bytes={}, id_value_sha256={node_value_sha256}",
                     path_input.has_focus(),
                     node_input.has_focus(),
                     path_input.id,
                     node_input.id,
                     path_input.rect,
                     node_input.rect,
-                    ui.ctx().pixels_per_point(),
                     self.canvas_text_edit_path.is_empty(),
                     self.canvas_text_edit_path.len(),
                     self.canvas_text_edit_node_id.is_empty(),
@@ -2283,10 +2383,9 @@ impl OpenObsidianApp {
                 let path_arrow_right_key_event = path_input.has_focus() && arrow_right_pressed;
                 let node_arrow_right_key_event = node_input.has_focus() && arrow_right_pressed;
                 eprintln!(
-                    "OpenObsidian CI canvas-text-edit-field: field=path enabled={target_fields_enabled}, frame_nr={frame_nr}, response_id={:?}, rect={:?}, pixels_per_point={:.2}, pointer={pointer:?}, pointer_button_primary={pointer_button_primary}, arrow_right_key_event={path_arrow_right_key_event}, tab_key_event={tab_key_event}, hovered={}, clicked={}, focused={}, empty={}, value_bytes={}, value_sha256={path_value_sha256}",
+                    "OpenObsidian CI canvas-text-edit-field: field=path enabled={target_fields_enabled}, frame_nr={frame_nr}, response_id={:?}, rect={:?}, pixels_per_point={pixels_per_point:.2}, pixels_per_point_bits=0x{pixels_per_point_bits:08x}, pointer={pointer:?}, pointer_button_primary={pointer_button_primary}, arrow_right_key_event={path_arrow_right_key_event}, tab_key_event={tab_key_event}, hovered={}, clicked={}, focused={}, empty={}, value_bytes={}, value_sha256={path_value_sha256}",
                     path_input.id,
                     path_input.rect,
-                    ui.ctx().pixels_per_point(),
                     path_input.hovered(),
                     path_input.clicked(),
                     path_input.has_focus(),
@@ -2294,10 +2393,9 @@ impl OpenObsidianApp {
                     self.canvas_text_edit_path.len(),
                 );
                 eprintln!(
-                    "OpenObsidian CI canvas-text-edit-field: field=id enabled={target_fields_enabled}, frame_nr={frame_nr}, response_id={:?}, rect={:?}, pixels_per_point={:.2}, pointer={pointer:?}, pointer_button_primary={pointer_button_primary}, arrow_right_key_event={node_arrow_right_key_event}, tab_key_event={tab_key_event}, hovered={}, clicked={}, focused={}, empty={}, value_bytes={}, value_sha256={node_value_sha256}",
+                    "OpenObsidian CI canvas-text-edit-field: field=id enabled={target_fields_enabled}, frame_nr={frame_nr}, response_id={:?}, rect={:?}, pixels_per_point={pixels_per_point:.2}, pixels_per_point_bits=0x{pixels_per_point_bits:08x}, pointer={pointer:?}, pointer_button_primary={pointer_button_primary}, arrow_right_key_event={node_arrow_right_key_event}, tab_key_event={tab_key_event}, hovered={}, clicked={}, focused={}, empty={}, value_bytes={}, value_sha256={node_value_sha256}",
                     node_input.id,
                     node_input.rect,
-                    ui.ctx().pixels_per_point(),
                     node_input.hovered(),
                     node_input.clicked(),
                     node_input.has_focus(),
@@ -2332,7 +2430,7 @@ impl OpenObsidianApp {
                 });
                 let frame_nr = ui.ctx().cumulative_frame_nr();
                 eprintln!(
-                    "OpenObsidian CI canvas-text-edit-focus-snapshot: request_id={request_id}, frame_nr={frame_nr}, monotonic_ms={monotonic_ms}, raw_events=[], pointer_button_primary={pointer_button_primary}, pointer={pointer:?}"
+                    "OpenObsidian CI canvas-text-edit-focus-snapshot: request_id={request_id}, frame_nr={frame_nr}, monotonic_ms={monotonic_ms}, raw_events=[], pixels_per_point={pixels_per_point:.2}, pixels_per_point_bits=0x{pixels_per_point_bits:08x}, pointer_button_primary={pointer_button_primary}, pointer={pointer:?}"
                 );
                 let path_value_sha256 = format!(
                     "{:x}",
@@ -2343,10 +2441,9 @@ impl OpenObsidianApp {
                     Sha256::digest(self.canvas_text_edit_node_id.as_bytes())
                 );
                 eprintln!(
-                    "OpenObsidian CI canvas-text-edit-field: request_id={request_id}, field=path enabled={target_fields_enabled}, frame_nr={frame_nr}, response_id={:?}, rect={:?}, pixels_per_point={:.2}, pointer={pointer:?}, pointer_button_primary={pointer_button_primary}, arrow_right_key_event=false, tab_key_event=false, hovered={}, clicked={}, focused={}, empty={}, value_bytes={}, value_sha256={path_value_sha256}",
+                    "OpenObsidian CI canvas-text-edit-field: request_id={request_id}, field=path enabled={target_fields_enabled}, frame_nr={frame_nr}, response_id={:?}, rect={:?}, pixels_per_point={pixels_per_point:.2}, pixels_per_point_bits=0x{pixels_per_point_bits:08x}, pointer={pointer:?}, pointer_button_primary={pointer_button_primary}, arrow_right_key_event=false, tab_key_event=false, hovered={}, clicked={}, focused={}, empty={}, value_bytes={}, value_sha256={path_value_sha256}",
                     path_input.id,
                     path_input.rect,
-                    ui.ctx().pixels_per_point(),
                     path_input.hovered(),
                     path_input.clicked(),
                     path_input.has_focus(),
@@ -2354,10 +2451,9 @@ impl OpenObsidianApp {
                     self.canvas_text_edit_path.len(),
                 );
                 eprintln!(
-                    "OpenObsidian CI canvas-text-edit-field: request_id={request_id}, field=id enabled={target_fields_enabled}, frame_nr={frame_nr}, response_id={:?}, rect={:?}, pixels_per_point={:.2}, pointer={pointer:?}, pointer_button_primary={pointer_button_primary}, arrow_right_key_event=false, tab_key_event=false, hovered={}, clicked={}, focused={}, empty={}, value_bytes={}, value_sha256={node_value_sha256}",
+                    "OpenObsidian CI canvas-text-edit-field: request_id={request_id}, field=id enabled={target_fields_enabled}, frame_nr={frame_nr}, response_id={:?}, rect={:?}, pixels_per_point={pixels_per_point:.2}, pixels_per_point_bits=0x{pixels_per_point_bits:08x}, pointer={pointer:?}, pointer_button_primary={pointer_button_primary}, arrow_right_key_event=false, tab_key_event=false, hovered={}, clicked={}, focused={}, empty={}, value_bytes={}, value_sha256={node_value_sha256}",
                     node_input.id,
                     node_input.rect,
-                    ui.ctx().pixels_per_point(),
                     node_input.hovered(),
                     node_input.clicked(),
                     node_input.has_focus(),

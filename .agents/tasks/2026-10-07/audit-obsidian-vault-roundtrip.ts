@@ -121,6 +121,9 @@ type CanvasInputSafetyTracker = {
   diagnosticMotionStages: Array<Record<string, unknown>>;
   motionDispatchAttempts: number;
   pasteDispatchAttempts: number;
+  targetCoordinateClickDispatchAttempts: number;
+  stationaryRecoveryClickDispatchAttempts: number;
+  initialCoordinateClickTrace: Record<string, unknown> | null;
   saveAttempted: boolean;
   clipboardCleanup: Record<string, unknown> | null;
   requestMarkerCleanup: Record<string, unknown> | null;
@@ -1271,6 +1274,74 @@ async function readOpenObsidianRefreshDiagnostics(
   return diagnostics;
 }
 
+async function openObsidianLogLineCount(logPath: string): Promise<number> {
+  const log = await readFile(logPath, "utf8").catch(() => "");
+  const lines = log.split(/\r?\n/);
+  return lines.at(-1) === "" ? Math.max(0, lines.length - 1) : lines.length;
+}
+
+type RustF32Reading = {raw: string; value: number};
+
+const RUST_DEBUG_F32_PATTERN = /^[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?$/;
+
+function readRustDebugF32(raw: unknown): RustF32Reading | null {
+  if (typeof raw !== "string" || !RUST_DEBUG_F32_PATTERN.test(raw)) return null;
+  const asNumber = Number(raw);
+  const value = Math.fround(asNumber);
+  if (!Number.isFinite(asNumber) || !Number.isFinite(value)) return null;
+  return {raw, value};
+}
+
+function readRustF32Bits(raw: unknown): {raw: string; value: number} | null {
+  if (typeof raw !== "string" || !/^0x[0-9a-f]{8}$/.test(raw)) return null;
+  const view = new DataView(new ArrayBuffer(4));
+  view.setUint32(0, Number.parseInt(raw.slice(2), 16), false);
+  const value = view.getFloat32(0, false);
+  if (!Number.isFinite(value) || !(value > 0) || f32BitsHex(value) !== raw) return null;
+  return {raw, value};
+}
+
+function f32BitsHex(value: number): string {
+  const view = new DataView(new ArrayBuffer(4));
+  view.setFloat32(0, value, false);
+  return `0x${view.getUint32(0, false).toString(16).padStart(8, "0")}`;
+}
+
+type CanvasTraceModifiers = {
+  alt: boolean;
+  ctrl: boolean;
+  shift: boolean;
+  mac_cmd: boolean;
+  command: boolean;
+};
+
+function readCanvasTraceModifiers(raw: unknown): CanvasTraceModifiers | null {
+  if (raw === null || typeof raw !== "object" || Array.isArray(raw)) return null;
+  const value = raw as Record<string, unknown>;
+  const names = ["alt", "ctrl", "shift", "mac_cmd", "command"] as const;
+  if (Object.keys(value).sort().join(",") !== [...names].sort().join(",")
+    || names.some((name) => typeof value[name] !== "boolean")) return null;
+  return {
+    alt: value.alt as boolean,
+    ctrl: value.ctrl as boolean,
+    shift: value.shift as boolean,
+    mac_cmd: value.mac_cmd as boolean,
+    command: value.command as boolean,
+  };
+}
+
+function canvasTraceModifiersClear(modifiers: CanvasTraceModifiers): boolean {
+  return !modifiers.alt && !modifiers.ctrl && !modifiers.shift && !modifiers.mac_cmd && !modifiers.command;
+}
+
+function readCanvasTraceCoordinatePair(raw: unknown): {raw: [string, string]; value: {x: number; y: number}} | null {
+  if (!Array.isArray(raw) || raw.length !== 2) return null;
+  const x = readRustDebugF32(raw[0]);
+  const y = readRustDebugF32(raw[1]);
+  if (!x || !y) return null;
+  return {raw: [x.raw, y.raw], value: {x: x.value, y: y.value}};
+}
+
 async function readCanvasTextEditFieldDiagnostic(
   logPath: string,
   field: "path" | "id",
@@ -1293,10 +1364,12 @@ async function readCanvasTextEditFieldDiagnostic(
     if (requestId !== undefined && observedRequestId !== requestId) continue;
     if (onlyFrameNr !== undefined && Number(frameNr) !== onlyFrameNr) continue;
     const responseId = value.match(/\bresponse_id=(.*?),\s*rect=/)?.[1]?.trim();
-    const geometry = value.match(/\brect=\[\[\s*(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s*\]\s*-\s*\[\s*(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s*\]\],\s*pixels_per_point=(\d+(?:\.\d+)?)/);
-    const pointerMatch = value.match(/\bpointer=Some\(\[\s*(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s*\]\)/);
+    const f32Token = "[-+]?(?:\\d+(?:\\.\\d*)?|\\.\\d+)(?:[eE][-+]?\\d+)?";
+    const geometry = value.match(new RegExp(`\\brect=\\[\\[\\s*(${f32Token})\\s+(${f32Token})\\s*\\]\\s*-\\s*\\[\\s*(${f32Token})\\s+(${f32Token})\\s*\\]\\],\\s*pixels_per_point=(${f32Token})`));
+    const pointerMatch = value.match(new RegExp(`\\bpointer=Some\\(\\[\\s*(${f32Token})\\s+(${f32Token})\\s*\\]\\)`));
     const pointerIsNone = /\bpointer=None\b/.test(value);
-    if (!frameNr || !responseId || !geometry || (!pointerMatch && !pointerIsNone)) return null;
+    const pixelsPerPointBits = value.match(/\bpixels_per_point_bits=(0x[0-9a-f]{8})\b/)?.[1] ?? null;
+    if (!frameNr || !responseId || !geometry || !pixelsPerPointBits || (!pointerMatch && !pointerIsNone)) return null;
     const clicked = value.match(/\bclicked=(true|false)/)?.[1];
     const focused = value.match(/\bfocused=(true|false)/)?.[1];
     const hovered = value.match(/\bhovered=(true|false)/)?.[1];
@@ -1308,14 +1381,25 @@ async function readCanvasTextEditFieldDiagnostic(
     const valueSha256 = value.match(/\bvalue_sha256=([a-f0-9]{64})/)?.[1];
     if (!enabled || !clicked || !focused || !arrowRightKeyEvent || !tabKeyEvent
       || !pointerButtonPrimary || empty === undefined || !valueBytes || !valueSha256) return null;
+    const rawRect = [geometry[1], geometry[2], geometry[3], geometry[4]] as [string, string, string, string];
+    const parsedRect = rawRect.map(readRustDebugF32);
+    const rawPixelsPerPoint = geometry[5];
+    const legacyPixelsPerPoint = readRustDebugF32(rawPixelsPerPoint);
+    const decodedPixelsPerPoint = readRustF32Bits(pixelsPerPointBits);
+    const rawPointer = pointerMatch ? [pointerMatch[1], pointerMatch[2]] as [string, string] : null;
+    const parsedPointer = rawPointer?.map(readRustDebugF32) ?? null;
+    if (parsedRect.some((coordinate) => coordinate === null)
+      || !legacyPixelsPerPoint || !(legacyPixelsPerPoint.value > 0)
+      || !decodedPixelsPerPoint
+      || (parsedPointer && parsedPointer.some((coordinate) => coordinate === null))) return null;
     const rect = {
-      left: Number(geometry[1]),
-      top: Number(geometry[2]),
-      right: Number(geometry[3]),
-      bottom: Number(geometry[4]),
+      left: parsedRect[0]!.value,
+      top: parsedRect[1]!.value,
+      right: parsedRect[2]!.value,
+      bottom: parsedRect[3]!.value,
     };
-    const pixelsPerPoint = Number(geometry[5]);
-    if (!(pixelsPerPoint > 0 && rect.right > rect.left && rect.bottom > rect.top)) return null;
+    const pixelsPerPoint = decodedPixelsPerPoint.value;
+    if (!(rect.right > rect.left && rect.bottom > rect.top)) return null;
     observations.push({
       line: index,
       enabled: enabled === "true",
@@ -1323,10 +1407,14 @@ async function readCanvasTextEditFieldDiagnostic(
       requestId: observedRequestId,
       responseId,
       rect,
+      rawRect,
+      rawPixelsPerPoint,
+      pixelsPerPointBits,
       pixelsPerPoint,
       pointer: pointerMatch
-        ? {x: Number(pointerMatch[1]), y: Number(pointerMatch[2])}
+        ? {x: parsedPointer![0]!.value, y: parsedPointer![1]!.value}
         : null,
+      rawPointer,
       clicked: clicked === "true",
       focused: focused === "true",
       hovered: hovered === undefined ? null : hovered === "true",
@@ -1371,8 +1459,12 @@ type CanvasTextEditFieldObservation = {
   requestId: string | null;
   responseId: string;
   rect: {left: number; top: number; right: number; bottom: number};
+  rawRect: [string, string, string, string];
+  rawPixelsPerPoint: string;
+  pixelsPerPointBits: string;
   pixelsPerPoint: number;
   pointer: {x: number; y: number} | null;
+  rawPointer: [string, string] | null;
   clicked: boolean;
   focused: boolean;
   hovered: boolean | null;
@@ -1405,11 +1497,15 @@ type CanvasFocusSnapshot = {
   monotonic_ms: number;
   raw_events_empty: true;
   pointer_button_primary: boolean;
+  pixels_per_point_bits: string;
   pointer: {x: number; y: number} | null;
+  pointer_raw: [string, string] | null;
   fields: {
     path: NonNullable<Awaited<ReturnType<typeof readCanvasTextEditFieldDiagnostic>>>;
     id: NonNullable<Awaited<ReturnType<typeof readCanvasTextEditFieldDiagnostic>>>;
   };
+  trace: CanvasFocusTraceFrame;
+  trace_frames: CanvasFocusTraceFrame[];
   x11: ReturnType<typeof x11InteractionState>;
 };
 
@@ -1423,10 +1519,17 @@ type CanvasFocusTraceFrame = {
   pathResponseId: string;
   siblingResponseId: string;
   pathRect: {left: number; top: number; right: number; bottom: number};
+  pathRectRaw: [string, string, string, string];
   siblingRect: {left: number; top: number; right: number; bottom: number};
+  siblingRectRaw: [string, string, string, string];
+  rawPixelsPerPoint: string;
+  pixelsPerPointBits: string;
   pixelsPerPoint: number;
   pointer: {x: number; y: number} | null;
+  pointerRaw: [string, string] | null;
   pointerButtonPrimary: boolean;
+  currentModifiers: CanvasTraceModifiers;
+  rawEvents: CanvasTraceRawEvent[];
   rawEventKinds: string[];
   tabPressCount: number;
   tabReleaseCount: number;
@@ -1441,6 +1544,325 @@ type CanvasFocusTraceFrame = {
   siblingValueSha256: string;
 };
 
+type CanvasTraceRawEvent = {
+  eventIndex: number;
+  kind: string;
+  button?: string;
+  pressed?: boolean;
+  repeat?: boolean;
+  position?: {x: number; y: number};
+  rawPosition?: [string, string];
+  modifiers?: CanvasTraceModifiers;
+  focused?: boolean;
+  raw: Record<string, unknown>;
+};
+
+function canvasTraceFrameMatchesFieldPair(
+  frame: CanvasFocusTraceFrame | undefined,
+  target: CanvasTextEditFieldObservation | undefined,
+  sibling: CanvasTextEditFieldObservation | undefined,
+): boolean {
+  return Boolean(frame
+    && target
+    && sibling
+    && frame.frameNr === target.frameNr
+    && frame.frameNr === sibling.frameNr
+    && frame.pathFocused === target.focused
+    && frame.siblingFocused === sibling.focused
+    && frame.pathEnabled === target.enabled
+    && frame.siblingEnabled === sibling.enabled
+    && frame.pathResponseId === target.responseId
+    && frame.siblingResponseId === sibling.responseId
+    && isDeepStrictEqual(frame.pathRect, target.rect)
+    && isDeepStrictEqual(frame.pathRectRaw, target.rawRect)
+    && isDeepStrictEqual(frame.siblingRect, sibling.rect)
+    && isDeepStrictEqual(frame.siblingRectRaw, sibling.rawRect)
+    && frame.pixelsPerPointBits === target.pixelsPerPointBits
+    && frame.pixelsPerPointBits === sibling.pixelsPerPointBits
+    && frame.pixelsPerPoint === target.pixelsPerPoint
+    && frame.pixelsPerPoint === sibling.pixelsPerPoint
+    && isDeepStrictEqual(frame.pointer, target.pointer)
+    && isDeepStrictEqual(frame.pointer, sibling.pointer)
+    && isDeepStrictEqual(frame.pointerRaw, target.rawPointer)
+    && isDeepStrictEqual(frame.pointerRaw, sibling.rawPointer)
+    && frame.pointerButtonPrimary === target.pointerButtonPrimary
+    && frame.pointerButtonPrimary === sibling.pointerButtonPrimary
+    && frame.pathEmpty === target.empty
+    && frame.pathValueBytes === target.valueBytes
+    && frame.pathValueSha256 === target.valueSha256
+    && frame.siblingEmpty === sibling.empty
+    && frame.siblingValueBytes === sibling.valueBytes
+    && frame.siblingValueSha256 === sibling.valueSha256);
+}
+
+function canvasTraceFramesCoverRange(
+  frames: CanvasFocusTraceFrame[],
+  firstFrameNr: number,
+  lastFrameNr: number,
+): boolean {
+  return lastFrameNr >= firstFrameNr
+    && frames.length === lastFrameNr - firstFrameNr + 1
+    && frames.every((frame, index) => frame.frameNr === firstFrameNr + index)
+    && frames.every((frame, index) => index === 0 || frame.line > (frames[index - 1]?.line ?? -1));
+}
+
+function canvasTraceWithinPhysicalPixelTolerance(
+  observed: {x: number; y: number},
+  expected: {x: number; y: number},
+  pixelsPerPoint: number,
+): boolean {
+  return Math.abs(observed.x - expected.x) * pixelsPerPoint <= 1.5
+    && Math.abs(observed.y - expected.y) * pixelsPerPoint <= 1.5;
+}
+
+function canvasTraceRawEventSummaryMatches(frame: CanvasFocusTraceFrame): boolean {
+  if (frame.rawEvents.length !== frame.rawEventKinds.length) return false;
+  for (const [index, event] of frame.rawEvents.entries()) {
+    const summary = frame.rawEventKinds[index];
+    if (!summary) return false;
+    if (event.kind === "pointer_button") {
+      if (summary !== (event.button === "primary" ? "primary_pointer_button" : "other_pointer_button")) return false;
+    } else if (event.kind === "pointer_moved") {
+      if (summary !== "pointer_move") return false;
+    } else if (event.kind === "modifiers_changed") {
+      if (summary !== "modifiers_changed") return false;
+    } else if (event.kind === "key") {
+      if (summary === "other_key") continue;
+      const modified = event.modifiers !== undefined && !canvasTraceModifiersClear(event.modifiers);
+      const expected = event.pressed === true
+        ? event.repeat && modified ? "tab_press_repeat_modified"
+          : event.repeat ? "tab_press_repeat"
+            : modified ? "tab_press_modified"
+              : "tab_press"
+        : modified ? "tab_release_modified" : "tab_release";
+      if (summary !== expected) return false;
+    } else if (summary !== "other_event") {
+      return false;
+    }
+  }
+  const tabPressCount = frame.rawEventKinds.filter((kind) => kind.startsWith("tab_press")).length;
+  const tabReleaseCount = frame.rawEventKinds.filter((kind) => kind.startsWith("tab_release")).length;
+  const primaryButtonCount = frame.rawEvents.filter((event) => event.kind === "pointer_button" && event.button === "primary").length;
+  const pointerMoveCount = frame.rawEvents.filter((event) => event.kind === "pointer_moved").length;
+  const otherEventCount = frame.rawEventKinds.filter((kind) => kind === "other_key"
+    || kind === "other_pointer_button" || kind === "other_event").length;
+  return frame.tabPressCount === tabPressCount
+    && frame.tabReleaseCount === tabReleaseCount
+    && frame.primaryPointerButtonEventCount === primaryButtonCount
+    && frame.pointerMoveEventCount === pointerMoveCount
+    && frame.otherEventCount === otherEventCount;
+}
+
+function verifyCanvasInitialClickPreDispatchTrace(input: {
+  frames: CanvasFocusTraceFrame[];
+  prePositionFrame: number;
+  positioningStartFrame: number;
+  watermarkFrame: number;
+  targetPoint: {x: number; y: number};
+  focusCommandSucceeded: boolean;
+  targetWindowFocused: boolean;
+}): {
+  passed: boolean;
+  checks: Record<string, boolean>;
+  failures: string[];
+  observed_pointer_moves: CanvasTraceRawEvent[];
+  observed_positioning_destination_indices: number[];
+  neutral_positioning_move_coalesced: boolean;
+} {
+  const frames = input.frames;
+  const byFrame = new Map(frames.map((frame) => [frame.frameNr, frame]));
+  const pre = byFrame.get(input.prePositionFrame);
+  const positioningStart = byFrame.get(input.positioningStartFrame);
+  const watermark = byFrame.get(input.watermarkFrame);
+  const focusFrames = frames.filter((frame) => frame.frameNr > input.prePositionFrame
+    && frame.frameNr <= input.positioningStartFrame);
+  const positioningFrames = frames.filter((frame) => frame.frameNr >= input.positioningStartFrame
+    && frame.frameNr <= input.watermarkFrame);
+  const focusEvents = focusFrames.flatMap((frame) => frame.rawEvents);
+  const movementEvents = positioningFrames.flatMap((frame) => frame.rawEvents.map((event) => ({frame, event})));
+  const preDispatchGeometryStable = Boolean(pre && frames.every((frame) => frame.pathEnabled
+    && frame.siblingEnabled
+    && frame.pathResponseId === pre.pathResponseId
+    && frame.siblingResponseId === pre.siblingResponseId
+    && frame.pathResponseId !== frame.siblingResponseId
+    && isDeepStrictEqual(frame.pathRectRaw, pre.pathRectRaw)
+    && isDeepStrictEqual(frame.siblingRectRaw, pre.siblingRectRaw)
+    && frame.pixelsPerPointBits === pre.pixelsPerPointBits
+    && frame.pathFocused === pre.pathFocused
+    && frame.siblingFocused === pre.siblingFocused
+    && frame.pathEmpty === pre.pathEmpty
+    && frame.pathValueBytes === pre.pathValueBytes
+    && frame.pathValueSha256 === pre.pathValueSha256
+    && frame.siblingEmpty === pre.siblingEmpty
+    && frame.siblingValueBytes === pre.siblingValueBytes
+    && frame.siblingValueSha256 === pre.siblingValueSha256));
+  const focusEventAllowlist = focusEvents.every((event) => event.kind === "modifiers_changed"
+    ? event.modifiers !== undefined && canvasTraceModifiersClear(event.modifiers)
+    : event.kind === "window_focused" && event.focused === true);
+  const focusEventCount = focusEvents.filter((event) => event.kind === "window_focused").length;
+  const focusPointerStable = pre !== undefined && focusFrames.every((frame) => isDeepStrictEqual(frame.pointerRaw, pre.pointerRaw));
+  const positioningStartEventFree = positioningStart !== undefined
+    && positioningStart.rawEvents.length === 0
+    && positioningStart.rawEventKinds.length === 0;
+  let nextDestination = 0;
+  let targetMoveObserved = false;
+  let destinationOrderValid = input.targetPoint.x !== 5 || input.targetPoint.y !== 5;
+  const observedDestinationIndices: number[] = [];
+  for (const {frame, event} of movementEvents) {
+    if (event.kind === "modifiers_changed") {
+      if (!event.modifiers || !canvasTraceModifiersClear(event.modifiers)) destinationOrderValid = false;
+      continue;
+    }
+    if (event.kind !== "pointer_moved" || !event.position || nextDestination >= 2) {
+      destinationOrderValid = false;
+      continue;
+    }
+    const expectedDestinations = [
+      {x: 5 / frame.pixelsPerPoint, y: 5 / frame.pixelsPerPoint},
+      {x: input.targetPoint.x / frame.pixelsPerPoint, y: input.targetPoint.y / frame.pixelsPerPoint},
+    ];
+    let matchedIndex = -1;
+    for (let candidate = nextDestination; candidate < expectedDestinations.length; candidate += 1) {
+      const expected = expectedDestinations[candidate];
+      if (expected && canvasTraceWithinPhysicalPixelTolerance(event.position, expected, frame.pixelsPerPoint)) {
+        matchedIndex = candidate;
+        break;
+      }
+    }
+    if (matchedIndex < 0) {
+      destinationOrderValid = false;
+      continue;
+    }
+    if (matchedIndex === 1) targetMoveObserved = true;
+    observedDestinationIndices.push(matchedIndex);
+    nextDestination = matchedIndex + 1;
+  }
+  const currentModifiersClear = frames.every((frame) => canvasTraceModifiersClear(frame.currentModifiers));
+  const noButtonBeforeWatermark = frames.filter((frame) => frame.frameNr > input.prePositionFrame
+    && frame.frameNr <= input.watermarkFrame).every((frame) => frame.rawEvents.every((event) => event.kind !== "pointer_button"));
+  const watermarkTargetPoint = watermark ? {
+    x: input.targetPoint.x / watermark.pixelsPerPoint,
+    y: input.targetPoint.y / watermark.pixelsPerPoint,
+  } : null;
+  const watermarkPointerMatchesTarget = Boolean(watermark?.pointer && watermarkTargetPoint
+    && canvasTraceWithinPhysicalPixelTolerance(watermark.pointer, watermarkTargetPoint, watermark.pixelsPerPoint));
+  const stableScale = preDispatchGeometryStable && Boolean(pre && positioningStart && watermark
+    && pre.pixelsPerPointBits === positioningStart.pixelsPerPointBits
+    && positioningStart.pixelsPerPointBits === watermark.pixelsPerPointBits);
+  const checks: Record<string, boolean> = {
+    complete_unique_consecutive_trace: canvasTraceFramesCoverRange(frames, input.prePositionFrame, input.watermarkFrame)
+      && frames.every(canvasTraceRawEventSummaryMatches),
+    stable_enabled_layout_scale_focus_and_values_through_watermark: preDispatchGeometryStable,
+    pre_position_button_released: pre !== undefined && !pre.pointerButtonPrimary,
+    pre_position_modifiers_clear: pre !== undefined && canvasTraceModifiersClear(pre.currentModifiers),
+    focus_command_succeeded: input.focusCommandSucceeded,
+    target_window_focused_before_movement: input.targetWindowFocused,
+    focus_interval_event_allowlist: focusEventAllowlist && focusEventCount <= 1,
+    focus_interval_pointer_stationary: focusPointerStable,
+    positioning_start_is_event_free: positioningStartEventFree,
+    positioning_start_pointer_stationary: Boolean(pre && positioningStart
+      && isDeepStrictEqual(pre.pointerRaw, positioningStart.pointerRaw)),
+    only_logged_positioning_destinations_in_order: destinationOrderValid,
+    target_positioning_move_observed: targetMoveObserved,
+    no_button_events_before_watermark: noButtonBeforeWatermark,
+    current_modifiers_clear_through_watermark: currentModifiersClear,
+    watermark_primary_button_released: watermark !== undefined && !watermark.pointerButtonPrimary,
+    watermark_modifiers_clear: watermark !== undefined && canvasTraceModifiersClear(watermark.currentModifiers),
+    watermark_pointer_matches_target: watermarkPointerMatchesTarget,
+    exact_scale_stable_through_watermark: stableScale,
+  };
+  const failures = Object.entries(checks).filter(([, passed]) => !passed).map(([name]) => name);
+  return {
+    passed: failures.length === 0,
+    checks,
+    failures,
+    observed_pointer_moves: movementEvents.filter(({event}) => event.kind === "pointer_moved").map(({event}) => event),
+    observed_positioning_destination_indices: observedDestinationIndices,
+    neutral_positioning_move_coalesced: !observedDestinationIndices.includes(0),
+  };
+}
+
+function verifyCanvasInitialClickFrames(input: {
+  frames: CanvasFocusTraceFrame[];
+  watermarkFrame: number;
+  clickFrame: number;
+  watermarkPointer: {x: number; y: number} | null;
+}): {passed: boolean; checks: Record<string, boolean>; failures: string[]; press: CanvasTraceRawEvent | null; release: CanvasTraceRawEvent | null} {
+  const frames = input.frames;
+  const watermarkTrace = frames.find((frame) => frame.frameNr === input.watermarkFrame);
+  const afterWatermark = frames.filter((frame) => frame.frameNr > input.watermarkFrame
+    && frame.frameNr <= input.clickFrame);
+  const events = afterWatermark.flatMap((frame) => frame.rawEvents.map((event) => ({frame, event})));
+  const pressEvents = events.filter(({event}) => event.kind === "pointer_button" && event.button === "primary" && event.pressed === true);
+  const releaseEvents = events.filter(({event}) => event.kind === "pointer_button" && event.button === "primary" && event.pressed === false);
+  const press = pressEvents[0]?.event ?? null;
+  const release = releaseEvents[0]?.event ?? null;
+  const pressFrame = pressEvents[0]?.frame;
+  const releaseFrame = releaseEvents[0]?.frame;
+  const buttonAndModifierAllowlist = events.every(({event}) => event.kind === "modifiers_changed"
+    ? event.modifiers !== undefined && canvasTraceModifiersClear(event.modifiers)
+    : event.kind === "pointer_button" && event.button === "primary"
+      && event.modifiers !== undefined && canvasTraceModifiersClear(event.modifiers));
+  const pressReleaseOrdered = Boolean(press && release && pressFrame && releaseFrame
+    && (pressFrame.frameNr < releaseFrame.frameNr
+      || (pressFrame.frameNr === releaseFrame.frameNr && press.eventIndex < release.eventIndex)));
+  const pointInside = (point: {x: number; y: number} | undefined, rect: CanvasTextEditFieldObservation["rect"]) => Boolean(point
+    && point.x >= rect.left && point.x <= rect.right
+    && point.y >= rect.top && point.y <= rect.bottom);
+  const pointOutside = (point: {x: number; y: number} | undefined, rect: CanvasTextEditFieldObservation["rect"]) => Boolean(point
+    && (point.x < rect.left || point.x > rect.right || point.y < rect.top || point.y > rect.bottom));
+  const buttonPositionsMatchOwnFrameGeometry = Boolean(pressEvents[0] && releaseEvents[0]
+    && [pressEvents[0], releaseEvents[0]].every(({frame, event}) => pointInside(event.position, frame.pathRect)
+      && pointOutside(event.position, frame.siblingRect)));
+  const stableGeometryScaleAndValues = Boolean(watermarkTrace
+    && frames.every((frame) => frame.pathEnabled
+      && frame.siblingEnabled
+      && frame.pathResponseId === watermarkTrace.pathResponseId
+      && frame.siblingResponseId === watermarkTrace.siblingResponseId
+      && frame.pathResponseId !== frame.siblingResponseId
+      && isDeepStrictEqual(frame.pathRectRaw, watermarkTrace.pathRectRaw)
+      && isDeepStrictEqual(frame.siblingRectRaw, watermarkTrace.siblingRectRaw)
+      && frame.pixelsPerPointBits === watermarkTrace.pixelsPerPointBits
+      && frame.pathEmpty === watermarkTrace.pathEmpty
+      && frame.pathValueBytes === watermarkTrace.pathValueBytes
+      && frame.pathValueSha256 === watermarkTrace.pathValueSha256
+      && frame.siblingEmpty === watermarkTrace.siblingEmpty
+      && frame.siblingValueBytes === watermarkTrace.siblingValueBytes
+      && frame.siblingValueSha256 === watermarkTrace.siblingValueSha256));
+  const pressPositionMatchesRelease = Boolean(press?.position && release?.position
+    && pressFrame && releaseFrame
+    && canvasTraceWithinPhysicalPixelTolerance(press.position, release.position, pressFrame.pixelsPerPoint)
+    && canvasTraceWithinPhysicalPixelTolerance(press.position, release.position, releaseFrame.pixelsPerPoint));
+  const pressPositionMatchesWatermark = Boolean(press?.position && pressFrame && input.watermarkPointer
+    && canvasTraceWithinPhysicalPixelTolerance(press.position, input.watermarkPointer, pressFrame.pixelsPerPoint));
+  const releasePositionMatchesWatermark = Boolean(release?.position && releaseFrame && input.watermarkPointer
+    && canvasTraceWithinPhysicalPixelTolerance(release.position, input.watermarkPointer, releaseFrame.pixelsPerPoint));
+  const allCurrentModifiersClear = frames.every((frame) => canvasTraceModifiersClear(frame.currentModifiers));
+  const finalFrame = afterWatermark.at(-1);
+  const checks: Record<string, boolean> = {
+    complete_unique_consecutive_post_watermark_frames: canvasTraceFramesCoverRange(
+      frames,
+      input.watermarkFrame,
+      input.clickFrame,
+    ) && afterWatermark.every(canvasTraceRawEventSummaryMatches),
+    click_frame_strictly_after_watermark: input.clickFrame > input.watermarkFrame,
+    exactly_one_primary_press: pressEvents.length === 1,
+    exactly_one_primary_release: releaseEvents.length === 1,
+    press_precedes_release: pressReleaseOrdered,
+    only_primary_press_release_and_neutral_modifier_events: buttonAndModifierAllowlist,
+    stable_frame_geometry_scale_and_values_after_watermark: stableGeometryScaleAndValues,
+    button_positions_match_their_own_frame_rectangles: buttonPositionsMatchOwnFrameGeometry,
+    all_observed_current_modifiers_clear: allCurrentModifiersClear,
+    press_and_release_positions_match: pressPositionMatchesRelease,
+    press_position_matches_watermark_pointer: pressPositionMatchesWatermark,
+    release_position_matches_watermark_pointer: releasePositionMatchesWatermark,
+    button_released_after_click: finalFrame !== undefined && !finalFrame.pointerButtonPrimary,
+    modifiers_clear_after_release: finalFrame !== undefined && canvasTraceModifiersClear(finalFrame.currentModifiers),
+  };
+  const failures = Object.entries(checks).filter(([, passed]) => !passed).map(([name]) => name);
+  return {passed: failures.length === 0, checks, failures, press, release};
+}
+
 async function readCanvasFocusTraceFrames(
   logPath: string,
   fromFrameNr = -1,
@@ -1453,7 +1875,9 @@ async function readCanvasFocusTraceFrames(
     const readString = (name: string): string | null => value.match(new RegExp(`\\b${name}=([^,]+)`))?.[1]?.trim() ?? null;
     const readNumber = (name: string): number | null => {
       const raw = readString(name);
-      return raw !== null && /^\d+(?:\.\d+)?$/.test(raw) ? Number(raw) : null;
+      if (raw === null || !/^\d+$/.test(raw)) return null;
+      const number = Number(raw);
+      return Number.isSafeInteger(number) ? number : null;
     };
     const readBoolean = (name: string): boolean | null => {
       const raw = readString(name);
@@ -1462,10 +1886,16 @@ async function readCanvasFocusTraceFrames(
     const frameNr = readNumber("frame_nr");
     if (frameNr === null) return [];
     if (frameNr < fromFrameNr || frameNr > throughFrameNr) continue;
-    const pathRectMatch = value.match(/\bpath_rect=\[\[\s*(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s*\]\s*-\s*\[\s*(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s*\]\]/);
-    const siblingRectMatch = value.match(/\bid_rect=\[\[\s*(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s*\]\s*-\s*\[\s*(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s*\]\]/);
-    const pointerMatch = value.match(/\bpointer=Some\(\[\s*(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s*\]\)/);
+    const f32Token = "[-+]?(?:\\d+(?:\\.\\d*)?|\\.\\d+)(?:[eE][-+]?\\d+)?";
+    const pathRectMatch = value.match(new RegExp(`\\bpath_rect=\\[\\[\\s*(${f32Token})\\s+(${f32Token})\\s*\\]\\s*-\\s*\\[\\s*(${f32Token})\\s+(${f32Token})\\s*\\]\\]`));
+    const siblingRectMatch = value.match(new RegExp(`\\bid_rect=\\[\\[\\s*(${f32Token})\\s+(${f32Token})\\s*\\]\\s*-\\s*\\[\\s*(${f32Token})\\s+(${f32Token})\\s*\\]\\]`));
+    const pointerMatch = value.match(new RegExp(`\\bpointer=Some\\(\\[\\s*(${f32Token})\\s+(${f32Token})\\s*\\]\\)`));
     const pointerNone = /\bpointer=None\b/.test(value);
+    const pixelsPerPointBits = readString("pixels_per_point_bits");
+    const pixelsPerPointBitsReading = readRustF32Bits(pixelsPerPointBits);
+    const rawPixelsPerPoint = readString("pixels_per_point");
+    const rawPointer = pointerMatch ? [pointerMatch[1], pointerMatch[2]] as [string, string] : null;
+    const parsedPointer = rawPointer ? readCanvasTraceCoordinatePair(rawPointer) : null;
     const pathEmpty = readBoolean("path_empty");
     const siblingEmpty = readBoolean("id_empty");
     const pathValueBytes = readNumber("path_value_bytes");
@@ -1481,7 +1911,63 @@ async function readCanvasFocusTraceFrames(
     } catch {
       return [];
     }
-    const pixelsPerPoint = readNumber("pixels_per_point");
+    const pixelsPerPointLegacy = rawPixelsPerPoint === null ? null : readRustDebugF32(rawPixelsPerPoint);
+    const currentModifiersMatch = value.match(/\bcurrent_modifiers=(\{[^}]*\})/);
+    let currentModifiersRaw: unknown;
+    try {
+      currentModifiersRaw = currentModifiersMatch ? JSON.parse(currentModifiersMatch[1]!) : null;
+    } catch {
+      return [];
+    }
+    const currentModifiers = readCanvasTraceModifiers(currentModifiersRaw);
+    const rawEventsMatch = value.match(/\braw_events=(\[.*\]),\s*raw_event_kinds=/);
+    let rawEventsRaw: unknown;
+    try {
+      rawEventsRaw = rawEventsMatch ? JSON.parse(rawEventsMatch[1]!) : null;
+    } catch {
+      return [];
+    }
+    const rawEventRecords = Array.isArray(rawEventsRaw) ? rawEventsRaw : null;
+    const rawEvents: CanvasTraceRawEvent[] = [];
+    if (rawEventRecords) {
+      for (const [eventIndex, eventValue] of rawEventRecords.entries()) {
+        if (eventValue === null || typeof eventValue !== "object" || Array.isArray(eventValue)) return [];
+        const event = eventValue as Record<string, unknown>;
+        if (event.event_index !== eventIndex || typeof event.kind !== "string") return [];
+        const parsed: CanvasTraceRawEvent = {eventIndex, kind: event.kind, raw: event};
+        if (event.kind === "pointer_button") {
+          const position = readCanvasTraceCoordinatePair(event.position);
+          const modifiers = readCanvasTraceModifiers(event.modifiers);
+          if (!position || !modifiers || typeof event.pressed !== "boolean"
+            || !["primary", "secondary", "middle", "extra1", "extra2"].includes(String(event.button))) return [];
+          parsed.button = String(event.button);
+          parsed.pressed = event.pressed;
+          parsed.position = position.value;
+          parsed.rawPosition = position.raw;
+          parsed.modifiers = modifiers;
+        } else if (event.kind === "pointer_moved") {
+          const position = readCanvasTraceCoordinatePair(event.position);
+          if (!position) return [];
+          parsed.position = position.value;
+          parsed.rawPosition = position.raw;
+        } else if (event.kind === "window_focused") {
+          if (typeof event.focused !== "boolean") return [];
+          parsed.focused = event.focused;
+        } else if (event.kind === "modifiers_changed") {
+          const modifiers = readCanvasTraceModifiers(event.modifiers);
+          if (!modifiers) return [];
+          parsed.modifiers = modifiers;
+        } else if (event.kind === "key") {
+          const modifiers = readCanvasTraceModifiers(event.modifiers);
+          if (!modifiers || typeof event.pressed !== "boolean" || typeof event.repeat !== "boolean") return [];
+          parsed.modifiers = modifiers;
+          parsed.pressed = event.pressed;
+          parsed.repeat = event.repeat;
+        }
+        rawEvents.push(parsed);
+      }
+    }
+    const pixelsPerPoint = pixelsPerPointBitsReading?.value ?? null;
     const pathFocused = readBoolean("path_focused");
     const siblingFocused = readBoolean("id_focused");
     const pathEnabled = readBoolean("path_enabled");
@@ -1493,16 +1979,26 @@ async function readCanvasFocusTraceFrames(
     const pointerMoveEventCount = readNumber("pointer_move_event_count");
     const otherEventCount = readNumber("other_event_count");
     if (!pathRectMatch || !siblingRectMatch || (!pointerMatch && !pointerNone)
+      || !pixelsPerPointBitsReading || !pixelsPerPointLegacy || !(pixelsPerPointLegacy.value > 0)
+      || !currentModifiers || !Array.isArray(rawEventKinds) || !rawEventRecords
+      || rawEventRecords.length !== rawEventKinds.length
       || pathEmpty === null || siblingEmpty === null || pathValueBytes === null
       || siblingValueBytes === null || !pathValueSha256 || !/^[a-f0-9]{64}$/.test(pathValueSha256)
       || !siblingValueSha256 || !/^[a-f0-9]{64}$/.test(siblingValueSha256)
-      || !pathResponseId || !siblingResponseId || pixelsPerPoint === null || !(pixelsPerPoint > 0)
+      || !pathResponseId || !siblingResponseId || pixelsPerPoint === null
+      || (pointerMatch && parsedPointer === null)
       || pathFocused === null || siblingFocused === null || pathEnabled === null || siblingEnabled === null
-      || !Array.isArray(rawEventKinds) || !rawEventKinds.every((kind) => typeof kind === "string")
+      || !rawEventKinds.every((kind) => typeof kind === "string")
       || pointerButtonPrimary === null || tabPressCount === null || tabReleaseCount === null
       || primaryPointerButtonEventCount === null || pointerMoveEventCount === null || otherEventCount === null) {
       return [];
     }
+    const pathRectRaw = [pathRectMatch[1], pathRectMatch[2], pathRectMatch[3], pathRectMatch[4]] as [string, string, string, string];
+    const siblingRectRaw = [siblingRectMatch[1], siblingRectMatch[2], siblingRectMatch[3], siblingRectMatch[4]] as [string, string, string, string];
+    const pathRectReadings = pathRectRaw.map(readRustDebugF32);
+    const siblingRectReadings = siblingRectRaw.map(readRustDebugF32);
+    if (pathRectReadings.some((coordinate) => coordinate === null)
+      || siblingRectReadings.some((coordinate) => coordinate === null)) return [];
     frames.push({
       line,
       frameNr,
@@ -1512,11 +2008,18 @@ async function readCanvasFocusTraceFrames(
       siblingEnabled,
       pathResponseId,
       siblingResponseId,
-      pathRect: {left: Number(pathRectMatch[1]), top: Number(pathRectMatch[2]), right: Number(pathRectMatch[3]), bottom: Number(pathRectMatch[4])},
-      siblingRect: {left: Number(siblingRectMatch[1]), top: Number(siblingRectMatch[2]), right: Number(siblingRectMatch[3]), bottom: Number(siblingRectMatch[4])},
+      pathRect: {left: pathRectReadings[0]!.value, top: pathRectReadings[1]!.value, right: pathRectReadings[2]!.value, bottom: pathRectReadings[3]!.value},
+      pathRectRaw,
+      siblingRect: {left: siblingRectReadings[0]!.value, top: siblingRectReadings[1]!.value, right: siblingRectReadings[2]!.value, bottom: siblingRectReadings[3]!.value},
+      siblingRectRaw,
+      rawPixelsPerPoint: rawPixelsPerPoint!,
+      pixelsPerPointBits: pixelsPerPointBits!,
       pixelsPerPoint,
-      pointer: pointerMatch ? {x: Number(pointerMatch[1]), y: Number(pointerMatch[2])} : null,
+      pointer: parsedPointer?.value ?? null,
+      pointerRaw: parsedPointer?.raw ?? null,
       pointerButtonPrimary,
+      currentModifiers,
+      rawEvents,
       rawEventKinds,
       tabPressCount,
       tabReleaseCount,
@@ -1557,9 +2060,14 @@ function verifyCanvasFocusTraceTransition(
     pathResponseId: frame.pathResponseId,
     siblingResponseId: frame.siblingResponseId,
     pathRect: frame.pathRect,
+    pathRectRaw: frame.pathRectRaw,
     siblingRect: frame.siblingRect,
+    siblingRectRaw: frame.siblingRectRaw,
+    rawPixelsPerPoint: frame.rawPixelsPerPoint,
+    pixelsPerPointBits: frame.pixelsPerPointBits,
     pixelsPerPoint: frame.pixelsPerPoint,
     pointer: frame.pointer,
+    pointerRaw: frame.pointerRaw,
     pointerButtonPrimary: frame.pointerButtonPrimary,
     pathEmpty: frame.pathEmpty,
     pathValueBytes: frame.pathValueBytes,
@@ -1571,6 +2079,10 @@ function verifyCanvasFocusTraceTransition(
   const expectedStableContent = frames[0] ? stableFrameContent(frames[0]) : null;
   addFailure("trace_content_tuple_is_stable_each_frame", expectedStableContent !== null
     && frames.every((frame) => isDeepStrictEqual(stableFrameContent(frame), expectedStableContent)));
+  addFailure("trace_raw_event_vectors_match_legacy_event_kind_vectors", frames.every((frame) => frame.rawEvents.length === frame.rawEventKinds.length));
+  addFailure("trace_event_indices_are_contiguous", frames.every((frame) => frame.rawEvents.every((event, index) => event.eventIndex === index)));
+  addFailure("trace_current_modifiers_stay_clear", frames.every((frame) => canvasTraceModifiersClear(frame.currentModifiers)));
+  addFailure("trace_raw_event_counters_match_event_vectors", frames.every(canvasTraceRawEventSummaryMatches));
 
   const rowMatchesSnapshot = (frame: CanvasFocusTraceFrame | undefined, snapshot: CanvasFocusSnapshot): boolean => Boolean(frame
     && frame.pathFocused === snapshot.fields.path.focused
@@ -1580,9 +2092,15 @@ function verifyCanvasFocusTraceTransition(
     && frame.pathResponseId === snapshot.fields.path.responseId
     && frame.siblingResponseId === snapshot.fields.id.responseId
     && isDeepStrictEqual(frame.pathRect, snapshot.fields.path.rect)
+    && isDeepStrictEqual(frame.pathRectRaw, snapshot.fields.path.rawRect)
     && isDeepStrictEqual(frame.siblingRect, snapshot.fields.id.rect)
+    && isDeepStrictEqual(frame.siblingRectRaw, snapshot.fields.id.rawRect)
+    && frame.pixelsPerPointBits === snapshot.pixels_per_point_bits
+    && frame.pixelsPerPointBits === snapshot.fields.path.pixelsPerPointBits
     && frame.pixelsPerPoint === snapshot.fields.path.pixelsPerPoint
     && isDeepStrictEqual(frame.pointer, snapshot.pointer)
+    && isDeepStrictEqual(frame.pointerRaw, snapshot.pointer_raw)
+    && isDeepStrictEqual(snapshot.fields.path.rawPointer, snapshot.pointer_raw)
     && frame.pointerButtonPrimary === snapshot.pointer_button_primary
     && frame.pathEmpty === snapshot.fields.path.empty
     && frame.pathValueBytes === snapshot.fields.path.valueBytes
@@ -1600,6 +2118,7 @@ function verifyCanvasFocusTraceTransition(
     && frame.primaryPointerButtonEventCount === 0
     && frame.pointerMoveEventCount === 0
     && frame.otherEventCount === 0
+    && frame.rawEvents.every((event) => event.kind === "key")
     && frame.rawEventKinds.every((kind) => allowedEventKinds.has(kind))));
   addFailure("tab_counts_match_event_identities", frames.every((frame) =>
     frame.tabPressCount === frame.rawEventKinds.filter((kind) => kind.startsWith("tab_press")).length
@@ -1646,6 +2165,10 @@ function verifyCanvasFocusTraceTransition(
     "trace_lines_are_increasing",
     "trace_frame_numbers_are_contiguous",
     "trace_content_tuple_is_stable_each_frame",
+    "trace_raw_event_vectors_match_legacy_event_kind_vectors",
+    "trace_event_indices_are_contiguous",
+    "trace_current_modifiers_stay_clear",
+    "trace_raw_event_counters_match_event_vectors",
     "baseline_trace_matches_event_free_snapshot",
     "post_tab_trace_matches_event_free_snapshot",
     "baseline_focus_is_exact_path_only",
@@ -1682,10 +2205,11 @@ async function readCanvasFocusSnapshot(
   requestId: string,
   afterLine: number,
   afterFrameNr: number,
+  traceFromFrameNr?: number,
 ): Promise<CanvasFocusSnapshot | null> {
   const log = await readFile(logPath, "utf8").catch(() => "");
   const lines = log.split(/\r?\n/);
-  let marker: Omit<CanvasFocusSnapshot, "fields" | "x11"> | null = null;
+  let marker: Omit<CanvasFocusSnapshot, "fields" | "trace" | "trace_frames" | "x11"> | null = null;
   for (let index = lines.length - 1; index > afterLine; index -= 1) {
     const value = lines[index] ?? "";
     if (!value.startsWith("OpenObsidian CI canvas-text-edit-focus-snapshot: ")
@@ -1694,12 +2218,18 @@ async function readCanvasFocusSnapshot(
     const frameNr = value.match(/\bframe_nr=(\d+)/)?.[1];
     const monotonicMs = value.match(/\bmonotonic_ms=(\d+)/)?.[1];
     const pointerButtonPrimary = value.match(/\bpointer_button_primary=(true|false)/)?.[1];
-    const pointerMatch = value.match(/\bpointer=Some\(\[\s*(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s*\]\)/);
+    const f32Token = "[-+]?(?:\\d+(?:\\.\\d*)?|\\.\\d+)(?:[eE][-+]?\\d+)?";
+    const pointerMatch = value.match(new RegExp(`\\bpointer=Some\\(\\[\\s*(${f32Token})\\s+(${f32Token})\\s*\\]\\)`));
     const pointerIsNone = /\bpointer=None\b/.test(value);
+    const pixelsPerPointBits = value.match(/\bpixels_per_point_bits=(0x[0-9a-f]{8})\b/)?.[1] ?? null;
+    const pointerRaw = pointerMatch ? [pointerMatch[1], pointerMatch[2]] as [string, string] : null;
+    const pointerCoordinates = pointerRaw?.map(readRustDebugF32) ?? null;
     const parsedMonotonicMs = Number(monotonicMs);
     if (observedRequestId !== requestId || !frameNr || !monotonicMs || !pointerButtonPrimary
       || !Number.isFinite(parsedMonotonicMs) || parsedMonotonicMs <= 0
-      || !value.includes("raw_events=[]") || (!pointerMatch && !pointerIsNone)) return null;
+      || !value.includes("raw_events=[]") || (!pointerMatch && !pointerIsNone)
+      || !readRustF32Bits(pixelsPerPointBits)
+      || (pointerCoordinates && pointerCoordinates.some((coordinate) => coordinate === null))) return null;
     marker = {
       request_id: requestId,
       line: index,
@@ -1707,7 +2237,9 @@ async function readCanvasFocusSnapshot(
       monotonic_ms: Number(monotonicMs),
       raw_events_empty: true,
       pointer_button_primary: pointerButtonPrimary === "true",
-      pointer: pointerMatch ? {x: Number(pointerMatch[1]), y: Number(pointerMatch[2])} : null,
+      pixels_per_point_bits: pixelsPerPointBits!,
+      pointer: pointerMatch ? {x: pointerCoordinates![0]!.value, y: pointerCoordinates![1]!.value} : null,
+      pointer_raw: pointerRaw,
     };
     break;
   }
@@ -1720,7 +2252,20 @@ async function readCanvasFocusSnapshot(
     || path.requestId !== requestId || id.requestId !== requestId
     || path.frameNr !== marker.frame_nr || id.frameNr !== marker.frame_nr
     || path.hovered === null || id.hovered === null) return null;
-  return {...marker, fields: {path, id}, x11: x11InteractionState()};
+  const firstTraceFrameNr = traceFromFrameNr ?? marker.frame_nr;
+  const traceFrames = await readCanvasFocusTraceFrames(logPath, firstTraceFrameNr, marker.frame_nr);
+  const trace = traceFrames.find((frame) => frame.frameNr === marker.frame_nr);
+  if (!trace
+    || !canvasTraceFramesCoverRange(traceFrames, firstTraceFrameNr, marker.frame_nr)
+    || trace.line >= marker.line
+    || trace.line >= path.line
+    || trace.line >= id.line
+    || trace.pixelsPerPointBits !== marker.pixels_per_point_bits
+    || !isDeepStrictEqual(trace.pointerRaw, marker.pointer_raw)
+    || trace.pointerButtonPrimary !== marker.pointer_button_primary
+    || trace.rawEvents.length !== 0
+    || !canvasTraceFrameMatchesFieldPair(trace, path, id)) return null;
+  return { ...marker, fields: {path, id}, trace, trace_frames: traceFrames, x11: x11InteractionState() };
 }
 
 let canvasFocusSnapshotRequestSequence = 0;
@@ -1730,6 +2275,7 @@ async function requestCanvasFocusSnapshot(
   stage: string,
   afterLine: number,
   afterFrameNr: number,
+  traceFromFrameNr?: number,
 ): Promise<CanvasFocusSnapshot> {
   const requestId = `${process.pid}-${Date.now()}-${++canvasFocusSnapshotRequestSequence}`;
   const temporaryRequestFile = `${linuxCanvasFocusSnapshotRequestFile}.${requestId}.tmp`;
@@ -1739,7 +2285,7 @@ async function requestCanvasFocusSnapshot(
     await rename(temporaryRequestFile, linuxCanvasFocusSnapshotRequestFile);
     const snapshot = await waitFor(
       `fresh event-free Canvas focus snapshot ${stage} (request ${requestId})`,
-      () => readCanvasFocusSnapshot(logPath, requestId, afterLine, afterFrameNr),
+      () => readCanvasFocusSnapshot(logPath, requestId, afterLine, afterFrameNr, traceFromFrameNr),
       (value) => value !== null,
       10_000,
     );
@@ -10396,6 +10942,385 @@ function countMarkdownFiles(snapshot: SnapshotEntry[]): number {
   return snapshot.filter((entry) => entry.kind === "file" && entry.path.toLowerCase().endsWith(".md")).length;
 }
 
+function canvasVaultDataId(vaultRoot: string): string {
+  return createHash("sha256").update(resolve(vaultRoot), "utf8").digest("hex").slice(0, 24);
+}
+
+function canvasManagedMarkerPaths(appDataRoot: string, managedUserDataRoot: string, vaultRoot: string): {
+  rootMarker: string;
+  vaultsDirectory: string;
+  vaultDirectory: string;
+  vaultMarker: string;
+} {
+  const managedRootRelative = relative(appDataRoot, managedUserDataRoot);
+  if (managedRootRelative === ".." || managedRootRelative.startsWith(`..${sep}`) || isAbsolute(managedRootRelative)) {
+    throw new Error("OpenObsidian managed user-data root is outside the full app-data snapshot root");
+  }
+  const managedPrefix = managedRootRelative.split(sep).join("/");
+  const vaultId = canvasVaultDataId(vaultRoot);
+  const vaultsDirectory = `${managedPrefix}/vaults`;
+  const vaultDirectory = `${vaultsDirectory}/${vaultId}`;
+  return {
+    rootMarker: `${managedPrefix}/.openobsidian-user-data-root`,
+    vaultsDirectory,
+    vaultDirectory,
+    vaultMarker: `${vaultDirectory}/.openobsidian-vault-data`,
+  };
+}
+
+async function validateCanvasManagedMarkerSnapshot(
+  appDataRoot: string,
+  managedUserDataRoot: string,
+  vaultRoot: string,
+  snapshot: SnapshotEntry[],
+  label: string,
+): Promise<void> {
+  const paths = canvasManagedMarkerPaths(appDataRoot, managedUserDataRoot, vaultRoot);
+  const expectedKinds = new Map([
+    [paths.rootMarker, "file"],
+    [paths.vaultsDirectory, "directory"],
+    [paths.vaultDirectory, "directory"],
+    [paths.vaultMarker, "file"],
+  ]);
+  const markerEntries = snapshot.filter((entry) => entry.path.endsWith(".openobsidian-user-data-root")
+    || entry.path.endsWith(".openobsidian-vault-data"));
+  if (markerEntries.some((entry) => !expectedKinds.has(entry.path))
+    || markerEntries.length !== 2) {
+    throw new Error(`${label} did not contain exactly the selected root and vault marker paths: ${JSON.stringify(markerEntries)}`);
+  }
+  for (const [path, kind] of expectedKinds) {
+    const entry = snapshot.find((candidate) => candidate.path === path);
+    if (entry?.kind !== kind) {
+      throw new Error(`${label} lacked the expected managed marker path or directory ${path}; found=${JSON.stringify(entry)}`);
+    }
+  }
+  const rootMarkerBytes = await readFile(join(appDataRoot, paths.rootMarker));
+  const vaultMarkerBytes = await readFile(join(appDataRoot, paths.vaultMarker));
+  const rootMarkerEntry = snapshot.find((entry) => entry.path === paths.rootMarker);
+  const vaultMarkerEntry = snapshot.find((entry) => entry.path === paths.vaultMarker);
+  if (rootMarkerEntry?.bytes !== rootMarkerBytes.length
+    || rootMarkerEntry?.sha256 !== createHash("sha256").update(rootMarkerBytes).digest("hex")
+    || vaultMarkerEntry?.bytes !== vaultMarkerBytes.length
+    || vaultMarkerEntry?.sha256 !== createHash("sha256").update(vaultMarkerBytes).digest("hex")) {
+    throw new Error(`${label} marker bytes changed after the app-data snapshot was captured`);
+  }
+  if (!rootMarkerBytes.equals(Buffer.from("openobsidian-user-data-root-v1\n", "ascii"))) {
+    throw new Error(`${label} root marker must contain the exact ASCII v1 line followed by one LF byte`);
+  }
+  if (!vaultMarkerBytes.equals(Buffer.from("openobsidian-vault-data-v1\n", "ascii"))) {
+    throw new Error(`${label} vault marker must contain the exact ASCII v1 line followed by one LF byte`);
+  }
+}
+
+async function validateCanvasManagedMarkerState(
+  appDataRoot: string,
+  managedUserDataRoot: string,
+  vaultRoot: string,
+  snapshot: SnapshotEntry[],
+  label: string,
+): Promise<{initialized: boolean}> {
+  const paths = canvasManagedMarkerPaths(appDataRoot, managedUserDataRoot, vaultRoot);
+  const knownPaths = new Set([paths.rootMarker, paths.vaultsDirectory, paths.vaultDirectory, paths.vaultMarker]);
+  const managedEntries = snapshot.filter((entry) => knownPaths.has(entry.path));
+  const markerEntries = snapshot.filter((entry) => entry.path.endsWith(".openobsidian-user-data-root")
+    || entry.path.endsWith(".openobsidian-vault-data"));
+  const unexpectedMarkers = markerEntries.filter((entry) => !knownPaths.has(entry.path));
+  if (unexpectedMarkers.length > 0) {
+    throw new Error(`${label} contained unexpected managed-marker paths: ${JSON.stringify(unexpectedMarkers)}`);
+  }
+  if (managedEntries.length === 0) return {initialized: false};
+  await validateCanvasManagedMarkerSnapshot(appDataRoot, managedUserDataRoot, vaultRoot, snapshot, label);
+  return {initialized: true};
+}
+
+type CanvasEframeInspectionEvidence = {
+  phase: string;
+  path_policy: "exact" | "legacy-unrestricted";
+  expected_app_ron_relative_path: string | null;
+  observed_app_ron_entries: Array<{path: string; kind: string; bytes: number; sha256: string}>;
+  checked_files: Array<{
+    path: string;
+    bytes: number;
+    sha256: string;
+    window_section_present: boolean;
+    egui_section_present: boolean;
+    forbidden_path_checks: number;
+    forbidden_path_leak_found: boolean;
+  }>;
+  result: "passed" | "failed";
+  error?: string;
+};
+
+async function validateCanvasEframeFiles(
+  appDataRoot: string,
+  snapshot: SnapshotEntry[],
+  label: string,
+  forbiddenPaths: string[],
+  expectedAppRonRelativePath?: string | null,
+  inspectionEvidence?: CanvasEframeInspectionEvidence[],
+): Promise<Array<{path: string; bytes: number; sha256: string; content: string}>> {
+  const appRonEntries = snapshot.filter((entry) => basename(entry.path).toLowerCase() === "app.ron");
+  const phaseEvidence: CanvasEframeInspectionEvidence = {
+    phase: label,
+    path_policy: expectedAppRonRelativePath === undefined ? "legacy-unrestricted" : "exact",
+    expected_app_ron_relative_path: expectedAppRonRelativePath ?? null,
+    observed_app_ron_entries: appRonEntries.map(({path, kind, bytes, sha256}) => ({path, kind, bytes, sha256})),
+    checked_files: [],
+    result: "failed",
+  };
+  inspectionEvidence?.push(phaseEvidence);
+  try {
+    if (expectedAppRonRelativePath !== undefined) {
+      const unexpectedAppRonEntries = appRonEntries.filter((entry) => expectedAppRonRelativePath === null
+        || entry.path !== expectedAppRonRelativePath
+        || entry.kind !== "file");
+      if (unexpectedAppRonEntries.length > 0) {
+        throw new Error(`${label} contained app.ron entries outside the exact expected path ${expectedAppRonRelativePath ?? "(none allowed)"}: ${JSON.stringify(unexpectedAppRonEntries)}`);
+      }
+    }
+    const eframeEntries = appRonEntries.filter((entry) => entry.kind === "file");
+    const eframeFiles = await Promise.all(eframeEntries.map(async (entry) => {
+      const bytes = await readFile(join(appDataRoot, entry.path));
+      const sha256 = createHash("sha256").update(bytes).digest("hex");
+      if (bytes.length !== entry.bytes || sha256 !== entry.sha256) {
+        throw new Error(`${label} ${entry.path} changed after its app-data snapshot was captured`);
+      }
+      return {path: entry.path, bytes: bytes.length, sha256, content: bytes.toString("utf8")};
+    }));
+    const checkedForbiddenPaths = forbiddenPaths.filter((path) => path.length > 0);
+    for (const file of eframeFiles) {
+      const windowSectionPresent = /(?:^|[\s({,\[])"?window"?\s*:/.test(file.content);
+      const eguiSectionPresent = /(?:^|[\s({,\[])"?egui"?\s*:/.test(file.content);
+      const forbiddenPathLeakFound = checkedForbiddenPaths.some((path) => file.content.includes(path));
+      phaseEvidence.checked_files.push({
+        path: file.path,
+        bytes: file.bytes,
+        sha256: file.sha256,
+        window_section_present: windowSectionPresent,
+        egui_section_present: eguiSectionPresent,
+        forbidden_path_checks: checkedForbiddenPaths.length,
+        forbidden_path_leak_found: forbiddenPathLeakFound,
+      });
+      if (!windowSectionPresent || !eguiSectionPresent) {
+        throw new Error(`${label} ${file.path} did not contain the expected eframe window and egui state`);
+      }
+      if (forbiddenPathLeakFound) {
+        throw new Error(`${label} ${file.path} contains a vault or app-data-root path`);
+      }
+    }
+    phaseEvidence.result = "passed";
+    return eframeFiles;
+  } catch (error) {
+    phaseEvidence.error = error instanceof Error ? error.message : String(error);
+    throw error;
+  }
+}
+
+async function validateCanvasAppDataDelta(
+  before: SnapshotEntry[],
+  after: SnapshotEntry[],
+  changes: Array<{path: string; before?: SnapshotEntry; after?: SnapshotEntry}>,
+  appDataRoot: string,
+  managedUserDataRoot: string,
+  vaultRoot: string,
+  label: string,
+  options: {
+    allowManagedBootstrap: boolean;
+    allowEframeAppRon: boolean;
+    forbiddenPaths: string[];
+    expectedEframeAppRonRelativePath: string | null;
+    inspectionEvidence?: CanvasEframeInspectionEvidence[];
+  },
+): Promise<void> {
+  if (!isDeepStrictEqual(changes, changedPaths(before, after))) {
+    throw new Error(`${label} supplied a phase delta that did not match its complete app-data snapshots`);
+  }
+  const markerPaths = canvasManagedMarkerPaths(appDataRoot, managedUserDataRoot, vaultRoot);
+  const managedEntries = new Set([
+    markerPaths.rootMarker,
+    markerPaths.vaultsDirectory,
+    markerPaths.vaultDirectory,
+    markerPaths.vaultMarker,
+  ]);
+  const unexpected = changes.filter((change) => {
+    if (basename(change.path).toLowerCase() === "app.ron") {
+      return !options.allowEframeAppRon
+        || change.path !== options.expectedEframeAppRonRelativePath
+        || change.after?.kind !== "file";
+    }
+    if (!options.allowManagedBootstrap || !managedEntries.has(change.path)) return true;
+    if (change.before !== undefined) return true;
+    const expectedKind = change.path === markerPaths.vaultsDirectory || change.path === markerPaths.vaultDirectory
+      ? "directory"
+      : "file";
+    return change.after?.kind !== expectedKind;
+  });
+  if (unexpected.length > 0) {
+    throw new Error(`${label} contained app-data changes outside the exact managed bootstrap and documented app.ron allowance: ${JSON.stringify(unexpected).slice(0, 6_000)}`);
+  }
+  if (options.allowManagedBootstrap) {
+    await validateCanvasManagedMarkerSnapshot(appDataRoot, managedUserDataRoot, vaultRoot, after, `${label} result`);
+  }
+  await validateCanvasEframeFiles(
+    appDataRoot,
+    after,
+    `${label} result`,
+    options.forbiddenPaths,
+    options.expectedEframeAppRonRelativePath,
+    options.inspectionEvidence,
+  );
+}
+
+function expectedCanvasEframeAppRonRelativePath(platform: NodeJS.Platform): string | null {
+  if (platform === "linux") return "data/openobsidian/app.ron";
+  if (platform === "darwin") return "home/Library/Application Support/OpenObsidian/app.ron";
+  return null;
+}
+
+async function runLinuxCanvasAppDataWarmupCycle(
+  cycleNumber: number,
+  appDataRoot: string,
+  managedUserDataRoot: string,
+  appEnv: NodeJS.ProcessEnv,
+  selectedVaultRoot: string,
+  selectedVaultName: string,
+  seedSnapshot: SnapshotEntry[],
+  expectedGeometry: string | undefined,
+  inspectionEvidence: CanvasEframeInspectionEvidence[],
+): Promise<{
+  preLaunch: SnapshotEntry[];
+  postSetup: SnapshotEntry[];
+  postClose: SnapshotEntry[];
+  geometry: string;
+  preLaunchMarkersInitialized: boolean;
+  startupChanges: Array<{path: string; before?: SnapshotEntry; after?: SnapshotEntry}>;
+  closeChanges: Array<{path: string; before?: SnapshotEntry; after?: SnapshotEntry}>;
+}> {
+  const cycleName = `canvas-app-data-warmup-${cycleNumber}`;
+  const cycleLogPath = join(reportDirectory, `openobsidian-${cycleName}.log`);
+  const canonicalVaultRoot = await realpath(selectedVaultRoot);
+  const canonicalAppDataRoot = await realpath(appDataRoot);
+  const canonicalManagedUserDataRoot = await realpath(managedUserDataRoot);
+  const forbiddenPaths = [selectedVaultRoot, resolve(selectedVaultRoot), canonicalVaultRoot, appDataRoot, resolve(appDataRoot), canonicalAppDataRoot, managedUserDataRoot, resolve(managedUserDataRoot), canonicalManagedUserDataRoot];
+  const preLaunch = await snapshotTree(appDataRoot);
+  const preLaunchMarkerState = await validateCanvasManagedMarkerState(
+    appDataRoot,
+    managedUserDataRoot,
+    selectedVaultRoot,
+    preLaunch,
+    `Linux Canvas app-data warm-up cycle ${cycleNumber} pre-launch tree`,
+  );
+  await validateCanvasEframeFiles(
+    appDataRoot,
+    preLaunch,
+    `Linux Canvas app-data warm-up cycle ${cycleNumber} pre-launch tree`,
+    forbiddenPaths,
+    "data/openobsidian/app.ron",
+    inspectionEvidence,
+  );
+  const warmupEnv = {...appEnv};
+  delete warmupEnv.OPENOBSIDIAN_CI_CANVAS_FOCUS_TRACE;
+  const child = launchLogged(openObsidianBinary, [], cycleLogPath, warmupEnv);
+  let postSetup: SnapshotEntry[] | null = null;
+  let window: {window_id: string; title: string; geometry: string} | undefined;
+  try {
+    await delay(1_000);
+    if (child.exitCode !== null || child.signalCode !== null) {
+      throw new Error(`OpenObsidian warm-up cycle ${cycleNumber} exited before Canvas setup (code=${child.exitCode}, signal=${child.signalCode})`);
+    }
+    const x11Window = await waitFor(`OpenObsidian Linux Canvas app-data warm-up ${cycleNumber} window`, async () => {
+      try {
+        const output = execFileSync("xdotool", ["search", "--onlyvisible", "--name", "OpenObsidian"], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]});
+        const windowId = output.trim().split(/\s+/).filter(Boolean).at(-1);
+        if (!windowId) return null;
+        const title = execFileSync("xdotool", ["getwindowname", windowId], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]}).trim();
+        const geometry = execFileSync("xdotool", ["getwindowgeometry", "--shell", windowId], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]});
+        return {window_id: windowId, title, geometry};
+      } catch {
+        return null;
+      }
+    }, (value) => value !== null, 30_000);
+    if (!x11Window) throw new Error(`OpenObsidian did not expose a visible window during app-data warm-up cycle ${cycleNumber}`);
+    window = x11Window;
+    if (expectedGeometry !== undefined && window.geometry !== expectedGeometry) {
+      throw new Error(`OpenObsidian warm-up cycle ${cycleNumber} window geometry differed from the established runner geometry`);
+    }
+    xdotool("windowfocus", "--sync", window.window_id);
+    const pickerReport: Record<string, unknown> = {};
+    await selectOpenObsidianVaultFromNativePicker(
+      child,
+      window,
+      cycleLogPath,
+      selectedVaultRoot,
+      pickerReport,
+      `openobsidian-${cycleName}`,
+    );
+    const initialMarkdownCount = countMarkdownFiles(seedSnapshot);
+    const opened = await waitFor(`OpenObsidian to render the fixture vault during warm-up cycle ${cycleNumber}`, async () => {
+      await delay(750);
+      return await captureOpenObsidianScreenshot(window!.window_id, child, `openobsidian-${cycleName}-selected`);
+    }, (capture) => ocrTextContainsFuzzyPhrase(capture.ocrText, selectedVaultName, 1)
+      && new RegExp(`${initialMarkdownCount}\\s+Markdown files found`, "i").test(capture.ocrText), 30_000);
+    if (!opened) throw new Error(`OpenObsidian did not render the fixture vault during warm-up cycle ${cycleNumber}`);
+    await waitForOpenObsidianRefreshIdle(0, initialMarkdownCount, false, cycleLogPath);
+    await invokeNativeAccessibleControl(child, window.window_id, "Edit Canvas text card", undefined, true);
+    const expandedForm = await waitFor(`OpenObsidian to expose the Canvas editor during warm-up cycle ${cycleNumber}`, async () => {
+      return await captureOpenObsidianScreenshot(window!.window_id, child, `openobsidian-${cycleName}-expanded-form`);
+    }, (capture) => ocrTextContainsFuzzyPhrase(capture.ocrText, "Canvas edit path", 2)
+      && ocrTextContainsFuzzyPhrase(capture.ocrText, "Canvas edit text-card ID", 2), 30_000);
+    if (!expandedForm) throw new Error(`OpenObsidian Canvas editor was not exposed during warm-up cycle ${cycleNumber}`);
+    postSetup = await snapshotTree(appDataRoot);
+    const startupChanges = changedPaths(preLaunch, postSetup);
+    await validateCanvasAppDataDelta(
+      preLaunch,
+      postSetup,
+      startupChanges,
+      appDataRoot,
+      managedUserDataRoot,
+      selectedVaultRoot,
+      `Linux Canvas app-data warm-up cycle ${cycleNumber} pre-launch-to-post-setup transition`,
+      {
+        allowManagedBootstrap: true,
+        allowEframeAppRon: true,
+        forbiddenPaths,
+        expectedEframeAppRonRelativePath: "data/openobsidian/app.ron",
+        inspectionEvidence,
+      },
+    );
+  } finally {
+    await stopProcess(child).catch(() => undefined);
+  }
+  if (!postSetup || !window) throw new Error(`OpenObsidian warm-up cycle ${cycleNumber} did not reach a complete setup snapshot`);
+  const postClose = await snapshotTree(appDataRoot);
+  const closeChanges = changedPaths(postSetup, postClose);
+  await validateCanvasAppDataDelta(
+    postSetup,
+    postClose,
+    closeChanges,
+    appDataRoot,
+    managedUserDataRoot,
+    selectedVaultRoot,
+    `Linux Canvas app-data warm-up cycle ${cycleNumber} post-setup-to-post-close transition`,
+    {
+      allowManagedBootstrap: false,
+      allowEframeAppRon: true,
+      forbiddenPaths,
+      expectedEframeAppRonRelativePath: "data/openobsidian/app.ron",
+      inspectionEvidence,
+    },
+  );
+  await validateCanvasManagedMarkerSnapshot(appDataRoot, managedUserDataRoot, selectedVaultRoot, postClose, `Linux Canvas app-data warm-up cycle ${cycleNumber} post-close tree`);
+  return {
+    preLaunch,
+    postSetup,
+    postClose,
+    geometry: window.geometry,
+    preLaunchMarkersInitialized: preLaunchMarkerState.initialized,
+    startupChanges: changedPaths(preLaunch, postSetup),
+    closeChanges,
+  };
+}
+
 function ensureAppDataChangesAreMacEframeUiStateOnly(
   changes: Array<{path: string; before?: SnapshotEntry; after?: SnapshotEntry}>,
   eframeFiles: Array<{path: string; bytes: number; sha256: string; content: string}>,
@@ -10907,6 +11832,16 @@ async function selectOpenObsidianVaultFromNativePicker(
   targetRoot = vaultRoot,
   reportTarget: Record<string, unknown> = report.openobsidian_open as Record<string, unknown>,
   screenshotPrefix = "openobsidian",
+  appDataCapture?: {
+    root: string;
+    managedUserDataRoot: string;
+    vaultRoot: string;
+    forbiddenPaths: string[];
+    expectedEframeAppRonRelativePath: string | null;
+    inspectionEvidence?: CanvasEframeInspectionEvidence[];
+    preOpen?: SnapshotEntry[];
+    panelOpen?: SnapshotEntry[];
+  },
 ): Promise<Record<string, unknown>> {
   const screenshots: string[] = [];
   const openReport = reportTarget;
@@ -10921,6 +11856,28 @@ async function selectOpenObsidianVaultFromNativePicker(
     reportTarget.native_picker_accessibility_windows_before_open = descriptions;
     reportTarget.native_picker_entries_before_open = macPickerEntriesBeforeOpen;
     await saveReport();
+  }
+
+  if (process.platform === "darwin" && appDataCapture) {
+    const preOpenSnapshot = await snapshotTree(appDataCapture.root);
+    appDataCapture.preOpen = preOpenSnapshot;
+    reportTarget.native_picker_app_data_snapshot_pre_open = preOpenSnapshot;
+    const markerState = await validateCanvasManagedMarkerState(
+      appDataCapture.root,
+      appDataCapture.managedUserDataRoot,
+      appDataCapture.vaultRoot,
+      preOpenSnapshot,
+      "macOS Canvas app-data immediately before native picker activation",
+    );
+    reportTarget.native_picker_app_data_pre_open_markers_initialized = markerState.initialized;
+    await validateCanvasEframeFiles(
+      appDataCapture.root,
+      preOpenSnapshot,
+      "macOS Canvas app-data immediately before native picker activation",
+      appDataCapture.forbiddenPaths,
+      appDataCapture.expectedEframeAppRonRelativePath,
+      appDataCapture.inspectionEvidence,
+    );
   }
 
   const openButtonInteraction = await clickOpenVaultButton(
@@ -11029,6 +11986,39 @@ async function selectOpenObsidianVaultFromNativePicker(
       reportTarget.native_picker_accessibility_windows_after_open_attempt = pickerAccessibility;
       await saveReportAfterStageFailure("native_picker_open", reportTarget, error);
       throw error;
+    }
+    if (appDataCapture) {
+      const panelOpenSnapshot = await snapshotTree(appDataCapture.root);
+      appDataCapture.panelOpen = panelOpenSnapshot;
+      reportTarget.native_picker_app_data_snapshot_panel_open = panelOpenSnapshot;
+      reportTarget.native_picker_app_data_changes_pre_open_to_panel_open = changedPaths(
+        appDataCapture.preOpen ?? [],
+        panelOpenSnapshot,
+      );
+      const markerState = await validateCanvasManagedMarkerState(
+        appDataCapture.root,
+        appDataCapture.managedUserDataRoot,
+        appDataCapture.vaultRoot,
+        panelOpenSnapshot,
+        "macOS Canvas app-data with native picker identity confirmed",
+      );
+      reportTarget.native_picker_app_data_panel_open_markers_initialized = markerState.initialized;
+      await validateCanvasAppDataDelta(
+        appDataCapture.preOpen ?? [],
+        panelOpenSnapshot,
+        reportTarget.native_picker_app_data_changes_pre_open_to_panel_open as Array<{path: string; before?: SnapshotEntry; after?: SnapshotEntry}>,
+        appDataCapture.root,
+        appDataCapture.managedUserDataRoot,
+        appDataCapture.vaultRoot,
+        "macOS Canvas exact pre-open-to-confirmed-picker-open app-data transition",
+        {
+          allowManagedBootstrap: false,
+          allowEframeAppRon: true,
+          forbiddenPaths: appDataCapture.forbiddenPaths,
+          expectedEframeAppRonRelativePath: appDataCapture.expectedEframeAppRonRelativePath,
+          inspectionEvidence: appDataCapture.inspectionEvidence,
+        },
+      );
     }
     reportTarget.native_picker_panel_identity = pickerPanelIdentity;
     reportTarget.native_picker_accessibility_windows = pickerAccessibility;
@@ -16729,6 +17719,9 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
     : controlName === "Canvas edit text-card ID"
       ? "id"
       : null;
+  const instrumentCanaryInitialClick = safetyTracker?.expectedAbortCanary === true
+    && process.platform === "linux"
+    && diagnosticField === "path";
   const siblingDiagnosticField = diagnosticField === "path"
     ? "id"
     : diagnosticField === "id"
@@ -16800,12 +17793,117 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
     let targetVisualReadbackError = "";
     let clipboardUsedForEntry = false;
     let clipboardAbortCleanup: Record<string, unknown> | null = null;
+    let canaryInitialClickPair: {target: NonNullable<Awaited<ReturnType<typeof readCanvasTextEditFieldDiagnostic>>>; sibling: NonNullable<Awaited<ReturnType<typeof readCanvasTextEditFieldDiagnostic>>>} | null = null;
+    let canaryInitialClickTraceEvidence: Record<string, unknown> | null = null;
+    let canaryPositioningContext: Record<string, unknown> | null = null;
+    let canaryDispatchWatermark: {frameNr: number; line: number; trace: CanvasFocusTraceFrame; pair: {target: NonNullable<Awaited<ReturnType<typeof readCanvasTextEditFieldDiagnostic>>>; sibling: NonNullable<Awaited<ReturnType<typeof readCanvasTextEditFieldDiagnostic>>>}} | null = null;
+    let refreshBeforeInitialClickDispatch: OpenObsidianRefreshDiagnostics | null = null;
     try {
-      xdotool("windowfocus", "--sync", windowId);
-      // Move through a neutral app corner first so the target move creates a fresh
-      // egui pointer event even when a retry reuses the prior click coordinates.
-      xdotool("mousemove", "--sync", "--window", windowId, "5", "5");
-      xdotool("mousemove", "--sync", "--window", windowId, String(clickX), String(clickY));
+      if (instrumentCanaryInitialClick) {
+        if (!beforeClickFieldPair
+          || beforeClickFieldPair.target.frameNr !== beforeClickFieldPair.sibling.frameNr
+          || beforeClickFieldPair.target.line <= -1
+          || beforeClickFieldPair.sibling.line <= -1) {
+          throw new Error("Linux canary initial-click prePositionFrame is missing a complete paired path/ID field record");
+        }
+        const prePositionFrames = await readCanvasFocusTraceFrames(
+          logPath,
+          beforeClickFieldPair.target.frameNr,
+          beforeClickFieldPair.target.frameNr,
+        );
+        const prePositionFrame = prePositionFrames.length === 1 ? prePositionFrames[0] : undefined;
+        const prePositionMatchesPair = canvasTraceFrameMatchesFieldPair(
+          prePositionFrame,
+          beforeClickFieldPair.target,
+          beforeClickFieldPair.sibling,
+        );
+        const prePositionStateSafe = Boolean(prePositionFrame
+          && !prePositionFrame.pointerButtonPrimary
+          && canvasTraceModifiersClear(prePositionFrame.currentModifiers)
+          && prePositionFrame.rawEvents.every((event, index) => event.eventIndex === index));
+        if (!prePositionFrame || !prePositionMatchesPair || !prePositionStateSafe
+          || beforeClickFieldPair.target.pixelsPerPointBits !== beforeClickFieldPair.sibling.pixelsPerPointBits) {
+          throw new Error("Linux canary prePositionFrame did not match its paired path/ID rows with button released and modifiers clear: "
+            + JSON.stringify({pre_position_frame: prePositionFrame, pre_position_matches_pair: prePositionMatchesPair, pre_position_state_safe: prePositionStateSafe, pair: beforeClickFieldPair}));
+        }
+
+        const focusCommandStartLine = await openObsidianLogLineCount(logPath);
+        xdotool("windowfocus", "--sync", windowId);
+        const focusCommandEndLine = await openObsidianLogLineCount(logPath);
+        const x11AfterFocus = x11InteractionState();
+        const focusCommandRecord = {
+          command: ["xdotool", "windowfocus", "--sync", windowId],
+          start_log_line_count: focusCommandStartLine,
+          end_log_line_count: focusCommandEndLine,
+          succeeded: true,
+          target_window_focused_after_command: x11AfterFocus.focused_window_id === windowId,
+          x11_state_after_command: x11AfterFocus,
+        };
+        if (x11AfterFocus.focused_window_id !== windowId) {
+          throw new Error("Linux canary windowfocus did not leave the intended OpenObsidian window focused before pointer movement: " + JSON.stringify(focusCommandRecord));
+        }
+        const positioningStartSnapshot = await requestCanvasFocusSnapshot(
+          logPath,
+          "event-free positioningStartFrame after windowfocus and before pointer movement",
+          Math.max(beforeClickFieldPair.target.line, beforeClickFieldPair.sibling.line),
+          prePositionFrame.frameNr,
+        );
+        const positioningStartTrace = positioningStartSnapshot.trace;
+        const positioningStartPairMatches = Boolean(positioningStartTrace
+          && positioningStartTrace.pathResponseId === positioningStartSnapshot.fields.path.responseId
+          && positioningStartTrace.siblingResponseId === positioningStartSnapshot.fields.id.responseId
+          && positioningStartTrace.pixelsPerPointBits === positioningStartSnapshot.pixels_per_point_bits
+          && isDeepStrictEqual(positioningStartTrace.pathRectRaw, positioningStartSnapshot.fields.path.rawRect)
+          && isDeepStrictEqual(positioningStartTrace.siblingRectRaw, positioningStartSnapshot.fields.id.rawRect)
+          && isDeepStrictEqual(positioningStartTrace.pointerRaw, positioningStartSnapshot.pointer_raw)
+          && positioningStartTrace.pointerButtonPrimary === positioningStartSnapshot.pointer_button_primary);
+        if (!positioningStartTrace || !positioningStartPairMatches
+          || positioningStartTrace.rawEvents.length !== 0
+          || positioningStartSnapshot.pointer_button_primary
+          || !canvasTraceModifiersClear(positioningStartTrace.currentModifiers)
+          || !isDeepStrictEqual(positioningStartSnapshot.pointer_raw, prePositionFrame.pointerRaw)) {
+          throw new Error("Linux canary positioningStartFrame was not one event-free paired frame after windowfocus and before movement: "
+            + JSON.stringify({positioning_start_trace: positioningStartTrace, positioning_start_snapshot: positioningStartSnapshot, positioning_start_pair_matches: positioningStartPairMatches}));
+        }
+
+        const neutralMoveStartLine = await openObsidianLogLineCount(logPath);
+        xdotool("mousemove", "--sync", "--window", windowId, "5", "5");
+        const neutralMoveEndLine = await openObsidianLogLineCount(logPath);
+        const targetMoveStartLine = neutralMoveEndLine;
+        xdotool("mousemove", "--sync", "--window", windowId, String(clickX), String(clickY));
+        const targetMoveEndLine = await openObsidianLogLineCount(logPath);
+        canaryPositioningContext = {
+          pre_position_frame: prePositionFrame,
+          pre_position_pair: beforeClickFieldPair,
+          focus_command: focusCommandRecord,
+          focus_interval_trace_frames: await readCanvasFocusTraceFrames(
+            logPath,
+            prePositionFrame.frameNr,
+            positioningStartSnapshot.frame_nr,
+          ),
+          positioning_start_frame: positioningStartSnapshot.frame_nr,
+          positioning_start_snapshot: positioningStartSnapshot,
+          positioning_start_trace: positioningStartTrace,
+          neutral_pointer_move_command: {
+            command: ["xdotool", "mousemove", "--sync", "--window", windowId, "5", "5"],
+            start_log_line_count: neutralMoveStartLine,
+            end_log_line_count: neutralMoveEndLine,
+            window_local_pixels: {x: 5, y: 5},
+          },
+          target_pointer_move_command: {
+            command: ["xdotool", "mousemove", "--sync", "--window", windowId, String(clickX), String(clickY)],
+            start_log_line_count: targetMoveStartLine,
+            end_log_line_count: targetMoveEndLine,
+            window_local_pixels: {x: clickX, y: clickY},
+          },
+        };
+      } else {
+        xdotool("windowfocus", "--sync", windowId);
+        // Move through a neutral app corner first so the target move creates a fresh
+        // egui pointer event even when a retry reuses the prior click coordinates.
+        xdotool("mousemove", "--sync", "--window", windowId, "5", "5");
+        xdotool("mousemove", "--sync", "--window", windowId, String(clickX), String(clickY));
+      }
       if (diagnosticField) {
         let freshGeometry: Awaited<ReturnType<typeof readCanvasFieldPair>> = null;
         try {
@@ -16856,7 +17954,9 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
         const responseIdsAreDistinct = targetGeometry.responseId !== siblingGeometry.responseId;
         const responseIdsAreStable = (!diagnosticBeforeClick || targetGeometry.responseId === diagnosticBeforeClick.responseId)
           && (!siblingBeforeClick || siblingGeometry.responseId === siblingBeforeClick.responseId);
-        const scaleIsConsistent = Math.abs(targetGeometry.pixelsPerPoint - siblingGeometry.pixelsPerPoint) <= 0.01;
+        const scaleIsConsistent = instrumentCanaryInitialClick
+          ? targetGeometry.pixelsPerPointBits === siblingGeometry.pixelsPerPointBits
+          : Math.abs(targetGeometry.pixelsPerPoint - siblingGeometry.pixelsPerPoint) <= 0.01;
         clickGeometryValidation = {
           screenshot: relative(reportDirectory, before.windowPngPath),
           click_x: clickX,
@@ -16883,6 +17983,7 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
           continue;
         }
         const refreshBeforeDispatch = await readOpenObsidianRefreshDiagnostics(logPath);
+        if (instrumentCanaryInitialClick) refreshBeforeInitialClickDispatch = refreshBeforeDispatch;
         const refreshChangedBeforeDispatch = openObsidianRefreshActivityChanged(refreshBeforeClick, refreshBeforeDispatch)
           || refreshReceiverBusyOrUnknown(refreshBeforeClick)
           || refreshReceiverBusyOrUnknown(refreshBeforeDispatch);
@@ -16892,14 +17993,259 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
         }
       }
 
-      xdotool("click", "--clearmodifiers", "1");
+      if (instrumentCanaryInitialClick) {
+        const positioning = canaryPositioningContext;
+        const geometryPair = targetAndSiblingGeometryBeforeClick;
+        const positioningStartFrame = Number(positioning?.positioning_start_frame);
+        const prePositionFrame = positioning?.pre_position_frame as CanvasFocusTraceFrame | undefined;
+        const focusCommand = positioning?.focus_command as Record<string, unknown> | undefined;
+        const positioningStartSnapshot = positioning?.positioning_start_snapshot as CanvasFocusSnapshot | undefined;
+        if (!positioning || !geometryPair || !prePositionFrame || !focusCommand || !positioningStartSnapshot
+          || refreshBeforeInitialClickDispatch === null) {
+          throw new Error("Linux canary initial click is missing its pre-position, focus, geometry, or refresh evidence");
+        }
+        const watermarkSnapshot = await requestCanvasFocusSnapshot(
+          logPath,
+          "immediately-before-dispatch click watermark W",
+          Math.max(geometryPair.target.line, geometryPair.sibling.line),
+          positioningStartFrame,
+          prePositionFrame.frameNr,
+        );
+        const framesThroughWatermark = watermarkSnapshot.trace_frames;
+        const watermarkTrace = watermarkSnapshot.trace;
+        const watermarkPair = {target: watermarkSnapshot.fields.path, sibling: watermarkSnapshot.fields.id};
+        const watermarkLine = Math.max(watermarkPair.target.line, watermarkPair.sibling.line);
+        const preDispatchTraceVerification = verifyCanvasInitialClickPreDispatchTrace({
+          frames: framesThroughWatermark,
+          prePositionFrame: prePositionFrame.frameNr,
+          positioningStartFrame,
+          watermarkFrame: watermarkSnapshot.frame_nr,
+          targetPoint: {x: clickX, y: clickY},
+          focusCommandSucceeded: focusCommand.succeeded === true,
+          targetWindowFocused: positioningStartSnapshot.x11.focused_window_id === windowId,
+        });
+        const watermarkMatchesPair = canvasTraceFrameMatchesFieldPair(watermarkTrace, watermarkPair.target, watermarkPair.sibling);
+        const watermarkMatchesPositionedGeometry = Boolean(watermarkTrace
+          && watermarkPair.target.enabled
+          && watermarkPair.sibling.enabled
+          && watermarkPair.target.responseId === geometryPair.target.responseId
+          && watermarkPair.sibling.responseId === geometryPair.sibling.responseId
+          && watermarkPair.target.responseId !== watermarkPair.sibling.responseId
+          && isDeepStrictEqual(watermarkPair.target.rawRect, geometryPair.target.rawRect)
+          && isDeepStrictEqual(watermarkPair.sibling.rawRect, geometryPair.sibling.rawRect)
+          && watermarkPair.target.pixelsPerPointBits === geometryPair.target.pixelsPerPointBits
+          && watermarkPair.sibling.pixelsPerPointBits === geometryPair.sibling.pixelsPerPointBits
+          && watermarkPair.target.focused === geometryPair.target.focused
+          && watermarkPair.sibling.focused === geometryPair.sibling.focused
+          && watermarkPair.target.valueBytes === geometryPair.target.valueBytes
+          && watermarkPair.target.valueSha256 === geometryPair.target.valueSha256
+          && watermarkPair.sibling.valueBytes === geometryPair.sibling.valueBytes
+          && watermarkPair.sibling.valueSha256 === geometryPair.sibling.valueSha256
+          && watermarkPair.target.clicked === false
+          && watermarkPair.sibling.clicked === false);
+        const watermarkPointerInsidePath = Boolean(watermarkPair.target.pointer
+          && watermarkPair.target.pointer.x >= watermarkPair.target.rect.left
+          && watermarkPair.target.pointer.x <= watermarkPair.target.rect.right
+          && watermarkPair.target.pointer.y >= watermarkPair.target.rect.top
+          && watermarkPair.target.pointer.y <= watermarkPair.target.rect.bottom);
+        const watermarkPointerOutsideSibling = Boolean(watermarkPair.target.pointer
+          && (watermarkPair.target.pointer.x < watermarkPair.sibling.rect.left
+            || watermarkPair.target.pointer.x > watermarkPair.sibling.rect.right
+            || watermarkPair.target.pointer.y < watermarkPair.sibling.rect.top
+            || watermarkPair.target.pointer.y > watermarkPair.sibling.rect.bottom));
+        const watermarkPointerMapsToCoordinate = Boolean(watermarkPair.target.pointer
+          && Math.abs(watermarkPair.target.pointer.x * watermarkPair.target.pixelsPerPoint - clickX) <= 1.5
+          && Math.abs(watermarkPair.target.pointer.y * watermarkPair.target.pixelsPerPoint - clickY) <= 1.5);
+        const watermarkLineOrder = Boolean(watermarkTrace
+          && watermarkTrace.line < watermarkPair.target.line
+          && watermarkTrace.line < watermarkPair.sibling.line);
+        const refreshStableAtWatermark = !openObsidianRefreshActivityChanged(refreshBeforeClick, refreshBeforeInitialClickDispatch)
+          && openObsidianRefreshReceiverIsKnownIdle(refreshBeforeClick)
+          && openObsidianRefreshReceiverIsKnownIdle(refreshBeforeInitialClickDispatch);
+        const watermarkChecks = {
+          unique_complete_watermark_trace: watermarkTrace !== undefined,
+          watermark_trace_matches_same_frame_field_rows: watermarkMatchesPair,
+          watermark_pair_matches_positioned_geometry: watermarkMatchesPositionedGeometry,
+          watermark_pair_is_after_geometry_and_refresh_checks: refreshStableAtWatermark,
+          watermark_path_pointer_inside_target_rect: watermarkPointerInsidePath,
+          watermark_path_pointer_outside_sibling_rect: watermarkPointerOutsideSibling,
+          watermark_pointer_maps_to_intended_coordinate: watermarkPointerMapsToCoordinate,
+          watermark_x11_window_focused: watermarkSnapshot.x11.focused_window_id === windowId,
+          trace_line_precedes_paired_field_rows: watermarkLineOrder,
+          pre_dispatch_input_trace_allowlist: preDispatchTraceVerification.passed,
+        };
+        const watermarkFailures = Object.entries(watermarkChecks)
+          .filter(([, passed]) => !passed)
+          .map(([name]) => name);
+        canaryDispatchWatermark = watermarkTrace ? {
+          frameNr: watermarkSnapshot.frame_nr,
+          line: watermarkLine,
+          trace: watermarkTrace,
+          pair: watermarkPair,
+        } : null;
+        const watermarkEvidence = {
+          frame_nr: watermarkSnapshot.frame_nr,
+          log_line: watermarkLine,
+          trace_log_line: watermarkTrace?.line ?? null,
+          paired_path_and_id_rows: watermarkPair,
+          snapshot: watermarkSnapshot,
+          pre_dispatch_trace_verification: preDispatchTraceVerification,
+          checks: watermarkChecks,
+          failed_checks: watermarkFailures,
+        };
+        if (watermarkFailures.length > 0) {
+          lastFailure = "Linux canary click watermark failed before dispatch: " + JSON.stringify(watermarkEvidence);
+          continue;
+        }
+
+        canaryInitialClickTraceEvidence = {
+          status: "validated_before_dispatch",
+          command: ["xdotool", "click", "--clearmodifiers", "1"],
+          dispatch_attempt_count: 0,
+          dispatch_watermark_frame: canaryDispatchWatermark?.frameNr ?? null,
+          dispatch_watermark_line: canaryDispatchWatermark?.line ?? null,
+          watermark: watermarkEvidence,
+          positioning: canaryPositioningContext,
+          checks: watermarkChecks,
+          failed_checks: [],
+        };
+        safetyTracker!.initialCoordinateClickTrace = canaryInitialClickTraceEvidence;
+        safetyTracker!.targetCoordinateClickDispatchAttempts += 1;
+        Object.assign(canaryInitialClickTraceEvidence, {
+          dispatch_attempt_count: safetyTracker!.targetCoordinateClickDispatchAttempts,
+          status: "dispatched_waiting_for_post_click_evidence",
+        });
+        try {
+          xdotool("click", "--clearmodifiers", "1");
+        } catch (error) {
+          Object.assign(canaryInitialClickTraceEvidence, {
+            status: "click_command_failed_after_dispatch_attempt",
+            dispatch_error: error instanceof Error ? error.message : String(error),
+            failed_checks: ["synchronous_click_command_succeeded"],
+          });
+          throw error;
+        }
+        let clickPairWithEvent: Awaited<ReturnType<typeof readCanvasFieldPair>>;
+        try {
+          clickPairWithEvent = await waitFor(
+            "fresh post-watermark Linux canary coordinate-click target and sibling rows",
+            () => readCanvasFieldPair(watermarkLine),
+            (pair) => pair !== null
+              && pair.target.frameNr > watermarkSnapshot.frame_nr
+              && pair.target.line > watermarkLine
+              && pair.sibling.line > watermarkLine
+              && pair.target.frameNr === pair.sibling.frameNr
+              && pair.target.clickEventObservation !== null
+              && pair.target.clickEventObservation.frameNr > watermarkSnapshot.frame_nr
+              && pair.target.clickEventObservation.line > watermarkLine,
+            5_000,
+          );
+        } catch (error) {
+          Object.assign(canaryInitialClickTraceEvidence, {
+            status: "post_dispatch_pair_observation_failed",
+            observation_error: error instanceof Error ? error.message : String(error),
+            failed_checks: ["unambiguous_post_watermark_target_sibling_pair_observed"],
+          });
+          throw error;
+        }
+        if (!clickPairWithEvent) {
+          Object.assign(canaryInitialClickTraceEvidence, {
+            status: "post_dispatch_pair_observation_missing",
+            failed_checks: ["unambiguous_post_watermark_target_sibling_pair_observed"],
+          });
+          throw new Error("Linux canary initial coordinate click was dispatched but produced no unambiguous post-watermark target/sibling pair");
+        }
+        const clickObservation = clickPairWithEvent.target.clickEventObservation;
+        const clickFrameNr = clickObservation?.frameNr ?? -1;
+        const clickFramePair = clickFrameNr > watermarkSnapshot.frame_nr
+          ? await readCanvasFieldPair(watermarkLine, undefined, clickFrameNr)
+          : null;
+        const clickTraceFrames = await readCanvasFocusTraceFrames(logPath, watermarkSnapshot.frame_nr, clickFrameNr);
+        const clickFrameRecords = clickTraceFrames.filter((frame) => frame.frameNr === clickFrameNr);
+        const clickFrameTrace = clickFrameRecords.length === 1 ? clickFrameRecords[0] : undefined;
+        const rawClickVerification = verifyCanvasInitialClickFrames({
+          frames: clickTraceFrames,
+          watermarkFrame: watermarkSnapshot.frame_nr,
+          clickFrame: clickFrameNr,
+          watermarkPointer: watermarkTrace?.pointer ?? null,
+        });
+        const clickFramePairMatches = canvasTraceFrameMatchesFieldPair(
+          clickFrameTrace,
+          clickFramePair?.target,
+          clickFramePair?.sibling,
+        );
+        const releaseIsInClickFrame = Boolean(clickFrameTrace && rawClickVerification.release
+          && clickFrameTrace.rawEvents.some((event) => event.eventIndex === rawClickVerification.release?.eventIndex
+            && event.kind === "pointer_button" && event.button === "primary" && event.pressed === false));
+        const clickFrameRowsExact = Boolean(clickObservation && clickFramePair
+          && clickObservation.frameNr === clickFrameNr
+          && clickObservation.line > watermarkLine
+          && clickFramePair.target.frameNr === clickFrameNr
+          && clickFramePair.sibling.frameNr === clickFrameNr
+          && clickFramePair.target.line > watermarkLine
+          && clickFramePair.sibling.line > watermarkLine
+          && clickFramePair.target.clicked
+          && clickPairWithEvent.target.clickEventObservations.length === 1
+          && clickPairWithEvent.sibling.clickEventObservations.length === 0
+          && !clickFramePair.sibling.clicked
+          && clickFramePair.target.focused
+          && !clickFramePair.sibling.focused
+          && !clickFramePair.target.pointerButtonPrimary
+          && !clickFramePair.sibling.pointerButtonPrimary
+          && clickFramePair.target.responseId === watermarkPair.target.responseId
+          && clickFramePair.sibling.responseId === watermarkPair.sibling.responseId
+          && isDeepStrictEqual(clickFramePair.target.rawRect, watermarkPair.target.rawRect)
+          && isDeepStrictEqual(clickFramePair.sibling.rawRect, watermarkPair.sibling.rawRect)
+          && clickFramePair.target.pixelsPerPointBits === watermarkPair.target.pixelsPerPointBits
+          && clickFramePair.sibling.pixelsPerPointBits === watermarkPair.sibling.pixelsPerPointBits
+          && clickFramePair.target.valueBytes === watermarkPair.target.valueBytes
+          && clickFramePair.target.valueSha256 === watermarkPair.target.valueSha256
+          && clickFramePair.sibling.valueBytes === watermarkPair.sibling.valueBytes
+          && clickFramePair.sibling.valueSha256 === watermarkPair.sibling.valueSha256);
+        const clickTraceMatchesWatermarkCapture = isDeepStrictEqual(clickTraceFrames[0], watermarkTrace);
+        const clickChecks = {
+          raw_press_release_contract: rawClickVerification.passed,
+          clicked_frame_trace_matches_paired_rows: clickFramePairMatches,
+          raw_release_shares_click_response_frame: releaseIsInClickFrame,
+          target_clicked_and_sibling_did_not: clickFrameRowsExact,
+          reread_watermark_frame_is_identical: clickTraceMatchesWatermarkCapture,
+        };
+        const clickFailures = Object.entries(clickChecks).filter(([, passed]) => !passed).map(([name]) => name);
+        canaryInitialClickPair = clickFramePair;
+        Object.assign(canaryInitialClickTraceEvidence, {
+          status: clickFailures.length === 0 ? "post_dispatch_validation_passed" : "post_dispatch_validation_failed",
+          dispatch_attempt_count: safetyTracker!.targetCoordinateClickDispatchAttempts,
+          dispatch_watermark_frame: canaryDispatchWatermark?.frameNr ?? null,
+          dispatch_watermark_line: canaryDispatchWatermark?.line ?? null,
+          post_watermark_frames: clickTraceFrames,
+          raw_click_verification: rawClickVerification,
+          latest_post_dispatch_field_pair: clickPairWithEvent,
+          click_frame_pair: clickFramePair,
+          checks: {...watermarkChecks, ...clickChecks},
+          failed_checks: clickFailures,
+          observed_frame_ordering_only: "press.frame_nr > W; this is egui frame ordering and does not measure OS-to-egui wall-clock latency or infer its cause",
+        });
+        clickGeometryValidation = {
+          ...(clickGeometryValidation ?? {}),
+          target_coordinate_click_dispatch_attempts: safetyTracker!.targetCoordinateClickDispatchAttempts,
+          pixels_per_point_bits: watermarkPair.target.pixelsPerPointBits,
+          click_dispatch_watermark: watermarkEvidence,
+          initial_click_trace: canaryInitialClickTraceEvidence,
+        };
+        if (clickFailures.length > 0) {
+          throw new Error("Linux canary initial coordinate click was dispatched but its raw-event/frame proof failed; no retry is permitted: "
+            + JSON.stringify(canaryInitialClickTraceEvidence));
+        }
+      } else {
+        xdotool("click", "--clearmodifiers", "1");
+      }
       if (diagnosticField) {
         const canaryClickOnlyBaseline = safetyTracker?.expectedAbortCanary === true;
         if (!canaryClickOnlyBaseline) {
           xdotool("key", "--clearmodifiers", "Right");
           await delay(100);
         }
-        const focusAndSiblingAfterClick = await waitFor(
+        const focusAndSiblingAfterClick = canaryInitialClickPair ?? await waitFor(
           `fresh Canvas target and sibling focus diagnostics after attempt ${attempt} click`,
           () => readCanvasFieldPair(geometryBaselineLine),
           (pair) => pair !== null
@@ -16939,6 +18285,7 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
           || preEntrySiblingWidget.valueSha256 !== targetAndSiblingGeometryBeforeClick.sibling.valueSha256
           || refreshChanged) {
           lastFailure = `pre-entry Canvas target ownership was not confirmed: target=${JSON.stringify(preEntryTargetWidget)}; sibling=${JSON.stringify(preEntrySiblingWidget)}; sibling_unchanged=${Boolean(preEntrySiblingWidget && targetAndSiblingGeometryBeforeClick && preEntrySiblingWidget.valueBytes === targetAndSiblingGeometryBeforeClick.sibling.valueBytes && preEntrySiblingWidget.valueSha256 === targetAndSiblingGeometryBeforeClick.sibling.valueSha256)}; refresh_changed=${refreshChanged}; click=(${clickX},${clickY})`;
+          if (instrumentCanaryInitialClick) throw new Error(lastFailure + "; initial click was already dispatched, so retry is forbidden");
           continue;
         }
         const fieldAlreadyContainsExpectedValue = preEntryTargetWidget.valueSha256 === expectedValueSha256
@@ -17736,10 +19083,14 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
 
                 // No await, pointer move, or other event dispatch is allowed between the final
                 // fresh tuple check above and this current-cursor click.
+                if (safetyTracker?.expectedAbortCanary === true) {
+                  safetyTracker.stationaryRecoveryClickDispatchAttempts += 1;
+                }
                 xdotool("click", "--clearmodifiers", "1");
                 recoveryRecord.recovery_click_dispatched = true;
                 recoveryRecord.recovery_click_command = ["xdotool", "click", "--clearmodifiers", "1"];
                 recoveryRecord.recovery_click_pointer_repositioned = false;
+                recoveryRecord.stationary_recovery_click_dispatch_attempts = safetyTracker?.stationaryRecoveryClickDispatchAttempts ?? null;
 
                 const clickPairWithEvent = await waitFor(
                   "fresh target click event for Linux Canvas pre-staging focus recovery",
@@ -19494,6 +20845,8 @@ async function runOpenObsidianCanvasTextEdit(
   const editReport = (expectedAbortCanary
     ? canvasReport.expected_abort_canary
     : canvasReport.text_edit) as Record<string, unknown>;
+  const eframeInspectionEvidence: CanvasEframeInspectionEvidence[] = [];
+  editReport.app_data_eframe_app_ron_inspections = eframeInspectionEvidence;
   const snapshots = report.vault_snapshots as Record<string, unknown>;
   const runName = expectedAbortCanary ? "canvas-abort-canary" : "canvas-text-edit";
   const artifactPrefix = expectedAbortCanary ? "canvas-abort-canary" : "canvas-text-edit";
@@ -19505,15 +20858,19 @@ async function runOpenObsidianCanvasTextEdit(
   const localDataRoot = join(appDataContainer, "local-data");
   const appEnv: NodeJS.ProcessEnv = {...process.env, HOME: homeRoot};
   const appDataRoot = appDataContainer;
+  const expectedEframeAppRonPath = expectedCanvasEframeAppRonRelativePath(process.platform);
+  let managedUserDataRoot: string;
   if (process.platform === "win32") {
     appEnv.APPDATA = userConfigRoot;
     appEnv.LOCALAPPDATA = localDataRoot;
     appEnv.USERPROFILE = homeRoot;
+    managedUserDataRoot = join(userConfigRoot, "OpenObsidian");
   } else if (process.platform === "darwin") {
     appEnv.XDG_CONFIG_HOME = userConfigRoot;
     appEnv.XDG_CACHE_HOME = join(appDataContainer, "cache");
     appEnv.XDG_DATA_HOME = join(appDataContainer, "data");
     appEnv.XDG_STATE_HOME = join(appDataContainer, "state");
+    managedUserDataRoot = join(homeRoot, "Library", "Application Support", "OpenObsidian");
   } else {
     appEnv.XDG_CONFIG_HOME = userConfigRoot;
     appEnv.XDG_CACHE_HOME = join(appDataContainer, "cache");
@@ -19522,6 +20879,7 @@ async function runOpenObsidianCanvasTextEdit(
     appEnv.LIBGL_ALWAYS_SOFTWARE = "1";
     appEnv.WGPU_BACKEND = "gl";
     appEnv.OPENOBSIDIAN_CI_CANVAS_FOCUS_SNAPSHOT_REQUEST_FILE = linuxCanvasFocusSnapshotRequestFile;
+    managedUserDataRoot = join(userConfigRoot, "OpenObsidian");
   }
   if (process.platform === "linux" && expectedAbortCanary) appEnv.OPENOBSIDIAN_CI_CANVAS_FOCUS_TRACE = "1";
   else delete appEnv.OPENOBSIDIAN_CI_CANVAS_FOCUS_TRACE;
@@ -19532,6 +20890,9 @@ async function runOpenObsidianCanvasTextEdit(
     diagnosticMotionStages: [],
     motionDispatchAttempts: 0,
     pasteDispatchAttempts: 0,
+    targetCoordinateClickDispatchAttempts: 0,
+    stationaryRecoveryClickDispatchAttempts: 0,
+    initialCoordinateClickTrace: null,
     saveAttempted: false,
     clipboardCleanup: null,
     requestMarkerCleanup: null,
@@ -19544,8 +20905,39 @@ async function runOpenObsidianCanvasTextEdit(
   await rm(appDataContainer, {recursive: true, force: true});
   await mkdir(join(homeRoot, "Desktop"), {recursive: true});
   await mkdir(appDataContainer, {recursive: true});
+  await mkdir(managedUserDataRoot, {recursive: true});
+  await mkdir(localDataRoot, {recursive: true});
+  await mkdir(join(appDataContainer, "cache"), {recursive: true});
+  await mkdir(join(appDataContainer, "data", "openobsidian"), {recursive: true});
+  await mkdir(join(appDataContainer, "state"), {recursive: true});
+  await mkdir(join(homeRoot, "Library", "Application Support", "OpenObsidian"), {recursive: true});
+  const canonicalVaultForAppData = await realpath(selectedVaultRoot);
+  const canonicalAppDataRootForAppData = await realpath(appDataRoot);
+  const canonicalManagedUserDataRoot = await realpath(managedUserDataRoot);
+  const appDataRelativeToVault = relative(canonicalVaultForAppData, canonicalAppDataRootForAppData);
+  if (appDataRelativeToVault === ""
+    || (!appDataRelativeToVault.startsWith(`..${sep}`) && appDataRelativeToVault !== ".." && !appDataRelativeToVault.startsWith(sep))) {
+    throw new Error("OpenObsidian's Canvas app-data root is inside the selected vault before process launch");
+  }
+  const appDataSnapshotBeforeAnyLaunch = await snapshotTree(appDataRoot);
+  const appDataMarkerStateBeforeAnyLaunch = await validateCanvasManagedMarkerState(
+    appDataRoot,
+    managedUserDataRoot,
+    selectedVaultRoot,
+    appDataSnapshotBeforeAnyLaunch,
+    `${process.platform} Canvas app-data before any process launch`,
+  );
+  await validateCanvasEframeFiles(
+    appDataRoot,
+    appDataSnapshotBeforeAnyLaunch,
+    `${process.platform} Canvas app-data before any process launch`,
+    [selectedVaultRoot, resolve(selectedVaultRoot), canonicalVaultForAppData, appDataRoot, resolve(appDataRoot), canonicalAppDataRootForAppData, managedUserDataRoot, resolve(managedUserDataRoot), canonicalManagedUserDataRoot],
+    expectedEframeAppRonPath,
+    eframeInspectionEvidence,
+  );
   editReport.status = "running";
   editReport.expected_abort_canary = expectedAbortCanary;
+  editReport.app_data_expected_eframe_app_ron_relative_path = expectedEframeAppRonPath;
   editReport.vault_name = selectedVaultName;
   editReport.vault_root = selectedVaultRoot;
   editReport.source_canvas_path = canvasPath;
@@ -19562,10 +20954,137 @@ async function runOpenObsidianCanvasTextEdit(
     "Cancel Canvas edit",
   ];
   editReport.save_policy = "The selected card is loaded into a draft; the vault must remain byte- and snapshot-identical until Save Canvas text is explicitly activated.";
+  editReport.app_data_root = appDataRoot;
+  editReport.managed_user_data_root = managedUserDataRoot;
+  editReport.app_data_root_exists_pre_launch = true;
+  editReport.managed_user_data_root_exists_pre_launch = true;
+  editReport.app_data_expected_vault_data_id = canvasVaultDataId(selectedVaultRoot);
+  editReport.app_data_vault_id_derivation = "first 24 lowercase hex characters of SHA-256 over UTF-8 bytes of the lexical absolute Node path.resolve(selectedVaultRoot) string";
+  editReport.app_data_snapshot_before_any_launch = appDataSnapshotBeforeAnyLaunch;
+  editReport.app_data_managed_markers_initialized_before_any_launch = appDataMarkerStateBeforeAnyLaunch.initialized;
+  editReport.app_data_canonical_root = canonicalAppDataRootForAppData;
+  editReport.app_data_canonical_root_is_outside_vault = true;
   const screenshots: Record<string, string> = {};
   let child: ChildProcess | undefined;
   let window: {window_id: string; title: string; geometry: string} | undefined;
+  let appDataSnapshotBeforeActualLaunch: SnapshotEntry[] = appDataSnapshotBeforeAnyLaunch;
+  let appDataSnapshotPostStartup: SnapshotEntry[] | null = null;
+  let appDataSnapshotPrePicker: SnapshotEntry[] | null = null;
+  let appDataSnapshotPickerOpen: SnapshotEntry[] | null = null;
+  let appDataSnapshotPostSelection: SnapshotEntry[] | null = null;
+  let appDataSnapshotPostPicker: SnapshotEntry[] | null = null;
+  let appDataSnapshotAfterCanvasSetup: SnapshotEntry[] | null = null;
+  let startupAppDataChanges: Array<{path: string; before?: SnapshotEntry; after?: SnapshotEntry}> = [];
+  let linuxWarmupGeometry: string | undefined;
+  const pickerAppDataCapture: {
+    root: string;
+    managedUserDataRoot: string;
+    vaultRoot: string;
+    forbiddenPaths: string[];
+    expectedEframeAppRonRelativePath: string | null;
+    inspectionEvidence: CanvasEframeInspectionEvidence[];
+    preOpen?: SnapshotEntry[];
+    panelOpen?: SnapshotEntry[];
+  } | undefined = process.platform === "darwin"
+    ? {
+      root: appDataRoot,
+      managedUserDataRoot,
+      vaultRoot: selectedVaultRoot,
+      expectedEframeAppRonRelativePath: expectedEframeAppRonPath,
+      inspectionEvidence: eframeInspectionEvidence,
+      forbiddenPaths: [
+        selectedVaultRoot,
+        resolve(selectedVaultRoot),
+        canonicalVaultForAppData,
+        appDataRoot,
+        resolve(appDataRoot),
+        canonicalAppDataRootForAppData,
+        managedUserDataRoot,
+        resolve(managedUserDataRoot),
+        canonicalManagedUserDataRoot,
+      ],
+    }
+    : undefined;
   try {
+    if (process.platform === "linux") {
+      const warmupCycles: Array<Record<string, unknown>> = [];
+      let previousPostClose: SnapshotEntry[] | null = null;
+      let stabilizationCycle: number | null = null;
+      editReport.app_data_linux_warmup_cycles = warmupCycles;
+      for (let cycleNumber = 1; cycleNumber <= 3; cycleNumber += 1) {
+        let cycle: Awaited<ReturnType<typeof runLinuxCanvasAppDataWarmupCycle>>;
+        try {
+          cycle = await runLinuxCanvasAppDataWarmupCycle(
+            cycleNumber,
+            appDataRoot,
+            managedUserDataRoot,
+            appEnv,
+            selectedVaultRoot,
+            selectedVaultName,
+            seedSnapshot,
+            linuxWarmupGeometry,
+            eframeInspectionEvidence,
+          );
+        } catch (warmupError) {
+          warmupCycles.push({
+            cycle: cycleNumber,
+            status: "failed",
+            error: warmupError instanceof Error ? warmupError.message : String(warmupError),
+          });
+          editReport.app_data_linux_warmup_cycles = warmupCycles;
+          throw warmupError;
+        }
+        if (linuxWarmupGeometry === undefined) linuxWarmupGeometry = cycle.geometry;
+        warmupCycles.push({
+          cycle: cycleNumber,
+          window_geometry: cycle.geometry,
+          managed_markers_initialized_before_launch: cycle.preLaunchMarkersInitialized,
+          pre_launch_snapshot: cycle.preLaunch,
+          post_setup_snapshot: cycle.postSetup,
+          post_close_snapshot: cycle.postClose,
+          pre_launch_to_post_setup_changes: cycle.startupChanges,
+          post_setup_to_post_close_changes: cycle.closeChanges,
+          pre_launch_to_post_setup_classified: true,
+          post_setup_to_post_close_classified: true,
+          eframe_app_ron_inspected_at_each_phase: true,
+          managed_marker_bytes_validated_at_each_phase: true,
+        });
+        editReport.app_data_linux_warmup_cycles = warmupCycles;
+        if (previousPostClose && isDeepStrictEqual(previousPostClose, cycle.postClose)) {
+          stabilizationCycle = cycleNumber;
+          break;
+        }
+        previousPostClose = cycle.postClose;
+      }
+      editReport.app_data_linux_warmup_cycles = warmupCycles;
+      editReport.app_data_linux_stabilization_cycle = stabilizationCycle;
+      if (stabilizationCycle === null) {
+        throw new Error("Linux Canvas app-data did not produce two consecutive equal post-close trees within three separate warm-up processes");
+      }
+    }
+    appDataSnapshotBeforeActualLaunch = await snapshotTree(appDataRoot);
+    if (process.platform === "linux") {
+      const lastWarmup = (editReport.app_data_linux_warmup_cycles as Array<{post_close_snapshot?: SnapshotEntry[]}> | undefined)?.at(-1)?.post_close_snapshot;
+      if (!lastWarmup || !isDeepStrictEqual(lastWarmup, appDataSnapshotBeforeActualLaunch)) {
+        throw new Error("The fresh Linux pre-canary launch tree did not equal the stabilized no-canary post-close app-data tree");
+      }
+    }
+    await validateCanvasManagedMarkerState(
+      appDataRoot,
+      managedUserDataRoot,
+      selectedVaultRoot,
+      appDataSnapshotBeforeActualLaunch,
+      `${process.platform} Canvas app-data before actual process launch`,
+    );
+    await validateCanvasEframeFiles(
+      appDataRoot,
+      appDataSnapshotBeforeActualLaunch,
+      `${process.platform} Canvas app-data before actual process launch`,
+      [selectedVaultRoot, resolve(selectedVaultRoot), canonicalVaultForAppData, appDataRoot, resolve(appDataRoot), canonicalAppDataRootForAppData, managedUserDataRoot, resolve(managedUserDataRoot), canonicalManagedUserDataRoot],
+      expectedEframeAppRonPath,
+      eframeInspectionEvidence,
+    );
+    editReport.app_data_snapshot_pre_launch = appDataSnapshotBeforeActualLaunch;
     child = launchLogged(openObsidianBinary, [], logPath, appEnv);
     editReport.pid = child.pid ?? null;
     await delay(1_000);
@@ -19587,11 +21106,43 @@ async function runOpenObsidianCanvasTextEdit(
       }, (value) => value !== null, 30_000);
       if (!x11Window) throw new Error("OpenObsidian did not expose a visible Canvas text-edit window");
       window = x11Window;
+      if (linuxWarmupGeometry !== undefined && window.geometry !== linuxWarmupGeometry) {
+        throw new Error("The fresh Linux Canvas run did not retain the warm-up runner window geometry");
+      }
       xdotool("windowfocus", "--sync", window.window_id);
     } else {
       window = {window_id: String(child.pid ?? "unknown"), title: "OpenObsidian Canvas text-edit window", geometry: "native window bounds captured during screenshot"};
     }
     editReport.window = window;
+    if (process.platform === "darwin") {
+      appDataSnapshotPostStartup = await snapshotTree(appDataRoot);
+      editReport.app_data_snapshot_after_startup_settled = appDataSnapshotPostStartup;
+      startupAppDataChanges = changedPaths(appDataSnapshotBeforeActualLaunch, appDataSnapshotPostStartup);
+      editReport.app_data_changes_pre_launch_to_startup_settled = startupAppDataChanges;
+      await validateCanvasManagedMarkerState(
+        appDataRoot,
+        managedUserDataRoot,
+        selectedVaultRoot,
+        appDataSnapshotPostStartup,
+        "macOS Canvas app-data after settled open-vault startup",
+      );
+      await validateCanvasAppDataDelta(
+        appDataSnapshotBeforeActualLaunch,
+        appDataSnapshotPostStartup,
+        startupAppDataChanges,
+        appDataRoot,
+        managedUserDataRoot,
+        selectedVaultRoot,
+        "macOS Canvas pre-launch-to-settled-startup transition",
+        {
+          allowManagedBootstrap: false,
+          allowEframeAppRon: true,
+          forbiddenPaths: pickerAppDataCapture?.forbiddenPaths ?? [],
+          expectedEframeAppRonRelativePath: expectedEframeAppRonPath,
+          inspectionEvidence: eframeInspectionEvidence,
+        },
+      );
+    }
     editReport.native_picker = await selectOpenObsidianVaultFromNativePicker(
       child,
       window,
@@ -19599,7 +21150,32 @@ async function runOpenObsidianCanvasTextEdit(
       selectedVaultRoot,
       editReport,
       `openobsidian-${runName}`,
+      pickerAppDataCapture,
     );
+    if (process.platform === "darwin") {
+      appDataSnapshotPrePicker = pickerAppDataCapture?.preOpen ?? null;
+      appDataSnapshotPickerOpen = pickerAppDataCapture?.panelOpen ?? null;
+      if (!appDataSnapshotPrePicker || !appDataSnapshotPickerOpen) {
+        throw new Error("macOS Canvas app-data snapshots were not captured at both native picker boundaries");
+      }
+      if (!appDataSnapshotPostStartup) {
+        throw new Error("macOS Canvas app-data settled-startup snapshot was not captured before the native picker");
+      }
+      const startupToPrePickerChanges = changedPaths(appDataSnapshotPostStartup, appDataSnapshotPrePicker);
+      editReport.app_data_changes_startup_to_pre_picker = startupToPrePickerChanges;
+      ensureExactSnapshot(appDataSnapshotPostStartup, appDataSnapshotPrePicker, "macOS settled-startup-to-immediately-pre-picker app data");
+      editReport.app_data_startup_to_pre_picker_exact = true;
+      editReport.app_data_snapshot_pre_picker = appDataSnapshotPrePicker;
+      editReport.app_data_snapshot_at_picker_open = appDataSnapshotPickerOpen;
+      await validateCanvasEframeFiles(
+        appDataRoot,
+        appDataSnapshotPrePicker,
+        "macOS Canvas app-data at exact settled-startup-to-pre-picker boundary",
+        pickerAppDataCapture?.forbiddenPaths ?? [],
+        expectedEframeAppRonPath,
+        eframeInspectionEvidence,
+      );
+    }
     const initialMarkdownCount = countMarkdownFiles(seedSnapshot);
     const opened = await waitFor("OpenObsidian to render the Canvas text-edit fixture vault", async () => {
       await delay(750);
@@ -19617,6 +21193,8 @@ async function runOpenObsidianCanvasTextEdit(
       throw new Error("OpenObsidian's Canvas text-edit application data directory is inside the selected vault");
     }
     editReport.app_data_root = appDataRoot;
+    editReport.app_data_canonical_root = canonicalAppData;
+    editReport.managed_user_data_canonical_root = await realpath(managedUserDataRoot);
     editReport.app_data_canonical_root_is_outside_vault = true;
 
     const beforeEdit = await snapshotTree(selectedVaultRoot);
@@ -19646,6 +21224,83 @@ async function runOpenObsidianCanvasTextEdit(
       settled_for_ms: settledRefreshBeforeCanvasEditor.settled_for_ms,
     };
 
+    if (process.platform === "darwin") {
+      appDataSnapshotPostSelection = await snapshotTree(appDataRoot);
+      appDataSnapshotPostPicker = appDataSnapshotPostSelection;
+      editReport.app_data_snapshot_after_settled_vault_selection = appDataSnapshotPostSelection;
+      const panelOpenToPostSelectionChanges = changedPaths(appDataSnapshotPickerOpen ?? [], appDataSnapshotPostSelection);
+      editReport.app_data_changes_panel_open_to_settled_vault_selection = panelOpenToPostSelectionChanges;
+      await validateCanvasAppDataDelta(
+        appDataSnapshotPickerOpen ?? [],
+        appDataSnapshotPostSelection,
+        panelOpenToPostSelectionChanges,
+        appDataRoot,
+        managedUserDataRoot,
+        selectedVaultRoot,
+        "macOS Canvas confirmed-picker-open-to-settled-selected-vault setup transition",
+        {
+          allowManagedBootstrap: true,
+          allowEframeAppRon: true,
+          forbiddenPaths: pickerAppDataCapture?.forbiddenPaths ?? [],
+          expectedEframeAppRonRelativePath: expectedEframeAppRonPath,
+          inspectionEvidence: eframeInspectionEvidence,
+        },
+      );
+    }
+
+    if (process.platform !== "darwin") {
+      appDataSnapshotPostStartup = await snapshotTree(appDataRoot);
+      editReport.app_data_snapshot_after_startup_settled = appDataSnapshotPostStartup;
+      editReport.app_data_snapshot_after_settled_vault_selection = appDataSnapshotPostStartup;
+      startupAppDataChanges = changedPaths(appDataSnapshotBeforeActualLaunch, appDataSnapshotPostStartup);
+      editReport.app_data_changes_pre_launch_to_startup_settled = startupAppDataChanges;
+    }
+    if (process.platform === "linux") {
+      await validateCanvasManagedMarkerSnapshot(appDataRoot, managedUserDataRoot, selectedVaultRoot, appDataSnapshotPostStartup!, "Linux Canvas app-data after fresh startup and vault setup");
+      await validateCanvasAppDataDelta(
+        appDataSnapshotBeforeActualLaunch,
+        appDataSnapshotPostStartup!,
+        startupAppDataChanges,
+        appDataRoot,
+        managedUserDataRoot,
+        selectedVaultRoot,
+        "Linux Canvas fresh pre-launch-to-startup transition after warm-up stabilization",
+        {
+          allowManagedBootstrap: false,
+          allowEframeAppRon: true,
+          forbiddenPaths: [selectedVaultRoot, resolve(selectedVaultRoot), canonicalVault, appDataRoot, resolve(appDataRoot), canonicalAppData, managedUserDataRoot, resolve(managedUserDataRoot), canonicalManagedUserDataRoot],
+          expectedEframeAppRonRelativePath: expectedEframeAppRonPath,
+          inspectionEvidence: eframeInspectionEvidence,
+        },
+      );
+    }
+    if (process.platform !== "darwin") {
+      appDataSnapshotPrePicker = await snapshotTree(appDataRoot);
+      editReport.app_data_snapshot_pre_picker = appDataSnapshotPrePicker;
+      editReport.app_data_snapshot_before_canvas_editor_setup = appDataSnapshotPrePicker;
+      const startupToPrePickerChanges = changedPaths(appDataSnapshotPostStartup ?? [], appDataSnapshotPrePicker);
+      editReport.app_data_changes_startup_to_pre_picker = startupToPrePickerChanges;
+      if (process.platform === "linux") {
+        editReport.app_data_changes_settled_vault_selection_to_pre_editor_setup = startupToPrePickerChanges;
+        ensureExactSnapshot(
+          appDataSnapshotPostStartup ?? [],
+          appDataSnapshotPrePicker,
+          "Linux settled-vault-selection-to-pre-editor-setup app data",
+        );
+        editReport.app_data_startup_to_pre_picker_exact = true;
+        editReport.app_data_settled_vault_selection_to_pre_editor_setup_exact = true;
+      }
+      await validateCanvasManagedMarkerSnapshot(appDataRoot, managedUserDataRoot, selectedVaultRoot, appDataSnapshotPrePicker, `${process.platform} Canvas app-data before Canvas editor setup`);
+      await validateCanvasEframeFiles(
+        appDataRoot,
+        appDataSnapshotPrePicker,
+        `${process.platform} Canvas app-data at pre-editor-setup boundary`,
+        [selectedVaultRoot, resolve(selectedVaultRoot), canonicalVault, appDataRoot, resolve(appDataRoot), canonicalAppData, managedUserDataRoot, resolve(managedUserDataRoot), canonicalManagedUserDataRoot],
+        expectedEframeAppRonPath,
+        eframeInspectionEvidence,
+      );
+    }
+
     const interactions: Record<string, string> = {};
     editReport.interactions = interactions;
     interactions.expand_canvas_text_edit = await invokeNativeAccessibleControl(
@@ -19665,6 +21320,83 @@ async function runOpenObsidianCanvasTextEdit(
     screenshots.expanded_form = relative(reportDirectory, expandedForm.windowPngPath);
     editReport.expanded_form_ocr = expandedForm.ocrText.slice(0, 4_000);
 
+    appDataSnapshotAfterCanvasSetup = await snapshotTree(appDataRoot);
+    editReport.app_data_snapshot_after_canvas_editor_setup = appDataSnapshotAfterCanvasSetup;
+    if (process.platform === "darwin") {
+      if (!appDataSnapshotPostSelection || !appDataSnapshotPostPicker) {
+        throw new Error("macOS Canvas settled selected-vault app-data baseline was not captured before editor setup");
+      }
+      ensureExactSnapshot(appDataSnapshotPostSelection, appDataSnapshotAfterCanvasSetup, "macOS settled selected-vault-to-Canvas-editor app-data");
+      editReport.app_data_selected_vault_to_canvas_editor_exact = true;
+      editReport.app_data_snapshot_after_picker_setup = appDataSnapshotPostPicker;
+    } else {
+      appDataSnapshotPostPicker = appDataSnapshotAfterCanvasSetup;
+      editReport.app_data_snapshot_after_picker_setup = appDataSnapshotPostPicker;
+    }
+    const appDataSnapshotForPickerSetupDelta = process.platform === "darwin"
+      ? appDataSnapshotPickerOpen ?? []
+      : appDataSnapshotPrePicker ?? [];
+    const prePickerToPostPickerChanges = changedPaths(appDataSnapshotForPickerSetupDelta, appDataSnapshotPostPicker ?? []);
+    if (process.platform !== "darwin") {
+      editReport.app_data_changes_pre_picker_to_post_picker_setup = prePickerToPostPickerChanges;
+    }
+    const forbiddenAppDataPaths = [selectedVaultRoot, resolve(selectedVaultRoot), canonicalVault, appDataRoot, resolve(appDataRoot), canonicalAppData, managedUserDataRoot, resolve(managedUserDataRoot), canonicalManagedUserDataRoot];
+    if (process.platform === "darwin") {
+      const panelOpenToPostSelectionChanges = changedPaths(appDataSnapshotPickerOpen ?? [], appDataSnapshotPostPicker ?? []);
+      editReport.app_data_changes_panel_open_to_settled_vault_selection = panelOpenToPostSelectionChanges;
+      await validateCanvasAppDataDelta(
+        appDataSnapshotPickerOpen ?? [],
+        appDataSnapshotPostPicker ?? [],
+        panelOpenToPostSelectionChanges,
+        appDataRoot,
+        managedUserDataRoot,
+        selectedVaultRoot,
+        "macOS Canvas confirmed-picker-open-to-settled-selected-vault setup transition",
+        {
+          allowManagedBootstrap: true,
+          allowEframeAppRon: true,
+          forbiddenPaths: forbiddenAppDataPaths,
+          expectedEframeAppRonRelativePath: expectedEframeAppRonPath,
+          inspectionEvidence: eframeInspectionEvidence,
+        },
+      );
+    } else if (process.platform === "win32") {
+      await validateCanvasAppDataDelta(
+        appDataSnapshotBeforeActualLaunch,
+        appDataSnapshotPostPicker ?? [],
+        changedPaths(appDataSnapshotBeforeActualLaunch, appDataSnapshotPostPicker ?? []),
+        appDataRoot,
+        managedUserDataRoot,
+        selectedVaultRoot,
+        "Windows Canvas pre-launch-to-post-setup bootstrap transition",
+        {
+          allowManagedBootstrap: true,
+          allowEframeAppRon: false,
+          forbiddenPaths: forbiddenAppDataPaths,
+          expectedEframeAppRonRelativePath: expectedEframeAppRonPath,
+          inspectionEvidence: eframeInspectionEvidence,
+        },
+      );
+    } else {
+      await validateCanvasAppDataDelta(
+        appDataSnapshotPrePicker ?? [],
+        appDataSnapshotPostPicker ?? [],
+        prePickerToPostPickerChanges,
+        appDataRoot,
+        managedUserDataRoot,
+        selectedVaultRoot,
+        "Linux Canvas settled pre-picker-to-post-picker UI-state transition",
+        {
+          allowManagedBootstrap: false,
+          allowEframeAppRon: true,
+          forbiddenPaths: forbiddenAppDataPaths,
+          expectedEframeAppRonRelativePath: expectedEframeAppRonPath,
+          inspectionEvidence: eframeInspectionEvidence,
+        },
+      );
+    }
+    editReport.app_data_bootstrap_policy_passed = true;
+
     const vaultBeforeFieldInput = await snapshotTree(selectedVaultRoot);
     ensureExactSnapshot(seedSnapshot, vaultBeforeFieldInput, "Canvas vault before first native text-edit field input");
     const canvasBytesBeforeFieldInput = await readFile(join(selectedVaultRoot, canvasPath));
@@ -19675,6 +21407,21 @@ async function runOpenObsidianCanvasTextEdit(
       throw new Error("Canvas source bytes or destination state changed before first native text-edit field input");
     }
     const appDataBeforeFieldInput = await snapshotTree(appDataRoot);
+    const appDataChangesFromPostPickerToFieldInput = changedPaths(appDataSnapshotPostPicker ?? [], appDataBeforeFieldInput);
+    if (appDataChangesFromPostPickerToFieldInput.length > 0) {
+      throw new Error(`Canvas app data changed between the settled post-picker snapshot and the pre-input baseline: ${JSON.stringify(appDataChangesFromPostPickerToFieldInput).slice(0, 6_000)}`);
+    }
+    editReport.app_data_snapshot_before_field_input = appDataBeforeFieldInput;
+    editReport.app_data_changes_post_picker_to_pre_input_baseline = appDataChangesFromPostPickerToFieldInput;
+    editReport.app_data_post_picker_baseline_exact = true;
+    await validateCanvasEframeFiles(
+      appDataRoot,
+      appDataBeforeFieldInput,
+      `${process.platform} Canvas app-data at exact pre-field-input baseline`,
+      forbiddenAppDataPaths,
+      expectedEframeAppRonPath,
+      eframeInspectionEvidence,
+    );
     safetyTracker.baseline = {
       vaultRoot: selectedVaultRoot,
       appDataRoot,
@@ -19683,8 +21430,28 @@ async function runOpenObsidianCanvasTextEdit(
       canvasBytes: canvasBytesBeforeFieldInput,
       canvasSha256: canvasHashBeforeFieldInput,
     };
+    const appDataInteractionCheckpoints: Array<Record<string, unknown>> = [];
+    const assertAppDataMatchesPostPickerBaseline = async (stage: string): Promise<SnapshotEntry[]> => {
+      const current = await snapshotTree(appDataRoot);
+      const changes = changedPaths(appDataBeforeFieldInput, current);
+      const checkpoint = {stage, snapshot: current, changes, exact_match: changes.length === 0};
+      appDataInteractionCheckpoints.push(checkpoint);
+      editReport.app_data_interaction_checkpoints = appDataInteractionCheckpoints;
+      if (changes.length > 0) {
+        throw new Error(`OpenObsidian app data changed after the settled post-picker baseline at ${stage}: ${JSON.stringify(changes).slice(0, 6_000)}`);
+      }
+      await validateCanvasManagedMarkerSnapshot(appDataRoot, managedUserDataRoot, selectedVaultRoot, current, `${process.platform} Canvas app-data at ${stage}`);
+      await validateCanvasEframeFiles(
+        appDataRoot,
+        current,
+        `${process.platform} Canvas app-data at ${stage}`,
+        [selectedVaultRoot, resolve(selectedVaultRoot), appDataRoot, canonicalAppData, managedUserDataRoot, resolve(managedUserDataRoot)],
+        expectedEframeAppRonPath,
+        eframeInspectionEvidence,
+      );
+      return current;
+    };
     editReport.vault_snapshot_before_field_input = vaultBeforeFieldInput;
-    editReport.app_data_snapshot_before_field_input = appDataBeforeFieldInput;
     editReport.canvas_source_before_field_input = {
       bytes: canvasBytesBeforeFieldInput.length,
       sha256: canvasHashBeforeFieldInput,
@@ -19720,6 +21487,7 @@ async function runOpenObsidianCanvasTextEdit(
       || afterInput.some((entry) => entry.path === canvasNotePath)) {
       throw new Error("Entering native Canvas edit inputs wrote to the vault or changed its Canvas source");
     }
+    await assertAppDataMatchesPostPickerBaseline("after-field-input");
     editReport.vault_snapshot_after_input = afterInput;
     editReport.no_write_during_input = true;
 
@@ -19741,6 +21509,7 @@ async function runOpenObsidianCanvasTextEdit(
       || afterLoad.some((entry) => entry.path === canvasNotePath)) {
       throw new Error("Loading the native Canvas text-card draft wrote to the vault or changed its source");
     }
+    await assertAppDataMatchesPostPickerBaseline("after-draft-load");
     editReport.vault_snapshot_after_load = afterLoad;
     editReport.no_write_during_load = true;
 
@@ -19762,6 +21531,7 @@ async function runOpenObsidianCanvasTextEdit(
       || afterDraft.some((entry) => entry.path === canvasNotePath)) {
       throw new Error("Editing the Canvas text draft wrote to the vault before explicit save");
     }
+    await assertAppDataMatchesPostPickerBaseline("after-draft-edit");
     editReport.vault_snapshot_after_draft = afterDraft;
     editReport.no_write_before_save = true;
 
@@ -19805,6 +21575,7 @@ async function runOpenObsidianCanvasTextEdit(
       || countMarkdownFiles(afterSave) !== countMarkdownFiles(afterDraft)) {
       throw new Error("Saving the native Canvas text card created or changed a Markdown note");
     }
+    await assertAppDataMatchesPostPickerBaseline("after-explicit-save");
     const allNonTargetDataPreserved = isDeepStrictEqual(savedDocument, expectedEditedDocument)
       && expectedEditedDocument.nodes.some((node) => node.id === "file-1")
       && expectedEditedDocument.nodes.some((node) => node.id === "group-1")
@@ -19820,6 +21591,9 @@ async function runOpenObsidianCanvasTextEdit(
     editReport.diagnostic_motion_stages = safetyTracker.diagnosticMotionStages;
     editReport.motion_dispatch_attempts = safetyTracker.motionDispatchAttempts;
     editReport.paste_dispatch_attempts = safetyTracker.pasteDispatchAttempts;
+    editReport.target_coordinate_click_dispatch_attempts = safetyTracker.targetCoordinateClickDispatchAttempts;
+    editReport.stationary_recovery_click_dispatch_attempts = safetyTracker.stationaryRecoveryClickDispatchAttempts;
+    editReport.initial_coordinate_click_trace = safetyTracker.initialCoordinateClickTrace;
     editReport.completed_paste_stages = safetyTracker.completedPasteStages;
     editReport.save_attempted = safetyTracker.saveAttempted;
     editReport.clipboard_cleanup = safetyTracker.clipboardCleanup;
@@ -19852,6 +21626,19 @@ async function runOpenObsidianCanvasTextEdit(
     await delay(1_000);
     await stopProcess(child);
     child = undefined;
+    const appDataAfterClose = await assertAppDataMatchesPostPickerBaseline("after-process-close");
+    const appDataChangesAfterClose = changedPaths(appDataBeforeFieldInput, appDataAfterClose);
+    if (appDataChangesAfterClose.length > 0) {
+      throw new Error(`OpenObsidian changed app data after the settled post-picker baseline and close: ${JSON.stringify(appDataChangesAfterClose).slice(0, 6_000)}`);
+    }
+    editReport.app_data_snapshot_after_close = appDataAfterClose;
+    editReport.app_data_changes_from_post_picker_baseline_through_close = appDataChangesAfterClose;
+    editReport.app_data_unchanged_from_post_picker_baseline_through_close = true;
+    editReport.app_data_eframe_app_ron_inspections_complete = eframeInspectionEvidence.length > 0
+      && eframeInspectionEvidence.every((inspection) => inspection.result === "passed");
+    if (!editReport.app_data_eframe_app_ron_inspections_complete) {
+      throw new Error("One or more Canvas app-data phase inspections were missing or failed");
+    }
     const afterClose = await snapshotTree(selectedVaultRoot);
     ensureExactSnapshot(afterSave, afterClose, "OpenObsidian close after native Canvas text edit");
     const closedBytes = await readFile(join(selectedVaultRoot, canvasPath));
@@ -19876,6 +21663,9 @@ async function runOpenObsidianCanvasTextEdit(
     editReport.diagnostic_motion_stages = safetyTracker.diagnosticMotionStages;
     editReport.motion_dispatch_attempts = safetyTracker.motionDispatchAttempts;
     editReport.paste_dispatch_attempts = safetyTracker.pasteDispatchAttempts;
+    editReport.target_coordinate_click_dispatch_attempts = safetyTracker.targetCoordinateClickDispatchAttempts;
+    editReport.stationary_recovery_click_dispatch_attempts = safetyTracker.stationaryRecoveryClickDispatchAttempts;
+    editReport.initial_coordinate_click_trace = safetyTracker.initialCoordinateClickTrace;
     editReport.completed_paste_stages = safetyTracker.completedPasteStages;
     editReport.save_attempted = safetyTracker.saveAttempted;
     const expectedCanaryMarker = error instanceof ExpectedCanvasAbortCanaryError
@@ -19963,6 +21753,22 @@ async function runOpenObsidianCanvasTextEdit(
       const postAbortVault = vaultCapture.status === "fulfilled" ? vaultCapture.value : null;
       const postAbortAppData = appDataCapture.status === "fulfilled" ? appDataCapture.value : null;
       const postAbortCanvasBytes = canvasCapture.status === "fulfilled" ? canvasCapture.value : null;
+      let postAbortEframeInspectionPassed = false;
+      if (postAbortAppData) {
+        try {
+          await validateCanvasEframeFiles(
+            baseline.appDataRoot,
+            postAbortAppData,
+            `${process.platform} Canvas app-data after abort and process termination`,
+            [baseline.vaultRoot, resolve(baseline.vaultRoot), canonicalVaultForAppData, baseline.appDataRoot, resolve(baseline.appDataRoot), canonicalAppDataRootForAppData, managedUserDataRoot, resolve(managedUserDataRoot), canonicalManagedUserDataRoot],
+            expectedEframeAppRonPath,
+            eframeInspectionEvidence,
+          );
+          postAbortEframeInspectionPassed = true;
+        } catch (inspectionError) {
+          canaryFailureReasons.push("post-abort app.ron inspection failed: " + (inspectionError instanceof Error ? inspectionError.message : String(inspectionError)));
+        }
+      }
       const vaultChanges = postAbortVault ? changedPaths(baseline.vaultSnapshot, postAbortVault) : null;
       const appDataChanges = postAbortAppData ? changedPaths(baseline.appDataSnapshot, postAbortAppData) : null;
       const destinationAbsent = postAbortVault !== null
@@ -19980,6 +21786,7 @@ async function runOpenObsidianCanvasTextEdit(
         && !safetyTracker.saveAttempted
         && vaultChanges !== null && vaultChanges.length === 0
         && appDataChanges !== null && appDataChanges.length === 0
+        && postAbortEframeInspectionPassed
         && canvasBytesUnchanged
         && destinationAbsent;
       const preservationRecord: Record<string, unknown> = {
@@ -19994,6 +21801,7 @@ async function runOpenObsidianCanvasTextEdit(
         app_data_snapshot_before: baseline.appDataSnapshot,
         app_data_snapshot_after: postAbortAppData,
         app_data_changes: appDataChanges,
+        app_data_eframe_app_ron_inspection_passed: postAbortEframeInspectionPassed,
         canvas_source_before: {
           bytes: baseline.canvasBytes.length,
           sha256: baseline.canvasSha256,
@@ -20057,14 +21865,31 @@ async function runOpenObsidianCanvasTextEdit(
         const clipboardWasCleared = clipboardCleanup?.succeeded === true
           && (clipboardCleanup.readback as Record<string, unknown> | undefined)?.succeeded === true;
         const requestMarkerWasRemoved = safetyTracker.requestMarkerCleanup?.succeeded === true;
+        const initialClickEvidence = safetyTracker.initialCoordinateClickTrace;
+        const initialClickChecks = initialClickEvidence?.checks as Record<string, unknown> | undefined;
+        const initialClickEvidencePassed = initialClickEvidence !== null
+          && initialClickEvidence.dispatch_attempt_count === 1
+          && Array.isArray(initialClickEvidence.failed_checks)
+          && initialClickEvidence.failed_checks.length === 0
+          && initialClickChecks !== undefined
+          && Object.values(initialClickChecks).every((passed) => passed === true);
+        const initialClickCountIsExact = safetyTracker.targetCoordinateClickDispatchAttempts === 1;
+        const recoveryClickCountIsExact = safetyTracker.stationaryRecoveryClickDispatchAttempts === 1;
         if (!expectedCanaryMarker) canaryFailureReasons.push("the exact typed expected-abort marker was not observed");
         if (!guardWasSyntheticOnly) canaryFailureReasons.push("the synthetic target-value mismatch was not the sole failed pre-motion predicate");
         if (!noDiagnosticMotion) canaryFailureReasons.push("a diagnostic pointer motion was attempted or dispatched");
         if (!noPaste) canaryFailureReasons.push("a Ctrl+V dispatch or completed paste stage was recorded");
+        if (!initialClickEvidencePassed) canaryFailureReasons.push("the initial pre-Tab coordinate click did not retain a complete passing watermark and raw-event trace");
+        if (!initialClickCountIsExact) canaryFailureReasons.push("the initial target-coordinate click dispatch count was not exactly one");
+        if (!recoveryClickCountIsExact) canaryFailureReasons.push("the separate stationary recovery click dispatch count was not exactly one");
         if (safetyTracker.saveAttempted) canaryFailureReasons.push("Save Canvas text was attempted");
         if (!clipboardWasCleared) canaryFailureReasons.push("clipboard neutralization and empty readback were not both proven");
         if (!requestMarkerWasRemoved) canaryFailureReasons.push("the focus snapshot request marker was not proven removed");
         if (!preservationVerified) canaryFailureReasons.push("complete post-abort vault, app-data, source-byte, destination, and app-termination preservation checks did not all pass");
+        const appRonInspectionsComplete = eframeInspectionEvidence.length > 0
+          && eframeInspectionEvidence.every((inspection) => inspection.result === "passed");
+        editReport.app_data_eframe_app_ron_inspections_complete = appRonInspectionsComplete;
+        if (!appRonInspectionsComplete) canaryFailureReasons.push("one or more per-phase app.ron inspection records are missing or failed");
         if (typeof preservationRecord.artifact_write_error === "string") canaryFailureReasons.push("one or more full preservation evidence artifacts could not be written");
         editReport.status = canaryFailureReasons.length === 0 ? "passed" : "failed";
         editReport.expected_abort_marker = {
@@ -20076,6 +21901,9 @@ async function runOpenObsidianCanvasTextEdit(
         editReport.zero_diagnostic_pointer_dispatches = noDiagnosticMotion;
         editReport.zero_ctrl_v_dispatches_and_completed_pastes = noPaste;
         editReport.save_attempted = safetyTracker.saveAttempted;
+        editReport.initial_coordinate_click_contract_passed = initialClickEvidencePassed;
+        editReport.target_coordinate_click_dispatch_count_is_exact = initialClickCountIsExact;
+        editReport.stationary_recovery_click_dispatch_count_is_exact = recoveryClickCountIsExact;
         editReport.clipboard_cleared_and_readback_empty = clipboardWasCleared;
         editReport.request_marker_removed = requestMarkerWasRemoved;
         editReport.preservation_verified = preservationVerified;
