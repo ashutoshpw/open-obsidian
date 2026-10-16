@@ -138,6 +138,15 @@ impl VaultSession {
         self.store.root().path()
     }
 
+    /// Returns a content-addressed revision of every regular file and symlink in the vault.
+    /// Snapshotting walks and hashes the full tree, so call this off the UI frame.
+    pub fn snapshot_revision_sha256(&self) -> Result<String, VaultError> {
+        self.store
+            .root()
+            .snapshot()
+            .map(|snapshot| snapshot.revision_sha256)
+    }
+
     /// Resolves an existing regular file beneath the vault without following symlinks.
     pub fn resolve_regular_file_path(
         &self,

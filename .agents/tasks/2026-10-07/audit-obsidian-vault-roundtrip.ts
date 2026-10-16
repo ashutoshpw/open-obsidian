@@ -589,6 +589,7 @@ const reportDirectory = resolve(requiredEnv("OBSIDIAN_REPORT_DIRECTORY"));
 const workDirectory = resolve(requiredEnv("OBSIDIAN_ROUNDTRIP_WORK_DIRECTORY"));
 const linuxCanvasFocusSnapshotRequestFile = join(workDirectory, "openobsidian-canvas-focus-snapshot.request");
 const vaultReconciliationRequestFile = join(workDirectory, "openobsidian-vault-reconciliation.request");
+const vaultWatcherHintRequestFile = join(workDirectory, "openobsidian-vault-watcher-hint.request");
 const vaultRoot = join(workDirectory, "C01.2 Roundtrip Fixture");
 const canvasVaultName = "C06 Canvas Reference Fixture";
 const canvasVaultRoot = join(workDirectory, canvasVaultName);
@@ -1317,9 +1318,11 @@ async function waitFor<T>(label: string, read: () => Promise<T>, predicate: (val
 }
 
 type OpenObsidianRefreshDiagnostics = {
-  requests: Array<{source: string; line: number; requestId: string | null; frameNr: number | null}>;
-  consumedResults: Array<{succeeded: boolean; entries: number | null; line: number; requestId: string | null; expectedPathVisible: boolean | null}>;
-  receiverStates: Array<{busy: boolean; line: number}>;
+  requests: Array<{source: string; triggerSources: string | null; line: number; requestId: string | null; frameNr: number | null}>;
+  consumedResults: Array<{succeeded: boolean; snapshotStable: boolean | null; revisionSha256: string | null; entries: number | null; line: number; requestId: string | null; expectedPathVisible: boolean | null}>;
+  snapshotProbes: Array<{phase: "scheduled" | "result"; requestId: string | null; outcome: "unchanged" | "changed" | "error" | null; revisionSha256: string | null; baselineRevisionSha256: string | null; line: number}>;
+  watcherHints: Array<{hint: string; requestId: string | null; line: number}>;
+  receiverStates: Array<{busy: boolean; refreshBusy: boolean; snapshotProbeBusy: boolean; line: number}>;
 };
 
 function openObsidianRefreshActivityChanged(
@@ -1327,43 +1330,133 @@ function openObsidianRefreshActivityChanged(
   after: OpenObsidianRefreshDiagnostics,
 ): boolean {
   return before.requests.length !== after.requests.length
-    || before.consumedResults.length !== after.consumedResults.length;
+    || before.consumedResults.length !== after.consumedResults.length
+    || before.snapshotProbes.length !== after.snapshotProbes.length
+    || before.watcherHints.length !== after.watcherHints.length;
+}
+
+function openObsidianSnapshotProbeIsBusy(diagnostics: OpenObsidianRefreshDiagnostics): boolean {
+  const scheduled = diagnostics.snapshotProbes.filter((probe) => probe.phase === "scheduled").at(-1);
+  if (!scheduled) return false;
+  const result = diagnostics.snapshotProbes.find((probe) => (
+    probe.phase === "result"
+      && probe.requestId === scheduled.requestId
+      && probe.line > scheduled.line
+  ));
+  return result === undefined;
 }
 
 function openObsidianRefreshReceiverIsKnownIdle(diagnostics: OpenObsidianRefreshDiagnostics): boolean {
-  return diagnostics.receiverStates.at(-1)?.busy === false;
+  return diagnostics.receiverStates.at(-1)?.busy === false && !openObsidianSnapshotProbeIsBusy(diagnostics);
 }
 
 async function readOpenObsidianRefreshDiagnostics(
   logPath = join(reportDirectory, "openobsidian.log"),
 ): Promise<OpenObsidianRefreshDiagnostics> {
   const log = await readFile(logPath, "utf8").catch(() => "");
-  const diagnostics: OpenObsidianRefreshDiagnostics = {requests: [], consumedResults: [], receiverStates: []};
+  const diagnostics: OpenObsidianRefreshDiagnostics = {
+    requests: [],
+    consumedResults: [],
+    snapshotProbes: [],
+    watcherHints: [],
+    receiverStates: [],
+  };
   for (const [line, value] of log.split(/\r?\n/).entries()) {
     const request = value.match(/OpenObsidian CI vault refresh request: source=([a-z_]+)/);
     if (request) {
       const frameNr = value.match(/\bframe_nr=(\d+)/)?.[1];
       diagnostics.requests.push({
         source: request[1] ?? "unknown",
+        triggerSources: value.match(/\btrigger_sources=([^,\s]+)/)?.[1] ?? null,
         line,
         requestId: value.match(/\brequest_id=([^,\s]+)/)?.[1] ?? null,
         frameNr: frameNr === undefined ? null : Number(frameNr),
       });
+      diagnostics.receiverStates.push({busy: true, refreshBusy: true, snapshotProbeBusy: false, line});
     }
-    const consumed = value.match(/OpenObsidian CI vault refresh result consumed: (?:request_id=([^,\s]+), )?succeeded=(true|false)(?:, entries=(\d+))?/);
+    const consumed = value.match(/OpenObsidian CI vault refresh result consumed: (?:request_id=([^,\s]+), )?succeeded=(true|false)/);
     if (consumed) diagnostics.consumedResults.push({
       requestId: consumed[1] ?? null,
       succeeded: consumed[2] === "true",
-      entries: consumed[3] === undefined ? null : Number(consumed[3]),
+      snapshotStable: value.match(/\bsnapshot_stable=(true|false)/)?.[1] === undefined
+        ? null
+        : value.includes("snapshot_stable=true"),
+      revisionSha256: value.match(/\brevision_sha256=([a-f0-9]{64})/)?.[1] ?? null,
+      entries: value.match(/\bentries=(\d+)/)?.[1] === undefined
+        ? null
+        : Number(value.match(/\bentries=(\d+)/)?.[1]),
       line,
       expectedPathVisible: value.match(/\bexpected_path_visible=(true|false)/)?.[1] === undefined
         ? null
         : value.includes("expected_path_visible=true"),
     });
-    const receiverState = value.match(/OpenObsidian CI UI state: .*vault_refresh_receiver=(true|false)/);
-    if (receiverState) diagnostics.receiverStates.push({busy: receiverState[1] === "true", line});
+    if (consumed) diagnostics.receiverStates.push({busy: false, refreshBusy: false, snapshotProbeBusy: false, line});
+    const probeScheduled = value.match(/OpenObsidian CI vault snapshot probe scheduled: request_id=([^,\s]+)/);
+    if (probeScheduled) diagnostics.snapshotProbes.push({
+      phase: "scheduled",
+      requestId: probeScheduled[1] ?? null,
+      outcome: null,
+      revisionSha256: null,
+      baselineRevisionSha256: value.match(/\bbaseline_revision=([a-f0-9]{64})/)?.[1] ?? null,
+      line,
+    });
+    if (probeScheduled) diagnostics.receiverStates.push({busy: true, refreshBusy: false, snapshotProbeBusy: true, line});
+    const probeResult = value.match(/OpenObsidian CI vault snapshot probe result: request_id=([^,\s]+), outcome=(unchanged|changed|error)/);
+    if (probeResult) diagnostics.snapshotProbes.push({
+      phase: "result",
+      requestId: probeResult[1] ?? null,
+      outcome: (probeResult[2] as "unchanged" | "changed" | "error" | undefined) ?? null,
+      revisionSha256: value.match(/\brevision_sha256=([a-f0-9]{64})/)?.[1] ?? null,
+      baselineRevisionSha256: value.match(/\bbaseline_revision_sha256=([a-f0-9]{64})/)?.[1] ?? null,
+      line,
+    });
+    if (probeResult) diagnostics.receiverStates.push({busy: false, refreshBusy: false, snapshotProbeBusy: false, line});
+    const watcherHint = value.match(/OpenObsidian CI vault watcher hint: hint=(.*?), request_id=([^,\s]+), refresh_in_flight=/);
+    if (watcherHint) diagnostics.watcherHints.push({
+      hint: watcherHint[1] ?? "unknown",
+      requestId: watcherHint[2] === "none" ? null : watcherHint[2] ?? null,
+      line,
+    });
+    const receiverState = value.match(/OpenObsidian CI UI state: .*vault_refresh_receiver=(true|false), vault_snapshot_probe_receiver=(true|false)/);
+    if (receiverState) {
+      const refreshBusy = receiverState[1] === "true";
+      const snapshotProbeBusy = receiverState[2] === "true";
+      diagnostics.receiverStates.push({busy: refreshBusy || snapshotProbeBusy, refreshBusy, snapshotProbeBusy, line});
+    }
   }
   return diagnostics;
+}
+
+function assertVaultSnapshotProbeCorrelation(diagnostics: OpenObsidianRefreshDiagnostics): void {
+  for (const probe of diagnostics.snapshotProbes) {
+    if (probe.phase !== "result") continue;
+    const scheduled = diagnostics.snapshotProbes.find((candidate) => (
+      candidate.phase === "scheduled"
+        && candidate.requestId === probe.requestId
+        && candidate.line < probe.line
+    ));
+    if (!scheduled) {
+      throw new Error(`Vault snapshot probe result has no earlier schedule: ${JSON.stringify(probe)}`);
+    }
+    if (probe.outcome === "unchanged") {
+      if (!scheduled.baselineRevisionSha256
+        || probe.revisionSha256 !== scheduled.baselineRevisionSha256
+        || diagnostics.requests.some((request) => request.requestId === probe.requestId && request.line > probe.line)) {
+        throw new Error(`Unchanged vault snapshot probe did not match its stable baseline or incorrectly triggered a full refresh: ${JSON.stringify({scheduled, probe, requests: diagnostics.requests})}`);
+      }
+    } else if (probe.outcome === "changed") {
+      if (!scheduled.baselineRevisionSha256
+        || !probe.revisionSha256
+        || probe.baselineRevisionSha256 !== scheduled.baselineRevisionSha256
+        || probe.revisionSha256 === scheduled.baselineRevisionSha256
+        || !diagnostics.requests.some((request) => request.requestId === probe.requestId && request.line > probe.line)) {
+        throw new Error(`Changed vault snapshot probe was not promoted to its correlated full refresh: ${JSON.stringify({scheduled, probe, requests: diagnostics.requests})}`);
+      }
+    } else if (probe.outcome === "error"
+      && !diagnostics.requests.some((request) => request.requestId === probe.requestId && request.line > probe.line)) {
+      throw new Error(`Failed vault snapshot probe was not promoted to its correlated full refresh: ${JSON.stringify({probe, requests: diagnostics.requests})}`);
+    }
+  }
 }
 
 async function waitForDeferredVaultRefreshHandoff(
@@ -1387,7 +1480,7 @@ async function waitForDeferredVaultRefreshHandoff(
         && state.safeToRefresh && state.rescanPending
         && !state.canvasPathFocused && !state.canvasTextCardIdFocused
         && !state.snapshotLeaseActive && !state.sourceOperationReceiverBusy
-        && !state.refreshReceiver && state.frameNr === request.frameNr
+        && !state.refreshReceiver && !state.snapshotProbeReceiver && state.frameNr === request.frameNr
         && state.line < request.line && state.triggerSources.includes("periodic_timer");
       if (!safeHandoff || request.source !== "watcher_reconciliation") return null;
       return {request, state};
@@ -1414,7 +1507,9 @@ async function waitForDeferredVaultRefreshHandoff(
       if (matchingResults.length !== 1) return null;
       const consumed = matchingResults[0]!;
       if (consumed.line <= handoffValue.request.line || !consumed.succeeded
+        || consumed.snapshotStable !== true
         || consumed.entries !== expectedEntries || consumed.expectedPathVisible !== true) return null;
+      assertVaultSnapshotProbeCorrelation(diagnostics);
       return consumed;
     },
     (value) => value !== null,
@@ -2456,6 +2551,7 @@ type VaultReconciliationStateObservation = {
   canvasTextCardIdFocused: boolean;
   rescanPending: boolean;
   refreshReceiver: boolean;
+  snapshotProbeReceiver: boolean;
   snapshotLeaseActive: boolean;
   sourceOperationReceiverBusy: boolean;
   safeToRefresh: boolean;
@@ -2481,12 +2577,14 @@ async function readVaultReconciliationState(
     const canvasTextCardIdFocused = readBoolean("canvas_text_card_id_focused");
     const rescanPending = readBoolean("rescan_pending");
     const refreshReceiver = readBoolean("refresh_receiver");
+    const snapshotProbeReceiver = readBoolean("snapshot_probe_receiver");
     const snapshotLeaseActive = readBoolean("snapshot_lease_active");
     const sourceOperationReceiverBusy = readBoolean("source_operation_receiver_busy");
     const safeToRefresh = readBoolean("safe_to_refresh");
     if (!pendingRequestId || !frameNr || !triggerSources
       || canvasPathFocused === null || canvasTextCardIdFocused === null
       || rescanPending === null || refreshReceiver === null
+      || snapshotProbeReceiver === null
       || snapshotLeaseActive === null || sourceOperationReceiverBusy === null
       || safeToRefresh === null) return null;
     return {
@@ -2499,6 +2597,7 @@ async function readVaultReconciliationState(
       canvasTextCardIdFocused,
       rescanPending,
       refreshReceiver,
+      snapshotProbeReceiver,
       snapshotLeaseActive,
       sourceOperationReceiverBusy,
       safeToRefresh,
@@ -2552,6 +2651,7 @@ async function assertSingleDeferredVaultRefresh(
     if (additionalPendingState) {
       throw new Error(`A second reconciliation became pending after deferred request ${requestId}: ${JSON.stringify(additionalPendingState)}`);
     }
+    assertVaultSnapshotProbeCorrelation(diagnostics);
     sampleCount += 1;
     await new Promise((resolvePromise) => setTimeout(resolvePromise, Math.min(100, Math.max(1, deadline - Date.now()))));
   }
@@ -2571,13 +2671,121 @@ async function writeAtomicRequestMarker(path: string, requestId: string): Promis
   return temporaryPath;
 }
 
+let unchangedWatcherProbeSequence = 0;
+
+async function requireUnchangedWatcherSnapshotProbe(
+  logPath: string,
+  requestFile: string,
+  baselineRevisionSha256: string,
+): Promise<Record<string, unknown>> {
+  const requestId = `${process.pid}-${Date.now()}-unchanged-${++unchangedWatcherProbeSequence}`;
+  const temporaryPath = await writeAtomicRequestMarker(requestFile, requestId);
+  let observation: {
+    watcherHint: OpenObsidianRefreshDiagnostics["watcherHints"][number];
+    scheduled: OpenObsidianRefreshDiagnostics["snapshotProbes"][number];
+    result: OpenObsidianRefreshDiagnostics["snapshotProbes"][number];
+    diagnostics: OpenObsidianRefreshDiagnostics;
+  } | null = null;
+  try {
+    const value = await waitFor(
+      `the request-correlated unchanged vault snapshot probe ${requestId}`,
+      async () => {
+        const diagnostics = await readOpenObsidianRefreshDiagnostics(logPath);
+        const watcherHint = diagnostics.watcherHints.find((item) => item.requestId === requestId);
+        const scheduled = diagnostics.snapshotProbes.find((item) => (
+          item.phase === "scheduled" && item.requestId === requestId
+        ));
+        const result = diagnostics.snapshotProbes.find((item) => (
+          item.phase === "result" && item.requestId === requestId
+        ));
+        if (!watcherHint || !scheduled || !result) return null;
+        if (watcherHint.line >= scheduled.line
+          || scheduled.line >= result.line
+          || result.outcome !== "unchanged"
+          || scheduled.baselineRevisionSha256 !== baselineRevisionSha256
+          || result.revisionSha256 !== baselineRevisionSha256) {
+          throw new Error(`Forced watcher hint did not produce an unchanged full-vault snapshot probe: ${JSON.stringify({watcherHint, scheduled, result, baselineRevisionSha256})}`);
+        }
+        const correlatedRequests = diagnostics.requests.filter((request) => request.requestId === requestId);
+        const correlatedResults = diagnostics.consumedResults.filter((result) => result.requestId === requestId);
+        if (correlatedRequests.length > 0 || correlatedResults.length > 0) {
+          throw new Error(`An unchanged watcher snapshot probe triggered a correlated full refresh: ${JSON.stringify({requestId, correlatedRequests, correlatedResults})}`);
+        }
+        assertVaultSnapshotProbeCorrelation(diagnostics);
+        return {watcherHint, scheduled, result, diagnostics};
+      },
+      (candidate) => candidate !== null,
+      30_000,
+    );
+    if (!value) throw new Error(`Unchanged watcher snapshot probe ${requestId} returned no result`);
+    observation = value;
+  } finally {
+    await rm(requestFile, {force: true}).catch(() => undefined);
+    await rm(temporaryPath, {force: true}).catch(() => undefined);
+  }
+  const observed = observation;
+  if (!observed) throw new Error(`Unchanged watcher snapshot probe ${requestId} was not observed`);
+
+  let settledSince: number | null = null;
+  let previousCounts = "";
+  const quiet = await waitFor(
+    `the unchanged watcher probe ${requestId} to remain free of refresh work`,
+    async () => {
+      const diagnostics = await readOpenObsidianRefreshDiagnostics(logPath);
+      const counts = JSON.stringify({
+        watcherHints: diagnostics.watcherHints.filter((item) => item.requestId === requestId).length,
+        snapshotProbes: diagnostics.snapshotProbes.filter((item) => item.requestId === requestId).length,
+        correlatedRequestCount: diagnostics.requests.filter((item) => item.requestId === requestId).length,
+        correlatedResultCount: diagnostics.consumedResults.filter((item) => item.requestId === requestId).length,
+      });
+      const noRefreshRequest = !diagnostics.requests.some((item) => item.requestId === requestId);
+      const noRefreshResult = !diagnostics.consumedResults.some((item) => item.requestId === requestId);
+      const idle = openObsidianRefreshReceiverIsKnownIdle(diagnostics) && noRefreshRequest && noRefreshResult;
+      if (!idle) {
+        settledSince = null;
+        previousCounts = "";
+      } else if (counts !== previousCounts) {
+        settledSince = Date.now();
+        previousCounts = counts;
+      }
+      return {diagnostics, noRefreshRequest, noRefreshResult, settledForMs: settledSince === null ? 0 : Date.now() - settledSince};
+    },
+    (candidate) => candidate.settledForMs >= 1_000,
+    15_000,
+  );
+  if (quiet.diagnostics.requests.some((item) => item.requestId === requestId)
+    || quiet.diagnostics.consumedResults.some((item) => item.requestId === requestId)
+    || quiet.diagnostics.watcherHints.filter((item) => item.requestId === requestId).length !== 1
+    || quiet.diagnostics.snapshotProbes.filter((probe) => probe.requestId === requestId).length !== 2
+    || !quiet.noRefreshRequest || !quiet.noRefreshResult) {
+    throw new Error(`An unchanged watcher probe caused full refresh activity during its quiet window: ${JSON.stringify({requestId, quiet})}`);
+  }
+  return {
+    request_id: requestId,
+    watcher_hint: observed.watcherHint,
+    scheduled_probe: observed.scheduled,
+    probe_result: observed.result,
+    baseline_revision_sha256: baselineRevisionSha256,
+    no_full_refresh_request_or_result: true,
+    correlated_full_refresh_requests: quiet.diagnostics.requests.filter((item) => item.requestId === requestId).length,
+    correlated_full_refresh_results: quiet.diagnostics.consumedResults.filter((item) => item.requestId === requestId).length,
+    quiet_window_ms: quiet.settledForMs,
+    final_request_count: quiet.diagnostics.requests.length,
+    final_result_count: quiet.diagnostics.consumedResults.length,
+  };
+}
+
 async function requestCanvasReconciliationFocusCapture(
   logPath: string,
   stage: string,
   targetField: "path" | "id",
   expectedTargetValue: string,
   expectedSiblingValue: string,
-  options: {forcePeriodicRescan: boolean; expectedPendingRequestId?: string},
+  options: {
+    forcePeriodicRescan: boolean;
+    expectedPendingRequestId?: string;
+    expectedRescanPending?: boolean;
+  },
 ): Promise<Record<string, unknown>> {
   const requestId = `${process.pid}-${Date.now()}-${++canvasFocusSnapshotRequestSequence}`;
   const temporaryPaths: string[] = [];
@@ -2587,7 +2795,9 @@ async function requestCanvasReconciliationFocusCapture(
       temporaryPaths.push(await writeAtomicRequestMarker(vaultReconciliationRequestFile, requestId));
     }
     temporaryPaths.push(await writeAtomicRequestMarker(linuxCanvasFocusSnapshotRequestFile, requestId));
-    const expectedPendingRequestId = options.expectedPendingRequestId ?? requestId;
+    const expectedRescanPending = options.expectedRescanPending ?? true;
+    const expectedPendingRequestId = options.expectedPendingRequestId
+      ?? (expectedRescanPending ? requestId : "missing-request-id");
     const expectedTargetSha256 = createHash("sha256").update(expectedTargetValue).digest("hex");
     const expectedSiblingSha256 = createHash("sha256").update(expectedSiblingValue).digest("hex");
     const capture = await waitFor(
@@ -2623,12 +2833,15 @@ async function requestCanvasReconciliationFocusCapture(
           && idField.frameNr === marker.frameNr
           && state.frameNr === marker.frameNr
           && pathField.line > marker.line && idField.line > marker.line;
-        const expectedTrigger = state.triggerSources.includes("periodic_timer");
+        const expectedTrigger = expectedRescanPending
+          ? state.triggerSources.includes("periodic_timer")
+          : state.triggerSources === "none";
         const pendingStateMatches = state.requestId === requestId
           && state.pendingRequestId === expectedPendingRequestId
-          && state.rescanPending && !state.refreshReceiver
+          && state.rescanPending === expectedRescanPending
+          && !state.refreshReceiver && !state.snapshotProbeReceiver
           && !state.snapshotLeaseActive && !state.sourceOperationReceiverBusy
-          && !state.safeToRefresh && expectedTrigger;
+          && (!expectedRescanPending || !state.safeToRefresh) && expectedTrigger;
         if (!sameFrame || !targetMatches || !siblingMatches || !pendingStateMatches) return null;
         return {
           request_id: requestId,
@@ -2694,6 +2907,7 @@ async function waitForOpenObsidianRefreshIdle(
   logPath = join(reportDirectory, "openobsidian.log"),
 ): Promise<OpenObsidianRefreshDiagnostics & {settled_for_ms: number}> {
   let settledSince: number | null = null;
+  let settledActivity = "";
   return await waitFor(
     requireManualRequest
       ? "OpenObsidian to finish the explicit manual note-list refresh"
@@ -2702,22 +2916,300 @@ async function waitForOpenObsidianRefreshIdle(
       const diagnostics = await readOpenObsidianRefreshDiagnostics(logPath);
       const latestRequest = diagnostics.requests.at(-1);
       const latestResult = diagnostics.consumedResults.at(-1);
-      const receiverBusy = diagnostics.receiverStates.at(-1)?.busy ?? false;
+      const receiverBusy = (diagnostics.receiverStates.at(-1)?.busy ?? false)
+        || openObsidianSnapshotProbeIsBusy(diagnostics);
       const latestRequestConsumed = !latestRequest || Boolean(latestResult && latestResult.line > latestRequest.line);
-      const newManualRequest = diagnostics.requests.some((request, index) => (
-        index >= previousRequestCount && request.source === "manual_button"
+      const newManualRequest = diagnostics.requests.slice(previousRequestCount).some((request) => (
+        request.source === "manual_button"
       ));
-      const latestResultHasExpectedEntries = latestResult?.succeeded === true && latestResult.entries === expectedEntries;
+      const latestResultHasExpectedEntries = latestResult?.succeeded === true
+        && latestResult.snapshotStable === true
+        && latestResult.entries === expectedEntries;
       const ready = !receiverBusy
         && latestRequestConsumed
-        && (!requireManualRequest || (newManualRequest && latestResultHasExpectedEntries));
-      if (ready) settledSince ??= Date.now();
-      else settledSince = null;
+        && (!latestRequest || latestResultHasExpectedEntries)
+        && (!requireManualRequest || newManualRequest);
+      const activity = JSON.stringify({
+        latestWatcherHint: diagnostics.watcherHints.at(-1),
+        latestRequest,
+        latestResult,
+        snapshotProbes: diagnostics.snapshotProbes,
+      });
+      if (ready && activity !== settledActivity) {
+        assertVaultSnapshotProbeCorrelation(diagnostics);
+        settledSince = Date.now();
+        settledActivity = activity;
+      } else if (!ready) {
+        settledSince = null;
+        settledActivity = "";
+      }
       return {...diagnostics, settled_for_ms: settledSince === null ? 0 : Date.now() - settledSince};
     },
     (diagnostics) => diagnostics.settled_for_ms >= 750,
     30_000,
   );
+}
+
+async function waitForChangedWatcherSnapshotRefresh(
+  logPath: string,
+  afterLine: number,
+  previousRequestCount: number,
+  expectedEntries: number,
+  baselineRevisionSha256: string,
+  options: {
+    requireWatcherSnapshotProbe?: boolean;
+    allowDirectWatcherPeriodicBatch?: boolean;
+    requireExpectedPathVisible?: boolean;
+  } = {},
+): Promise<OpenObsidianRefreshDiagnostics & {
+  settled_for_ms: number;
+  reconciliationPath: "watcher_snapshot_probe" | "periodic_timer";
+  changedWatcherHint: OpenObsidianRefreshDiagnostics["watcherHints"][number] | null;
+  changedSnapshotProbe: OpenObsidianRefreshDiagnostics["snapshotProbes"][number] | null;
+  changedSnapshotRefresh: OpenObsidianRefreshDiagnostics["requests"][number];
+  changedSnapshotRefreshResult: OpenObsidianRefreshDiagnostics["consumedResults"][number];
+}> {
+  const correlated = await waitFor(
+    options.requireWatcherSnapshotProbe
+      ? "a post-edit changed watcher snapshot probe and correlated full refresh"
+      : "a post-edit changed watcher probe or periodic full refresh",
+    async () => {
+      const diagnostics = await readOpenObsidianRefreshDiagnostics(logPath);
+      for (const watcherHint of diagnostics.watcherHints.filter((item) => (
+        item.line >= afterLine && item.requestId !== null
+      ))) {
+        if (!watcherHint.requestId) continue;
+        const scheduled = diagnostics.snapshotProbes.find((probe) => (
+          probe.phase === "scheduled"
+            && probe.requestId === watcherHint.requestId
+            && probe.line > watcherHint.line
+        ));
+        const probe = diagnostics.snapshotProbes.find((item) => (
+          item.phase === "result"
+            && item.requestId === watcherHint.requestId
+            && scheduled !== undefined
+            && item.line > scheduled.line
+        ));
+        if (scheduled && probe && probe.outcome === "changed"
+          && scheduled.baselineRevisionSha256 === baselineRevisionSha256
+          && probe.baselineRevisionSha256 === baselineRevisionSha256
+          && probe.revisionSha256
+          && probe.revisionSha256 !== baselineRevisionSha256) {
+          const request = diagnostics.requests.find((item) => (
+            item.requestId === watcherHint.requestId && item.line > probe.line
+          ));
+          const result = diagnostics.consumedResults.find((item) => (
+            item.requestId === watcherHint.requestId
+              && request !== undefined
+              && item.line > request.line
+          ));
+          if (request && result) {
+            if (!result.succeeded
+              || result.snapshotStable !== true
+              || result.entries !== expectedEntries
+              || result.revisionSha256 !== probe.revisionSha256
+              || (options.requireExpectedPathVisible && result.expectedPathVisible !== true)) {
+              throw new Error(`Changed watcher probe was not followed by its stable correlated full refresh: ${JSON.stringify({watcherHint, scheduled, probe, request, result, expectedEntries})}`);
+            }
+            assertVaultSnapshotProbeCorrelation(diagnostics);
+            return {path: "watcher_snapshot_probe" as const, diagnostics, watcherHint, probe, request, result};
+          }
+        }
+      }
+
+      const periodicRequests = diagnostics.requests.filter((request) => (
+        request.line >= afterLine
+          && request.source === "watcher_reconciliation"
+          && request.triggerSources?.split("+").includes("periodic_timer")
+          && request.requestId !== null
+      ));
+      for (const periodicRequest of periodicRequests) {
+        const periodicResult = diagnostics.consumedResults.find((result) => (
+          result.requestId === periodicRequest.requestId && result.line > periodicRequest.line
+        ));
+        const periodicOrigins = periodicRequest.triggerSources?.split("+") ?? [];
+        const watcherHintInTimerBatch = diagnostics.watcherHints.find((hint) => (
+          hint.line >= afterLine
+            && hint.requestId === periodicRequest.requestId
+            && hint.line < periodicRequest.line
+        ));
+        let followupWatcherHint: OpenObsidianRefreshDiagnostics["watcherHints"][number] | null = null;
+        let followupProbeSchedule: OpenObsidianRefreshDiagnostics["snapshotProbes"][number] | null = null;
+        let followupProbeResult: OpenObsidianRefreshDiagnostics["snapshotProbes"][number] | null = null;
+        if (periodicResult?.revisionSha256) {
+          for (const hint of diagnostics.watcherHints.filter((item) => (
+            item.line >= afterLine
+              && item.requestId !== null
+              && item.requestId !== periodicRequest.requestId
+              && item.line > periodicRequest.line
+          ))) {
+            const scheduled = diagnostics.snapshotProbes.find((probe) => (
+              probe.phase === "scheduled"
+                && probe.requestId === hint.requestId
+                && probe.line > periodicResult.line
+                && probe.line > hint.line
+            ));
+            const probeResult = diagnostics.snapshotProbes.find((probe) => (
+              probe.phase === "result"
+                && probe.requestId === hint.requestId
+                && scheduled !== undefined
+                && probe.line > scheduled.line
+            ));
+            if (scheduled?.baselineRevisionSha256 === periodicResult.revisionSha256
+              && probeResult?.outcome === "unchanged"
+              && probeResult.revisionSha256 === periodicResult.revisionSha256) {
+              followupWatcherHint = hint;
+              followupProbeSchedule = scheduled;
+              followupProbeResult = probeResult;
+              break;
+            }
+          }
+        }
+        const watcherConfirmedAfterTimer = (watcherHintInTimerBatch !== undefined
+          && periodicOrigins.includes("filesystem_watcher")
+          && periodicOrigins.includes("periodic_timer"))
+          || (followupProbeSchedule !== null
+            && followupProbeResult?.outcome === "unchanged"
+            && followupProbeResult.revisionSha256 === periodicResult?.revisionSha256);
+        if (periodicResult
+          && periodicResult.succeeded
+          && periodicResult.snapshotStable === true
+          && periodicResult.entries === expectedEntries
+          && periodicResult.revisionSha256
+          && periodicResult.revisionSha256 !== baselineRevisionSha256
+          && watcherConfirmedAfterTimer) {
+          assertVaultSnapshotProbeCorrelation(diagnostics);
+          return {
+            path: "periodic_timer" as const,
+            diagnostics,
+            watcherHint: watcherHintInTimerBatch ?? followupWatcherHint,
+            probe: null,
+            request: periodicRequest,
+            result: periodicResult,
+          };
+        }
+      }
+      return null;
+    },
+    (candidate) => candidate !== null,
+    30_000,
+  );
+  if (!correlated) throw new Error("Neither a changed watcher snapshot probe nor a periodic refresh reconciled the changed vault");
+  if (options.requireWatcherSnapshotProbe && correlated.path !== "watcher_snapshot_probe") {
+    const sameBatchWatcherPeriodicRefresh = options.allowDirectWatcherPeriodicBatch
+      && correlated.path === "periodic_timer"
+      && correlated.watcherHint?.requestId === correlated.request.requestId
+      && correlated.request.triggerSources?.split("+").includes("filesystem_watcher") === true
+      && correlated.request.triggerSources?.split("+").includes("periodic_timer") === true;
+    if (!sameBatchWatcherPeriodicRefresh) {
+      throw new Error(`The changed vault was not reconciled by its watcher snapshot probe or one same-ID watcher+periodic batch: ${JSON.stringify(correlated)}`);
+    }
+  }
+
+  const settled = await waitForOpenObsidianRefreshIdle(
+    previousRequestCount,
+    expectedEntries,
+    false,
+    logPath,
+  );
+  assertVaultSnapshotProbeCorrelation(settled);
+  const changedSnapshotProbe = correlated.probe === null ? null : settled.snapshotProbes.find((probe) => (
+    probe.phase === "result"
+      && probe.requestId === correlated.probe?.requestId
+      && probe.line === correlated.probe.line
+      && probe.outcome === "changed"
+  )) ?? null;
+  const changedSnapshotRefresh = settled.requests.find((request) => (
+    request.requestId === correlated.request.requestId
+      && request.line === correlated.request.line
+      && (changedSnapshotProbe === null || request.line > changedSnapshotProbe.line)
+  ));
+  const changedSnapshotRefreshResult = settled.consumedResults.find((result) => (
+    result.requestId === correlated.request.requestId
+      && changedSnapshotRefresh !== undefined
+      && result.line > changedSnapshotRefresh.line
+  ));
+  const postEditWatcherHints = settled.watcherHints.filter((hint) => hint.line >= afterLine && hint.requestId !== null);
+  const postEditWatcherRequestIds = new Set(postEditWatcherHints.map((hint) => hint.requestId!));
+  for (const requestId of postEditWatcherRequestIds) {
+    const hints = postEditWatcherHints.filter((hint) => hint.requestId === requestId);
+    const schedules = settled.snapshotProbes.filter((probe) => (
+      probe.phase === "scheduled" && probe.requestId === requestId && probe.line >= afterLine
+    ));
+    const probeResults = settled.snapshotProbes.filter((probe) => (
+      probe.phase === "result" && probe.requestId === requestId && probe.line >= afterLine
+    ));
+    const requests = settled.requests.filter((request) => request.requestId === requestId && request.line >= afterLine);
+    const results = settled.consumedResults.filter((result) => result.requestId === requestId && result.line >= afterLine);
+    const requestOrigins = requests[0]?.triggerSources?.split("+") ?? [];
+    const directWatcherPeriodicRefresh = options.allowDirectWatcherPeriodicBatch === true
+      && schedules.length === 0
+      && probeResults.length === 0
+      && requests.length === 1
+      && results.length === 1
+      && requests[0]?.source === "watcher_reconciliation"
+      && requestOrigins.includes("filesystem_watcher")
+      && requestOrigins.includes("periodic_timer")
+      && hints.every((hint) => hint.line < requests[0]!.line)
+      && results[0]!.line > requests[0]!.line
+      && results[0]!.succeeded
+      && results[0]!.snapshotStable === true
+      && results[0]!.revisionSha256 !== baselineRevisionSha256
+      && results[0]!.entries === expectedEntries
+      && (!options.requireExpectedPathVisible || results[0]!.expectedPathVisible === true);
+    if (directWatcherPeriodicRefresh) continue;
+    if (hints.length === 0 || schedules.length !== 1 || probeResults.length !== 1
+      || hints.some((hint) => hint.line >= schedules[0]!.line)
+      || schedules[0]!.line >= probeResults[0]!.line) {
+      throw new Error(`A watcher hint after the external change did not remain correlated with one ordered snapshot probe: ${JSON.stringify({requestId, hints, schedules, probeResults})}`);
+    }
+    if (probeResults[0]!.outcome === "unchanged") {
+      if (requests.length !== 0 || results.length !== 0) {
+        throw new Error(`An unchanged watcher snapshot probe caused a full refresh: ${JSON.stringify({requestId, requests, results})}`);
+      }
+    } else if (probeResults[0]!.outcome === "changed") {
+      if (requests.length !== 1 || results.length !== 1
+        || requests[0]!.line <= probeResults[0]!.line
+        || results[0]!.line <= requests[0]!.line
+        || !results[0]!.succeeded || results[0]!.snapshotStable !== true
+        || results[0]!.revisionSha256 !== probeResults[0]!.revisionSha256) {
+        throw new Error(`A changed watcher snapshot probe did not produce one stable, revision-matched refresh: ${JSON.stringify({requestId, probe: probeResults[0], requests, results})}`);
+      }
+    } else {
+      throw new Error(`A watcher snapshot probe failed after the external change: ${JSON.stringify({requestId, probe: probeResults[0]})}`);
+    }
+  }
+  const uncorrelatedWatcherRequests = settled.requests.filter((request) => (
+    request.line >= afterLine
+      && request.source === "watcher_reconciliation"
+      && request.triggerSources?.split("+").includes("filesystem_watcher")
+      && (!request.requestId || !postEditWatcherRequestIds.has(request.requestId))
+  ));
+  if (uncorrelatedWatcherRequests.length > 0
+    || !changedSnapshotRefresh || !changedSnapshotRefreshResult
+    || !correlated.request.requestId
+    || settled.requests.filter((request) => request.requestId === correlated.request.requestId && request.line >= afterLine).length !== 1
+    || settled.consumedResults.filter((result) => result.requestId === correlated.request.requestId && result.line >= afterLine).length !== 1
+    || (correlated.path === "watcher_snapshot_probe"
+      && (!changedSnapshotProbe
+        || changedSnapshotProbe.baselineRevisionSha256 !== baselineRevisionSha256
+        || changedSnapshotProbe.revisionSha256 !== changedSnapshotRefreshResult.revisionSha256))
+    || (correlated.path === "periodic_timer"
+      && (!changedSnapshotRefresh.triggerSources?.split("+").includes("periodic_timer")
+        || changedSnapshotRefreshResult.revisionSha256 === baselineRevisionSha256))
+    || !changedSnapshotRefreshResult.succeeded
+    || changedSnapshotRefreshResult.snapshotStable !== true
+    || changedSnapshotRefreshResult.entries !== expectedEntries) {
+    throw new Error(`The settled refresh lost its changed-probe or periodic-refresh correlation: ${JSON.stringify({correlated, changedSnapshotProbe, changedSnapshotRefresh, changedSnapshotRefreshResult, uncorrelatedWatcherRequests})}`);
+  }
+  return {
+    ...settled,
+    reconciliationPath: correlated.path,
+    changedWatcherHint: correlated.watcherHint,
+    changedSnapshotProbe,
+    changedSnapshotRefresh,
+    changedSnapshotRefreshResult,
+  };
 }
 
 async function waitForOpenObsidianRefreshSnapshotQuiet(
@@ -2733,15 +3225,21 @@ async function waitForOpenObsidianRefreshSnapshotQuiet(
       const diagnostics = await readOpenObsidianRefreshDiagnostics(logPath);
       const latestRequest = diagnostics.requests.at(-1);
       const latestResult = diagnostics.consumedResults.at(-1);
-      const receiverBusy = diagnostics.receiverStates.at(-1)?.busy ?? false;
+      const receiverBusy = (diagnostics.receiverStates.at(-1)?.busy ?? false)
+        || openObsidianSnapshotProbeIsBusy(diagnostics);
       const latestRequestConsumed = Boolean(latestRequest && latestResult && latestResult.line > latestRequest.line);
-      const latestResultMatches = latestResult?.succeeded === true && latestResult.entries === expectedEntries;
+      const latestResultMatches = latestResult?.succeeded === true
+        && latestResult.snapshotStable === true
+        && latestResult.entries === expectedEntries;
       const ready = !receiverBusy && latestRequestConsumed && latestResultMatches;
+      if (ready) assertVaultSnapshotProbeCorrelation(diagnostics);
       const snapshot = JSON.stringify({
         requestCount: diagnostics.requests.length,
         latestRequest,
         resultCount: diagnostics.consumedResults.length,
         latestResult,
+        latestWatcherHint: diagnostics.watcherHints.at(-1),
+        snapshotProbes: diagnostics.snapshotProbes,
         receiverBusy,
       });
       if (!ready) {
@@ -14657,7 +15155,29 @@ async function runReferenceExternalNoteRefresh(
   };
   open.external_note_refresh = refreshReport;
 
-  const refreshRequestCountBeforeCreation = (await readOpenObsidianRefreshDiagnostics()).requests.length;
+  const refreshRequestCountBeforeBaseline = (await readOpenObsidianRefreshDiagnostics()).requests.length;
+  refreshReport.baseline_refresh_action = await clickManualRefreshUntilRequested(
+    child,
+    window.window_id,
+    refreshRequestCountBeforeBaseline,
+  );
+  const settledBaselineRefresh = await waitForOpenObsidianRefreshIdle(
+    refreshRequestCountBeforeBaseline,
+    countMarkdownFiles(vaultBaseline),
+    true,
+  );
+  const revisionBeforeCreation = settledBaselineRefresh.consumedResults.at(-1)?.revisionSha256;
+  if (!revisionBeforeCreation) {
+    throw new Error("The stable pre-creation refresh did not report a full-vault snapshot revision");
+  }
+  refreshReport.baseline_refresh_before_external_creation = {
+    latest_request: settledBaselineRefresh.requests.at(-1) ?? null,
+    latest_result: settledBaselineRefresh.consumedResults.at(-1) ?? null,
+    settled_for_ms: settledBaselineRefresh.settled_for_ms,
+    full_vault_revision_sha256: revisionBeforeCreation,
+  };
+  const refreshRequestCountBeforeCreation = settledBaselineRefresh.requests.length;
+  const logLineBaselineBeforeCreation = await openObsidianLogLineCount(join(reportDirectory, "openobsidian.log"));
   const vaultBeforeCreation = await snapshotTree(vaultRoot);
   ensureExactSnapshot(vaultBaseline, vaultBeforeCreation, "OpenObsidian vault before deliberate external note creation");
   const appDataBeforeCreation = await snapshotTree(appDataRoot);
@@ -14695,15 +15215,23 @@ async function runReferenceExternalNoteRefresh(
   await saveReport();
 
   if (process.platform !== "win32") await delay(2_000);
-  const settledWatcherRefresh = await waitForOpenObsidianRefreshIdle(
+  const settledWatcherRefresh = await waitForChangedWatcherSnapshotRefresh(
+    join(reportDirectory, "openobsidian.log"),
+    logLineBaselineBeforeCreation,
     refreshRequestCountBeforeCreation,
     expectedMarkdownCount,
-    false,
+    revisionBeforeCreation,
+    {requireWatcherSnapshotProbe: true, allowDirectWatcherPeriodicBatch: true, requireExpectedPathVisible: true},
   );
   refreshReport.watcher_refresh_settled_before_manual = {
+    reconciliation_path: settledWatcherRefresh.reconciliationPath,
     settled_for_ms: settledWatcherRefresh.settled_for_ms,
     latest_receiver_busy: settledWatcherRefresh.receiverStates.at(-1)?.busy ?? false,
-    latest_consumed_result: settledWatcherRefresh.consumedResults.at(-1) ?? null,
+    baseline_revision_sha256: revisionBeforeCreation,
+    changed_watcher_hint: settledWatcherRefresh.changedWatcherHint,
+    changed_snapshot_probe: settledWatcherRefresh.changedSnapshotProbe,
+    changed_snapshot_refresh: settledWatcherRefresh.changedSnapshotRefresh,
+    latest_consumed_result: settledWatcherRefresh.changedSnapshotRefreshResult,
   };
   const refreshRequestCountBeforeManual = settledWatcherRefresh.requests.length;
   refreshReport.refresh_action = await clickManualRefreshUntilRequested(
@@ -14716,12 +15244,21 @@ async function runReferenceExternalNoteRefresh(
     expectedMarkdownCount,
     true,
   );
+  const creationRevision = settledManualRefresh.consumedResults.at(-1)?.revisionSha256;
+  if (!creationRevision) {
+    throw new Error("The stable external-note refresh did not report a full-vault snapshot revision");
+  }
   refreshReport.manual_refresh_diagnostics = {
     action_request: settledManualRefresh.requests.at(-1) ?? null,
     result: settledManualRefresh.consumedResults.at(-1) ?? null,
     receiver_busy_after_result: settledManualRefresh.receiverStates.at(-1)?.busy ?? false,
     settled_for_ms: settledManualRefresh.settled_for_ms,
   };
+  refreshReport.unchanged_snapshot_probe = await requireUnchangedWatcherSnapshotProbe(
+    join(reportDirectory, "openobsidian.log"),
+    vaultWatcherHintRequestFile,
+    creationRevision,
+  );
   const refreshedList = await waitFor("OpenObsidian to finish refreshing its note list after external creation", async () => {
     await delay(350);
     const capture = await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-after-external-note-refresh");
@@ -14881,10 +15418,15 @@ async function runReferenceExternalNoteRefresh(
     expectedMarkdownCount,
     false,
   );
+  const revisionBeforeExternalEdit = settledRefreshBeforeEdit.consumedResults.at(-1)?.revisionSha256;
+  if (!revisionBeforeExternalEdit) {
+    throw new Error("The pre-edit settled refresh did not report a full-vault snapshot revision");
+  }
   editReport.previous_refresh_settled_before_edit = {
     settled_for_ms: settledRefreshBeforeEdit.settled_for_ms,
     latest_receiver_busy: settledRefreshBeforeEdit.receiverStates.at(-1)?.busy ?? false,
     latest_consumed_result: settledRefreshBeforeEdit.consumedResults.at(-1) ?? null,
+    full_vault_revision_sha256: revisionBeforeExternalEdit,
   };
   const refreshRequestCountBeforeEdit = settledRefreshBeforeEdit.requests.length;
   const vaultBeforeEdit = await snapshotTree(vaultRoot);
@@ -14899,6 +15441,7 @@ async function runReferenceExternalNoteRefresh(
     throw new Error("The external note does not match the original source bytes before the in-place edit");
   }
   const appDataBeforeEdit = await snapshotTree(appDataRoot);
+  const logLineBaselineBeforeEdit = await openObsidianLogLineCount(join(reportDirectory, "openobsidian.log"));
   await writeFile(join(vaultRoot, externalRefreshMarkdownPath), externalEditedMarkdownBytes);
 
   const vaultAfterEdit = await snapshotTree(vaultRoot);
@@ -14937,16 +15480,26 @@ async function runReferenceExternalNoteRefresh(
   await writeFile(join(reportDirectory, "vault-after-external-note-edit.json"), JSON.stringify(vaultAfterEdit, null, 2) + "\n");
   await saveReport();
 
-  if (process.platform !== "win32") await delay(2_000);
-  const settledWatcherRefreshAfterEdit = await waitForOpenObsidianRefreshIdle(
+  const settledWatcherRefreshAfterEdit = await waitForChangedWatcherSnapshotRefresh(
+    join(reportDirectory, "openobsidian.log"),
+    logLineBaselineBeforeEdit,
     refreshRequestCountBeforeEdit,
     markdownCountAfterEdit,
-    false,
+    revisionBeforeExternalEdit,
+    {requireWatcherSnapshotProbe: true, allowDirectWatcherPeriodicBatch: true},
   );
+  const correlatedChangedRefresh = settledWatcherRefreshAfterEdit.changedSnapshotRefresh;
   editReport.watcher_refresh_settled_before_manual = {
+    reconciliation_path: settledWatcherRefreshAfterEdit.reconciliationPath,
     settled_for_ms: settledWatcherRefreshAfterEdit.settled_for_ms,
     latest_receiver_busy: settledWatcherRefreshAfterEdit.receiverStates.at(-1)?.busy ?? false,
-    latest_consumed_result: settledWatcherRefreshAfterEdit.consumedResults.at(-1) ?? null,
+    changed_watcher_hint: settledWatcherRefreshAfterEdit.changedWatcherHint,
+    latest_consumed_result: settledWatcherRefreshAfterEdit.changedSnapshotRefreshResult,
+    snapshot_probes: settledWatcherRefreshAfterEdit.snapshotProbes.filter((probe) => probe.line >= logLineBaselineBeforeEdit),
+    changed_probe_correlated_refresh: settledWatcherRefreshAfterEdit.reconciliationPath === "watcher_snapshot_probe"
+      ? correlatedChangedRefresh
+      : null,
+    reconciled_refresh_request: correlatedChangedRefresh,
   };
   const refreshRequestCountBeforeManualEdit = settledWatcherRefreshAfterEdit.requests.length;
   editReport.refresh_action = await clickManualRefreshUntilRequested(
@@ -15930,6 +16483,7 @@ async function runOpenObsidian(noOpBaseline: SnapshotEntry[]): Promise<SnapshotE
     ...process.env,
     HOME: homeRoot,
   };
+  appEnv.OPENOBSIDIAN_CI_VAULT_REFRESH_EXPECTED_PATH = externalRefreshMarkdownPath;
   let appDataRoot: string;
   if (process.platform === "win32") {
     appEnv.APPDATA = userConfigRoot;
@@ -18895,7 +19449,15 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
               && pair.target.pointer !== null
               && pair.sibling.pointer !== null
               && Math.abs(pair.target.pointer.x - pair.sibling.pointer.x) <= 0.5
-              && Math.abs(pair.target.pointer.y - pair.sibling.pointer.y) <= 0.5,
+              && Math.abs(pair.target.pointer.y - pair.sibling.pointer.y) <= 0.5
+              && Number.isFinite(pair.target.pixelsPerPoint)
+              && pair.target.pixelsPerPoint > 0
+              && Number.isFinite(pair.sibling.pixelsPerPoint)
+              && pair.sibling.pixelsPerPoint > 0
+              && Math.abs(pair.target.pointer.x * pair.target.pixelsPerPoint - clickX) <= 1.5
+              && Math.abs(pair.target.pointer.y * pair.target.pixelsPerPoint - clickY) <= 1.5
+              && Math.abs(pair.sibling.pointer.x * pair.sibling.pixelsPerPoint - clickX) <= 1.5
+              && Math.abs(pair.sibling.pointer.y * pair.sibling.pixelsPerPoint - clickY) <= 1.5,
             5_000,
           );
         } catch (error) {
@@ -21141,6 +21703,7 @@ async function replaceMacOSOpenObsidianTextInputWithKeyboard(
   let before: Awaited<ReturnType<typeof captureOpenObsidianScreenshot>> | undefined;
   let layout: CanvasInputFieldLayout | undefined;
   let click = "";
+  let targetSiblingClickGeometry: Record<string, unknown> | null = null;
   let lastPositionFailure = "no field-position attempt completed";
   let initialFieldValueLength: number | null = null;
   let initialFieldVisualReadback: Awaited<ReturnType<typeof readCanvasInputScreenshotValue>> | undefined;
@@ -21215,11 +21778,116 @@ async function replaceMacOSOpenObsidianTextInputWithKeyboard(
       const noteCreateDiagnosticBeforeClick = controlName === "Text card ID"
         ? await readCanvasNoteCreateTextCardIdDiagnostic(logPath)
         : null;
+      const canvasTargetField = controlName === "Canvas edit path"
+        ? "path"
+        : controlName === "Canvas edit text-card ID"
+          ? "id"
+          : null;
+      const canvasSiblingField = canvasTargetField === "path" ? "id" : "path";
+      const canvasClickLineBaseline = canvasTargetField === null
+        ? -1
+        : Math.max(-1, await openObsidianLogLineCount(logPath) - 1);
       const attemptClick = await clickMacOSDesktopFraction(
         attemptLayout.fieldCenter.x / attemptLayout.imageDimensions.width,
         attemptLayout.fieldCenter.y / attemptLayout.imageDimensions.height,
       );
       await delay(120);
+      if (canvasTargetField !== null) {
+        type CanvasClickDiagnostic = NonNullable<Awaited<ReturnType<typeof readCanvasTextEditFieldDiagnostic>>>;
+        let clickPair: {
+          targetDiagnostic: CanvasClickDiagnostic;
+          targetClick: NonNullable<CanvasClickDiagnostic["clickEventObservation"]>;
+          sibling: CanvasClickDiagnostic;
+        } | null = null;
+        try {
+          clickPair = await waitFor(
+            `fresh paired macOS Canvas ${canvasTargetField}/sibling click geometry`,
+            async () => {
+              const targetDiagnostic = await readCanvasTextEditFieldDiagnostic(
+                logPath,
+                canvasTargetField,
+                canvasClickLineBaseline,
+              );
+              const targetClick = targetDiagnostic?.clickEventObservation;
+              if (!targetDiagnostic || !targetClick) return null;
+              const siblingDiagnostic = await readCanvasTextEditFieldDiagnostic(
+                logPath,
+                canvasSiblingField,
+                canvasClickLineBaseline,
+                undefined,
+                targetClick.frameNr,
+              );
+              if (!siblingDiagnostic) return null;
+              return {targetDiagnostic, targetClick, sibling: siblingDiagnostic};
+            },
+            (candidate) => candidate !== null,
+            5_000,
+          );
+        } catch (error) {
+          lastPositionFailure = `fresh paired target/sibling diagnostics did not follow the coordinate click: ${error instanceof Error ? error.message : String(error)}`;
+          continue;
+        }
+        if (!clickPair) {
+          lastPositionFailure = "fresh paired target/sibling diagnostics did not follow the coordinate click";
+          continue;
+        }
+        const {targetDiagnostic, targetClick, sibling} = clickPair;
+        const expectedSiblingValue = canvasTargetField === "path" ? "" : canvasPath;
+        const emptySha256 = createHash("sha256").update("", "utf8").digest("hex");
+        const siblingSha256 = createHash("sha256").update(expectedSiblingValue, "utf8").digest("hex");
+        const pointer = targetClick.pointer;
+        const pointerInsideTarget = pointer !== null
+          && pointer.x >= targetClick.rect.left
+          && pointer.x <= targetClick.rect.right
+          && pointer.y >= targetClick.rect.top
+          && pointer.y <= targetClick.rect.bottom;
+        const pointerOutsideSibling = pointer !== null
+          && (pointer.x < sibling.rect.left
+            || pointer.x > sibling.rect.right
+            || pointer.y < sibling.rect.top
+            || pointer.y > sibling.rect.bottom);
+        const targetValueMatches = targetClick.empty === true
+          && targetClick.valueBytes === 0
+          && targetClick.valueSha256 === emptySha256;
+        const siblingValueMatches = sibling.valueBytes === Buffer.byteLength(expectedSiblingValue)
+          && sibling.valueSha256 === siblingSha256;
+        const pairedGeometryMatches = targetClick.line > canvasClickLineBaseline
+          && sibling.line > canvasClickLineBaseline
+          && targetClick.frameNr === sibling.frameNr
+          && targetClick.responseId !== sibling.responseId
+          && targetClick.pixelsPerPointBits === sibling.pixelsPerPointBits
+          && targetClick.rawPixelsPerPoint === sibling.rawPixelsPerPoint
+          && isDeepStrictEqual(targetClick.pointer, sibling.pointer)
+          && isDeepStrictEqual(targetClick.rawPointer, sibling.rawPointer);
+        const clickTargetMatches = targetDiagnostic.clickEventObservations.length === 1
+          && targetClick.clicked
+          && targetClick.enabled
+          && targetClick.focused
+          && sibling.enabled
+          && !sibling.clicked
+          && !sibling.focused;
+        targetSiblingClickGeometry = {
+          target_field: canvasTargetField,
+          sibling_field: canvasSiblingField,
+          screenshot_field_center: attemptLayout.fieldCenter,
+          screenshot_dimensions: attemptLayout.imageDimensions,
+          click_dispatch: attemptClick,
+          target_click_observation: targetClick,
+          sibling_observation: sibling,
+          pointer_inside_target: pointerInsideTarget,
+          pointer_outside_sibling: pointerOutsideSibling,
+          target_value_matches_before_entry: targetValueMatches,
+          sibling_value_matches_before_entry: siblingValueMatches,
+          paired_geometry_matches: pairedGeometryMatches,
+          target_only_click_matches: clickTargetMatches,
+        };
+        if (!pointerInsideTarget || !pointerOutsideSibling || !targetValueMatches
+          || !siblingValueMatches || !pairedGeometryMatches || !clickTargetMatches) {
+          lastPositionFailure = `macOS coordinate click did not target the exact Canvas field outside its sibling: ${JSON.stringify(targetSiblingClickGeometry)}`;
+          continue;
+        }
+        targetFieldClickDiagnostic = targetDiagnostic;
+      }
       if (controlName === "Canvas edit text-card ID") {
         const focusAfterClick = await readCanvasTextEditFieldDiagnostic(
           logPath,
@@ -21792,6 +22460,7 @@ async function replaceMacOSOpenObsidianTextInputWithKeyboard(
     initial_field_value_length: initialFieldValueLength,
     initial_field_visual_ocr: initialFieldVisualReadback?.text ?? null,
     initial_field_visual_exact: initialFieldVisualReadback?.exact ?? null,
+    target_sibling_click_geometry: targetSiblingClickGeometry,
     target_widget_click: targetFieldClickDiagnostic,
     target_widget_focus: targetFieldFocusDiagnostic,
       note_create_text_card_id_pre_paste_focus: noteCreateIdPrePasteFieldDiagnostic,
@@ -22527,6 +23196,7 @@ async function runOpenObsidianCanvasTextEdit(
   delete appEnv.OPENOBSIDIAN_CI_CANVAS_DISABLE_EFRAME_PERSISTENCE;
   appEnv.OPENOBSIDIAN_CI_CANVAS_FOCUS_SNAPSHOT_REQUEST_FILE = linuxCanvasFocusSnapshotRequestFile;
   appEnv.OPENOBSIDIAN_CI_FORCE_VAULT_RECONCILIATION_REQUEST_FILE = vaultReconciliationRequestFile;
+  appEnv.OPENOBSIDIAN_CI_FORCE_VAULT_WATCHER_HINT_REQUEST_FILE = vaultWatcherHintRequestFile;
   if (!expectedAbortCanary) {
     appEnv.OPENOBSIDIAN_CI_VAULT_REFRESH_EXPECTED_PATH = "R3-17-Reconciliation-External.md";
   } else {
@@ -23606,8 +24276,29 @@ async function runOpenObsidianCanvasTextEdit(
     editReport.destination_absent_before_field_input = true;
     await saveReport();
 
+    const refreshCountBeforeFocusTimerReset = (await readOpenObsidianRefreshDiagnostics(logPath)).requests.length;
+    editReport.manual_refresh_before_focus_capture = await clickManualRefreshUntilRequested(
+      child,
+      window.window_id,
+      refreshCountBeforeFocusTimerReset,
+    );
+    const settledFocusTimerReset = await waitForOpenObsidianRefreshIdle(
+      refreshCountBeforeFocusTimerReset,
+      initialMarkdownCount,
+      true,
+      logPath,
+    );
+    editReport.focus_timer_reset_result = settledFocusTimerReset.consumedResults.at(-1) ?? null;
     const refreshDiagnosticsBeforeFocusCapture = await readOpenObsidianRefreshDiagnostics(logPath);
     const canvasPathReadback = await replaceOpenObsidianTextInput(child, window.window_id, "Canvas edit path", canvasPath, logPath, safetyTracker);
+    const pathUntriggeredFocusCapture = await requestCanvasReconciliationFocusCapture(
+      logPath,
+      "Canvas edit path before the timer trigger",
+      "path",
+      canvasPath,
+      "",
+      {forcePeriodicRescan: false, expectedRescanPending: false},
+    );
     const pathRefreshFocusCapture = await requestCanvasReconciliationFocusCapture(
       logPath,
       "Canvas edit path",
@@ -23630,6 +24321,7 @@ async function runOpenObsidianCanvasTextEdit(
       periodic_trigger_source: "production periodic timer deadline forced by one-shot CI request file",
       request_file: relative(reportDirectory, vaultReconciliationRequestFile),
       request_count_before: refreshDiagnosticsBeforeFocusCapture.requests.length,
+      canvas_path_untriggered_capture: pathUntriggeredFocusCapture,
       canvas_path_capture: pathRefreshFocusCapture,
       text_card_id_capture: idRefreshFocusCapture,
       pending_request_id: pendingRefreshRequestId,

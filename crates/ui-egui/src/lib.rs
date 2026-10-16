@@ -67,23 +67,58 @@ impl CanvasTargetFieldFocus {
 struct VaultRescanOrigins {
     filesystem_watcher: bool,
     periodic_timer: bool,
+    manual_button: bool,
 }
 
 impl VaultRescanOrigins {
-    fn label(self) -> &'static str {
-        match (self.filesystem_watcher, self.periodic_timer) {
-            (true, true) => "filesystem_watcher+periodic_timer",
-            (true, false) => "filesystem_watcher",
-            (false, true) => "periodic_timer",
-            (false, false) => "none",
+    fn label(self) -> String {
+        let mut origins = Vec::new();
+        if self.filesystem_watcher {
+            origins.push("filesystem_watcher");
+        }
+        if self.periodic_timer {
+            origins.push("periodic_timer");
+        }
+        if self.manual_button {
+            origins.push("manual_button");
+        }
+        if origins.is_empty() {
+            "none".to_owned()
+        } else {
+            origins.join("+")
         }
     }
+
+    fn merge(&mut self, other: Self) {
+        self.filesystem_watcher |= other.filesystem_watcher;
+        self.periodic_timer |= other.periodic_timer;
+        self.manual_button |= other.manual_button;
+    }
+
+    fn clear_periodic_timer(&mut self) {
+        self.periodic_timer = false;
+    }
+
+    fn is_empty(self) -> bool {
+        !self.filesystem_watcher && !self.periodic_timer && !self.manual_button
+    }
+
+    fn is_watcher_only(self) -> bool {
+        self.filesystem_watcher && !self.periodic_timer && !self.manual_button
+    }
+}
+
+#[derive(Clone, Debug, Default)]
+struct VaultRescanBatch {
+    origins: VaultRescanOrigins,
+    request_id: Option<String>,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 enum VaultRescanOrigin {
     FilesystemWatcher,
     PeriodicTimer,
+    ManualButton,
 }
 
 fn ci_canvas_egui_memory_persistence_disabled() -> bool {
@@ -219,6 +254,7 @@ type ExternalFileOpenAction = dyn Fn(&Path) -> Result<(), String> + Send + Sync;
 type NotePreviewReceiver = Receiver<Result<NoteSourcePreview, String>>;
 type NotePreviewWriteReceiver = Receiver<Result<String, String>>;
 type VaultRefreshReceiver = Receiver<Result<VaultRefreshOutcome, String>>;
+type VaultSnapshotProbeReceiver = Receiver<Result<String, String>>;
 type RenameReceiver = Receiver<RenameTaskMessage>;
 type CanvasNoteReceiver = Receiver<CanvasNoteTaskMessage>;
 type CanvasTextEditReceiver = Receiver<CanvasTextEditTaskMessage>;
@@ -294,6 +330,9 @@ struct RenameApplyOutcome {
 struct VaultRefreshOutcome {
     session: VaultSession,
     preserve_note_preview: bool,
+    snapshot_revision_sha256: Option<String>,
+    snapshot_before_sha256: Option<String>,
+    snapshot_after_sha256: Option<String>,
 }
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
@@ -461,13 +500,19 @@ struct OpenObsidianApp {
     vault_open_error: Option<String>,
     vault_refresh_receiver: Option<VaultRefreshReceiver>,
     vault_refresh_request_id: Option<String>,
+    vault_refresh_trigger_origins: VaultRescanOrigins,
     vault_refresh_error: Option<String>,
     vault_refresh_status: Option<String>,
     vault_watcher: Option<VaultWatcher>,
+    vault_watcher_hint_request_id: Option<String>,
     vault_watch_error: Option<String>,
     vault_rescan_pending: bool,
     vault_rescan_origins: VaultRescanOrigins,
     vault_rescan_request_id: Option<String>,
+    vault_rescan_promoted_batch: Option<VaultRescanBatch>,
+    last_reconciled_vault_revision: Option<String>,
+    vault_snapshot_probe_receiver: Option<VaultSnapshotProbeReceiver>,
+    vault_snapshot_probe_batch: Option<VaultRescanBatch>,
     next_vault_reconciliation: Option<Instant>,
     canvas_target_field_focus: CanvasTargetFieldFocus,
     canvas_focus_observation_request_id: Option<String>,
@@ -573,6 +618,7 @@ impl OpenObsidianApp {
             || self.note_preview_receiver.is_some()
             || self.note_preview_write_receiver.is_some()
             || self.vault_refresh_receiver.is_some()
+            || self.vault_snapshot_probe_receiver.is_some()
             || self.rename_receiver.is_some()
             || self.canvas_note_receiver.is_some()
             || self.canvas_text_edit_receiver.is_some()
@@ -639,9 +685,15 @@ impl OpenObsidianApp {
                         .to_owned()
                 });
                 self.vault_watcher = watcher.ok();
+                self.vault_watcher_hint_request_id = None;
                 self.vault_rescan_pending = false;
                 self.vault_rescan_origins = VaultRescanOrigins::default();
                 self.vault_rescan_request_id = None;
+                self.vault_rescan_promoted_batch = None;
+                self.last_reconciled_vault_revision = None;
+                self.vault_snapshot_probe_receiver = None;
+                self.vault_snapshot_probe_batch = None;
+                self.vault_refresh_trigger_origins = VaultRescanOrigins::default();
                 self.next_vault_reconciliation =
                     Some(Instant::now() + VAULT_RECONCILIATION_INTERVAL);
                 self.rename_source_path = session
@@ -656,6 +708,7 @@ impl OpenObsidianApp {
                 self.vault_open_error = None;
                 self.vault_refresh_receiver = None;
                 self.vault_refresh_request_id = None;
+                self.vault_refresh_trigger_origins = VaultRescanOrigins::default();
                 self.vault_refresh_error = None;
                 self.vault_refresh_status = None;
                 self.history_records.clear();
@@ -745,17 +798,18 @@ impl OpenObsidianApp {
                     .unwrap_or("Selected vault");
                 ui.horizontal_wrapped(|ui| {
                     ui.label(format!("Vault: {vault_name}"));
-                    let refresh_response = ui.add_enabled_ui(!vault_operation_busy, |ui| {
-                        ui.small_button("Refresh note list")
-                            .on_hover_text("Rescan Markdown paths without changing vault files.")
-                    });
+                    let refresh_response =
+                        ui.add_enabled_ui(!self.manual_refresh_action_blocked(), |ui| {
+                            ui.small_button("Refresh note list")
+                                .on_hover_text("Rescan Markdown paths without changing vault files.")
+                        });
                     refresh_note_list_requested = refresh_response.inner.clicked();
                     if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some()
                         && ui.input(|input| !input.raw.events.is_empty())
                     {
                         eprintln!(
                             "OpenObsidian CI refresh button input: enabled={}, response_rect={:?}, pointer={:?}, hovered={}, clicked={}, events={:?}",
-                            !vault_operation_busy,
+                            !self.manual_refresh_action_blocked(),
                             refresh_response.inner.rect,
                             ui.input(|input| input.pointer.hover_pos()),
                             refresh_response.inner.hovered(),
@@ -803,10 +857,15 @@ impl OpenObsidianApp {
             ui.colored_label(eframe::egui::Color32::YELLOW, error);
         }
         if refresh_note_list_requested {
+            let sequence = CI_VAULT_RESCAN_REQUEST_SEQUENCE.fetch_add(1, Ordering::Relaxed);
+            let request_id = format!("manual-refresh-{sequence}");
             if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some() {
-                eprintln!("OpenObsidian CI vault refresh request: source=manual_button");
+                eprintln!("OpenObsidian CI manual vault refresh queued: request_id={request_id}");
             }
-            self.start_vault_refresh();
+            self.mark_vault_rescan_pending(
+                VaultRescanOrigin::ManualButton,
+                Some(&request_id),
+            );
             ui.ctx().request_repaint();
         }
         if self.session.is_some() {
@@ -854,6 +913,7 @@ impl OpenObsidianApp {
             self.note_preview_receiver.is_some(),
             self.note_preview_write_receiver.is_some(),
             self.vault_refresh_receiver.is_some(),
+            self.vault_snapshot_probe_receiver.is_some(),
             self.rename_receiver.is_some(),
             self.canvas_note_receiver.is_some(),
             self.canvas_text_edit_receiver.is_some(),
@@ -881,13 +941,14 @@ impl OpenObsidianApp {
             || self.note_preview_receiver.is_some()
             || self.note_preview_write_receiver.is_some()
             || self.vault_refresh_receiver.is_some()
+            || self.vault_snapshot_probe_receiver.is_some()
             || self.rename_receiver.is_some()
             || self.canvas_note_receiver.is_some()
             || self.canvas_text_edit_receiver.is_some()
             || self.canvas_text_edit_preview.is_some()
             || self.note_source_editing();
         eprintln!(
-            "OpenObsidian CI UI state: session={}, vault_opening={}, vault_open_receiver={}, history_receiver={}, link_receiver={}, note_preview_receiver={}, note_preview_write_receiver={}, vault_refresh_receiver={}, rename_receiver={}, canvas_note_receiver={}, canvas_text_edit_receiver={}, canvas_text_edit_preview={}, canvas_text_edit_snapshot_lease={}, bases_receiver={}, open_vault_enabled={}",
+            "OpenObsidian CI UI state: session={}, vault_opening={}, vault_open_receiver={}, history_receiver={}, link_receiver={}, note_preview_receiver={}, note_preview_write_receiver={}, vault_refresh_receiver={}, vault_snapshot_probe_receiver={}, rename_receiver={}, canvas_note_receiver={}, canvas_text_edit_receiver={}, canvas_text_edit_preview={}, canvas_text_edit_snapshot_lease={}, bases_receiver={}, open_vault_enabled={}",
             self.session.is_some(),
             self.vault_opening,
             self.vault_open_receiver.is_some(),
@@ -896,6 +957,7 @@ impl OpenObsidianApp {
             self.note_preview_receiver.is_some(),
             self.note_preview_write_receiver.is_some(),
             self.vault_refresh_receiver.is_some(),
+            self.vault_snapshot_probe_receiver.is_some(),
             self.rename_receiver.is_some(),
             self.canvas_note_receiver.is_some(),
             self.canvas_text_edit_receiver.is_some(),
@@ -942,6 +1004,7 @@ impl OpenObsidianApp {
             || self.note_preview_receiver.is_some()
             || self.note_preview_write_receiver.is_some()
             || self.vault_refresh_receiver.is_some()
+            || self.vault_snapshot_probe_receiver.is_some()
             || self.rename_receiver.is_some()
             || self.canvas_note_receiver.is_some()
             || self.canvas_text_edit_receiver.is_some()
@@ -965,11 +1028,31 @@ impl OpenObsidianApp {
             || self.note_preview_receiver.is_some()
             || self.note_preview_write_receiver.is_some()
             || self.vault_refresh_receiver.is_some()
+            || self.vault_snapshot_probe_receiver.is_some()
             || self.rename_receiver.is_some()
             || self.canvas_note_receiver.is_some()
             || self.canvas_text_edit_receiver.is_some()
             || self.canvas_text_edit_snapshot_lease
             || self.note_source_editing()
+    }
+
+    fn manual_refresh_action_blocked(&self) -> bool {
+        self.vault_opening
+            || self.vault_open_receiver.is_some()
+            || self.vault_snapshot_probe_receiver.is_some()
+            || self.history_receiver.is_some()
+            || self.link_receiver.is_some()
+            || self.bases_receiver.is_some()
+            || self.note_preview_receiver.is_some()
+            || self.note_preview_write_receiver.is_some()
+            || self.rename_receiver.is_some()
+            || self.canvas_note_receiver.is_some()
+            || self.canvas_text_edit_receiver.is_some()
+            || (self.vault_rescan_pending && self.vault_rescan_origins.manual_button)
+            || self
+                .vault_rescan_promoted_batch
+                .as_ref()
+                .is_some_and(|batch| batch.origins.manual_button)
     }
 
     fn clear_bases_state(&mut self) {
@@ -3093,16 +3176,18 @@ impl OpenObsidianApp {
                             });
                         });
 
-                        if self.note_source_mode != NoteSourceMode::Reading {
+                        if self.note_source_mode != NoteSourceMode::Reading
+                            || (source_editing && preview.revision_sha256.is_none())
+                        {
                             if source_editing {
+                                ui.small("Markdown source draft");
                                 ui.small(format!(
                                     "Edit the complete note as plain UTF-8 source. The draft must fit within the {} KiB write limit; unsupported Markdown remains literal source.",
                                     MAX_NOTE_SOURCE_PREVIEW_BYTES / 1024
                                 ));
-                                if let (Some(draft), Some(revision_sha256)) = (
-                                    preview.source_draft.as_mut(),
-                                    preview.revision_sha256.as_ref(),
-                                ) {
+                                let source_relative_path = preview.relative_path.clone();
+                                let current_revision_sha256 = preview.revision_sha256.clone();
+                                if let Some(draft) = preview.source_draft.as_mut() {
                                     let editor_label = ui.label("Markdown source editor");
                                     ui.add(
                                         eframe::egui::TextEdit::multiline(draft)
@@ -3122,22 +3207,29 @@ impl OpenObsidianApp {
                                             "The edited source exceeds the 16 KiB write limit.",
                                         );
                                     }
+                                    if current_revision_sha256.is_none() {
+                                        ui.colored_label(
+                                            eframe::egui::Color32::YELLOW,
+                                            "The note's current revision could not be verified. Saving is disabled; cancel this draft to read the current source.",
+                                        );
+                                    }
                                     ui.horizontal(|ui| {
                                         let save_enabled = !operation_busy
                                             && !write_busy
                                             && draft_fits_limit
-                                            && preview.revision_sha256.is_some();
-                                        if ui
-                                            .add_enabled(
-                                                save_enabled,
-                                                eframe::egui::Button::new("Save source edits"),
-                                            )
-                                            .clicked()
+                                            && current_revision_sha256.is_some();
+                                        let save_response = ui.add_enabled(
+                                            save_enabled,
+                                            eframe::egui::Button::new("Save source edits"),
+                                        );
+                                        if save_response.clicked()
+                                            && let Some(revision_sha256) =
+                                                current_revision_sha256.clone()
                                         {
                                             source_write = Some((
-                                                preview.relative_path.clone(),
+                                                source_relative_path,
                                                 source_bytes,
-                                                revision_sha256.clone(),
+                                                revision_sha256,
                                             ));
                                         }
                                         if ui
@@ -3303,7 +3395,11 @@ impl OpenObsidianApp {
                                         "Read the note preview again to refresh resolved wiki links.",
                                     );
                                 }
-                                ui.small("Original Markdown source");
+                                ui.small(if source_editing {
+                                    "Markdown source draft"
+                                } else {
+                                    "Original Markdown source"
+                                });
                                 ui.add(
                                     eframe::egui::TextEdit::multiline(&mut render_source)
                                         .font(eframe::egui::TextStyle::Monospace)
@@ -4232,25 +4328,41 @@ impl OpenObsidianApp {
     }
 
     fn start_vault_refresh(&mut self) {
-        self.start_vault_refresh_with_request_id(None);
+        self.start_vault_refresh_with_request_id(
+            None,
+            VaultRescanOrigins {
+                manual_button: true,
+                ..VaultRescanOrigins::default()
+            },
+        );
     }
 
-    fn start_vault_refresh_for_request(&mut self, request_id: String) {
-        self.start_vault_refresh_with_request_id(Some(request_id));
+    fn start_vault_refresh_for_request(
+        &mut self,
+        request_id: String,
+        trigger_origins: VaultRescanOrigins,
+    ) {
+        self.start_vault_refresh_with_request_id(Some(request_id), trigger_origins);
     }
 
-    fn start_vault_refresh_with_request_id(&mut self, request_id: Option<String>) {
+    fn start_vault_refresh_with_request_id(
+        &mut self,
+        request_id: Option<String>,
+        trigger_origins: VaultRescanOrigins,
+    ) {
         let Some(mut session) = self.session.as_ref().map(|session| (**session).clone()) else {
             return;
         };
         self.vault_refresh_generation = self.vault_refresh_generation.saturating_add(1);
         self.vault_refresh_request_id = request_id;
+        self.vault_refresh_trigger_origins = trigger_origins;
         let ci_diagnostics = std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some();
         let entries_before = session.entries().len();
+        let trigger_sources = trigger_origins.label();
         if ci_diagnostics {
             eprintln!(
-                "OpenObsidian CI vault refresh scheduled: generation={}, entries_before={entries_before}",
-                self.vault_refresh_generation
+                "OpenObsidian CI vault refresh scheduled: generation={}, trigger_sources={trigger_sources}, entries_before={entries_before}",
+                self.vault_refresh_generation,
             );
         }
         let note_preview_guard = self.note_source_preview.as_ref().and_then(|preview| {
@@ -4273,13 +4385,22 @@ impl OpenObsidianApp {
             if ci_diagnostics {
                 eprintln!("OpenObsidian CI vault refresh worker started");
             }
+            let snapshot_before = session.snapshot_revision_sha256().ok();
             let refresh_result = session.refresh_entries();
+            let snapshot_after = session.snapshot_revision_sha256().ok();
+            let snapshot_revision_sha256 = match (&snapshot_before, &snapshot_after) {
+                (Some(before), Some(after)) if before == after => Some(after.clone()),
+                _ => None,
+            };
             if ci_diagnostics {
                 eprintln!(
-                    "OpenObsidian CI vault refresh scan finished: succeeded={}, entries_before={}, entries_after={}, elapsed_ms={}",
+                    "OpenObsidian CI vault refresh scan finished: succeeded={}, entries_before={}, entries_after={}, snapshot_stable={}, snapshot_before={}, snapshot_after={}, elapsed_ms={}",
                     refresh_result.is_ok(),
                     entries_before,
                     session.entries().len(),
+                    snapshot_revision_sha256.is_some(),
+                    snapshot_before.as_deref().unwrap_or("unavailable"),
+                    snapshot_after.as_deref().unwrap_or("unavailable"),
                     worker_started.elapsed().as_millis()
                 );
             }
@@ -4304,6 +4425,9 @@ impl OpenObsidianApp {
                     Ok(VaultRefreshOutcome {
                         session,
                         preserve_note_preview,
+                        snapshot_revision_sha256,
+                        snapshot_before_sha256: snapshot_before,
+                        snapshot_after_sha256: snapshot_after,
                     })
                 }
                 Err(_) => {
@@ -4333,13 +4457,146 @@ impl OpenObsidianApp {
         self.vault_refresh_receiver = Some(receiver);
     }
 
+    fn take_vault_rescan_batch(&mut self) -> VaultRescanBatch {
+        let batch = VaultRescanBatch {
+            origins: self.vault_rescan_origins,
+            request_id: self.vault_rescan_request_id.take(),
+        };
+        self.vault_rescan_pending = false;
+        self.vault_rescan_origins = VaultRescanOrigins::default();
+        batch
+    }
+
+    fn merge_vault_rescan_batch(&mut self, batch: VaultRescanBatch) {
+        self.vault_rescan_pending = true;
+        self.vault_rescan_origins.merge(batch.origins);
+        if self.vault_rescan_request_id.is_none() {
+            self.vault_rescan_request_id = batch.request_id;
+        }
+    }
+
+    fn queue_promoted_vault_rescan_batch(&mut self, batch: VaultRescanBatch) {
+        if let Some(promoted) = &mut self.vault_rescan_promoted_batch {
+            promoted.origins.merge(batch.origins);
+            if promoted.request_id.is_none() {
+                promoted.request_id = batch.request_id;
+            }
+        } else {
+            self.vault_rescan_promoted_batch = Some(batch);
+        }
+    }
+
+    fn clear_pending_periodic_vault_rescan(&mut self) {
+        self.vault_rescan_origins.clear_periodic_timer();
+        if self.vault_rescan_origins.is_empty() {
+            self.vault_rescan_pending = false;
+            self.vault_rescan_request_id = None;
+        }
+        let promoted_batch_is_empty =
+            if let Some(batch) = &mut self.vault_rescan_promoted_batch {
+                batch.origins.clear_periodic_timer();
+                batch.origins.is_empty()
+            } else {
+                false
+            };
+        if promoted_batch_is_empty {
+            self.vault_rescan_promoted_batch = None;
+        }
+    }
+
+    fn start_vault_snapshot_probe(&mut self) -> bool {
+        let (Some(session), Some(baseline_revision)) = (
+            self.session.as_ref().cloned(),
+            self.last_reconciled_vault_revision.clone(),
+        ) else {
+            return false;
+        };
+        let batch = self.take_vault_rescan_batch();
+        let request_id = batch
+            .request_id
+            .as_deref()
+            .unwrap_or("missing-request-id");
+        let trigger_sources = batch.origins.label();
+        if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some() {
+            eprintln!(
+                "OpenObsidian CI vault snapshot probe scheduled: request_id={request_id}, trigger_sources={trigger_sources}, baseline_revision={baseline_revision}"
+            );
+        }
+        let (sender, receiver) = mpsc::channel();
+        rayon::spawn(move || {
+            let result = session
+                .snapshot_revision_sha256()
+                .map_err(|_| "The vault snapshot could not be read safely.".to_owned());
+            let _ = sender.send(result);
+        });
+        self.vault_snapshot_probe_batch = Some(batch);
+        self.vault_snapshot_probe_receiver = Some(receiver);
+        true
+    }
+
+    fn poll_vault_snapshot_probe(&mut self, ui: &mut eframe::egui::Ui) {
+        let result = self
+            .vault_snapshot_probe_receiver
+            .as_ref()
+            .map(Receiver::try_recv);
+        let outcome = match result {
+            Some(Ok(result)) => Some(result),
+            Some(Err(TryRecvError::Disconnected)) => Some(Err(
+                "The vault snapshot probe stopped unexpectedly.".to_owned(),
+            )),
+            Some(Err(TryRecvError::Empty)) => {
+                ui.ctx().request_repaint_after(Duration::from_millis(100));
+                None
+            }
+            None => None,
+        };
+        let Some(outcome) = outcome else {
+            return;
+        };
+        self.vault_snapshot_probe_receiver = None;
+        let batch = self.vault_snapshot_probe_batch.take().unwrap_or_default();
+        let request_id = batch
+            .request_id
+            .as_deref()
+            .unwrap_or("missing-request-id");
+        let baseline_revision = self.last_reconciled_vault_revision.as_deref();
+        match outcome {
+            Ok(current_revision) if Some(current_revision.as_str()) == baseline_revision => {
+                self.vault_refresh_error = None;
+                if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some() {
+                    eprintln!(
+                        "OpenObsidian CI vault snapshot probe result: request_id={request_id}, outcome=unchanged, revision_sha256={current_revision}"
+                    );
+                }
+            }
+            Ok(current_revision) => {
+                if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some() {
+                    eprintln!(
+                        "OpenObsidian CI vault snapshot probe result: request_id={request_id}, outcome=changed, baseline_revision_sha256={}, revision_sha256={current_revision}",
+                        baseline_revision.unwrap_or("unavailable")
+                    );
+                }
+                self.queue_promoted_vault_rescan_batch(batch);
+            }
+            Err(error) => {
+                self.last_reconciled_vault_revision = None;
+                if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some() {
+                    eprintln!(
+                        "OpenObsidian CI vault snapshot probe result: request_id={request_id}, outcome=error, error={error}"
+                    );
+                }
+                self.queue_promoted_vault_rescan_batch(batch);
+            }
+        }
+        ui.ctx().request_repaint();
+    }
+
     fn consume_ci_periodic_reconciliation_request(&mut self, now: Instant) -> Option<String> {
         if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_none() {
             return None;
         }
-        let request_file = std::env::var_os(
-            "OPENOBSIDIAN_CI_FORCE_VAULT_RECONCILIATION_REQUEST_FILE",
-        )?;
+        let request_file =
+            std::env::var_os("OPENOBSIDIAN_CI_FORCE_VAULT_RECONCILIATION_REQUEST_FILE")?;
         let request_file = Path::new(&request_file);
         let request_id = std::fs::read_to_string(request_file).ok()?;
         let request_id = request_id.trim().to_owned();
@@ -4350,11 +4607,24 @@ impl OpenObsidianApp {
         Some(request_id)
     }
 
-    fn mark_vault_rescan_pending(
-        &mut self,
-        origin: VaultRescanOrigin,
-        request_id: Option<&str>,
-    ) {
+    fn consume_ci_watcher_rescan_request(&self) -> Option<String> {
+        if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_none() {
+            return None;
+        }
+        let request_file =
+            std::env::var_os("OPENOBSIDIAN_CI_FORCE_VAULT_WATCHER_HINT_REQUEST_FILE")?;
+        let request_file = Path::new(&request_file);
+        let request_id = std::fs::read_to_string(request_file).ok()?;
+        let request_id = request_id.trim().to_owned();
+        if request_id.is_empty() || std::fs::remove_file(request_file).is_err() {
+            return None;
+        }
+        Some(request_id)
+    }
+
+    fn mark_vault_rescan_pending(&mut self, origin: VaultRescanOrigin, request_id: Option<&str>) {
+        let had_filesystem_watcher = self.vault_rescan_origins.filesystem_watcher;
+        let had_periodic_timer = self.vault_rescan_origins.periodic_timer;
         self.vault_rescan_pending = true;
         match origin {
             VaultRescanOrigin::FilesystemWatcher => {
@@ -4363,9 +4633,20 @@ impl OpenObsidianApp {
             VaultRescanOrigin::PeriodicTimer => {
                 self.vault_rescan_origins.periodic_timer = true;
             }
+            VaultRescanOrigin::ManualButton => {
+                self.vault_rescan_origins.manual_button = true;
+            }
         }
         if let Some(request_id) = request_id.filter(|request_id| !request_id.is_empty()) {
-            self.vault_rescan_request_id = Some(request_id.to_owned());
+            if origin != VaultRescanOrigin::PeriodicTimer || !had_filesystem_watcher {
+                self.vault_rescan_request_id = Some(request_id.to_owned());
+            }
+        } else if origin == VaultRescanOrigin::FilesystemWatcher
+            && !had_filesystem_watcher
+            && had_periodic_timer
+        {
+            let sequence = CI_VAULT_RESCAN_REQUEST_SEQUENCE.fetch_add(1, Ordering::Relaxed);
+            self.vault_rescan_request_id = Some(format!("vault-rescan-{sequence}"));
         } else if self.vault_rescan_request_id.is_none() {
             let sequence = CI_VAULT_RESCAN_REQUEST_SEQUENCE.fetch_add(1, Ordering::Relaxed);
             self.vault_rescan_request_id = Some(format!("vault-rescan-{sequence}"));
@@ -4373,16 +4654,27 @@ impl OpenObsidianApp {
     }
 
     fn poll_vault_change_hints(&mut self, ui: &mut eframe::egui::Ui) {
+        self.poll_vault_snapshot_probe(ui);
         let mut state_changed = false;
-        let watcher_hint = self.vault_watcher.as_mut().and_then(VaultWatcher::poll);
+        let mut watcher_hint = self.vault_watcher.as_mut().and_then(VaultWatcher::poll);
+        let watcher_hint_request_id = watcher_hint
+            .as_ref()
+            .and_then(|_| self.vault_watcher_hint_request_id.take());
         if let Some(hint) = watcher_hint {
+            self.mark_vault_rescan_pending(
+                VaultRescanOrigin::FilesystemWatcher,
+                watcher_hint_request_id.as_deref(),
+            );
+            let request_id = self
+                .vault_rescan_request_id
+                .as_deref()
+                .unwrap_or("missing-request-id");
             if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some() {
                 eprintln!(
-                    "OpenObsidian CI vault watcher hint: hint={hint:?}, refresh_in_flight={}",
+                    "OpenObsidian CI vault watcher hint: hint={hint:?}, request_id={request_id}, refresh_in_flight={}",
                     self.vault_refresh_receiver.is_some()
                 );
             }
-            self.mark_vault_rescan_pending(VaultRescanOrigin::FilesystemWatcher, None);
             state_changed = true;
         }
 
@@ -4404,13 +4696,54 @@ impl OpenObsidianApp {
                 VaultRescanOrigin::PeriodicTimer,
                 forced_request_id.as_deref(),
             );
-            if let Some(watcher) = &mut self.vault_watcher {
-                watcher.request_rescan();
-                let _ = watcher.poll();
+            let rewatch_hint = if let Some(watcher) = &mut self.vault_watcher {
+                watcher.request_root_rewatch();
+                watcher.poll()
+            } else {
+                None
+            };
+            if let Some(hint) = rewatch_hint {
+                let request_id = self.vault_watcher_hint_request_id.take();
+                self.mark_vault_rescan_pending(
+                    VaultRescanOrigin::FilesystemWatcher,
+                    request_id.as_deref(),
+                );
+                let request_id = self
+                    .vault_rescan_request_id
+                    .as_deref()
+                    .unwrap_or("missing-request-id");
+                if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some() {
+                    eprintln!(
+                        "OpenObsidian CI vault watcher hint: hint={hint:?}, request_id={request_id}, refresh_in_flight={}",
+                        self.vault_refresh_receiver.is_some()
+                    );
+                }
+                watcher_hint = Some(hint);
             }
             self.next_vault_reconciliation = Some(now + VAULT_RECONCILIATION_INTERVAL);
             state_changed = true;
         }
+        if let Some(request_id) = self.consume_ci_watcher_rescan_request() {
+            if let Some(watcher) = &mut self.vault_watcher {
+                watcher.request_rescan();
+                self.vault_watcher_hint_request_id = Some(request_id.clone());
+                if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some() {
+                    eprintln!(
+                        "OpenObsidian CI vault watcher rescan requested: request_id={request_id}"
+                    );
+                }
+            } else if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some() {
+                eprintln!(
+                    "OpenObsidian CI vault watcher rescan unavailable: request_id={request_id}, watcher_present=false"
+                );
+            }
+        }
+        let observed_trigger_origins = VaultRescanOrigins {
+            filesystem_watcher: watcher_hint.is_some(),
+            periodic_timer: timer_due,
+            manual_button: false,
+        };
+        let trigger_observed = watcher_hint.is_some() || timer_due;
         let next_reconciliation = self
             .next_vault_reconciliation
             .unwrap_or(now + VAULT_RECONCILIATION_INTERVAL);
@@ -4419,50 +4752,102 @@ impl OpenObsidianApp {
 
         let operation_busy = self.vault_reconciliation_busy();
         let should_log_state = std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some()
-            && self.vault_rescan_pending
-            && (state_changed || !operation_busy || self.canvas_focus_observation_request_id.is_some());
+            && (state_changed
+                || trigger_observed
+                || self.canvas_focus_observation_request_id.is_some());
         if should_log_state {
             let request_id = self
                 .canvas_focus_observation_request_id
                 .as_deref()
                 .or(self.vault_rescan_request_id.as_deref())
+                .or(self.vault_refresh_request_id.as_deref())
+                .or_else(|| {
+                    self.vault_rescan_promoted_batch
+                        .as_ref()
+                        .and_then(|batch| batch.request_id.as_deref())
+                })
                 .unwrap_or("missing-request-id");
             let pending_request_id = self
                 .vault_rescan_request_id
                 .as_deref()
+                .or_else(|| {
+                    self.vault_rescan_promoted_batch
+                        .as_ref()
+                        .and_then(|batch| batch.request_id.as_deref())
+                })
                 .unwrap_or("missing-request-id");
             let frame_nr = ui.ctx().cumulative_frame_nr();
-            let trigger_sources = self.vault_rescan_origins.label();
+            let trigger_sources = if trigger_observed {
+                observed_trigger_origins.label()
+            } else if self.vault_rescan_pending {
+                self.vault_rescan_origins.label()
+            } else {
+                self.vault_rescan_promoted_batch
+                    .as_ref()
+                    .map_or_else(|| "none".to_owned(), |batch| batch.origins.label())
+            };
             eprintln!(
-                "OpenObsidian CI vault reconciliation state: request_id={request_id}, pending_request_id={pending_request_id}, frame_nr={frame_nr}, trigger_sources={trigger_sources}, canvas_path_focused={}, canvas_text_card_id_focused={}, rescan_pending={}, refresh_receiver={}, snapshot_lease_active={}, source_operation_receiver_busy={}, safe_to_refresh={}",
+                "OpenObsidian CI vault reconciliation state: request_id={request_id}, pending_request_id={pending_request_id}, frame_nr={frame_nr}, session={}, timer_due={timer_due}, watcher_hint={watcher_hint:?}, trigger_sources={trigger_sources}, canvas_path_focused={}, canvas_text_card_id_focused={}, rescan_pending={}, refresh_receiver={}, snapshot_probe_receiver={}, canvas_text_edit_receiver={}, note_preview_receiver={}, note_preview_write_receiver={}, vault_open_receiver={}, snapshot_lease_active={}, source_operation_receiver_busy={}, safe_to_refresh={}",
+                self.session.is_some(),
                 self.canvas_target_field_focus.path,
                 self.canvas_target_field_focus.text_card_id,
-                self.vault_rescan_pending,
+                self.vault_rescan_pending || self.vault_rescan_promoted_batch.is_some(),
                 self.vault_refresh_receiver.is_some(),
+                self.vault_snapshot_probe_receiver.is_some(),
+                self.canvas_text_edit_receiver.is_some(),
+                self.note_preview_receiver.is_some(),
+                self.note_preview_write_receiver.is_some(),
+                self.vault_open_receiver.is_some(),
                 self.vault_snapshot_lease_active(),
                 self.vault_source_operation_in_flight(),
                 !operation_busy,
             );
         }
 
-        if self.vault_rescan_pending && !operation_busy {
-            let request_id = self
-                .vault_rescan_request_id
+        if !operation_busy {
+            let (batch, promoted) = if let Some(batch) = self.vault_rescan_promoted_batch.take() {
+                (Some(batch), true)
+            } else if self.vault_rescan_pending {
+                if self.vault_rescan_origins.is_watcher_only()
+                    && self.last_reconciled_vault_revision.is_some()
+                    && self.start_vault_snapshot_probe()
+                {
+                    ui.ctx().request_repaint_after(Duration::from_millis(100));
+                    return;
+                }
+                (Some(self.take_vault_rescan_batch()), false)
+            } else {
+                (None, false)
+            };
+            let Some(batch) = batch else {
+                return;
+            };
+            let request_id = batch
+                .request_id
                 .clone()
-                .unwrap_or_else(|| "missing-request-id".to_owned());
-            let trigger_sources = self.vault_rescan_origins.label();
+                .unwrap_or_else(|| {
+                    let sequence =
+                        CI_VAULT_RESCAN_REQUEST_SEQUENCE.fetch_add(1, Ordering::Relaxed);
+                    format!("vault-rescan-{sequence}")
+                });
+            let trigger_sources = batch.origins.label();
+            let request_source = if batch.origins.manual_button
+                && !batch.origins.filesystem_watcher
+                && !batch.origins.periodic_timer
+            {
+                "manual_button"
+            } else {
+                "watcher_reconciliation"
+            };
             if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some() {
                 eprintln!(
-                    "OpenObsidian CI vault refresh request: source=watcher_reconciliation, request_id={request_id}, trigger_sources={trigger_sources}, frame_nr={}",
+                    "OpenObsidian CI vault refresh request: source={request_source}, request_id={request_id}, trigger_sources={trigger_sources}, promoted_from_snapshot_probe={promoted}, frame_nr={}",
                     ui.ctx().cumulative_frame_nr()
                 );
             }
-            self.vault_rescan_pending = false;
-            self.vault_rescan_origins = VaultRescanOrigins::default();
-            self.vault_rescan_request_id = None;
-            self.start_vault_refresh_for_request(request_id);
+            self.start_vault_refresh_for_request(request_id, batch.origins);
             ui.ctx().request_repaint();
-        } else if self.vault_rescan_pending {
+        } else if self.vault_rescan_pending || self.vault_rescan_promoted_batch.is_some() {
             ui.ctx().request_repaint_after(Duration::from_millis(100));
         }
     }
@@ -4887,28 +5272,76 @@ impl OpenObsidianApp {
                     .take()
                     .unwrap_or_else(|| "none".to_owned());
                 let entries = outcome.session.entries().len();
-                let expected_path_visible = std::env::var_os(
-                    "OPENOBSIDIAN_CI_VAULT_REFRESH_EXPECTED_PATH",
-                )
-                .map(|expected_path| {
-                    let expected_path = std::path::PathBuf::from(expected_path);
-                    outcome
-                        .session
-                        .entries()
-                        .iter()
-                        .any(|entry| entry.relative_path == expected_path)
-                })
-                .unwrap_or(true);
+                let snapshot_stable = outcome.snapshot_revision_sha256.is_some();
+                if !snapshot_stable {
+                    let snapshot_changed = matches!(
+                        (
+                            outcome.snapshot_before_sha256.as_deref(),
+                            outcome.snapshot_after_sha256.as_deref()
+                        ),
+                        (Some(before), Some(after)) if before != after
+                    );
+                    if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some() {
+                        eprintln!(
+                            "OpenObsidian CI vault refresh result consumed: request_id={request_id}, succeeded=false, snapshot_stable=false, snapshot_before_sha256={}, snapshot_after_sha256={}",
+                            outcome.snapshot_before_sha256.as_deref().unwrap_or("unavailable"),
+                            outcome.snapshot_after_sha256.as_deref().unwrap_or("unavailable"),
+                        );
+                    }
+                    self.vault_refresh_receiver = None;
+                    self.vault_refresh_trigger_origins = VaultRescanOrigins::default();
+                    self.clear_pending_periodic_vault_rescan();
+                    self.next_vault_reconciliation =
+                        Some(Instant::now() + VAULT_RECONCILIATION_INTERVAL);
+                    let newer_trigger_pending =
+                        self.vault_rescan_pending || self.vault_rescan_promoted_batch.is_some();
+                    let snapshot_message = if snapshot_changed {
+                        "The vault changed while the note list was refreshing."
+                    } else {
+                        "A stable full-vault snapshot could not be established while the note list was refreshing."
+                    };
+                    let retry_message = if newer_trigger_pending {
+                        " A newer reconciliation trigger is queued."
+                    } else {
+                        " The existing listing was kept; reconciliation will retry after another watcher event or the next scheduled check."
+                    };
+                    self.vault_refresh_status = None;
+                    self.vault_refresh_error =
+                        Some(format!("{snapshot_message}{retry_message}"));
+                    ui.ctx().request_repaint();
+                    return;
+                }
+                let expected_path_visible =
+                    std::env::var_os("OPENOBSIDIAN_CI_VAULT_REFRESH_EXPECTED_PATH")
+                        .map(|expected_path| {
+                            let expected_path = std::path::PathBuf::from(expected_path);
+                            outcome
+                                .session
+                                .entries()
+                                .iter()
+                                .any(|entry| entry.relative_path == expected_path)
+                        })
+                        .unwrap_or(false);
                 if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some() {
                     eprintln!(
-                        "OpenObsidian CI vault refresh result consumed: request_id={request_id}, succeeded=true, entries={entries}, expected_path_visible={expected_path_visible}"
+                        "OpenObsidian CI vault refresh result consumed: request_id={request_id}, succeeded=true, snapshot_stable=true, snapshot_before_sha256={}, snapshot_after_sha256={}, revision_sha256={}, entries={entries}, expected_path_visible={expected_path_visible}",
+                        outcome.snapshot_before_sha256.as_deref().unwrap_or("unavailable"),
+                        outcome.snapshot_after_sha256.as_deref().unwrap_or("unavailable"),
+                        outcome.snapshot_revision_sha256.as_deref().unwrap_or("unavailable"),
                     );
                 }
                 self.vault_refresh_receiver = None;
                 let VaultRefreshOutcome {
                     session,
                     preserve_note_preview,
+                    snapshot_revision_sha256,
+                    ..
                 } = outcome;
+                self.last_reconciled_vault_revision = snapshot_revision_sha256;
+                self.vault_refresh_trigger_origins = VaultRescanOrigins::default();
+                self.clear_pending_periodic_vault_rescan();
+                self.next_vault_reconciliation =
+                    Some(Instant::now() + VAULT_RECONCILIATION_INTERVAL);
                 let note_paths: Vec<_> = session
                     .entries()
                     .iter()
@@ -4977,14 +5410,20 @@ impl OpenObsidianApp {
                     .take()
                     .unwrap_or_else(|| "none".to_owned());
                 if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some() {
-                    eprintln!("OpenObsidian CI vault refresh result consumed: request_id={request_id}, succeeded=false");
+                    eprintln!(
+                        "OpenObsidian CI vault refresh result consumed: request_id={request_id}, succeeded=false"
+                    );
                 }
                 self.vault_refresh_receiver = None;
+                self.vault_refresh_trigger_origins = VaultRescanOrigins::default();
+                self.last_reconciled_vault_revision = None;
                 self.vault_refresh_status = None;
                 self.vault_refresh_error = Some(error);
             }
             Some(Err(TryRecvError::Disconnected)) => {
                 self.vault_refresh_request_id = None;
+                self.vault_refresh_trigger_origins = VaultRescanOrigins::default();
+                self.last_reconciled_vault_revision = None;
                 if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some() {
                     eprintln!("OpenObsidian CI vault refresh result channel disconnected");
                 }
@@ -6034,7 +6473,10 @@ fn write_recovery_summary(report: &VaultWriteRecoveryReport) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use egui_kittest::{Harness, kittest::Queryable as _};
+    use egui_kittest::{
+        Harness,
+        kittest::{NodeT as _, Queryable as _},
+    };
     use std::path::{Path, PathBuf};
     use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
 
@@ -6622,6 +7064,26 @@ mod tests {
         }
     }
 
+    fn wait_for_vault_reconciliation(harness: &mut Harness<'_, OpenObsidianApp>) {
+        let deadline = Instant::now() + Duration::from_secs(5);
+        loop {
+            harness.step();
+            let state = harness.state();
+            if state.vault_refresh_receiver.is_none()
+                && state.vault_snapshot_probe_receiver.is_none()
+                && !state.vault_rescan_pending
+                && state.vault_rescan_promoted_batch.is_none()
+            {
+                return;
+            }
+            assert!(
+                Instant::now() < deadline,
+                "vault reconciliation did not settle within five seconds"
+            );
+            std::thread::sleep(Duration::from_millis(2));
+        }
+    }
+
     #[derive(Clone, Copy, Debug, Eq, PartialEq)]
     enum CanvasFocusTestField {
         Path,
@@ -6646,49 +7108,68 @@ mod tests {
             CanvasFocusTestField::Path => "Canvas edit path",
             CanvasFocusTestField::TextCardId => "Canvas edit text-card ID",
         };
+
+        // egui_kittest delivers hover, press, and release on separate frames.
+        // Acquire field focus before making a production refresh trigger due so
+        // the hover frame cannot start a safe refresh ahead of focus.
+        harness.get_by_label(target_label).click();
+        for _ in 0..3 {
+            harness.step();
+        }
+        let focus = harness.state().canvas_target_field_focus;
+        assert_eq!(focus.path, field == CanvasFocusTestField::Path);
+        assert_eq!(
+            focus.text_card_id,
+            field == CanvasFocusTestField::TextCardId
+        );
+        assert!(!harness.state().vault_rescan_pending);
+        assert!(harness.state().vault_refresh_receiver.is_none());
+        assert_eq!(harness.state().vault_refresh_generation, 0);
+
         let external_note = b"# Added while Canvas target is focused\n";
+        if trigger == VaultRescanOrigin::FilesystemWatcher {
+            let root = harness
+                .state()
+                .session
+                .as_ref()
+                .expect("test vault session remains open")
+                .root_path()
+                .to_path_buf();
+            let watcher = VaultWatcher::watch(root).expect("watch the test vault");
+            harness.state_mut().vault_watcher = Some(watcher);
+        }
         std::fs::write(vault_path.join("External.md"), external_note)
             .expect("write an external note while a Canvas target is focused");
         let expected_vault = existing_vault_tree_snapshot(&vault_path);
         let expected_app_data = existing_vault_tree_snapshot(&app_data_path);
 
-        // Make the trigger eligible before the click event is handled so focus
-        // acquisition and reconciliation happen on the same egui frame.
         match trigger {
             VaultRescanOrigin::PeriodicTimer => {
                 harness.state_mut().next_vault_reconciliation =
                     Some(Instant::now() - Duration::from_secs(1));
+                harness.step();
             }
             VaultRescanOrigin::FilesystemWatcher => {
-                let root = harness
-                    .state()
-                    .session
-                    .as_ref()
-                    .expect("test vault session remains open")
-                    .root_path()
-                    .to_path_buf();
-                let watcher = VaultWatcher::watch(root).expect("watch the test vault");
-                harness.state_mut().vault_watcher = Some(watcher);
                 harness
                     .state()
                     .vault_watcher
                     .as_ref()
                     .expect("test watcher was installed")
                     .request_rescan();
+                harness.step();
             }
+            VaultRescanOrigin::ManualButton => unreachable!("deferral test uses production hints"),
         }
 
-        harness.get_by_label(target_label).click();
-        harness.step();
-        let focus = harness.state().canvas_target_field_focus;
-        assert_eq!(focus.path, field == CanvasFocusTestField::Path);
-        assert_eq!(focus.text_card_id, field == CanvasFocusTestField::TextCardId);
         for _ in 0..2 {
             let state = harness.state();
             assert!(state.vault_rescan_pending);
             assert!(state.vault_refresh_receiver.is_none());
             assert_eq!(state.vault_refresh_generation, 0);
-            assert_eq!(state.canvas_target_field_focus.path, field == CanvasFocusTestField::Path);
+            assert_eq!(
+                state.canvas_target_field_focus.path,
+                field == CanvasFocusTestField::Path
+            );
             assert_eq!(
                 state.canvas_target_field_focus.text_card_id,
                 field == CanvasFocusTestField::TextCardId
@@ -6701,6 +7182,7 @@ mod tests {
                 state.vault_rescan_origins.filesystem_watcher,
                 trigger == VaultRescanOrigin::FilesystemWatcher
             );
+            assert!(!state.vault_rescan_origins.manual_button);
             assert!(!state.vault_snapshot_lease_active());
             assert!(!state.vault_source_operation_in_flight());
             harness.step();
@@ -6727,11 +7209,17 @@ mod tests {
         assert!(harness.state().vault_refresh_receiver.is_none());
         assert_eq!(harness.state().vault_refresh_generation, 0);
         assert!(!harness.state().vault_source_operation_in_flight());
-        assert_eq!(harness.state().canvas_target_field_focus, CanvasTargetFieldFocus::default());
+        assert_eq!(
+            harness.state().canvas_target_field_focus,
+            CanvasTargetFieldFocus::default()
+        );
 
         harness.get_by_label("Cancel Canvas edit").click();
         harness.step();
-        assert_eq!(harness.state().canvas_target_field_focus, CanvasTargetFieldFocus::default());
+        assert_eq!(
+            harness.state().canvas_target_field_focus,
+            CanvasTargetFieldFocus::default()
+        );
         assert!(!harness.state().vault_rescan_pending);
         assert!(!harness.state().vault_snapshot_lease_active());
         assert_eq!(harness.state().vault_refresh_generation, 1);
@@ -6749,9 +7237,15 @@ mod tests {
             .as_ref()
             .expect("reconciled vault session remains open");
         assert_eq!(session.entries().len(), 1);
-        assert_eq!(session.read("External.md").unwrap().document.as_bytes(), external_note);
+        assert_eq!(
+            session.read("External.md").unwrap().document.as_bytes(),
+            external_note
+        );
         assert_eq!(existing_vault_tree_snapshot(&vault_path), expected_vault);
-        assert_eq!(existing_vault_tree_snapshot(&app_data_path), expected_app_data);
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            expected_app_data
+        );
 
         for _ in 0..3 {
             harness.step();
@@ -6761,7 +7255,10 @@ mod tests {
         }
         drop(harness);
         assert_eq!(existing_vault_tree_snapshot(&vault_path), expected_vault);
-        assert_eq!(existing_vault_tree_snapshot(&app_data_path), expected_app_data);
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            expected_app_data
+        );
     }
 
     fn wait_for_history(harness: &mut Harness<'_, OpenObsidianApp>) {
@@ -8248,13 +8745,43 @@ mod tests {
         assert!(harness.state().vault_snapshot_lease_active());
         replace_canvas_text_draft(&mut harness, "edited text card");
         assert_eq!(existing_vault_tree_snapshot(&vault_path), vault_before);
+        let refresh_generation_before_save = harness.state().vault_refresh_generation;
+        harness.state_mut().mark_vault_rescan_pending(
+            VaultRescanOrigin::PeriodicTimer,
+            Some("canvas-save-handoff"),
+        );
+        harness.step();
+        assert!(harness.state().vault_rescan_pending);
+        assert!(harness.state().vault_refresh_receiver.is_none());
+        assert!(harness.state().vault_snapshot_lease_active());
 
         harness.get_by_label("Save Canvas text").click();
         harness.step();
         assert!(harness.state().canvas_text_edit_receiver.is_some());
+        assert!(harness.state().vault_snapshot_lease_active());
+        assert!(harness.state().vault_rescan_pending);
+        assert!(harness.state().vault_refresh_receiver.is_none());
         wait_for_canvas_text_edit_task(&mut harness);
         assert!(!harness.state().vault_snapshot_lease_active());
         assert!(harness.state().canvas_text_edit_preview.is_some());
+        assert_eq!(
+            harness.state().vault_refresh_generation,
+            refresh_generation_before_save + 1,
+            "one pending full refresh starts when the successful save releases its lease"
+        );
+        assert_eq!(
+            harness.state().vault_refresh_request_id.as_deref(),
+            Some("canvas-save-handoff")
+        );
+        assert!(harness.state().vault_refresh_receiver.is_some());
+        wait_for_vault_refresh(&mut harness);
+        assert_eq!(
+            harness.state().vault_refresh_generation,
+            refresh_generation_before_save + 1,
+            "the saved Canvas change does not enqueue a duplicate refresh"
+        );
+        assert!(!harness.state().vault_rescan_pending);
+        assert!(harness.state().vault_rescan_promoted_batch.is_none());
 
         let actual_bytes = std::fs::read(vault_path.join("Boards/Idea.canvas")).unwrap();
         let actual: serde_json::Value =
@@ -8355,6 +8882,7 @@ mod tests {
         harness.get_by_label("Reload Canvas").click();
         harness.step();
         assert!(harness.state().canvas_text_edit_receiver.is_some());
+        assert!(harness.state().vault_snapshot_lease_active());
         wait_for_canvas_text_edit_task(&mut harness);
         assert!(!harness.state().canvas_text_edit_stale);
         assert!(harness.state().vault_snapshot_lease_active());
@@ -8366,6 +8894,39 @@ mod tests {
                 .map(|preview| preview.draft_text.as_str()),
             Some("external edit"),
             "explicit reload discards the old draft and loads the current Canvas text"
+        );
+        let before_failed_reload = existing_vault_tree_snapshot(&vault_path);
+        std::fs::remove_file(vault_path.join("Boards/Idea.canvas"))
+            .expect("remove the Canvas before testing a failed reload");
+        let after_external_removal = existing_vault_tree_snapshot(&vault_path);
+        harness.get_by_label("Reload Canvas").click();
+        harness.step();
+        assert!(harness.state().canvas_text_edit_receiver.is_some());
+        assert!(harness.state().vault_snapshot_lease_active());
+        wait_for_canvas_text_edit_task(&mut harness);
+        assert!(harness.state().canvas_text_edit_error.is_some());
+        assert!(harness.state().vault_snapshot_lease_active());
+        assert_eq!(
+            harness
+                .state()
+                .canvas_text_edit_preview
+                .as_ref()
+                .map(|preview| preview.draft_text.as_str()),
+            Some("external edit"),
+            "a failed reload retains the previous Canvas preview and its lease"
+        );
+        assert_eq!(
+            existing_vault_tree_snapshot(&vault_path),
+            after_external_removal
+        );
+        assert_ne!(after_external_removal, before_failed_reload);
+        harness.get_by_label("Cancel Canvas edit").click();
+        harness.step();
+        assert!(harness.state().canvas_text_edit_preview.is_none());
+        assert!(!harness.state().vault_snapshot_lease_active());
+        assert_eq!(
+            existing_vault_tree_snapshot(&vault_path),
+            after_external_removal
         );
         assert!(!vault_path.join("Notes/Created.md").exists());
         assert_eq!(
@@ -9713,9 +10274,100 @@ mod tests {
             .note_source_preview
             .as_ref()
             .expect("failed source draft stays visible");
-        assert_eq!(preview.text.as_bytes(), expected.as_bytes());
+        assert_eq!(preview.text.as_bytes(), source.as_bytes());
         assert!(preview.revision_sha256.is_none());
+        assert_eq!(preview.source_draft.as_deref(), Some(expected));
+        assert!(harness.state().vault_snapshot_lease_active());
+        let draft_editor = harness.get_by_role_and_label(
+            eframe::egui::accesskit::Role::MultilineTextInput,
+            "Markdown source editor",
+        );
+        assert_eq!(draft_editor.value().as_deref(), Some(expected));
+        harness.get_by_label("Markdown source draft");
+        harness.state_mut().note_source_mode = NoteSourceMode::Reading;
+        harness.step();
+        let stale_reading_editor = harness.get_by_role_and_label(
+            eframe::egui::accesskit::Role::MultilineTextInput,
+            "Markdown source editor",
+        );
+        assert_eq!(stale_reading_editor.value().as_deref(), Some(expected));
+        harness.get_by_label("Cancel source edits");
+
+        let conflict_record = harness
+            .state()
+            .session
+            .as_ref()
+            .expect("vault session remains open after stale edit")
+            .history_records()
+            .expect("conflict history remains readable after stale edit")
+            .into_iter()
+            .find(|record| {
+                record.kind == VaultHistoryKind::Conflict
+                    && record.relative_path.as_path() == Path::new("Tasks.md")
+                    && record.bytes == expected.len() as u64
+            })
+            .expect("stale source draft is recorded in conflict history");
+        let conflict_payload = harness
+            .state()
+            .session
+            .as_ref()
+            .expect("vault session remains open after stale edit")
+            .read_conflict(&conflict_record.id, &conflict_record.relative_path)
+            .expect("the stale source draft conflict payload remains readable");
+        assert_eq!(conflict_payload.bytes, expected.as_bytes());
+        let app_data_after_conflict = existing_vault_tree_snapshot(&app_data_path);
+
+        // A stale revision disables Save, but keeps the attempted draft and its
+        // snapshot lease available until the user explicitly cancels the draft.
+        assert!(
+            harness
+                .get_by_label("Save source edits")
+                .accesskit_node()
+                .is_disabled()
+        );
+        harness.get_by_label("Save source edits").click();
+        harness.step();
+        assert!(harness.state().note_preview_write_receiver.is_none());
+        assert_eq!(
+            harness
+                .state()
+                .note_source_preview
+                .as_ref()
+                .and_then(|preview| preview.source_draft.as_deref()),
+            Some(expected)
+        );
+        assert_eq!(
+            std::fs::read(vault_path.join("Tasks.md")).unwrap(),
+            external_bytes.to_vec()
+        );
+
+        harness.get_by_label("Cancel source edits").click();
+        harness.step();
+        let preview = harness
+            .state()
+            .note_source_preview
+            .as_ref()
+            .expect("source snapshot remains visible after canceling the stale draft");
+        assert_eq!(preview.text.as_bytes(), source.as_bytes());
         assert!(preview.source_draft.is_none());
+        assert!(preview.revision_sha256.is_none());
+        assert!(!harness.state().vault_snapshot_lease_active());
+        assert_eq!(
+            std::fs::read(vault_path.join("Tasks.md")).unwrap(),
+            external_bytes.to_vec()
+        );
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            app_data_after_conflict
+        );
+        let retained_conflict = harness
+            .state()
+            .session
+            .as_ref()
+            .expect("vault session remains open after canceling the stale draft")
+            .read_conflict(&conflict_record.id, &conflict_record.relative_path)
+            .expect("cancel does not remove the preserved conflict payload");
+        assert_eq!(retained_conflict.bytes, expected.as_bytes());
     }
 
     #[test]
@@ -10122,11 +10774,395 @@ mod tests {
             expected_app_data
         );
 
+        let reconciled_revision = harness
+            .state()
+            .last_reconciled_vault_revision
+            .clone()
+            .expect("successful full refresh records a full-vault revision");
+        let generation_after_path_add = harness.state().vault_refresh_generation;
+        harness
+            .state()
+            .vault_watcher
+            .as_ref()
+            .expect("open vault watcher remains available")
+            .request_rescan();
+        harness.step();
+        assert!(
+            harness.state().vault_snapshot_probe_receiver.is_some(),
+            "an unchanged watcher hint starts a background snapshot-only probe"
+        );
+        wait_for_vault_reconciliation(&mut harness);
+        assert_eq!(
+            harness.state().vault_refresh_generation,
+            generation_after_path_add,
+            "an unchanged full-vault revision does not start another full refresh"
+        );
+        assert_eq!(
+            harness.state().last_reconciled_vault_revision.as_deref(),
+            Some(reconciled_revision.as_str())
+        );
+
+        let edited_source = b"# Content changed with the same note count\r\n";
+        std::fs::write(vault_path.join("Before.md"), edited_source)
+            .expect("edit an existing note without changing the Markdown count");
+        let expected_vault_after_content_edit = existing_vault_tree_snapshot(&vault_path);
+        harness
+            .state()
+            .vault_watcher
+            .as_ref()
+            .expect("open vault watcher remains available")
+            .request_rescan();
+        harness.step();
+        assert!(
+            harness.state().vault_snapshot_probe_receiver.is_some(),
+            "a content-only watcher hint is checked against the full-vault revision"
+        );
+        wait_for_vault_reconciliation(&mut harness);
+        assert_eq!(
+            harness.state().vault_refresh_generation,
+            generation_after_path_add + 1,
+            "a content-only change triggers exactly one full refresh"
+        );
+        assert_ne!(
+            harness.state().last_reconciled_vault_revision.as_deref(),
+            Some(reconciled_revision.as_str()),
+            "content changes are detected even when the Markdown count is unchanged"
+        );
+        let session = harness
+            .state()
+            .session
+            .as_ref()
+            .expect("edited watched vault remains open");
+        assert_eq!(session.entries().len(), 2);
+        assert_eq!(session.read("Before.md").unwrap().document.as_bytes(), edited_source);
+        assert_eq!(existing_vault_tree_snapshot(&vault_path), expected_vault_after_content_edit);
+        assert_eq!(existing_vault_tree_snapshot(&app_data_path), expected_app_data);
+
         drop(harness);
-        assert_eq!(existing_vault_tree_snapshot(&vault_path), expected_vault);
+        assert_eq!(existing_vault_tree_snapshot(&vault_path), expected_vault_after_content_edit);
         assert_eq!(
             existing_vault_tree_snapshot(&app_data_path),
             expected_app_data
+        );
+    }
+
+    #[test]
+    fn egui_defers_an_unstable_refresh_retry_until_a_later_trigger() {
+        let temporary = UiTempDir::new();
+        let vault_path = temporary.0.join("Unstable Refresh Vault");
+        let app_data_path = temporary.0.join("App Data");
+        std::fs::create_dir_all(&vault_path).expect("create unstable-refresh vault");
+        std::fs::create_dir_all(&app_data_path).expect("create unstable-refresh app data");
+        std::fs::write(vault_path.join("Note.md"), b"# Existing note\n")
+            .expect("write initial note");
+        let session = VaultSession::open(&vault_path, &app_data_path)
+            .expect("open existing vault before unstable refresh");
+        let baseline_revision = session
+            .snapshot_revision_sha256()
+            .expect("capture the existing full-vault revision");
+        let changed_revision = if baseline_revision == "f".repeat(64) {
+            "e".repeat(64)
+        } else {
+            "f".repeat(64)
+        };
+        let (sender, receiver) = mpsc::channel();
+        assert!(
+            sender
+                .send(Ok(VaultRefreshOutcome {
+                    session: session.clone(),
+                    preserve_note_preview: false,
+                    snapshot_revision_sha256: None,
+                    snapshot_before_sha256: Some(baseline_revision.clone()),
+                    snapshot_after_sha256: Some(changed_revision),
+                }))
+                .is_ok(),
+            "deliver the simulated unstable refresh result"
+        );
+        let app = OpenObsidianApp {
+            session: Some(Arc::new(session)),
+            vault_refresh_receiver: Some(receiver),
+            vault_refresh_request_id: Some("unstable-refresh".to_owned()),
+            vault_refresh_trigger_origins: VaultRescanOrigins {
+                filesystem_watcher: true,
+                ..VaultRescanOrigins::default()
+            },
+            vault_rescan_pending: true,
+            vault_rescan_origins: VaultRescanOrigins {
+                filesystem_watcher: true,
+                periodic_timer: true,
+                ..VaultRescanOrigins::default()
+            },
+            vault_rescan_request_id: Some("watcher-during-refresh".to_owned()),
+            last_reconciled_vault_revision: Some(baseline_revision.clone()),
+            next_vault_reconciliation: Some(Instant::now() + VAULT_RECONCILIATION_INTERVAL),
+            ..OpenObsidianApp::default()
+        };
+        let mut harness = Harness::new_ui_state(|ui, app| app.show_ui(ui), app);
+
+        harness.step();
+
+        let state = harness.state();
+        assert!(state.vault_refresh_receiver.is_none());
+        assert!(state.vault_snapshot_probe_receiver.is_some());
+        assert!(!state.vault_rescan_pending);
+        assert!(state.vault_rescan_origins.is_empty());
+        assert_eq!(
+            state.vault_rescan_request_id.as_deref(),
+            None,
+            "the watcher trigger is consumed by its snapshot-only probe"
+        );
+        assert_eq!(
+            state
+                .vault_snapshot_probe_batch
+                .as_ref()
+                .and_then(|batch| batch.request_id.as_deref()),
+            Some("watcher-during-refresh"),
+            "dropping the failed timer trigger preserves watcher request attribution"
+        );
+        assert_eq!(
+            state.last_reconciled_vault_revision.as_deref(),
+            Some(baseline_revision.as_str()),
+            "the still-open session keeps its last known full-vault revision"
+        );
+        assert!(state
+            .vault_refresh_error
+            .as_deref()
+            .is_some_and(|error| error.contains("vault changed while the note list was refreshing")));
+        assert!(state
+            .next_vault_reconciliation
+            .is_some_and(|deadline| deadline > Instant::now()));
+        assert_eq!(
+            state
+                .session
+                .as_ref()
+                .expect("the existing session remains open")
+                .entries()
+                .len(),
+            1,
+            "the unstable worker listing is not applied"
+        );
+
+        wait_for_vault_reconciliation(&mut harness);
+        assert!(
+            harness.state().vault_refresh_error.is_none(),
+            "a later unchanged watcher probe resolves the previous unstable-refresh error"
+        );
+        assert_eq!(
+            harness.state().last_reconciled_vault_revision.as_deref(),
+            Some(baseline_revision.as_str()),
+            "the unchanged watcher probe preserves the last known revision"
+        );
+
+        harness.state_mut().next_vault_reconciliation =
+            Some(Instant::now() - Duration::from_secs(1));
+        harness.step();
+        assert!(
+            harness.state().vault_refresh_receiver.is_some(),
+            "the scheduled reconciliation retries after its later timer trigger"
+        );
+        wait_for_vault_refresh(&mut harness);
+        assert!(harness.state().vault_refresh_error.is_none());
+        assert!(harness
+            .state()
+            .last_reconciled_vault_revision
+            .as_deref()
+            .is_some_and(|revision| revision == baseline_revision.as_str()));
+    }
+
+    #[test]
+    fn egui_defers_an_unavailable_snapshot_refresh_retry_until_a_later_trigger() {
+        let temporary = UiTempDir::new();
+        let vault_path = temporary.0.join("Unavailable Snapshot Refresh Vault");
+        let app_data_path = temporary.0.join("App Data");
+        std::fs::create_dir_all(&vault_path).expect("create unavailable-snapshot vault");
+        std::fs::create_dir_all(&app_data_path).expect("create unavailable-snapshot app data");
+        std::fs::write(vault_path.join("Note.md"), b"# Existing note\n")
+            .expect("write initial note");
+        let session = VaultSession::open(&vault_path, &app_data_path)
+            .expect("open existing vault before unavailable refresh");
+        let baseline_revision = session
+            .snapshot_revision_sha256()
+            .expect("capture the existing full-vault revision");
+
+        std::fs::write(vault_path.join("After.md"), b"# External change\n")
+            .expect("simulate an external note addition during refresh");
+        let scanned_session = VaultSession::open(&vault_path, &app_data_path)
+            .expect("scan the changed vault before simulating an unavailable revision");
+        assert_eq!(scanned_session.entries().len(), 2);
+
+        let (sender, receiver) = mpsc::channel();
+        assert!(sender
+            .send(Ok(VaultRefreshOutcome {
+                session: scanned_session,
+                preserve_note_preview: false,
+                snapshot_revision_sha256: None,
+                snapshot_before_sha256: None,
+                snapshot_after_sha256: None,
+            }))
+            .is_ok());
+        let app = OpenObsidianApp {
+            session: Some(Arc::new(session)),
+            vault_refresh_receiver: Some(receiver),
+            vault_refresh_request_id: Some("unavailable-snapshot-refresh".to_owned()),
+            vault_refresh_trigger_origins: VaultRescanOrigins {
+                periodic_timer: true,
+                ..VaultRescanOrigins::default()
+            },
+            vault_rescan_pending: true,
+            vault_rescan_origins: VaultRescanOrigins {
+                periodic_timer: true,
+                ..VaultRescanOrigins::default()
+            },
+            vault_rescan_request_id: Some("timer-only-during-unavailable-refresh".to_owned()),
+            last_reconciled_vault_revision: Some(baseline_revision.clone()),
+            next_vault_reconciliation: Some(Instant::now() + VAULT_RECONCILIATION_INTERVAL),
+            ..OpenObsidianApp::default()
+        };
+        let mut harness = Harness::new_ui_state(|ui, app| app.show_ui(ui), app);
+
+        harness.step();
+
+        let state = harness.state();
+        assert!(state.vault_refresh_receiver.is_none());
+        assert!(state.vault_snapshot_probe_receiver.is_none());
+        assert!(!state.vault_rescan_pending);
+        assert!(state.vault_refresh_request_id.is_none());
+        assert!(state.vault_refresh_trigger_origins.is_empty());
+        assert!(state.vault_rescan_origins.is_empty());
+        assert_eq!(state.vault_rescan_request_id.as_deref(), None);
+        assert_eq!(state.vault_refresh_generation, 0);
+        assert_eq!(
+            state.last_reconciled_vault_revision.as_deref(),
+            Some(baseline_revision.as_str()),
+            "an unavailable full-vault snapshot retains the previous revision"
+        );
+        assert!(state
+            .vault_refresh_error
+            .as_deref()
+            .is_some_and(|error| error.contains("stable full-vault snapshot could not be established")));
+        assert_eq!(
+            state
+                .session
+                .as_ref()
+                .expect("the prior vault session remains available")
+                .entries()
+                .len(),
+            1,
+            "the listing from a scan without a stable snapshot is not applied"
+        );
+        assert!(state
+            .next_vault_reconciliation
+            .is_some_and(|deadline| deadline > Instant::now()));
+
+        harness.state_mut().next_vault_reconciliation =
+            Some(Instant::now() - Duration::from_secs(1));
+        harness.step();
+        assert!(harness.state().vault_refresh_receiver.is_some());
+        assert_eq!(harness.state().vault_refresh_generation, 1);
+        wait_for_vault_refresh(&mut harness);
+        assert!(harness.state().vault_refresh_error.is_none());
+        assert!(harness
+            .state()
+            .last_reconciled_vault_revision
+            .as_deref()
+            .is_some_and(|revision| revision != baseline_revision.as_str()),
+            "a later scheduled full refresh establishes the changed vault revision"
+        );
+        assert_eq!(
+            harness
+                .state()
+                .session
+                .as_ref()
+                .expect("the later stable session remains open")
+                .entries()
+                .len(),
+            2
+        );
+    }
+
+    #[test]
+    fn egui_preserves_a_manual_refresh_requested_during_an_unstable_refresh() {
+        let temporary = UiTempDir::new();
+        let vault_path = temporary.0.join("Manual Retry Vault");
+        let app_data_path = temporary.0.join("App Data");
+        std::fs::create_dir_all(&vault_path).expect("create manual-retry vault");
+        std::fs::create_dir_all(&app_data_path).expect("create manual-retry app data");
+        std::fs::write(vault_path.join("Note.md"), b"# Existing note\n")
+            .expect("write initial note");
+        let session = VaultSession::open(&vault_path, &app_data_path)
+            .expect("open existing vault before unstable refresh");
+        let baseline_revision = session
+            .snapshot_revision_sha256()
+            .expect("capture the existing full-vault revision");
+        let changed_revision = if baseline_revision == "f".repeat(64) {
+            "e".repeat(64)
+        } else {
+            "f".repeat(64)
+        };
+        let (sender, receiver) = mpsc::channel();
+        let app = OpenObsidianApp {
+            session: Some(Arc::new(session.clone())),
+            vault_refresh_receiver: Some(receiver),
+            vault_refresh_request_id: Some("unstable-refresh-with-manual-followup".to_owned()),
+            vault_refresh_trigger_origins: VaultRescanOrigins {
+                periodic_timer: true,
+                ..VaultRescanOrigins::default()
+            },
+            last_reconciled_vault_revision: Some(baseline_revision.clone()),
+            next_vault_reconciliation: Some(Instant::now() + VAULT_RECONCILIATION_INTERVAL),
+            ..OpenObsidianApp::default()
+        };
+        let mut harness = Harness::new_ui_state(|ui, app| app.show_ui(ui), app);
+
+        harness.step();
+        assert!(harness.state().vault_refresh_receiver.is_some());
+        harness.get_by_label("Refresh note list").click();
+        harness.step();
+
+        let pending_manual_request_id = harness
+            .state()
+            .vault_rescan_request_id
+            .clone()
+            .expect("queued manual refresh retains its request ID");
+        assert!(pending_manual_request_id.starts_with("manual-refresh-"));
+        assert!(harness.state().vault_rescan_pending);
+        assert!(harness.state().vault_rescan_origins.manual_button);
+        assert!(harness.state().vault_refresh_receiver.is_some());
+        assert_eq!(
+            harness.state().vault_refresh_request_id.as_deref(),
+            Some("unstable-refresh-with-manual-followup")
+        );
+        assert!(sender
+            .send(Ok(VaultRefreshOutcome {
+                session,
+                preserve_note_preview: false,
+                snapshot_revision_sha256: None,
+                snapshot_before_sha256: Some(baseline_revision.clone()),
+                snapshot_after_sha256: Some(changed_revision),
+            }))
+            .is_ok());
+
+        harness.step();
+
+        assert!(harness.state().vault_refresh_receiver.is_some());
+        assert_eq!(
+            harness.state().vault_refresh_generation,
+            1,
+            "the newer manual request starts one actionable refresh after the unstable result"
+        );
+        assert_eq!(
+            harness.state().vault_refresh_request_id.as_deref(),
+            Some(pending_manual_request_id.as_str())
+        );
+        assert!(harness.state().vault_refresh_trigger_origins.manual_button);
+        assert!(!harness.state().vault_rescan_pending);
+        assert!(harness.state().vault_rescan_origins.is_empty());
+        wait_for_vault_refresh(&mut harness);
+        assert_eq!(harness.state().vault_refresh_generation, 1);
+        assert!(harness.state().vault_refresh_error.is_none());
+        assert_eq!(
+            harness.state().last_reconciled_vault_revision.as_deref(),
+            Some(baseline_revision.as_str())
         );
     }
 
@@ -10159,6 +11195,87 @@ mod tests {
         assert_canvas_refresh_defers_for_focused_field(
             CanvasFocusTestField::TextCardId,
             VaultRescanOrigin::FilesystemWatcher,
+        );
+    }
+
+    #[test]
+    fn egui_keeps_a_later_watcher_hint_separate_from_an_in_flight_snapshot_probe() {
+        let temporary = UiTempDir::new();
+        let vault_path = temporary.0.join("Later Watcher Hint Vault");
+        let app_data_path = temporary.0.join("App Data");
+        std::fs::create_dir_all(&vault_path).expect("create later-hint vault");
+        std::fs::create_dir_all(&app_data_path).expect("create later-hint app data");
+        std::fs::write(vault_path.join("Note.md"), b"# Existing note\n")
+            .expect("write initial note");
+        let session = VaultSession::open(&vault_path, &app_data_path)
+            .expect("open vault for the first watcher snapshot probe");
+        let baseline_revision = session
+            .snapshot_revision_sha256()
+            .expect("capture the first probe's full-vault baseline");
+        let (first_probe_sender, first_probe_receiver) = mpsc::channel();
+        let mut watcher = VaultWatcher::watch(&vault_path).expect("watch later-hint vault");
+        watcher.request_rescan();
+        let app = OpenObsidianApp {
+            session: Some(Arc::new(session)),
+            vault_watcher: Some(watcher),
+            vault_watcher_hint_request_id: Some("later-watcher-hint".to_owned()),
+            vault_snapshot_probe_receiver: Some(first_probe_receiver),
+            vault_snapshot_probe_batch: Some(VaultRescanBatch {
+                origins: VaultRescanOrigins {
+                    filesystem_watcher: true,
+                    ..VaultRescanOrigins::default()
+                },
+                request_id: Some("first-watcher-probe".to_owned()),
+            }),
+            last_reconciled_vault_revision: Some(baseline_revision.clone()),
+            next_vault_reconciliation: Some(Instant::now() + VAULT_RECONCILIATION_INTERVAL),
+            ..OpenObsidianApp::default()
+        };
+        let mut harness = Harness::new_ui_state(|ui, app| app.show_ui(ui), app);
+
+        harness.step();
+
+        let state = harness.state();
+        assert!(state.vault_snapshot_probe_receiver.is_some());
+        assert_eq!(
+            state
+                .vault_snapshot_probe_batch
+                .as_ref()
+                .and_then(|batch| batch.request_id.as_deref()),
+            Some("first-watcher-probe"),
+            "the original watcher probe remains in flight"
+        );
+        assert!(state.vault_rescan_pending);
+        assert!(state.vault_rescan_origins.is_watcher_only());
+        assert_eq!(
+            state.vault_rescan_request_id.as_deref(),
+            Some("later-watcher-hint"),
+            "a later watcher hint retains its own request ID while the first probe is busy"
+        );
+
+        assert!(first_probe_sender
+            .send(Ok(baseline_revision.clone()))
+            .is_ok());
+        harness.step();
+
+        assert!(harness.state().vault_snapshot_probe_receiver.is_some());
+        assert_eq!(
+            harness
+                .state()
+                .vault_snapshot_probe_batch
+                .as_ref()
+                .and_then(|batch| batch.request_id.as_deref()),
+            Some("later-watcher-hint"),
+            "the later watcher hint starts a separate snapshot probe after the first completes"
+        );
+        assert!(!harness.state().vault_rescan_pending);
+        wait_for_vault_reconciliation(&mut harness);
+        assert!(harness.state().vault_snapshot_probe_receiver.is_none());
+        assert!(harness.state().vault_refresh_receiver.is_none());
+        assert!(!harness.state().vault_rescan_pending);
+        assert_eq!(
+            harness.state().last_reconciled_vault_revision.as_deref(),
+            Some(baseline_revision.as_str())
         );
     }
 

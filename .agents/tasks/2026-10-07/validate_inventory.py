@@ -36,6 +36,8 @@ decomposed_rows = [row for row in new_rows if row["id"].startswith("C07.")]
 canvas_rows = [row for row in new_rows if row["id"].startswith("C06.")]
 if {row["id"] for row in goal_rows} != expected_new:
     errors.append("Goal-specific acceptance rows must cover MIG-001 through MIG-016")
+if len(goal_rows) != 16:
+    errors.append("Goal-specific acceptance row count must remain 16")
 if {row["id"] for row in decomposed_rows} != expected_decomposed:
     errors.append("C07 decomposition must include child requirements C07.2 through C07.9")
 if {row["id"] for row in canvas_rows} != expected_canvas:
@@ -44,11 +46,13 @@ if {row["id"] for row in new_rows} != expected_new | expected_decomposed | expec
     errors.append("Migration requirements contain an unrecognized new requirement ID")
 
 mapping_review = requirement_manifest["mapping_review"]
-expected_reviewed_count = len(legacy_by_id) + len(goal_rows)
+expected_reviewed_count = len(legacy_by_id) + len(new_rows)
+if mapping_review.get("legacy_requirement_count") != len(legacy_by_id):
+    errors.append("Legacy requirement count must match the inherited requirement IDs")
 if mapping_review.get("reviewed_requirement_count") != expected_reviewed_count:
-    errors.append("Mapping review count must include inherited requirements and goal-level MIG rows")
-if mapping_review.get("new_migration_requirement_count") != len(goal_rows):
-    errors.append("New migration requirement count must match goal-level MIG rows")
+    errors.append("Mapping review count must include inherited requirements and every recognized new requirement row")
+if mapping_review.get("new_migration_requirement_count") != len(new_rows):
+    errors.append("New migration requirement count must include MIG and recognized C06/C07 decomposition rows")
 goal_sha256 = hashlib.sha256((task / "goal.md").read_bytes()).hexdigest()
 if mapping_review.get("goal_sha256") != goal_sha256:
     errors.append("Mapping review must record the current Rust migration goal SHA-256")

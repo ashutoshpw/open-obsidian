@@ -38,9 +38,10 @@ pub enum VaultWatchError {
 /// Watches a vault and its parent while keeping only one coalesced invalidation signal.
 ///
 /// Filesystem events, including overflow events, do not contain authoritative state. The
-/// application must rescan the vault from disk after polling a hint. Periodic callers can use
-/// [`request_rescan`](Self::request_rescan) to recover after sleep, reconnect, or filesystems
-/// that do not reliably emit notifications.
+/// application must rescan the vault from disk after polling a hint. Callers can use
+/// [`request_rescan`](Self::request_rescan) to recover after sleep or reconnect, and
+/// [`request_root_rewatch`](Self::request_root_rewatch) when they need to rebuild the watch
+/// without manufacturing a content-change hint.
 pub struct VaultWatcher {
     root: PathBuf,
     watcher: RecommendedWatcher,
@@ -127,6 +128,11 @@ impl VaultWatcher {
     pub fn request_rescan(&self) {
         self.root_change_pending.store(true, Ordering::Release);
         self.queue_rescan();
+    }
+
+    /// Requests a root-watch rebuild on the next poll without a synthetic change hint.
+    pub fn request_root_rewatch(&self) {
+        self.root_change_pending.store(true, Ordering::Release);
     }
 
     /// Drains coalesced notifications and repairs the recursive watch after root replacement.
@@ -286,6 +292,56 @@ mod tests {
             root.read("After.md").unwrap().document.as_bytes(),
             b"after\r\n"
         );
+    }
+
+    #[test]
+    fn root_rewatch_does_not_synthesize_or_consume_a_real_change_hint() {
+        let temp = TempDir::new();
+        let mut watcher = VaultWatcher::watch(&temp.0).unwrap();
+
+        watcher.request_root_rewatch();
+        let _ = watcher.poll();
+        assert!(watcher.root_watched);
+
+        fs::write(temp.0.join("After.md"), b"after rewatch\n").unwrap();
+        let deadline = Instant::now() + Duration::from_secs(5);
+        let hint = loop {
+            if let Some(hint) = watcher.poll() {
+                break hint;
+            }
+            assert!(Instant::now() < deadline, "filesystem change hint was not delivered");
+            std::thread::sleep(Duration::from_millis(10));
+        };
+        assert!(matches!(hint, VaultWatchHint::Changed | VaultWatchHint::RescanRequired));
+        assert!(watcher.root_watched);
+    }
+
+    #[test]
+    fn root_rewatch_returns_a_change_hint_that_was_already_queued() {
+        let temp = TempDir::new();
+        fs::create_dir_all(&temp.0).unwrap();
+        let (sender, receiver) = mpsc::sync_channel(1);
+        let rescan_pending = Arc::new(AtomicBool::new(false));
+        let root_change_pending = Arc::new(AtomicBool::new(false));
+        let backend = notify::recommended_watcher(|_: Result<Event, notify::Error>| {}).unwrap();
+        let mut watcher = VaultWatcher {
+            root: temp.0.clone(),
+            watcher: backend,
+            receiver,
+            sender,
+            rescan_pending: Arc::clone(&rescan_pending),
+            root_change_pending,
+            root_watched: true,
+            receiver_disconnected: false,
+            next_root_watch_attempt: Instant::now(),
+        };
+
+        enqueue_hint(&watcher.sender, &rescan_pending, VaultWatchHint::Changed);
+        watcher.request_root_rewatch();
+
+        assert_eq!(watcher.poll(), Some(VaultWatchHint::Changed));
+        assert!(watcher.root_watched);
+        assert!(!watcher.rescan_pending.load(Ordering::Acquire));
     }
 
     #[test]

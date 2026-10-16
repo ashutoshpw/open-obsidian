@@ -1,0 +1,129 @@
+{
+  "schema_version": 1,
+  "milestone_id": "R3.18",
+  "plan_id": "R2.8.150-R3.18-R3.17-CI-REPAIR",
+  "name": "R3.18 consolidated repair of R3.17 exact-SHA CI failures",
+  "status": "implementation_complete_waiting_for_submission",
+  "created_at": "2026-10-16T20:16:42Z",
+  "updated_at": "2026-10-16T21:44:29Z",
+  "candidate_base_sha": "37994bfb0cdea541f907a33b2c38527a411ca2c7",
+  "starting_sha": "37994bfb0cdea541f907a33b2c38527a411ca2c7",
+  "goal_sha256": "eb70762b8507e93e8fb247d112230fe3d40d6fdc4d1d6408f24f20b01dc6feb3",
+  "source_milestone_id": "R3.17",
+  "source_ci_evidence": ".agents/tasks/2026-10-07/evidence/r2.8.149-attempt-1-37994bfb.json",
+  "objective": "Close the inventory, Rust UI, and strict round-trip acceptance failures confirmed by R3.17 exact-SHA CI, while preserving the approved Canvas draft-lease and vault-safety contracts.",
+  "source_ci_summary": {
+    "implementation_sha": "37994bfb0cdea541f907a33b2c38527a411ca2c7",
+    "workflow_runs": {
+      "OpenObsidian Rust CI": {
+        "run_id": 38959159282,
+        "conclusion": "failure"
+      },
+      "OpenObsidian quality": {
+        "run_id": 38959159518,
+        "conclusion": "success"
+      },
+      "OpenObsidian plugin renderer matrix": {
+        "run_id": 38959159298,
+        "conclusion": "success"
+      },
+      "Obsidian vault round-trip acceptance": {
+        "run_id": 38959159363,
+        "conclusion": "failure"
+      },
+      "OpenObsidian desktop build": {
+        "run_id": 38959159285,
+        "conclusion": "success"
+      },
+      "OpenObsidian loaded plugin workflows": {
+        "run_id": 38959159197,
+        "conclusion": "success"
+      },
+      "Rust migration inventory": {
+        "run_id": 38959159170,
+        "conclusion": "failure"
+      }
+    },
+    "job_counts": {
+      "total": 20,
+      "passed": 12,
+      "failed": 8,
+      "terminal": 20
+    },
+    "artifact_reconciliation": "All 12 records reconciled: nine report archives verified by hash/identity; three large desktop previews metadata-only under existing policy.",
+    "origin_main_sha_at_scope_draft": "37994bfb0cdea541f907a33b2c38527a411ca2c7",
+    "no_active_required_runs": true
+  },
+  "scope": [
+    "Correct the migration inventory validator to count every recognized nonlegacy migration row in the reviewed/new totals: 221 reviewed = 196 inherited + 25 new. Check each explicit manifest count against the corresponding computed row set, including the 196 inherited rows. Keep a separately named check for the 16 goal-level MIG rows and preserve required MIG/C06/C07 ID, parent, source, and mapping checks; do not alter requirements.json totals or row dispositions.",
+    "Repair the confirmed Canvas deferral test ordering: egui_kittest processes a queued click's hover frame before the target receives focus, so a due timer/watcher can safely start refresh during that frame. Acquire and assert field focus first; then arm the production timer or real VaultWatcher rescan and advance without input. Add request-correlated diagnostics for session presence, timer due, watcher hint/result, trigger origin, field focus, pending state, busy/lease state, and receivers even when pending remains false. Do not set the pending flag directly or weaken assertions.",
+    "Preserve the approved stale-source conflict behavior: external vault bytes and conflict-history evidence stay intact; the preview snapshot text stays intact; source revision becomes invalid; retry remains disabled; the attempted source draft remains in source_draft and is what the editor displays; its snapshot lease remains until an explicit supported resolution. Keep the draft editor and Cancel source edits action available after the failed compare-and-swap even though Save is disabled; cancel releases the lease without writing. A failed compare-and-swap must not clear the draft or silently save it, and the conflict payload remains readable through conflict history.",
+    "Repair the strict round-trip harness so Linux clicks the current Canvas edit-path target with fresh, unambiguous geometry and confirms focus/value, while retaining target, sibling, OCR/accessibility, and exact-value checks.",
+    "Trace the adjacent Windows/macOS watcher refresh requests to determine whether they represent duplicate notifications for the same unchanged vault snapshot or distinct changes. Coalesce only proven redundant hints for an unchanged snapshot; ensure each distinct external change is represented in the reconciled snapshot. Keep periodic root-watch repair separate from hint generation so it cannot drain and discard a concurrent real watcher event. Keep later hints separate while a snapshot probe is in flight. Add an explicitly request-correlated watcher-only CI hint on a stable vault to prove unchanged-snapshot suppression without a full refresh; retain path-add and content-only same-Markdown-count changes as distinct reconciliation cases. If a real watcher hint and periodic timer coalesce in one batch, accept a direct full refresh only when the same request ID carries both trigger origins and the stable changed result matches that batch; otherwise require the watcher snapshot-probe chain. Keep correlation/quiet-window checks strict so duplicate hints do not cause extra refreshes and distinct changes are not lost.",
+    "Prevent immediate retry loops when a successful Markdown scan cannot be paired with a stable before/after full-vault snapshot. Keep the existing session and its last known revision, discard the failed trigger batch, remove timer-only triggers that accumulated during that refresh while retaining newer watcher/manual triggers, and schedule the next periodic retry. Add a focused UI regression case proving the failed batch does not immediately restart and a later timer does.",
+    "Cover the Canvas snapshot lease lifecycle: a pending refresh remains deferred after field focus leaves while a preview lease is held; successful reload replaces the old lease with the new preview lease; failed reload retains the old lease; cancel releases it without writing; successful save releases it only after receiver completion; and exactly one pending refresh starts at the first safe handoff.",
+    "Resolve the Ubuntu cargo-fmt failure in the Rust source; all executable formatting validation remains in GitHub Actions."
+  ],
+  "out_of_scope": [
+    "Changing reviewed requirement counts, stable IDs, mappings, provenance, or pending/external dispositions to make validation pass.",
+    "Promoting compatibility based on partial loaded-plugin reports; all three reports explicitly remain partial and promote no compatibility status.",
+    "Dropping path/ID, timer/watcher, platform, first-open/reopen, refresh-correlation, exact-value, source-preservation, conflict-history, or security checks to make CI green.",
+    "Changing release/signing/publication scope or claiming R3.17 achieved."
+  ],
+  "acceptance_criteria": [
+    "The inventory CI check accepts exactly 221 reviewed requirements: the manifest's 196 inherited rows must match computed legacy IDs and 25 recognized migration rows must match computed new IDs; it separately validates 16 MIG rows plus C06.2 and C07.2\u2013C07.9, and all existing parent/source/mapping checks still run.",
+    "Each of the four Canvas deferral tests first proves path/ID field focus, then observes its production trigger (timer_due or a real VaultWatcher hint) without input events, logs correlated state even if pending=false, and proves one pending request with no refresh until safe handoff. After handoff exactly one correlated full refresh completes and the strict quiet window contains no extra full-refresh request/result or pending rescan state. Any later watcher-only snapshot probe remains separately correlated and cannot cause an extra full refresh.",
+    "The stale-source conflict test verifies unchanged external bytes and preview snapshot text, retained/readable conflict history payload, invalidated revision, disabled Save, retained source_draft lease, and that the editor displays the attempted draft. The editor and Cancel source edits remain available after the failed compare-and-swap; cancel releases the lease without writing, clears the draft only after that explicit resolution, and preserves conflict history.",
+    "Canvas lease lifecycle coverage proves that pending refresh stays deferred after field focus leaves while a preview lease is held; successful reload replaces the lease; failed reload retains it; cancel releases it without writing; successful save releases it only after receiver completion; and exactly one pending refresh begins at the first safe handoff.",
+    "On Linux, macOS, and Windows, strict Canvas path and ID round-trip capture proves exact target/sibling values and the platform's target-selection behavior before explicit load/save. Coordinate-dispatched clicks must use fresh paired target/sibling geometry and prove the pointer lands inside the target and outside its sibling; accessibility value entry must identify its exact target and preserve the sibling value. Verify the saved Canvas JSON exactly after save, then verify the saved text through Obsidian first-open and reopen on every platform; the reopen checks concern persisted/rendered content, not focus in a closed editor. Record the expected refresh handoff within 15 seconds. A request-correlated watcher-only hint on a stable vault yields an unchanged full revision and no full refresh request/result through the quiet window. Content-only edits with unchanged Markdown count and path additions yield changed full revisions and correlated full refreshes; a same-ID watcher+periodic batch may use one direct stable refresh. Later hints remain separate. Periodic root-watch repair leaves genuine queued watcher notifications available for correlation. No uncorrelated duplicate refresh is accepted.",
+    "When a refresh scan succeeds but its before/after full-vault snapshot is unstable or unavailable, the previous listing and last known revision remain active, the failed batch does not cause an immediate repeated refresh, timer-only pending work is deferred, newer watcher/manual triggers remain actionable, and a later scheduled retry can establish a stable revision.",
+    "GitHub CI formatting, the declared Rust 1.95 job, all three OS Rust jobs, inventory, quality, plugin renderer matrix, loaded plugin workflows, desktop build, and all three vault round-trip jobs pass on the same submitted SHA.",
+    "All artifacts from every required workflow for the R3.18 SHA are enumerated and reconciled by run/SHA, size, digest, and report identity. Large native previews may remain metadata-only under the established policy; partial compatibility reports never promote status.",
+    "No local tests, builds, formatters, linters, validators, runtime probes, or application launches are used as acceptance evidence."
+  ],
+  "required_workflows": [
+    "OpenObsidian Rust CI",
+    "Rust migration inventory",
+    "Obsidian vault round-trip acceptance",
+    "OpenObsidian desktop build",
+    "OpenObsidian quality",
+    "OpenObsidian plugin renderer matrix",
+    "OpenObsidian loaded plugin workflows"
+  ],
+  "expected_jobs": 20,
+  "required_artifact_reconciliation": {
+    "enumerate_every_artifact_per_required_run": true,
+    "verify_report_archive_size_sha256_and_identity": true,
+    "large_native_previews_may_remain_metadata_only": true,
+    "record_partial_plugin_reports_without_promoting_compatibility": true
+  },
+  "submission_gate": "Implement and review the complete R3.18 milestone locally. Do not push for individual fixes or interim CI feedback. Immediately before submission, verify live origin/main still equals candidate_base_sha and that no required CI batch is active. If main moved, stop, reconcile the new commits, update the base and repeat independent scope review. Once all scope and acceptance criteria are met and both gates pass, push the reviewed milestone to origin/main exactly once, then hold main at that SHA until every required workflow/job is terminal and all artifacts/reports are reconciled. Only exact-SHA success achieves R3.18.",
+  "review_status": "amended scope approved by three independent reviewers",
+  "reviewed_by": [
+    "local_milestone_audit",
+    "r314_repair_scope_review",
+    "r317_harness_seam_audit"
+  ],
+  "implementation_review": {
+    "status": "approved",
+    "reviewed_at": "2026-10-16T21:44:29Z",
+    "reviewers": [
+      "r318_harness_recheck",
+      "r318_ui_recheck",
+      "r318_tracker_recheck"
+    ],
+    "findings": [
+      "The harness review found no remaining gap in watcher correlation, unchanged-snapshot suppression, separate later hints, root-rewatch event retention, Canvas target/sibling checks, exact persistence, or handoff coverage.",
+      "The UI review found no runtime blocker in refresh retries, Canvas lease handoff, stale-source conflict retention, or unavailable-snapshot coverage. Its quiet-window caveat was resolved by specifying no extra full-refresh request/result or pending rescan state while separately correlated watcher-only probes remain allowed.",
+      "The tracker review found no inventory, goal-hash, candidate-status, or evidence mismatch. Two likely rustfmt layout discrepancies were corrected by inspection; no formatter was run."
+    ],
+    "local_executable_validation": false
+  },
+  "implementation_status": "complete_and_reviewed_waiting_for_live_origin_main_and_ci_batch_recheck",
+  "implementation_started": true,
+  "implementation_complete": true,
+  "pushed_once": false,
+  "milestone_achieved": false,
+  "local_executable_validation": false,
+  "next_action": "Recheck live origin/main and required CI activity, then commit and push the complete reviewed R3.18 milestone once."
+}
