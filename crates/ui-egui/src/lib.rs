@@ -501,8 +501,7 @@ impl eframe::App for OpenObsidianApp {
     }
 
     fn persist_egui_memory(&self) -> bool {
-        !ci_canvas_egui_memory_persistence_disabled()
-            && !ci_canvas_eframe_persistence_disabled()
+        !ci_canvas_egui_memory_persistence_disabled() && !ci_canvas_eframe_persistence_disabled()
     }
 }
 

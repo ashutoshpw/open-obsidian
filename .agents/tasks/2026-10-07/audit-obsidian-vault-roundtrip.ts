@@ -19573,7 +19573,7 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
               stage,
               required: canaryRequiresFinalClick || focusOwnershipLost,
               reason: canaryRequiresFinalClick
-                ? "the expected-abort canary requires a real final target click and ArrowRight after clipboard staging"
+                ? "the expected-abort canary requires a real final target click after clipboard staging, without ArrowRight"
                 : focusOwnershipLost
                   ? "a post-staging checkpoint recorded target focus loss or sibling focus"
                   : "both post-staging checkpoints retained target focus and an unfocused sibling",
@@ -19638,10 +19638,12 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
               throw new Error(`Refusing final Canvas target click after ${stage} clipboard staging because current target geometry/state failed: ${JSON.stringify({guardPredicates, failedPredicates, target, sibling, afterSnapshot})}`);
             }
             xdotool("click", "--clearmodifiers", "1");
-            xdotool("key", "--clearmodifiers", "Right");
+            const canarySkipsArrowRight = safetyTracker?.expectedAbortCanary === true;
+            if (!canarySkipsArrowRight) xdotool("key", "--clearmodifiers", "Right");
             await delay(100);
+            const recoveryAction = canarySkipsArrowRight ? "final click" : "final click/ArrowRight";
             return (await capturePathFocusCheckpoint(
-              `fresh target focus after ${stage} clipboard staging and final click/ArrowRight`,
+              `fresh target focus after ${stage} clipboard staging and ${recoveryAction}`,
               afterSnapshot.line,
               afterSnapshot.frame_nr,
             )).snapshot;
@@ -21066,7 +21068,7 @@ function normalizeCanvasRecoveryPath(value: string): string {
     : slashNormalized;
 }
 
-async function validateMacCanvasWriteTransaction(
+async function validateCanvasWriteTransaction(
   before: SnapshotEntry[],
   after: SnapshotEntry[],
   changes: Array<{path: string; before?: SnapshotEntry; after?: SnapshotEntry}>,
@@ -21086,59 +21088,59 @@ async function validateMacCanvasWriteTransaction(
   const recoveryDirectoryPath = `${paths.vaultDirectory}/recovery`;
   const beforeJournalEntry = canvasSnapshotEntry(before, journalPath);
   if (beforeJournalEntry && beforeJournalEntry.kind !== "file") {
-    throw new Error("macOS Canvas write transaction baseline journal was not a regular file");
+    throw new Error("Canvas write transaction baseline journal was not a regular file");
   }
   if (!beforeJournalEntry && baselineJournalBytes.length !== 0) {
-    throw new Error("macOS Canvas write transaction journal baseline bytes had no matching snapshot entry");
+    throw new Error("Canvas write transaction journal baseline bytes had no matching snapshot entry");
   }
   if (beforeJournalEntry && (beforeJournalEntry.bytes !== baselineJournalBytes.length
     || beforeJournalEntry.sha256 !== createHash("sha256").update(baselineJournalBytes).digest("hex"))) {
-    throw new Error("macOS Canvas write transaction journal baseline bytes differed from its snapshot");
+    throw new Error("Canvas write transaction journal baseline bytes differed from its snapshot");
   }
   if (baselineJournalBytes.length > 0 && baselineJournalBytes.at(-1) !== 0x0a) {
-    throw new Error("macOS Canvas write transaction journal baseline lacked its final record delimiter");
+    throw new Error("Canvas write transaction journal baseline lacked its final record delimiter");
   }
   const beforeRecoveryDirectory = canvasSnapshotEntry(before, recoveryDirectoryPath);
   if (beforeRecoveryDirectory && beforeRecoveryDirectory.kind !== "directory") {
-    throw new Error("macOS Canvas write transaction baseline recovery path was not a directory");
+    throw new Error("Canvas write transaction baseline recovery path was not a directory");
   }
   if (!beforeRecoveryDirectory && before.some((entry) => entry.path.startsWith(`${recoveryDirectoryPath}/`))) {
-    throw new Error("macOS Canvas write transaction baseline contained recovery children without their directory");
+    throw new Error("Canvas write transaction baseline contained recovery children without their directory");
   }
 
   const afterJournalEntry = canvasSnapshotEntry(after, journalPath);
-  if (afterJournalEntry?.kind !== "file") throw new Error("macOS Canvas write transaction journal was missing from the accepted post-save snapshot");
+  if (afterJournalEntry?.kind !== "file") throw new Error("Canvas write transaction journal was missing from the accepted post-save snapshot");
   const journalBytes = await readFile(snapshotEntryAbsolutePath(appDataRoot, journalPath));
   if (afterJournalEntry.bytes !== journalBytes.length
     || afterJournalEntry.sha256 !== createHash("sha256").update(journalBytes).digest("hex")
     || journalBytes.length <= baselineJournalBytes.length
     || !journalBytes.subarray(0, baselineJournalBytes.length).equals(baselineJournalBytes)) {
-    throw new Error("macOS Canvas write transaction journal did not preserve the exact baseline prefix and accepted snapshot hash");
+    throw new Error("Canvas write transaction journal did not preserve the exact baseline prefix and accepted snapshot hash");
   }
   const appendedJournalBytes = journalBytes.subarray(baselineJournalBytes.length);
   if (!appendedJournalBytes.length || appendedJournalBytes.at(-1) !== 0x0a) {
-    throw new Error("macOS Canvas write transaction journal did not end with a complete record");
+    throw new Error("Canvas write transaction journal did not end with a complete record");
   }
   const appendedJournalText = appendedJournalBytes.toString("utf8");
   if (!Buffer.from(appendedJournalText, "utf8").equals(appendedJournalBytes)) {
-    throw new Error("macOS Canvas write transaction journal appended bytes were not valid UTF-8");
+    throw new Error("Canvas write transaction journal appended bytes were not valid UTF-8");
   }
   const journalLines = appendedJournalText.slice(0, -1).split("\n");
   if (journalLines.length !== 2 || journalLines.some((line) => line.length === 0)) {
-    throw new Error("macOS Canvas write transaction must append exactly two complete journal records");
+    throw new Error("Canvas write transaction must append exactly two complete journal records");
   }
   let journalRows: Array<Record<string, unknown>>;
   try {
     journalRows = journalLines.map((line) => JSON.parse(line) as Record<string, unknown>);
   } catch {
-    throw new Error("macOS Canvas write transaction appended journal records were not valid JSON");
+    throw new Error("Canvas write transaction appended journal records were not valid JSON");
   }
   const expectedJournalKeys = ["error", "expected_revision", "id", "next_revision", "operation", "recorded_at", "relative_path", "state"].sort();
   if (journalRows.some((row) => JSON.stringify(Object.keys(row).sort()) !== JSON.stringify(expectedJournalKeys))) {
-    throw new Error("macOS Canvas write transaction journal record fields did not match the exact Rust writer schema");
+    throw new Error("Canvas write transaction journal record fields did not match the exact Rust writer schema");
   }
   const [prepared, committed] = journalRows;
-  if (!prepared || !committed) throw new Error("macOS Canvas write transaction lacked its prepared or committed journal record");
+  if (!prepared || !committed) throw new Error("Canvas write transaction lacked its prepared or committed journal record");
   const operationId = typeof prepared.id === "string" ? prepared.id : "";
   if (!/^\d+-\d+-\d+$/.test(operationId)
     || committed.id !== operationId
@@ -21150,20 +21152,20 @@ async function validateMacCanvasWriteTransaction(
     || prepared.error !== null || committed.error !== null
     || !canvasDecimalTimestamp(prepared.recorded_at) || !canvasDecimalTimestamp(committed.recorded_at)
     || compareCanvasDecimalTimestamps(committed.recorded_at, prepared.recorded_at) < 0) {
-    throw new Error("macOS Canvas write transaction journal records did not match the selected save and its pre/post revisions");
+    throw new Error("Canvas write transaction journal records did not match the selected save and its pre/post revisions");
   }
   if (baselineJournalBytes.length > 0 && baselineJournalBytes.toString("utf8").includes(operationId)) {
-    throw new Error("macOS Canvas write transaction reused an operation ID already present in the baseline journal");
+    throw new Error("Canvas write transaction reused an operation ID already present in the baseline journal");
   }
 
   const recoveryDirectory = after.find((entry) => entry.path === recoveryDirectoryPath);
-  if (recoveryDirectory?.kind !== "directory") throw new Error("macOS Canvas write transaction recovery directory was missing");
+  if (recoveryDirectory?.kind !== "directory") throw new Error("Canvas write transaction recovery directory was missing");
   const recoveryRoot = join(canonicalManagedUserDataRoot, "vaults", canvasVaultDataId(vaultRoot), "recovery");
   const actualRecoveryDirectory = join(managedUserDataRoot, "vaults", canvasVaultDataId(vaultRoot), "recovery");
   const recoveryDirectoryMetadata = await lstat(actualRecoveryDirectory);
   if (recoveryDirectoryMetadata.isSymbolicLink() || !recoveryDirectoryMetadata.isDirectory()
     || normalizeCanvasRecoveryPath(await realpath(actualRecoveryDirectory)) !== normalizeCanvasRecoveryPath(recoveryRoot)) {
-    throw new Error("macOS Canvas write transaction recovery directory was not the exact canonical managed recovery root");
+    throw new Error("Canvas write transaction recovery directory was not the exact canonical managed recovery root");
   }
   const expectedArtifactNames = [
     `${operationId}-previous`,
@@ -21188,25 +21190,25 @@ async function validateMacCanvasWriteTransaction(
       || manifestMetadata.isSymbolicLink() || !manifestMetadata.isFile()
       || normalizeCanvasRecoveryPath(await realpath(absoluteBytesPath)) !== normalizeCanvasRecoveryPath(expectedAbsoluteBytesPath)
       || normalizeCanvasRecoveryPath(await realpath(absoluteManifestPath)) !== normalizeCanvasRecoveryPath(join(recoveryRoot, manifestName))) {
-      throw new Error("macOS Canvas write transaction recovery records were not confined regular files under the canonical recovery root");
+      throw new Error("Canvas write transaction recovery records were not confined regular files under the canonical recovery root");
     }
     const preservedBytes = await readFile(absoluteBytesPath);
     if (bytesEntry?.kind !== "file" || !preservedBytes.equals(expectedBytes)
       || bytesEntry.bytes !== preservedBytes.length
       || bytesEntry.sha256 !== expectedRevision
       || createHash("sha256").update(preservedBytes).digest("hex") !== expectedRevision) {
-      throw new Error("macOS Canvas write transaction recovery blob did not match the pre-save or post-save Canvas bytes");
+      throw new Error("Canvas write transaction recovery blob did not match the pre-save or post-save Canvas bytes");
     }
     const manifestBytes = await readFile(absoluteManifestPath);
     if (manifestEntry?.kind !== "file" || manifestEntry.bytes !== manifestBytes.length
       || manifestEntry.sha256 !== createHash("sha256").update(manifestBytes).digest("hex")) {
-      throw new Error("macOS Canvas write transaction recovery manifest did not match its accepted snapshot metadata");
+      throw new Error("Canvas write transaction recovery manifest did not match its accepted snapshot metadata");
     }
     let manifest: Record<string, unknown>;
     try {
       manifest = JSON.parse(manifestBytes.toString("utf8")) as Record<string, unknown>;
     } catch {
-      throw new Error("macOS Canvas write transaction recovery manifest was not valid JSON");
+      throw new Error("Canvas write transaction recovery manifest was not valid JSON");
     }
     const expectedManifestKeys = ["bytes", "captured_at", "current_revision", "expected_revision", "id", "path", "relative_path", "revision"].sort();
     if (JSON.stringify(Object.keys(manifest).sort()) !== JSON.stringify(expectedManifestKeys)
@@ -21218,7 +21220,7 @@ async function validateMacCanvasWriteTransaction(
       || !canvasDecimalTimestamp(manifest.captured_at)
       || manifest.expected_revision !== beforeRevision
       || manifest.current_revision !== beforeRevision) {
-      throw new Error("macOS Canvas write transaction recovery manifest did not match the exact writer schema and pre/post Canvas state");
+      throw new Error("Canvas write transaction recovery manifest did not match the exact writer schema and pre/post Canvas state");
     }
     recoveryRecords.push({
       id: recordId,
@@ -21245,21 +21247,21 @@ async function validateMacCanvasWriteTransaction(
   if (!isDeepStrictEqual(changes, actualChanges)
     || actualChanges.length !== expectedChangedPaths.size
     || actualChanges.some((change) => !expectedChangedPaths.has(change.path))) {
-    throw new Error("macOS Canvas write transaction changed app-data paths outside its exact journal and recovery artifacts");
+    throw new Error("Canvas write transaction changed app-data paths outside its exact journal and recovery artifacts");
   }
   for (const change of actualChanges) {
     if (change.path === journalPath) {
-      if (change.after?.kind !== "file") throw new Error("macOS Canvas write transaction journal delta was not a regular file");
+      if (change.after?.kind !== "file") throw new Error("Canvas write transaction journal delta was not a regular file");
       continue;
     }
     if (change.path === recoveryDirectoryPath) {
       if (change.before !== undefined || change.after?.kind !== "directory") {
-        throw new Error("macOS Canvas write transaction recovery-directory delta was not an exact new directory");
+        throw new Error("Canvas write transaction recovery-directory delta was not an exact new directory");
       }
       continue;
     }
     if (change.before !== undefined || change.after?.kind !== "file") {
-      throw new Error("macOS Canvas write transaction recovery artifacts were not exact new regular files");
+      throw new Error("Canvas write transaction recovery artifacts were not exact new regular files");
     }
   }
   return {
@@ -21280,7 +21282,7 @@ async function validateMacCanvasWriteTransaction(
   };
 }
 
-async function waitForMacCanvasWriteTransaction(
+async function waitForCanvasWriteTransaction(
   before: SnapshotEntry[],
   baselineJournalBytes: Buffer,
   appDataRoot: string,
@@ -21302,17 +21304,17 @@ async function waitForMacCanvasWriteTransaction(
     try {
       const metadata = await lstat(absoluteJournalPath);
       if (metadata.isSymbolicLink() || !metadata.isFile()) {
-        throw new Error("macOS Canvas write transaction journal path was not a regular file");
+        throw new Error("Canvas write transaction journal path was not a regular file");
       }
       journalBytes = await readFile(absoluteJournalPath);
     } catch (error) {
       if (!(error instanceof Error && "code" in error && error.code === "ENOENT")) throw error;
     }
     if (journalBytes && journalBytes.length < baselineJournalBytes.length) {
-      throw new Error("macOS Canvas write transaction journal shrank below its exact pre-save prefix");
+      throw new Error("Canvas write transaction journal shrank below its exact pre-save prefix");
     }
     if (journalBytes && !journalBytes.subarray(0, baselineJournalBytes.length).equals(baselineJournalBytes)) {
-      throw new Error("macOS Canvas write transaction journal no longer begins with its exact pre-save prefix");
+      throw new Error("Canvas write transaction journal no longer begins with its exact pre-save prefix");
     }
     const appendedBytes = journalBytes?.subarray(baselineJournalBytes.length) ?? Buffer.alloc(0);
     if (appendedBytes.length === 0) {
@@ -21322,18 +21324,18 @@ async function waitForMacCanvasWriteTransaction(
     } else {
       const appendedText = appendedBytes.toString("utf8");
       if (!Buffer.from(appendedText, "utf8").equals(appendedBytes)) {
-        throw new Error("macOS Canvas write transaction journal appended bytes were not valid UTF-8");
+        throw new Error("Canvas write transaction journal appended bytes were not valid UTF-8");
       }
       const lines = appendedText.slice(0, -1).split("\n");
       let rows: Array<Record<string, unknown>>;
       try {
         rows = lines.map((line) => JSON.parse(line) as Record<string, unknown>);
       } catch {
-        throw new Error("macOS Canvas write transaction journal contains a complete invalid JSON record");
+        throw new Error("Canvas write transaction journal contains a complete invalid JSON record");
       }
       const states = rows.map((row) => row.state);
       if (states.some((state) => state === "failed" || state === "recovery_required" || state === "conflict")) {
-        throw new Error("macOS Canvas write transaction ended in a rejected terminal state");
+        throw new Error("Canvas write transaction ended in a rejected terminal state");
       }
       if (rows.length === 1 && rows[0]?.state === "prepared"
         && rows[0]?.operation === "write"
@@ -21349,7 +21351,7 @@ async function waitForMacCanvasWriteTransaction(
         if (!stableJournalBytes.equals(journalBytes)) {
           lastObservedState = "journal_changed_during_post_commit_snapshot";
         } else {
-          const transaction = await validateMacCanvasWriteTransaction(
+          const transaction = await validateCanvasWriteTransaction(
             before,
             snapshot,
             changedPaths(before, snapshot),
@@ -21365,7 +21367,7 @@ async function waitForMacCanvasWriteTransaction(
           return {snapshot, transaction};
         }
       } else {
-        throw new Error("macOS Canvas write transaction had an invalid journal state sequence");
+        throw new Error("Canvas write transaction had an invalid journal state sequence");
       }
     }
     await delay(250);
@@ -21864,7 +21866,7 @@ async function runOpenObsidianCanvasTextEdit(
   let appDataSnapshotAfterCanvasSetup: SnapshotEntry[] | null = null;
   let appDataSnapshotAfterAcceptedSave: SnapshotEntry[] | null = null;
   let appDataSnapshotAfterClose: SnapshotEntry[] | null = null;
-  let macCanvasJournalBaselineBytes = Buffer.alloc(0);
+  let canvasJournalBaselineBytes = Buffer.alloc(0);
   let startupAppDataChanges: Array<{path: string; before?: SnapshotEntry; after?: SnapshotEntry}> = [];
   let linuxWarmupGeometry: string | undefined;
   const pickerAppDataCapture: {
@@ -22355,22 +22357,22 @@ async function runOpenObsidianCanvasTextEdit(
       expectedEframeAppRonPath,
       eframeInspectionEvidence,
     );
-    if (process.platform === "darwin") {
+    if (process.platform === "darwin" || process.platform === "win32") {
       const journalPath = `${canvasManagedMarkerPaths(appDataRoot, managedUserDataRoot, selectedVaultRoot).vaultDirectory}/journal.jsonl`;
       const journalEntry = canvasSnapshotEntry(appDataBeforeFieldInput, journalPath);
       if (journalEntry) {
         if (journalEntry.kind !== "file") {
-          throw new Error("macOS Canvas app-data pre-save journal baseline was not a regular file");
+          throw new Error("Canvas app-data pre-save journal baseline was not a regular file");
         }
         const absoluteJournalPath = snapshotEntryAbsolutePath(appDataRoot, journalPath);
         const journalMetadata = await lstat(absoluteJournalPath);
         if (journalMetadata.isSymbolicLink() || !journalMetadata.isFile()) {
-          throw new Error("macOS Canvas app-data pre-save journal baseline was not a regular file");
+          throw new Error("Canvas app-data pre-save journal baseline was not a regular file");
         }
-        macCanvasJournalBaselineBytes = await readFile(absoluteJournalPath);
-        if (journalEntry.bytes !== macCanvasJournalBaselineBytes.length
-          || journalEntry.sha256 !== createHash("sha256").update(macCanvasJournalBaselineBytes).digest("hex")) {
-          throw new Error("macOS Canvas app-data pre-save journal baseline bytes differed from their snapshot");
+        canvasJournalBaselineBytes = await readFile(absoluteJournalPath);
+        if (journalEntry.bytes !== canvasJournalBaselineBytes.length
+          || journalEntry.sha256 !== createHash("sha256").update(canvasJournalBaselineBytes).digest("hex")) {
+          throw new Error("Canvas app-data pre-save journal baseline bytes differed from their snapshot");
         }
       }
     }
@@ -22526,10 +22528,10 @@ async function runOpenObsidianCanvasTextEdit(
       || countMarkdownFiles(afterSave) !== countMarkdownFiles(afterDraft)) {
       throw new Error("Saving the native Canvas text card created or changed a Markdown note");
     }
-    if (process.platform === "darwin") {
-      const acceptedSave = await waitForMacCanvasWriteTransaction(
+    if (process.platform === "darwin" || process.platform === "win32") {
+      const acceptedSave = await waitForCanvasWriteTransaction(
         appDataBeforeFieldInput,
-        macCanvasJournalBaselineBytes,
+        canvasJournalBaselineBytes,
         appDataRoot,
         managedUserDataRoot,
         canonicalManagedUserDataRoot,
@@ -22541,18 +22543,18 @@ async function runOpenObsidianCanvasTextEdit(
       appDataSnapshotAfterAcceptedSave = acceptedSave.snapshot;
       editReport.app_data_snapshot_after_explicit_save = acceptedSave.snapshot;
       editReport.app_data_changes_for_accepted_write_transaction = changedPaths(appDataBeforeFieldInput, acceptedSave.snapshot);
-      editReport.app_data_mac_write_transaction = acceptedSave.transaction;
+      editReport.app_data_canvas_write_transaction = acceptedSave.transaction;
       await validateCanvasManagedMarkerSnapshot(
         appDataRoot,
         managedUserDataRoot,
         selectedVaultRoot,
         acceptedSave.snapshot,
-        "macOS Canvas app-data after exact committed write transaction",
+        `${process.platform} Canvas app-data after exact committed write transaction`,
       );
       await validateCanvasEframeFiles(
         appDataRoot,
         acceptedSave.snapshot,
-        "macOS Canvas app-data after exact committed write transaction",
+        `${process.platform} Canvas app-data after exact committed write transaction`,
         forbiddenAppDataPaths,
         expectedEframeAppRonPath,
         eframeInspectionEvidence,
@@ -22608,27 +22610,27 @@ async function runOpenObsidianCanvasTextEdit(
     await stopProcess(child);
     child = undefined;
     let appDataAfterClose: SnapshotEntry[];
-    if (process.platform === "darwin") {
+    if (process.platform === "darwin" || process.platform === "win32") {
       appDataAfterClose = await snapshotTree(appDataRoot);
       appDataSnapshotAfterClose = appDataAfterClose;
       if (!appDataSnapshotAfterAcceptedSave) {
-        throw new Error("macOS Canvas accepted post-save app-data snapshot was missing before process-close comparison");
+        throw new Error("Canvas accepted post-save app-data snapshot was missing before process-close comparison");
       }
       const closeChanges = changedPaths(appDataSnapshotAfterAcceptedSave, appDataAfterClose);
       if (closeChanges.length > 0) {
-        throw new Error(`macOS Canvas app data changed after the validated committed write transaction and process close: ${JSON.stringify(closeChanges).slice(0, 6_000)}`);
+        throw new Error(`${process.platform} Canvas app data changed after the validated committed write transaction and process close: ${JSON.stringify(closeChanges).slice(0, 6_000)}`);
       }
       await validateCanvasManagedMarkerSnapshot(
         appDataRoot,
         managedUserDataRoot,
         selectedVaultRoot,
         appDataAfterClose,
-        "macOS Canvas app-data after process close",
+        `${process.platform} Canvas app-data after process close`,
       );
       await validateCanvasEframeFiles(
         appDataRoot,
         appDataAfterClose,
-        "macOS Canvas app-data after process close",
+        `${process.platform} Canvas app-data after process close`,
         forbiddenAppDataPaths,
         expectedEframeAppRonPath,
         eframeInspectionEvidence,

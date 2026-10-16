@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "id": "R2.8.141-R3.9-CROSS-PLATFORM-CANVAS-CI-FAILURE-REPAIR",
+  "name": "Repair the grouped R3.8 inventory, formatting, and Canvas CI failures",
+  "status": "implementation-complete / CI-pending; the complete grouped change is independently source-reviewed and ready for one exact-SHA milestone submission. No local executable validation.",
+  "planning_base_sha": "586b3f42aafe4e1ffeb47e7a145c2f62881fd9a3",
+  "starting_sha": "586b3f42aafe4e1ffeb47e7a145c2f62881fd9a3",
+  "expected_starting_sha": "586b3f42aafe4e1ffeb47e7a145c2f62881fd9a3",
+  "origin_main_sha_at_planning": "586b3f42aafe4e1ffeb47e7a145c2f62881fd9a3",
+  "goal_sha256": "bfe0b0cf2d683d2e9864e8aa63f13a34c7b495a1a15cc0ecb50c58f3ecf857f7",
+  "predecessor_milestone": "R2.8.140-R3.8-CROSS-PLATFORM-CANVAS-CI-REPAIR",
+  "predecessor_sha": "586b3f42aafe4e1ffeb47e7a145c2f62881fd9a3",
+  "predecessor_evidence": "evidence/r2.8.140-r3-8-attempt-1-586b3f4.json",
+  "predecessor_ci_result": {
+    "workflows": {
+      "observed": 7,
+      "terminal": 7,
+      "passed": 4,
+      "failed": 3
+    },
+    "jobs": {
+      "observed": 20,
+      "terminal": 20,
+      "passed": 16,
+      "failed": 4
+    },
+    "failed_job_ids": [
+      116854723537,
+      116854723218,
+      116854723855,
+      116854724408
+    ],
+    "all_required_jobs_terminal": true,
+    "roundtrip_archive_digests_match_api": true,
+    "roundtrip_report_hashes_verified": true
+  },
+  "deliverable": "Resolve all four R3.8 CI failures in one reviewed repair milestone while preserving fail-closed Linux Canvas input handling, exact managed Windows save-transaction acceptance, strict app-data ownership, privacy, and carried cross-platform acceptance.",
+  "scope": [
+    "Update only requirements.json.mapping_review.goal_sha256 to match the unchanged active tracker goal.md bytes at the planned base SHA; do not edit the active goal text in this repair.",
+    "Apply the semantic-free rustfmt change in crates/ui-egui/src/lib.rs by placing the existing boolean && expression on one line.",
+    "In the Linux expected-abort canary, suppress the post-clipboard ArrowRight only for expectedAbortCanary; preserve ArrowRight for normal target-focus recovery and retain the click only behind its current full guard. Keep the separately guarded pre-staging recovery ArrowRight and its event/focus/paste-state checks unchanged.",
+    "Keep the Linux canary fail-closed: expected abort classification requires the synthetic target-value mismatch to be the sole failed predicate; preserve exact target/sibling focus, response identity, unchanged sibling, pointer/window/button, event-free snapshot, and refresh checks. Any other failure stops before pointer movement, Ctrl+V, paste, or save; preserve cleanup and save_attempted=false.",
+    "Extend the existing bounded exact Canvas write-transaction acceptance to Windows: capture the pre-save journal baseline, validate only the exact successful prepared/committed operation and its confined/hash-verified recovery artifacts, and compare process-close state with the accepted post-save snapshot.",
+    "Retain strict Windows pre-save, input, draft-load, and draft-edit equality; exact managed-marker/full-root eframe checks; zero app.ron across the Windows monitored root union; rejection of incomplete, failed, malformed, uncommitted, or extra path deltas; and vault-only selected Canvas mutation."
+  ],
+  "out_of_scope": [
+    "Changing the user-visible Canvas writer, disabling persistence globally, or broadly allowlisting journal/recovery/app-data paths.",
+    "Changing ArrowRight behavior for normal Linux focus recovery.",
+    "Editing goal.md text or changing unrelated inventory requirements in this repair.",
+    "Weakening report privacy, source-preservation checks, synthetic fixture provenance, or carried C07.4 acceptance.",
+    "Local tests, builds, formatters, linters, validators, runtime probes, or application launches for executable validation."
+  ],
+  "required_workflows": [
+    "OpenObsidian Rust CI",
+    "Rust migration inventory",
+    "Obsidian vault round-trip acceptance",
+    "OpenObsidian desktop build",
+    "OpenObsidian quality",
+    "OpenObsidian plugin renderer matrix",
+    "OpenObsidian loaded plugin workflows"
+  ],
+  "expected_jobs": 20,
+  "platforms": [
+    "Ubuntu 24.04",
+    "macOS latest",
+    "Windows latest"
+  ],
+  "implementation_acceptance": [
+    "The Rust migration inventory validates the exact goal SHA-256, and Linux Rust CI passes Check formatting without changing behavior.",
+    "Linux expected-abort evidence shows the injected synthetic-prefix mismatch is the sole failed predicate; the canary-only ArrowRight is suppressed while normal recovery retains it; no motion, paste, or save occurs on a failed guard.",
+    "Windows explicit save accepts only the exact successful journal transaction and matching confined/hash-verified recovery files; close equals the accepted snapshot; strict pre-save checks and the full-root no-app.ron invariant pass.",
+    "All seven required workflows and all twenty jobs pass on the same exact submitted SHA; reports and artifact digests are reconciled before the milestone is marked achieved."
+  ],
+  "evidence_to_collect": [
+    "Exact submitted SHA and all seven GitHub Actions run URLs/IDs, twenty job conclusions, and per-platform results.",
+    "Rust inventory goal-hash check and Ubuntu Check formatting step.",
+    "Linux canary report and event trace proving sole synthetic-prefix mismatch, fail-closed guards, cleanup, and no pointer movement/paste/save.",
+    "Windows transaction summary proving prepared-to-committed success, exact journal/recovery path and content hashes, accepted post-save snapshot, full-root app.ron absence, and close equality.",
+    "All artifact API digests, downloaded round-trip archive SHA-256 values, report SHA-256 values, exact report source SHA, and privacy-safe synthetic-data summary."
+  ],
+  "local_executable_validation": false,
+  "implementation_sha": null,
+  "submitted_sha": null,
+  "pushed_once": false,
+  "all_required_jobs_terminal": false,
+  "ci_attempt_evidence": null,
+  "review_findings": [
+    "Inventory/rustfmt review: the validator compares exact goal bytes with requirements.json.mapping_review.goal_sha256; update only that field. The sole Ubuntu fmt finding is a semantic-free line wrap.",
+    "Linux review: the observed failure follows the post-clipboard canary click and ArrowRight. Suppress only that post-staging ArrowRight for expectedAbortCanary, preserve normal recovery, and leave the separately guarded pre-staging ArrowRight and its own event/focus/paste-state checks intact; every existing fail-closed predicate remains required.",
+    "Windows independent source review: reuse the exact bounded transaction validator/waiter and compare shutdown with the accepted full-root snapshot; strict pre-save equality, managed-marker checks, null expected app.ron path, and rejection of any app.ron remain in force.",
+    "Integrated reviewer approved this single four-failure scope with the Linux fail-closed and Windows exact-transaction acceptance above.",
+    "Independent inventory/Rust/tracker review found the active goal hash matches the mapping, the Rust diff is only the semantic-free line wrap, and no out-of-scope source edits; tracker status pointers were reconciled before milestone submission."
+  ],
+  "origin_main_verified_at": "2026-10-16T08:24:27Z"
+}

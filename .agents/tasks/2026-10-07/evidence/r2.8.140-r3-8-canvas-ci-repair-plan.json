@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "R2.8.140-R3.8-CROSS-PLATFORM-CANVAS-CI-REPAIR",
   "name": "Repair the grouped R3.7 cross-platform CI failures",
-  "status": "implementation-complete and independently source-reviewed by Linux, Windows, macOS, and integrated reviewers; ready for one exact-SHA milestone CI submission; no local executable validation",
+  "status": "Terminal-failed on exact SHA 586b3f42aafe4e1ffeb47e7a145c2f62881fd9a3; all seven workflows and twenty jobs are terminal (4 workflows/16 jobs passed, 3 workflows/4 jobs failed). All fourteen artifact metadata entries and all round-trip reports are reconciled. The grouped follow-up repair is planned in evidence/r2.8.141-r3-9-canvas-ci-failure-repair-plan.json.",
   "planning_base_sha": "261a5bec782f0ce5780b2f93695afbdba5dd0927",
   "starting_sha": "261a5bec782f0ce5780b2f93695afbdba5dd0927",
   "expected_starting_sha": "261a5bec782f0ce5780b2f93695afbdba5dd0927",
@@ -12,9 +12,24 @@
   "predecessor_sha": "261a5bec782f0ce5780b2f93695afbdba5dd0927",
   "predecessor_evidence": "evidence/r2.8.139-r3-7-attempt-1-261a5be.json",
   "predecessor_ci_result": {
-    "workflows": {"terminal": 7, "passed": 5, "failed": 2},
-    "jobs": {"terminal": 20, "passed": 14, "failed": 6},
-    "failed_job_ids": [116838190122, 116838190207, 116838190229, 116838204518, 116838204758, 116838204799],
+    "workflows": {
+      "terminal": 7,
+      "passed": 5,
+      "failed": 2
+    },
+    "jobs": {
+      "terminal": 20,
+      "passed": 14,
+      "failed": 6
+    },
+    "failed_job_ids": [
+      116838190122,
+      116838190207,
+      116838190229,
+      116838204518,
+      116838204758,
+      116838204799
+    ],
     "all_required_jobs_terminal": true,
     "no_same_sha_rerun": true
   },
@@ -43,7 +58,11 @@
     "OpenObsidian loaded plugin workflows"
   ],
   "expected_jobs": 20,
-  "platforms": ["Ubuntu 24.04", "macOS latest", "Windows latest"],
+  "platforms": [
+    "Ubuntu 24.04",
+    "macOS latest",
+    "Windows latest"
+  ],
   "implementation_acceptance": [
     "The NativeOptions initializer has no clippy::field_reassign_with_default warning; the supported MSRV and all three Rust CI platform jobs pass their exact-SHA checks.",
     "Linux app-data warm-up, fresh canary, and post-close checks compare the full monitored root union. GTK config/data roots are outside that union, while config/OpenObsidian and data/openobsidian remain canonical, fully snapshotted, and covered by exact managed-marker and .ron checks. Root registration occurs before the baseline snapshot, the external marker resolver fails closed without its exact prefix mapping, and no GTK noise path is filtered or allowed.",
@@ -62,17 +81,54 @@
     "Round-trip report hashes, downloaded round-trip archive hashes compared with GitHub API digests, and report privacy/structured-failure summaries."
   ],
   "local_executable_validation": false,
-  "implementation_sha": null,
-  "submitted_sha": null,
-  "pushed_once": false,
-  "all_required_jobs_terminal": false,
+  "implementation_sha": "586b3f42aafe4e1ffeb47e7a145c2f62881fd9a3",
+  "submitted_sha": "586b3f42aafe4e1ffeb47e7a145c2f62881fd9a3",
+  "pushed_once": true,
+  "all_required_jobs_terminal": true,
+  "ci_attempt_evidence": "evidence/r2.8.140-r3-8-attempt-1-586b3f4.json",
+  "origin_main_sha_after_push": "586b3f42aafe4e1ffeb47e7a145c2f62881fd9a3",
   "review_findings": [
-    {"reviewer":"r38_linux_gtk_review","status":"approved","scope":"Linux external XDG roots, exact managed-root snapshot mapping, marker checks, collision avoidance, canonical containment and cleanup","resolution":"No blockers; implement the reviewed exact-root plan."},
-    {"reviewer":"r38_windows_eframe_review","status":"approved","scope":"Windows eframe persistence gates and child-only environment policy","resolution":"No blockers; exact-value flag disables both persistence channels while preserving ordinary defaults and macOS memory-only policy."},
-    {"reviewer":"r38_macos_recovery_review","status":"approved","scope":"macOS asynchronous write completion, exact journal/recovery acceptance, post-close comparison and report privacy","resolution":"Clarified journal acceptance uses expected_revision and next_revision; current_revision belongs to manifests."},
-    {"reviewer":"r38_linux_gtk_review","status":"approved","scope":"R3.8 implementation review of Linux XDG root isolation, exact marker mapping, complete union snapshots, forbidden-path checks, and cleanup","resolution":"No blockers. Preflight cleanup now clears both snapshot-root registrations and removes the XDG/Mesa scratch roots."},
-    {"reviewer":"r38_windows_eframe_review","status":"approved","scope":"R3.8 implementation review of Rust eframe persistence gates and Windows-only child environment policy","resolution":"No blockers. The exact-value flag disables both persistence channels only for the normal Windows Canvas child and preserves product defaults and macOS behavior."},
-    {"reviewer":"r38_macos_recovery_review","status":"approved","scope":"R3.8 implementation follow-up of macOS commit-gated write validation and Canvas/report privacy","resolution":"No blockers. Journal and manifest failures, wait timeouts, and reopen error paths expose summaries only; successful UI excerpts remain restricted to the generated synthetic fixture as specified by the plan."},
-    {"reviewer":"r38_integrated_review","status":"approved","scope":"Integrated R3.8 source review across Rust, Linux, Windows, macOS, cleanup, and report privacy","resolution":"No blockers. Latest summary-only timeout and reopen diagnostics do not change successful wait behavior."}
+    {
+      "reviewer": "r38_linux_gtk_review",
+      "status": "approved",
+      "scope": "Linux external XDG roots, exact managed-root snapshot mapping, marker checks, collision avoidance, canonical containment and cleanup",
+      "resolution": "No blockers; implement the reviewed exact-root plan."
+    },
+    {
+      "reviewer": "r38_windows_eframe_review",
+      "status": "approved",
+      "scope": "Windows eframe persistence gates and child-only environment policy",
+      "resolution": "No blockers; exact-value flag disables both persistence channels while preserving ordinary defaults and macOS memory-only policy."
+    },
+    {
+      "reviewer": "r38_macos_recovery_review",
+      "status": "approved",
+      "scope": "macOS asynchronous write completion, exact journal/recovery acceptance, post-close comparison and report privacy",
+      "resolution": "Clarified journal acceptance uses expected_revision and next_revision; current_revision belongs to manifests."
+    },
+    {
+      "reviewer": "r38_linux_gtk_review",
+      "status": "approved",
+      "scope": "R3.8 implementation review of Linux XDG root isolation, exact marker mapping, complete union snapshots, forbidden-path checks, and cleanup",
+      "resolution": "No blockers. Preflight cleanup now clears both snapshot-root registrations and removes the XDG/Mesa scratch roots."
+    },
+    {
+      "reviewer": "r38_windows_eframe_review",
+      "status": "approved",
+      "scope": "R3.8 implementation review of Rust eframe persistence gates and Windows-only child environment policy",
+      "resolution": "No blockers. The exact-value flag disables both persistence channels only for the normal Windows Canvas child and preserves product defaults and macOS behavior."
+    },
+    {
+      "reviewer": "r38_macos_recovery_review",
+      "status": "approved",
+      "scope": "R3.8 implementation follow-up of macOS commit-gated write validation and Canvas/report privacy",
+      "resolution": "No blockers. Journal and manifest failures, wait timeouts, and reopen error paths expose summaries only; successful UI excerpts remain restricted to the generated synthetic fixture as specified by the plan."
+    },
+    {
+      "reviewer": "r38_integrated_review",
+      "status": "approved",
+      "scope": "Integrated R3.8 source review across Rust, Linux, Windows, macOS, cleanup, and report privacy",
+      "resolution": "No blockers. Latest summary-only timeout and reopen diagnostics do not change successful wait behavior."
+    }
   ]
 }
