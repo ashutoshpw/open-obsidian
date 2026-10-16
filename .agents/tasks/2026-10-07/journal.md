@@ -8950,3 +8950,8 @@ Live origin/main is still 15fc2c10f87ada3ba9fb191e76206ce45acac74d. Its precedin
 ## 2026-10-16T22:36:29Z — R3.19 submitted; exact-SHA CI pending
 
 Fast-forwarded origin/main once from 15fc2c10f87ada3ba9fb191e76206ce45acac74d to 57a28b2d371be576d1d4aebb1ea77d1b47b17fb9. GitHub Actions created all seven required workflows for this exact SHA: inventory run 38976742999 was in progress; loaded-plugin 38976743151, renderer matrix 38976743088, desktop build 38976743089, Rust CI 38976743053, quality 38976743201, and round-trip 38976743025 were queued at first observation. The stale baseline-SHA run 34748436643 remains queued with no jobs and is not part of this exact-SHA batch. Hold origin/main at the submitted SHA until all seven workflows and every job are terminal and their artifacts/results are reconciled. No local executable validation was run.
+
+
+## 2026-10-16T22:38:17Z — R3.19 CI first failures observed; batch remains active
+
+The exact-SHA batch for 57a28b2d371be576d1d4aebb1ea77d1b47b17fb9 has four successful workflows, one terminal failure, and two workflows still running. Inventory run 38976742999 failed because the migration mapping does not record the current goal SHA-256; this is consistent with the goal edit included in the milestone. Rust CI run 38976743053 has an observed Ubuntu formatting-step failure while workspace tests continue. Rust CI and the three-platform round-trip run 38976743025 are still active. No repair or additional push before every current job is terminal; results and artifacts remain unreconciled.

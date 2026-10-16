@@ -3,7 +3,7 @@
   "plan_id": "R2.8.151-R3.19-R3.18-CI-REPAIR",
   "milestone_id": "R3.19",
   "name": "R3.19 consolidated repair of R3.18 exact-SHA CI failures",
-  "status": "submitted once / exact-SHA CI pending",
+  "status": "submitted once / exact-SHA CI in progress with one terminal workflow failure; reconciliation pending",
   "created_at": "2026-10-16T22:05:38Z",
   "candidate_base_sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
   "integrated_source_head": "1c863ab73b6d74df9dd5aa3df11fba399018b46a",
@@ -104,8 +104,8 @@
   "local_check_deviation": "One agent accidentally ran git diff --check once in the watcher worktree. It was not used as acceptance evidence. No local tests, builds, formatters, linters, validators, benchmarks, runtime probes, or application launches were used.",
   "pushed_once": true,
   "milestone_achieved": false,
-  "next_action": "Wait for all seven required workflows and every job on this exact SHA to become terminal, then reconcile their results and artifacts. Do not push another milestone while this batch is pending.",
-  "updated_at": "2026-10-16T22:36:29Z",
+  "next_action": "Keep origin/main at this SHA. Wait for both remaining workflows and all their jobs to become terminal, reconcile every artifact/report, then prepare one consolidated repair milestone for the recorded inventory and formatting failures.",
+  "updated_at": "2026-10-16T22:38:17Z",
   "reviewed_at": "2026-10-16T22:32:28Z",
   "reviewed_by": [
     "r318_ui_ci_review",
@@ -151,53 +151,87 @@
   "submitted_sha": "57a28b2d371be576d1d4aebb1ea77d1b47b17fb9",
   "push_url": "https://github.com/ashutoshpw/open-obsidian/commit/57a28b2d371be576d1d4aebb1ea77d1b47b17fb9",
   "ci_acceptance": {
-    "status": "pending",
+    "status": "in_progress_with_observed_failure",
     "exact_sha": "57a28b2d371be576d1d4aebb1ea77d1b47b17fb9",
     "required_workflows": [
       {
         "workflow": "Rust migration inventory",
         "run_id": 38976742999,
-        "status": "in_progress",
+        "status": "completed",
+        "conclusion": "failure",
         "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38976742999"
       },
       {
         "workflow": "OpenObsidian loaded plugin workflows",
         "run_id": 38976743151,
-        "status": "queued",
+        "status": "completed",
+        "conclusion": "success",
         "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38976743151"
       },
       {
         "workflow": "OpenObsidian plugin renderer matrix",
         "run_id": 38976743088,
-        "status": "queued",
+        "status": "completed",
+        "conclusion": "success",
         "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38976743088"
       },
       {
         "workflow": "OpenObsidian desktop build",
         "run_id": 38976743089,
-        "status": "queued",
+        "status": "completed",
+        "conclusion": "success",
         "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38976743089"
       },
       {
         "workflow": "OpenObsidian Rust CI",
         "run_id": 38976743053,
-        "status": "queued",
+        "status": "in_progress",
+        "conclusion": null,
         "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38976743053"
       },
       {
         "workflow": "OpenObsidian quality",
         "run_id": 38976743201,
-        "status": "queued",
+        "status": "completed",
+        "conclusion": "success",
         "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38976743201"
       },
       {
         "workflow": "Obsidian vault round-trip acceptance",
         "run_id": 38976743025,
-        "status": "queued",
+        "status": "in_progress",
+        "conclusion": null,
         "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38976743025"
       }
     ],
+    "workflow_counts": {
+      "observed": 7,
+      "terminal": 5,
+      "passed": 4,
+      "failed": 1,
+      "cancelled": 0,
+      "queued": 0,
+      "in_progress": 2
+    },
     "all_terminal": false,
-    "all_artifacts_reconciled": false
+    "all_artifacts_reconciled": false,
+    "observed_findings": [
+      {
+        "run_id": 38976742999,
+        "workflow": "Rust migration inventory",
+        "status": "terminal_failure",
+        "observed_error": "Mapping review must record the current Rust migration goal SHA-256",
+        "interpretation": "The goal file changed in this milestone, so the recorded goal hash may need a consolidated tracker update after the full batch finishes.",
+        "repair_deferred_until_batch_terminal": true
+      },
+      {
+        "run_id": 38976743053,
+        "workflow": "OpenObsidian Rust CI",
+        "status": "in_progress_with_observed_failure",
+        "job": "rust (ubuntu-latest)",
+        "observed_step": "Check formatting failed while the workspace tests continued",
+        "repair_deferred_until_batch_terminal": true
+      }
+    ]
   }
 }
