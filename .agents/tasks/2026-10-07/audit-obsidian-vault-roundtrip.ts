@@ -126,6 +126,7 @@ type CanvasInputSafetyTracker = {
   requestMarkerCleanup: Record<string, unknown> | null;
   focusCheckpoints: Array<Record<string, unknown>>;
   guardFailures: Array<Record<string, unknown>>;
+  preStagingFocusRecovery: Record<string, unknown> | null;
   baseline: {
     vaultRoot: string;
     appDataRoot: string;
@@ -1271,44 +1272,11 @@ async function readCanvasTextEditFieldDiagnostic(
   field: "path" | "id",
   afterLine = -1,
   requestId?: string,
-): Promise<{
-  line: number;
-  enabled: boolean;
-  frameNr: number;
-  requestId: string | null;
-  responseId: string;
-  rect: {left: number; top: number; right: number; bottom: number};
-  pixelsPerPoint: number;
-  pointer: {x: number; y: number} | null;
-  clicked: boolean;
-  clickEventLine: number | null;
-  focused: boolean;
-  hovered: boolean | null;
-  arrowRightKeyEvent: boolean;
-  arrowRightEventLine: number | null;
-  empty: boolean | null;
-  valueBytes: number;
-  valueSha256: string;
-} | null> {
+  onlyFrameNr?: number,
+): Promise<CanvasTextEditFieldDiagnostic | null> {
   const log = await readFile(logPath, "utf8").catch(() => "");
   const lines = log.split(/\r?\n/);
-  const observations: Array<{
-    line: number;
-    enabled: boolean;
-    frameNr: number;
-    requestId: string | null;
-    responseId: string;
-    rect: {left: number; top: number; right: number; bottom: number};
-    pixelsPerPoint: number;
-    pointer: {x: number; y: number} | null;
-    clicked: boolean;
-    focused: boolean;
-    hovered: boolean | null;
-    arrowRightKeyEvent: boolean;
-    empty: boolean | null;
-    valueBytes: number;
-    valueSha256: string;
-  }> = [];
+  const observations: CanvasTextEditFieldObservation[] = [];
   for (let index = lines.length - 1; index >= 0; index -= 1) {
     const value = lines[index] ?? "";
     const fieldPrefix = requestId === undefined
@@ -1319,6 +1287,7 @@ async function readCanvasTextEditFieldDiagnostic(
     const frameNr = value.match(/\bframe_nr=(\d+)/)?.[1];
     const observedRequestId = value.match(/\brequest_id=([^,\s]+)/)?.[1] ?? null;
     if (requestId !== undefined && observedRequestId !== requestId) continue;
+    if (onlyFrameNr !== undefined && Number(frameNr) !== onlyFrameNr) continue;
     const responseId = value.match(/\bresponse_id=(.*?),\s*rect=/)?.[1]?.trim();
     const geometry = value.match(/\brect=\[\[\s*(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s*\]\s*-\s*\[\s*(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s*\]\],\s*pixels_per_point=(\d+(?:\.\d+)?)/);
     const pointerMatch = value.match(/\bpointer=Some\(\[\s*(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s*\]\)/);
@@ -1363,16 +1332,51 @@ async function readCanvasTextEditFieldDiagnostic(
   const latest = observations[0];
   if (!latest) return null;
   const freshObservations = observations.filter((observation) => observation.line > afterLine);
-  const clickEventLine = freshObservations.find((observation) => observation.clicked)?.line ?? null;
-  const arrowRightEventLine = freshObservations.find((observation) => observation.arrowRightKeyEvent)?.line ?? null;
+  const clickEventObservations = freshObservations.filter((observation) => observation.clicked);
+  const arrowRightEventObservations = freshObservations.filter((observation) => observation.arrowRightKeyEvent);
+  const clickEventObservation = clickEventObservations[0] ?? null;
+  const arrowRightEventObservation = arrowRightEventObservations[0] ?? null;
   return {
     ...latest,
-    clicked: clickEventLine !== null,
-    clickEventLine,
-    arrowRightKeyEvent: arrowRightEventLine !== null,
-    arrowRightEventLine,
+    clicked: clickEventObservation !== null,
+    clickEventLine: clickEventObservation?.line ?? null,
+    clickEventObservation,
+    clickEventObservations,
+    arrowRightKeyEvent: arrowRightEventObservation !== null,
+    arrowRightEventLine: arrowRightEventObservation?.line ?? null,
+    arrowRightEventObservation,
+    arrowRightEventObservations,
   };
 }
+
+type CanvasTextEditFieldObservation = {
+  line: number;
+  enabled: boolean;
+  frameNr: number;
+  requestId: string | null;
+  responseId: string;
+  rect: {left: number; top: number; right: number; bottom: number};
+  pixelsPerPoint: number;
+  pointer: {x: number; y: number} | null;
+  clicked: boolean;
+  focused: boolean;
+  hovered: boolean | null;
+  arrowRightKeyEvent: boolean;
+  empty: boolean | null;
+  valueBytes: number;
+  valueSha256: string;
+};
+
+type CanvasTextEditFieldDiagnostic = CanvasTextEditFieldObservation & {
+  clickEventLine: number | null;
+  clickEventObservation: CanvasTextEditFieldObservation | null;
+  clickEventObservations: CanvasTextEditFieldObservation[];
+  arrowRightEventLine: number | null;
+  arrowRightEventObservation: CanvasTextEditFieldObservation | null;
+  arrowRightEventObservations: CanvasTextEditFieldObservation[];
+};
+
+
 
 type CanvasFocusSnapshot = {
   request_id: string;
@@ -1823,6 +1827,41 @@ function x11InteractionState(): {focused_window_id: string; focused_window_title
     focused_window_title: /^\d+$/.test(focusedWindowId) ? read(["getwindowname", focusedWindowId]) : "unavailable",
     pointer: read(["getmouselocation", "--shell"]),
   };
+}
+
+type X11RootPointer = {x: number; y: number; screen: number; window_under_pointer: string};
+type X11WindowGeometry = {x: number; y: number; width: number; height: number};
+
+function parseX11RootPointer(output: string): X11RootPointer {
+  const readNumber = (key: string): number => {
+    const match = output.match(new RegExp(`^${key}=(-?\\d+)$`, "m"));
+    return match ? Number(match[1]) : NaN;
+  };
+  const windowUnderPointer = output.match(/^WINDOW=(.+)$/m)?.[1]?.trim() ?? "";
+  const pointer = {
+    x: readNumber("X"),
+    y: readNumber("Y"),
+    screen: readNumber("SCREEN"),
+    window_under_pointer: windowUnderPointer,
+  };
+  if (![pointer.x, pointer.y, pointer.screen].every(Number.isFinite) || !pointer.window_under_pointer) {
+    throw new Error(`Could not parse X11 root-screen pointer coordinates: ${output}`);
+  }
+  return pointer;
+}
+
+function readX11WindowGeometry(windowId: string): X11WindowGeometry {
+  const output = execFileSync("xdotool", ["getwindowgeometry", "--shell", windowId], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]});
+  const read = (key: string): number => {
+    const match = output.match(new RegExp(`^${key}=(-?\\d+)$`, "m"));
+    return match ? Number(match[1]) : NaN;
+  };
+  const geometry = {x: read("X"), y: read("Y"), width: read("WIDTH"), height: read("HEIGHT")};
+  if (![geometry.x, geometry.y, geometry.width, geometry.height].every(Number.isFinite)
+    || !(geometry.width > 0 && geometry.height > 0)) {
+    throw new Error(`Could not parse X11 client-window geometry for ${windowId}: ${output}`);
+  }
+  return geometry;
 }
 
 async function clickOpenVaultButtonMacOS(child: ChildProcess): Promise<string> {
@@ -16420,11 +16459,11 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
     : diagnosticField === "id"
       ? "path"
       : null;
-  const readCanvasFieldPair = async (afterLine: number, requestId?: string) => {
+  const readCanvasFieldPair = async (afterLine: number, requestId?: string, onlyFrameNr?: number) => {
     if (!diagnosticField || !siblingDiagnosticField) return null;
     const [target, sibling] = await Promise.all([
-      readCanvasTextEditFieldDiagnostic(logPath, diagnosticField, afterLine, requestId),
-      readCanvasTextEditFieldDiagnostic(logPath, siblingDiagnosticField, afterLine, requestId),
+      readCanvasTextEditFieldDiagnostic(logPath, diagnosticField, afterLine, requestId, onlyFrameNr),
+      readCanvasTextEditFieldDiagnostic(logPath, siblingDiagnosticField, afterLine, requestId, onlyFrameNr),
     ]);
     return target && sibling ? {target, sibling} : null;
   };
@@ -16981,6 +17020,136 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
             safetyTracker?.focusCheckpoints.push(checkpoint);
             return {snapshot, refresh};
           };
+          const capturePreStagingRecoverySnapshot = async (
+            stage: string,
+            expectedCurrentValue: string,
+            afterLine: number,
+            afterFrameNr: number,
+          ) => {
+            const checkpoint = await capturePathFocusCheckpoint(stage, afterLine, afterFrameNr);
+            const snapshot = checkpoint.snapshot;
+            const refreshAfterCapture = await readOpenObsidianRefreshDiagnostics(logPath);
+            const windowGeometry = readX11WindowGeometry(windowId);
+            const currentX11 = x11InteractionState();
+            const rootPointer = parseX11RootPointer(currentX11.pointer);
+            const target = snapshot.fields.path;
+            const sibling = snapshot.fields.id;
+            const pointer = snapshot.pointer;
+            const pixelsPerPoint = target.pixelsPerPoint;
+            const mappedPointer = pointer ? {
+              screen_x: windowGeometry.x + pointer.x * pixelsPerPoint,
+              screen_y: windowGeometry.y + pointer.y * pixelsPerPoint,
+            } : null;
+            const targetPointerMatchesSnapshot = Boolean(pointer && target.pointer
+              && Math.abs(target.pointer.x - pointer.x) <= 0.5
+              && Math.abs(target.pointer.y - pointer.y) <= 0.5);
+            const siblingPointerMatchesSnapshot = Boolean(pointer && sibling.pointer
+              && Math.abs(sibling.pointer.x - pointer.x) <= 0.5
+              && Math.abs(sibling.pointer.y - pointer.y) <= 0.5);
+            const x11PointerMapsToSnapshot = Boolean(pointer
+              && Math.abs((rootPointer.x - windowGeometry.x) - pointer.x * pixelsPerPoint) <= 1.5
+              && Math.abs((rootPointer.y - windowGeometry.y) - pointer.y * pixelsPerPoint) <= 1.5);
+            const pointerInsideTarget = Boolean(pointer
+              && pointer.x >= target.rect.left && pointer.x <= target.rect.right
+              && pointer.y >= target.rect.top && pointer.y <= target.rect.bottom);
+            const pointerOutsideSibling = Boolean(pointer
+              && (pointer.x < sibling.rect.left || pointer.x > sibling.rect.right
+                || pointer.y < sibling.rect.top || pointer.y > sibling.rect.bottom));
+            const expectedBytes = Buffer.byteLength(expectedCurrentValue, "utf8");
+            const expectedSha256 = expectedHash(expectedCurrentValue);
+            const targetValueExact = target.valueBytes === expectedBytes
+              && target.valueSha256 === expectedSha256
+              && target.empty === (expectedCurrentValue.length === 0);
+            const siblingUnchanged = sibling.valueBytes === preEntrySiblingWidget.valueBytes
+              && sibling.valueSha256 === preEntrySiblingWidget.valueSha256;
+            const responseIdsStable = target.responseId === preEntryTargetWidget.responseId
+              && sibling.responseId === preEntrySiblingWidget.responseId
+              && target.responseId !== sibling.responseId;
+            const pixelsPerPointConsistent = Math.abs(target.pixelsPerPoint - sibling.pixelsPerPoint) <= 0.01;
+            const fieldsPaired = target.requestId === snapshot.request_id
+              && sibling.requestId === snapshot.request_id
+              && target.frameNr === snapshot.frame_nr
+              && sibling.frameNr === snapshot.frame_nr
+              && target.frameNr === sibling.frameNr;
+            const refreshStable = !openObsidianRefreshActivityChanged(refreshBeforeClick, checkpoint.refresh)
+              && checkpoint.refresh_stable
+              && !(checkpoint.refresh.receiverStates.at(-1)?.busy ?? false)
+              && !openObsidianRefreshActivityChanged(checkpoint.refresh, refreshAfterCapture)
+              && !(refreshAfterCapture.receiverStates.at(-1)?.busy ?? false);
+            const checks = {
+              event_free_snapshot: snapshot.raw_events_empty,
+              fields_paired_to_fresh_request_frame: fieldsPaired,
+              target_enabled: target.enabled,
+              sibling_enabled: sibling.enabled,
+              expected_target_value_exact: targetValueExact,
+              sibling_unchanged: siblingUnchanged,
+              response_ids_stable: responseIdsStable,
+              pixels_per_point_consistent: pixelsPerPointConsistent,
+              target_field_pointer_matches_snapshot: targetPointerMatchesSnapshot,
+              sibling_field_pointer_matches_snapshot: siblingPointerMatchesSnapshot,
+              x11_pointer_maps_to_egui_snapshot: x11PointerMapsToSnapshot,
+              pointer_inside_target: pointerInsideTarget,
+              pointer_outside_sibling: pointerOutsideSibling,
+              x11_pointer_unchanged_since_snapshot: snapshot.x11.pointer === currentX11.pointer,
+              snapshot_window_focused: snapshot.x11.focused_window_id === windowId,
+              current_window_focused: currentX11.focused_window_id === windowId,
+              window_size_unchanged: windowGeometry.width === windowWidth && windowGeometry.height === windowHeight,
+              primary_button_released: !snapshot.pointer_button_primary,
+              refresh_stable: refreshStable,
+              request_snapshot_has_no_click_event: !target.clicked && !sibling.clicked,
+              request_snapshot_has_no_arrow_right_event: !target.arrowRightKeyEvent && !sibling.arrowRightKeyEvent,
+            };
+            const refreshSignature = {
+              request_count: refreshAfterCapture.requests.length,
+              consumed_result_count: refreshAfterCapture.consumedResults.length,
+              receiver_busy: refreshAfterCapture.receiverStates.at(-1)?.busy ?? false,
+            };
+            const contentSignature = {
+              current_window_id: currentX11.focused_window_id,
+              current_window_title: currentX11.focused_window_title,
+              current_x11_pointer: rootPointer,
+              x11_client_content_origin_source: "xdotool getwindowgeometry --shell for the visible OpenObsidian client window ID",
+              window_geometry: windowGeometry,
+              egui_pointer: pointer,
+              mapped_pointer: mappedPointer,
+              pointer_button_primary: snapshot.pointer_button_primary,
+              refresh: refreshSignature,
+              target: {
+                enabled: target.enabled,
+                response_id: target.responseId,
+                rect: target.rect,
+                pixels_per_point: target.pixelsPerPoint,
+                pointer: target.pointer,
+                value_bytes: target.valueBytes,
+                value_sha256: target.valueSha256,
+                empty: target.empty,
+              },
+              sibling: {
+                enabled: sibling.enabled,
+                response_id: sibling.responseId,
+                rect: sibling.rect,
+                pixels_per_point: sibling.pixelsPerPoint,
+                pointer: sibling.pointer,
+                value_bytes: sibling.valueBytes,
+                value_sha256: sibling.valueSha256,
+                empty: sibling.empty,
+              },
+            };
+            return {
+              stage,
+              checkpoint,
+              snapshot,
+              refresh_after_capture: refreshAfterCapture,
+              current_x11: currentX11,
+              root_pointer: rootPointer,
+              window_geometry: windowGeometry,
+              mapped_pointer: mappedPointer,
+              focus_state: {target_focused: target.focused, sibling_focused: sibling.focused},
+              checks,
+              failed_checks: Object.entries(checks).filter(([, passed]) => !passed).map(([name]) => name),
+              content_signature: contentSignature,
+            };
+          };
           const stageClipboardWithFocusCheckpoints = async (
             stage: string,
             text: string,
@@ -16988,17 +17157,462 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
             afterLine: number,
             afterFrameNr: number,
           ) => {
-            const beforeClipboard = await capturePathFocusCheckpoint(
-              `immediately before ${stage} clipboard staging`,
-              afterLine,
-              afterFrameNr,
-            );
-            await assertPasteState(
-              `fresh pre-staging target guard for ${stage}`,
-              expectedCurrentValue,
-              beforeClipboard.snapshot.line,
-              beforeClipboard.snapshot,
-            );
+            const firstCharacterStage = stage === "first-character sentinel";
+            let beforeClipboard: Awaited<ReturnType<typeof capturePathFocusCheckpoint>> | null = null;
+            if (safetyTracker?.expectedAbortCanary === true && firstCharacterStage) {
+              let baseline: Awaited<ReturnType<typeof capturePreStagingRecoverySnapshot>> | null = null;
+              try {
+                baseline = await capturePreStagingRecoverySnapshot(
+                  "canary pre-Tab focused baseline",
+                  expectedCurrentValue,
+                  afterLine,
+                  afterFrameNr,
+                );
+                const baselineHasExactFocus = baseline.focus_state.target_focused
+                  && !baseline.focus_state.sibling_focused;
+                if (baseline.failed_checks.length !== 0 || !baselineHasExactFocus) {
+                  throw new Error("Canary pre-Tab baseline did not prove the exact focused target state: "
+                    + JSON.stringify({failed_checks: baseline.failed_checks, focus_state: baseline.focus_state, baseline}));
+                }
+                await assertPasteState(
+                  "canary pre-Tab baseline full guard",
+                  expectedCurrentValue,
+                  baseline.snapshot.line,
+                  baseline.snapshot,
+                );
+              } catch (error) {
+                safetyTracker.preStagingFocusRecovery = {
+                  status: "failed_closed_before_tab_induction",
+                  canary_focus_loss_induction: {
+                    status: "baseline_failed",
+                    baseline,
+                    failure: error instanceof Error ? error.message : String(error),
+                  },
+                };
+                throw error;
+              }
+              if (!baseline) throw new Error("Canary pre-Tab focused baseline was not captured");
+
+              const canaryInduction: Record<string, unknown> = {
+                status: "tab_dispatched",
+                method: "xdotool key --clearmodifiers Tab",
+                pointer_repositioned: false,
+                baseline,
+              };
+              safetyTracker.preStagingFocusRecovery = {
+                status: "canary_focus_loss_induced",
+                canary_focus_loss_induction: canaryInduction,
+              };
+              try {
+                xdotool("key", "--clearmodifiers", "Tab");
+                const afterTab = await capturePreStagingRecoverySnapshot(
+                  "canary post-Tab induced focus loss",
+                  expectedCurrentValue,
+                  baseline.snapshot.line,
+                  baseline.snapshot.frame_nr,
+                );
+                const exactInjectedFocus = !afterTab.focus_state.target_focused
+                  && afterTab.focus_state.sibling_focused;
+                const contentUnchanged = isDeepStrictEqual(baseline.content_signature, afterTab.content_signature);
+                if (afterTab.failed_checks.length !== 0 || !exactInjectedFocus || !contentUnchanged) {
+                  throw new Error("Canary Tab did not produce only the exact stationary focus transfer: "
+                    + JSON.stringify({
+                      failed_checks: afterTab.failed_checks,
+                      focus_state: afterTab.focus_state,
+                      exact_injected_focus: exactInjectedFocus,
+                      content_unchanged: contentUnchanged,
+                      baseline_content_signature: baseline.content_signature,
+                      post_tab_content_signature: afterTab.content_signature,
+                      after_tab: afterTab,
+                    }));
+                }
+                Object.assign(canaryInduction, {
+                  status: "passed",
+                  tab_dispatch_observed_by: "xdotool completed and the next fresh event-free request/frame showed path unfocused and ID focused",
+                  post_tab_snapshot: afterTab,
+                  focus_transfer_exact: exactInjectedFocus,
+                  stable_content_tuple: contentUnchanged,
+                });
+                safetyTracker.preStagingFocusRecovery = {
+                  status: "canary_focus_loss_induced",
+                  canary_focus_loss_induction: canaryInduction,
+                };
+                beforeClipboard = {snapshot: afterTab.snapshot, refresh: afterTab.checkpoint.refresh};
+              } catch (error) {
+                Object.assign(canaryInduction, {
+                  status: "failed_closed",
+                  failure: error instanceof Error ? error.message : String(error),
+                });
+                safetyTracker.preStagingFocusRecovery = {
+                  status: "failed_closed_during_canary_induction",
+                  canary_focus_loss_induction: canaryInduction,
+                };
+                throw error;
+              }
+            } else {
+              beforeClipboard = await capturePathFocusCheckpoint(
+                `immediately before ${stage} clipboard staging`,
+                afterLine,
+                afterFrameNr,
+              );
+            }
+            if (!beforeClipboard) throw new Error(`Linux Canvas ${stage} has no fresh pre-staging snapshot`);
+
+            const guardFailureCountBefore = safetyTracker?.guardFailures.length ?? 0;
+            let guardError: unknown = null;
+            try {
+              await assertPasteState(
+                `fresh pre-staging target guard for ${stage}`,
+                expectedCurrentValue,
+                beforeClipboard.snapshot.line,
+                beforeClipboard.snapshot,
+              );
+            } catch (error) {
+              guardError = error;
+            }
+
+            if (guardError !== null) {
+              const failure = safetyTracker?.guardFailures.at(-1);
+              const failurePredicates = Array.isArray(failure?.failed_predicates)
+                ? (failure.failed_predicates as unknown[]).filter((item): item is string => typeof item === "string").sort()
+                : [];
+              const guardPredicates = failure?.guard_predicates as Record<string, unknown> | undefined;
+              const recoveryIsEligible = firstCharacterStage
+                && process.platform === "linux"
+                && diagnosticField === "path"
+                && expectedCurrentValue === ""
+                && safetyTracker !== undefined
+                && safetyTracker.guardFailures.length === guardFailureCountBefore + 1
+                && failure?.stage === "fresh pre-staging target guard for first-character sentinel"
+                && failure?.expected_text === ""
+                && failurePredicates.length === 2
+                && failurePredicates[0] === "sibling_unfocused"
+                && failurePredicates[1] === "target_focused"
+                && guardPredicates?.target_focused === false
+                && guardPredicates?.sibling_unfocused === false
+                && guardError instanceof Error
+                && guardError.message.startsWith("Canvas paste guard failed fresh pre-staging target guard for first-character sentinel");
+              if (!recoveryIsEligible || !safetyTracker) {
+                if (safetyTracker?.expectedAbortCanary === true && firstCharacterStage) {
+                  const previousRecoveryRecord = safetyTracker.preStagingFocusRecovery ?? {};
+                  safetyTracker.preStagingFocusRecovery = {
+                    ...previousRecoveryRecord,
+                    status: "failed_closed_after_canary_focus_induction",
+                    pre_staging_guard_failure: failure ?? null,
+                    recovery_eligible: recoveryIsEligible,
+                    clipboard_staging_blocked: true,
+                    guard_error: guardError instanceof Error ? guardError.message : String(guardError),
+                  };
+                }
+                throw guardError;
+              }
+
+              const previousRecoveryRecord = safetyTracker.preStagingFocusRecovery ?? {};
+              const recoveryRecord: Record<string, unknown> = {
+                ...previousRecoveryRecord,
+                status: "recovering_after_exact_focus_only_guard_failure",
+                stage,
+                original_guard_failure: failure,
+                original_failure_snapshot: beforeClipboard.snapshot,
+                recovery_attempts: 1,
+                recovery_click_dispatched: false,
+                arrow_right_dispatched: false,
+              };
+              safetyTracker.preStagingFocusRecovery = recoveryRecord;
+
+              const requireSnapshotState = (
+                checkpoint: Awaited<ReturnType<typeof capturePreStagingRecoverySnapshot>>,
+                label: string,
+                expectedFocus: {target_focused: boolean; sibling_focused: boolean},
+              ): void => {
+                const focusMatches = checkpoint.focus_state.target_focused === expectedFocus.target_focused
+                  && checkpoint.focus_state.sibling_focused === expectedFocus.sibling_focused;
+                if (checkpoint.failed_checks.length > 0 || !focusMatches) {
+                  throw new Error(`Linux Canvas ${label} failed its required fresh snapshot: `
+                    + JSON.stringify({failed_checks: checkpoint.failed_checks, focus_state: checkpoint.focus_state, expected_focus: expectedFocus, checkpoint}));
+                }
+              };
+
+              try {
+                const recoverySnapshotOne = await capturePreStagingRecoverySnapshot(
+                  "first-character focus recovery stable observation 1",
+                  expectedCurrentValue,
+                  beforeClipboard.snapshot.line,
+                  beforeClipboard.snapshot.frame_nr,
+                );
+                requireSnapshotState(recoverySnapshotOne, "recovery observation 1", {target_focused: false, sibling_focused: true});
+                const recoverySnapshotTwo = await capturePreStagingRecoverySnapshot(
+                  "first-character focus recovery stable observation 2",
+                  expectedCurrentValue,
+                  recoverySnapshotOne.snapshot.line,
+                  recoverySnapshotOne.snapshot.frame_nr,
+                );
+                requireSnapshotState(recoverySnapshotTwo, "recovery observation 2", {target_focused: false, sibling_focused: true});
+                const preDispatchTupleStable = isDeepStrictEqual(
+                  recoverySnapshotOne.content_signature,
+                  recoverySnapshotTwo.content_signature,
+                );
+                const requestIdsAdvanced = recoverySnapshotOne.snapshot.request_id !== recoverySnapshotTwo.snapshot.request_id;
+                const frameNumbersAdvanced = recoverySnapshotTwo.snapshot.frame_nr > recoverySnapshotOne.snapshot.frame_nr;
+                if (!preDispatchTupleStable || !requestIdsAdvanced || !frameNumbersAdvanced) {
+                  throw new Error("Linux Canvas focus recovery stable pointer/window/geometry/value/refresh tuple changed before click: "
+                    + JSON.stringify({
+                      first: recoverySnapshotOne.content_signature,
+                      second: recoverySnapshotTwo.content_signature,
+                      request_ids_advanced: requestIdsAdvanced,
+                      frame_numbers_advanced: frameNumbersAdvanced,
+                    }));
+                }
+                Object.assign(recoveryRecord, {
+                  pre_dispatch_snapshot_one: recoverySnapshotOne,
+                  pre_dispatch_snapshot_two: recoverySnapshotTwo,
+                  pre_dispatch_stable_tuple: preDispatchTupleStable,
+                  request_ids_advanced: requestIdsAdvanced,
+                  frame_numbers_advanced: frameNumbersAdvanced,
+                });
+
+                // No await, pointer move, or other event dispatch is allowed between the final
+                // fresh tuple check above and this current-cursor click.
+                xdotool("click", "--clearmodifiers", "1");
+                recoveryRecord.recovery_click_dispatched = true;
+                recoveryRecord.recovery_click_command = ["xdotool", "click", "--clearmodifiers", "1"];
+                recoveryRecord.recovery_click_pointer_repositioned = false;
+
+                const clickPairWithEvent = await waitFor(
+                  "fresh target click event for Linux Canvas pre-staging focus recovery",
+                  () => readCanvasFieldPair(recoverySnapshotTwo.snapshot.line),
+                  (pair) => pair !== null
+                    && pair.target.clickEventObservation !== null
+                    && pair.target.clickEventObservation.line > recoverySnapshotTwo.snapshot.line,
+                  5_000,
+                );
+                if (!clickPairWithEvent
+                  || clickPairWithEvent.target.clickEventObservations.length !== 1
+                  || clickPairWithEvent.sibling.clickEventObservations.length !== 0) {
+                  throw new Error("Linux Canvas recovery did not produce exactly one target click event and no sibling click event: "
+                    + JSON.stringify(clickPairWithEvent));
+                }
+                const clickObservation = clickPairWithEvent.target.clickEventObservation;
+                if (!clickObservation || clickObservation.pointer === null) {
+                  throw new Error("Linux Canvas recovery click did not produce a target event with a pointer: "
+                    + JSON.stringify(clickPairWithEvent));
+                }
+                const clickEventPointer = clickObservation.pointer;
+                const clickEventPair = await readCanvasFieldPair(
+                  recoverySnapshotTwo.snapshot.line,
+                  undefined,
+                  clickObservation.frameNr,
+                );
+                if (!clickEventPair
+                  || clickEventPair.target.frameNr !== clickObservation.frameNr
+                  || clickEventPair.sibling.frameNr !== clickObservation.frameNr
+                  || clickEventPair.target.clickEventObservations.length !== 1
+                  || clickEventPair.sibling.clickEventObservations.length !== 0
+                  || clickEventPair.target.clickEventObservation?.line !== clickObservation.line
+                  || clickEventPair.target.responseId !== recoverySnapshotTwo.snapshot.fields.path.responseId
+                  || clickEventPair.sibling.responseId !== recoverySnapshotTwo.snapshot.fields.id.responseId) {
+                  throw new Error("Linux Canvas recovery click was not a single target-only event paired with its same-frame sibling diagnostic: "
+                    + JSON.stringify({clickObservation, clickEventPair, recoverySnapshotTwo}));
+                }
+                const clickEventScreenPoint = {
+                  x: recoverySnapshotTwo.window_geometry.x + clickEventPointer.x * clickObservation.pixelsPerPoint,
+                  y: recoverySnapshotTwo.window_geometry.y + clickEventPointer.y * clickObservation.pixelsPerPoint,
+                };
+                const clickEventMapsToDispatchPointer = Math.abs(clickEventScreenPoint.x - recoverySnapshotTwo.root_pointer.x) <= 1.5
+                  && Math.abs(clickEventScreenPoint.y - recoverySnapshotTwo.root_pointer.y) <= 1.5;
+                const clickEventInsideTarget = clickEventPointer.x >= clickObservation.rect.left
+                  && clickEventPointer.x <= clickObservation.rect.right
+                  && clickEventPointer.y >= clickObservation.rect.top
+                  && clickEventPointer.y <= clickObservation.rect.bottom;
+                const clickEventOutsideSibling = clickEventPointer.x < clickEventPair.sibling.rect.left
+                  || clickEventPointer.x > clickEventPair.sibling.rect.right
+                  || clickEventPointer.y < clickEventPair.sibling.rect.top
+                  || clickEventPointer.y > clickEventPair.sibling.rect.bottom;
+                const clickEventGeometryStable = isDeepStrictEqual(
+                  clickObservation.rect,
+                  recoverySnapshotTwo.snapshot.fields.path.rect,
+                ) && isDeepStrictEqual(
+                  clickEventPair.target.rect,
+                  clickObservation.rect,
+                ) && isDeepStrictEqual(
+                  clickEventPair.sibling.rect,
+                  recoverySnapshotTwo.snapshot.fields.id.rect,
+                ) && Math.abs(clickObservation.pixelsPerPoint - recoverySnapshotTwo.snapshot.fields.path.pixelsPerPoint) <= 0.01
+                  && Math.abs(clickEventPair.target.pixelsPerPoint - clickObservation.pixelsPerPoint) <= 0.01
+                  && Math.abs(clickEventPair.sibling.pixelsPerPoint - recoverySnapshotTwo.snapshot.fields.id.pixelsPerPoint) <= 0.01
+                  && Math.abs(clickObservation.pixelsPerPoint - clickEventPair.sibling.pixelsPerPoint) <= 0.01;
+                if (!clickEventMapsToDispatchPointer || !clickEventInsideTarget || !clickEventOutsideSibling || !clickEventGeometryStable) {
+                  throw new Error("Linux Canvas recovery click event did not map to the stationary pre-dispatch target pointer: "
+                    + JSON.stringify({
+                      click_event_pointer: clickEventPointer,
+                      click_event_screen_point: clickEventScreenPoint,
+                      pre_dispatch_root_pointer: recoverySnapshotTwo.root_pointer,
+                      click_event_inside_target: clickEventInsideTarget,
+                      click_event_outside_sibling: clickEventOutsideSibling,
+                      click_event_geometry_stable: clickEventGeometryStable,
+                      clickEventPair,
+                    }));
+                }
+                recoveryRecord.recovery_click_evidence = {
+                  target_event: clickObservation,
+                  same_frame_pair: clickEventPair,
+                  event_pointer_screen_point: clickEventScreenPoint,
+                  event_pointer_maps_to_dispatch_pointer: clickEventMapsToDispatchPointer,
+                  event_pointer_inside_target: clickEventInsideTarget,
+                  event_pointer_outside_sibling: clickEventOutsideSibling,
+                  event_geometry_matches_pre_dispatch: clickEventGeometryStable,
+                  pre_dispatch_root_pointer: recoverySnapshotTwo.root_pointer,
+                };
+
+                const clickEventLine = Math.max(
+                  clickEventPair.target.line,
+                  clickEventPair.sibling.line,
+                  clickObservation.line,
+                );
+                const postClickSnapshot = await capturePreStagingRecoverySnapshot(
+                  "first-character focus recovery post-click event-free guard",
+                  expectedCurrentValue,
+                  clickEventLine,
+                  clickObservation.frameNr,
+                );
+                requireSnapshotState(postClickSnapshot, "post-click event-free guard", {target_focused: true, sibling_focused: false});
+                const pointerAndContentUnchangedAfterClick = isDeepStrictEqual(
+                  recoverySnapshotTwo.content_signature,
+                  postClickSnapshot.content_signature,
+                );
+                if (!pointerAndContentUnchangedAfterClick) {
+                  throw new Error("Linux Canvas post-click guard observed pointer, window, geometry, value, ID, or refresh drift: "
+                    + JSON.stringify({
+                      pre_dispatch: recoverySnapshotTwo.content_signature,
+                      post_click: postClickSnapshot.content_signature,
+                    }));
+                }
+                recoveryRecord.post_click_snapshot = postClickSnapshot;
+                recoveryRecord.post_click_stable_tuple = pointerAndContentUnchangedAfterClick;
+                recoveryRecord.post_click_pointer_unchanged = isDeepStrictEqual(
+                  recoverySnapshotTwo.root_pointer,
+                  postClickSnapshot.root_pointer,
+                );
+
+                // The event-free post-click guard above must pass before ArrowRight is sent.
+                xdotool("key", "--clearmodifiers", "Right");
+                recoveryRecord.arrow_right_dispatched = true;
+                recoveryRecord.arrow_right_command = ["xdotool", "key", "--clearmodifiers", "Right"];
+                const arrowPairWithEvent = await waitFor(
+                  "fresh target ArrowRight event for Linux Canvas pre-staging focus recovery",
+                  () => readCanvasFieldPair(postClickSnapshot.snapshot.line),
+                  (pair) => pair !== null
+                    && pair.target.arrowRightEventObservation !== null
+                    && pair.target.arrowRightEventObservation.line > postClickSnapshot.snapshot.line,
+                  5_000,
+                );
+                if (!arrowPairWithEvent
+                  || arrowPairWithEvent.target.arrowRightEventObservations.length !== 1
+                  || arrowPairWithEvent.sibling.arrowRightEventObservations.length !== 0) {
+                  throw new Error("Linux Canvas recovery did not produce exactly one target ArrowRight event and no sibling ArrowRight event: "
+                    + JSON.stringify(arrowPairWithEvent));
+                }
+                const arrowRightObservation = arrowPairWithEvent.target.arrowRightEventObservation;
+                if (!arrowRightObservation) {
+                  throw new Error("Linux Canvas recovery ArrowRight event was not observed on the target: "
+                    + JSON.stringify(arrowPairWithEvent));
+                }
+                const arrowRightEventPair = await readCanvasFieldPair(
+                  postClickSnapshot.snapshot.line,
+                  undefined,
+                  arrowRightObservation.frameNr,
+                );
+                if (!arrowRightEventPair
+                  || arrowRightEventPair.target.frameNr !== arrowRightObservation.frameNr
+                  || arrowRightEventPair.sibling.frameNr !== arrowRightObservation.frameNr
+                  || arrowRightEventPair.target.arrowRightEventObservations.length !== 1
+                  || arrowRightEventPair.sibling.arrowRightEventObservations.length !== 0
+                  || arrowRightEventPair.target.arrowRightEventObservation?.line !== arrowRightObservation.line
+                  || arrowRightEventPair.target.responseId !== recoverySnapshotTwo.snapshot.fields.path.responseId
+                  || arrowRightEventPair.sibling.responseId !== recoverySnapshotTwo.snapshot.fields.id.responseId) {
+                  throw new Error("Linux Canvas ArrowRight evidence was not a single target-only event paired with the same-frame sibling diagnostic: "
+                    + JSON.stringify({arrowRightObservation, arrowRightEventPair, postClickSnapshot}));
+                }
+                const arrowRightEventGeometryStable = isDeepStrictEqual(
+                  arrowRightObservation.rect,
+                  postClickSnapshot.snapshot.fields.path.rect,
+                ) && isDeepStrictEqual(
+                  arrowRightEventPair.target.rect,
+                  arrowRightObservation.rect,
+                ) && isDeepStrictEqual(
+                  arrowRightEventPair.sibling.rect,
+                  postClickSnapshot.snapshot.fields.id.rect,
+                ) && Math.abs(arrowRightObservation.pixelsPerPoint - postClickSnapshot.snapshot.fields.path.pixelsPerPoint) <= 0.01
+                  && Math.abs(arrowRightEventPair.target.pixelsPerPoint - arrowRightObservation.pixelsPerPoint) <= 0.01
+                  && Math.abs(arrowRightEventPair.sibling.pixelsPerPoint - postClickSnapshot.snapshot.fields.id.pixelsPerPoint) <= 0.01
+                  && Math.abs(arrowRightObservation.pixelsPerPoint - arrowRightEventPair.sibling.pixelsPerPoint) <= 0.01;
+                if (!arrowRightEventGeometryStable) {
+                  throw new Error("Linux Canvas ArrowRight event geometry changed from the guarded post-click tuple: "
+                    + JSON.stringify({arrowRightObservation, arrowRightEventPair, post_click: postClickSnapshot.content_signature}));
+                }
+                recoveryRecord.arrow_right_evidence = {
+                  target_event: arrowRightObservation,
+                  same_frame_pair: arrowRightEventPair,
+                  event_geometry_matches_post_click: arrowRightEventGeometryStable,
+                };
+
+                const arrowEventLine = Math.max(
+                  arrowRightEventPair.target.line,
+                  arrowRightEventPair.sibling.line,
+                  arrowRightObservation.line,
+                );
+                const finalRecoverySnapshot = await capturePreStagingRecoverySnapshot(
+                  "first-character focus recovery final pre-staging guard",
+                  expectedCurrentValue,
+                  arrowEventLine,
+                  arrowRightObservation.frameNr,
+                );
+                requireSnapshotState(finalRecoverySnapshot, "final pre-staging guard", {target_focused: true, sibling_focused: false});
+                const contentUnchangedAfterArrowRight = isDeepStrictEqual(
+                  postClickSnapshot.content_signature,
+                  finalRecoverySnapshot.content_signature,
+                );
+                if (!contentUnchangedAfterArrowRight) {
+                  throw new Error("Linux Canvas final pre-staging snapshot changed stable pointer/window/geometry/value/refresh state after ArrowRight: "
+                    + JSON.stringify({
+                      post_click: postClickSnapshot.content_signature,
+                      after_arrow_right: finalRecoverySnapshot.content_signature,
+                    }));
+                }
+                const finalGuard = await assertPasteState(
+                  "fresh pre-staging target guard for first-character sentinel after focus recovery",
+                  expectedCurrentValue,
+                  finalRecoverySnapshot.snapshot.line,
+                  finalRecoverySnapshot.snapshot,
+                );
+                Object.assign(recoveryRecord, {
+                  status: "recovered_before_clipboard_staging",
+                  final_pre_staging_snapshot: finalRecoverySnapshot,
+                  final_pre_staging_content_stable: contentUnchangedAfterArrowRight,
+                  final_pre_staging_guard: {
+                    target: finalGuard.pair.target,
+                    sibling: finalGuard.pair.sibling,
+                    refresh: finalGuard.refresh,
+                    expected_bytes: finalGuard.expectedBytes,
+                    expected_sha256: finalGuard.expectedSha256,
+                    passed: true,
+                  },
+                });
+                beforeClipboard = {
+                  snapshot: finalRecoverySnapshot.snapshot,
+                  refresh: finalRecoverySnapshot.checkpoint.refresh,
+                };
+                safetyTracker.preStagingFocusRecovery = recoveryRecord;
+              } catch (error) {
+                Object.assign(recoveryRecord, {
+                  status: "failed_closed_before_clipboard_staging",
+                  failure: error instanceof Error ? error.message : String(error),
+                });
+                safetyTracker.preStagingFocusRecovery = recoveryRecord;
+                throw error;
+              }
+            }
+
             stageClipboard(stage, text);
             const immediatelyAfterClipboard = await capturePathFocusCheckpoint(
               `immediately after ${stage} clipboard staging`,
@@ -17471,6 +18085,7 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
             clipboard_used: clipboardUsedForEntry,
             paste_stage_diagnostics: diagnosticField === "path" ? pasteStageDiagnostics : undefined,
             focus_checkpoints: safetyTracker?.focusCheckpoints,
+            pre_staging_focus_recovery: safetyTracker?.preStagingFocusRecovery ?? null,
             clipboard_neutralization: safetyTracker?.clipboardCleanup,
             request_marker_cleanup: safetyTracker?.requestMarkerCleanup,
             target_widget_field: diagnosticField,
@@ -18555,6 +19170,7 @@ async function runOpenObsidianCanvasTextEdit(
     requestMarkerCleanup: null,
     focusCheckpoints: [],
     guardFailures: [],
+    preStagingFocusRecovery: null,
     baseline: null,
   };
   await rm(linuxCanvasFocusSnapshotRequestFile, {force: true});
@@ -18833,6 +19449,7 @@ async function runOpenObsidianCanvasTextEdit(
     editReport.status = "passed";
     editReport.focus_checkpoints = safetyTracker.focusCheckpoints;
     editReport.guard_failures = safetyTracker.guardFailures;
+    editReport.pre_staging_focus_recovery = safetyTracker.preStagingFocusRecovery;
     editReport.diagnostic_motion_stages = safetyTracker.diagnosticMotionStages;
     editReport.motion_dispatch_attempts = safetyTracker.motionDispatchAttempts;
     editReport.paste_dispatch_attempts = safetyTracker.pasteDispatchAttempts;
@@ -18888,6 +19505,7 @@ async function runOpenObsidianCanvasTextEdit(
     editReport.screenshots = screenshots;
     editReport.focus_checkpoints = safetyTracker.focusCheckpoints;
     editReport.guard_failures = safetyTracker.guardFailures;
+    editReport.pre_staging_focus_recovery = safetyTracker.preStagingFocusRecovery;
     editReport.diagnostic_motion_stages = safetyTracker.diagnosticMotionStages;
     editReport.motion_dispatch_attempts = safetyTracker.motionDispatchAttempts;
     editReport.paste_dispatch_attempts = safetyTracker.pasteDispatchAttempts;

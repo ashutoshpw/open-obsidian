@@ -10294,12 +10294,12 @@
       "source": {
         "path": ".agents/tasks/2026-10-07/goal.md",
         "heading": "Mandatory execution workflow: GitHub CI only",
-        "clause": "**A push is a milestone submission, not a per-change CI request.** Define each milestone as a bounded, independently reviewable deliverable with measurable acceptance criteria. Bundle small related implementation, fix, documentation, contract, and workflow changes under that deliverable. A task, fix, file change, cleanup, or commit is not a push boundary: do not push every small change, invent a milestone solely to trigger CI, or push for early feedback. Split larger phases only at meaningful deliverable boundaries. A milestone may span multiple local commits. After its full scope is implemented and reviewed, push it to `origin/main` exactly once at one SHA. That starts one full CI batch and marks the milestone `implementation-complete / CI-pending`; it becomes `achieved / CI-passed` only after every required check passes on that exact SHA and its evidence is reconciled. Plan for cross-platform CI to take several hours: keep `origin/main` at the submitted SHA until every required job is terminal and the batch is reconciled before submitting the next milestone. Do not overlap full milestone CI batches or dispatch duplicate batches for minor changes. Evidence-only and status-only changes stay local for the next substantive milestone."
+        "clause": "Do not push to trigger CI for each minor change. Keep related small tasks, fixes, documentation, and any number of local commits together until one named, bounded milestone meets its measurable implementation criteria and the whole milestone has been reviewed. Bound milestones by coherent deliverables, not edit count: do not create artificial micro-milestones or bundle unrelated work just to trigger CI. Then push to origin/main exactly once; that push starts one complete required CI batch. The state sequence is implementation-complete / CI-pending at push → achieved / CI-passed only after every required job passes on that exact SHA and its evidence is reconciled. Because this cross-platform CI can take several hours, keep origin/main at the submitted SHA until every required job is terminal and reconciled; do not push or start another full batch while it is pending. If CI finds a problem, let the current batch finish, group related fixes into one named, reviewed repair milestone, and push that repair once. Evidence-only and status-only updates stay local for the next substantive milestone. Cadence: minor changes and local commits → one complete, reviewed milestone → one push → full CI batch and exact-SHA reconciliation → next milestone. This avoids spending hours on repeated full-suite runs for incomplete slices."
       },
       "checkpoint": "R0",
       "owner": "xtask",
       "mandatory": true,
-      "acceptance_criteria": "Accumulate related implementation, tests, workflow, and documentation work, including minor fixes and any number of local commits, into one named, bounded, independently reviewable milestone. A task, fix, file change, cleanup, or commit is not a push boundary; do not create artificial micro-milestones or push for early CI feedback. Keep the milestone small enough to review and diagnose, but complete enough to justify the several-hour cross-platform CI cycle. Push origin/main exactly once only after all implementation criteria are complete and the accumulated deliverable has been reviewed. Run one full CI batch on that exact SHA, record implementation-complete / CI-pending, and keep origin/main at that SHA until every required job is terminal and evidence is reconciled. Record achieved / CI-passed only after all required exact-SHA checks pass. Do not overlap milestone CI batches or dispatch duplicate batches for minor changes.",
+      "acceptance_criteria": "Do not push for each minor edit. Accumulate related implementation, fixes, docs, contracts, workflow changes, and any number of local commits into one named, bounded, independently reviewable milestone whose boundaries follow measurable deliverables. Push origin/main exactly once after all implementation criteria are complete and the whole milestone is reviewed; the push starts one complete GitHub Actions batch on that exact SHA. Label it implementation-complete / CI-pending at push, and achieved / CI-passed only after every required job passes and evidence is reconciled. Since the cross-platform batch may take several hours, keep origin/main at the submitted SHA until every required job is terminal; do not start another full batch while it is pending. If CI finds a problem, wait for the batch to finish, group related fixes into a reviewed repair milestone, and push it once. Evidence-only and status-only changes stay local for the next substantive milestone.",
       "fixture_ids": [
         "fixture:mig-002"
       ],
@@ -10433,6 +10433,16 @@
           "kind": "rust-migration-goal",
           "version": "2026-10-16-meaningful-milestone-ci-boundaries",
           "sha256": "42ef146035e83e6c047d904b53f99eff454a9394d562f877e31ca9a3dc81a4e8"
+        },
+        {
+          "kind": "rust-migration-goal",
+          "version": "2026-10-16-acceptance-driven-multi-hour-ci-cadence",
+          "sha256": "8a469b3058cbba979c59e231b1d9d7c54bdddd1c4c683384ceef4ffea1d4979e"
+        },
+        {
+          "kind": "rust-migration-goal",
+          "version": "2026-10-16-no-per-change-push-cadence-summary",
+          "sha256": "f9e4fddd953eb784a5fb5bbe2358600ffaea0a359fe6a1d0b35c844a7ee9bc57"
         }
       ],
       "applicable_platforms": [
@@ -11203,7 +11213,7 @@
     "post_r0_2_additions": [
       "MIG-016: maintain current, accurate documentation throughout migration and audit it at cutover."
     ],
-    "goal_sha256": "680ef166e4ddf4bf35513c318f868d9942e2ba51e0600201423f83c1379e67f8",
+    "goal_sha256": "f9e4fddd953eb784a5fb5bbe2358600ffaea0a359fe6a1d0b35c844a7ee9bc57",
     "policy": "Every inherited requirement was reviewed by ID and assigned a Rust owner, migration phase, acceptance criterion and retained/superseded/external disposition. Historical status/evidence remain preserved separately. Rust acceptance remains pending unless current exact-SHA migration evidence is attached; external items remain external_pending."
   }
 }

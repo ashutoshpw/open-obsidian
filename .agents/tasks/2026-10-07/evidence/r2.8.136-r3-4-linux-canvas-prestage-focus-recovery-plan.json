@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "id": "R2.8.136-R3.4-LINUX-CANVAS-PRESTAGING-FOCUS-RECOVERY",
+  "name": "Repair Linux Canvas path focus loss before first clipboard staging",
+  "status": "implementation-complete; independently reviewed; ready for one push; not pushed",
+  "starting_sha": "13b137db5adae44e80bb003971845d34453bc8f5",
+  "planning_base_sha": "13b137db5adae44e80bb003971845d34453bc8f5",
+  "goal_sha256": "f9e4fddd953eb784a5fb5bbe2358600ffaea0a359fe6a1d0b35c844a7ee9bc57",
+  "predecessor_ci_evidence": "evidence/r2.8.136-r3-3-attempt-1-13b137d.json",
+  "confirmed_failure": {
+    "workflow_run_id": 38828825090,
+    "job_id": 116742545673,
+    "job_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38828825090/job/116742545673",
+    "source_sha": "13b137db5adae44e80bb003971845d34453bc8f5",
+    "stage": "fresh pre-staging target guard for first-character sentinel",
+    "observed": "The earlier click and ArrowRight had reported the Canvas path target focused; the fresh event-free pre-staging snapshot reported target_focused=false and sibling_unfocused=false with the sibling ID field focused. No Linux clipboard content was staged, no diagnostic pointer motion was dispatched, no Ctrl+V/paste stage completed, and request-marker cleanup succeeded.",
+    "root_cause": "unknown; do not infer it from the report"
+  },
+  "bounded_outcome": "Make the Linux Canvas path-field pre-staging focus gate recover from the observed focus loss through one safe, geometry-verified target reacquisition. Prove that recovery path in the isolated Linux canary and stage the first-character clipboard sentinel only after a new event-free snapshot passes every existing guard.",
+  "scope": [
+    "Limit implementation changes to the Linux round-trip harness Canvas path-field sequence and its evidence report. Do not change Rust document or comparator behavior.",
+    "In the isolated Linux expected-abort canary only, after the initial checks prove that the path field is focused, the ID sibling is unfocused, and both fields match their baselines, send one Tab without moving the cursor. Capture a fresh event-free snapshot and require the exact injected focus state: path unfocused, ID focused, pointer still inside the path and outside the sibling, unchanged values/hashes and response IDs, enabled controls, foreground OpenObsidian window, released primary button, and stable refresh. Record the induction separately. If Tab does not produce exactly this state, abort before clipboard staging. This makes CI exercise the new recovery branch deterministically.",
+    "For the first-character pre-staging gate, allow at most one recovery attempt only when its fresh event-free snapshot fails exactly target_focused and sibling_unfocused. Both fresh pre-dispatch snapshots must verify distinct stable response IDs, enabled controls, the expected exact current path value, unchanged sibling bytes/hash, stable refresh state, foreground OpenObsidian window, released primary button, and the current pointer inside the path field/outside the sibling. Record each request/frame ID and the target/sibling response IDs and shared frame, rectangles, values/hashes, refresh state, X11 root-screen pointer coordinates, and app/window focus and geometry.",
+    "Map the X11 root-screen pointer into egui window-local points with egui_points = (root_screen_pixels - X11_window_content_origin_pixels) / pixels_per_point; use the client/content origin, not a decorated outer-frame origin. Require the mapped pointer to match the event-free snapshot and both same-frame field pointers. Immediately obtain a second fresh event-free request/frame and reread pointer/window/focus and field geometry/state before dispatch. Request IDs and frame numbers must advance and path/sibling records within each request must share its ID/frame. Stable values (screen/mapped pointer, client origin/window geometry, focus, enabled state, rectangles/scale, values/hashes, response IDs, released button, and refresh state) must match across snapshots. Abort if any stable value changes.",
+    "Do not move the pointer for the recovery. xdotool click must use the revalidated current cursor position without repositioning. Capture the event-bearing target click observation and map its event pointer forward to the recorded screen location. Then capture a fresh event-free post-click snapshot and post-click screen pointer; require the target-focused/sibling-unfocused state and unchanged window, pointer, geometry, values, IDs, refresh, enabled controls, and released button before sending any key. If this guard fails, abort without ArrowRight, clipboard staging, diagnostic pointer motion, Ctrl+V, or Save.",
+    "Only after the post-click guard passes may recovery send one ArrowRight. First require fresh same-frame event-bearing diagnostics showing arrowRightKeyEvent=true for the target and false for the sibling. Then capture a later fresh event-free request/frame and require the complete existing pre-staging guard before xclip. Clipboard staging is allowed after the original focus-only guard failure only when this entire recovery sequence and final guard pass.",
+    "Record the original focus loss, canary induction if used, recovery decision, geometry checks, event-free snapshots, request/frame IDs, event-bearing click/ArrowRight observations, focus/value hashes, refresh state, stable-tuple comparisons, and final guard result. Do not claim a root cause unless the new evidence establishes one.",
+    "Preserve the existing independent post-staging focus checkpoints, guarded final click/ArrowRight recovery, single validated diagnostic pointer motion, pre-paste checks, exact path readback, clipboard neutralization/readback, request-marker cleanup, and explicit Save behavior. The expected-abort canary retains its separate post-staging recovery click; the pre-staging recovery and post-staging canary click are phase-distinct.",
+    "Keep the Linux expected-abort canary isolated in its separate app invocation and fixture. After the new pre-staging recovery succeeds, it must continue through the existing real post-staging target recovery, then abort only on its synthetic prefix mismatch before any diagnostic pointer-motion dispatch, Ctrl+V, or Save; complete clipboard clear/readback and marker cleanup; and produce exact vault/app-data/source preservation evidence.",
+    "Keep normal Canvas edit and note-creation acceptance on Ubuntu, macOS, and Windows. Require all ten C07.4 scenarios, first-open/reopen predicates, comparable pairs, complete source checkpoints, and platform-specific tie-order gates on the same full CI submission.",
+    "Carry the goal's milestone-only GitHub Actions push cadence and exact goal SHA in the tracker. Keep all implementation and documentation changes local until the whole R3.4 milestone is complete and reviewed, then push once to origin/main and wait for the complete exact-SHA CI batch."
+  ],
+  "out_of_scope": [
+    "Assigning a cause to the focus loss without supporting captured evidence.",
+    "Weakening or bypassing target/sibling focus, frame/request identity, event-free, geometry, refresh, clipboard, pointer-motion, paste, explicit-save, source-hash, destination-absence, vault-snapshot, or app-data-snapshot checks.",
+    "Unconditional request_focus calls, repeated blind clicks, more than one attempt in the new pre-staging recovery phase, or unguarded typing. After any unrecovered failed guard, no pointer motion, clipboard staging, Ctrl+V, paste, or Save is allowed. The sole exceptions are the canary-only Tab used before its first pre-staging guard to create the exact focus-only state; and, after that specific failure (or an identical natural failure), one verified current-position click followed by one ArrowRight only after a passing post-click event-free guard. Clipboard staging is allowed afterward only if a later fresh event-free snapshot passes the complete existing pre-staging guard. Preserve the independent post-staging click/ArrowRight path and canary requirement.",
+    "Changes to macOS or Windows input methods, C07.4 Rust parity, C07.5, C09.2, unrelated application behavior, or other feature work."
+  ],
+  "implementation_acceptance": [
+    "A code review confirms the recovery is bounded to the initial Linux first-character pre-staging focus failure; both fresh request/frame snapshots have advancing IDs/frames, paired path/sibling records, enabled controls, and a released primary button while their stable pointer/window/geometry/value/refresh tuple remains unchanged; root-screen coordinates map via the X11 client/content origin and division by pixels-per-point to the observed egui pointer; the separate click-event pointer maps back to the same screen location; xdotool clicks the current cursor without repositioning; the post-click event-free snapshot passes before ArrowRight; event-bearing diagnostics prove ArrowRight reached only the target; and a later event-free snapshot passes the full pre-staging guard before clipboard staging.",
+    "The Linux canary records the controlled one-Tab focus-loss induction and then a successful pre-staging reacquisition with the required click, post-click guard, ArrowRight event, and final pre-staging guard before xclip. If the exact injected state or recovery fails, the canary fails closed before clipboard staging.",
+    "Linux Canvas edit and reopen evidence shows exact requested path bytes/hash, unchanged sibling value, intended saved Canvas state, and complete vault/app-data preservation.",
+    "At the expected-abort canary's synthetic abort checkpoint, target_value_exact is the sole failed predicate; any earlier, successfully recovered focus-only failure remains separately recorded. Preserve the single pending pre-motion guard record with status 'expected synthetic guard abort before pointer dispatch', motion.status='pending', and no snapshot_after_motion; require zero diagnostic pointer-motion dispatches, zero Ctrl+V dispatches/completed paste stages, zero Save attempts, verified empty clipboard after cleanup, removed request marker, absent destination, and byte-identical vault/app-data/source snapshots.",
+    "All ten C07.4 scenarios pass on first open and reopen on Ubuntu, macOS, and Windows with comparable pairs and complete 28-checkpoint capture; the macOS tie preselection gate is required and passes. Reference-only results remain explicitly distinct from Rust parity.",
+    "No local executable validation is used. Compilation, tests, formatter, linter, and executable audits run only in the required GitHub Actions workflows."
+  ],
+  "required_workflows": [
+    "OpenObsidian Rust CI",
+    "Rust migration inventory",
+    "Obsidian vault round-trip acceptance",
+    "OpenObsidian desktop build",
+    "OpenObsidian quality",
+    "OpenObsidian plugin renderer matrix",
+    "OpenObsidian loaded plugin workflows"
+  ],
+  "required_platforms": [
+    "Ubuntu",
+    "macOS",
+    "Windows"
+  ],
+  "expected_jobs": 20,
+  "evidence_to_collect": [
+    "The named milestone ID, starting SHA, submitted SHA, goal SHA-256, and one-push record.",
+    "All seven required workflow and twenty job run IDs, URLs, conclusions, exact-SHA verification, and terminal status.",
+    "Round-trip artifact IDs, archive digests, report SHA-256 values, Linux focus-recovery checkpoints, and the expected-abort canary preservation record.",
+    "First-open/reopen result rows for all ten C07.4 cases on all operating systems; source checkpoint hashes/mutations; macOS tie preselection; captured locale and collator settings; explicit no-Rust-parity status.",
+    "Final tracker and journal reconciliation; all changes remain local until the milestone is fully implemented and reviewed."
+  ],
+  "local_executable_validation": false,
+  "plan_review_status": "approved by independent read-only implementation and canary reviews; no remaining concrete blockers",
+  "implementation_review_status": "Approved by r34_final_source_review, c074_rust_gap_audit, linux_focus_repair_review, and r3_4_canary_audit; no remaining concrete blockers. Read-only source review only; no executable validation.",
+  "implementation_reviewed_at": "2026-10-16T01:43:43Z",
+  "ci_dispatched": false,
+  "pushed_once": false,
+  "reviewed_at": "2026-10-16T01:43:43Z"
+}

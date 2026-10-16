@@ -1,0 +1,1716 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.8.136-R3.3-LINUX-CANVAS-FOCUS-AND-ABORT-PRESERVATION-REPAIR",
+  "attempt": 1,
+  "status": "Terminal exact-SHA batch: six of seven workflows and 19 of 20 jobs passed; the Ubuntu round-trip failed before C07.4 capture at the Canvas pre-staging focus guard. macOS and Windows round-trip captured all ten C07.4 scenarios. The batch is fully reconciled; Rust parity remains unclaimed and all-platform C07.4 reference capture remains pending on Linux.",
+  "starting_sha": "ab220878eade34c1240154d940560f9702ad5c98",
+  "submitted_sha": "13b137db5adae44e80bb003971845d34453bc8f5",
+  "submitted_at": "2026-10-16T00:19:23Z",
+  "pushed_once": true,
+  "origin_main_sha_at_observation": "13b137db5adae44e80bb003971845d34453bc8f5",
+  "observed_at": "2026-10-16T01:09:29Z",
+  "required_workflows": 7,
+  "required_jobs": 20,
+  "workflow_counts": {
+    "observed": 7,
+    "terminal": 7,
+    "passed": 6,
+    "failed": 1,
+    "cancelled": 0,
+    "queued": 0,
+    "in_progress": 0
+  },
+  "job_counts": {
+    "observed": 20,
+    "terminal": 20,
+    "passed": 19,
+    "failed": 1,
+    "cancelled": 0,
+    "queued": 0,
+    "in_progress": 0
+  },
+  "workflows": [
+    {
+      "name": "Obsidian vault round-trip acceptance",
+      "run_id": 38828825090,
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38828825090",
+      "head_sha": "13b137db5adae44e80bb003971845d34453bc8f5",
+      "jobs": [
+        {
+          "job_id": 116742545673,
+          "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04",
+          "status": "completed",
+          "conclusion": "failure",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38828825090/job/116742545673",
+          "started_at": "2026-10-16T00:19:25Z",
+          "completed_at": "2026-10-16T00:28:10Z",
+          "failed_steps": [
+            {
+              "name": "Author, open, snapshot, and reopen the same vault",
+              "number": 15,
+              "status": "completed",
+              "conclusion": "failure"
+            }
+          ]
+        },
+        {
+          "job_id": 116742546038,
+          "name": "Obsidian 1.14.4 vault round-trip on macos-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38828825090/job/116742546038",
+          "started_at": "2026-10-16T00:20:16Z",
+          "completed_at": "2026-10-16T01:01:21.586Z",
+          "failed_steps": []
+        },
+        {
+          "job_id": 116742546147,
+          "name": "Obsidian 1.14.4 vault round-trip on windows-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38828825090/job/116742546147",
+          "started_at": "2026-10-16T00:19:25Z",
+          "completed_at": "2026-10-16T00:37:46Z",
+          "failed_steps": []
+        }
+      ],
+      "completed_at": "2026-10-16T01:01:29Z"
+    },
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 38828825123,
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38828825123",
+      "head_sha": "13b137db5adae44e80bb003971845d34453bc8f5",
+      "jobs": [
+        {
+          "job_id": 116742545763,
+          "name": "rust (windows-latest)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38828825123/job/116742545763",
+          "started_at": "2026-10-16T00:19:25Z",
+          "completed_at": "2026-10-16T00:25:42Z",
+          "failed_steps": []
+        },
+        {
+          "job_id": 116742545910,
+          "name": "rust (macos-latest)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38828825123/job/116742545910",
+          "started_at": "2026-10-16T00:19:30Z",
+          "completed_at": "2026-10-16T00:22:58Z",
+          "failed_steps": []
+        },
+        {
+          "job_id": 116742545973,
+          "name": "rust (ubuntu-latest)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38828825123/job/116742545973",
+          "started_at": "2026-10-16T00:19:25Z",
+          "completed_at": "2026-10-16T00:22:36Z",
+          "failed_steps": []
+        },
+        {
+          "job_id": 116742546113,
+          "name": "minimum supported Rust (1.95)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38828825123/job/116742546113",
+          "started_at": "2026-10-16T00:19:26Z",
+          "completed_at": "2026-10-16T00:29:35Z",
+          "failed_steps": []
+        }
+      ]
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 38828825065,
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38828825065",
+      "head_sha": "13b137db5adae44e80bb003971845d34453bc8f5",
+      "jobs": [
+        {
+          "job_id": 116742545824,
+          "name": "inventory",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38828825065/job/116742545824",
+          "started_at": "2026-10-16T00:19:26Z",
+          "completed_at": "2026-10-16T00:19:32Z",
+          "failed_steps": []
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 38828825069,
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38828825069",
+      "head_sha": "13b137db5adae44e80bb003971845d34453bc8f5",
+      "jobs": [
+        {
+          "job_id": 116742545782,
+          "name": "macos-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38828825069/job/116742545782",
+          "started_at": "2026-10-16T00:19:31Z",
+          "completed_at": "2026-10-16T00:20:09Z",
+          "failed_steps": []
+        },
+        {
+          "job_id": 116742546059,
+          "name": "ubuntu-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38828825069/job/116742546059",
+          "started_at": "2026-10-16T00:19:26Z",
+          "completed_at": "2026-10-16T00:19:49Z",
+          "failed_steps": []
+        },
+        {
+          "job_id": 116742546130,
+          "name": "windows-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38828825069/job/116742546130",
+          "started_at": "2026-10-16T00:19:25Z",
+          "completed_at": "2026-10-16T00:20:11Z",
+          "failed_steps": []
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 38828825074,
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38828825074",
+      "head_sha": "13b137db5adae44e80bb003971845d34453bc8f5",
+      "jobs": [
+        {
+          "job_id": 116742545744,
+          "name": "windows-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38828825074/job/116742545744",
+          "started_at": "2026-10-16T00:19:25Z",
+          "completed_at": "2026-10-16T00:20:25Z",
+          "failed_steps": []
+        },
+        {
+          "job_id": 116742546068,
+          "name": "macos-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38828825074/job/116742546068",
+          "started_at": "2026-10-16T00:19:31Z",
+          "completed_at": "2026-10-16T00:20:16Z",
+          "failed_steps": []
+        },
+        {
+          "job_id": 116742546070,
+          "name": "ubuntu-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38828825074/job/116742546070",
+          "started_at": "2026-10-16T00:19:25Z",
+          "completed_at": "2026-10-16T00:19:56Z",
+          "failed_steps": []
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 38828825113,
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38828825113",
+      "head_sha": "13b137db5adae44e80bb003971845d34453bc8f5",
+      "jobs": [
+        {
+          "job_id": 116742546164,
+          "name": "windows-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38828825113/job/116742546164",
+          "started_at": "2026-10-16T00:19:26Z",
+          "completed_at": "2026-10-16T00:20:59Z",
+          "failed_steps": []
+        },
+        {
+          "job_id": 116742546279,
+          "name": "macos-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38828825113/job/116742546279",
+          "started_at": "2026-10-16T00:20:23Z",
+          "completed_at": "2026-10-16T00:21:16Z",
+          "failed_steps": []
+        },
+        {
+          "job_id": 116742546487,
+          "name": "ubuntu-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38828825113/job/116742546487",
+          "started_at": "2026-10-16T00:19:26Z",
+          "completed_at": "2026-10-16T00:20:09Z",
+          "failed_steps": []
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 38828825117,
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38828825117",
+      "head_sha": "13b137db5adae44e80bb003971845d34453bc8f5",
+      "jobs": [
+        {
+          "job_id": 116742545986,
+          "name": "ubuntu-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38828825117/job/116742545986",
+          "started_at": "2026-10-16T00:19:26Z",
+          "completed_at": "2026-10-16T00:19:47Z",
+          "failed_steps": []
+        },
+        {
+          "job_id": 116742546355,
+          "name": "macos-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38828825117/job/116742546355",
+          "started_at": "2026-10-16T00:19:30Z",
+          "completed_at": "2026-10-16T00:20:17Z",
+          "failed_steps": []
+        },
+        {
+          "job_id": 116742546401,
+          "name": "windows-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38828825117/job/116742546401",
+          "started_at": "2026-10-16T00:19:26Z",
+          "completed_at": "2026-10-16T00:20:29Z",
+          "failed_steps": []
+        }
+      ]
+    }
+  ],
+  "local_executable_validation": false,
+  "artifact_inventory": [
+    {
+      "run_id": 38828825090,
+      "workflow_name": "Obsidian vault round-trip acceptance",
+      "artifact_id": 12016112867,
+      "size_bytes": 9075776,
+      "digest": "sha256:cc189aba444d0fb70e5755ad8e1c8059c19d9b45c44c034052e2e56064267462",
+      "source_sha": "13b137db5adae44e80bb003971845d34453bc8f5",
+      "downloaded_for_report_inspection": true,
+      "platform": "Linux",
+      "name": "obsidian-vault-roundtrip-Linux-13b137db5adae44e80bb003971845d34453bc8f5",
+      "report_sha256": "947636709a0739b3a3c63b3d345c3b27aa3bcab226cd855a15d26a0be3bda0a9"
+    },
+    {
+      "run_id": 38828825090,
+      "workflow_name": "Obsidian vault round-trip acceptance",
+      "artifact_id": 12017146948,
+      "size_bytes": 22173185,
+      "digest": "sha256:421845f406d5e7515aee981171b7cfe97afbcf60345eb7692ca649e7bfee6130",
+      "source_sha": "13b137db5adae44e80bb003971845d34453bc8f5",
+      "downloaded_for_report_inspection": true,
+      "platform": "Windows",
+      "name": "obsidian-vault-roundtrip-Windows-13b137db5adae44e80bb003971845d34453bc8f5",
+      "report_sha256": "2432ffe7878e19294549d02b6817e9b3161dfa9874814cde9d11a92b63a5a56e"
+    },
+    {
+      "run_id": 38828825090,
+      "workflow_name": "Obsidian vault round-trip acceptance",
+      "artifact_id": 12018171754,
+      "size_bytes": 33141153,
+      "digest": "sha256:41f5b3c6aaad822ca1de6b107585680d1fcf1e038ee45d0b420d35b6940baf2c",
+      "source_sha": "13b137db5adae44e80bb003971845d34453bc8f5",
+      "downloaded_for_report_inspection": true,
+      "platform": "macOS",
+      "name": "obsidian-vault-roundtrip-macOS-13b137db5adae44e80bb003971845d34453bc8f5",
+      "report_sha256": "a216e3bb61d01847d7cd3711588541d5536b69ba650edb593cf2cf42d08d74d1"
+    },
+    {
+      "run_id": 38828825123,
+      "workflow_name": "OpenObsidian Rust CI",
+      "artifact_id": 12015849370,
+      "size_bytes": 3602,
+      "digest": "sha256:04408f322a8fda2f14d2d69a81e207d423ca6eec028a9a428b321434c5cf700e",
+      "source_sha": "13b137db5adae44e80bb003971845d34453bc8f5",
+      "downloaded_for_report_inspection": false,
+      "platform": "Linux",
+      "name": "rust-plugin-runtime-Linux-13b137db5adae44e80bb003971845d34453bc8f5"
+    },
+    {
+      "run_id": 38828825123,
+      "workflow_name": "OpenObsidian Rust CI",
+      "artifact_id": 12016217786,
+      "size_bytes": 3629,
+      "digest": "sha256:dc036a8d39d54531d2d83804803c134cc2ef0b9cd121de9351a6de34c0edfb63",
+      "source_sha": "13b137db5adae44e80bb003971845d34453bc8f5",
+      "downloaded_for_report_inspection": false,
+      "platform": "macOS",
+      "name": "rust-plugin-runtime-macOS-13b137db5adae44e80bb003971845d34453bc8f5"
+    },
+    {
+      "run_id": 38828825123,
+      "workflow_name": "OpenObsidian Rust CI",
+      "artifact_id": 12016865761,
+      "size_bytes": 3628,
+      "digest": "sha256:ace54cbba9ec4518847cdc5eea08efda116a3995dfccbea05a65b22eeedef4e9",
+      "source_sha": "13b137db5adae44e80bb003971845d34453bc8f5",
+      "downloaded_for_report_inspection": false,
+      "platform": "Windows",
+      "name": "rust-plugin-runtime-Windows-13b137db5adae44e80bb003971845d34453bc8f5"
+    },
+    {
+      "run_id": 38828825123,
+      "workflow_name": "OpenObsidian Rust CI",
+      "artifact_id": 12016177751,
+      "size_bytes": 11114945,
+      "digest": "sha256:2fe4fb77341934578796a9f8a1a4c58c7d7c863f7a7f7b5fd36273dc903dabaa",
+      "source_sha": "13b137db5adae44e80bb003971845d34453bc8f5",
+      "downloaded_for_report_inspection": false,
+      "name": "openobsidian-rust-preview-13b137db5adae44e80bb003971845d34453bc8f5"
+    },
+    {
+      "run_id": 38828825069,
+      "workflow_name": "OpenObsidian plugin renderer matrix",
+      "artifact_id": 12015988445,
+      "size_bytes": 3100,
+      "digest": "sha256:146461b40396c721e9a86ad3335b918d0cae7247267997e1220692be3a7b1b64",
+      "source_sha": "13b137db5adae44e80bb003971845d34453bc8f5",
+      "downloaded_for_report_inspection": false,
+      "platform": "Linux",
+      "name": "plugin-renderer-lifecycle-Linux-13b137db5adae44e80bb003971845d34453bc8f5"
+    },
+    {
+      "run_id": 38828825069,
+      "workflow_name": "OpenObsidian plugin renderer matrix",
+      "artifact_id": 12016126681,
+      "size_bytes": 3100,
+      "digest": "sha256:e332d7420930144e5b2f0eb1c7870680cb17dc7cb396778e9aa7b43337baeeb4",
+      "source_sha": "13b137db5adae44e80bb003971845d34453bc8f5",
+      "downloaded_for_report_inspection": false,
+      "platform": "macOS",
+      "name": "plugin-renderer-lifecycle-macOS-13b137db5adae44e80bb003971845d34453bc8f5"
+    },
+    {
+      "run_id": 38828825069,
+      "workflow_name": "OpenObsidian plugin renderer matrix",
+      "artifact_id": 12016501900,
+      "size_bytes": 3104,
+      "digest": "sha256:5002dd6afc8b4464105f69c455752ff4b1a4cfa67ccbb083bfa9a0ad286026dd",
+      "source_sha": "13b137db5adae44e80bb003971845d34453bc8f5",
+      "downloaded_for_report_inspection": false,
+      "platform": "Windows",
+      "name": "plugin-renderer-lifecycle-Windows-13b137db5adae44e80bb003971845d34453bc8f5"
+    },
+    {
+      "run_id": 38828825074,
+      "workflow_name": "OpenObsidian loaded plugin workflows",
+      "artifact_id": 12016092593,
+      "size_bytes": 171450,
+      "digest": "sha256:6dc33749de13680fb6d5ce6299c84952b0736125e1ff0e75cd11aa29dd81f626",
+      "source_sha": "13b137db5adae44e80bb003971845d34453bc8f5",
+      "downloaded_for_report_inspection": false,
+      "platform": "Linux"
+    },
+    {
+      "run_id": 38828825074,
+      "workflow_name": "OpenObsidian loaded plugin workflows",
+      "artifact_id": 12016211514,
+      "size_bytes": 171460,
+      "digest": "sha256:01ed3437bf1dd7177fe0836007cfa1456aa9c3ed056a510a916e0439e1ee48c",
+      "source_sha": "13b137db5adae44e80bb003971845d34453bc8f5",
+      "downloaded_for_report_inspection": false,
+      "platform": "macOS"
+    },
+    {
+      "run_id": 38828825074,
+      "workflow_name": "OpenObsidian loaded plugin workflows",
+      "artifact_id": 12016291493,
+      "size_bytes": 171471,
+      "digest": "sha256:191288817e5333f542477d0b85a199a9710937603da73f2d2498a2977784c34e",
+      "source_sha": "13b137db5adae44e80bb003971845d34453bc8f5",
+      "downloaded_for_report_inspection": false,
+      "platform": "Windows"
+    },
+    {
+      "run_id": 38828825117,
+      "workflow_name": "OpenObsidian desktop build",
+      "artifact_id": 12015734373,
+      "size_bytes": 125946850,
+      "digest": "sha256:b13aeb5680ed3035433d8c4ea7b0605211761e84cc347e7894ce889034b672b0",
+      "source_sha": "13b137db5adae44e80bb003971845d34453bc8f5",
+      "downloaded_for_report_inspection": false,
+      "platform": "Linux"
+    },
+    {
+      "run_id": 38828825117,
+      "workflow_name": "OpenObsidian desktop build",
+      "artifact_id": 12016097663,
+      "size_bytes": 397395784,
+      "digest": "sha256:caab457bab2b503de4eb150cb30e5fb6183a88c47bb9b5b1123e96fc43006502",
+      "source_sha": "13b137db5adae44e80bb003971845d34453bc8f5",
+      "downloaded_for_report_inspection": false,
+      "platform": "macOS"
+    },
+    {
+      "run_id": 38828825117,
+      "workflow_name": "OpenObsidian desktop build",
+      "artifact_id": 12015619698,
+      "size_bytes": 163006126,
+      "digest": "sha256:d0a6bdcfbe0ba9dd3674fd50c97590102b4c1bc1535b055b44476b29d64c6baa",
+      "source_sha": "13b137db5adae44e80bb003971845d34453bc8f5",
+      "downloaded_for_report_inspection": false,
+      "platform": "Windows"
+    }
+  ],
+  "logs_reviewed": [
+    {
+      "run_id": 38828825090,
+      "job_id": 116742545673,
+      "source_sha": "13b137db5adae44e80bb003971845d34453bc8f5",
+      "review_method": "GitHub Actions failed-job log, read-only inspection after parent workflow became terminal",
+      "failed_step": "Author, open, snapshot, and reopen the same vault",
+      "finding": "The Ubuntu Canvas path field failed the fresh event-free pre-staging first-character-sentinel focus guard: target_focused=false and sibling_unfocused=false with the sibling field focused. No Linux clipboard was staged; no diagnostic motion, Ctrl+V, paste, or save occurred. Request-marker cleanup succeeded. The log does not establish why focus changed."
+    }
+  ],
+  "note": "The exact-SHA batch is terminal and fully reconciled: 6/7 workflows and 19/20 jobs passed; only Ubuntu round-trip failed, before C07.4, at the pre-staging Canvas path focus guard. macOS and Windows each captured all ten C07.4 scenarios on first open and reopen with complete 28-checkpoint matrices; the macOS reverse-enumeration tie gate passed. All three round-trip artifacts/reports were inspected, all 16 uploaded artifact archive digests are recorded, inventory and quality uploaded none, and the Linux failed-step log was reviewed. Pinned Obsidian rewrote .base files on successful captures; reseeding restored exact source bytes before reopen where recorded. These are reference-only observations, not Rust parity/source-preservation evidence. No local executable validation, rerun, dispatch, or additional push occurred.",
+  "progress_snapshots": [
+    {
+      "observed_at": "2026-10-16T00:23:33Z",
+      "origin_main_sha": "13b137db5adae44e80bb003971845d34453bc8f5",
+      "workflow_counts": {
+        "observed": 7,
+        "terminal": 5,
+        "passed": 5,
+        "failed": 0,
+        "cancelled": 0,
+        "queued": 0,
+        "in_progress": 2
+      },
+      "job_counts": {
+        "observed": 20,
+        "terminal": 15,
+        "passed": 15,
+        "failed": 0,
+        "cancelled": 0,
+        "queued": 0,
+        "in_progress": 5
+      },
+      "active_job_ids": [
+        116742545673,
+        116742546038,
+        116742546147,
+        116742545763,
+        116742546113
+      ]
+    },
+    {
+      "observed_at": "2026-10-16T00:26:18Z",
+      "origin_main_sha": "13b137db5adae44e80bb003971845d34453bc8f5",
+      "workflow_counts": {
+        "observed": 7,
+        "terminal": 5,
+        "passed": 5,
+        "failed": 0,
+        "cancelled": 0,
+        "queued": 0,
+        "in_progress": 2
+      },
+      "job_counts": {
+        "observed": 20,
+        "terminal": 16,
+        "passed": 16,
+        "failed": 0,
+        "cancelled": 0,
+        "queued": 0,
+        "in_progress": 4
+      },
+      "active_job_ids": [
+        116742545673,
+        116742546038,
+        116742546147,
+        116742546113
+      ]
+    },
+    {
+      "observed_at": "2026-10-16T00:29:18Z",
+      "origin_main_sha": "13b137db5adae44e80bb003971845d34453bc8f5",
+      "workflow_counts": {
+        "observed": 7,
+        "terminal": 5,
+        "passed": 5,
+        "failed": 0,
+        "cancelled": 0,
+        "queued": 0,
+        "in_progress": 2
+      },
+      "job_counts": {
+        "observed": 20,
+        "terminal": 17,
+        "passed": 16,
+        "failed": 1,
+        "cancelled": 0,
+        "queued": 0,
+        "in_progress": 3
+      },
+      "active_job_ids": [
+        116742546038,
+        116742546147,
+        116742546113
+      ],
+      "failed_job_ids": [
+        116742545673
+      ]
+    },
+    {
+      "observed_at": "2026-10-16T00:30:24Z",
+      "origin_main_sha": "13b137db5adae44e80bb003971845d34453bc8f5",
+      "workflow_counts": {
+        "observed": 7,
+        "terminal": 6,
+        "passed": 6,
+        "failed": 0,
+        "cancelled": 0,
+        "queued": 0,
+        "in_progress": 1
+      },
+      "job_counts": {
+        "observed": 20,
+        "terminal": 18,
+        "passed": 17,
+        "failed": 1,
+        "cancelled": 0,
+        "queued": 0,
+        "in_progress": 2
+      },
+      "active_job_ids": [
+        116742546038,
+        116742546147
+      ],
+      "failed_job_ids": [
+        116742545673
+      ]
+    },
+    {
+      "observed_at": "2026-10-16T00:38:17Z",
+      "origin_main_sha": "13b137db5adae44e80bb003971845d34453bc8f5",
+      "workflow_counts": {
+        "observed": 7,
+        "terminal": 6,
+        "passed": 6,
+        "failed": 0,
+        "cancelled": 0,
+        "queued": 0,
+        "in_progress": 1
+      },
+      "job_counts": {
+        "observed": 20,
+        "terminal": 19,
+        "passed": 18,
+        "failed": 1,
+        "cancelled": 0,
+        "queued": 0,
+        "in_progress": 1
+      },
+      "active_job_ids": [
+        116742546038
+      ],
+      "failed_job_ids": [
+        116742545673
+      ]
+    },
+    {
+      "observed_at": "2026-10-16T01:09:29Z",
+      "origin_main_sha": "13b137db5adae44e80bb003971845d34453bc8f5",
+      "workflow_counts": {
+        "observed": 7,
+        "terminal": 7,
+        "passed": 6,
+        "failed": 1,
+        "cancelled": 0,
+        "queued": 0,
+        "in_progress": 0
+      },
+      "job_counts": {
+        "observed": 20,
+        "terminal": 20,
+        "passed": 19,
+        "failed": 1,
+        "cancelled": 0,
+        "queued": 0,
+        "in_progress": 0
+      },
+      "active_job_ids": [],
+      "failed_job_ids": [
+        116742545673
+      ],
+      "note": "All seven workflows and twenty jobs terminal; 19 passed and one Ubuntu round-trip failed."
+    }
+  ],
+  "failure_triage": {
+    "job_id": 116742545673,
+    "job_name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04",
+    "job_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38828825090/job/116742545673",
+    "status": "completed",
+    "conclusion": "failure",
+    "failed_steps": [
+      {
+        "name": "Author, open, snapshot, and reopen the same vault",
+        "number": 15,
+        "status": "completed",
+        "conclusion": "failure"
+      }
+    ],
+    "logs_available": true,
+    "log_check": "The parent workflow is terminal; the failed Ubuntu job log was retrieved and reviewed. It confirms the report failure at the fresh pre-staging Canvas focus guard and does not identify a root cause.",
+    "repair_started": false,
+    "report_observation": "Report and failed-job log agree: Linux stopped before C07.4 capture at the pre-staging Canvas path-field focus guard; no clipboard content, diagnostic motion, Ctrl+V, paste, or save was dispatched. Do not infer why focus changed.",
+    "report_error_excerpt": "Linux Canvas field input failed for Canvas edit path: code=unknown; syscall=unknown; click=(238,89); clipboard_abort_cleanup={\"attempted\":false,\"reason\":\"no Linux clipboard content was staged\"}; request_marker_cleanup={\"attempted\":true,\"path\":\"/home/runner/work/_temp/openobsidian-c01-roundtrip/openobsidian-canvas-focus-snapshot.request\",\"succeeded\":true}; detail=Canvas paste guard failed fresh pre-staging target guard for first-character sentinel; input_method=xclip clipboard plus Ctrl+V; expected_prefix_bytes=0; expected_prefix_sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855; guard_predicates={\"event_free_snapshot\":true,\"refresh_stable\":true,\"x11_window_focused\":true,\"primary_button_released\":true,\"pointer_inside_target\":true,\"pointer_outside_sibling\":true,\"target_enabled\":true,\"target_focused\":false,\"sibling_enabled\":true,\"sibling_unfocused\":false,\"sibling_arrow_right_absent\":true,\"sibling_unchanged\":true,\"response_ids_stable\":true,\"target_value_exact\":true}; failed_predicates=[\"target_focused\",\"sibling_unfocused\"]; target={\"line\":52,\"enabled\":true,\"frameNr\":367,\"requestId\":\"8319-1792110484302-1\",\"responseId\":\"id_E51C\",\"rect\":{\"left\":121.7,\"top\":79,\"right\":351.7,\"bottom\":98},\"pixelsPerPoint\":1,\"pointer\":{\"x\":238,\"y\":89},\"clicked\":false,\"focused\":false,\"hovered\":true,\"arrowRightKeyEvent\":false,\"empty\":true,\"valueBytes\":0,\"valueSha256\":\"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\",\"clickEventLine\":null,\"arrowRightEventLine\":null}; sibling={\"line\":53,\"enabled\":true,\"frameNr\":367,\"requestId\":\"8319-1792110484302-1\",\"responseId\":\"id_6C61\",\"rect\":{\"left\":504.2,\"top\":79,\"right\":664.2,\"bottom\":98},\"pixelsPerPoint\":1,\"pointer\":{\"x\":238,\"y\":89},\"clicked\":false,\"focused\":true,\"hovered\":false,\"arrowRightKeyEvent\":false,\"empty\":true,\"val"
+  },
+  "partial_roundtrip_artifact_reconciliation": {
+    "status": "complete; parent round-trip workflow failed on Ubuntu before C07.4; macOS and Windows reports passed reference-only capture",
+    "observed_at": "2026-10-16T01:09:29Z",
+    "linux": {
+      "runner_os": "Linux",
+      "runner_image_version": "20261012.334.1",
+      "job_id": 116742545673,
+      "job_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38828825090/job/116742545673",
+      "artifact": {
+        "artifact_id": 12016112867,
+        "name": "obsidian-vault-roundtrip-Linux-13b137db5adae44e80bb003971845d34453bc8f5",
+        "size_bytes": 9075776,
+        "digest": "sha256:cc189aba444d0fb70e5755ad8e1c8059c19d9b45c44c034052e2e56064267462"
+      },
+      "report_sha256": "947636709a0739b3a3c63b3d345c3b27aa3bcab226cd855a15d26a0be3bda0a9",
+      "report_status": "failed",
+      "source_sha": "13b137db5adae44e80bb003971845d34453bc8f5",
+      "reference_capture_status": "incomplete",
+      "c07_4_status": "pending",
+      "failure_stage": "Linux Canvas field input pre-staging target focus guard for first-character sentinel",
+      "failed_predicates": [
+        "target_focused",
+        "sibling_unfocused"
+      ],
+      "target_focused": false,
+      "sibling_focused": true,
+      "clipboard_content_staged": "no",
+      "completed_paste_stages": [],
+      "error_excerpt": "Linux Canvas field input failed for Canvas edit path: code=unknown; syscall=unknown; click=(238,89); clipboard_abort_cleanup={\"attempted\":false,\"reason\":\"no Linux clipboard content was staged\"}; request_marker_cleanup={\"attempted\":true,\"path\":\"/home/runner/work/_temp/openobsidian-c01-roundtrip/openobsidian-canvas-focus-snapshot.request\",\"succeeded\":true}; detail=Canvas paste guard failed fresh pre-staging target guard for first-character sentinel; input_method=xclip clipboard plus Ctrl+V; expected_prefix_bytes=0; expected_prefix_sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855; guard_predicates={\"event_free_snapshot\":true,\"refresh_stable\":true,\"x11_window_focused\":true,\"primary_button_released\":true,\"pointer_inside_target\":true,\"pointer_outside_sibling\":true,\"target_enabled\":true,\"target_focused\":false,\"sibling_enabled\":true,\"sibling_unfocused\":false,\"sibling_arrow_right_absent\":true,\"sibling_unchanged\":true,\"response_ids_stable\":true,\"target_value_exact\":true}; failed_predicates=[\"target_focused\",\"sibling_unfocused\"]; target={\"line\":52,\"enabled\":true,\"frameNr\":367,\"requestId\":\"8319-1792110484302-1\",\"responseId\":\"id_E51C\",\"rect\":{\"left\":121.7,\"top\":79,\"right\":351.7,\"bottom\":98},\"pixelsPerPoint\":1,\"pointer\":{\"x\":238,\"y\":89},\"clicked\":false,\"focused\":false,\"hovered\":true,\"arrowRightKeyEvent\":false,\"empty\":true,\"valueBytes\":0,\"valueSha256\":\"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\",\"clickEventLine\":null,\"arrowRightEventLine\":null}; sibling={\"line\":53,\"enabled\":true,\"frameNr\":367,\"requestId\":\"8319-1792110484302-1\",\"responseId\":\"id_6C61\",\"rect\":{\"left\":504.2,\"top\":79,\"right\":664.2,\"bottom\":98},\"pixelsPerPoint\":1,\"pointer\":{\"x\":238,\"y\":89},\"clicked\":false,\"focused\":true,\"hovered\":false,\"arrowRightKeyEvent\":false,\"empty\":true,\"val",
+      "interpretation": "The report failed before C07.4 capture. It records a focus-guard failure and no staged clipboard/paste; no root cause is inferred from this report alone."
+    },
+    "windows": {
+      "runner_os": "Windows",
+      "runner_image_version": "20261007.264.1",
+      "job_id": 116742546147,
+      "job_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38828825090/job/116742546147",
+      "artifact": {
+        "artifact_id": 12017146948,
+        "name": "obsidian-vault-roundtrip-Windows-13b137db5adae44e80bb003971845d34453bc8f5",
+        "size_bytes": 22173185,
+        "digest": "sha256:421845f406d5e7515aee981171b7cfe97afbcf60345eb7692ca649e7bfee6130"
+      },
+      "report_sha256": "2432ffe7878e19294549d02b6817e9b3161dfa9874814cde9d11a92b63a5a56e",
+      "report_status": "passed",
+      "source_sha": "13b137db5adae44e80bb003971845d34453bc8f5",
+      "reference_app": {
+        "product": "Obsidian Desktop",
+        "version": "1.14.4",
+        "asset": "Obsidian-1.14.4.exe",
+        "sha256": "28662520368d5956df7798076b8370ac730164a8863dcd4f678ced53f63faa00",
+        "source_platform": "Windows x86_64",
+        "runner_architecture": "x64",
+        "fixture_authoring": "Open the generated vault in the pinned desktop app, create a new note with its editor action, and insert the seed text through the renderer keyboard input protocol."
+      },
+      "c07_4_status": "captured-reference-only",
+      "c07_4_observed_scenarios": 10,
+      "c07_4_required_scenarios": 10,
+      "all_ten_first_open_predicates_passed": true,
+      "all_ten_reopen_predicates_passed": true,
+      "all_ten_comparable_pairs_passed": true,
+      "first_open_reopen_comparison_passed": true,
+      "scenario_acceptance": {
+        "numeric-sort-ascending": true,
+        "numeric-sort-descending": true,
+        "numeric-equality-filter": true,
+        "numeric-relational-filter": true,
+        "numeric-array-contains": true,
+        "numeric-group-identity": true,
+        "text-case-collation": true,
+        "text-diacritic-collation": true,
+        "text-natural-numeric-collation": true,
+        "text-equal-key-path-tie": true
+      },
+      "source_checkpoint_count": 28,
+      "source_checkpoint_matrix_complete": true,
+      "locale_policy": "runner-default locale; locale variables are observed but not changed",
+      "renderer_locale": "en-US",
+      "renderer_languages": [
+        "en-US"
+      ],
+      "requested_collator_options": {
+        "numeric": true,
+        "sensitivity": "base"
+      },
+      "requested_collator_resolved_options": {
+        "locale": "en-US",
+        "usage": "sort",
+        "sensitivity": "base",
+        "ignorePunctuation": false,
+        "collation": "default",
+        "numeric": true,
+        "caseFirst": "false"
+      },
+      "default_collator_resolved_options": {
+        "locale": "en-US",
+        "usage": "sort",
+        "sensitivity": "variant",
+        "ignorePunctuation": false,
+        "collation": "default",
+        "numeric": false,
+        "caseFirst": "false"
+      },
+      "runner_locale_environment": {
+        "LANG": null,
+        "LC_ALL": null,
+        "LC_COLLATE": null,
+        "LANGUAGE": null,
+        "TZ": null
+      },
+      "tie_seed_creation_order": [
+        "Notes/Text/Ties/z-last.md",
+        "Notes/Text/Ties/a-first.md"
+      ],
+      "tie_vault_file_enumeration_order": [
+        "Notes/Text/Ties/z-last.md",
+        "Notes/Text/Ties/a-first.md"
+      ],
+      "tie_first_open_ordered_paths": [
+        "Notes/Text/Ties/a-first.md",
+        "Notes/Text/Ties/z-last.md"
+      ],
+      "tie_reopen_ordered_paths": [
+        "Notes/Text/Ties/a-first.md",
+        "Notes/Text/Ties/z-last.md"
+      ],
+      "tie_mac_only_reopen_enumeration_gate_required": false,
+      "reference_source_mutation_observed": true,
+      "reopen_source_hashes_match_seed": false,
+      "reseed_tie_note_hashes_match_seed": true,
+      "reseeded_base_paths": [
+        "Bases/01 Numeric sort ASC.base",
+        "Bases/02 Numeric sort DESC.base",
+        "Bases/03 Numeric equality.base",
+        "Bases/04 Numeric relational.base",
+        "Bases/05 Array contains.base",
+        "Bases/06 Numeric group identity.base",
+        "Bases/07 Case collation.base",
+        "Bases/08 Diacritic collation.base",
+        "Bases/09 Natural numeric text.base",
+        "Notes/Text/Ties/z-last.md",
+        "Notes/Text/Ties/a-first.md"
+      ],
+      "rust_parity_claimed": false,
+      "scenario_results": [
+        {
+          "id": "numeric-sort-ascending",
+          "operation": "sort",
+          "base_path": "Bases/01 Numeric sort ASC.base",
+          "first_open": {
+            "selected_path": "Bases/01 Numeric sort ASC.base",
+            "active_view_type": "bases",
+            "result_count": 7,
+            "ordered_paths": [
+              "Notes/Numbers/00-below-safe-range.md",
+              "Notes/Numbers/01-max-safe-integer.md",
+              "Notes/Numbers/02-at-2-to-53.md",
+              "Notes/Numbers/03-above-odd-integer.md",
+              "Notes/Numbers/04-above-decimal-spelling.md",
+              "Notes/Numbers/05-above-exponent-spelling.md",
+              "Notes/Numbers/06-next-representable.md"
+            ],
+            "group_headings": [],
+            "complete": true,
+            "visible_links_match_rows": true
+          },
+          "reopen": {
+            "selected_path": "Bases/01 Numeric sort ASC.base",
+            "active_view_type": "bases",
+            "result_count": 7,
+            "ordered_paths": [
+              "Notes/Numbers/00-below-safe-range.md",
+              "Notes/Numbers/01-max-safe-integer.md",
+              "Notes/Numbers/02-at-2-to-53.md",
+              "Notes/Numbers/03-above-odd-integer.md",
+              "Notes/Numbers/04-above-decimal-spelling.md",
+              "Notes/Numbers/05-above-exponent-spelling.md",
+              "Notes/Numbers/06-next-representable.md"
+            ],
+            "group_headings": [],
+            "complete": true,
+            "visible_links_match_rows": true
+          }
+        },
+        {
+          "id": "numeric-sort-descending",
+          "operation": "sort",
+          "base_path": "Bases/02 Numeric sort DESC.base",
+          "first_open": {
+            "selected_path": "Bases/02 Numeric sort DESC.base",
+            "active_view_type": "bases",
+            "result_count": 7,
+            "ordered_paths": [
+              "Notes/Numbers/06-next-representable.md",
+              "Notes/Numbers/02-at-2-to-53.md",
+              "Notes/Numbers/03-above-odd-integer.md",
+              "Notes/Numbers/04-above-decimal-spelling.md",
+              "Notes/Numbers/05-above-exponent-spelling.md",
+              "Notes/Numbers/01-max-safe-integer.md",
+              "Notes/Numbers/00-below-safe-range.md"
+            ],
+            "group_headings": [],
+            "complete": true,
+            "visible_links_match_rows": true
+          },
+          "reopen": {
+            "selected_path": "Bases/02 Numeric sort DESC.base",
+            "active_view_type": "bases",
+            "result_count": 7,
+            "ordered_paths": [
+              "Notes/Numbers/06-next-representable.md",
+              "Notes/Numbers/02-at-2-to-53.md",
+              "Notes/Numbers/03-above-odd-integer.md",
+              "Notes/Numbers/04-above-decimal-spelling.md",
+              "Notes/Numbers/05-above-exponent-spelling.md",
+              "Notes/Numbers/01-max-safe-integer.md",
+              "Notes/Numbers/00-below-safe-range.md"
+            ],
+            "group_headings": [],
+            "complete": true,
+            "visible_links_match_rows": true
+          }
+        },
+        {
+          "id": "numeric-equality-filter",
+          "operation": "equality-filter",
+          "base_path": "Bases/03 Numeric equality.base",
+          "first_open": {
+            "selected_path": "Bases/03 Numeric equality.base",
+            "active_view_type": "bases",
+            "result_count": 4,
+            "ordered_paths": [
+              "Notes/Numbers/02-at-2-to-53.md",
+              "Notes/Numbers/03-above-odd-integer.md",
+              "Notes/Numbers/04-above-decimal-spelling.md",
+              "Notes/Numbers/05-above-exponent-spelling.md"
+            ],
+            "group_headings": [],
+            "complete": true,
+            "visible_links_match_rows": true
+          },
+          "reopen": {
+            "selected_path": "Bases/03 Numeric equality.base",
+            "active_view_type": "bases",
+            "result_count": 4,
+            "ordered_paths": [
+              "Notes/Numbers/02-at-2-to-53.md",
+              "Notes/Numbers/03-above-odd-integer.md",
+              "Notes/Numbers/04-above-decimal-spelling.md",
+              "Notes/Numbers/05-above-exponent-spelling.md"
+            ],
+            "group_headings": [],
+            "complete": true,
+            "visible_links_match_rows": true
+          }
+        },
+        {
+          "id": "numeric-relational-filter",
+          "operation": "relational-filter",
+          "base_path": "Bases/04 Numeric relational.base",
+          "first_open": {
+            "selected_path": "Bases/04 Numeric relational.base",
+            "active_view_type": "bases",
+            "result_count": 1,
+            "ordered_paths": [
+              "Notes/Numbers/06-next-representable.md"
+            ],
+            "group_headings": [],
+            "complete": true,
+            "visible_links_match_rows": true
+          },
+          "reopen": {
+            "selected_path": "Bases/04 Numeric relational.base",
+            "active_view_type": "bases",
+            "result_count": 1,
+            "ordered_paths": [
+              "Notes/Numbers/06-next-representable.md"
+            ],
+            "group_headings": [],
+            "complete": true,
+            "visible_links_match_rows": true
+          }
+        },
+        {
+          "id": "numeric-array-contains",
+          "operation": "array-contains-filter",
+          "base_path": "Bases/05 Array contains.base",
+          "first_open": {
+            "selected_path": "Bases/05 Array contains.base",
+            "active_view_type": "bases",
+            "result_count": 4,
+            "ordered_paths": [
+              "Notes/Arrays/00-boundary-integer.md",
+              "Notes/Arrays/01-above-odd-integer.md",
+              "Notes/Arrays/02-above-decimal-spelling.md",
+              "Notes/Arrays/03-above-exponent-spelling.md"
+            ],
+            "group_headings": [],
+            "complete": true,
+            "visible_links_match_rows": true
+          },
+          "reopen": {
+            "selected_path": "Bases/05 Array contains.base",
+            "active_view_type": "bases",
+            "result_count": 4,
+            "ordered_paths": [
+              "Notes/Arrays/00-boundary-integer.md",
+              "Notes/Arrays/01-above-odd-integer.md",
+              "Notes/Arrays/02-above-decimal-spelling.md",
+              "Notes/Arrays/03-above-exponent-spelling.md"
+            ],
+            "group_headings": [],
+            "complete": true,
+            "visible_links_match_rows": true
+          }
+        },
+        {
+          "id": "numeric-group-identity",
+          "operation": "group-identity",
+          "base_path": "Bases/06 Numeric group identity.base",
+          "first_open": {
+            "selected_path": "Bases/06 Numeric group identity.base",
+            "active_view_type": "bases",
+            "result_count": 7,
+            "ordered_paths": [
+              "Notes/Numbers/00-below-safe-range.md",
+              "Notes/Numbers/01-max-safe-integer.md",
+              "Notes/Numbers/02-at-2-to-53.md",
+              "Notes/Numbers/03-above-odd-integer.md",
+              "Notes/Numbers/04-above-decimal-spelling.md",
+              "Notes/Numbers/05-above-exponent-spelling.md",
+              "Notes/Numbers/06-next-representable.md"
+            ],
+            "group_headings": [
+              "metric 9007199254740990",
+              "metric 9007199254740991",
+              "metric 9007199254740992",
+              "metric 9007199254740994"
+            ],
+            "complete": true,
+            "visible_links_match_rows": true
+          },
+          "reopen": {
+            "selected_path": "Bases/06 Numeric group identity.base",
+            "active_view_type": "bases",
+            "result_count": 7,
+            "ordered_paths": [
+              "Notes/Numbers/00-below-safe-range.md",
+              "Notes/Numbers/01-max-safe-integer.md",
+              "Notes/Numbers/02-at-2-to-53.md",
+              "Notes/Numbers/03-above-odd-integer.md",
+              "Notes/Numbers/04-above-decimal-spelling.md",
+              "Notes/Numbers/05-above-exponent-spelling.md",
+              "Notes/Numbers/06-next-representable.md"
+            ],
+            "group_headings": [
+              "metric 9007199254740990",
+              "metric 9007199254740991",
+              "metric 9007199254740992",
+              "metric 9007199254740994"
+            ],
+            "complete": true,
+            "visible_links_match_rows": true
+          }
+        },
+        {
+          "id": "text-case-collation",
+          "operation": "text-sort",
+          "base_path": "Bases/07 Case collation.base",
+          "first_open": {
+            "selected_path": "Bases/07 Case collation.base",
+            "active_view_type": "bases",
+            "result_count": 3,
+            "ordered_paths": [
+              "Notes/Text/Case/01-lower.md",
+              "Notes/Text/Case/02-title.md",
+              "Notes/Text/Case/03-upper.md"
+            ],
+            "group_headings": [],
+            "complete": true,
+            "visible_links_match_rows": true
+          },
+          "reopen": {
+            "selected_path": "Bases/07 Case collation.base",
+            "active_view_type": "bases",
+            "result_count": 3,
+            "ordered_paths": [
+              "Notes/Text/Case/01-lower.md",
+              "Notes/Text/Case/02-title.md",
+              "Notes/Text/Case/03-upper.md"
+            ],
+            "group_headings": [],
+            "complete": true,
+            "visible_links_match_rows": true
+          }
+        },
+        {
+          "id": "text-diacritic-collation",
+          "operation": "text-sort",
+          "base_path": "Bases/08 Diacritic collation.base",
+          "first_open": {
+            "selected_path": "Bases/08 Diacritic collation.base",
+            "active_view_type": "bases",
+            "result_count": 4,
+            "ordered_paths": [
+              "Notes/Text/Diacritics/01-plain.md",
+              "Notes/Text/Diacritics/02-acute.md",
+              "Notes/Text/Diacritics/03-grave.md",
+              "Notes/Text/Diacritics/04-decomposed-acute.md"
+            ],
+            "group_headings": [],
+            "complete": true,
+            "visible_links_match_rows": true
+          },
+          "reopen": {
+            "selected_path": "Bases/08 Diacritic collation.base",
+            "active_view_type": "bases",
+            "result_count": 4,
+            "ordered_paths": [
+              "Notes/Text/Diacritics/01-plain.md",
+              "Notes/Text/Diacritics/02-acute.md",
+              "Notes/Text/Diacritics/03-grave.md",
+              "Notes/Text/Diacritics/04-decomposed-acute.md"
+            ],
+            "group_headings": [],
+            "complete": true,
+            "visible_links_match_rows": true
+          }
+        },
+        {
+          "id": "text-natural-numeric-collation",
+          "operation": "text-sort",
+          "base_path": "Bases/09 Natural numeric text.base",
+          "first_open": {
+            "selected_path": "Bases/09 Natural numeric text.base",
+            "active_view_type": "bases",
+            "result_count": 3,
+            "ordered_paths": [
+              "Notes/Text/Numeric/01-item-2.md",
+              "Notes/Text/Numeric/02-item-02.md",
+              "Notes/Text/Numeric/03-item-10.md"
+            ],
+            "group_headings": [],
+            "complete": true,
+            "visible_links_match_rows": true
+          },
+          "reopen": {
+            "selected_path": "Bases/09 Natural numeric text.base",
+            "active_view_type": "bases",
+            "result_count": 3,
+            "ordered_paths": [
+              "Notes/Text/Numeric/01-item-2.md",
+              "Notes/Text/Numeric/02-item-02.md",
+              "Notes/Text/Numeric/03-item-10.md"
+            ],
+            "group_headings": [],
+            "complete": true,
+            "visible_links_match_rows": true
+          }
+        },
+        {
+          "id": "text-equal-key-path-tie",
+          "operation": "text-path-tie",
+          "base_path": "Bases/10 Equal key path tie.base",
+          "first_open": {
+            "selected_path": "Bases/10 Equal key path tie.base",
+            "active_view_type": "bases",
+            "result_count": 2,
+            "ordered_paths": [
+              "Notes/Text/Ties/a-first.md",
+              "Notes/Text/Ties/z-last.md"
+            ],
+            "group_headings": [],
+            "complete": true,
+            "visible_links_match_rows": true
+          },
+          "reopen": {
+            "selected_path": "Bases/10 Equal key path tie.base",
+            "active_view_type": "bases",
+            "result_count": 2,
+            "ordered_paths": [
+              "Notes/Text/Ties/a-first.md",
+              "Notes/Text/Ties/z-last.md"
+            ],
+            "group_headings": [],
+            "complete": true,
+            "visible_links_match_rows": true
+          }
+        }
+      ],
+      "pinned_app_rewritten_base_paths": [
+        "Bases/01 Numeric sort ASC.base",
+        "Bases/02 Numeric sort DESC.base",
+        "Bases/03 Numeric equality.base",
+        "Bases/04 Numeric relational.base",
+        "Bases/05 Array contains.base",
+        "Bases/06 Numeric group identity.base",
+        "Bases/07 Case collation.base",
+        "Bases/08 Diacritic collation.base",
+        "Bases/09 Natural numeric text.base",
+        "Bases/10 Equal key path tie.base"
+      ],
+      "reseed_restored_all_source_hashes_before_reopen": true,
+      "source_hash_entries_compared": 33,
+      "reseed_hash_mismatch_paths": [],
+      "reopen_app_source_hashes_match_seed": false,
+      "interpretation": "The pinned app rewrote all ten JSON Bases files to YAML during capture; the harness reseeded the exact 33-path source set before reopen. The reopened app again rewrote the Bases files, so post-reopen source hashes differ by recorded pinned-app behavior; this is not Rust parity or preservation evidence.",
+      "source_reseed_verified_at": "2026-10-16T01:03:16Z"
+    },
+    "completed_at": "2026-10-16T01:01:29Z",
+    "macos": {
+      "runner_os": "macOS",
+      "runner_image": "macos26",
+      "runner_image_version": "20260907.0351.1",
+      "runner_architecture": "arm64",
+      "job_id": 116742546038,
+      "job_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38828825090/job/116742546038",
+      "artifact": {
+        "artifact_id": 12018171754,
+        "name": "obsidian-vault-roundtrip-macOS-13b137db5adae44e80bb003971845d34453bc8f5",
+        "size_bytes": 33141153,
+        "digest": "sha256:41f5b3c6aaad822ca1de6b107585680d1fcf1e038ee45d0b420d35b6940baf2c"
+      },
+      "report_sha256": "a216e3bb61d01847d7cd3711588541d5536b69ba650edb593cf2cf42d08d74d1",
+      "report_status": "passed",
+      "report_completed_at": "2026-10-16T01:01:21.586Z",
+      "source_sha": "13b137db5adae44e80bb003971845d34453bc8f5",
+      "reference_app": {
+        "product": "Obsidian Desktop",
+        "version": "1.14.4",
+        "asset": "Obsidian-1.14.4.dmg",
+        "sha256": "dcf818dd20ee5d9dd3e782eee0c0c4c47cc225383b051c2fc9af7d5772f59f70",
+        "source_platform": "official macOS desktop build",
+        "runner_architecture": "arm64",
+        "fixture_authoring": "Open the generated vault in the pinned desktop app, create a new note with its editor action, and insert the seed text through the renderer keyboard input protocol."
+      },
+      "c07_4_status": "captured-reference-only",
+      "c07_4_capture_status": "completed",
+      "observed_scenarios": 10,
+      "required_scenarios": 10,
+      "all_ten_first_open_predicates_passed": true,
+      "all_ten_reopen_predicates_passed": true,
+      "all_ten_comparable_pairs_passed": true,
+      "first_open_reopen_comparison_passed": true,
+      "scenario_acceptance": {
+        "numeric-sort-ascending": true,
+        "numeric-sort-descending": true,
+        "numeric-equality-filter": true,
+        "numeric-relational-filter": true,
+        "numeric-array-contains": true,
+        "numeric-group-identity": true,
+        "text-case-collation": true,
+        "text-diacritic-collation": true,
+        "text-natural-numeric-collation": true,
+        "text-equal-key-path-tie": true
+      },
+      "scenario_results": [
+        {
+          "id": "numeric-sort-ascending",
+          "operation": "sort",
+          "base_path": "Bases/01 Numeric sort ASC.base",
+          "first_open": {
+            "selected_path": "Bases/01 Numeric sort ASC.base",
+            "result_count": 7,
+            "ordered_paths": [
+              "Notes/Numbers/00-below-safe-range.md",
+              "Notes/Numbers/01-max-safe-integer.md",
+              "Notes/Numbers/02-at-2-to-53.md",
+              "Notes/Numbers/03-above-odd-integer.md",
+              "Notes/Numbers/04-above-decimal-spelling.md",
+              "Notes/Numbers/05-above-exponent-spelling.md",
+              "Notes/Numbers/06-next-representable.md"
+            ],
+            "group_headings": [],
+            "complete": true,
+            "visible_links_match_rows": true
+          },
+          "reopen": {
+            "selected_path": "Bases/01 Numeric sort ASC.base",
+            "result_count": 7,
+            "ordered_paths": [
+              "Notes/Numbers/00-below-safe-range.md",
+              "Notes/Numbers/01-max-safe-integer.md",
+              "Notes/Numbers/02-at-2-to-53.md",
+              "Notes/Numbers/03-above-odd-integer.md",
+              "Notes/Numbers/04-above-decimal-spelling.md",
+              "Notes/Numbers/05-above-exponent-spelling.md",
+              "Notes/Numbers/06-next-representable.md"
+            ],
+            "group_headings": [],
+            "complete": true,
+            "visible_links_match_rows": true
+          },
+          "comparison_passed": false
+        },
+        {
+          "id": "numeric-sort-descending",
+          "operation": "sort",
+          "base_path": "Bases/02 Numeric sort DESC.base",
+          "first_open": {
+            "selected_path": "Bases/02 Numeric sort DESC.base",
+            "result_count": 7,
+            "ordered_paths": [
+              "Notes/Numbers/06-next-representable.md",
+              "Notes/Numbers/02-at-2-to-53.md",
+              "Notes/Numbers/03-above-odd-integer.md",
+              "Notes/Numbers/04-above-decimal-spelling.md",
+              "Notes/Numbers/05-above-exponent-spelling.md",
+              "Notes/Numbers/01-max-safe-integer.md",
+              "Notes/Numbers/00-below-safe-range.md"
+            ],
+            "group_headings": [],
+            "complete": true,
+            "visible_links_match_rows": true
+          },
+          "reopen": {
+            "selected_path": "Bases/02 Numeric sort DESC.base",
+            "result_count": 7,
+            "ordered_paths": [
+              "Notes/Numbers/06-next-representable.md",
+              "Notes/Numbers/02-at-2-to-53.md",
+              "Notes/Numbers/03-above-odd-integer.md",
+              "Notes/Numbers/04-above-decimal-spelling.md",
+              "Notes/Numbers/05-above-exponent-spelling.md",
+              "Notes/Numbers/01-max-safe-integer.md",
+              "Notes/Numbers/00-below-safe-range.md"
+            ],
+            "group_headings": [],
+            "complete": true,
+            "visible_links_match_rows": true
+          },
+          "comparison_passed": false
+        },
+        {
+          "id": "numeric-equality-filter",
+          "operation": "equality-filter",
+          "base_path": "Bases/03 Numeric equality.base",
+          "first_open": {
+            "selected_path": "Bases/03 Numeric equality.base",
+            "result_count": 4,
+            "ordered_paths": [
+              "Notes/Numbers/02-at-2-to-53.md",
+              "Notes/Numbers/03-above-odd-integer.md",
+              "Notes/Numbers/04-above-decimal-spelling.md",
+              "Notes/Numbers/05-above-exponent-spelling.md"
+            ],
+            "group_headings": [],
+            "complete": true,
+            "visible_links_match_rows": true
+          },
+          "reopen": {
+            "selected_path": "Bases/03 Numeric equality.base",
+            "result_count": 4,
+            "ordered_paths": [
+              "Notes/Numbers/02-at-2-to-53.md",
+              "Notes/Numbers/03-above-odd-integer.md",
+              "Notes/Numbers/04-above-decimal-spelling.md",
+              "Notes/Numbers/05-above-exponent-spelling.md"
+            ],
+            "group_headings": [],
+            "complete": true,
+            "visible_links_match_rows": true
+          },
+          "comparison_passed": false
+        },
+        {
+          "id": "numeric-relational-filter",
+          "operation": "relational-filter",
+          "base_path": "Bases/04 Numeric relational.base",
+          "first_open": {
+            "selected_path": "Bases/04 Numeric relational.base",
+            "result_count": 1,
+            "ordered_paths": [
+              "Notes/Numbers/06-next-representable.md"
+            ],
+            "group_headings": [],
+            "complete": true,
+            "visible_links_match_rows": true
+          },
+          "reopen": {
+            "selected_path": "Bases/04 Numeric relational.base",
+            "result_count": 1,
+            "ordered_paths": [
+              "Notes/Numbers/06-next-representable.md"
+            ],
+            "group_headings": [],
+            "complete": true,
+            "visible_links_match_rows": true
+          },
+          "comparison_passed": false
+        },
+        {
+          "id": "numeric-array-contains",
+          "operation": "array-contains-filter",
+          "base_path": "Bases/05 Array contains.base",
+          "first_open": {
+            "selected_path": "Bases/05 Array contains.base",
+            "result_count": 4,
+            "ordered_paths": [
+              "Notes/Arrays/00-boundary-integer.md",
+              "Notes/Arrays/01-above-odd-integer.md",
+              "Notes/Arrays/02-above-decimal-spelling.md",
+              "Notes/Arrays/03-above-exponent-spelling.md"
+            ],
+            "group_headings": [],
+            "complete": true,
+            "visible_links_match_rows": true
+          },
+          "reopen": {
+            "selected_path": "Bases/05 Array contains.base",
+            "result_count": 4,
+            "ordered_paths": [
+              "Notes/Arrays/00-boundary-integer.md",
+              "Notes/Arrays/01-above-odd-integer.md",
+              "Notes/Arrays/02-above-decimal-spelling.md",
+              "Notes/Arrays/03-above-exponent-spelling.md"
+            ],
+            "group_headings": [],
+            "complete": true,
+            "visible_links_match_rows": true
+          },
+          "comparison_passed": false
+        },
+        {
+          "id": "numeric-group-identity",
+          "operation": "group-identity",
+          "base_path": "Bases/06 Numeric group identity.base",
+          "first_open": {
+            "selected_path": "Bases/06 Numeric group identity.base",
+            "result_count": 7,
+            "ordered_paths": [
+              "Notes/Numbers/00-below-safe-range.md",
+              "Notes/Numbers/01-max-safe-integer.md",
+              "Notes/Numbers/02-at-2-to-53.md",
+              "Notes/Numbers/03-above-odd-integer.md",
+              "Notes/Numbers/04-above-decimal-spelling.md",
+              "Notes/Numbers/05-above-exponent-spelling.md",
+              "Notes/Numbers/06-next-representable.md"
+            ],
+            "group_headings": [
+              "metric 9007199254740990",
+              "metric 9007199254740991",
+              "metric 9007199254740992",
+              "metric 9007199254740994"
+            ],
+            "complete": true,
+            "visible_links_match_rows": true
+          },
+          "reopen": {
+            "selected_path": "Bases/06 Numeric group identity.base",
+            "result_count": 7,
+            "ordered_paths": [
+              "Notes/Numbers/00-below-safe-range.md",
+              "Notes/Numbers/01-max-safe-integer.md",
+              "Notes/Numbers/02-at-2-to-53.md",
+              "Notes/Numbers/03-above-odd-integer.md",
+              "Notes/Numbers/04-above-decimal-spelling.md",
+              "Notes/Numbers/05-above-exponent-spelling.md",
+              "Notes/Numbers/06-next-representable.md"
+            ],
+            "group_headings": [
+              "metric 9007199254740990",
+              "metric 9007199254740991",
+              "metric 9007199254740992",
+              "metric 9007199254740994"
+            ],
+            "complete": true,
+            "visible_links_match_rows": true
+          },
+          "comparison_passed": false
+        },
+        {
+          "id": "text-case-collation",
+          "operation": "text-sort",
+          "base_path": "Bases/07 Case collation.base",
+          "first_open": {
+            "selected_path": "Bases/07 Case collation.base",
+            "result_count": 3,
+            "ordered_paths": [
+              "Notes/Text/Case/01-lower.md",
+              "Notes/Text/Case/02-title.md",
+              "Notes/Text/Case/03-upper.md"
+            ],
+            "group_headings": [],
+            "complete": true,
+            "visible_links_match_rows": true
+          },
+          "reopen": {
+            "selected_path": "Bases/07 Case collation.base",
+            "result_count": 3,
+            "ordered_paths": [
+              "Notes/Text/Case/01-lower.md",
+              "Notes/Text/Case/02-title.md",
+              "Notes/Text/Case/03-upper.md"
+            ],
+            "group_headings": [],
+            "complete": true,
+            "visible_links_match_rows": true
+          },
+          "comparison_passed": false
+        },
+        {
+          "id": "text-diacritic-collation",
+          "operation": "text-sort",
+          "base_path": "Bases/08 Diacritic collation.base",
+          "first_open": {
+            "selected_path": "Bases/08 Diacritic collation.base",
+            "result_count": 4,
+            "ordered_paths": [
+              "Notes/Text/Diacritics/01-plain.md",
+              "Notes/Text/Diacritics/02-acute.md",
+              "Notes/Text/Diacritics/03-grave.md",
+              "Notes/Text/Diacritics/04-decomposed-acute.md"
+            ],
+            "group_headings": [],
+            "complete": true,
+            "visible_links_match_rows": true
+          },
+          "reopen": {
+            "selected_path": "Bases/08 Diacritic collation.base",
+            "result_count": 4,
+            "ordered_paths": [
+              "Notes/Text/Diacritics/01-plain.md",
+              "Notes/Text/Diacritics/02-acute.md",
+              "Notes/Text/Diacritics/03-grave.md",
+              "Notes/Text/Diacritics/04-decomposed-acute.md"
+            ],
+            "group_headings": [],
+            "complete": true,
+            "visible_links_match_rows": true
+          },
+          "comparison_passed": false
+        },
+        {
+          "id": "text-natural-numeric-collation",
+          "operation": "text-sort",
+          "base_path": "Bases/09 Natural numeric text.base",
+          "first_open": {
+            "selected_path": "Bases/09 Natural numeric text.base",
+            "result_count": 3,
+            "ordered_paths": [
+              "Notes/Text/Numeric/01-item-2.md",
+              "Notes/Text/Numeric/02-item-02.md",
+              "Notes/Text/Numeric/03-item-10.md"
+            ],
+            "group_headings": [],
+            "complete": true,
+            "visible_links_match_rows": true
+          },
+          "reopen": {
+            "selected_path": "Bases/09 Natural numeric text.base",
+            "result_count": 3,
+            "ordered_paths": [
+              "Notes/Text/Numeric/01-item-2.md",
+              "Notes/Text/Numeric/02-item-02.md",
+              "Notes/Text/Numeric/03-item-10.md"
+            ],
+            "group_headings": [],
+            "complete": true,
+            "visible_links_match_rows": true
+          },
+          "comparison_passed": false
+        },
+        {
+          "id": "text-equal-key-path-tie",
+          "operation": "text-path-tie",
+          "base_path": "Bases/10 Equal key path tie.base",
+          "first_open": {
+            "selected_path": "Bases/10 Equal key path tie.base",
+            "result_count": 2,
+            "ordered_paths": [
+              "Notes/Text/Ties/a-first.md",
+              "Notes/Text/Ties/z-last.md"
+            ],
+            "group_headings": [],
+            "complete": true,
+            "visible_links_match_rows": true
+          },
+          "reopen": {
+            "selected_path": "Bases/10 Equal key path tie.base",
+            "result_count": 2,
+            "ordered_paths": [
+              "Notes/Text/Ties/a-first.md",
+              "Notes/Text/Ties/z-last.md"
+            ],
+            "group_headings": [],
+            "complete": true,
+            "visible_links_match_rows": true
+          },
+          "comparison_passed": false
+        }
+      ],
+      "source_checkpoint_count": 28,
+      "source_checkpoint_matrix_complete": true,
+      "locale_policy": "runner-default locale; locale variables are observed but not changed",
+      "runner_locale_environment": {
+        "LANG": "en_US.UTF-8",
+        "LC_ALL": "en_US.UTF-8",
+        "LC_COLLATE": null,
+        "LANGUAGE": null,
+        "TZ": null
+      },
+      "renderer_locale": "en-US",
+      "renderer_languages": [
+        "en-US"
+      ],
+      "default_collator_resolved_options": {
+        "locale": "en-US",
+        "usage": "sort",
+        "sensitivity": "variant",
+        "ignorePunctuation": false,
+        "collation": "default",
+        "numeric": false,
+        "caseFirst": "false"
+      },
+      "requested_collator_options": {
+        "numeric": true,
+        "sensitivity": "base"
+      },
+      "requested_collator_resolved_options": {
+        "locale": "en-US",
+        "usage": "sort",
+        "sensitivity": "base",
+        "ignorePunctuation": false,
+        "collation": "default",
+        "numeric": true,
+        "caseFirst": "false"
+      },
+      "collator_note": "Requested-collator diagnostics are recorded separately; observed DOM row ordering is captured in scenario_results.",
+      "tie_seed_creation_order": [
+        "Notes/Text/Ties/z-last.md",
+        "Notes/Text/Ties/a-first.md"
+      ],
+      "tie_reopen_preselection_gate_required": true,
+      "tie_reopen_preselection_gate_passed": true,
+      "tie_preselection_read_pair_attempts": 1,
+      "tie_preselection_first_paths": [
+        "Notes/Text/Ties/z-last.md",
+        "Notes/Text/Ties/a-first.md"
+      ],
+      "tie_preselection_second_paths": [
+        "Notes/Text/Ties/z-last.md",
+        "Notes/Text/Ties/a-first.md"
+      ],
+      "tie_rendered_reopen_order": [
+        "Notes/Text/Ties/a-first.md",
+        "Notes/Text/Ties/z-last.md"
+      ],
+      "source_hash_entries_compared": 33,
+      "source_hash_path_sets_match_after_reseed": true,
+      "reseed_hash_mismatch_paths": [],
+      "app_mutated_base_paths_at_first_open_shutdown": [
+        "Bases/01 Numeric sort ASC.base",
+        "Bases/02 Numeric sort DESC.base",
+        "Bases/03 Numeric equality.base",
+        "Bases/04 Numeric relational.base",
+        "Bases/05 Array contains.base",
+        "Bases/06 Numeric group identity.base",
+        "Bases/07 Case collation.base",
+        "Bases/08 Diacritic collation.base",
+        "Bases/09 Natural numeric text.base"
+      ],
+      "app_mutated_base_paths_at_reopen_shutdown": [
+        "Bases/01 Numeric sort ASC.base",
+        "Bases/02 Numeric sort DESC.base",
+        "Bases/03 Numeric equality.base",
+        "Bases/04 Numeric relational.base",
+        "Bases/05 Array contains.base",
+        "Bases/06 Numeric group identity.base",
+        "Bases/07 Case collation.base",
+        "Bases/08 Diacritic collation.base",
+        "Bases/09 Natural numeric text.base",
+        "Bases/10 Equal key path tie.base"
+      ],
+      "reopen_seed_hashes_match": true,
+      "reopen_source_hashes_match_seed": false,
+      "reference_source_mutation_observed": true,
+      "reopen_source_mutation_observed": true,
+      "rust_parity_claimed": false,
+      "interpretation": "Pinned Obsidian rewrote .base files; the harness reseeded all 33 source paths with zero mismatches before reopen. Post-reopen mutations are reference-app behavior, not Rust source-preservation or parity evidence."
+    },
+    "all_platform_c07_4_capture_status": "incomplete: Linux aborted before C07.4; macOS and Windows captured all ten first-open/reopen scenarios",
+    "rust_parity_claimed": false
+  },
+  "artifact_runs_without_uploads": [
+    {
+      "run_id": 38828825065,
+      "workflow_name": "Rust migration inventory",
+      "conclusion": "success",
+      "artifact_count": 0
+    },
+    {
+      "run_id": 38828825113,
+      "workflow_name": "OpenObsidian quality",
+      "conclusion": "success",
+      "artifact_count": 0
+    }
+  ],
+  "final_reconciliation": {
+    "terminal": true,
+    "source_sha": "13b137db5adae44e80bb003971845d34453bc8f5",
+    "required_workflows": {
+      "observed": 7,
+      "terminal": 7,
+      "passed": 6,
+      "failed": 1,
+      "cancelled": 0,
+      "queued": 0,
+      "in_progress": 0
+    },
+    "required_jobs": {
+      "observed": 20,
+      "terminal": 20,
+      "passed": 19,
+      "failed": 1,
+      "cancelled": 0,
+      "queued": 0,
+      "in_progress": 0
+    },
+    "roundtrip_workflow_conclusion": "failure",
+    "failed_job_id": 116742545673,
+    "failed_job_stage": "Linux Canvas pre-staging target focus guard before C07.4",
+    "c07_4": "macOS and Windows passed all ten reference-only first-open/reopen gates; Linux did not reach C07.4, so cross-platform reference acceptance remains pending",
+    "rust_parity_claimed": false,
+    "all_16_artifact_archive_digests_recorded": true
+  }
+}
