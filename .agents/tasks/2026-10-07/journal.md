@@ -8439,3 +8439,66 @@ Implemented the approved Linux target-only Canvas readback crop and macOS reopen
 Two scoped read-only reviews and an independent whole-source review found no remaining blocker. Updated the goal's push policy to state that minor edits stay local, one full push submits a predeclared completed and reviewed milestone, and `origin/main` remains fixed until the complete multi-hour CI batch and evidence reconciliation finish. Synchronized the current goal hash (`92409372d9cb637cf8bb08603293b4b473a593fc82b8beacce93f309c68e5a1e`) in state and requirements. No local test, build, formatter, linter, validator, benchmark, runtime probe, or application launch was run.
 
 R3.12 is implementation-complete / CI-pending, not achieved. `origin/main` remains at `7f2dd3efd47ce1df3f14fb9cf07519afc408ca6b`; this milestone has not been pushed and C07.4 remains pending. Next: submit the complete reviewed milestone once, then hold its exact SHA through all seven required workflows and 20 jobs and reconcile every result and artifact before another full batch.
+
+## R3.12 revision 6 submitted once; CI batch in progress — 2026-10-16T12:41:37Z
+
+Committed the complete reviewed milestone as `ad983495302c8d7d52701eb2b698087c4013fbe0` and pushed it once to `origin/main`, whose verified prior SHA was `7f2dd3efd47ce1df3f14fb9cf07519afc408ca6b`. All seven required workflows triggered. Exact-SHA run IDs and current job states are recorded in `evidence/r2.8.144-r3-12-attempt-1-ad98349.json`.
+
+At the latest status poll, the inventory, desktop build, loaded plugin workflows, and plugin renderer matrix passed. OpenObsidian quality failed on Ubuntu, macOS, and Windows: the Knip audit reports `tesseract` as an unlisted binary used by `audit-obsidian-vault-roundtrip.ts`; the Fallow audit passed. The Rust CI and three-platform round-trip workflows are still running. Overall: 5/7 workflows terminal (4 passed, 1 failed), 13/20 jobs terminal (10 passed, 3 failed), 7 jobs active. Keep `origin/main` at the submitted SHA; do not begin a repair or another full CI batch until every required job is terminal and all reports/artifacts are reconciled. C07.4 remains pending. No local executable validation was run.
+
+
+## R3.12 CI progress — Rust CI terminal success; round-trip active — 2026-10-16T12:49:36Z
+
+Rust CI run 38902084409 passed on all four jobs, including minimum supported Rust 1.95. The round-trip run 38902084440 remains in progress on Ubuntu, macOS, and Windows, so the exact-SHA batch is not terminal. Across all required checks, 6/7 workflows are terminal (5 passed, 1 failed) and 17/20 jobs are terminal (14 passed, 3 failed). OpenObsidian quality failed on all three OSes because Knip flags the system-installed `tesseract` executable as unlisted. Artifact metadata for all available outputs is being reconciled. Keep `origin/main` pinned at `ad983495302c8d7d52701eb2b698087c4013fbe0`; no repair, rerun, or further push before every required job is terminal. C07.4 remains pending. No local executable validation was run.
+
+
+## R3.12 exact-SHA CI terminal and evidence reconciled — 2026-10-16T13:04:05Z
+
+Confirmed all seven required workflow runs and all 20 jobs are terminal on exact SHA `ad983495302c8d7d52701eb2b698087c4013fbe0`; `origin/main` remains pinned at that SHA. Five workflows and 15 jobs passed; quality and round-trip workflows failed, with exactly five failed jobs: Knip jobs `116976533104`, `116976533468`, `116976533591`; Linux round-trip job `116976532914`; and macOS round-trip job `116976532473`. Windows round-trip job `116976532831` passed. Rust CI passed all four jobs, including MSRV 1.95. No reruns or pushes occurred.
+
+Reconciled all 16 artifact records and verified each artifact name and workflow head SHA. The three round-trip archive SHA-256 values independently match GitHub API digests: Linux artifact `12047212695`, 16,293,833 bytes, `adbcd070107b22c43349a23b17cbf0242f487230df20ff7f7d22d25461e8f4b7`; macOS `12047233083`, 18,678,779 bytes, `daa9830b133e61c02fe131c9f493afdb8e17bb02e49d0ae978ab533552c952e5`; Windows `12047690625`, 22,786,339 bytes, `53b56e5ebb61cbb279f43ece3e0bb63b4ef1caf3ad741aa9579ad35fb235d4c9`. All three report payloads identify the exact SHA `ad983495302c8d7d52701eb2b698087c4013fbe0`; their sizes and hashes are recorded in the attempt evidence.
+
+Linux report SHA-256 `47b239926dea526a97b14e8ccd67fa804ee4b69f1f27e0486dc168650a73921a` confirms the paired target-only Canvas path crop and exact OCR pass, then Canvas edit text-card ID visual readback fails because the legacy label-offset crop misses the field despite exact field-state bytes/hash; no save was attempted. macOS report SHA-256 `5262d898f91ecfa90ce7b81fa18ac40709170820e2047b13ba31d3283cb6604e` confirms text edit passes but note-creation Text card ID entry fails before C07.4; clipboard/Tesseract crop are empty while Vision OCR from the target textbox crop reads exact `text-1`. Windows report SHA-256 `9aec35ecd99f4a0dfc2348f40ffe9e3bcc7a078fc5b506e9bf721cc21ac39123` passes 10/10 C07.4 scenarios and 28 source checkpoints as captured reference only; source rewrites are recorded and Rust parity is unclaimed. C07.4 remains pending overall.
+
+The grouped post-batch repair scope is: declare `tesseract` in `knip.json`'s existing `ignoreBinaries`; invoke the existing paired widget-geometry capture for Linux ID input with path as sibling, preserving exact target-only crop and full-value OCR; and allow the exact macOS Vision result only when it is uniquely associated with the label-anchored target-field crop and clipboard readback is empty, preserving current association/focus safeguards. Implement and review this as one named milestone; no local executable validation is allowed.
+
+
+## R2.8.145/R3.13 repair milestone planned — 2026-10-16T13:09:18Z
+
+Created [r2.8.145-r3-13-c07-4-id-readback-repair-plan.json](evidence/r2.8.145-r3-13-c07-4-id-readback-repair-plan.json) from the fully reconciled R3.12 findings. The bounded outcome is to repair the Knip `tesseract` declaration, route Linux Canvas ID readback through the existing correlated target-only geometry helper with path as sibling, and allow the exact macOS Vision candidate only through the already localized target-field crop when clipboard readback is empty. The approved R3.12 Mac tie-order contract and Windows behavior remain unchanged; the complete C07.4 reference matrix must pass on Linux, macOS and Windows, with no Rust parity claim. Two independent read-only reviews are pending. No implementation edits, local executable validation, commit, or push occurred; `origin/main` remains at `ad983495302c8d7d52701eb2b698087c4013fbe0`.
+
+## R2.8.145 plan revised for macOS target-focus evidence — 2026-10-16T13:15:39Z
+
+The independent review found that note creation's `Text card ID` path had no explicit native focus diagnostic, despite the plan requiring fresh focus evidence. Revised the plan to allow one passive, environment-gated diagnostic in `crates/ui-egui/src/lib.rs` with a distinct `canvas-note-create` / `field=text-card-id` identity, no raw text, and no UI/event/input-sequence changes. The harness must retain and assert a fresh post-copy/ArrowRight observation with the target enabled and focused, nonempty expected byte count/hash, stable response ID/frame, plus the existing uniquely label-anchored crop, single exact Vision candidate, empty error-free clipboard, and refresh checks. The allowed diff is explicit. Two fresh independent read-only reviews are pending. Updated MIG-001 to require CI evidence per submitted milestone rather than per local commit. No implementation edit, executable validation, commit, or push occurred; `origin/main` remains pinned at `ad983495302c8d7d52701eb2b698087c4013fbe0`.
+
+## R2.8.145 plan approved; implementation released — 2026-10-16T13:17:10Z
+
+Both independent reviewers approved the final plan. The second review confirmed the focus baseline is a fresh, enabled/focused/empty observation after click; acceptance then requires a newer post-paste/ArrowRight log line and frame with stable response ID/rectangle, focused nonempty expected byte count/hash, and geometry associated with the label-anchored crop. Both approved the distinct diagnostic identity and passive CI-only scope. Implementation is now authorized for the named four changes only. No source implementation has been edited yet; no local executable validation, commit, or push has occurred. `origin/main` remains pinned at `ad983495302c8d7d52701eb2b698087c4013fbe0`.
+
+## Push-unit wording clarified — 2026-10-16T13:26:23Z
+
+At the user's request, sharpened the goal's batching rule: the named, reviewed milestone is the unit submitted to `origin/main`, while edits, tasks, and local commits stay grouped locally. A complete milestone is pushed once; the submitted SHA remains fixed until every required workflow/job is terminal and its artifacts/results are reconciled, even when CI takes several hours. Subsequent milestones and consolidated repairs wait for that reconciliation. Synchronized the requirements mapping and current state goal hash. This wording update does not change R2.8.145's implementation scope or trigger a push. No local executable validation, commit, or push occurred; `origin/main` remains pinned at `ad983495302c8d7d52701eb2b698087c4013fbe0`.
+
+## R2.8.145 plan revision 3 includes requested push-unit wording — 2026-10-16T13:37:39Z
+
+Added the goal cadence clarification to the approved C07.4 repair milestone's allowed paths and acceptance criteria, strengthened its push-policy text, and marked the plan revision pending two fresh independent read-only reviews. Recorded the current goal hash as a new MIG-002 source version while retaining earlier hashes as historical, and synchronized the requirement's artifact-reconciliation wording. The implementation remains limited to the previously approved source changes. No local executable validation, commit, or push occurred; `origin/main` remains at `ad983495302c8d7d52701eb2b698087c4013fbe0`.
+
+## R2.8.145 revision 3 tracker scope correction — 2026-10-16T13:38:56Z
+
+The independent plan audit found that the revised state still described revision 2 as current and the reconciled R3.12 attempt evidence was referenced but absent from the plan's allowed paths. Updated the state to record R3.12's terminal 7-workflow/20-job outcome and report hashes, mark the revision 3 amendment pending review, and allow the referenced terminal-evidence file in this batch. The plan amendment remains pending two fresh read-only reviews; no source validation, commit, or push occurred.
+
+## R2.8.145 revision 3 reconciles active CI pointers — 2026-10-16T13:42:10Z
+
+The independent review found additional structured state pointers still reporting R3.12 as active. Updated the current attempt, repair, and CI batch records to terminal status with all 20 jobs, five failures, 16 artifacts, and three report payloads reconciled; pointed the next-follow-up field to R2.8.145. Added the plan file itself to revision 3's in-scope and allowed paths because it is part of the milestone evidence package. Two fresh read-only reviews remain pending. No tests, builds, formatters, linters, validators, commits, or pushes occurred; `origin/main` remains pinned at `ad983495302c8d7d52701eb2b698087c4013fbe0`.
+
+## R2.8.145 revision 3 supersedes stale R3.11 next-plan pointers — 2026-10-16T13:43:39Z
+
+The independent tracker review found two additional next-milestone pointers still naming R3.11. Marked the R3.11 plan records as historical/superseded, changed the active planned-next and CI-repair IDs to R2.8.145, and aligned state.json.updated_at with this entry. The R2.8.145 plan amendment remains pending final independent read-only review; no executable validation, commit, or push occurred.
+
+## R2.8.145 revision 3 retargets forward C07.4/C09.2 dependencies — 2026-10-16T13:45:33Z
+
+The final tracker review found forward-planning text still naming R3.11/R3.12 as the prerequisite for the future C07.4 comparator and C09.2 sequence. Retargeted those current dependency statements to the R2.8.145/R3.13 repair and subsequent all-platform capture, while leaving historical attempt records unchanged. The revision 3 plan remains pending two fresh read-only approvals; no tests, validators, commits, or pushes occurred.
+
+## R2.8.145/R3.13 implementation and review complete — 2026-10-16T13:46:46Z
+
+Two independent plan reviewers approved revision 3 after all current/forward tracker pointers and allowed paths were reconciled. A separate whole-milestone read-only review approved the bounded source changes, goal cadence wording, requirements/state hashes, and the complete nine-path diff. The milestone is implementation-complete and ready for one push; origin/main remains at `ad983495302c8d7d52701eb2b698087c4013fbe0`. No local tests, builds, formatters, linters, validators, application runs, commit, or push occurred.

@@ -2661,15 +2661,66 @@ impl OpenObsidianApp {
                 .labelled_by(canvas_path_label.id)
                 .changed();
             let node_id_label = ui.label("Text card ID");
-            inputs_changed |= ui
+            let node_id_input = ui
                 .add_enabled(
                     !operation_busy,
                     eframe::egui::TextEdit::singleline(&mut self.canvas_note_node_id)
                         .hint_text("text-card-id")
                         .desired_width(140.0),
                 )
-                .labelled_by(node_id_label.id)
-                .changed();
+                .labelled_by(node_id_label.id);
+            inputs_changed |= node_id_input.changed();
+            if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some()
+                && ui.input(|input| !input.raw.events.is_empty())
+            {
+                let frame_nr = ui.ctx().cumulative_frame_nr();
+                let pixels_per_point = ui.ctx().pixels_per_point();
+                let pointer = ui.input(|input| input.pointer.hover_pos());
+                let pointer_button_primary = ui.input(|input| {
+                    input
+                        .pointer
+                        .button_down(eframe::egui::PointerButton::Primary)
+                });
+                let arrow_right_pressed = ui.input(|input| {
+                    input.raw.events.iter().any(|event| {
+                        matches!(
+                            event,
+                            eframe::egui::Event::Key {
+                                key: eframe::egui::Key::ArrowRight,
+                                pressed: true,
+                                ..
+                            }
+                        )
+                    })
+                });
+                let tab_key_event = ui.input(|input| {
+                    input.raw.events.iter().any(|event| {
+                        matches!(
+                            event,
+                            eframe::egui::Event::Key {
+                                key: eframe::egui::Key::Tab,
+                                pressed: true,
+                                ..
+                            }
+                        )
+                    })
+                });
+                let node_id_value_sha256 =
+                    format!("{:x}", Sha256::digest(self.canvas_note_node_id.as_bytes()));
+                eprintln!(
+                    "OpenObsidian CI canvas-note-create-field: field=text-card-id enabled={}, frame_nr={frame_nr}, response_id={:?}, rect={:?}, pixels_per_point={pixels_per_point:.2}, pixels_per_point_bits=0x{:08x}, pointer={pointer:?}, pointer_button_primary={pointer_button_primary}, arrow_right_key_event={}, tab_key_event={tab_key_event}, hovered={}, clicked={}, focused={}, empty={}, value_bytes={}, value_sha256={node_id_value_sha256}",
+                    !operation_busy,
+                    node_id_input.id,
+                    node_id_input.rect,
+                    pixels_per_point.to_bits(),
+                    node_id_input.has_focus() && arrow_right_pressed,
+                    node_id_input.hovered(),
+                    node_id_input.clicked(),
+                    node_id_input.has_focus(),
+                    self.canvas_note_node_id.is_empty(),
+                    self.canvas_note_node_id.len(),
+                );
+            }
             let destination_path_label = ui.label("New Markdown path");
             inputs_changed |= ui
                 .add_enabled(

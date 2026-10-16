@@ -3437,10 +3437,12 @@
         ".agents/tasks/2026-10-07/evidence/r2.8.142-r3-10-windows-linux-canvas-repair-plan.json",
         ".agents/tasks/2026-10-07/evidence/r2.8.143-r3-11-linux-canvas-focus-c07-4-reference-plan.json",
         ".agents/tasks/2026-10-07/evidence/r2.8.143-r3-11-attempt-1-7f2dd3e.json",
-        ".agents/tasks/2026-10-07/evidence/r2.8.144-r3-12-c07-4-all-platform-capture-repair-plan.json"
+        ".agents/tasks/2026-10-07/evidence/r2.8.144-r3-12-c07-4-all-platform-capture-repair-plan.json",
+        "evidence/r2.8.144-r3-12-attempt-1-ad98349.json",
+        "evidence/r2.8.145-r3-13-c07-4-id-readback-repair-plan.json"
       ],
       "tested_source_tree": null,
-      "blocker": "R3.11 is terminal-failed on exact SHA 7f2dd3efd47ce1df3f14fb9cf07519afc408ca6b: 7/7 workflows and 20/20 jobs terminal, with 6 workflows/18 jobs passed and Linux 116935062474 plus macOS 116935062753 failed. Linux report 72a803d739d9999c2c8c0a3353b6e69614cb50459746c4e8498821d5b720028 confirms exact field-state bytes/SHA but strict screenshot OCR failed after a contaminated fallback crop; no save was attempted. The macOS report c23bcc9c497ee709d805e64ff01a5cb41d1be8e8b67dea0bdd87d075a0f6f5e4 shows first-open Bases/10 passed with seed order [z-last,a-first] and rows [a-first,z-last]. Mac reopen stably observed [a-first,z-last] across 23 paired preselection reads but did not select the tie view because two source predicates required creation order. Windows report bff1b6ac3520fb1cc7f5fab95d1ca64e24c5800509938076872e1c60c090601f passes all 10 C07.4 pairs. All 16 artifacts and all three report payload hashes/source SHAs/statuses are reconciled. R3.12 revision 6 is approved by two independent plan reviewers; implementation is complete and independently reviewed, with one full exact-SHA GitHub Actions batch pending after milestone submission. C07.4 remains pending and no Rust parity is claimed.",
+      "blocker": "R3.12 terminal-failed on exact SHA ad983495302c8d7d52701eb2b698087c4013fbe0. Linux/macOS stopped before C07.4 capture (Linux ID screenshot readback; macOS note-creation ID readback); Windows alone captured 10/10 scenarios and 28 checkpoints as reference-only, with source rewrites recorded and rust_parity_claimed=false. Do not claim all-platform reference capture or Rust parity.",
       "gate_class": "implementation",
       "decision_id": "D03",
       "legacy_status": "implemented",
@@ -3457,8 +3459,8 @@
       "runtime_override": "Compatibility is defined by checksum-pinned Obsidian 1.14.4 assets in .agents/tasks/2026-10-07/obsidian-reference-pin.json and the recorded locale/OS policy; C07.2 intentionally covers a smaller comparator slice only.",
       "migration_disposition": "retained",
       "migration_acceptance": "Implement the pinned-app captured comparison contract in crates/doc using the explicit runner-default locale policy. Exercise the production parse/evaluate path on captured source bytes, preserve exact Rust input bytes and unknown fields, compare fixture outcomes on the three-OS GitHub Actions matrix, and do not claim parity until exact-SHA required CI passes.",
-      "evidence": "Terminal R3.11 exact-SHA reports: Linux report SHA-256 72a803d739d9999c2c8c0a3353b6e69614cb50459746c64e8498821d5b720028, Windows report SHA-256 bff1b6ac3520fb1cc7f5fab95d1ca64e24c5800509938076872e1c60c090601f, macOS report SHA-256 c23bcc9c497ee709d805e64ff01a5cb41d1be8e8b67dea0bdd87d075a0f6f5e4; all report source SHA 7f2dd3efd47ce1df3f14fb9cf07519afc408ca6b. Archive/API digests and report payload hashes are recorded in evidence/r2.8.143-r3-11-attempt-1-7f2dd3e.json.",
-      "blockers": "R3.11 exact-SHA CI failed on Linux screenshot OCR and macOS C07.4 capture harness order checks. Windows C07.4 passes all ten first-open/reopen pairs. Mac report proves first-nine semantic projections match but their global tie-order diagnostic differs; the equal-key scenario stops before selection due the two hardcoded creation-order predicates. R3.12 revision 6 source changes are implemented and independently reviewed. The full exact-SHA seven-workflow/20-job GitHub Actions batch remains required; C07.4 stays pending until it passes.",
+      "evidence": "Terminal R3.11 exact-SHA reports: Linux report SHA-256 72a803d739d9999c2c8c0a3353b6e69614cb50459746c64e8498821d5b720028, Windows report SHA-256 bff1b6ac3520fb1cc7f5fab95d1ca64e24c5800509938076872e1c60c090601f, macOS report SHA-256 c23bcc9c497ee709d805e64ff01a5cb41d1be8e8b67dea0bdd87d075a0f6f5e4; all report source SHA 7f2dd3efd47ce1df3f14fb9cf07519afc408ca6b. Archive/API digests and report payload hashes are recorded in evidence/r2.8.143-r3-11-attempt-1-7f2dd3e.json. R3.12 exact-SHA reports at ad983495302c8d7d52701eb2b698087c4013fbe0 are reconciled in evidence/r2.8.144-r3-12-attempt-1-ad98349.json: Linux report 1,242,981 B / SHA-256 47b239926dea526a97b14e8ccd67fa804ee4b69f1f27e0486dc168650a73921a failed before C07.4 after the paired path crop passed; macOS report 656,617 B / SHA-256 5262d898f91ecfa90ce7b81fa18ac40709170820e2047b13ba31d3283cb6604e failed before C07.4 during note-creation ID entry; Windows report 69,910,424 B / SHA-256 9aec35ecd99f4a0dfc2348f40ffe9e3bcc7a078fc5b506e9bf721cc21ac39123 passed Windows reference capture only (10 scenarios, 28 checkpoints, source mutation observed, no Rust parity).",
+      "blockers": "The R3.12 batch is fully terminal and artifact/report-reconciled: 15/20 jobs passed; quality (3 OS jobs) and Linux/macOS round-trip (2 jobs) failed. R2.8.145 groups the Knip tesseract declaration and the platform-specific Canvas ID readback repairs and is pending two independent reviews. C07.4 remains pending until a future exact-SHA full matrix passes.",
       "notes": "No shared Linux/macOS cause is inferred. Mac and Windows reports are read and reconciled via signed artifact URLs. Windows/macOS post-reopen source mutation is recorded behavior, not an acceptance gate by itself. The revision 6 Mac capture contract preserves raw runtime order, strict visible rows, and all other predicates. Rust parity remains unclaimed."
     },
     {
@@ -10258,7 +10260,7 @@
       "checkpoint": "R0",
       "owner": "xtask",
       "mandatory": true,
-      "acceptance_criteria": "Every migration commit records an exact SHA and CI run; no local validation is counted.",
+      "acceptance_criteria": "Every submitted migration milestone records its exact implementation SHA and required GitHub Actions results; local validation is never counted.",
       "fixture_ids": [
         "fixture:mig-001"
       ],
@@ -10272,6 +10274,11 @@
           "kind": "rust-migration-goal",
           "version": "2026-10-07-documentation-update",
           "sha256": "89ed20b10116ecc814509f368935a284fa94f209b54a2055f71815cbd4099c87"
+        },
+        {
+          "kind": "rust-migration-goal",
+          "version": "2026-10-16-milestone-only-ci-submission",
+          "sha256": "92409372d9cb637cf8bb08603293b4b473a593fc82b8beacce93f309c68e5a1e"
         }
       ],
       "applicable_platforms": [
@@ -10292,7 +10299,7 @@
       "rust_owner": "xtask",
       "mapping_status": "reviewed",
       "migration_disposition": "retained",
-      "migration_acceptance": "Every migration commit records an exact SHA and CI run; no local validation is counted.",
+      "migration_acceptance": "Every submitted migration milestone records its exact implementation SHA and required GitHub Actions results; local validation is never counted.",
       "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence."
     },
     {
@@ -10470,6 +10477,11 @@
           "kind": "rust-migration-goal",
           "version": "2026-10-16-one-batch-per-reviewed-milestone",
           "sha256": "92409372d9cb637cf8bb08603293b4b473a593fc82b8beacce93f309c68e5a1e"
+        },
+        {
+          "kind": "rust-migration-goal",
+          "version": "2026-10-16-explicit-milestone-push-unit",
+          "sha256": "cf445c1599f6d12d5cf89f95a0ec81a621f761cfbb8756c0515498b78b3e5f0c"
         }
       ],
       "applicable_platforms": [
@@ -10490,10 +10502,10 @@
       "rust_owner": "xtask",
       "mapping_status": "reviewed",
       "migration_disposition": "retained",
-      "migration_acceptance": "Keep minor implementation, documentation, tests, fixes, and optional local commits grouped until a coherent, measurable milestone is complete and the full scope has been reviewed. A minor edit, formatting/lint correction, compiler fix, cleanup item, or evidence update does not trigger a push. Push origin/main once after implementation completion and whole-milestone review; that push starts the full exact-SHA GitHub Actions batch and marks implementation-complete / CI-pending. Keep origin/main at that SHA until every required job is terminal and evidence is reconciled, even if CI takes several hours; do not start another full batch meanwhile. If CI finds problems, let the full batch finish, group related findings into one reviewed repair milestone, and push that repair once. Mark achieved / CI-passed only after every required exact-SHA job passes and its evidence is reconciled.",
+      "migration_acceptance": "Keep minor implementation, documentation, tests, fixes, and optional local commits grouped until a coherent, measurable milestone is complete and the full scope has been reviewed. A minor edit, formatting/lint correction, compiler fix, cleanup item, or evidence update does not trigger a push. Push origin/main once after implementation completion and whole-milestone review; that push starts the full exact-SHA GitHub Actions batch and marks implementation-complete / CI-pending. Keep origin/main at that SHA until every required job is terminal and all results and artifacts are reconciled, even if CI takes several hours; do not start another full batch meanwhile. If CI finds problems, let the full batch finish, group related findings into one reviewed repair milestone, and push that repair once. Mark achieved / CI-passed only after every required exact-SHA job passes and its evidence is reconciled.",
       "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
-      "clause": "Do not push to origin/main for every minor change or to obtain early CI feedback. Keep implementation, documentation, tests, fixes, and optional local commits together until a named milestone has a coherent outcome, its full implementation scope is complete, and the accumulated work has been reviewed. Push that milestone once to start its full GitHub Actions batch; the push marks implementation-complete / CI-pending, not achieved. A single edit, test, formatting/lint correction, compiler fix, cleanup item, or evidence update is not a milestone. Do not split one coherent outcome into micro-milestones or combine unrelated work. Cross-platform CI may take several hours, so keep origin/main at the submitted SHA until every required job is terminal and its evidence is reconciled. If CI finds issues, wait for the batch to finish and group related corrections into one complete, reviewed repair milestone before its single push. Evidence-only and status-only updates stay local for the next substantive milestone.",
-      "goal_sha256": "92409372d9cb637cf8bb08603293b4b473a593fc82b8beacce93f309c68e5a1e"
+      "clause": "Do not push to origin/main for every minor change or to obtain early CI feedback. Keep implementation, documentation, tests, fixes, and optional local commits together until a named milestone has a coherent outcome, its full implementation scope is complete, and the accumulated work has been reviewed. Push that milestone once to start its full GitHub Actions batch; the push marks implementation-complete / CI-pending, not achieved. A single edit, test, formatting/lint correction, compiler fix, cleanup item, or evidence update is not a milestone. Do not split one coherent outcome into micro-milestones or combine unrelated work. Cross-platform CI may take several hours, so keep origin/main at the submitted SHA until every required job is terminal and all results and artifacts are reconciled. If CI finds issues, wait for the batch to finish and group related corrections into one complete, reviewed repair milestone before its single push. Evidence-only and status-only updates stay local for the next substantive milestone.",
+      "goal_sha256": "cf445c1599f6d12d5cf89f95a0ec81a621f761cfbb8756c0515498b78b3e5f0c"
     },
     {
       "id": "MIG-003",
@@ -11242,10 +11254,10 @@
     "post_r0_2_additions": [
       "MIG-016: maintain current, accurate documentation throughout migration and audit it at cutover."
     ],
-    "goal_sha256": "92409372d9cb637cf8bb08603293b4b473a593fc82b8beacce93f309c68e5a1e",
+    "goal_sha256": "cf445c1599f6d12d5cf89f95a0ec81a621f761cfbb8756c0515498b78b3e5f0c",
     "policy": "Every inherited requirement was reviewed by ID and assigned a Rust owner, migration phase, acceptance criterion and retained/superseded/external disposition. Historical status/evidence remain preserved separately. Rust acceptance remains pending unless current exact-SHA migration evidence is attached; external items remain external_pending.",
-    "cadence_synced_at": "2026-10-16T12:38:59Z",
-    "cadence_sync_note": "Synchronized the current goal text and hash. Do not push or trigger CI for minor edits; batch related work under a predeclared, measurable milestone and push once after implementation and whole-milestone review. Keep origin/main fixed at that SHA through the full multi-hour CI batch and evidence reconciliation. C07.4 remains pending until exact-SHA CI passes.",
+    "cadence_synced_at": "2026-10-16T13:26:23Z",
+    "cadence_sync_note": "Synchronized the current goal text and hash. The named, reviewed milestone is the push unit, not an edit, task, or local commit: batch related minor work locally, push once when the complete milestone is reviewed, and hold origin/main fixed until all required jobs and artifacts are reconciled, even if the cross-platform batch takes several hours. C07.4 remains pending until exact-SHA CI passes.",
     "reviewed_at": "2026-10-16T10:46:05Z"
   }
 }

@@ -1,0 +1,648 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.8.144-R3.12-C07.4-ALL-PLATFORM-CAPTURE-REPAIR",
+  "attempt": 1,
+  "plan": ".agents/tasks/2026-10-07/evidence/r2.8.144-r3-12-c07-4-all-platform-capture-repair-plan.json",
+  "starting_sha": "7f2dd3efd47ce1df3f14fb9cf07519afc408ca6b",
+  "implementation_sha": "ad983495302c8d7d52701eb2b698087c4013fbe0",
+  "submitted_sha": "ad983495302c8d7d52701eb2b698087c4013fbe0",
+  "pushed_once": true,
+  "pushed_at": "2026-10-16T12:39:41Z",
+  "origin_main_sha_before_push": "7f2dd3efd47ce1df3f14fb9cf07519afc408ca6b",
+  "origin_main_sha_after_push": "ad983495302c8d7d52701eb2b698087c4013fbe0",
+  "origin_main_verified_at": "2026-10-16T12:41:58Z",
+  "status_at": "2026-10-16T13:04:05Z",
+  "status": "Terminal failed on exact SHA ad983495302c8d7d52701eb2b698087c4013fbe0: 7/7 workflows terminal (5 passed, 2 failed); 20/20 jobs terminal (15 passed, 5 failed). All 16 artifacts and all three round-trip reports are reconciled. C07.4 remains pending because Linux and macOS stopped before capture; Windows passed capture-only.",
+  "required_workflows": [
+    {
+      "workflow": "OpenObsidian plugin renderer matrix",
+      "run_id": 38902084468,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38902084468",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "workflow": "OpenObsidian loaded plugin workflows",
+      "run_id": 38902084388,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38902084388",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "workflow": "Rust migration inventory",
+      "run_id": 38902084636,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38902084636",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "workflow": "OpenObsidian quality",
+      "run_id": 38902084496,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38902084496",
+      "status": "completed",
+      "conclusion": "failure"
+    },
+    {
+      "workflow": "Obsidian vault round-trip acceptance",
+      "run_id": 38902084440,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38902084440",
+      "status": "completed",
+      "conclusion": "failure"
+    },
+    {
+      "workflow": "OpenObsidian Rust CI",
+      "run_id": 38902084409,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38902084409",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "workflow": "OpenObsidian desktop build",
+      "run_id": 38902084560,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38902084560",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ],
+  "workflow_counts": {
+    "observed": 7,
+    "terminal": 7,
+    "passed": 5,
+    "failed": 2,
+    "cancelled": 0,
+    "queued": 0,
+    "in_progress": 0
+  },
+  "required_job_count": 20,
+  "jobs": [
+    {
+      "run_id": 38902084468,
+      "job_id": 116976535610,
+      "name": "windows-latest",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "run_id": 38902084468,
+      "job_id": 116976535795,
+      "name": "macos-latest",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "run_id": 38902084468,
+      "job_id": 116976535984,
+      "name": "ubuntu-latest",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "run_id": 38902084388,
+      "job_id": 116976531878,
+      "name": "windows-latest",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "run_id": 38902084388,
+      "job_id": 116976532387,
+      "name": "ubuntu-latest",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "run_id": 38902084388,
+      "job_id": 116976532623,
+      "name": "macos-latest",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "run_id": 38902084636,
+      "job_id": 116976533559,
+      "name": "inventory",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "run_id": 38902084496,
+      "job_id": 116976533104,
+      "name": "ubuntu-latest",
+      "status": "completed",
+      "conclusion": "failure"
+    },
+    {
+      "run_id": 38902084496,
+      "job_id": 116976533468,
+      "name": "macos-latest",
+      "status": "completed",
+      "conclusion": "failure"
+    },
+    {
+      "run_id": 38902084496,
+      "job_id": 116976533591,
+      "name": "windows-latest",
+      "status": "completed",
+      "conclusion": "failure"
+    },
+    {
+      "run_id": 38902084440,
+      "job_id": 116976532473,
+      "name": "Obsidian 1.14.4 vault round-trip on macos-latest",
+      "status": "completed",
+      "conclusion": "failure"
+    },
+    {
+      "run_id": 38902084440,
+      "job_id": 116976532831,
+      "name": "Obsidian 1.14.4 vault round-trip on windows-latest",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "run_id": 38902084440,
+      "job_id": 116976532914,
+      "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04",
+      "status": "completed",
+      "conclusion": "failure"
+    },
+    {
+      "run_id": 38902084409,
+      "job_id": 116976532777,
+      "name": "rust (windows-latest)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "run_id": 38902084409,
+      "job_id": 116976532787,
+      "name": "minimum supported Rust (1.95)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "run_id": 38902084409,
+      "job_id": 116976532848,
+      "name": "rust (ubuntu-latest)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "run_id": 38902084409,
+      "job_id": 116976533109,
+      "name": "rust (macos-latest)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "run_id": 38902084560,
+      "job_id": 116976532823,
+      "name": "macos-latest",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "run_id": 38902084560,
+      "job_id": 116976533226,
+      "name": "ubuntu-latest",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "run_id": 38902084560,
+      "job_id": 116976534361,
+      "name": "windows-latest",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ],
+  "job_counts": {
+    "observed": 20,
+    "terminal": 20,
+    "passed": 15,
+    "failed": 5,
+    "cancelled": 0,
+    "queued": 0,
+    "in_progress": 0
+  },
+  "failure_findings": [
+    {
+      "workflow": "OpenObsidian quality",
+      "run_id": 38902084496,
+      "job_ids": [
+        116976533104,
+        116976533468,
+        116976533591
+      ],
+      "finding": "All three OS jobs fail only in Knip: the system binary `tesseract` used in audit-obsidian-vault-roundtrip.ts is absent from knip.json ignoreBinaries. The Fallow audit passed on each OS.",
+      "repair_policy": "Add the known system binary to the existing ignoreBinaries list as part of the grouped post-batch repair milestone."
+    },
+    {
+      "workflow": "Obsidian vault round-trip acceptance",
+      "run_id": 38902084440,
+      "job_ids": [
+        116976532914
+      ],
+      "finding": "Linux paired target-only geometry crop passes for the Canvas path input and exact OCR, then the Canvas edit text-card ID screenshot readback fails: field state is exact but the label-offset crop is not the target field; no save is attempted.",
+      "repair_policy": "Use the existing paired geometry capture for ID target with path sibling, retaining exact target-only geometry and OCR acceptance."
+    },
+    {
+      "workflow": "Obsidian vault round-trip acceptance",
+      "run_id": 38902084440,
+      "job_ids": [
+        116976532473
+      ],
+      "finding": "macOS Canvas text edit passed; subsequent note-creation Text card ID entry fails before C07.4. The exact target textbox screenshot is visible and Vision recognizes `text-1`, while clipboard and Tesseract crop readback are empty.",
+      "repair_policy": "Use only a uniquely associated label-anchored target-field Vision result for the established empty-clipboard fallback; preserve target-label, crop bounds, focus, and exact-value guards."
+    }
+  ],
+  "artifacts": null,
+  "artifact_inventory_complete": true,
+  "roundtrip_report_payloads_reconciled": true,
+  "main_sha_held": true,
+  "local_executable_validation": false,
+  "artifact_count": 16,
+  "artifact_inventory_count": 16,
+  "artifact_metadata_reconciled": true,
+  "artifact_inventory": [
+    {
+      "artifact_id": 12046641419,
+      "name": "loaded-plugin-workflows-Linux-ad983495302c8d7d52701eb2b698087c4013fbe0",
+      "size_bytes": 171471,
+      "api_digest": "sha256:001d1fc73e17e6ef798b9247e883e9ee6a1a3de2a0843c4d56f1f700e5855e25",
+      "expired": false,
+      "created_at": "2026-10-16T12:40:16Z",
+      "expires_at": "2027-01-14T12:39:41Z",
+      "workflow_run_id": 38902084388,
+      "head_sha": "ad983495302c8d7d52701eb2b698087c4013fbe0",
+      "api_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38902084388/artifacts/12046641419"
+    },
+    {
+      "artifact_id": 12046577373,
+      "name": "loaded-plugin-workflows-Windows-ad983495302c8d7d52701eb2b698087c4013fbe0",
+      "size_bytes": 171476,
+      "api_digest": "sha256:202688a00370fe40c7e7ce6250f99087a105612e25d989e25fb1c6ccb9d23f22",
+      "expired": false,
+      "created_at": "2026-10-16T12:40:33Z",
+      "expires_at": "2027-01-14T12:39:41Z",
+      "workflow_run_id": 38902084388,
+      "head_sha": "ad983495302c8d7d52701eb2b698087c4013fbe0",
+      "api_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38902084388/artifacts/12046577373"
+    },
+    {
+      "artifact_id": 12046346919,
+      "name": "loaded-plugin-workflows-macOS-ad983495302c8d7d52701eb2b698087c4013fbe0",
+      "size_bytes": 171471,
+      "api_digest": "sha256:dd1097fd3076835b9938ee6776b1ce7a80c28d9c3d24ba47092fd8b1ca994953",
+      "expired": false,
+      "created_at": "2026-10-16T12:40:44Z",
+      "expires_at": "2027-01-14T12:39:41Z",
+      "workflow_run_id": 38902084388,
+      "head_sha": "ad983495302c8d7d52701eb2b698087c4013fbe0",
+      "api_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38902084388/artifacts/12046346919"
+    },
+    {
+      "artifact_id": 12046297950,
+      "name": "rust-plugin-runtime-macOS-ad983495302c8d7d52701eb2b698087c4013fbe0",
+      "size_bytes": 3637,
+      "api_digest": "sha256:ef00f4912ed3fefcbeb27c231b5d73352c5a11f24254ef67cf9c29c90d344fc7",
+      "expired": false,
+      "created_at": "2026-10-16T12:43:04Z",
+      "expires_at": "2027-01-14T12:39:41Z",
+      "workflow_run_id": 38902084409,
+      "head_sha": "ad983495302c8d7d52701eb2b698087c4013fbe0",
+      "api_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38902084409/artifacts/12046297950"
+    },
+    {
+      "artifact_id": 12046512927,
+      "name": "rust-plugin-runtime-Linux-ad983495302c8d7d52701eb2b698087c4013fbe0",
+      "size_bytes": 3597,
+      "api_digest": "sha256:1ce2e66a7680d268ab0d9a4bb83b44e202948317b1360c3e5e3ceac96b156f4c",
+      "expired": false,
+      "created_at": "2026-10-16T12:43:04Z",
+      "expires_at": "2027-01-14T12:39:41Z",
+      "workflow_run_id": 38902084409,
+      "head_sha": "ad983495302c8d7d52701eb2b698087c4013fbe0",
+      "api_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38902084409/artifacts/12046512927"
+    },
+    {
+      "artifact_id": 12045859911,
+      "name": "openobsidian-rust-preview-ad983495302c8d7d52701eb2b698087c4013fbe0",
+      "size_bytes": 11117244,
+      "api_digest": "sha256:a97c07c96f40de160b1e7d0a3d8ef76063feeef4966e424322fcc9e60c06207b",
+      "expired": false,
+      "created_at": "2026-10-16T12:43:06Z",
+      "expires_at": "2027-01-14T12:39:41Z",
+      "workflow_run_id": 38902084409,
+      "head_sha": "ad983495302c8d7d52701eb2b698087c4013fbe0",
+      "api_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38902084409/artifacts/12045859911"
+    },
+    {
+      "artifact_id": 12046762037,
+      "name": "rust-plugin-runtime-Windows-ad983495302c8d7d52701eb2b698087c4013fbe0",
+      "size_bytes": 3627,
+      "api_digest": "sha256:1f93f893c8959b7aead250eeb4283c3f1c8c777ffa34569044b7a9700ebcef54",
+      "expired": false,
+      "created_at": "2026-10-16T12:45:58Z",
+      "expires_at": "2027-01-14T12:39:41Z",
+      "workflow_run_id": 38902084409,
+      "head_sha": "ad983495302c8d7d52701eb2b698087c4013fbe0",
+      "api_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38902084409/artifacts/12046762037"
+    },
+    {
+      "artifact_id": 12047041467,
+      "name": "plugin-renderer-lifecycle-Linux-ad983495302c8d7d52701eb2b698087c4013fbe0",
+      "size_bytes": 3100,
+      "api_digest": "sha256:4a14b434dfa39f6985c9f0e9d382ef77efe8be39a6b48275d61c9eafb1be7d55",
+      "expired": false,
+      "created_at": "2026-10-16T12:39:58Z",
+      "expires_at": "2027-01-14T12:39:41Z",
+      "workflow_run_id": 38902084468,
+      "head_sha": "ad983495302c8d7d52701eb2b698087c4013fbe0",
+      "api_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38902084468/artifacts/12047041467"
+    },
+    {
+      "artifact_id": 12045993027,
+      "name": "plugin-renderer-lifecycle-Windows-ad983495302c8d7d52701eb2b698087c4013fbe0",
+      "size_bytes": 3104,
+      "api_digest": "sha256:0778962e7b099ec62c5f1d9c49f451c4d54c122b89b0f984de2b5504aee70f2f",
+      "expired": false,
+      "created_at": "2026-10-16T12:40:33Z",
+      "expires_at": "2027-01-14T12:39:41Z",
+      "workflow_run_id": 38902084468,
+      "head_sha": "ad983495302c8d7d52701eb2b698087c4013fbe0",
+      "api_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38902084468/artifacts/12045993027"
+    },
+    {
+      "artifact_id": 12046676927,
+      "name": "plugin-renderer-lifecycle-macOS-ad983495302c8d7d52701eb2b698087c4013fbe0",
+      "size_bytes": 3100,
+      "api_digest": "sha256:65aaea48b4779dd71828fb4855dd791d708a045cb903d23cdebd1ab1e176417d",
+      "expired": false,
+      "created_at": "2026-10-16T12:41:17Z",
+      "expires_at": "2027-01-14T12:39:41Z",
+      "workflow_run_id": 38902084468,
+      "head_sha": "ad983495302c8d7d52701eb2b698087c4013fbe0",
+      "api_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38902084468/artifacts/12046676927"
+    },
+    {
+      "artifact_id": 12046706311,
+      "name": "openobsidian-Linux-preview-ad983495302c8d7d52701eb2b698087c4013fbe0",
+      "size_bytes": 125946850,
+      "api_digest": "sha256:f798e3cdb823af050936e879ac51d24b2c2c491afe70e6fc967c9cc09d20b1ea",
+      "expired": false,
+      "created_at": "2026-10-16T12:40:00Z",
+      "expires_at": "2027-01-14T12:39:41Z",
+      "workflow_run_id": 38902084560,
+      "head_sha": "ad983495302c8d7d52701eb2b698087c4013fbe0",
+      "api_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38902084560/artifacts/12046706311"
+    },
+    {
+      "artifact_id": 12046297526,
+      "name": "openobsidian-macOS-preview-ad983495302c8d7d52701eb2b698087c4013fbe0",
+      "size_bytes": 397395784,
+      "api_digest": "sha256:f887343d2170e5978447ee3c5f5c0748c4845e1965c27919f37997618a851d7c",
+      "expired": false,
+      "created_at": "2026-10-16T12:40:42Z",
+      "expires_at": "2027-01-14T12:39:41Z",
+      "workflow_run_id": 38902084560,
+      "head_sha": "ad983495302c8d7d52701eb2b698087c4013fbe0",
+      "api_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38902084560/artifacts/12046297526"
+    },
+    {
+      "artifact_id": 12046646449,
+      "name": "openobsidian-Windows-preview-ad983495302c8d7d52701eb2b698087c4013fbe0",
+      "size_bytes": 163006126,
+      "api_digest": "sha256:5678360cb400358db5af38943afb8d5dd26ebff30e7a4a9bda9785a7fe174229",
+      "expired": false,
+      "created_at": "2026-10-16T12:40:47Z",
+      "expires_at": "2027-01-14T12:39:41Z",
+      "workflow_run_id": 38902084560,
+      "head_sha": "ad983495302c8d7d52701eb2b698087c4013fbe0",
+      "api_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38902084560/artifacts/12046646449"
+    },
+    {
+      "artifact_id": 12047212695,
+      "name": "obsidian-vault-roundtrip-Linux-ad983495302c8d7d52701eb2b698087c4013fbe0",
+      "size_bytes": 16293833,
+      "api_digest": "sha256:adbcd070107b22c43349a23b17cbf0242f487230df20ff7f7d22d25461e8f4b7",
+      "expired": false,
+      "created_at": "2026-10-16T12:50:55Z",
+      "expires_at": "2026-11-15T12:50:52Z",
+      "workflow_run_id": 38902084440,
+      "head_sha": "ad983495302c8d7d52701eb2b698087c4013fbe0",
+      "api_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38902084440/artifacts/12047212695"
+    },
+    {
+      "artifact_id": 12047233083,
+      "name": "obsidian-vault-roundtrip-macOS-ad983495302c8d7d52701eb2b698087c4013fbe0",
+      "size_bytes": 18678779,
+      "api_digest": "sha256:daa9830b133e61c02fe131c9f493afdb8e17bb02e49d0ae978ab533552c952e5",
+      "expired": false,
+      "created_at": "2026-10-16T12:53:10Z",
+      "expires_at": "2026-11-15T12:53:07Z",
+      "workflow_run_id": 38902084440,
+      "head_sha": "ad983495302c8d7d52701eb2b698087c4013fbe0",
+      "api_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38902084440/artifacts/12047233083"
+    },
+    {
+      "artifact_id": 12047690625,
+      "name": "obsidian-vault-roundtrip-Windows-ad983495302c8d7d52701eb2b698087c4013fbe0",
+      "size_bytes": 22786339,
+      "api_digest": "sha256:53b56e5ebb61cbb279f43ece3e0bb63b4ef1caf3ad741aa9579ad35fb235d4c9",
+      "expired": false,
+      "created_at": "2026-10-16T12:58:53Z",
+      "expires_at": "2026-11-15T12:58:50Z",
+      "workflow_run_id": 38902084440,
+      "head_sha": "ad983495302c8d7d52701eb2b698087c4013fbe0",
+      "api_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38902084440/artifacts/12047690625"
+    }
+  ],
+  "rust_runtime_reports": [
+    {
+      "platform": "Linux",
+      "artifact_id": 12046512927,
+      "artifact_name": "rust-plugin-runtime-Linux-ad983495302c8d7d52701eb2b698087c4013fbe0",
+      "archive_bytes": 3597,
+      "archive_sha256": "1ce2e66a7680d268ab0d9a4bb83b44e202948317b1360c3e5e3ceac96b156f4c",
+      "report_file": "rust-plugin-runtime-Linux.json",
+      "report_bytes": 15648,
+      "report_sha256": "74a7e69168c98df6f28f9ddc1f4eac0b514c11ac4b80adce6b1128b0372d40eb",
+      "pc05_version": "0.23.2",
+      "pc08_version": "1.0.9",
+      "pc05_status": "passed",
+      "pc08_status": "passed",
+      "process_exit_code": 0,
+      "timed_out": false,
+      "certification": "feasibility-only",
+      "legacy_compatibility_state": "Pending",
+      "report_has_repository_source_sha": false
+    },
+    {
+      "platform": "macOS",
+      "artifact_id": 12046297950,
+      "artifact_name": "rust-plugin-runtime-macOS-ad983495302c8d7d52701eb2b698087c4013fbe0",
+      "archive_bytes": 3637,
+      "archive_sha256": "ef00f4912ed3fefcbeb27c231b5d73352c5a11f24254ef67cf9c29c90d344fc7",
+      "report_file": "rust-plugin-runtime-macOS.json",
+      "report_bytes": 15610,
+      "report_sha256": "bcbc6ce1c9ca38f1c34e9c2477b09d04983c4594e34653c5fb84a6afec9ec094",
+      "pc05_version": "0.23.2",
+      "pc08_version": "1.0.9",
+      "pc05_status": "passed",
+      "pc08_status": "passed",
+      "process_exit_code": 0,
+      "timed_out": false,
+      "certification": "feasibility-only",
+      "legacy_compatibility_state": "Pending",
+      "report_has_repository_source_sha": false
+    },
+    {
+      "platform": "Windows",
+      "artifact_id": 12046762037,
+      "artifact_name": "rust-plugin-runtime-Windows-ad983495302c8d7d52701eb2b698087c4013fbe0",
+      "archive_bytes": 3627,
+      "archive_sha256": "1f93f893c8959b7aead250eeb4283c3f1c8c777ffa34569044b7a9700ebcef54",
+      "report_file": "rust-plugin-runtime-Windows.json",
+      "report_bytes": 15756,
+      "report_sha256": "4bce20859b989870829215c451a0dc92c5e383539464312b5857bacdff4e6013",
+      "pc05_version": "0.23.2",
+      "pc08_version": "1.0.9",
+      "pc05_status": "passed",
+      "pc08_status": "passed",
+      "process_exit_code": 0,
+      "timed_out": false,
+      "certification": "feasibility-only",
+      "legacy_compatibility_state": "Pending",
+      "report_has_repository_source_sha": false
+    }
+  ],
+  "linux_preview_artifact": {
+    "artifact_id": 12045859911,
+    "artifact_name": "openobsidian-rust-preview-ad983495302c8d7d52701eb2b698087c4013fbe0",
+    "archive_bytes": 11117244,
+    "archive_sha256": "a97c07c96f40de160b1e7d0a3d8ef76063feeef4966e424322fcc9e60c06207b",
+    "executable_bytes": 27621128,
+    "executable_sha256": "dbc8f9a5fe5e065316576ae413fa42a6025829bc2f31c11117a654a889cc8d2d"
+  },
+  "expected_no_artifact_runs": [
+    {
+      "run_id": 38902084636,
+      "workflow": "Rust migration inventory",
+      "artifact_count": 0
+    },
+    {
+      "run_id": 38902084496,
+      "workflow": "OpenObsidian quality",
+      "artifact_count": 0
+    }
+  ],
+  "updated_at": "2026-10-16T13:04:05Z",
+  "all_required_jobs_terminal": true,
+  "failed_job_ids": [
+    116976533104,
+    116976533468,
+    116976533591,
+    116976532473,
+    116976532914
+  ],
+  "active_job_ids": [],
+  "queued_job_ids": [],
+  "roundtrip_report_payloads_reconciled_at": "2026-10-16T13:04:05Z",
+  "roundtrip_artifacts": [
+    {
+      "platform": "Linux",
+      "artifact_id": 12047212695,
+      "artifact_name": "obsidian-vault-roundtrip-Linux-ad983495302c8d7d52701eb2b698087c4013fbe0",
+      "artifact_size_bytes": 16293833,
+      "artifact_api_digest": "sha256:adbcd070107b22c43349a23b17cbf0242f487230df20ff7f7d22d25461e8f4b7",
+      "archive_sha256": "adbcd070107b22c43349a23b17cbf0242f487230df20ff7f7d22d25461e8f4b7",
+      "archive_digest_matches_api": true,
+      "report_file": "obsidian-vault-roundtrip-report.json",
+      "report_bytes": 1242981,
+      "report_sha256": "47b239926dea526a97b14e8ccd67fa804ee4b69f1f27e0486dc168650a73921a",
+      "report_status": "failed",
+      "report_source_sha": "ad983495302c8d7d52701eb2b698087c4013fbe0",
+      "roundtrip_job_id": 116976532914,
+      "roundtrip_job_conclusion": "failure",
+      "c07_4_capture_status": "pending",
+      "linux_path_target_crop_subcase": "passed: fresh paired target/sibling diagnostics, stable geometry, target-only crop and exact OCR `C06 Reference.canvas`",
+      "failure_cause": "Canvas edit text-card ID had exact field-state hash but the legacy label-offset screenshot crop did not contain the target field value; full-window screenshot visibly shows text-1. No save was attempted.",
+      "rust_parity_claimed": false
+    },
+    {
+      "platform": "macOS",
+      "artifact_id": 12047233083,
+      "artifact_name": "obsidian-vault-roundtrip-macOS-ad983495302c8d7d52701eb2b698087c4013fbe0",
+      "artifact_size_bytes": 18678779,
+      "artifact_api_digest": "sha256:daa9830b133e61c02fe131c9f493afdb8e17bb02e49d0ae978ab533552c952e5",
+      "archive_sha256": "daa9830b133e61c02fe131c9f493afdb8e17bb02e49d0ae978ab533552c952e5",
+      "archive_digest_matches_api": true,
+      "report_file": "obsidian-vault-roundtrip-report.json",
+      "report_bytes": 656617,
+      "report_sha256": "5262d898f91ecfa90ce7b81fa18ac40709170820e2047b13ba31d3283cb6604e",
+      "report_status": "failed",
+      "report_source_sha": "ad983495302c8d7d52701eb2b698087c4013fbe0",
+      "roundtrip_job_id": 116976532473,
+      "roundtrip_job_conclusion": "failure",
+      "c07_4_capture_status": "pending",
+      "failure_cause": "Canvas text edit passed; note creation then failed to resolve/confirm the Text card ID field. Clipboard and crop OCR were empty, but exact macOS Vision OCR returned text-1 in the target textbox crop. C07.4 capture was not reached.",
+      "rust_parity_claimed": false
+    },
+    {
+      "platform": "Windows",
+      "artifact_id": 12047690625,
+      "artifact_name": "obsidian-vault-roundtrip-Windows-ad983495302c8d7d52701eb2b698087c4013fbe0",
+      "artifact_size_bytes": 22786339,
+      "artifact_api_digest": "sha256:53b56e5ebb61cbb279f43ece3e0bb63b4ef1caf3ad741aa9579ad35fb235d4c9",
+      "archive_sha256": "53b56e5ebb61cbb279f43ece3e0bb63b4ef1caf3ad741aa9579ad35fb235d4c9",
+      "archive_digest_matches_api": true,
+      "report_file": "obsidian-vault-roundtrip-report.json",
+      "report_bytes": 69910424,
+      "report_sha256": "9aec35ecd99f4a0dfc2348f40ffe9e3bcc7a078fc5b506e9bf721cc21ac39123",
+      "report_status": "passed",
+      "report_source_sha": "ad983495302c8d7d52701eb2b698087c4013fbe0",
+      "roundtrip_job_id": 116976532831,
+      "roundtrip_job_conclusion": "success",
+      "c07_4_capture_status": "captured-reference-only",
+      "all_ten_first_open_predicates_passed": true,
+      "all_ten_reopen_predicates_passed": true,
+      "all_ten_comparable_pairs_passed": true,
+      "source_checkpoint_count": 28,
+      "source_checkpoint_matrix_complete": true,
+      "reopen_seed_hashes_match": true,
+      "reopen_source_hashes_match_seed": false,
+      "reference_source_mutation_observed": true,
+      "rust_parity_claimed": false
+    }
+  ],
+  "roundtrip_report_evidence": {
+    "Linux": {
+      "report_bytes": 1242981,
+      "report_sha256": "47b239926dea526a97b14e8ccd67fa804ee4b69f1f27e0486dc168650a73921a",
+      "report_source_sha": "ad983495302c8d7d52701eb2b698087c4013fbe0",
+      "report_status": "failed",
+      "artifact_archive_sha256": "adbcd070107b22c43349a23b17cbf0242f487230df20ff7f7d22d25461e8f4b7",
+      "report_payload_reconciled": true
+    },
+    "macOS": {
+      "report_bytes": 656617,
+      "report_sha256": "5262d898f91ecfa90ce7b81fa18ac40709170820e2047b13ba31d3283cb6604e",
+      "report_source_sha": "ad983495302c8d7d52701eb2b698087c4013fbe0",
+      "report_status": "failed",
+      "artifact_archive_sha256": "daa9830b133e61c02fe131c9f493afdb8e17bb02e49d0ae978ab533552c952e5",
+      "report_payload_reconciled": true
+    },
+    "Windows": {
+      "report_bytes": 69910424,
+      "report_sha256": "9aec35ecd99f4a0dfc2348f40ffe9e3bcc7a078fc5b506e9bf721cc21ac39123",
+      "report_source_sha": "ad983495302c8d7d52701eb2b698087c4013fbe0",
+      "report_status": "passed",
+      "artifact_archive_sha256": "53b56e5ebb61cbb279f43ece3e0bb63b4ef1caf3ad741aa9579ad35fb235d4c9",
+      "c07_4_capture_status": "captured-reference-only",
+      "report_payload_reconciled": true
+    }
+  },
+  "candidate_followup_plan": "evidence/r2.8.145-r3-13-c07-4-id-readback-repair-plan.json",
+  "followup_plan_status": "planned_pending_independent_review"
+}

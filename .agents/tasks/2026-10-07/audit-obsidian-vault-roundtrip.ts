@@ -1423,10 +1423,11 @@ function readCanvasTraceCoordinatePair(raw: unknown): {raw: [string, string]; va
 
 async function readCanvasTextEditFieldDiagnostic(
   logPath: string,
-  field: "path" | "id",
+  field: "path" | "id" | "text-card-id",
   afterLine = -1,
   requestId?: string,
   onlyFrameNr?: number,
+  diagnosticPrefix = "canvas-text-edit-field",
 ): Promise<CanvasTextEditFieldDiagnostic | null> {
   const log = await readFile(logPath, "utf8").catch(() => "");
   const lines = log.split(/\r?\n/);
@@ -1434,8 +1435,8 @@ async function readCanvasTextEditFieldDiagnostic(
   for (let index = lines.length - 1; index >= 0; index -= 1) {
     const value = lines[index] ?? "";
     const fieldPrefix = requestId === undefined
-      ? `OpenObsidian CI canvas-text-edit-field: field=${field} `
-      : `OpenObsidian CI canvas-text-edit-field: request_id=${requestId}, field=${field} `;
+      ? `OpenObsidian CI ${diagnosticPrefix}: field=${field} `
+      : `OpenObsidian CI ${diagnosticPrefix}: request_id=${requestId}, field=${field} `;
     if (!value.includes(fieldPrefix)) continue;
     const enabled = value.match(/\benabled=(true|false)/)?.[1];
     const frameNr = value.match(/\bframe_nr=(\d+)/)?.[1];
@@ -1529,6 +1530,20 @@ async function readCanvasTextEditFieldDiagnostic(
     tabKeyEventObservation,
     tabKeyEventObservations,
   };
+}
+
+async function readCanvasNoteCreateTextCardIdDiagnostic(
+  logPath: string,
+  afterLine = -1,
+): Promise<CanvasTextEditFieldDiagnostic | null> {
+  return await readCanvasTextEditFieldDiagnostic(
+    logPath,
+    "text-card-id",
+    afterLine,
+    undefined,
+    undefined,
+    "canvas-note-create-field",
+  );
 }
 
 type CanvasTextEditFieldObservation = {
@@ -18303,9 +18318,9 @@ async function readCanvasInputScreenshotValue(
     candidate.text.replace(/\s+/g, " ").trim() === expectedLine
   );
   const visionExact = exactVisionCandidates.length === 1;
-  // Keep the existing empty-clipboard fallback tied to Tesseract's literal
-  // exact-line result; Vision supplies the second exact visual readback path,
-  // but does not widen that clipboard fallback.
+  // Keep the existing exact-line result tied to literal Tesseract output.
+  // The only Vision-based empty-clipboard fallback is gated downstream to
+  // the note-create Text card ID target crop and its fresh focus/refresh proof.
   const exactLine = canvasInputOcrHasExactLine(text, expectedValue);
   return {
     exact: tesseractExact || visionExact,
@@ -20344,8 +20359,8 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
         let targetVisualReadbackAttempts = 0;
         for (let visualProbe = 1; visualProbe <= 3; visualProbe += 1) {
           const linuxTargetOnlyReadback = process.platform === "linux"
-            && diagnosticField === "path"
-            && siblingDiagnosticField === "id";
+            && ((diagnosticField === "path" && siblingDiagnosticField === "id")
+              || (diagnosticField === "id" && siblingDiagnosticField === "path"));
           const readbackScreenshotName = `${inputScreenshotPrefix}-${fileSafeName}-field-readback-${attempt}-${visualProbe}`;
           const expectedLinuxWindowScreenshotPath = linuxTargetOnlyReadback
             ? join(reportDirectory, `${readbackScreenshotName}-window.png`)
@@ -20571,7 +20586,9 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
             field_value_bytes: fieldStateReadback.valueBytes,
             expected_value_sha256: expectedValueSha256,
             field_value_sha256: fieldStateReadback.valueSha256,
-            readback_source: process.platform === "linux" && diagnosticField === "path"
+            readback_source: process.platform === "linux"
+              && ((diagnosticField === "path" && siblingDiagnosticField === "id")
+                || (diagnosticField === "id" && siblingDiagnosticField === "path"))
               ? "CI-gated egui field-state SHA-256 plus exact OCR from a target-only crop derived from fresh paired TextEdit geometry and a verified screenshot mapping"
               : "CI-gated egui field-state SHA-256 plus exact OCR from a fresh crop anchored to the same visible field label",
             readback_ocr: targetVisualReadback?.text ?? "",
@@ -20616,7 +20633,9 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
               screenshot: targetReadbackScreenshot ? relative(reportDirectory, targetReadbackScreenshot.windowPngPath) : null,
               crop: targetVisualReadback ? relative(reportDirectory, targetVisualReadback.cropPath) : null,
             },
-            position_source: process.platform === "linux" && diagnosticField === "path"
+            position_source: process.platform === "linux"
+              && ((diagnosticField === "path" && siblingDiagnosticField === "id")
+                || (diagnosticField === "id" && siblingDiagnosticField === "path"))
               ? "fresh paired target/sibling TextEdit geometry bracketed around a stable event-free screenshot"
               : "fresh visible label bounds after a stable vault-refresh window",
             readback_capture_correlations: safetyTracker?.readbackCaptureCorrelations ?? [],
@@ -20828,6 +20847,14 @@ async function replaceMacOSOpenObsidianTextInputWithKeyboard(
   let initialFieldVisualReadback: Awaited<ReturnType<typeof readCanvasInputScreenshotValue>> | undefined;
   let targetFieldClickDiagnostic: Awaited<ReturnType<typeof readCanvasTextEditFieldDiagnostic>> = null;
   let targetFieldFocusDiagnostic: Awaited<ReturnType<typeof readCanvasTextEditFieldDiagnostic>> = null;
+  let noteCreateIdPrePasteFieldDiagnostic: Awaited<ReturnType<typeof readCanvasNoteCreateTextCardIdDiagnostic>> = null;
+  let noteCreateIdPostArrowRightFieldDiagnostic: Awaited<ReturnType<typeof readCanvasNoteCreateTextCardIdDiagnostic>> = null;
+  let noteCreateIdRefreshBaseline: OpenObsidianRefreshDiagnostics | null = null;
+  let noteCreateIdRefreshAfterCopy: OpenObsidianRefreshDiagnostics | null = null;
+  let noteCreateIdRefreshAfterReadback: OpenObsidianRefreshDiagnostics | null = null;
+  let noteCreateIdFocusEvidenceValid = false;
+  let noteCreateIdFocusEvidenceError = "";
+  const readbackFocusAttempts: Array<Record<string, unknown>> = [];
   let pasteAlreadySent = false;
   const pasteScript = `on run argv
     set processId to (item 1 of argv) as integer
@@ -20885,6 +20912,9 @@ async function replaceMacOSOpenObsidianTextInputWithKeyboard(
       }
       const focusDiagnosticBeforeClick = controlName === "Canvas edit text-card ID"
         ? await readCanvasTextEditFieldDiagnostic(logPath, "id")
+        : null;
+      const noteCreateDiagnosticBeforeClick = controlName === "Text card ID"
+        ? await readCanvasNoteCreateTextCardIdDiagnostic(logPath)
         : null;
       const attemptClick = await clickMacOSDesktopFraction(
         attemptLayout.fieldCenter.x / attemptLayout.imageDimensions.width,
@@ -20948,6 +20978,78 @@ async function replaceMacOSOpenObsidianTextInputWithKeyboard(
         pasteAlreadySent = true;
         break;
       }
+      if (controlName === "Text card ID") {
+        const priorLine = noteCreateDiagnosticBeforeClick?.line ?? -1;
+        const focusAfterClick = await readCanvasNoteCreateTextCardIdDiagnostic(logPath, priorLine);
+        const refreshAfterClick = await readOpenObsidianRefreshDiagnostics(logPath);
+        const refreshChangedDuringFocus = openObsidianRefreshActivityChanged(refreshBeforeClick, refreshAfterClick)
+          || (refreshAfterClick.receiverStates.at(-1)?.busy ?? false);
+        const emptyValueSha256 = createHash("sha256").update("", "utf8").digest("hex");
+        const clickPointer = focusAfterClick?.pointer ?? null;
+        const clickPointerInsideTarget = focusAfterClick !== null
+          && clickPointer !== null
+          && clickPointer.x >= focusAfterClick.rect.left
+          && clickPointer.x <= focusAfterClick.rect.right
+          && clickPointer.y >= focusAfterClick.rect.top
+          && clickPointer.y <= focusAfterClick.rect.bottom;
+        const clickObservationIsCurrent = focusAfterClick !== null
+          && focusAfterClick.clickEventObservation !== null
+          && focusAfterClick.clickEventObservation.line === focusAfterClick.line
+          && focusAfterClick.clickEventObservation.frameNr === focusAfterClick.frameNr;
+        targetFieldClickDiagnostic = focusAfterClick;
+        if (!focusAfterClick
+          || focusAfterClick.line <= priorLine
+          || focusAfterClick.frameNr <= (noteCreateDiagnosticBeforeClick?.frameNr ?? -1)
+          || focusAfterClick.clickEventLine === null
+          || !clickObservationIsCurrent
+          || !clickPointerInsideTarget
+          || !focusAfterClick.enabled
+          || !focusAfterClick.focused
+          || focusAfterClick.empty !== true
+          || focusAfterClick.valueBytes !== 0
+          || focusAfterClick.valueSha256 !== emptyValueSha256
+          || refreshChangedDuringFocus) {
+          noteCreateIdFocusEvidenceError = `fresh pre-paste note-create Text card ID focus was not proven after attempt ${attempt}`;
+          lastPositionFailure = `${noteCreateIdFocusEvidenceError}: prior=${JSON.stringify(noteCreateDiagnosticBeforeClick)}; after_click=${JSON.stringify(focusAfterClick)}; click_observation_is_current=${clickObservationIsCurrent}; click_pointer_inside_target=${clickPointerInsideTarget}; target_field_position_source=${attemptLayout.fieldPositionSource}; target_field_center_image=${JSON.stringify(attemptLayout.fieldCenter)}; target_field_crop_bounds=${JSON.stringify(attemptLayout.cropBounds)}; target_field_screenshot_dimensions=${JSON.stringify(attemptLayout.imageDimensions)}; refresh=${JSON.stringify(refreshAfterClick)}; refresh_changed=${refreshChangedDuringFocus}; screenshot=${relative(reportDirectory, attemptBefore.pngPath)}; click=${attemptClick}`;
+          readbackFocusAttempts.push({
+            stage: "pre-paste-after-click",
+            attempt,
+            prior_target_widget: noteCreateDiagnosticBeforeClick,
+            target_widget: focusAfterClick,
+            target_field_position_source: attemptLayout.fieldPositionSource,
+            target_field_center_image: attemptLayout.fieldCenter,
+            target_field_crop_bounds: attemptLayout.cropBounds,
+            target_field_screenshot_dimensions: attemptLayout.imageDimensions,
+            click_pointer_inside_target: clickPointerInsideTarget,
+            click_observation_is_current: clickObservationIsCurrent,
+            refresh_after_click: refreshAfterClick,
+            refresh_changed: refreshChangedDuringFocus,
+            error: lastPositionFailure,
+          });
+          if (refreshChangedDuringFocus) await waitForOpenObsidianRefreshIdle(0, 0, false, logPath);
+          continue;
+        }
+        noteCreateIdPrePasteFieldDiagnostic = focusAfterClick;
+        noteCreateIdRefreshBaseline = refreshAfterClick;
+        targetFieldFocusDiagnostic = focusAfterClick;
+        noteCreateIdFocusEvidenceValid = true;
+        noteCreateIdFocusEvidenceError = "";
+        readbackFocusAttempts.push({
+          stage: "pre-paste-after-click",
+          attempt,
+          prior_target_widget: noteCreateDiagnosticBeforeClick,
+          target_widget: focusAfterClick,
+          target_field_position_source: attemptLayout.fieldPositionSource,
+          target_field_center_image: attemptLayout.fieldCenter,
+          target_field_crop_bounds: attemptLayout.cropBounds,
+          target_field_screenshot_dimensions: attemptLayout.imageDimensions,
+          click_pointer_inside_target: clickPointerInsideTarget,
+          click_observation_is_current: clickObservationIsCurrent,
+          refresh_after_click: refreshAfterClick,
+          refresh_changed: false,
+          error: null,
+        });
+      }
       execFileSync("pbcopy", [], {input: "", stdio: ["pipe", "ignore", "ignore"]});
       execFileSync("osascript", ["-e", probeScript, String(child.pid ?? -1)], {stdio: "ignore"});
       const initialFieldValue = execFileSync("pbpaste", [], {
@@ -21005,7 +21107,6 @@ async function replaceMacOSOpenObsidianTextInputWithKeyboard(
   }
   let clipboardReadback = "";
   let clipboardReadbackError = "";
-  const readbackFocusAttempts: Array<Record<string, unknown>> = [];
   let readbackTargetWidgetDiagnostic: Awaited<ReturnType<typeof readCanvasTextEditFieldDiagnostic>> = null;
   let verification: Awaited<ReturnType<typeof captureOpenObsidianScreenshot>> | undefined;
   if (controlName === "Canvas edit text-card ID") {
@@ -21205,6 +21306,66 @@ async function replaceMacOSOpenObsidianTextInputWithKeyboard(
     // following pbpaste result can only come from the focused field selection.
     execFileSync("pbcopy", [], {input: "", stdio: ["pipe", "ignore", "ignore"]});
     execFileSync("osascript", ["-e", copyFieldScript, String(child.pid ?? -1)], {stdio: "ignore"});
+    if (controlName === "Text card ID") {
+      const prePasteDiagnostic = noteCreateIdPrePasteFieldDiagnostic;
+      const postArrowRightDiagnostic = await readCanvasNoteCreateTextCardIdDiagnostic(
+        logPath,
+        prePasteDiagnostic?.line ?? -1,
+      );
+      const acceptedArrowRightObservation = postArrowRightDiagnostic?.arrowRightEventObservation ?? null;
+      const refreshAfterCopy = await readOpenObsidianRefreshDiagnostics(logPath);
+      const refreshBaseline = noteCreateIdRefreshBaseline;
+      const refreshChanged = refreshBaseline === null
+        || openObsidianRefreshActivityChanged(refreshBaseline, refreshAfterCopy)
+        || (refreshAfterCopy.receiverStates.at(-1)?.busy ?? false);
+      const expectedValueBytes = Buffer.byteLength(value, "utf8");
+      const expectedValueSha256 = createHash("sha256").update(value, "utf8").digest("hex");
+      const stableTarget = prePasteDiagnostic !== null
+        && acceptedArrowRightObservation !== null
+        && acceptedArrowRightObservation.responseId === prePasteDiagnostic.responseId
+        && JSON.stringify(acceptedArrowRightObservation.rect) === JSON.stringify(prePasteDiagnostic.rect)
+        && acceptedArrowRightObservation.pixelsPerPointBits === prePasteDiagnostic.pixelsPerPointBits;
+      const hasFreshArrowRight = prePasteDiagnostic !== null
+        && acceptedArrowRightObservation !== null
+        && acceptedArrowRightObservation.line > prePasteDiagnostic.line
+        && acceptedArrowRightObservation.frameNr > prePasteDiagnostic.frameNr
+        && postArrowRightDiagnostic?.arrowRightEventLine === acceptedArrowRightObservation.line;
+      const exactTargetValue = acceptedArrowRightObservation !== null
+        && acceptedArrowRightObservation.enabled
+        && acceptedArrowRightObservation.focused
+        && acceptedArrowRightObservation.empty === false
+        && acceptedArrowRightObservation.valueBytes === expectedValueBytes
+        && acceptedArrowRightObservation.valueSha256 === expectedValueSha256;
+      const postArrowRightValid = noteCreateIdFocusEvidenceValid
+        && stableTarget
+        && hasFreshArrowRight
+        && exactTargetValue
+        && !refreshChanged;
+      const postArrowRightError = postArrowRightValid
+        ? ""
+        : "post-paste Text card ID focus/value was not proven by a fresh ArrowRight observation on the stable target while vault refresh remained idle";
+      noteCreateIdPostArrowRightFieldDiagnostic = postArrowRightDiagnostic;
+      noteCreateIdRefreshAfterCopy = refreshAfterCopy;
+      noteCreateIdFocusEvidenceValid = postArrowRightValid;
+      noteCreateIdFocusEvidenceError = postArrowRightError;
+      readbackTargetWidgetDiagnostic = postArrowRightDiagnostic;
+      readbackFocusAttempts.push({
+        stage: "post-paste-after-arrow-right",
+        prior_target_widget: prePasteDiagnostic,
+        target_widget: postArrowRightDiagnostic,
+        accepted_arrow_right_observation: acceptedArrowRightObservation,
+        refresh_baseline: refreshBaseline,
+        refresh_after_copy: refreshAfterCopy,
+        refresh_changed: refreshChanged,
+        expected_value_bytes: expectedValueBytes,
+        expected_value_sha256: expectedValueSha256,
+        stable_target: stableTarget,
+        fresh_arrow_right: hasFreshArrowRight,
+        exact_target_value: exactTargetValue,
+        valid: postArrowRightValid,
+        error: postArrowRightValid ? null : postArrowRightError,
+      });
+    }
     await waitForOpenObsidianRefreshIdle(0, 0, false, logPath);
     try {
       clipboardReadback = execFileSync("pbpaste", [], {
@@ -21232,15 +21393,51 @@ async function replaceMacOSOpenObsidianTextInputWithKeyboard(
   } catch (error) {
     visualReadbackError = error instanceof Error ? error.message : "unknown screenshot OCR error";
   }
+  if (controlName === "Text card ID") {
+    const refreshAfterReadback = await readOpenObsidianRefreshDiagnostics(logPath);
+    const refreshBaseline = noteCreateIdRefreshBaseline;
+    const refreshChanged = refreshBaseline === null
+      || openObsidianRefreshActivityChanged(refreshBaseline, refreshAfterReadback)
+      || (refreshAfterReadback.receiverStates.at(-1)?.busy ?? false);
+    noteCreateIdRefreshAfterReadback = refreshAfterReadback;
+    if (refreshChanged) {
+      noteCreateIdFocusEvidenceValid = false;
+      noteCreateIdFocusEvidenceError = [noteCreateIdFocusEvidenceError, "vault refresh changed before the target-field readback completed"]
+        .filter(Boolean)
+        .join("; ");
+    }
+    readbackFocusAttempts.push({
+      stage: "refresh-after-readback-screenshot",
+      refresh_baseline: refreshBaseline,
+      refresh_after_readback: refreshAfterReadback,
+      refresh_changed: refreshChanged,
+      valid: !refreshChanged,
+      error: refreshChanged ? "vault refresh changed before the target-field readback completed" : null,
+    });
+  }
+  if (controlName === "Text card ID" && !noteCreateIdFocusEvidenceValid) {
+    throw new Error(`macOS note-create Text card ID readback lacked required pre-paste and post-paste focus/value evidence: focus_error=${noteCreateIdFocusEvidenceError || "unknown"}; pre_paste_focus=${JSON.stringify(noteCreateIdPrePasteFieldDiagnostic)}; post_arrow_right_focus=${JSON.stringify(noteCreateIdPostArrowRightFieldDiagnostic)}; refresh_baseline=${JSON.stringify(noteCreateIdRefreshBaseline)}; refresh_after_copy=${JSON.stringify(noteCreateIdRefreshAfterCopy)}; refresh_after_readback=${JSON.stringify(noteCreateIdRefreshAfterReadback)}; clipboard_exact=${clipboardReadback === value}; clipboard_error=${clipboardReadbackError || "none"}; crop_ocr=${JSON.stringify(visualReadback?.text ?? "")}; vision_ocr=${JSON.stringify(visualReadback?.visionText ?? "")}; vision_error=${visualReadback?.visionError || "none"}; visual_readback_error=${visualReadbackError || "none"}; readback_focus_attempts=${JSON.stringify(readbackFocusAttempts)}`);
+  }
   // Confirm the visible value in the label-relative field crop even when the
   // clipboard returns the expected value. This ties readback to the requested
   // control instead of proving only that some focused field was copied.
+  const visualRegionIsLabelRelative = visualReadback?.layout.fieldPositionSource === "visible-field-text-ocr"
+    || visualReadback?.layout.fieldPositionSource === "label-anchored-readback-crop";
+  const tesseractVisualExact = visualReadback?.exact === true && visualReadback.visionExact !== true;
+  const noteCreateVisionVisualExact = controlName === "Text card ID"
+    && visualReadback?.visionExact === true
+    && visualReadback.layout.fieldPositionSource === "label-anchored-readback-crop"
+    && visualReadback.visionError === "";
+  const exactClipboardVisionVisualReadback = controlName !== "Text card ID"
+    && clipboardReadback === value
+    && visualReadback?.visionExact === true
+    && visualRegionIsLabelRelative
+    && visualReadback.visionError === "";
   const exactVisualFieldReadback = controlName !== "Canvas text draft"
-    && (visualReadback?.layout.fieldPositionSource === "visible-field-text-ocr"
-      || visualReadback?.layout.fieldPositionSource === "label-anchored-readback-crop")
-    && visualReadback?.exact === true;
+    && visualRegionIsLabelRelative
+    && (tesseractVisualExact || noteCreateVisionVisualExact || exactClipboardVisionVisualReadback);
   if (controlName !== "Canvas text draft" && !exactVisualFieldReadback) {
-    throw new Error(`macOS ${controlName} field crop did not visually confirm the exact value in its label-relative OCR region: expected=${JSON.stringify(value)}; crop_ocr=${JSON.stringify(visualReadback?.text ?? "")}; vision_ocr=${JSON.stringify(visualReadback?.visionText ?? "")}; vision_error=${visualReadback?.visionError || "none"}; field_position_source=${visualReadback?.layout.fieldPositionSource ?? "unavailable"}; label_vision=${JSON.stringify(layout.labelVision)}; readback_label_vision=${JSON.stringify(visualReadback?.layout.labelVision ?? null)}; macos_tesseract=${JSON.stringify(layout.macOSOCRDiagnostics)}; readback_macos_tesseract=${JSON.stringify(visualReadback?.layout.macOSOCRDiagnostics ?? null)}; field_search_failure=${layout.fieldSearchFailure || "none"}; clipboard_exact=${clipboardReadback === value}; clipboard_length=${clipboardReadback.length}; clipboard_error=${clipboardReadbackError || "none"}; visual_readback_error=${visualReadbackError || "none"}; click=${click}; crop=${visualReadback ? relative(reportDirectory, visualReadback.cropPath) : "unavailable"}; screenshot=${relative(reportDirectory, verification.pngPath)}; readback_focus_attempts=${JSON.stringify(readbackFocusAttempts)}`);
+    throw new Error(`macOS ${controlName} field crop did not visually confirm the exact value in its label-relative OCR region: expected=${JSON.stringify(value)}; crop_ocr=${JSON.stringify(visualReadback?.text ?? "")}; vision_ocr=${JSON.stringify(visualReadback?.visionText ?? "")}; vision_error=${visualReadback?.visionError || "none"}; field_position_source=${visualReadback?.layout.fieldPositionSource ?? "unavailable"}; label_vision=${JSON.stringify(layout.labelVision)}; readback_label_vision=${JSON.stringify(visualReadback?.layout.labelVision ?? null)}; macos_tesseract=${JSON.stringify(layout.macOSOCRDiagnostics)}; readback_macos_tesseract=${JSON.stringify(visualReadback?.layout.macOSOCRDiagnostics ?? null)}; field_search_failure=${layout.fieldSearchFailure || "none"}; clipboard_exact=${clipboardReadback === value}; clipboard_length=${clipboardReadback.length}; clipboard_error=${clipboardReadbackError || "none"}; visual_readback_error=${visualReadbackError || "none"}; note_create_focus_error=${noteCreateIdFocusEvidenceError || "none"}; click=${click}; crop=${visualReadback ? relative(reportDirectory, visualReadback.cropPath) : "unavailable"}; screenshot=${relative(reportDirectory, verification.pngPath)}; readback_focus_attempts=${JSON.stringify(readbackFocusAttempts)}`);
   }
   // egui can display the exact value even when macOS does not return its
   // selection through pbpaste. Accept that fallback only when the fresh
@@ -21249,23 +21446,43 @@ async function replaceMacOSOpenObsidianTextInputWithKeyboard(
     && clipboardReadback === ""
     && clipboardReadbackError === ""
     && visualReadback?.exactLine === true;
-  if (clipboardReadback !== value && !exactVisualFieldFallback) {
-    throw new Error(`macOS clipboard readback did not confirm the exact ${controlName} value: expected_length=${value.length}; actual_length=${clipboardReadback.length}; clipboard_error=${clipboardReadbackError || "none"}; crop_ocr=${JSON.stringify(visualReadback?.text ?? "")}; vision_ocr=${JSON.stringify(visualReadback?.visionText ?? "")}; vision_error=${visualReadback?.visionError || "none"}; visual_readback_error=${visualReadbackError || "none"}; label_vision=${JSON.stringify(layout.labelVision)}; readback_label_vision=${JSON.stringify(visualReadback?.layout.labelVision ?? null)}; macos_tesseract=${JSON.stringify(layout.macOSOCRDiagnostics)}; readback_macos_tesseract=${JSON.stringify(visualReadback?.layout.macOSOCRDiagnostics ?? null)}; field_search_failure=${layout.fieldSearchFailure || "none"}; click=${click}; crop=${visualReadback ? relative(reportDirectory, visualReadback.cropPath) : "unavailable"}; screenshot=${relative(reportDirectory, verification.pngPath)}; readback_focus_attempts=${JSON.stringify(readbackFocusAttempts)}`);
+  const noteCreateVisionClipboardFallback = controlName === "Text card ID"
+    && noteCreateIdFocusEvidenceValid
+    && clipboardReadback === ""
+    && clipboardReadbackError === ""
+    && visualReadback?.visionExact === true
+    && visualReadback.layout.fieldPositionSource === "label-anchored-readback-crop"
+    && visualReadback.visionError === ""
+    && noteCreateIdRefreshBaseline !== null
+    && noteCreateIdRefreshAfterCopy !== null
+    && noteCreateIdRefreshAfterReadback !== null
+    && !openObsidianRefreshActivityChanged(noteCreateIdRefreshBaseline, noteCreateIdRefreshAfterCopy)
+    && !(noteCreateIdRefreshAfterCopy.receiverStates.at(-1)?.busy ?? false)
+    && !openObsidianRefreshActivityChanged(noteCreateIdRefreshBaseline, noteCreateIdRefreshAfterReadback)
+    && !(noteCreateIdRefreshAfterReadback.receiverStates.at(-1)?.busy ?? false);
+  const acceptedEmptyClipboardFallback = exactVisualFieldFallback || noteCreateVisionClipboardFallback;
+  if (clipboardReadback !== value && !acceptedEmptyClipboardFallback) {
+    throw new Error(`macOS clipboard readback did not confirm the exact ${controlName} value: expected_length=${value.length}; actual_length=${clipboardReadback.length}; clipboard_error=${clipboardReadbackError || "none"}; crop_ocr=${JSON.stringify(visualReadback?.text ?? "")}; vision_ocr=${JSON.stringify(visualReadback?.visionText ?? "")}; vision_error=${visualReadback?.visionError || "none"}; visual_readback_error=${visualReadbackError || "none"}; note_create_focus_error=${noteCreateIdFocusEvidenceError || "none"}; note_create_vision_fallback=${noteCreateVisionClipboardFallback}; label_vision=${JSON.stringify(layout.labelVision)}; readback_label_vision=${JSON.stringify(visualReadback?.layout.labelVision ?? null)}; macos_tesseract=${JSON.stringify(layout.macOSOCRDiagnostics)}; readback_macos_tesseract=${JSON.stringify(visualReadback?.layout.macOSOCRDiagnostics ?? null)}; field_search_failure=${layout.fieldSearchFailure || "none"}; click=${click}; crop=${visualReadback ? relative(reportDirectory, visualReadback.cropPath) : "unavailable"}; screenshot=${relative(reportDirectory, verification.pngPath)}; readback_focus_attempts=${JSON.stringify(readbackFocusAttempts)}`);
   }
   return JSON.stringify({
-      name: controlName,
-      action: controlName === "Canvas edit text-card ID"
-        ? "proved the blank field hint and pre-paste egui focus, pasted through the macOS clipboard, then waited for refresh idle and re-localized/refocused the exact nonempty value before a fresh focus/ArrowRight check and exact clipboard/visual readback"
-        : "focused the OCR-positioned field, verified its initial blank state, pasted through the macOS clipboard, copied the selected field, then sent Right Arrow to collapse the selection before screenshot readback; macOS Vision reads the label-anchored crop if Tesseract cannot locate the exact value",
+    name: controlName,
+    action: controlName === "Canvas edit text-card ID"
+      ? "proved the blank field hint and pre-paste egui focus, pasted through the macOS clipboard, then waited for refresh idle and re-localized/refocused the exact nonempty value before a fresh focus/ArrowRight check and exact clipboard/visual readback"
+      : controlName === "Text card ID"
+        ? "proved fresh note-create Text card ID focus before paste and after a post-paste ArrowRight observation, confirmed the exact value hash and stable refresh state, then read back the label-anchored crop and clipboard"
+        : "focused the OCR-positioned field, verified its initial blank state, pasted through the macOS clipboard, copied the selected field, then sent Right Arrow to collapse the selection before screenshot readback",
     exact_readback: true,
     clipboard_exact: clipboardReadback === value,
     readback_selection_collapse_key_sent: true,
     readback_source: clipboardReadback === value
       ? "macOS clipboard after selecting and copying the focused field"
-      : "exact literal Tesseract OCR line from a fresh label-relative field crop after clipboard readback was empty",
+      : noteCreateVisionClipboardFallback
+        ? "unique exact macOS Vision candidate in the label-anchored Text card ID crop after an empty, error-free clipboard readback and valid focus/refresh evidence"
+        : "exact literal Tesseract OCR line from a fresh label-relative field crop after clipboard readback was empty",
     readback_ocr: visualReadback?.text ?? "",
     visual_ocr_exact: visualReadback?.exact ?? false,
     visual_ocr_exact_line: visualReadback?.exactLine ?? false,
+    vision_ocr_exact: visualReadback?.visionExact ?? false,
     visual_ocr_engine: visualReadback?.visionAttempted ? "Tesseract + macOS Vision" : "Tesseract",
     vision_ocr_text: visualReadback?.visionText ?? "",
     vision_ocr_candidates: visualReadback?.visionCandidates ?? [],
@@ -21278,9 +21495,17 @@ async function replaceMacOSOpenObsidianTextInputWithKeyboard(
     initial_field_visual_exact: initialFieldVisualReadback?.exact ?? null,
     target_widget_click: targetFieldClickDiagnostic,
     target_widget_focus: targetFieldFocusDiagnostic,
+      note_create_text_card_id_pre_paste_focus: noteCreateIdPrePasteFieldDiagnostic,
+      note_create_text_card_id_post_arrow_right_focus: noteCreateIdPostArrowRightFieldDiagnostic,
+      note_create_text_card_id_accepted_arrow_right_observation: noteCreateIdPostArrowRightFieldDiagnostic?.arrowRightEventObservation ?? null,
+    note_create_text_card_id_focus_evidence_valid: controlName === "Text card ID" ? noteCreateIdFocusEvidenceValid : null,
+    note_create_text_card_id_focus_evidence_error: controlName === "Text card ID" ? noteCreateIdFocusEvidenceError || null : null,
+    note_create_text_card_id_refresh_baseline: noteCreateIdRefreshBaseline,
+    note_create_text_card_id_refresh_after_copy: noteCreateIdRefreshAfterCopy,
+    note_create_text_card_id_refresh_after_readback: noteCreateIdRefreshAfterReadback,
     target_widget_readback_focus: readbackTargetWidgetDiagnostic,
     readback_focus_attempts: readbackFocusAttempts,
-    readback_refresh_aware_retry_count: readbackFocusAttempts.length,
+    readback_refresh_aware_retry_count: controlName === "Canvas edit text-card ID" ? readbackFocusAttempts.length : 0,
     position_source: layout.fieldPositionSource,
     field_text_ocr_source: layout.fieldTextOcrSource,
     field_search_crop: layout.fieldSearchCrop,

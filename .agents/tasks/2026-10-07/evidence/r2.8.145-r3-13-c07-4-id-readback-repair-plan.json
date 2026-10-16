@@ -1,0 +1,129 @@
+{
+  "schema_version": 1,
+  "milestone_id": "R2.8.145-R3.13-C07.4-ID-READBACK-REPAIR",
+  "name": "R3.13 C07.4 Canvas ID readback and CI audit repair",
+  "status": "implementation-complete / whole-milestone review approved / ready for one push",
+  "starting_sha": "ad983495302c8d7d52701eb2b698087c4013fbe0",
+  "origin_main_sha_at_planning": "ad983495302c8d7d52701eb2b698087c4013fbe0",
+  "planning_date": "2026-10-16",
+  "parent_milestone": "R2.8.144-R3.12-C07.4-ALL-PLATFORM-CAPTURE-REPAIR",
+  "outcome": "Repair the exact-SHA quality and Linux/macOS Canvas text-card ID readback failures that prevented the R3.12 reference-capture matrix from completing. Preserve the accepted Windows capture and the approved R3.12 Mac tie-order contract, then capture C07.4 reference behavior on all three operating systems. This milestone records pinned Obsidian behavior only and must not claim Rust comparator parity.",
+  "evidence_basis": {
+    "terminal_attempt": "evidence/r2.8.144-r3-12-attempt-1-ad98349.json",
+    "approved_capture_contract": "evidence/r2.8.144-r3-12-c07-4-all-platform-capture-repair-plan.json",
+    "exact_sha": "ad983495302c8d7d52701eb2b698087c4013fbe0",
+    "terminal_ci": {
+      "workflow_runs": [38902084468, 38902084388, 38902084636, 38902084496, 38902084440, 38902084409, 38902084560],
+      "job_totals": {"passed": 15, "failed": 5, "terminal": 20},
+      "failure_jobs": [116976533104, 116976533468, 116976533591, 116976532914, 116976532473]
+    },
+    "failure_summary": [
+      "All three quality jobs report Knip's unlisted system binary tesseract; Fallow passed on each OS.",
+      "Linux passes the paired target-only path crop and exact C06 Reference.canvas OCR, then fails Canvas edit text-card ID visual readback because the label-offset crop misses the visibly populated target field despite exact field-state bytes/hash.",
+      "macOS Canvas text edit passes; note creation stops at Text card ID. Clipboard and Tesseract crop readback are empty, while the uniquely returned Vision candidate reads exact text-1 from the target textbox crop. C07.4 is not reached on macOS.",
+      "Windows passes the full C07.4 reference capture: ten first-open/reopen/comparable pairs and 28 source checkpoints. The report records Obsidian source rewrites and rust_parity_claimed=false."
+    ]
+  },
+  "scope": {
+    "in_scope": [
+      "Declare the system tesseract executable in the existing knip.json ignoreBinaries list so Knip recognizes the runtime dependency already provisioned by the GitHub Actions runner; do not disable the binary audit broadly.",
+      "Use the existing paired Linux widget-geometry readback capture for Canvas edit text-card ID input with the path field as its sibling, symmetrically with the passing path-target capture. Preserve the exact target-only crop and all freshness, correlation, focus, event-free, refresh-idle, mapping, bounds, sibling-disjointness, helper-text exclusion, full-value OCR, clipboard cleanup, canary, and no-save guards.",
+      "Add a read-only CI diagnostic for the note-creation Text card ID TextEdit response, gated by OPENOBSIDIAN_CI_DIAGNOSTICS. Give it a distinct canvas-note-create prefix and field=text-card-id identity; record the fresh frame, response ID/rectangle, enabled/focused/empty state, and value byte count/SHA-256 without logging raw text or changing widget state, event dispatch, or the existing click/paste sequence. Extend the harness to capture a fresh pre-paste observation after the existing click (enabled/focused/empty) and a post-paste/ArrowRight observation before screenshot acceptance. Require the latter log line and frame to be newer than the pre-paste observation, with the same response ID and rectangle, focused=true, enabled=true, empty=false, and the expected byte count/hash; retain both observations on pass and failure.",
+      "Allow the existing macOS empty-clipboard fallback only for the note-creation Text card ID control and only when the fresh readback is uniquely associated with the label-anchored target textbox crop, exactly one accepted Vision candidate equals the complete expected value, the clipboard is empty without error, the new fresh target-field diagnostic passes, and the refresh and field-localization gates pass. Keep the current Tesseract exact-line fallback and normal nonempty exact-clipboard path.",
+      "Retain the approved R3.12 revision 6 C07.4 behavior and capture all ten scenarios on first open and reopen on Linux, macOS, and Windows, including 28 source checkpoints per OS and the exact Mac equal-key result rows.",
+      "Update only the migration status/evidence needed to record this milestone and its exact-SHA GitHub Actions outcomes.",
+      "Carry the user-requested milestone push cadence clarification in .agents/tasks/2026-10-07/goal.md as part of this same local milestone batch, and synchronize its exact SHA-256 in requirements.json and state.json; do not submit the documentation change separately.",
+      "Include the already reconciled R3.12 terminal attempt evidence file cited in evidence_basis with the milestone package; preserve its recorded hashes and captured results.",
+      "Include this R2.8.145 plan artifact and its review history in the same milestone package, with status fields matching the latest approved review state."
+    ],
+    "out_of_scope": [
+      "Implementing or changing the Rust Bases comparator, number semantics, collation, filtering, grouping, or any Rust parity claim.",
+      "Changing product UI behavior, widget state, event dispatch, focus recovery, click/paste sequences, Canvas save/write behavior, note-creation semantics, or unrelated vault/plugin/appearance work. The sole UI source change allowed is the passive environment-gated Text card ID diagnostic described above.",
+      "Relaxing exact field values, target association, OCR candidate uniqueness, crop bounds, the existing Linux focus/refresh checks or the new macOS focused-field diagnostic, no-save protections, scenario predicates, source checkpoints, or expected tie rows.",
+      "Changing Windows input behavior or the accepted Mac tie-order comparison boundary; preserve all raw seed/runtime order evidence.",
+      "Running tests, builds, formatters, linters, validators, benchmarks, runtime probes, or application launches locally."
+    ]
+  },
+  "allowed_changed_paths": [
+    "knip.json",
+    "crates/ui-egui/src/lib.rs (passive CI-gated note-creation Text card ID diagnostic only)",
+    ".agents/tasks/2026-10-07/audit-obsidian-vault-roundtrip.ts (paired Linux ID capture, Mac target-field diagnostic assertion, and bounded Vision fallback only)",
+    ".agents/tasks/2026-10-07/requirements.json",
+    ".agents/tasks/2026-10-07/state.json",
+    ".agents/tasks/2026-10-07/journal.md",
+    ".agents/tasks/2026-10-07/goal.md (milestone-only push cadence clarification; no unrelated goal changes)",
+    ".agents/tasks/2026-10-07/evidence/r2.8.144-r3-12-attempt-1-ad98349.json (reconciled R3.12 terminal CI/artifact evidence referenced by this plan)",
+    ".agents/tasks/2026-10-07/evidence/r2.8.145-r3-13-c07-4-id-readback-repair-plan.json (this plan and its review history)",
+    ".agents/tasks/2026-10-07/evidence/r2.8.145-attempt-1-<submitted-sha>.json"
+  ],
+  "implementation_acceptance": [
+    "knip.json adds only the known tesseract system binary to its existing ignoreBinaries configuration; unrelated quality rules remain active.",
+    "Linux paired geometry capture is selected for the target ID/path-sibling pair and the existing path/ID-sibling pair. The helper verifies correlated fresh diagnostics, stable target/sibling geometry and values, target focus, sibling non-focus, event-free frames, idle refresh, screenshot/window mapping, crop containment within the target widget, and separation from sibling, labels, and instructions.",
+    "Linux ID readback retains complete expected-value OCR matching and fail-closed behavior; field-state evidence alone cannot pass visual readback. The successful path-target behavior remains intact.",
+    "macOS emits the note-creation Text card ID diagnostic only under OPENOBSIDIAN_CI_DIAGNOSTICS, with a distinct prefix/field identity and no raw text. The harness captures a fresh enabled/focused/empty pre-paste observation after click, then requires a post-paste/ArrowRight record before screenshot acceptance whose log line and frame are newer, whose response ID and rectangle match the pre-paste observation and localized target crop, and whose field is enabled/focused/nonempty with the expected byte count/SHA-256. Retain both observations on passing and failing attempts.",
+    "macOS uses Vision for empty-clipboard fallback only for note-creation Text card ID and only when exactly one accepted candidate equals the complete expected input value in the uniquely localized target-field crop; no whole-window Vision match or unrelated candidate can satisfy the gate. The fresh focused-field diagnostic, idle-refresh check, exact field localization, and visible-readback guards remain active.",
+    "The Mac note-creation ID path reaches confirmation without weakening no-overwrite, source/vault preservation, clipboard cleanup, or explicit-save requirements.",
+    "A full source review and fresh independent plan reviews confirm the diff changes only the named Knip configuration, the passive CI-gated Text card ID diagnostic, bounded Canvas readback harness code, and corresponding migration evidence/status.",
+    "goal.md explicitly makes one named, complete, reviewed milestone the push unit: related minor work stays local, that milestone is pushed once, and origin/main remains at the submitted SHA until all required jobs and artifacts are reconciled, even when CI takes several hours. requirements.json.mapping_review.goal_sha256 and state.json.goal_sha256 equal the exact current goal.md SHA-256."
+  ],
+  "github_ci_acceptance": [
+    "After this complete, reviewed milestone is ready, push its final SHA exactly once to origin/main; do not push individual minor edits or local commits. Keep origin/main pinned at that SHA until all seven required workflows and all 20 jobs are terminal and every result/artifact is reconciled, even if CI takes several hours; no missing, skipped, disabled, cancelled, or failed required job passes.",
+    "OpenObsidian quality passes Knip and Fallow on Ubuntu, macOS, and Windows; Rust migration inventory passes; Rust CI passes Linux, macOS, Windows, and MSRV 1.95; desktop preview, renderer matrix, and loaded-plugin workflows pass on all required platforms.",
+    "The three-platform Obsidian round-trip workflow passes. Each report names the submitted source_sha and shows C07.4 complete: all ten first-open predicates, reopen predicates, and comparable pairs; all 28 source checkpoints; exact reseed hashes before reopen; the approved Mac stable-enumeration and tie-row contract; and source rewrites accurately recorded where observed.",
+    "Linux artifacts prove exact paired target-only crops and full-value OCR for both Canvas path and ID readback. macOS evidence proves the empty-clipboard acceptance was based on one exact Vision match in the correctly label-anchored ID field crop and includes a fresh, distinct Text card ID focus/value diagnostic plus refresh evidence. Windows remains passing under unchanged input behavior.",
+    "All artifact names and workflow_run.head_sha values match the submitted SHA; reconcile the expected artifacts and all three report payload hashes and sizes against their API/archive metadata. Keep captured Obsidian reference evidence separate from Rust parity."
+  ],
+  "required_workflows": [
+    {"name":"Rust migration inventory","platforms":["ubuntu-latest"],"expected_jobs":1},
+    {"name":"OpenObsidian Rust CI","platforms":["ubuntu-latest","macos-latest","windows-latest","minimum supported Rust 1.95"],"expected_jobs":4},
+    {"name":"Obsidian vault round-trip acceptance","platforms":["ubuntu-24.04","macos-latest","windows-latest"],"expected_jobs":3},
+    {"name":"OpenObsidian desktop build","platforms":["ubuntu-latest","macos-latest","windows-latest"],"expected_jobs":3},
+    {"name":"OpenObsidian quality","platforms":["ubuntu-latest","macos-latest","windows-latest"],"expected_jobs":3},
+    {"name":"OpenObsidian plugin renderer matrix","platforms":["ubuntu-latest","macos-latest","windows-latest"],"expected_jobs":3},
+    {"name":"OpenObsidian loaded plugin workflows","platforms":["ubuntu-latest","macos-latest","windows-latest"],"expected_jobs":3}
+  ],
+  "evidence_to_collect": [
+    "Starting and submitted SHAs; exact origin/main before-push and after-push values; commit/push time; all seven run URLs/IDs and 20 job IDs/conclusions.",
+    "All artifact IDs, names, sizes, API digests, expiration dates, workflow head SHAs, independently downloaded archive hashes where applicable, and exact report payload hashes/sizes/source SHAs.",
+    "Linux paired path and ID geometry diagnostics, event/focus/refresh correlation, crop/widget/window bounds, sibling/helper disjointness, exact OCR outputs, no-save and clipboard-cleanup evidence.",
+    "macOS label-anchored field localization, exact Vision candidate count/text/bounds, empty clipboard state, distinct Text card ID pre-paste and post-paste diagnostics (log line/frame ordering, stable response ID/rect, enabled/focused/empty, expected byte count/hash) before screenshot acceptance, refresh diagnostics, and note-creation completion evidence; retain both records on failures too.",
+    "C07.4 per-platform first-open/reopen scenario matrix, 28-checkpoint source matrix, exact reseed result, Mac per-phase raw order and tie rows, and accurate source-mutation observations.",
+    "Explicit rust_parity_claimed=false until a separate Rust comparator milestone passes its own acceptance."
+  ],
+  "push_policy": "Keep every minor edit, task, and optional local commit in the named milestone batch until its implementation criteria are complete and the whole milestone is reviewed. Push the final milestone SHA to origin/main exactly once; do not push for incremental CI feedback. Hold origin/main at that SHA until all required jobs are terminal and every result/artifact is reconciled, even if the full CI batch takes several hours. No local executable validation is permitted.",
+  "reviews": {
+    "independent_read_only_reviews_required": 2,
+    "implementation_hold_until_approved": true,
+    "review_status": "approved",
+    "revision_review_scope": "Re-review the added goal.md changed-path scope, its exact-SHA mapping acceptance criterion, and the strengthened one-push-per-complete-milestone policy. Existing code-scope approvals remain recorded below.",
+    "revision_review_results": [
+      {
+        "reviewer": "r312_terminal_audit",
+        "status": "approved",
+        "finding": "Final tracker pointers consistently record R3.12's terminal exact-SHA state and point the active next milestone to R2.8.145; historical R3.11 records are explicitly superseded. The milestone-only push policy and goal hash mapping are consistent."
+      },
+      {
+        "reviewer": "r312_plan_scope_audit",
+        "status": "approved",
+        "finding": "Goal wording, requirements/state hash mappings, changed-path scope, reconciled predecessor evidence, active milestone pointers, and forward C07.4/C09.2 dependencies are consistent and within revision 3 scope."
+      }
+    ],
+    "whole_milestone_review": {
+      "reviewer": "r145_whole_milestone_review",
+      "status": "approved",
+      "finding": "All nine modified/untracked paths are in scope; the code changes satisfy the bounded Knip/UI/harness criteria on source review; goal hash and tracker state align; CI-only validation policy is preserved."
+    },
+    "review_results": [
+      {
+        "reviewer": "r312_terminal_audit",
+        "status": "approved",
+        "finding": "The passive CI-gated focus diagnostic resolves the missing Mac note-create target-focus evidence; the Vision fallback remains limited to the uniquely label-anchored exact candidate with empty error-free clipboard and refresh/localization gates."
+      },
+      {
+        "reviewer": "r312_plan_scope_audit",
+        "status": "approved",
+        "finding": "The Linux paired geometry repair, distinct note-create diagnostic identity, focus/value evidence, exact Vision fallback, changed-path scope, and seven-workflow/20-job boundary are bounded and evidence-based."
+      }
+    ]
+  }
+}
