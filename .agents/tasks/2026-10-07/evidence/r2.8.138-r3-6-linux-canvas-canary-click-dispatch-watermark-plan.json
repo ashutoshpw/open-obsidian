@@ -1,0 +1,319 @@
+{
+  "schema_version": 1,
+  "id": "R2.8.138-R3.6-LINUX-CANVAS-CANARY-CLICK-DISPATCH-WATERMARK-REPAIR",
+  "name": "Bind the Linux Canvas canary click check to a post-dispatch frame",
+  "status": "implementation-complete and independently reviewed, including explicit exact-equality app.ron inspection evidence; ready for one milestone push. origin/main remains at the reconciled R3.5 SHA 7e40c10aaf5b28bb52cd98eadf53ebc59447a91f",
+  "planning_base_sha": "7e40c10aaf5b28bb52cd98eadf53ebc59447a91f",
+  "expected_starting_sha": "7e40c10aaf5b28bb52cd98eadf53ebc59447a91f",
+  "starting_sha_confirmation_gate": "At implementation start, verify origin/main still equals the reconciled R3.5 SHA and inspect any intervening commits or uncommitted work before using this plan.",
+  "local_implementation_sha": "24f7e1d243073ab2f1ee9baeb1e6850b160b527d",
+  "submitted_sha": null,
+  "pushed_once": false,
+  "goal_sha256": "c0be89ea6705ca5b05c6589c14ffa38ebe7358e3671f39543429f3866df6eaf3",
+  "predecessor_milestone": "R2.8.137-R3.5-LINUX-CANVAS-CANARY-BASELINE-TRACE-REPAIR",
+  "predecessor_ci_run": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38844361889",
+  "predecessor_ci_status_at_draft": {
+    "submitted_sha": "7e40c10aaf5b28bb52cd98eadf53ebc59447a91f",
+    "ubuntu_job_id": 116791400916,
+    "ubuntu_conclusion": "failure",
+    "macos_job_id": 116791401015,
+    "macos_status": "in_progress",
+    "windows_job_id": 116791401151,
+    "windows_conclusion": "success",
+    "batch_terminal": false,
+    "origin_main_sha": "7e40c10aaf5b28bb52cd98eadf53ebc59447a91f",
+    "linux_preservation": {
+      "preservation_verified": false,
+      "app_data_change_paths": [
+        "data/openobsidian/app.ron"
+      ],
+      "canvas_source_bytes_unchanged": true,
+      "destination_absent_after_abort": true,
+      "clipboard_cleanup": null,
+      "interpretation": "The canary failed before clipboard staging. The changed app.ron and missing clipboard cleanup evidence mean full preservation is unverified; R3.6 must prove it rather than inheriting a pass."
+    }
+  },
+  "failure_evidence": "evidence/r2.8.137-r3-5-attempt-1-7e40c10.json",
+  "bounded_outcome": "Make the isolated Linux expected-abort Canvas canary associate its initial pre-Tab path-focus click with exactly one raw primary press/release observed in egui frames strictly after watermark W, and require the paired field state to belong to that exact click-event frame. Keep the later R3.5 stationary recovery click as a separate action with its own evidence and no pointer movement. Report observed frame ordering only; do not infer OS-to-egui wall-clock latency or its cause. Preserve the full R3.5 focus-transition, recovery, expected-abort, clipboard, and byte-preservation acceptance.",
+  "confirmed_sampling_gap": {
+    "observation": "The post-click wait can accept a paired field observation recorded during pointer positioning, before click dispatch, because its predicate is bounded by an earlier geometry watermark and does not require a post-dispatch target click. A later clicked=true guard then fails closed. The trace records the click in a later frame but cannot explain the OS-to-egui timing delay.",
+    "source_review": "Two independent static reviews support the sampling gap; a follow-up review specified exact-frame pairing and no retry after ambiguous post-dispatch input.",
+    "diagnostic_frames": [
+      304,
+      347,
+      376,
+      389
+    ],
+    "cause_limit": "Do not claim why the OS-to-egui event appears later; logs prove only the event timing observed by the harness and egui."
+  },
+  "eframe_app_ron_paths": {
+    "pinned_eframe_version": "0.36.2",
+    "linux_snapshot_relative_path": "data/openobsidian/app.ron",
+    "linux_path_basis": "XDG_DATA_HOME is appDataContainer/data; the pinned eframe Linux storage path uses the lowercased app ID, and R3.5 CI recorded this exact path.",
+    "macos_snapshot_relative_path": "home/Library/Application Support/OpenObsidian/app.ron",
+    "macos_path_basis": "HOME is appDataContainer/home; pinned eframe preserves the OpenObsidian app ID spelling in its macOS Application Support storage path.",
+    "macos_directory_setup": "Pre-create the exact OpenObsidian spelling requested by eframe so case-insensitive runner volumes do not preserve a conflicting lowercase directory entry.",
+    "windows_app_ron_allowed": false,
+    "acceptance": "Inspect app.ron only at the exact platform path above; reject any app.ron basename at another path and reject all app.ron entries on Windows. Every allowed change must still be phase-authorized and its resulting bytes must pass the existing eframe state and path-leakage checks."
+  },
+  "pointer_positioning_coalescing_evidence": {
+    "acceptance": "Continue accepting an ordered subsequence of the two planned destinations when the backend coalesces movement, while requiring the target move and rejecting duplicates or other positions.",
+    "reported_fields": [
+      "observed_positioning_destination_indices",
+      "neutral_positioning_move_coalesced"
+    ],
+    "meaning": "The evidence reports a neutral move coalesced when destination index 0 is absent from the observed ordered sequence; this does not make the neutral move mandatory."
+  },
+  "scope": [
+    "After geometry and refresh guards pass, capture the latest fresh same-frame path/ID pair immediately before dispatch. Require stable distinct response IDs, known idle receiver states, released primary button, and no primary-button event since the prePositionFrame state boundary.",
+    "Define prePositionFrame from the frame_nr shared by beforeClickFieldPair path/ID rows and exactly one complete trace record, captured immediately before xdotool windowfocus. Treat its trace as the pre-command state/event boundary: preserve its raw event vector as evidence, but do not attribute those events to the subsequent focus or pointer commands because they may have occurred earlier in that frame. Require the primary button released and all five current modifier bits clear at this boundary. Record the focus command start/end lines and successful completion, then verify the intended X11 window is focused before any pointer movement. Between prePositionFrame and positioningStartFrame, permit no raw event except an optional WindowFocused(true) attributed to that command within this bounded frame interval and optional ModifiersChanged(NONE). The focus event may be logged after the xdotool command returns because egui event delivery is asynchronous; associate it by frame interval, command record, and confirmed target-window focus rather than requiring its log line to fall inside the command's wall-clock interval. Require an event-free, unique complete paired path/ID trace frame after windowfocus returns and before pointer movement, and name it positioningStartFrame. Define W as the frame_nr shared by the immediately-before-dispatch path/ID rows; set clickDispatchWatermark to their maximum log line plus W and keep the earlier geometry baseline for geometry and pre-dispatch retry purposes only. Require exactly one complete focus-trace record for W, stable enabled distinct response IDs/rectangles/scale, pointer at the intended path point, primary button up, and all five current modifier bits clear at W.",
+    "Extend only the canary-gated frame trace to record every raw event in vector order for each frame, including frame_nr, per-frame event_index, and a safe event-kind tag. For PointerButton, record button, pressed state, logical position, and all five modifier bits (alt/ctrl/shift/mac_cmd/command); for PointerMoved, record logical position; for WindowFocused, record focused state; for ModifiersChanged, record all five bits. Also record the five current modifier bits and primary-button-down state on every trace frame. Never log text, paste, IME, or clipboard contents. Correlate trace and field rows by frame_nr because Rust emits the trace before the paired field diagnostics.",
+    "Require complete, unique, consecutive trace records from prePositionFrame through W. Treat prePositionFrame only as the state/event boundary described above; preserve its raw event vector but do not apply the subsequent-command allowlist to it. From the next frame through positioningStartFrame, allow only the optional WindowFocused(true) attributed to the recorded xdotool windowfocus command within the bounded frame interval and optional ModifiersChanged(NONE); require positioningStartFrame itself to be event-free. From positioningStartFrame through W, allow only PointerMoved events attributable in order to the two logged xdotool mousemove destinations, plus optional ModifiersChanged(NONE). Map the xdotool window-local pixel destinations (5,5) and (clickX,clickY) into egui logical points using the stable pixels-per-point scale. Accept an ordered subsequence of those two destinations to account for backend coalescing, but require the target destination (clickX,clickY) to be observed; every observed PointerMoved position must match the next allowed destination per axis within 1.5 physical pixels: abs(dx) * pixelsPerPoint <= 1.5 and abs(dy) * pixelsPerPoint <= 1.5 (equivalently 1.5 / pixelsPerPoint logical points per axis), and no duplicate or other move is allowed. Record command boundaries and coordinates. Require the paired W pointer to match the target destination. Position movement may arrive in W, but no PointerMoved event is allowed after W. Reject primary/secondary buttons, keys/text/paste/IME, wheel/touch, other focus events, and unknown events throughout these pre-dispatch intervals. Immediately before dispatch, require W to show no primary-button event, the primary button released, and all five current modifier bits clear. Retain pre-dispatch retry behavior only for failures detected before click dispatch.",
+    "After capturing and validating the watermark, send exactly one coordinate click synchronously: perform no await, delay, screenshot, log wait, pointer action, or other input between watermark capture and click dispatch. If unexpected raw input is observed in that interval, fail before text entry.",
+    "The R3.6-instrumented click is the initial path-field focus click: its two scripted pointer-positioning commands precede it, and it establishes the event-free pre-Tab baseline before the existing Tab-induced focus loss and recovery. The R3.5 recovery sequence later sends a separate stationary target click at the already positioned pointer, after the two stable recovery observations and before ArrowRight. That later click retains its existing fresh clicked/geometry/pointer guards and sends no pointer movement. Report separate counters: target_coordinate_click_dispatch_attempts counts only the initial traced click and must equal one; stationary_recovery_click_dispatch_attempts counts only the later recovery click and must equal one. The W+1-through-initial-click exact raw press/release contract applies only to the first click; do not conflate the two click phases.",
+    "From W+1 through the click frame, require exactly one complete trace record for every consecutive frame, with no missing or duplicate frame records, and preserve every frame’s raw event vector order. Accept exactly one primary press followed by exactly one primary release, both with all five event modifier bits clear, plus zero or more ModifiersChanged(NONE) events; reject any nonempty modifier change, pointer move, key/text/paste/IME event, other button, wheel/touch event, window-focus change, other/unknown event, or incomplete trace. Require all five current modifier bits clear at W and after release. Preserve event_index when events share a frame.",
+    "Require press.frame_nr > W. Treat this as observed egui frame ordering for the single initial pre-Tab focus click, not a measurement of dispatch-to-egui wall-clock latency. Compare each event position directly with the path and ID response rectangles in the same egui logical-point coordinate space; require both positions inside the path rectangle and outside the sibling ID rectangle. Also require the press and release positions to match each other and the paired W pointer per axis within 1.5 physical pixels: abs(dx) * pixelsPerPoint <= 1.5 and abs(dy) * pixelsPerPoint <= 1.5 (equivalently 1.5 / pixelsPerPoint logical points per axis), with stable geometry, scale, and distinct response IDs. If press and release share a frame, require press.event_index < release.event_index; otherwise require press.frame_nr < release.frame_nr. The raw release, path Response::clicked=true observation, accepted path widget row, and accepted sibling widget row must all have the same initial-click frame_nr. The later stationary recovery click is a distinct R3.5 action and does not enter this initial-click frame comparison.",
+    "Require the target click observation line to be newer than clickDispatchWatermark.line as a secondary check, no sibling click, and the primary button released after the click. Use strict frame_nr comparisons for frame freshness; log-line order alone never proves a post-dispatch event.",
+    "A Response::clicked=true observation alone is insufficient proof of one raw click. Fail closed on missing, duplicate, reordered, modified, unrelated, out-of-geometry, sibling, or unpaired raw events or mismatched frame relations.",
+    "After dispatch, timeout, duplicate/ambiguous raw button events, sibling click, stale/mismatched pair, or missing exact-frame evidence aborts before text entry. Do not retry another click after a dispatch whose outcome is ambiguous.",
+    "Keep existing retries only for failures detected before click dispatch; leave ordinary Linux field entry, macOS/Windows input paths, production UI behavior, Rust semantics, and unrelated workflow acceptance unchanged."
+  ],
+  "out_of_scope": [
+    "Weakening any target, sibling, focus, receiver-idle, geometry, refresh, value, clipboard, recovery, abort, preservation, or cross-platform acceptance gate.",
+    "Assigning an unsupported cause to the frame-376/frame-389 timing difference.",
+    "Claiming C07.4 Rust parity or changing C07.4 comparator semantics.",
+    "Starting implementation or pushing before all R3.5 workflows and jobs are terminal and evidence is reconciled."
+  ],
+  "implementation_acceptance": [
+    "Independent review confirms the pre-position boundary is tied to the paired frame/trace, and W is captured after geometry checks and the final awaited refresh check but before the initial pre-Tab traced focus click. Synchronous validation and dispatch have no await, delay, screenshot, log wait, pointer action, or other input between W capture and that initial click.",
+    "Canary-gated trace records every raw event in vector order with frame_nr, event_index, and safe event-kind tag; primary button records include button/pressed/position/all five modifier bits, ModifiersChanged records include all five bits, and each trace record includes the five current modifier bits and primary-button-down state. It never logs text, paste, IME, or clipboard contents; frame correlation uses frame_nr because trace text precedes widget rows.",
+    "prePositionFrame and positioningStartFrame are distinct, unique paired path/ID frames with exactly one complete trace record each. prePositionFrame is the pre-command state/event boundary: preserve its raw event vector but do not attribute it to the new commands; require the primary button released and all five current modifiers clear there. positioningStartFrame is event-free and follows the successful, logged windowfocus command plus confirmed X11 target focus, but precedes both pointer moves. An optional WindowFocused(true) may be attributed to that command by its bounded frame interval even if egui logs it after the command returns. Every frame through W is complete and consecutive. From the frame after prePositionFrame through positioningStartFrame, accept only that optional focus event and optional ModifiersChanged(NONE); from positioningStartFrame through W, accept only an ordered subsequence of the two scripted pointer destinations (neutral (5,5), then target (clickX,clickY)) and optional ModifiersChanged(NONE), allowing backend coalescing but requiring the target move and rejecting duplicate or other positions. Match logical PointerMoved positions against pixel destinations using the stable pixels-per-point conversion and per-axis tolerance abs(dx) * pixelsPerPoint <= 1.5 and abs(dy) * pixelsPerPoint <= 1.5. No keys/text/paste/IME, buttons, wheel/touch, unexpected focus events, or unknown events may occur; final paired pointer at W matches the target. Positioning movement may occur in W but none after W. W is shared by the immediately-before-dispatch rows and has exactly one complete trace record, primary button up, and all five current modifiers clear. Trace frames W+1 through click are complete, consecutive, and unique. Their raw event sequence contains exactly one primary press then one primary release, plus only zero or more ModifiersChanged(NONE) events. Both button events have all five modifier bits clear; their positions lie inside the path rect, outside the sibling rect, and match each other and W's pointer with both coordinate deltas multiplied by pixelsPerPoint <= 1.5 physical pixels each. Current modifiers are clear and the button is released after release; the sibling is not clicked.",
+    "The raw press frame_nr is strictly greater than W; this establishes the observed egui-frame relation for the initial pre-Tab traced focus click, not OS-to-egui latency. If press and release share a frame, press event_index precedes release; otherwise the press frame precedes the release frame. Raw release, path Response::clicked=true, accepted target row, and accepted sibling row share the exact initial-click frame_nr; after dispatch, re-read the paired path/ID rows constrained to the click observation frame while retaining the count of all fresh click observations across the full post-dispatch log, so a later allowed neutral-modifier frame cannot replace the exact click-frame pair. Require exactly one click observation overall and none on the sibling. Each button position is compared to both rectangles and to the W pointer in the same egui logical-point space, with each coordinate delta multiplied by pixelsPerPoint <= 1.5 physical pixels; stable distinct IDs, geometry, refresh, focus, and value guards pass. The separate stationary recovery click remains under its carried R3.5 clicked/pointer/geometry checks.",
+    "Any uncertain outcome after click dispatch fails closed before path entry and does not dispatch another coordinate click; only pre-dispatch failures may use existing retry behavior.",
+    "The full carried R3.5 acceptance list passes, including Linux recovery/expected abort and full preservation, zero additional diagnostic pointer motion after the initial click's scripted positioning, a later stationary recovery click with no pointer movement, zero paste/Save, cleanup, and ten C07.4 reference scenarios per platform on first open and reopen.",
+    "The whole milestone and tracker are reviewed before one origin/main push.",
+    "Record and reconcile complete app-data trees separately for each runOpenObsidianCanvasTextEdit profile on Linux, macOS, and Windows using platform-specific settled baselines. The separate runOpenObsidian C07.4 reference-roundtrip process retains the carried R3.5 app-data acceptance. On macOS Canvas profiles, allow only the observed app.ron startup write from pre-launch to settled startup; require exact settled-startup-to-pre-picker equality; allow only the observed app.ron transition from pre-picker to confirmed native-panel-open; from panel-open through settled selected-vault setup, allow only exact managed root/vault bootstrap markers and inspected app.ron setup changes; then require exact full-tree equality from that post-selection setup baseline through Canvas editor interactions and process close. Inspect app.ron for vault/app-data-root path leakage and reject every unclassified delta. Retain each phase inspection in the CI report as path, byte count, SHA-256, required window/egui section results, forbidden-path check count, and a no-leak result without including app.ron contents.",
+    "Log `pixels_per_point_bits` as the exact eight-hex-digit f32 bit pattern on trace and path/ID diagnostic rows. Decode it with a strict TypeScript helper, reject malformed/non-finite/non-positive values, and use the decoded exact f32 value for every scale calculation. For every logged f32 coordinate used by geometry checks (pointer positions, response-rectangle edges, scripted pointer events, and button positions), parse its round-trippable Rust Debug decimal and immediately apply `Math.fround(Number(raw))`; reject malformed/non-finite values and use only those reconstructed f32 values for the 1.5-physical-pixel per-axis checks. Do not use the existing two-decimal scale value.",
+    "On the Linux expected-abort path, report target_coordinate_click_dispatch_attempts for the initial pre-Tab focus click and stationary_recovery_click_dispatch_attempts for the later R3.5 recovery click. Each must equal one. A timeout, missing/ambiguous frame, or post-dispatch guard failure on the initial traced click terminates that attempt and cannot send another initial click; pre-dispatch failures may retry without incrementing its counter. The separate recovery click remains stationary and must pass its existing one-click guard."
+  ],
+  "ci_acceptance": {
+    "workflows": [
+      "OpenObsidian Rust CI",
+      "Rust migration inventory",
+      "Obsidian vault round-trip acceptance",
+      "OpenObsidian desktop build",
+      "OpenObsidian quality",
+      "OpenObsidian plugin renderer matrix",
+      "OpenObsidian loaded plugin workflows"
+    ],
+    "expected_jobs": 20,
+    "platforms": [
+      "Ubuntu",
+      "macOS",
+      "Windows"
+    ],
+    "require_exact_submitted_sha": true,
+    "require_all_jobs_terminal_and_passing": true,
+    "full_roundtrip_reports_and_artifact_hashes_required": true,
+    "C07_4_reference_only_no_Rust_parity_claim": true,
+    "roundtrip_requirements": [
+      "All Linux/macOS/Windows round-trip jobs complete and pass on the exact submitted SHA.",
+      "The R3.6 Linux canary reaches the initial pre-Tab target-focus click with exactly one raw press/release after W and the two scripted pre-click positioning commands, then the event-free pre-Tab baseline, Tab transition, guarded recovery, and one separate stationary recovery click with no pointer movement; the expected abort follows with zero additional diagnostic pointer motion/Ctrl+V/paste/Save, cleanup, destination absence, app termination, and full vault/app-data/Canvas-source preservation.",
+      "All ten C07.4 reference scenarios complete on first open and reopen on each of Ubuntu, macOS, and Windows, with all comparable pairs and source checkpoint matrices reconciled.",
+      "C07.4 results remain reference-only; no Rust parity claim.",
+      "For each runOpenObsidianCanvasTextEdit profile, reconcile app-data snapshots on all three OSes: every Linux warm-up launch and setup/close delta must be fully classified as exact managed bootstrap markers or inspected eframe app.ron UI state, with no other changes, and two separate post-close trees must match within three cycles; then require exact canary-baseline/post-termination equality. On macOS, validate the observed app.ron startup write, require exact settled-startup-to-pre-picker equality, allow only the observed app.ron transition at confirmed native-panel-open, validate exact managed root/vault bootstrap markers and inspected app.ron setup changes from panel-open through settled selected-vault setup, then require exact full-tree equality from that post-selection baseline through close. Windows allows only validated managed bootstrap markers at startup and requires exact equality from the post-setup baseline through close. All roots remain outside the vault."
+    ]
+  },
+  "preimplementation_gate": [
+    "Confirm the recorded R3.5 batch is terminal on the exact submitted SHA: 7/7 workflows and 20/20 jobs terminal, six workflows and nineteen jobs passed, and the only failure is Ubuntu job 116791400916.",
+    "Review terminal Ubuntu logs and the Linux report; preserve the confirmed pre-entry sampling gap, unknown OS-to-egui timing cause, and unverified app-data/clipboard preservation findings.",
+    "Review the terminal macOS report and artifact: round-trip passed, C07.4 captured 10/10 scenarios on first open and reopen with all pairs and 28 checkpoints complete, reference source mutations are Obsidian-only, and the Linux expected-abort canary is not applicable. Record its startup/picker app.ron state changes and later stable baseline as phase evidence.",
+    "Reconcile all sixteen GitHub artifact API digests and all three platform round-trip archive/report hashes; verify origin/main remains at the submitted SHA.",
+    "Finalize app-data preservation for each R3.6 Canvas text-edit profile on all platforms: Linux uses a dedicated app-data root outside the fixture vault and up to three separate no-canary launch/setup/close cycles. For each cycle, capture pre-launch, post-setup, and post-close full trees; validate every marker path and byte; classify every delta as an exact managed bootstrap marker or inspected eframe app.ron UI-state change; inspect every resulting app.ron for expected window/egui state and vault/app-data-root path leakage; reject all other additions, removals, or changes. Require two consecutive equal post-close trees from distinct cycles. On the fresh canary process, require the pre-launch tree to match the stabilized post-close tree; classify pre-launch through settled vault selection with only the exact inspected app.ron allowance and no marker creation; require exact full-tree equality from settled vault selection to the pre-editor-setup snapshot; classify pre-editor-setup through expanded Canvas editor setup using only the exact inspected app.ron allowance; snapshot the complete tree immediately before canary interaction and require exact full-tree equality after abort and process termination. macOS records pre-launch, settled-startup, pre-picker, confirmed panel-open, settled post-selection/setup, and post-close snapshots; allow only the observed app.ron startup write from pre-launch to settled startup; require exact full-tree equality from settled startup to pre-picker; allow only the observed app.ron UI-state transition at confirmed panel-open; from panel-open to settled selected-vault setup allow only the exact managed root/vault marker bootstrap and inspected app.ron changes; then require exact equality from the settled post-selection baseline through close. Inspect app.ron for vault or app-data-root path leakage at every transition. Windows Canvas-profile evidence records pre-launch and post-startup/setup snapshots, validates only the exact marker allowlist, then requires exact equality from its post-setup baseline through editor interaction and process close with no app.ron exception. Picker-cancellation and post-cancel snapshots belong only to the separate runOpenObsidian C07.4 reference flow, remain under carried R3.5 app-data acceptance, and are not Canvas-profile phases. On every OS, derive the vault ID as the first 24 lowercase hex characters of SHA-256 over the UTF-8 bytes of the lexical absolute path string produced by Node path.resolve(selectedVaultRoot), without realpath/symlink resolution, matching Rust resolve_legacy_path. The root marker file bytes must be ASCII openobsidian-user-data-root-v1 followed by exactly one 0x0A byte; the vault marker file bytes must be ASCII openobsidian-vault-data-v1 followed by exactly one 0x0A byte. All three canonical app-data roots must be outside the vault.",
+    "Synchronized the requested milestone-only CI cadence and assigned-worktree submission flow at goal SHA-256 c0be89ea6705ca5b05c6589c14ffa38ebe7358e3671f39543429f3866df6eaf3; MIG-002 and requirements.json.mapping_review.goal_sha256 now match. Keep R3.5 evidence pinned to its submitted-goal hash f9e4fddd953eb784a5fb5bbe2358600ffaea0a359fe6a1d0b35c844a7ee9bc57.",
+    "At implementation start, verify origin/main still equals the reconciled R3.5 SHA and inspect intervening commits or uncommitted work before using this plan.",
+    "Keep source implementation and commits local; push exactly once after the entire R3.6 milestone is implemented and independently reviewed, then use only its complete exact-SHA GitHub Actions batch for executable validation."
+  ],
+  "evidence_to_collect": [
+    "Pre-dispatch paired field lines/frame, clickDispatchWatermark line and frame, target/sibling identities, receiver states, raw event list since pointer positioning, and released-button state.",
+    "prePositionFrame and positioningStartFrame paired rows/traces, preserved pre-command raw-event vector and boundary button/modifier state, event-free positioningStartFrame, successful windowfocus command and X11 target-focus confirmation, bounded focus-event attribution, complete unique frame sequence through W, exact windowfocus/mousemove command boundaries and pixel coordinates, ordered observed PointerMoved positions and coalescing result, logical-point conversion and per-axis tolerance calculations (abs(dx) * pixelsPerPoint <= 1.5 and abs(dy) * pixelsPerPoint <= 1.5), each interval's allowlist result, final pointer mapping, current modifier/button state at W and after release, and gap-free unique trace records for every frame W+1 through click. Include every raw event in order with event_index/safe kind, all five modifier bits, button positions and rects in egui logical points, strict W/press frame ordering, exact press/release ordering and position matching, disallowed-event results, and exact release/click-response/paired-widget frame equality. State explicitly that the frame relation does not measure OS-to-egui wall-clock latency.",
+    "Fail-closed timeout/ambiguous-click report proving no text, clipboard stage, paste, or Save follows an uncertain dispatched click and no second click is sent.",
+    "All seven required workflow IDs, twenty terminal job outcomes, exact SHA and origin/main head, all sixteen artifact API digests, and Linux/macOS/Windows round-trip archive/report hashes.",
+    "All seven required workflow IDs, twenty job outcomes, exact SHA, artifact digests, and Linux/macOS/Windows round-trip report hashes.",
+    "Linux pre-launch/post-setup/post-close snapshots for every distinct no-canary warm-up cycle (at most three), all per-cycle classified deltas and app.ron inspections, two consecutive equal post-close trees, fresh canary pre-launch and settled-vault-selection snapshots with their classified delta, exact settled-selection-to-pre-editor-setup equality with a phase-labeled app.ron inspection record for the identical pre-editor snapshot, the inspected app.ron-only editor-setup delta, immediate pre-click full-tree baseline with its own app.ron inspection record, and post-abort/post-termination exact comparison; include exact bootstrap marker bytes, vault-ID derivation, path-leak checks, both initial traced-click and stationary recovery-click dispatch counts, and evidence that the initial click precedes the pre-Tab baseline while the recovery click remains stationary. For each Canvas text-edit profile, macOS pre-launch/settled-startup/pre-picker/confirmed panel-open/settled post-selection setup/post-close snapshots, exact settled-startup-to-pre-picker equality with an explicit phase-labeled inspection of the identical pre-picker snapshot, the observed app.ron-only picker-open transition, exact managed marker bootstrap and inspected app.ron setup changes after selection, and exact post-selection baseline comparison; Windows pre-launch/bootstrap/post-setup/editor-interaction/post-close snapshots with validated marker allowlist and exact post-setup equality. Every exact-equality boundary that depends on an inspected unchanged app.ron snapshot must include a phase-labeled inspection record carrying expected/observed path, bytes, SHA-256, window/egui checks, forbidden-path count and leak result (never app.ron contents). Any picker-cancellation/post-cancel snapshots are C07.4-only evidence for the separate runOpenObsidian reference flow under carried R3.5 acceptance. Record canonical-root-outside-vault evidence on every OS.",
+    "Coordinate parser evidence must retain the raw Rust f32 decimal values and the reconstructed Math.fround values for pointer positions, target/sibling rectangle edges, pointer-move events, and press/release positions; record the exact pixels_per_point_bits and resulting physical-pixel deltas so each <=1.5 per-axis decision is reproducible. The CI report must retain a per-phase app.ron inspection record with phase label, expected/observed path, byte count, SHA-256, window/egui section checks, forbidden-path check count, and a no-leak result; do not include app.ron contents."
+  ],
+  "notes": [
+    "This is a planning draft only. The R3.5 exact-SHA CI batch is terminal and reconciled: macOS and Windows passed; Ubuntu failed the Linux canary before the expected-abort marker.",
+    "The current R3.5 Linux report does not prove full preservation: preservation_verified=false, data/openobsidian/app.ron changed, and clipboard cleanup is null. Do not treat this report as a preservation pass.",
+    "No source edit, local test/build/runtime validation, commit, push, or CI dispatch occurred while drafting or reviewing this plan.",
+    "The independent plan reviews required explicit raw primary-button ordering/position evidence, exact frame equality among release, Response::clicked and paired widgets, no awaited work between watermark and dispatch, full R3.5 recovery/C07.4 acceptance carry-forward, and the GitHub-CI-only implementation rule.",
+    "The raw-event allowlist explicitly permits only ModifiersChanged(NONE) in addition to the single unmodified primary press/release pair, matching the observed xdotool --clearmodifiers trace. The post-watermark press frame must strictly advance beyond the watermark frame.",
+    "A second independent source review further requires current modifier state at W and after release, one unique gap-free trace record per frame, exact watermark-frame pairing, and direct comparison of pointer-button positions with egui rectangles in logical points. These prevent missing modifier-change events or absent trace frames from creating false acceptance.",
+    "The requested milestone cadence and assigned-worktree submission flow are synced into the active tracker at SHA-256 c0be89ea6705ca5b05c6589c14ffa38ebe7358e3671f39543429f3866df6eaf3, and migration inventory MIG-002 plus mapping_review fingerprint match it. The R3.5 commit/evidence retain their historical goal hash f9e4fddd953eb784a5fb5bbe2358600ffaea0a359fe6a1d0b35c844a7ee9bc57.",
+    "The final read-only review required a concrete positioningStartFrame and pre-W input allowlist because the path field is already focused. The allowed pre-W positioning movement can arrive in W; the final pointer must then match the intended path point, and all PointerMoved events are prohibited after W. The watermark must follow the final awaited refresh read, with synchronous validation and click dispatch.",
+    "The positioning boundary now has two explicit checkpoints: prePositionFrame immediately before windowfocus, and an event-free paired positioningStartFrame after windowfocus but before mouse movement. Focus-event attribution uses this bounded frame interval plus command success and confirmed target focus, since egui may log asynchronous delivery after xdotool returns. Pointer movement must follow the logged neutral-then-target coordinates in logical-point space, allowing coalescing while requiring the target event; press and release positions must match each other and W's pointer within the existing per-axis 1.5 physical-pixel geometry tolerance (each coordinate delta times pixelsPerPoint <= 1.5). The post-W frame relation describes observed egui frame ordering and makes no wall-clock latency or cause claim.",
+    "The final boundary review clarified that raw events in prePositionFrame precede capture of its paired rows and the new xdotool commands, even though they share the same egui frame number. Preserve that event vector as baseline evidence and check button/modifier state there, but start focus-command attribution and its allowlist on subsequent frames.",
+    "The terminal macOS artifact passed on source SHA 7e40c10aaf5b28bb52cd98eadf53ebc59447a91f. Its expected-abort canary is not applicable. It records app.ron changes during startup (1994 to 3400 bytes) and picker opening (3400 to 3399), followed by no further app-data changes after the picker baseline through close. C07.4 captured 10/10 first-open and reopen scenarios, all pairs, and 28 source checkpoints; its source rewrites are pinned Obsidian observations only.",
+    "The terminal Linux report shows the canary app-data snapshot had 186 entries before entry and 187 after app termination because data/openobsidian/app.ron was created; preservation_verified=false. R3.6 must establish a stable, fully populated pre-canary app-data baseline and then require exact equality after termination. Do not infer that the new app.ron is harmless or carry the macOS UI-state observation into Linux.",
+    "The R3.5 Windows report showed a stable app-data tree and no app.ron from post-startup through close; R3.6 now requires fresh pre-launch and post-setup phase snapshots and exact equality from the post-setup baseline. Its report does not establish pre-launch immutability.",
+    "The click-coordinate contract depends on pixels-per-point; the current Rust diagnostic prints two decimal places. R3.6 must log a round-trippable f32 decimal or exact bits so the harness can enforce the stated physical-pixel tolerance.",
+    "A second independent plan review required Linux warm-up samples to come from separate launch/setup/close cycles, not two reads of one closed tree. R3.6 permits up to three such cycles and requires a fresh, separate launch/setup for the actual pre-canary baseline.",
+    "The Windows pre-launch-to-setup delta is now fail-closed except for the exact managed root/vault marker paths and constant marker contents. R3.5 did not capture the pre-launch tree, so its stable post-startup result does not establish which setup entries were created.",
+    "The harness will report a dedicated target coordinate-click dispatch attempt count for the Linux canary so its single-dispatch/no-post-dispatch-retry property is explicit in CI evidence.",
+    "Independent Rust trace review found that Math Number parsing alone does not reconstruct logged f32 geometry exactly. The plan now requires Math.fround(Number(raw)) for every Rust-Debug-formatted f32 position/rectangle coordinate used in the 1.5-pixel checks, and exact bit decoding for pixels_per_point; malformed/non-finite values fail closed.",
+    "Final independent plan review found three app-data specification gaps: JSON marker strings encoded a literal backslash+n instead of one LF byte; Linux warm-up requirements did not classify every phase delta or inspect each app.ron; and vault-ID hashing did not specify path resolution and encoding. The plan now defines exactly one trailing 0x0A byte, per-cycle fail-closed delta and app.ron inspection, and lowercase SHA-256 over UTF-8 bytes of the lexical absolute Node path.resolve(selectedVaultRoot) string, matching Rust resolve_legacy_path.",
+    "Follow-up review confirmed the Linux, Windows, marker, vault-ID, precision, cadence, and CI-only criteria, then found a macOS gap between settled post-startup and pre-picker snapshots. R3.6 now requires exact full-tree equality across that interval so setup-time changes cannot be absorbed into a later baseline.",
+    "A follow-up app-data review noted that exact-equality snapshots reused inspection evidence from the identical prior tree without adding a phase-labeled app.ron inspection row. R3.6 now records explicit inspections for the equal Linux pre-editor, macOS pre-picker, and immediate pre-input snapshots; the evidence requirement names these equality-boundary rows.",
+    "Focused follow-up source and plan reviews confirmed the equality-boundary inspection calls use the exact platform app.ron path policy, snapshot byte/hash checks, section checks, and all supplied vault/app-data/managed-root forbidden paths. The checks run after the equality gates and before subsequent editor interaction; no contents enter the retained evidence.",
+    "The final consistency review found that the carried zero-pointer-motion wording conflicted with the R3.6 click's logged pre-click positioning destinations, and a follow-up found the initial focus click and later stationary recovery click needed distinct phases. Acceptance now identifies the initial pre-Tab traced click, permits only its two scripted positioning commands, tracks its one-dispatch count separately from the one stationary recovery-click count, and preserves zero pointer movement for the later recovery click.",
+    "Source-flow inspection found the macOS harness starts without a vault, writes eframe app.ron state at startup, then opens the native picker; managed root/vault markers are created only after the picker returns a selected vault path. The carried macOS acceptance now scopes app.ron changes to startup and confirmed panel-open, requires startup-to-pre-picker equality, validates marker bootstrap after selection, and requires post-selection equality through close. This amendment awaits independent plan review."
+  ],
+  "drafted_at": "2026-10-16T03:42:31Z",
+  "last_revised_at": "2026-10-16T05:18:16Z",
+  "review_findings": [
+    {
+      "reviewer": "independent static review of the plan and frame trace",
+      "finding": "A widget clicked=true response does not prove exactly one raw primary-button press/release pair, its order, or its coordinates; multiple button pairs in one egui frame may collapse to one clicked=true response.",
+      "required_plan_change": "Record ordered raw primary PointerButton events in the canary-gated frame trace, including pressed/released, event order, and pointer position. Correlate exactly one press and one release after the watermark to the intended path geometry; the release and clicked=true response must belong to the same frame, with the paired path/ID diagnostics from that frame. Reject extra events and require the button released afterward.",
+      "logging_order_clarification": "Rust emits the per-frame trace line before the target/sibling field rows. Correlate the watermark and raw events by frame_nr; do not require a same-frame trace line to have a greater text-log line number than the paired field rows."
+    },
+    {
+      "reviewer": "independent full-scope static review",
+      "findings": [
+        "Make exact equality operational: raw egui primary press/release, path Response::clicked, accepted target widget row, and accepted sibling row must correlate by their defined event/frame relations.",
+        "No awaited work or other input may occur between capturing the dispatch watermark and sending the one click; unexpected intervening events fail closed.",
+        "Carry every original R3.5 recovery, preservation, no-paste/no-save, cross-platform, C07.4, and CI-only acceptance condition forward explicitly."
+      ]
+    },
+    {
+      "reviewer": "independent static review of the R3.6 plan and current Rust trace",
+      "findings": [
+        "The phrase no unexpected raw input did not define an operational allowlist, and the draft lacked an explicit strict press.frame_nr > clickDispatchWatermark.frame_nr condition.",
+        "The recorded valid Linux click includes ModifiersChanged(Modifiers::NONE) around the primary press/release, while the current Rust trace records only its kind and not modifier bits."
+      ],
+      "required_plan_change": "Record every raw event in vector order with per-frame event_index and safe kind; include all five modifier bits for PointerButton and ModifiersChanged. Allow exactly one unmodified primary press/release pair plus ModifiersChanged(NONE), reject every other post-watermark event, require the press frame strictly after the watermark, and preserve exact event/frame ordering and equality."
+    },
+    {
+      "reviewer": "independent review of current R3.6 trace semantics and canary input path",
+      "findings": [
+        "Event payload logging alone would not prove that a held modifier was absent if no ModifiersChanged event arrived; current input.modifiers must be recorded at the watermark and after release.",
+        "The draft did not require one unique, gap-free trace record for each frame through the click frame, or explicitly specify that pointer event positions and egui response rectangles share logical-point coordinates."
+      ],
+      "required_plan_change": "Define W from the immediately-before-dispatch paired rows and require one trace record for W. Require current modifiers clear and primary button up at W and after release; require complete unique consecutive frames W+1 through click; reject primary-button events from pointer positioning through W; compare button positions directly against egui logical-point rectangles; treat the log-line watermark only as a secondary check."
+    },
+    {
+      "reviewer": "independent follow-up review of positioning boundary and pre-watermark input",
+      "findings": [
+        "The prior draft did not define positioningStartFrame or a pre-W raw-event allowlist, leaving key/text activity during pointer positioning able to change a focused field without failing.",
+        "The last PointerMoved can be delivered in the same egui frame as the paired W rows, so requiring all positioning movement to end before W could reject valid input delivery."
+      ],
+      "required_plan_change": "Define positioningStartFrame from the unique paired pre-position rows and trace; allow only logged pointer-positioning moves, neutral modifier changes, and a specifically associated WindowFocused(true) during the explicit focus command through W; reject keys/text, buttons, wheel/touch, other focus changes and unknown events. Permit the last positioning move in W if the final pointer matches the intended point, but prohibit PointerMoved after W. Capture W after the final awaited refresh check and then validate/dispatch synchronously."
+    },
+    {
+      "reviewer": "independent follow-up review of the pre-watermark input window",
+      "findings": [
+        "The pre-position boundary needed to be tied to actual paired field rows and a complete trace before windowfocus, and pointer motion may arrive in W rather than strictly before it.",
+        "A key or text event before W could alter the already focused path field unless the entire setup interval had its own event allowlist."
+      ],
+      "required_plan_change": "Record prePositionFrame before windowfocus, record command boundaries, allow only the expected WindowFocused(true) and neutral modifier events through an event-free positioningStartFrame, then allow only the two scripted pointer-positioning moves and neutral modifiers through W. Permit the last move in W if the final pointer is correct; reject pointer movement after W and reject key/text, buttons, scroll/touch, unexpected focus, and unknown events in all intervals."
+    },
+    {
+      "reviewer": "final independent review of focus attribution, pointer coordinates, and frame-order wording",
+      "findings": [
+        "WindowFocused(true) may be logged asynchronously after xdotool windowfocus --sync returns, so a literal command-time log requirement could reject valid delivery.",
+        "The pointer allowlist needed exact neutral and target destinations, ordered-subsequence handling for backend coalescing, and an explicit requirement to observe the target move.",
+        "Button-event coordinates needed to match each other and the paired W pointer within a stated tolerance.",
+        "press.frame_nr > W proves later egui-frame observation, not OS-to-egui wall-clock latency."
+      ],
+      "required_plan_change": "Attribute an optional WindowFocused(true) by the bounded prePositionFrame-to-positioningStartFrame interval, successful explicit focus command, and confirmed target-window focus. Record the two mousemove destinations, map pixels to logical points, allow only their ordered subsequence to accommodate coalescing while requiring the target move, and use a 1.5 physical-pixel tolerance for pointer and button-position matching. State that acceptance proves only the isolated single commanded click was observed in egui frames after W, with no latency or cause inference."
+    },
+    {
+      "reviewer": "independent follow-up review of coordinate tolerance semantics",
+      "finding": "The 1.5 physical-pixel tolerance needed to say whether it applies per axis or to total Euclidean distance.",
+      "required_plan_change": "Specify independent per-axis checks abs(dx) * pixelsPerPoint <= 1.5 and abs(dy) * pixelsPerPoint <= 1.5, matching the existing pointer-to-click coordinate checks."
+    },
+    {
+      "reviewer": "independent follow-up review of prePositionFrame event timing",
+      "finding": "The raw events in prePositionFrame happened before the harness captures the paired rows and before the new xdotool focus command, so applying the new-command allowlist to that entire frame could reject unrelated prior-frame activity.",
+      "required_plan_change": "Treat prePositionFrame as a state/event boundary, preserve its raw trace vector, require released button and clear current modifiers there, and apply focus-command attribution and allowlists only to subsequent frames through positioningStartFrame."
+    }
+  ],
+  "carried_r3_5_acceptance": [
+    "Correct refresh-stability return contract and record baseline/checkpoint/after-capture request/result counts, receiver-idle observations, individual comparisons, and aggregate result; missing/busy receiver states fail closed.",
+    "Canary-only click establishes a fresh paired event-free pre-Tab baseline with path focused, ID unfocused, stable IDs, exact values/hashes, enabled state, geometry/scale, pointer mapping/ownership, foreground window/geometry, released button, and stable refresh.",
+    "Exactly one unmodified, non-repeated Tab press and release; reject modifier-change or pointer-button events; preserve press-before-release order, continuous paired trace, and require the exact path-to-ID focus transition on the Tab frame.",
+    "Capture a later advancing event-free snapshot with only the intended focus transfer and all other values, hashes, IDs, geometry, scale, pointer mapping, foreground window, button, and refresh state unchanged.",
+    "The existing pre-staging guard fails only the two expected focus predicates; require exactly two advancing stable event-free recovery snapshots, no pointer repositioning, one stationary current-position target click, and a passing fresh event-free post-click guard before ArrowRight.",
+    "Require target-only ArrowRight evidence and the final complete event-free pre-staging guard before clipboard staging; any other predicate failure aborts before clipboard staging, paste, additional diagnostic pointer motion, or Save.",
+    "For the initial pre-Tab focus click, verify its two planned positioning destinations and exactly one traced coordinate-click dispatch; later, keep the R3.5 focus-recovery sequence stationary through its separate recovery click. Reach only the expected synthetic-prefix abort after recovery, with zero pointer movement after the initial positioning, zero additional diagnostic pointer motion, zero Ctrl+V dispatches, zero completed paste stages, zero Save attempts, verified clipboard cleanup and readback, request-marker removal, destination absent, and app termination.",
+    "These app-data requirements apply to each R3.6 runOpenObsidianCanvasTextEdit profile. The separate runOpenObsidian C07.4 reference-roundtrip flow, including its picker-cancellation sequence, remains governed by the carried R3.5 app-data acceptance and is not covered by the Canvas-profile snapshots. Require full preservation of authoritative vault files, Canvas source bytes, and the complete canonical app-data tree. For Linux, use a dedicated app-data root outside the fixture vault. Before starting the canary, run up to three separate no-canary process cycles; each cycle launches a fresh app, opens the same fixture vault at the same runner geometry, expands the same Canvas editor UI, and records full pre-launch, post-setup, and post-close trees. For every cycle, validate exact managed marker paths and bytes; classify every addition, removal, or change across those phases only as an exact managed marker creation or inspected eframe app.ron UI-state change; inspect every resulting app.ron for expected window/egui state and vault/app-data-root path leakage; reject all other deltas. Require two consecutive post-close snapshots from distinct cycles to match exactly by path, kind, byte count, and file hash; fail if no matching pair is reached within three cycles. After stability, launch a fresh process and require its pre-launch tree to equal the stabilized post-close tree. Classify pre-launch through settled vault selection with only an exact inspected app.ron allowance and no new markers; require exact full-tree equality from settled vault selection to the pre-editor-setup snapshot. Classify pre-editor-setup through expanded Canvas editor setup with only the exact inspected app.ron allowance. Then snapshot every app-data path/kind/byte count/hash immediately before the canary-specific interaction. After abort and process termination, require the entire tree to equal that baseline exactly, including app.ron; no Linux app.ron exception is allowed during the canary interval. If warm-up does not stabilize or any canary-interval entry changes, preservation fails. The R3.5 Linux report had 186 entries before entry and 187 after termination because app.ron was created; clipboard cleanup was null, so no preservation pass may be inherited.",
+    "For each macOS Canvas text-edit profile, capture pre-launch (including a missing-root state if applicable), settled startup, immediately pre-picker, confirmed native-panel-open, settled selected-vault setup, and post-close full-tree snapshots. This harness launches without a vault, so pre-launch-to-settled-startup may contain only the observed eframe app.ron startup write; root/vault markers must not appear before a vault selection. Require exact full-tree equality from settled startup to immediately pre-picker. From pre-picker to confirmed panel-open, allow only the documented app.ron UI-state transition, inspect its contents, and reject vault/app-data-root path leakage. From confirmed panel-open to settled selected-vault setup, allow only the exact managed root/vault marker bootstrap and inspected app.ron setup changes; validate every marker path and byte. Derive <id> as the first 24 lowercase hex characters of SHA-256 over UTF-8 bytes of the lexical absolute path string produced by Node path.resolve(selectedVaultRoot), without realpath/symlink resolution, matching Rust resolve_legacy_path. Require exact full-tree equality from the settled post-selection/setup baseline through Canvas editor interactions and process close. R3.5 observed app.ron changing 1994→3400 bytes during startup and 3400→3399 when opening the picker, with no later changes after the picker baseline. These phase-scoped app.ron transitions are the only exception; the Linux-only canary is not applicable on macOS.",
+    "For each Windows Canvas text-edit profile, keep the canonical root outside the fixture vault and record its pre-launch presence/absence and full tree, then snapshot after startup and selected-vault/editor setup. The only allowed startup additions are the exact managed bootstrap entries: `.openobsidian-user-data-root` with ASCII bytes openobsidian-user-data-root-v1 followed by exactly one 0x0A byte; vaults/; vaults/<id>/; and vaults/<id>/.openobsidian-vault-data with ASCII bytes openobsidian-vault-data-v1 followed by exactly one 0x0A byte. Derive <id> from the first 24 lowercase hex characters of SHA-256 over the UTF-8 bytes of the lexical absolute path string produced by Node path.resolve(selectedVaultRoot), without realpath/symlink resolution, matching Rust resolve_legacy_path. Validate exact paths, kinds, and marker contents; fail on any other startup delta, including app.ron. Use the validated post-setup snapshot as the interaction baseline and require exact path/kind/byte-count/hash equality through editor interactions and process close. R3.5 observed no startup/picker/close changes and no app.ron after startup, but lacked a pre-launch snapshot; it does not exempt new runs from the bootstrap allowlist. The Linux-only canary is not applicable.",
+    "Retain full round-trip acceptance and all ten C07.4 scenarios on first open and reopen for Ubuntu, macOS, and Windows; reconcile every comparable pair and checkpoint. Keep C07.4 reference-only and make no Rust parity claim."
+  ],
+  "implementation_constraints": {
+    "validation_location": "GitHub Actions only",
+    "prohibited_local_validation": [
+      "tests",
+      "smoke tests",
+      "benchmarks",
+      "runtime probes",
+      "application launches for validation",
+      "builds",
+      "typechecks",
+      "formatters",
+      "linters",
+      "validators",
+      "packaging checks",
+      "fixture audits"
+    ],
+    "allowed_local_work": [
+      "source inspection",
+      "editing",
+      "git operations",
+      "static review"
+    ],
+    "note": "Executable validation and acceptance evidence must come from the complete required GitHub Actions batch for the exact submitted SHA. Local source inspection, edits, git operations, and static review are allowed.",
+    "milestone_submission_cadence": "Do not push or trigger full CI for each minor edit or fix. Keep related work local until the entire named milestone meets its measurable acceptance criteria and has been reviewed as a whole; then push exactly once to origin/main. Wait for all required jobs in that exact-SHA batch to become terminal and reconcile its evidence before another full batch. For R3.6 the planned batch has seven required workflows and twenty jobs; no R3.6 push occurs before implementation and independent review are complete."
+  },
+  "predecessor_ci_status_at_reconciliation": {
+    "submitted_sha": "7e40c10aaf5b28bb52cd98eadf53ebc59447a91f",
+    "origin_main_sha": "7e40c10aaf5b28bb52cd98eadf53ebc59447a91f",
+    "reconciled_at": "2026-10-16T04:09:26Z",
+    "batch_terminal": true,
+    "workflow_counts": {
+      "observed": 7,
+      "terminal": 7,
+      "passed": 6,
+      "failed": 1,
+      "cancelled": 0,
+      "queued": 0,
+      "in_progress": 0
+    },
+    "job_counts": {
+      "observed": 20,
+      "terminal": 20,
+      "passed": 19,
+      "failed": 1,
+      "cancelled": 0,
+      "queued": 0,
+      "in_progress": 0
+    },
+    "failed_job_ids": [
+      116791400916
+    ],
+    "passed_roundtrip_jobs": {
+      "macos": 116791401015,
+      "windows": 116791401151
+    },
+    "artifact_count": 16,
+    "artifacts_reconciled": true,
+    "roundtrip_report_hashes": {
+      "linux": "9edfff50dd99520d90ceeb2f634ca47a239271eda7faad9818484e4faefa7ca1",
+      "windows": "9857e6418b1d855f0f3da7525adf941a1d2a19a5ab8a1d481f8aa3830b8e9d3c",
+      "macos": "6d59a2be666622eed3124f2528717d9b4293375d33899e056866207aa41ebf28"
+    },
+    "summary": "Ubuntu failed before the Linux expected-abort marker; macOS and Windows round-trip reports passed. MacOS expected-abort canary is Linux-only and not applicable. All three platform report hashes and artifact digests are reconciled."
+  }
+}

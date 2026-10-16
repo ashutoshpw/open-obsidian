@@ -8002,3 +8002,100 @@ Implemented the R3.5 refresh-stability return contract and recorded baseline-to-
 ## R3.5 review findings closed — 2026-10-16T03:08:49Z
 
 Independent static review found the checkpoint-return, canary gating, trace continuity, and recovery sequence in place, then identified two evidence gaps: missing receiver-state logs were treated as idle, and Tab release order was not proven for events in the same frame. The canary now requires explicit before/after receiver observations with both states idle at each relevant guard; missing observations fail closed. The Rust trace records modified and repeated Tab states from all egui modifier bits, and the harness allows only an unmodified, non-repeated press/release, rejects modifier-change events, and checks within-frame press-before-release order. Two independent follow-up source reviews found no concrete remaining findings or Rust API/type issues. Updated the R3.5 plan, state, and evidence criteria. No GitHub CI was dispatched and no commit or push occurred. One `git diff --check` command was inadvertently included in a chained source-inspection command; it is not accepted as validation evidence. No tests, builds, formatters, typechecks, validators, or runtime probes were run.
+
+## R3.5 pushed; exact-SHA CI progress — 2026-10-16T03:16:49Z
+
+Pushed the reviewed R3.5 milestone once to origin/main at exact SHA 7e40c10aaf5b28bb52cd98eadf53ebc59447a91f. Read-only GitHub status confirms all seven required workflows are attached to that SHA. Five workflows and 15/20 jobs have completed successfully; five jobs remain active across the Rust CI and three-platform vault round-trip workflows. No failures or queued jobs are reported. The current run/job IDs and statuses are recorded in [evidence/r2.8.137-r3-5-attempt-1-7e40c10.json](evidence/r2.8.137-r3-5-attempt-1-7e40c10.json); artifact reconciliation remains pending until all jobs are terminal.
+
+The unrelated loaded-plugin workflow run 34748436643 is still queued at the old SHA d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79. A cancellation attempt returned HTTP 409 with “Cannot cancel a workflow run that has not been queued yet”; it is excluded from this R3.5 batch and will not be retried. origin/main remains at 7e40c10aaf5b28bb52cd98eadf53ebc59447a91f. No additional push/dispatch or local executable validation occurred.
+
+## R3.5 exact-SHA CI progress — 2026-10-16T03:19:46Z
+
+The Windows Rust CI job passed. Five of seven required workflows and 16/20 jobs have passed on exact SHA 7e40c10aaf5b28bb52cd98eadf53ebc59447a91f; the Windows Rust job is now complete, while the three vault round-trip jobs and Rust 1.95 job remain active. No failures or queued jobs are reported. origin/main was rechecked at the submitted SHA. Updated [evidence/r2.8.137-r3-5-attempt-1-7e40c10.json](evidence/r2.8.137-r3-5-attempt-1-7e40c10.json); artifact reconciliation remains pending until the full batch is terminal. No additional push/dispatch or local executable validation occurred.
+
+## R3.5 exact-SHA CI progress — 2026-10-16T03:20:36Z
+
+The minimum-supported Rust 1.95 job has passed. Six of seven required workflows and 17/20 jobs have passed on exact SHA 7e40c10aaf5b28bb52cd98eadf53ebc59447a91f; only the three-platform Obsidian vault round-trip jobs remain active. No failures or queued jobs are reported. origin/main was rechecked at the submitted SHA. Updated [evidence/r2.8.137-r3-5-attempt-1-7e40c10.json](evidence/r2.8.137-r3-5-attempt-1-7e40c10.json); artifact reconciliation remains pending until the round-trip jobs and full batch are terminal. No additional push/dispatch or local executable validation occurred.
+
+## R3.5 completed-workflow artifact inventory — 2026-10-16T03:20:36Z
+
+Read artifact metadata for all six completed workflows. Thirteen unexpired artifacts are present across loaded-plugin workflows, desktop previews, plugin renderer, and Rust CI; quality and inventory completed with no uploads. Their IDs, names, sizes, creation times, and expiry times are recorded in the attempt evidence. Round-trip artifacts are still pending while its three jobs run; this is not final artifact reconciliation, and archive hashes/report review remain outstanding.
+
+## R3.5 Linux round-trip failure observed; batch still active — 2026-10-16T03:25:38Z
+
+Ubuntu round-trip job 116791400916 failed on exact SHA 7e40c10aaf5b28bb52cd98eadf53ebc59447a91f; the macOS and Windows round-trip jobs remain active, so the parent workflow and batch are not terminal. The Linux report artifact (ID 12021928999) has archive SHA-256 690fa132207564b22325be7261c886cc78012505502edadd1dd664183ef2d361 and report SHA-256 9edfff50dd99520d90ceeb2f634ca47a239271eda7faad9818484e4faefa7ca1.
+
+The report records failure during the expected-abort Canvas canary's path-field entry, before Tab, clipboard staging, paste, or Save. After three fresh-position attempts, frame 376 showed the path field focused/hovered and the pointer inside it, but no click-event observation; the value remained empty. The abort marker and focus checkpoints were absent, and preservation was not verified. The exact cause is not assigned. GitHub logs are unavailable until the parent run completes. No source repair or new push is allowed while the remaining jobs run; origin/main was verified at 7e40c10aaf5b28bb52cd98eadf53ebc59447a91f.
+
+## R3.5 Linux app-log trace reviewed — 2026-10-16T03:28:22Z
+
+Reviewed the extracted Linux canary app log (SHA-256 96bbe42fb38f6935c8ce5f58d9bc9cf9e502d3fed7af4b38e7e1a8a7328b40b4). It records path-field clicked=true observations at frames 304, 347, and 389. The report's failed pre-entry pair is frame 376, where clicked=false and the only raw event was pointer movement; the frame-389 click is later than that pair. This gives a concrete timing distinction, but does not by itself establish why the guard failed or which attempt owns each logged event. GitHub workflow logs remain unavailable until the parent run ends. The macOS and Windows round-trip jobs are still active; no repair or push was made.
+
+
+## R3.5 Windows round-trip complete; Linux sampling gap identified — 2026-10-16T03:34:04Z
+
+The Windows round-trip job 116791401151 passed on exact SHA `7e40c10aaf5b28bb52cd98eadf53ebc59447a91f`. Its report artifact (ID 12022279240; archive SHA-256 `0763c45cf254769359f611a18c432c3d88e183e08ff7a82ce9e891d2bf594951`; report SHA-256 `9857e6418b1d855f0f3da7525adf941a1d2a19a5ab8a1d481f8aa3830b8e9d3c`) reports overall success and completes all ten C07.4 first-open, reopen, and comparable-pair predicates with a complete 28-checkpoint matrix. The C07.4 result is reference-only; it records reference source mutation and makes no Rust parity claim. The Linux-only R3.5 canary is not applicable on Windows. The macOS round-trip job remains active; the parent workflow is not terminal, so final logs, artifacts, and batch reconciliation remain pending. `origin/main` is still `7e40c10aaf5b28bb52cd98eadf53ebc59447a91f`.
+
+Two independent read-only static reviews correlated the Linux report and diagnostic trace with the harness. The evidence supports a sampling gap: after click dispatch, the wait can accept a newly logged paired observation from before the click because it uses an earlier geometry watermark and does not require a click event. The later strict `clicked=true` guard then fails closed. The target does eventually log `clicked=true` at frame 389, but the OS-to-egui delay is unexplained; no Tab was sent and the focus transition was not exercised. A bounded repair hypothesis is to capture a dedicated log watermark immediately before the click and require exactly one newer target click observation in a fresh paired target/sibling frame, retaining existing safety guards and timeout failure. Do not begin implementation or push before the current batch is terminal.
+
+
+## R3.5 click sampling repair design independently reviewed — 2026-10-16T03:36:06Z
+
+A further read-only review sharpened the Linux repair hypothesis. `geometryBaselineLine` is captured before pointer positioning; the current wait can therefore accept a fresh paired frame from before click dispatch, and the later click scan uses the same broad baseline rather than proving the event belongs to the sampled pair. Preserve that geometry baseline, but capture a separate `clickDispatchWatermark` from the latest fresh same-frame target/sibling pair immediately before dispatch. After exactly one click, require exactly one target click after that watermark, no sibling click, and a paired observation in the exact target-click event frame. Fail before dispatch if the pair is stale/mismatched or a button/click is already present. Once dispatched, timeout, duplicates, sibling clicks, or an invalid event-frame pair must abort before text entry without another coordinate click; retain retry behavior only for pre-dispatch geometry/refresh failures. This narrows the harness race without assigning the unexplained OS-to-egui delay. Current batch remains active; no source changes, validation, push, or dispatch occurred.
+
+
+## R3.5 available artifact digests inventoried — 2026-10-16T03:39:51Z
+
+Queried GitHub artifact metadata for all seven exact-SHA workflows. GitHub SHA-256 digests are now recorded in the attempt evidence for all 15 currently available artifacts; the Linux and Windows round-trip archives were downloaded and their local SHA-256 values match the GitHub API digests. Quality and inventory workflows published no artifacts. The macOS round-trip artifact is not available while its job remains active, so artifact and batch reconciliation remain incomplete. `origin/main` remains at `7e40c10aaf5b28bb52cd98eadf53ebc59447a91f`; no push or dispatch occurred.
+
+
+## Drafted R3.6 click-dispatch watermark repair plan — 2026-10-16T03:42:31Z
+
+Created [the R3.6 planning draft](evidence/r2.8.138-r3-6-linux-canvas-canary-click-dispatch-watermark-plan.json) from the reviewed Linux sampling-gap evidence. It keeps a dedicated click-dispatch watermark, requires one post-watermark target event paired to the exact event frame, forbids a second click after ambiguous dispatch, and preserves the full R3.5 canary acceptance. The draft is explicitly gated on terminal R3.5 jobs and macOS report/log reconciliation, and must be revised if those add evidence. No source implementation, validation, commit, push, or dispatch occurred.
+
+
+## R3.6 draft tightened after independent acceptance reviews — 2026-10-16T03:46:27Z
+
+The draft now requires canary-gated ordered raw primary-button press/release evidence with modifier bits and positions, no unexpected input, exact release/`Response::clicked`/path-row/sibling-row frame correlation, and no awaited work or other input between watermark capture and click dispatch. It uses frame numbers because the Rust trace line precedes widget rows. It explicitly carries the R3.5 two-snapshot recovery, stationary click, post-click guard, ArrowRight, final pre-staging, zero-Ctrl+V/paste/Save, cleanup, preservation, and ten C07.4 scenarios on first open/reopen per OS. The predecessor Linux report is explicitly marked preservation-unverified (`app.ron` changed; clipboard cleanup null). Implementation remains gated on terminal R3.5 logs/reports and the GitHub-CI-only rule is explicit. This remains a draft; no source changes, local validation, push, or CI dispatch occurred.
+
+
+## R3.6 draft raw-event allowlist and strict watermark frame — 2026-10-16T03:51:04Z
+
+After independent review, the draft now specifies a complete, ordered raw-event trace from the first frame after the click-dispatch watermark through the click frame. It records safe event kinds and event indices, all five modifier bits for pointer-button and modifier-change events, and button positions without logging text. The only post-watermark sequence accepted is one unmodified primary press/release pair plus optional `ModifiersChanged(NONE)` events; pointer motion, key/text, other buttons, wheel/touch, focus changes, unknown events, and incomplete traces fail closed. The press frame must be strictly later than the watermark; same-frame press/release ordering uses event indices, and release, clicked response, target row, and sibling row must share a frame.
+
+The R3.5 exact-SHA batch remains active on 7e40c10aaf5b28bb52cd98eadf53ebc59447a91f: 6/7 workflows successful, 18/20 jobs passed, Ubuntu round-trip failed, Windows passed, and macOS job 116791401015 remains in progress. Its status and artifact reconciliation are updated in the attempt record. `origin/main` remains pinned to the submitted SHA. No source implementation, local executable validation, push, or CI dispatch occurred.
+
+
+## R3.6 operational trace criteria and goal-hash handoff — 2026-10-16T03:52:55Z
+
+A second independent review added requirements for the exact watermark frame W: one matching trace record, primary button up, and all five current modifier bits clear. The post-watermark trace must contain one unique, gap-free record for every frame through the click frame; the current modifier state must remain clear after release. Compare pointer-event positions with both response rectangles in egui logical points. The requested milestone-cadence revision exists in the main workspace goal (SHA-256 c2c1c5f3e68e5ae779e999cadc597ee52da6017fcb62cee6c94467a2d139d9d7), while the active R3.5 commit and evidence remain pinned to goal hash f9e4fddd953eb784a5fb5bbe2358600ffaea0a359fe6a1d0b35c844a7ee9bc57. The plan now explicitly defers syncing that goal revision until R3.5 CI is terminal, then refreshes the inventory hash before R3.6 work. No source edits, executable validation, push, or dispatch occurred.
+
+## R3.5 CI batch reconciled; R3.6 plan refreshed — 2026-10-16T04:13:52Z
+
+Reconciled the terminal exact-SHA R3.5 batch at `7e40c10aaf5b28bb52cd98eadf53ebc59447a91f`: all seven workflows and twenty jobs are terminal; six workflows and nineteen jobs passed; Ubuntu round-trip job `116791400916` is the sole failure; all sixteen artifact digests and the Linux/macOS/Windows round-trip report hashes are recorded in [the attempt evidence](evidence/r2.8.137-r3-5-attempt-1-7e40c10.json). macOS and Windows round-trip reports passed. The Linux report remains preservation-unverified because `app.ron` appeared at shutdown and clipboard cleanup was not exercised.
+
+Synced the user-requested milestone-only CI cadence into the active tracker. `goal.md`, MIG-002/reference history, `requirements.json.mapping_review.goal_sha256`, `state.json`, and the R3.6 plan now use SHA-256 `c2c1c5f3e68e5ae779e999cadc597ee52da6017fcb62cee6c94467a2d139d9d7`; the committed R3.5 attempt and evidence retain their historical `f9e4fddd...` fingerprint. The plan now specifies separate Linux, macOS, and Windows app-data baselines, including the observed macOS startup/picker `app.ron` changes and the Windows post-startup no-change interval. An independent trace review also identified that the current `pixels_per_point` diagnostic is rounded to two decimals; R3.6 now requires round-trippable f32 precision or exact bits before applying the physical-pixel tolerance.
+
+R3.6 source implementation is not started. Independent plan reviews are in progress. No tests, builds, formatters, linters, validators, application launches, commits, pushes, or CI dispatches occurred.
+
+## R3.6 app-data paths and positioning evidence tightened — 2026-10-16T04:56:00Z
+
+Static review found the shared app-data delta helper allowed any path ending in `app.ron`. The R3.6 harness now allows only `data/openobsidian/app.ron` on Linux and `home/Library/Application Support/OpenObsidian/app.ron` on macOS, rejects app.ron entries elsewhere, and allows none on Windows. The macOS setup now creates the exact case-preserving `OpenObsidian` directory requested by pinned eframe 0.36.2. The plan records the path derivation and phase-specific exception rules. A second review confirmed Linux's exact path against the R3.5 artifact and confirmed the macOS path from the pinned eframe storage implementation; the existing macOS artifact only flattened its path, so the next R3.6 artifact remains the direct CI observation.
+
+An independent click-trace review retracted its earlier request to require both positioning moves after confirming the plan explicitly accepts an ordered subsequence to account for backend coalescing. The verifier keeps that behavior, still requires the target move, and now reports the observed destination indices and whether the neutral move was coalesced.
+
+Integrated R3.6 plan/source review is pending. No local tests, builds, formatters, linters, validators, application launches, commits, pushes, or CI dispatches were run.
+
+## R3.6 Canvas/C07.4 scope boundary approved — 2026-10-16T05:02:43Z
+
+A read-only follow-up review approved the final plan wording: strict app-data snapshots apply to each Canvas text-edit profile through editor interaction and process close; picker-cancellation and post-cancel snapshots belong only to the separate `runOpenObsidian` C07.4 reference flow under carried R3.5 acceptance. The preimplementation gate, evidence list, and acceptance section now state this consistently. The independent whole-source reviews remain in progress. R3.6 source and tracker edits remain local, `origin/main` stays at the reconciled R3.5 SHA, and no CI batch is active. No local executable validation ran.
+
+## R3.6 goal fingerprint and inspection evidence sync — 2026-10-16T05:15:00Z
+
+Recorded the final goal fingerprint `c0be89ea6705ca5b05c6589c14ffa38ebe7358e3671f39543429f3866df6eaf3`, matching `requirements.json`, MIG-002 and the active R3.6 plan; the earlier `c2c1c5f3...` journal entry remains historical. After the app-data review noted that exact-equality snapshots only referenced inspection of their identical prior tree, the harness now emits explicit phase-labeled `app.ron` inspection rows at Linux pre-editor setup, macOS pre-picker and each platform's exact pre-input baseline. The plan now names those evidence requirements. Focused independent review is pending. All R3.6 changes remain local; no local executable validation, commit, push or CI dispatch occurred.
+
+## R3.6 implementation review complete — 2026-10-16T05:17:25Z
+
+The independent integrated review passed the click-frame correlation, Linux app-data stabilization/preservation, exact platform app.ron paths, retained inspection summaries, goal cadence, and assigned-worktree submission flow. Two focused read-only follow-ups confirmed explicit inspection rows for Linux pre-editor setup, macOS pre-picker and the all-platform pre-input baseline, with exact path, snapshot hash, section, and forbidden-path checks. The R3.6 plan lists all seven required workflows and twenty jobs. The named implementation milestone is complete and ready for one push; `origin/main` is still `7e40c10aaf5b28bb52cd98eadf53ebc59447a91f`. No local executable validation or CI batch occurred.
+
+Committed the R3.6 implementation source locally as `24f7e1d243073ab2f1ee9baeb1e6850b160b527d` after independent review. The CI and tracker handoff remains a separate local commit; `origin/main` is unchanged and the milestone will be pushed only once after that handoff is complete. No local executable validation ran.
