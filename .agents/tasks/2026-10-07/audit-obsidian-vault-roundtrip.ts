@@ -1317,13 +1317,54 @@ async function waitFor<T>(label: string, read: () => Promise<T>, predicate: (val
   throw new Error(`Timed out waiting for ${label}; last value=${lastValueSummary.slice(0, 2_000)}`);
 }
 
+type WatcherEventBatch = {batchId: string; eventCount: number};
+
 type OpenObsidianRefreshDiagnostics = {
-  requests: Array<{source: string; triggerSources: string | null; line: number; requestId: string | null; frameNr: number | null}>;
-  consumedResults: Array<{succeeded: boolean; snapshotStable: boolean | null; revisionSha256: string | null; entries: number | null; line: number; requestId: string | null; expectedPathVisible: boolean | null}>;
-  snapshotProbes: Array<{phase: "scheduled" | "result"; requestId: string | null; outcome: "unchanged" | "changed" | "error" | null; revisionSha256: string | null; baselineRevisionSha256: string | null; line: number}>;
-  watcherHints: Array<{hint: string; requestId: string | null; line: number}>;
+  requests: Array<{source: string; triggerSources: string | null; line: number; requestId: string | null; frameNr: number | null; watcherEventBatches: WatcherEventBatch[] | null}>;
+  consumedResults: Array<{succeeded: boolean; snapshotStable: boolean | null; revisionSha256: string | null; entries: number | null; line: number; requestId: string | null; expectedPathVisible: boolean | null; watcherEventBatches: WatcherEventBatch[] | null}>;
+  snapshotProbes: Array<{phase: "scheduled" | "result"; requestId: string | null; outcome: "unchanged" | "changed" | "error" | null; revisionSha256: string | null; baselineRevisionSha256: string | null; line: number; watcherEventBatches: WatcherEventBatch[] | null}>;
+  watcherCallbacks: Array<WatcherEventBatch & {line: number; callbackKind: string | null}>;
+  watcherHints: Array<{hint: string; requestId: string | null; line: number; eventBatchId: string | null; eventCount: number | null; callbackToPollMs: number | null; notifyErrorCallbacks: number | null; timerDueBeforePoll: boolean | null}>;
   receiverStates: Array<{busy: boolean; refreshBusy: boolean; snapshotProbeBusy: boolean; line: number}>;
 };
+
+function parseWatcherEventBatches(value: string): WatcherEventBatch[] | null {
+  const encoded = value.match(/\bwatcher_event_batches=([^,\s]*)/)?.[1];
+  if (encoded === undefined) return null;
+  if (encoded === "" || encoded === "none") return [];
+  const seenBatchIds = new Set<string>();
+  const batches: WatcherEventBatch[] = [];
+  for (const item of encoded.split("|")) {
+    const batch = item.match(/^([^:|,\s]+):(\d+)$/);
+    if (!batch) return null;
+    const batchId = batch[1] ?? "";
+    const eventCount = Number(batch[2]);
+    if (!batchId || !Number.isSafeInteger(eventCount) || eventCount < 1 || seenBatchIds.has(batchId)) {
+      return null;
+    }
+    seenBatchIds.add(batchId);
+    batches.push({batchId, eventCount});
+  }
+  return batches;
+}
+
+function parseWatcherEventCount(value: string | undefined): number | null {
+  if (value === undefined) return null;
+  const eventCount = Number(value);
+  return Number.isSafeInteger(eventCount) && eventCount >= 0 ? eventCount : null;
+}
+
+function parseCallbackToPollMs(value: string | undefined): number | null {
+  if (value === undefined || value === "none") return null;
+  const elapsedMs = Number(value);
+  return Number.isSafeInteger(elapsedMs) && elapsedMs >= 0 ? elapsedMs : null;
+}
+
+function parseDiagnosticBoolean(value: string | undefined): boolean | null {
+  if (value === "true") return true;
+  if (value === "false") return false;
+  return null;
+}
 
 function openObsidianRefreshActivityChanged(
   before: OpenObsidianRefreshDiagnostics,
@@ -1332,6 +1373,7 @@ function openObsidianRefreshActivityChanged(
   return before.requests.length !== after.requests.length
     || before.consumedResults.length !== after.consumedResults.length
     || before.snapshotProbes.length !== after.snapshotProbes.length
+    || before.watcherCallbacks.length !== after.watcherCallbacks.length
     || before.watcherHints.length !== after.watcherHints.length;
 }
 
@@ -1358,6 +1400,7 @@ async function readOpenObsidianRefreshDiagnostics(
     requests: [],
     consumedResults: [],
     snapshotProbes: [],
+    watcherCallbacks: [],
     watcherHints: [],
     receiverStates: [],
   };
@@ -1371,6 +1414,7 @@ async function readOpenObsidianRefreshDiagnostics(
         line,
         requestId: value.match(/\brequest_id=([^,\s]+)/)?.[1] ?? null,
         frameNr: frameNr === undefined ? null : Number(frameNr),
+        watcherEventBatches: parseWatcherEventBatches(value),
       });
       diagnostics.receiverStates.push({busy: true, refreshBusy: true, snapshotProbeBusy: false, line});
     }
@@ -1389,6 +1433,7 @@ async function readOpenObsidianRefreshDiagnostics(
       expectedPathVisible: value.match(/\bexpected_path_visible=(true|false)/)?.[1] === undefined
         ? null
         : value.includes("expected_path_visible=true"),
+      watcherEventBatches: parseWatcherEventBatches(value),
     });
     if (consumed) diagnostics.receiverStates.push({busy: false, refreshBusy: false, snapshotProbeBusy: false, line});
     const probeScheduled = value.match(/OpenObsidian CI vault snapshot probe scheduled: request_id=([^,\s]+)/);
@@ -1399,6 +1444,7 @@ async function readOpenObsidianRefreshDiagnostics(
       revisionSha256: null,
       baselineRevisionSha256: value.match(/\bbaseline_revision=([a-f0-9]{64})/)?.[1] ?? null,
       line,
+      watcherEventBatches: parseWatcherEventBatches(value),
     });
     if (probeScheduled) diagnostics.receiverStates.push({busy: true, refreshBusy: false, snapshotProbeBusy: true, line});
     const probeResult = value.match(/OpenObsidian CI vault snapshot probe result: request_id=([^,\s]+), outcome=(unchanged|changed|error)/);
@@ -1409,13 +1455,28 @@ async function readOpenObsidianRefreshDiagnostics(
       revisionSha256: value.match(/\brevision_sha256=([a-f0-9]{64})/)?.[1] ?? null,
       baselineRevisionSha256: value.match(/\bbaseline_revision_sha256=([a-f0-9]{64})/)?.[1] ?? null,
       line,
+      watcherEventBatches: parseWatcherEventBatches(value),
     });
     if (probeResult) diagnostics.receiverStates.push({busy: false, refreshBusy: false, snapshotProbeBusy: false, line});
+    const watcherCallback = value.match(/OpenObsidian CI vault watcher callback enqueued:/);
+    if (watcherCallback) diagnostics.watcherCallbacks.push({
+      batchId: value.match(/\bbatch_id=([^,\s]+)/)?.[1] ?? "",
+      eventCount: parseWatcherEventCount(value.match(/\bevent_count=(\d+)/)?.[1]) ?? -1,
+      line,
+      callbackKind: value.match(/\bcallback_kind=([^,\s]+)/)?.[1] ?? null,
+    });
     const watcherHint = value.match(/OpenObsidian CI vault watcher hint: hint=(.*?), request_id=([^,\s]+), refresh_in_flight=/);
     if (watcherHint) diagnostics.watcherHints.push({
       hint: watcherHint[1] ?? "unknown",
       requestId: watcherHint[2] === "none" ? null : watcherHint[2] ?? null,
       line,
+      eventBatchId: value.match(/\bevent_batch_id=([^,\s]+)/)?.[1] === "none"
+        ? null
+        : value.match(/\bevent_batch_id=([^,\s]+)/)?.[1] ?? null,
+      eventCount: parseWatcherEventCount(value.match(/\bevent_count=(\d+)/)?.[1]),
+      callbackToPollMs: parseCallbackToPollMs(value.match(/\bcallback_to_poll_ms=([^,\s]+)/)?.[1]),
+      notifyErrorCallbacks: parseWatcherEventCount(value.match(/\bnotify_error_callbacks=(\d+)/)?.[1]),
+      timerDueBeforePoll: parseDiagnosticBoolean(value.match(/\btimer_due_before_poll=(true|false)\b/)?.[1]),
     });
     const receiverState = value.match(/OpenObsidian CI UI state: .*vault_refresh_receiver=(true|false), vault_snapshot_probe_receiver=(true|false)/);
     if (receiverState) {
@@ -1425,6 +1486,76 @@ async function readOpenObsidianRefreshDiagnostics(
     }
   }
   return diagnostics;
+}
+
+function assertExternalWatcherEventBatchLineage(
+  diagnostics: OpenObsidianRefreshDiagnostics,
+  afterLine: number,
+  hint: OpenObsidianRefreshDiagnostics["watcherHints"][number],
+  scheduled: OpenObsidianRefreshDiagnostics["snapshotProbes"][number],
+  probeResult: OpenObsidianRefreshDiagnostics["snapshotProbes"][number],
+  request: OpenObsidianRefreshDiagnostics["requests"][number],
+  refreshResult: OpenObsidianRefreshDiagnostics["consumedResults"][number],
+): OpenObsidianRefreshDiagnostics["watcherCallbacks"][number] | null {
+  const batchId = hint.eventBatchId;
+  const eventCount = hint.eventCount;
+  const callbackToPollMs = hint.callbackToPollMs;
+  if (!batchId || eventCount === null || eventCount < 1 || callbackToPollMs === null
+    || callbackToPollMs > 15_000 || hint.notifyErrorCallbacks !== 0
+    || hint.timerDueBeforePoll !== false) {
+    throw new Error(`The external watcher hint has invalid batch, timing, notification-error, or timer diagnostics: ${JSON.stringify({afterLine, hint})}`);
+  }
+  if (!(hint.line < scheduled.line
+    && scheduled.line < probeResult.line
+    && probeResult.line < request.line
+    && request.line < refreshResult.line)) {
+    throw new Error(`The external watcher event batch lost its ordered probe-to-refresh chain: ${JSON.stringify({hint, scheduled, probeResult, request, refreshResult})}`);
+  }
+
+  const expectedBatch = {batchId, eventCount};
+  const stages = [
+    {name: "snapshot probe schedule", record: scheduled},
+    {name: "snapshot probe result", record: probeResult},
+    {name: "full refresh request", record: request},
+    {name: "full refresh result", record: refreshResult},
+  ];
+  for (const stage of stages) {
+    const matchingBatches = stage.record.watcherEventBatches?.filter((batch) => batch.batchId === batchId) ?? [];
+    if (matchingBatches.length !== 1 || matchingBatches[0]!.eventCount !== eventCount) {
+      throw new Error(`The ${stage.name} did not retain the exact watcher event batch ID/count: ${JSON.stringify({expectedBatch, stage: stage.name, actual: stage.record.watcherEventBatches})}`);
+    }
+  }
+
+  const callbacks = diagnostics.watcherCallbacks.filter((callback) => (
+    callback.batchId === batchId
+      && callback.line >= afterLine
+  ));
+  const callbacksByEventCount = [...callbacks].sort((left, right) => left.eventCount - right.eventCount);
+  if (callbacks.some((callback) => callback.callbackKind !== "filesystem_event"
+    || callback.eventCount < 1 || callback.eventCount > eventCount)) {
+    throw new Error(`The external watcher batch contains a non-filesystem callback or an extra/invalid callback count: ${JSON.stringify({afterLine, hint, callbacks})}`);
+  }
+  const seenCallbackCounts = new Set<number>();
+  for (const callback of callbacksByEventCount) {
+    if (seenCallbackCounts.has(callback.eventCount)) {
+      throw new Error(`The external watcher batch contains a duplicate callback count: ${JSON.stringify({afterLine, hint, callbacks})}`);
+    }
+    seenCallbackCounts.add(callback.eventCount);
+  }
+  if (callbacks.length > eventCount) {
+    throw new Error(`The external watcher batch contains more callback records than its hint event count: ${JSON.stringify({afterLine, hint, callbacks})}`);
+  }
+  if (callbacks.length < eventCount) return null;
+
+  const callbackCountsAreContiguous = callbacksByEventCount.every((callback, index) => (
+    callback.eventCount === index + 1
+  ));
+  if (!callbackCountsAreContiguous) return null;
+  const finalCallback = callbacks.find((callback) => callback.eventCount === eventCount);
+  if (!finalCallback) {
+    throw new Error(`The external watcher batch has no callback record for its final event count: ${JSON.stringify({afterLine, hint, callbacks})}`);
+  }
+  return finalCallback;
 }
 
 function assertVaultSnapshotProbeCorrelation(diagnostics: OpenObsidianRefreshDiagnostics): void {
@@ -2965,6 +3096,7 @@ async function waitForChangedWatcherSnapshotRefresh(
   settled_for_ms: number;
   reconciliationPath: "watcher_snapshot_probe" | "periodic_timer";
   changedWatcherHint: OpenObsidianRefreshDiagnostics["watcherHints"][number] | null;
+  changedWatcherEventCallback: OpenObsidianRefreshDiagnostics["watcherCallbacks"][number] | null;
   changedSnapshotProbe: OpenObsidianRefreshDiagnostics["snapshotProbes"][number] | null;
   changedSnapshotRefresh: OpenObsidianRefreshDiagnostics["requests"][number];
   changedSnapshotRefreshResult: OpenObsidianRefreshDiagnostics["consumedResults"][number];
@@ -3011,11 +3143,25 @@ async function waitForChangedWatcherSnapshotRefresh(
               || (options.requireExpectedPathVisible && result.expectedPathVisible !== true)) {
               throw new Error(`Changed watcher probe was not followed by its stable correlated full refresh: ${JSON.stringify({watcherHint, scheduled, probe, request, result, expectedEntries})}`);
             }
+            const watcherEventCallback = options.requireWatcherSnapshotProbe
+              ? assertExternalWatcherEventBatchLineage(
+                diagnostics,
+                afterLine,
+                watcherHint,
+                scheduled,
+                probe,
+                request,
+                result,
+              )
+              : null;
+            if (options.requireWatcherSnapshotProbe && watcherEventCallback === null) return null;
             assertVaultSnapshotProbeCorrelation(diagnostics);
-            return {path: "watcher_snapshot_probe" as const, diagnostics, watcherHint, probe, request, result};
+            return {path: "watcher_snapshot_probe" as const, diagnostics, watcherHint, watcherEventCallback, probe, request, result};
           }
         }
       }
+
+      if (options.requireWatcherSnapshotProbe) return null;
 
       const periodicRequests = diagnostics.requests.filter((request) => (
         request.line >= afterLine
@@ -3083,6 +3229,7 @@ async function waitForChangedWatcherSnapshotRefresh(
             path: "periodic_timer" as const,
             diagnostics,
             watcherHint: watcherHintInTimerBatch ?? followupWatcherHint,
+            watcherEventCallback: null,
             probe: null,
             request: periodicRequest,
             result: periodicResult,
@@ -3102,7 +3249,7 @@ async function waitForChangedWatcherSnapshotRefresh(
       && correlated.request.triggerSources?.split("+").includes("filesystem_watcher") === true
       && correlated.request.triggerSources?.split("+").includes("periodic_timer") === true;
     if (!sameBatchWatcherPeriodicRefresh) {
-      throw new Error(`The changed vault was not reconciled by its watcher snapshot probe or one same-ID watcher+periodic batch: ${JSON.stringify(correlated)}`);
+      throw new Error(`The changed vault was not reconciled by its correlated watcher snapshot probe: ${JSON.stringify(correlated)}`);
     }
   }
 
@@ -3129,6 +3276,13 @@ async function waitForChangedWatcherSnapshotRefresh(
       && changedSnapshotRefresh !== undefined
       && result.line > changedSnapshotRefresh.line
   ));
+  const correlatedWatcherEventCallback = correlated.watcherEventCallback;
+  const changedWatcherEventCallback = correlatedWatcherEventCallback === null
+    ? null
+    : settled.watcherCallbacks.find((callback) => (
+      callback.batchId === correlatedWatcherEventCallback.batchId
+        && callback.line === correlatedWatcherEventCallback.line
+    )) ?? null;
   const postEditWatcherHints = settled.watcherHints.filter((hint) => hint.line >= afterLine && hint.requestId !== null);
   const postEditWatcherRequestIds = new Set(postEditWatcherHints.map((hint) => hint.requestId!));
   for (const requestId of postEditWatcherRequestIds) {
@@ -3206,6 +3360,7 @@ async function waitForChangedWatcherSnapshotRefresh(
     ...settled,
     reconciliationPath: correlated.path,
     changedWatcherHint: correlated.watcherHint,
+    changedWatcherEventCallback,
     changedSnapshotProbe,
     changedSnapshotRefresh,
     changedSnapshotRefreshResult,
@@ -15221,7 +15376,7 @@ async function runReferenceExternalNoteRefresh(
     refreshRequestCountBeforeCreation,
     expectedMarkdownCount,
     revisionBeforeCreation,
-    {requireWatcherSnapshotProbe: true, allowDirectWatcherPeriodicBatch: true, requireExpectedPathVisible: true},
+    {requireWatcherSnapshotProbe: true, requireExpectedPathVisible: true},
   );
   refreshReport.watcher_refresh_settled_before_manual = {
     reconciliation_path: settledWatcherRefresh.reconciliationPath,
@@ -15229,6 +15384,7 @@ async function runReferenceExternalNoteRefresh(
     latest_receiver_busy: settledWatcherRefresh.receiverStates.at(-1)?.busy ?? false,
     baseline_revision_sha256: revisionBeforeCreation,
     changed_watcher_hint: settledWatcherRefresh.changedWatcherHint,
+    watcher_event_callback: settledWatcherRefresh.changedWatcherEventCallback,
     changed_snapshot_probe: settledWatcherRefresh.changedSnapshotProbe,
     changed_snapshot_refresh: settledWatcherRefresh.changedSnapshotRefresh,
     latest_consumed_result: settledWatcherRefresh.changedSnapshotRefreshResult,
@@ -15486,7 +15642,7 @@ async function runReferenceExternalNoteRefresh(
     refreshRequestCountBeforeEdit,
     markdownCountAfterEdit,
     revisionBeforeExternalEdit,
-    {requireWatcherSnapshotProbe: true, allowDirectWatcherPeriodicBatch: true},
+    {requireWatcherSnapshotProbe: true},
   );
   const correlatedChangedRefresh = settledWatcherRefreshAfterEdit.changedSnapshotRefresh;
   editReport.watcher_refresh_settled_before_manual = {
@@ -15494,6 +15650,7 @@ async function runReferenceExternalNoteRefresh(
     settled_for_ms: settledWatcherRefreshAfterEdit.settled_for_ms,
     latest_receiver_busy: settledWatcherRefreshAfterEdit.receiverStates.at(-1)?.busy ?? false,
     changed_watcher_hint: settledWatcherRefreshAfterEdit.changedWatcherHint,
+    watcher_event_callback: settledWatcherRefreshAfterEdit.changedWatcherEventCallback,
     latest_consumed_result: settledWatcherRefreshAfterEdit.changedSnapshotRefreshResult,
     snapshot_probes: settledWatcherRefreshAfterEdit.snapshotProbes.filter((probe) => probe.line >= logLineBaselineBeforeEdit),
     changed_probe_correlated_refresh: settledWatcherRefreshAfterEdit.reconciliationPath === "watcher_snapshot_probe"
