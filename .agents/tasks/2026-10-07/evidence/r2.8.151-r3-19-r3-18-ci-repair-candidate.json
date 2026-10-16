@@ -3,7 +3,7 @@
   "plan_id": "R2.8.151-R3.19-R3.18-CI-REPAIR",
   "milestone_id": "R3.19",
   "name": "R3.19 consolidated repair of R3.18 exact-SHA CI failures",
-  "status": "implementation complete / integrated review approved / ready for submission gate; unpushed",
+  "status": "implementation complete / integrated review approved / exact-base gate passed; ready for one submission; unpushed",
   "created_at": "2026-10-16T22:05:38Z",
   "candidate_base_sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
   "integrated_source_head": "1c863ab73b6d74df9dd5aa3df11fba399018b46a",
@@ -104,8 +104,8 @@
   "local_check_deviation": "One agent accidentally ran git diff --check once in the watcher worktree. It was not used as acceptance evidence. No local tests, builds, formatters, linters, validators, benchmarks, runtime probes, or application launches were used.",
   "pushed_once": false,
   "milestone_achieved": false,
-  "next_action": "Verify live origin/main still equals candidate_base_sha and no required CI batch is active; submit this reviewed milestone to origin/main once. Then wait for every exact-SHA workflow/job and reconcile all artifacts before any next push. No local executable validation.",
-  "updated_at": "2026-10-16T22:32:28Z",
+  "next_action": "Push this completed R3.19 milestone to origin/main once. Then hold main at the resulting SHA, record every exact-SHA workflow/job, and reconcile all results/artifacts before any next push.",
+  "updated_at": "2026-10-16T22:35:24Z",
   "reviewed_at": "2026-10-16T22:32:28Z",
   "reviewed_by": [
     "r318_ui_ci_review",
@@ -122,5 +122,29 @@
     "Duplicate snapshots of a watcher batch merge event_count and notify_error_callbacks by maximum so cumulative counters are not double-counted or lost."
   ],
   "implementation_status": "implementation_complete_ready_to_submit",
-  "implementation_started_at": "2026-10-16T22:07:44Z"
+  "implementation_started_at": "2026-10-16T22:07:44Z",
+  "pre_push_gate": {
+    "checked_at": "2026-10-16T22:35:24Z",
+    "origin_main_sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+    "candidate_head_sha": "01b8d5f0856ab7bd4ac2cdc2db8b344cdf0e60e6",
+    "previous_exact_sha_batch": {
+      "sha": "15fc2c10f87ada3ba9fb191e76206ce45acac74d",
+      "workflows": 7,
+      "workflows_terminal": 7,
+      "jobs": 20,
+      "jobs_terminal": 20,
+      "artifacts_reconciled": true
+    },
+    "active_runs_on_main": [],
+    "historical_queued_run": {
+      "run_id": 34748436643,
+      "workflow": "OpenObsidian loaded plugin workflows",
+      "sha": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
+      "created_at": "2026-09-13T08:45:13Z",
+      "status": "queued",
+      "jobs": 0,
+      "disposition": "stale run from the original baseline SHA, outside the fully reconciled R3.18 exact-SHA batch; left untouched and not treated as an active batch for the current main SHA"
+    },
+    "decision": "Submit the fully implemented and independently reviewed R3.19 milestone once; do not submit another milestone until its exact-SHA CI batch is terminal and reconciled."
+  }
 }
