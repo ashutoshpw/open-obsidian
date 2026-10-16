@@ -22268,6 +22268,7 @@ async function runOpenObsidianCanvasTextEdit(
     delete appEnv.OPENOBSIDIAN_CI_CANVAS_DISABLE_EGUI_MEMORY_PERSISTENCE;
   }
   const windowsPersistenceOptOut = process.platform === "win32" && !expectedAbortCanary;
+  const linuxNormalCanvasEguiMemoryOptOut = process.platform === "linux" && !expectedAbortCanary;
   const linuxExpectedAbortPersistenceOptOut = process.platform === "linux" && expectedAbortCanary;
   if (windowsPersistenceOptOut) appEnv.OPENOBSIDIAN_CI_CANVAS_DISABLE_EFRAME_PERSISTENCE = "1";
   if (process.platform === "linux") appEnv.OPENOBSIDIAN_CI_CANVAS_FOCUS_TRACE = "1";
@@ -22353,6 +22354,18 @@ async function runOpenObsidianCanvasTextEdit(
       status: "not_applicable",
       reason: "The full eframe-persistence opt-out is restricted to the Linux expected-abort canary child.",
     },
+    linux_normal_canvas_text_edit_persistence_profile: linuxNormalCanvasEguiMemoryOptOut ? {
+      environment_flag: "OPENOBSIDIAN_CI_CANVAS_DISABLE_EGUI_MEMORY_PERSISTENCE",
+      environment_value: "1",
+      expected_persist_egui_memory: false,
+      expected_persist_window: true,
+      expected_runtime_log_marker: "OPENOBSIDIAN_CI_CANVAS_EGUI_MEMORY_POLICY_DISABLED=1;persist_egui_memory=false;persist_window=true",
+      launch_scope: "normal Linux Canvas text-edit child, after default-persistence warm-up and prelaunch inspection",
+      app_ron_section_expectation: {window: true, egui: false},
+    } : {
+      status: "not_applicable",
+      reason: "The egui-memory-only opt-out is restricted to the normal Linux Canvas text-edit child.",
+    },
     mesa_shader_cache_scratch: process.platform === "linux" ? {
       configured_root: mesaShaderCacheRoot,
       canonical_root: null,
@@ -22383,6 +22396,7 @@ async function runOpenObsidianCanvasTextEdit(
   };
   editReport.app_data_windows_persistence_profile = appDataRootInventory.windows_canvas_persistence_profile;
   editReport.app_data_linux_expected_abort_persistence_profile = appDataRootInventory.linux_expected_abort_persistence_profile;
+  editReport.app_data_linux_canvas_text_edit_persistence_profile = appDataRootInventory.linux_normal_canvas_text_edit_persistence_profile;
   let canonicalVaultForAppData = "";
   let canonicalAppDataRootForAppData = "";
   let canonicalManagedUserDataRoot = "";
@@ -22807,12 +22821,16 @@ async function runOpenObsidianCanvasTextEdit(
       appEnv.OPENOBSIDIAN_CI_CANVAS_DISABLE_EFRAME_PERSISTENCE = "1";
       canvasEframeMemoryPolicyByRoot.set(resolve(appDataRoot), "disabled");
     }
+    if (linuxNormalCanvasEguiMemoryOptOut) {
+      appEnv.OPENOBSIDIAN_CI_CANVAS_DISABLE_EGUI_MEMORY_PERSISTENCE = "1";
+      canvasEframeMemoryPolicyByRoot.set(resolve(appDataRoot), "disabled");
+    }
     child = launchLogged(
       openObsidianBinary,
       [],
       logPath,
       appEnv,
-      process.platform === "darwin" && !expectedAbortCanary,
+      (process.platform === "darwin" && !expectedAbortCanary) || linuxNormalCanvasEguiMemoryOptOut,
       windowsPersistenceOptOut || linuxExpectedAbortPersistenceOptOut,
     );
     editReport.pid = child.pid ?? null;
@@ -22858,6 +22876,23 @@ async function runOpenObsidianCanvasTextEdit(
         && appEnv.OPENOBSIDIAN_CI_CANVAS_DISABLE_EGUI_MEMORY_PERSISTENCE === "1";
       if (!persistenceProfile.runtime_policy_mapping_passed) {
         throw new Error("macOS Canvas runtime did not confirm the exact env flag disables egui-memory persistence while window persistence remains enabled");
+      }
+    }
+    if (linuxNormalCanvasEguiMemoryOptOut) {
+      const persistenceProfile = editReport.app_data_linux_canvas_text_edit_persistence_profile as Record<string, unknown>;
+      const expectedMarker = String(persistenceProfile.expected_runtime_log_marker);
+      const startupLog = await waitFor(
+        "OpenObsidian to report the isolated Linux Canvas egui-memory persistence policy",
+        async () => await readFile(logPath, "utf8"),
+        (contents) => contents.includes(expectedMarker),
+        10_000,
+      );
+      persistenceProfile.runtime_log_marker_observed = startupLog.includes(expectedMarker);
+      persistenceProfile.runtime_log_path = logName;
+      persistenceProfile.runtime_policy_mapping_passed = persistenceProfile.runtime_log_marker_observed === true
+        && appEnv.OPENOBSIDIAN_CI_CANVAS_DISABLE_EGUI_MEMORY_PERSISTENCE === "1";
+      if (!persistenceProfile.runtime_policy_mapping_passed) {
+        throw new Error("Linux Canvas runtime did not confirm the exact env flag disables egui-memory persistence while window persistence remains enabled");
       }
     }
     if (windowsPersistenceOptOut) {

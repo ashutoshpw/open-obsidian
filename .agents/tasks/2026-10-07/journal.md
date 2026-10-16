@@ -8541,3 +8541,81 @@ Two independent whole-milestone reviewers approved the completed R3.14 source an
 ## R3.14 final tracker re-review and submission readiness — 2026-10-16T15:19:57Z
 
 A fresh whole-milestone tracker re-review found two stale active pointers that still described the R3.14 review as pending. Updated the current blocker summary and future comparator planning pointer to say implementation and review are complete, one push is ready, and R3.14 CI has not started. The reviewer approved after correction: the changed paths match the allowlist; R3.13 remains terminal and reconciled; `origin/main` remains at `89da1495fac160fc77029ea4ad60c9c47724148b`; and no R3.14 run is in flight. C07.4 remains pending and Rust parity is unclaimed. No local executable validation was run.
+
+## R3.14 exact-SHA CI progress and cadence clarification — 2026-10-16T15:30:48Z
+
+R3.14 was pushed once at `67f5e6c1bedbcfc0fc645a5652a1a23419750ab3`; `origin/main` still points to that SHA. On the exact-SHA batch, 5/7 workflows and 16/20 jobs have passed; the Rust 1.95 MSRV job and Linux, macOS, and Windows vault round-trip jobs remain active, with no failures or cancellations. The Actions API lists 13 artifacts, including four from Rust CI; no round-trip reports are available yet. Updated the local attempt evidence, plan snapshot, and state pointers. Clarified in `goal.md` that minor edits stay local, one push submits a complete reviewed milestone and starts its CI batch, and the milestone is achieved only after all required exact-SHA checks pass and evidence is reconciled. These tracker/goal updates are local and are not part of the submitted SHA. No local executable validation, new dispatch, commit, or push occurred.
+
+## R3.14 Linux round-trip failure; remaining CI jobs active — 2026-10-16T15:38:23Z
+
+The Linux round-trip job `117048213425` failed on exact SHA `67f5e6c1bedbcfc0fc645a5652a1a23419750ab3` at `after-field-input`: the fail-closed app-data checkpoint detected newly created `data/openobsidian/app.ron` (2,825 bytes; SHA-256 `918f9c6c3dc4b2438af2c53e8585a8064dd01d7909ccb99f919709a284c06106`). Artifact `12055224607` is 14,223,336 bytes; its downloaded archive SHA-256 `220188d64a53c5029bf276283e48435a07671568b41aadff9420ceeab9245dc5` matches the API digest. The report SHA-256 is `ecf425b5a17d8242c45bfcf842af57d2a5b36773f7782aba5aa21541b253672f`; it records C07.2/C07.3/C07.4 capture incomplete and `rust_parity_claimed=false`. An after-abort eframe inspection found the expected app.ron path and sections with no forbidden-path leak, but why it appeared during field input is not established. At the latest poll, 16/20 jobs passed, this Linux job failed, and Rust MSRV plus macOS/Windows round-trip remain active; the batch and full artifact/report reconciliation are not terminal. Keep `origin/main` at `67f5e6c1bedbcfc0fc645a5652a1a23419750ab3` and make no repair commit or push until all remaining jobs and reports are reconciled. No local executable validation was run.
+
+
+## R3.14 Windows round-trip passed; macOS and MSRV pending — 2026-10-16T15:43:28Z
+
+Windows round-trip job `117048213811` passed on exact SHA `67f5e6c1bedbcfc0fc645a5652a1a23419750ab3`. Artifact `12057110521` is 22,826,012 bytes; the downloaded archive SHA-256 `26295fdf6f85d5d0c166953a45519aff7d45a0b5a25df4724ac92c25313a2606` matches GitHub's API digest. The report SHA-256 is `1626f9319ec252a3028aee392d0aaab6bf9fa62337ef639579023d174b75348f`; its source SHA matches, the round-trip checkpoints pass, and the report records two pinned-Obsidian source rewrites while keeping `rust_parity_claimed=false`. At this snapshot, 5/7 workflows are terminal-successful and 18/20 jobs are terminal (17 pass, one Linux round-trip failure); Rust 1.95 and macOS round-trip remain active. Fifteen artifact records are available; Linux and Windows round-trip reports are payload-hash reconciled, while the macOS report and full inventory remain pending. `origin/main` remains pinned at `67f5e6c1bedbcfc0fc645a5652a1a23419750ab3`. No local executable validation or push occurred.
+
+
+## R3.14 Rust MSRV passed; macOS round-trip pending — 2026-10-16T15:46:50Z
+
+The minimum supported Rust 1.95 job `117048213465` passed, and the Rust CI workflow is terminal-success on exact SHA `67f5e6c1bedbcfc0fc645a5652a1a23419750ab3`. Six of seven workflows are terminal-success; the vault round-trip workflow remains active. Nineteen of twenty jobs are terminal (18 pass, one Ubuntu round-trip failure), with only macOS job `117048213748` still running in its author/open/snapshot/reopen audit. Fifteen artifact records are available; Linux and Windows report payloads are reconciled, and the macOS report is pending. `origin/main` remains pinned at `67f5e6c1bedbcfc0fc645a5652a1a23419750ab3`. No local executable validation, push, or overlapping CI batch occurred.
+
+
+## R3.14 macOS report artifact available; cleanup pending — 2026-10-16T16:20:55Z
+
+The macOS round-trip job `117048213748` has advanced from the long audit step to `Post Cache Cargo outputs`; its parent workflow remains active during cleanup. Artifact `12058622262` is now visible at 32,982,084 bytes with API digest `sha256:fe6af0fb7e1071f79cc088dfab3b4fa5fcc1ee98d7edc30acbe9ee6f9d8062e7`, exact source SHA `67f5e6c1bedbcfc0fc645a5652a1a23419750ab3`, and expiry `2026-11-15T16:20:28Z`. Its archive and report payloads remain under inspection. At this snapshot, 18/20 jobs passed, one Ubuntu round-trip job failed, and one macOS job is still active; 16 artifact records are available. Linux and Windows reports are reconciled. `origin/main` remains pinned at `67f5e6c1bedbcfc0fc645a5652a1a23419750ab3`; no push or local executable validation occurred.
+
+
+## R3.14 terminal CI and artifact reconciliation; R3.15 plan drafted — 2026-10-16T16:32:33Z
+
+R3.14 is terminal-failed on exact SHA `67f5e6c1bedbcfc0fc645a5652a1a23419750ab3`: all 7 required workflows and 20 jobs finished; 6 workflows and 19 jobs passed, with Ubuntu vault round-trip job `117048213425` the only failure. The Linux report failed at `after-field-input` because strict full app-data equality found a new `data/openobsidian/app.ron` (2,825 bytes; SHA-256 `918f9c6c3dc4b2438af2c53e8585a8064dd01d7909ccb99f919709a284c06106`). Exact Canvas path and ID readbacks and vault no-write checks passed; no save was attempted. Cause is not established. macOS and Windows passed reference-only C07.4 capture (10 scenarios, 28 source checkpoints, all first-open/reopen pairs) and report `rust_parity_claimed=false`.
+
+The 16 artifact metadata records match GitHub's API, including run IDs and exact source SHA. All 12 downloaded non-preview archives match their API SHA-256 digests, with payload hashes/sizes recorded in [r2.8.146-attempt-1-67f5e6c.json](evidence/r2.8.146-attempt-1-67f5e6c.json); the four desktop/Rust preview payloads are intentionally undownloaded. Inventory and quality runs correctly have no artifacts. The loaded-plugin reports have matching `source_tree.head` and 328 paths but different per-OS tree content hashes; this discrepancy is recorded and is not a source SHA mismatch.
+
+Drafted [R3.15 Linux Canvas egui persistence isolation plan](evidence/r2.8.147-r3-15-linux-canvas-egui-persistence-isolation-plan.json) from the terminal SHA. It applies the existing egui-memory-only opt-out only to the normal Linux Canvas edit child, keeps window persistence and all strict checks, and treats the cause as unproven. A reviewer requested scoping the window-only app.ron shape check specifically to this new profile; the plan now reflects that clarification and awaits confirmation plus a second independent review. No implementation edit, executable validation, commit, or push occurred. `origin/main` remains pinned at `67f5e6c1bedbcfc0fc645a5652a1a23419750ab3`.
+
+
+## R3.15 plan revision 3 after independent review — 2026-10-16T16:33:04Z
+
+The source reviewer requested that the window-only `app.ron` shape check apply only to the normal Linux child after the egui-memory opt-out; warm-up and expected-abort inspection remain on their existing profiles. The plan now states that explicitly. The second reviewer also required the Linux report to complete/status C07.2, C07.3, and C07.4 reference capture without promoting their Rust implementation status; replace the literal evidence SHA placeholder with a full submitted-SHA template; and state the pre-push gate (R3.14 terminal/reconciled, no active batch, recheck `origin/main` against the reviewed base, complete implementation and whole-diff review, then one push). These changes are recorded in plan revision 3. Two fresh independent read-only approvals are pending. No implementation edit, executable validation, commit, or push occurred; `origin/main` remains at `67f5e6c1bedbcfc0fc645a5652a1a23419750ab3`.
+
+
+## R3.15 plan approved; harness implementation started locally — 2026-10-16T16:34:28Z
+
+Two independent reviewers approved plan revision 3. The source reviewer confirmed the window-only/no-egui `app.ron` shape expectation is scoped to the normal Linux child after the egui-only opt-out, leaving warm-up and expected-abort inspection profiles unchanged. The second reviewer confirmed Linux C07.2/C07.3/C07.4 reference capture without parity/status promotion, exact full-SHA attempt evidence naming, and the pre-push gate. Implemented the approved harness-only change: report the normal Linux persistence profile, set the egui-only flag only after default warm-up and prelaunch validation, pass it only for the normal child, and require its runtime marker before interaction. Source diff is local and incomplete pending whole-milestone review. No tests, builds, formatters, linters, validators, runtime probes, or launches were run; no commit or push occurred. `origin/main` remains at `67f5e6c1bedbcfc0fc645a5652a1a23419750ab3`.
+
+
+## R3.15 plan revision 4 includes the requested goal cadence — 2026-10-16T16:35:10Z
+
+The user-requested `goal.md` wording that minor edits stay local and one complete, reviewed milestone is pushed once is already staged locally. Added `goal.md` to R3.15's in-scope tracker paths and acceptance so the policy is preserved with this substantive harness milestone instead of a standalone documentation-only CI batch. The plan's source scope remains limited to `audit-obsidian-vault-roundtrip.ts`; no extra CI trigger is requested. Plan revision 4 is pending two fresh independent read-only reviews. No executable validation, commit, or push occurred; `origin/main` remains at `67f5e6c1bedbcfc0fc645a5652a1a23419750ab3`.
+
+
+## R3.15 plan revision 5 corrects Git staging terminology — 2026-10-16T16:36:15Z
+
+A plan reviewer noted that `goal.md` is modified in the worktree but not staged in Git's index. Changed “already staged” to “prepared locally”; it will be staged only with the complete R3.15 milestone. No scope or code changed. Two fresh independent confirmation reviews are pending; no commit or push occurred.
+
+
+## R3.15 plan revision 6 removes remaining Git-index ambiguity — 2026-10-16T16:37:20Z
+
+The source reviewer found one remaining acceptance sentence calling the goal policy “staged.” Reworded it to say the cadence rule is included with R3.15. This is wording only; source scope and push policy did not change. Two fresh independent confirmations are pending; no commit or push occurred.
+
+
+## R3.15 plan revision 7 carries reconciled predecessor evidence — 2026-10-16T16:39:00Z
+
+The working tree also contains the terminal R3.14 attempt evidence and its plan, updated after the submitted SHA's CI completed. Added both exact paths to R3.15's carried tracker scope so their reconciled status can be committed with the next substantive milestone. Their failure outcome remains unchanged. Two fresh independent plan reviews are pending; no source change, commit, or push occurred.
+
+## R3.15 plan approved; local implementation and tracker sync — 2026-10-16T16:40:30Z
+
+Two independent reviewers approved plan revision 7. They confirmed the normal Linux Canvas child is the only changed persistence profile; strict app-data, vault, field-readback, and no-save gates remain intact; C07.2/C07.3/C07.4 are reference-capture requirements only; and the exact-SHA one-push cadence and fully reconciled R3.14 evidence carry are correct. Updated the current requirement blocker and goal hash/cadence metadata. The harness source and all tracker changes remain local pending a whole-milestone review. No local executable validation, commit, or push occurred; origin/main remains at 67f5e6c1bedbcfc0fc645a5652a1a23419750ab3.
+
+## R3.15 whole-milestone review corrections — 2026-10-16T16:47:05Z
+
+The independent whole-milestone reviews found stale state pointers and six unrelated historical journal snapshots whose job count had drifted from 15/20 to 16/20. Restored those historical counts and synchronized the current repair/candidate pointers to R3.15 plan revision 7; the R3.14 predecessor remains terminal-failed and reconciled. Fresh whole-milestone confirmation is pending. No executable validation, commit, or push occurred; origin/main remains at 67f5e6c1bedbcfc0fc645a5652a1a23419750ab3.
+
+## R3.15 whole-milestone review approved — 2026-10-16T16:48:26Z
+
+Both independent reviewers approved the corrected R3.15 source and tracker diff. The implementation remains limited to the normal Linux Canvas edit child; strict app-data and vault gates remain in place. The goal hash matches its metadata, C07.4 remains pending, the six historical 15/20 snapshots are preserved, and R3.14 remains terminal-failed with artifacts and reports reconciled. R3.15 is ready for its one planned push after a fresh origin/main check. No local executable validation, commit, or push has occurred.
+
+## R3.15 reviewed base rechecked — 2026-10-16T16:50:21Z
+
+Immediately before submission, origin/main was rechecked read-only and still points to the reviewed R3.15 starting SHA 67f5e6c1bedbcfc0fc645a5652a1a23419750ab3. The prior R3.14 exact-SHA batch is terminal and reconciled with no active jobs. R3.15 is ready for one commit and one push; no local executable validation was run.

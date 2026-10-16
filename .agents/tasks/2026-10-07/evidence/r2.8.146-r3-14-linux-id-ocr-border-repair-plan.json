@@ -4,7 +4,7 @@
   "name": "R3.14 Linux Canvas ID OCR border-exclusion repair",
   "parent_milestone": "R2.8.145-R3.13-C07.4-ID-READBACK-REPAIR",
   "planning_date": "2026-10-16",
-  "status": "implementation complete / whole-milestone review approved / ready for one push",
+  "status": "terminal-failed; all exact-SHA CI and artifact/report evidence reconciled",
   "planning_base_sha": "89da1495fac160fc77029ea4ad60c9c47724148b",
   "starting_sha": "89da1495fac160fc77029ea4ad60c9c47724148b",
   "source_failure": {
@@ -39,13 +39,68 @@
     "An independent whole-milestone review confirms the only source change is the bounded Linux ID crop inset and its evidence field, with no matcher or safety-gate relaxation."
   ],
   "required_workflows": [
-    {"name": "Rust migration inventory", "platforms": ["ubuntu-latest"], "expected_jobs": 1},
-    {"name": "OpenObsidian Rust CI", "platforms": ["ubuntu-latest", "macos-latest", "windows-latest", "minimum supported Rust 1.95"], "expected_jobs": 4},
-    {"name": "Obsidian vault round-trip acceptance", "platforms": ["ubuntu-24.04", "macos-latest", "windows-latest"], "expected_jobs": 3},
-    {"name": "OpenObsidian desktop build", "platforms": ["ubuntu-latest", "macos-latest", "windows-latest"], "expected_jobs": 3},
-    {"name": "OpenObsidian quality", "platforms": ["ubuntu-latest", "macos-latest", "windows-latest"], "expected_jobs": 3},
-    {"name": "OpenObsidian plugin renderer matrix", "platforms": ["ubuntu-latest", "macos-latest", "windows-latest"], "expected_jobs": 3},
-    {"name": "OpenObsidian loaded plugin workflows", "platforms": ["ubuntu-latest", "macos-latest", "windows-latest"], "expected_jobs": 3}
+    {
+      "name": "Rust migration inventory",
+      "platforms": [
+        "ubuntu-latest"
+      ],
+      "expected_jobs": 1
+    },
+    {
+      "name": "OpenObsidian Rust CI",
+      "platforms": [
+        "ubuntu-latest",
+        "macos-latest",
+        "windows-latest",
+        "minimum supported Rust 1.95"
+      ],
+      "expected_jobs": 4
+    },
+    {
+      "name": "Obsidian vault round-trip acceptance",
+      "platforms": [
+        "ubuntu-24.04",
+        "macos-latest",
+        "windows-latest"
+      ],
+      "expected_jobs": 3
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "platforms": [
+        "ubuntu-latest",
+        "macos-latest",
+        "windows-latest"
+      ],
+      "expected_jobs": 3
+    },
+    {
+      "name": "OpenObsidian quality",
+      "platforms": [
+        "ubuntu-latest",
+        "macos-latest",
+        "windows-latest"
+      ],
+      "expected_jobs": 3
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "platforms": [
+        "ubuntu-latest",
+        "macos-latest",
+        "windows-latest"
+      ],
+      "expected_jobs": 3
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "platforms": [
+        "ubuntu-latest",
+        "macos-latest",
+        "windows-latest"
+      ],
+      "expected_jobs": 3
+    }
   ],
   "github_ci_acceptance": [
     "Push the complete, reviewed R3.14 milestone once to origin/main; do not push per edit or start overlapping CI batches. Hold origin/main at the submitted SHA until all seven required workflows and all 20 jobs are terminal and their artifacts/reports are reconciled, even if the run takes several hours.",
@@ -56,7 +111,7 @@
   "changed_paths": [
     ".agents/tasks/2026-10-07/audit-obsidian-vault-roundtrip.ts",
     ".agents/tasks/2026-10-07/evidence/r2.8.146-r3-14-linux-id-ocr-border-repair-plan.json",
-    ".agents/tasks/2026-10-07/evidence/r2.8.146-attempt-1-<submitted-sha>.json",
+    ".agents/tasks/2026-10-07/evidence/r2.8.146-attempt-1-67f5e6c.json",
     ".agents/tasks/2026-10-07/evidence/r2.8.145-attempt-1-89da149.json",
     ".agents/tasks/2026-10-07/evidence/r2.8.145-r3-13-c07-4-id-readback-repair-plan.json",
     ".agents/tasks/2026-10-07/state.json",
@@ -111,8 +166,8 @@
     }
   ],
   "implementation_started": true,
-  "implementation_sha": null,
-  "pushed_once": false,
+  "implementation_sha": "67f5e6c1bedbcfc0fc645a5652a1a23419750ab3",
+  "pushed_once": true,
   "evidence_basis": {
     "prior_terminal_attempt": "evidence/r2.8.145-attempt-1-89da149.json",
     "prior_plan": "evidence/r2.8.145-r3-13-c07-4-id-readback-repair-plan.json",
@@ -128,5 +183,88 @@
       "roundtrip_reports_reconciled": 3
     },
     "root_cause": "The Linux target-widget crop reaches the widget's right border; the exact OCR returns a border pipe after the correct six-byte field value. The strict matcher and field-state gates behave as specified."
-  }
+  },
+  "submitted_sha": "67f5e6c1bedbcfc0fc645a5652a1a23419750ab3",
+  "submitted_at": "2026-10-16T15:21:20Z",
+  "run_ids": [
+    38923246635,
+    38923246796,
+    38923246601,
+    38923246528,
+    38923246570,
+    38923246501,
+    38923246503
+  ],
+  "ci_attempt_evidence": ".agents/tasks/2026-10-07/evidence/r2.8.146-attempt-1-67f5e6c.json",
+  "origin_main_sha_after_push": "67f5e6c1bedbcfc0fc645a5652a1a23419750ab3",
+  "origin_main_verified_at": "2026-10-16T15:24:40Z",
+  "initial_ci_snapshot": {
+    "status_at": "2026-10-16T15:25:02Z",
+    "workflow_counts": {
+      "observed": 7,
+      "terminal": 5,
+      "passed": 5,
+      "failed": 0,
+      "in_progress": 2
+    },
+    "job_counts": {
+      "observed": 20,
+      "terminal": 13,
+      "passed": 13,
+      "failed": 0,
+      "in_progress": 7
+    },
+    "artifact_inventory_count": 9,
+    "artifact_inventory_complete": false,
+    "artifacts_reconciled": false,
+    "roundtrip_report_payloads_reconciled": false,
+    "evidence": ".agents/tasks/2026-10-07/evidence/r2.8.146-attempt-1-67f5e6c.json"
+  },
+  "latest_ci_snapshot": {
+    "status_at": "2026-10-16T16:32:33Z",
+    "workflow_counts": {
+      "observed": 7,
+      "terminal": 7,
+      "passed": 6,
+      "failed": 1,
+      "cancelled": 0,
+      "queued": 0,
+      "in_progress": 0
+    },
+    "job_counts": {
+      "observed": 20,
+      "terminal": 20,
+      "passed": 19,
+      "failed": 1,
+      "cancelled": 0,
+      "queued": 0,
+      "in_progress": 0
+    },
+    "artifact_inventory_count": 16,
+    "artifact_inventory_complete": true,
+    "artifact_metadata_reconciled": true,
+    "downloaded_non_preview_archives": 12,
+    "downloaded_non_preview_archive_digests_match": true,
+    "undownloaded_preview_artifact_ids": [
+      12055114023,
+      12055671895,
+      12056075932,
+      12054888563
+    ],
+    "artifacts_reconciled": true,
+    "roundtrip_report_payloads_reconciled": true,
+    "evidence": ".agents/tasks/2026-10-07/evidence/r2.8.146-attempt-1-67f5e6c.json",
+    "failed_job_ids": [
+      117048213425
+    ],
+    "active_job_ids": [],
+    "queued_job_ids": [],
+    "macos_report_payload_reconciled": true,
+    "linux_report_payload_reconciled": true,
+    "windows_report_payload_reconciled": true,
+    "origin_main_sha": "67f5e6c1bedbcfc0fc645a5652a1a23419750ab3",
+    "milestone_achieved": false
+  },
+  "milestone_achieved": false,
+  "terminal_at": "2026-10-16T16:32:33Z"
 }
