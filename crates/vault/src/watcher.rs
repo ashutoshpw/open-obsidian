@@ -120,9 +120,11 @@ impl VaultWatcher {
                             &callback_event_batch,
                             &callback_root_change_pending,
                             &callback_wake,
-                            hint,
-                            root_change,
-                            false,
+                            EventHintMetadata {
+                                hint,
+                                root_change,
+                                notify_error: false,
+                            },
                         );
                     }
                 }
@@ -133,9 +135,11 @@ impl VaultWatcher {
                         &callback_event_batch,
                         &callback_root_change_pending,
                         &callback_wake,
-                        VaultWatchHint::RescanRequired,
-                        true,
-                        true,
+                        EventHintMetadata {
+                            hint: VaultWatchHint::RescanRequired,
+                            root_change: true,
+                            notify_error: true,
+                        },
                     );
                 }
             })
@@ -257,15 +261,19 @@ fn enqueue_hint(sender: &SyncSender<()>, rescan_pending: &AtomicBool, hint: Vaul
     let _ = sender.try_send(());
 }
 
+struct EventHintMetadata {
+    hint: VaultWatchHint,
+    root_change: bool,
+    notify_error: bool,
+}
+
 fn enqueue_event_hint(
     sender: &SyncSender<()>,
     rescan_pending: &AtomicBool,
     pending_event_batch: &Mutex<Option<VaultWatchEventBatch>>,
     root_change_pending: &AtomicBool,
     wake_callback: &Arc<dyn Fn() + Send + Sync>,
-    hint: VaultWatchHint,
-    root_change: bool,
-    notify_error: bool,
+    metadata: EventHintMetadata,
 ) {
     let now = Instant::now();
     let mut pending = pending_event_batch
@@ -274,7 +282,7 @@ fn enqueue_event_hint(
     let batch = match *pending {
         Some(mut batch) => {
             batch.event_count = batch.event_count.saturating_add(1);
-            if notify_error {
+            if metadata.notify_error {
                 batch.notify_error_callbacks = batch.notify_error_callbacks.saturating_add(1);
             }
             batch
@@ -282,22 +290,22 @@ fn enqueue_event_hint(
         None => VaultWatchEventBatch {
             id: NEXT_WATCH_EVENT_BATCH_ID.fetch_add(1, Ordering::Relaxed),
             event_count: 1,
-            notify_error_callbacks: if notify_error { 1 } else { 0 },
+            notify_error_callbacks: if metadata.notify_error { 1 } else { 0 },
             enqueued_at: now,
         },
     };
     *pending = Some(batch);
-    if root_change {
+    if metadata.root_change {
         root_change_pending.store(true, Ordering::Release);
     }
-    enqueue_hint(sender, rescan_pending, hint);
+    enqueue_hint(sender, rescan_pending, metadata.hint);
     drop(pending);
     if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some() {
         eprintln!(
             "OpenObsidian CI vault watcher callback enqueued: batch_id={}, event_count={}, callback_kind={}",
             batch.id,
             batch.event_count,
-            if notify_error {
+            if metadata.notify_error {
                 "notify_error"
             } else {
                 "filesystem_event"
@@ -504,9 +512,11 @@ mod tests {
             &pending_event_batch,
             &root_change_pending,
             &wake_callback,
-            VaultWatchHint::Changed,
-            false,
-            false,
+            EventHintMetadata {
+                hint: VaultWatchHint::Changed,
+                root_change: false,
+                notify_error: false,
+            },
         );
         let first_batch = pending_event_batch
             .lock()
@@ -521,9 +531,11 @@ mod tests {
             &pending_event_batch,
             &root_change_pending,
             &wake_callback,
-            VaultWatchHint::RescanRequired,
-            true,
-            true,
+            EventHintMetadata {
+                hint: VaultWatchHint::RescanRequired,
+                root_change: true,
+                notify_error: true,
+            },
         );
         let coalesced_batch = pending_event_batch
             .lock()
