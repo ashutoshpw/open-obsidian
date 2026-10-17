@@ -19,6 +19,26 @@ pub enum VaultWatchHint {
     RescanRequired,
 }
 
+/// Coarse event kind exposed only to opt-in watcher diagnostics.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum VaultWatchEventKind {
+    Create,
+    Modify,
+    Remove,
+    Other,
+}
+
+type WatchEventDiagnosticObserver =
+    dyn Fn(
+            VaultWatchEventKind,
+            &[PathBuf],
+            Option<VaultWatchHint>,
+            Option<VaultWatchEventBatch>,
+            bool,
+        ) + Send
+        + Sync;
+type WatchWakeCallback = dyn Fn(VaultWatchEventBatch) + Send + Sync;
+
 /// Identifies relevant filesystem callbacks coalesced before a caller polls the watcher.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct VaultWatchEventBatch {
@@ -92,6 +112,38 @@ impl VaultWatcher {
         root: impl AsRef<Path>,
         wake_callback: impl Fn() + Send + Sync + 'static,
     ) -> Result<Self, VaultWatchError> {
+        Self::watch_with_callbacks(root, Arc::new(move |_| wake_callback()), None)
+    }
+
+    /// Watches a vault and observes raw filesystem events with their production classification.
+    ///
+    /// The opt-in observer runs on the filesystem notification thread after production
+    /// classification and queueing, immediately before the wake callback. `None` means the
+    /// production classifier filtered the event. The optional batch identifies the exact
+    /// coalesced callback batch passed to the wake callback; `notify_error` identifies a backend
+    /// error callback, which has no source paths. Keep the observer fast and avoid persisting
+    /// paths; paths may identify user vault files.
+    pub fn watch_with_event_diagnostics(
+        root: impl AsRef<Path>,
+        event_observer: impl Fn(
+                VaultWatchEventKind,
+                &[PathBuf],
+                Option<VaultWatchHint>,
+                Option<VaultWatchEventBatch>,
+                bool,
+            ) + Send
+            + Sync
+            + 'static,
+        wake_callback: impl Fn(VaultWatchEventBatch) + Send + Sync + 'static,
+    ) -> Result<Self, VaultWatchError> {
+        Self::watch_with_callbacks(root, Arc::new(wake_callback), Some(Arc::new(event_observer)))
+    }
+
+    fn watch_with_callbacks(
+        root: impl AsRef<Path>,
+        wake_callback: Arc<WatchWakeCallback>,
+        event_observer: Option<Arc<WatchEventDiagnosticObserver>>,
+    ) -> Result<Self, VaultWatchError> {
         let root = root.as_ref().to_path_buf();
         if !root.is_dir() {
             return Err(VaultWatchError::RootUnavailable(root));
@@ -101,46 +153,69 @@ impl VaultWatcher {
         let rescan_pending = Arc::new(AtomicBool::new(false));
         let root_change_pending = Arc::new(AtomicBool::new(false));
         let pending_event_batch = Arc::new(Mutex::new(None));
-        let wake_callback: Arc<dyn Fn() + Send + Sync> = Arc::new(wake_callback);
         let callback_sender = sender.clone();
         let callback_rescan_pending = Arc::clone(&rescan_pending);
         let callback_root_change_pending = Arc::clone(&root_change_pending);
         let callback_event_batch = Arc::clone(&pending_event_batch);
         let callback_wake = Arc::clone(&wake_callback);
         let callback_root = root.clone();
+        let callback_event_observer = event_observer;
         let mut watcher =
             notify::recommended_watcher(move |result: Result<Event, notify::Error>| match result {
                 Ok(event) => {
-                    if let Some(hint) = classify_event(&event, &callback_root) {
+                    let hint = classify_event(&event, &callback_root);
+                    let event_batch = if let Some(hint) = hint {
                         let root_change = hint == VaultWatchHint::RescanRequired
                             || event.paths.iter().any(|path| path == &callback_root);
-                        enqueue_event_hint(
+                        Some(record_event_hint(
                             &callback_sender,
                             &callback_rescan_pending,
                             &callback_event_batch,
                             &callback_root_change_pending,
-                            &callback_wake,
                             EventHintMetadata {
                                 hint,
                                 root_change,
                                 notify_error: false,
                             },
+                        ))
+                    } else {
+                        None
+                    };
+                    if let Some(event_observer) = &callback_event_observer {
+                        event_observer(
+                            diagnostic_event_kind(&event.kind),
+                            &event.paths,
+                            hint,
+                            event_batch,
+                            false,
                         );
+                    }
+                    if let Some(event_batch) = event_batch {
+                        callback_wake(event_batch);
                     }
                 }
                 Err(_) => {
-                    enqueue_event_hint(
+                    let event_batch = record_event_hint(
                         &callback_sender,
                         &callback_rescan_pending,
                         &callback_event_batch,
                         &callback_root_change_pending,
-                        &callback_wake,
                         EventHintMetadata {
                             hint: VaultWatchHint::RescanRequired,
                             root_change: true,
                             notify_error: true,
                         },
                     );
+                    if let Some(event_observer) = &callback_event_observer {
+                        event_observer(
+                            VaultWatchEventKind::Other,
+                            &[],
+                            Some(VaultWatchHint::RescanRequired),
+                            Some(event_batch),
+                            true,
+                        );
+                    }
+                    callback_wake(event_batch);
                 }
             })
             .map_err(|source| VaultWatchError::Initialize {
@@ -267,14 +342,32 @@ struct EventHintMetadata {
     notify_error: bool,
 }
 
+#[cfg(test)]
 fn enqueue_event_hint(
     sender: &SyncSender<()>,
     rescan_pending: &AtomicBool,
     pending_event_batch: &Mutex<Option<VaultWatchEventBatch>>,
     root_change_pending: &AtomicBool,
-    wake_callback: &Arc<dyn Fn() + Send + Sync>,
+    wake_callback: &Arc<WatchWakeCallback>,
     metadata: EventHintMetadata,
 ) {
+    let batch = record_event_hint(
+        sender,
+        rescan_pending,
+        pending_event_batch,
+        root_change_pending,
+        metadata,
+    );
+    wake_callback(batch);
+}
+
+fn record_event_hint(
+    sender: &SyncSender<()>,
+    rescan_pending: &AtomicBool,
+    pending_event_batch: &Mutex<Option<VaultWatchEventBatch>>,
+    root_change_pending: &AtomicBool,
+    metadata: EventHintMetadata,
+) -> VaultWatchEventBatch {
     let now = Instant::now();
     let mut pending = pending_event_batch
         .lock()
@@ -312,7 +405,16 @@ fn enqueue_event_hint(
             }
         );
     }
-    wake_callback();
+    batch
+}
+
+fn diagnostic_event_kind(kind: &EventKind) -> VaultWatchEventKind {
+    match kind {
+        EventKind::Create(_) => VaultWatchEventKind::Create,
+        EventKind::Modify(_) => VaultWatchEventKind::Modify,
+        EventKind::Remove(_) => VaultWatchEventKind::Remove,
+        EventKind::Any | EventKind::Access(_) | EventKind::Other => VaultWatchEventKind::Other,
+    }
 }
 
 fn classify_event(event: &Event, root: &Path) -> Option<VaultWatchHint> {
@@ -489,7 +591,7 @@ mod tests {
         let pending_event_batch = Arc::new(Mutex::new(None));
         let wake_count = Arc::new(AtomicU64::new(0));
         let callback_count = Arc::clone(&wake_count);
-        let wake_callback: Arc<dyn Fn() + Send + Sync> = Arc::new(move || {
+        let wake_callback: Arc<WatchWakeCallback> = Arc::new(move |_| {
             callback_count.fetch_add(1, Ordering::Relaxed);
         });
         let backend = notify::recommended_watcher(|_: Result<Event, notify::Error>| {}).unwrap();

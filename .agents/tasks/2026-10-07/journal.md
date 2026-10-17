@@ -8992,3 +8992,58 @@ Read-only whole-milestone review found tracker and evidence gaps; corrected them
 ## 2026-10-16T23:42:05Z — R3.21 whole-milestone review approved
 
 The integrated review approved the complete R3.21 diff for one milestone push after synchronizing the root and generic phase timestamps with the R3 phase. The independent Rust review confirmed the explicit watcher batch type and exactly six CI-requested rustfmt changes; the round-trip review confirmed the guarded, bounded, motion-only wake and preserved probe assertions. R3.21 is implementation-complete and reviewed locally, but remains unpushed and is not CI-accepted. The final exact-base/no-active-batch preflight remains before the single push. No local executable validation was run.
+
+## 2026-10-16T23:44:44Z — R3.21 submitted; exact-SHA CI in progress
+
+Pushed the complete, independently reviewed R3.21 milestone once to origin/main as ccfbd24ac68afdbcb8eb79ce6ffad489f01689fb, fast-forwarding from a0049c751d82540a9eca12e5323c05c673beacf9. GitHub created all seven required workflows for the submitted SHA (run IDs: 38982900556, 38982900472, 38982900426, 38982900518, 38982900474, 38982900378, 38982900390). At this poll, 2/7 workflows and 7/20 jobs had passed; 5 workflows/13 jobs were active, with no failures. Five artifact records are visible but not yet reconciled. Keep origin/main at ccfbd24ac68afdbcb8eb79ce6ffad489f01689fb until all exact-SHA results and artifacts are terminal and reconciled. No local executable validation was run.
+
+## 2026-10-16T23:45:24Z — R3.21 CI update: Rust platform failures observed
+
+The submitted SHA ccfbd24ac68afdbcb8eb79ce6ffad489f01689fb remains at origin/main. Five of seven workflows and 13/20 jobs have passed; two Rust CI platform jobs have failed, while Rust CI and vault round-trip remain active with five jobs running. Failure logs are not yet available from GitHub while the workflow is in progress. Nine artifact records are visible and not yet reconciled. No repair push or local executable validation was performed; wait for all results and artifacts before the next milestone.
+
+## 2026-10-16T23:47:34Z — R3.21 CI update: third Rust platform job failed
+
+Five of seven workflows and 13/20 jobs passed on ccfbd24ac68afdbcb8eb79ce6ffad489f01689fb. The Rust CI workflow now has three failed platform jobs; its MSRV job and the three vault round-trip platform jobs remain active. GitHub has not exposed failed-step logs before workflow completion. Nine artifact records are visible and unreconciled. The exact-SHA batch is still active; no repair push or local executable validation was performed.
+
+## 2026-10-16T23:51:21Z — R3.21 CI update: Windows round-trip failure observed
+
+Thirteen of twenty jobs passed; four failed (macOS, Ubuntu and Windows Rust CI plus Windows vault round-trip), while the Rust 1.95 job and Linux/macOS round-trip remain active. Five of seven workflows are terminal-success; Rust CI and round-trip are still running, so failed-step logs are not yet available. Ten artifact records are visible and unreconciled. origin/main remains at ccfbd24ac68afdbcb8eb79ce6ffad489f01689fb; no repair push or local executable validation was performed.
+
+
+## 2026-10-16T23:57:49Z — R3.21 exact-SHA CI terminal and fully reconciled
+
+R3.21 at `ccfbd24ac68afdbcb8eb79ce6ffad489f01689fb` is terminal failed: all seven required workflows and all twenty jobs are terminal; five workflows and fourteen jobs passed, while two workflows and six jobs failed. GitHub Actions produced twelve artifact records. Nine non-preview archive digests match the API values, and three large desktop previews remain metadata-only. Detailed run/job/artifact records and report hashes are in `.agents/tasks/2026-10-07/evidence/r3-21-r3-20-terminal-ci-repair-ci.json`. The unchanged watcher-probe slice passed on Linux, macOS and Windows; later failures were the Clippy `enqueue_event_hint` argument count on Ubuntu/Windows, macOS readiness-sentinel delivery, Canvas log selection on Linux/macOS, and Windows native picker focus/cancel. No Rust parity claim is made from this batch.
+
+The cadence remains milestone-boundary only: minor fixes and tracker updates stay local. `origin/main` remains at the R3.21 submitted SHA. R3.22 is defined in `.agents/tasks/2026-10-07/evidence/r3-22-r3-21-terminal-ci-repair.json` to consolidate all six failed jobs into one reviewed repair milestone; the plan is pending independent review. No local tests, builds, formatting, linting, runtime probes or app launches were run.
+
+
+## 2026-10-17T00:00:33Z — R3.22 plan approved; implementation started locally
+
+The integrated, Rust, and round-trip reviewers approved the R3.22 plan. The round-trip reviewer added a guard that the Windows picker HWND is still live, visible, and owned by the expected app PID before it is focused; the Rust reviewer required exact sentinel path/phase correlation, staged event diagnostics, and a conditional production fix if the watcher itself is defective. Those details and a six-job repair crosswalk are recorded in the plan. Implementation is starting from the exact base SHA `ccfbd24ac68afdbcb8eb79ce6ffad489f01689fb` in isolated local worktrees. No local executable validation is allowed.
+
+
+## 2026-10-17T00:09:40Z — R3.22 implementation consolidated; whole-milestone review pending
+
+R3.22 is being accumulated locally from `ccfbd24ac68afdbcb8eb79ce6ffad489f01689fb`; no push has occurred and `origin/main` remains at that base. The Clippy metadata refactor (`dbc5e73`) and Canvas log/HWND repair (`048fca4`) are local commits. The watcher readiness test now records exact sentinel path/phase, notify kind, classifier result, queue outcome, callback wake and polled batch, while preserving the real create/remove and UI-refresh criteria. A one-second macOS startup-settling hypothesis stays inside the existing ten-second window and is not accepted as readiness evidence; the CI result will determine whether it is sufficient. The goal's milestone-only cadence is already explicit: minor edits stay local; push once after a complete reviewed milestone; wait for the exact-SHA batch to finish before the next push.
+
+Independent static review of the complete R3.22 changes is pending. No tests, builds, formatting, linting, runtime probes, or application launches were run. During source inspection, `git diff --check` was accidentally invoked as a local whitespace check; it did not execute code and will not be used as CI acceptance evidence. No further local validation will be run.
+
+
+## 2026-10-17T00:14:47Z — R3.22 watcher proof tightened after static review
+
+Read-only reviewers identified an undefined test field reference and a phase-attribution gap: a delayed create-side Modify could otherwise be labeled as a remove callback. The count reference is corrected. Create and remove now use distinct exact Markdown paths, so an earlier callback cannot match the removal path. The opt-in watcher diagnostic callback records the exact coalesced batch before wake; the wake callback receives that same batch ID; acceptance requires that ID to occur in the exact-path event observation and a polled UI batch. Notify errors are also recorded. The original ten-second deadline and real filesystem/UI criteria remain. The independent Rust and integrated reviewers are rechecking the updated diff. No local executable validation was run.
+
+
+## 2026-10-17T00:19:14Z — R3.22 implementation reviewed; submission preflight pending
+
+The complete R3.22 source and tracker diff was approved in read-only review by the Rust, integrated, and round-trip reviewers. The `enqueue_event_hint` test helper is test-gated; the sentinel proof correlates exact distinct paths through event batch, wake, and UI polling; Canvas and Windows picker repairs match the six-job plan. The deferred C09.2/C07.4 planners now wait for R3.22 exact-SHA CI, and the journal is chronological. R3.22 remains local and unpushed. Commit the reviewed batch, then immediately confirm `origin/main` is still `ccfbd24ac68afdbcb8eb79ce6ffad489f01689fb` and no CI batch is active before its single push. No local executable validation was run; the earlier accidental `git diff --check` remains recorded above.
+
+
+## 2026-10-17T00:19:45Z — R3.22 tracker synchronization complete
+
+Refreshed the root and R3 phase summaries to implementation-complete/reviewed, synchronized state timestamps, and corrected the current next action to the local commit plus immediate exact-base/no-active-batch preflight. The C09.2/C07.4 planners remain deferred until R3.22 exact-SHA CI is terminal and reconciled, with the separate C07.5 dependency preserved. R3.22 remains unpushed. No local executable validation was run.
+
+
+## 2026-10-17T00:20:23Z — Final R3 tracker summaries synchronized
+
+Updated the remaining generic R3 phase summary that still described R3.21 as in progress. All current root/phase/milestone status now agrees: R3.21 is terminal-failed and reconciled; R3.22 is complete, reviewed, local, and pending one preflighted push; deferred planners wait for R3.22 CI. State timestamps are synchronized. No local executable validation was run.

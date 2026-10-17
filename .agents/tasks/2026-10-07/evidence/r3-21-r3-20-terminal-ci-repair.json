@@ -3,7 +3,7 @@
   "plan_id": "R3.21-R3.20-TERMINAL-CI-REPAIR",
   "milestone_id": "R3.21",
   "name": "R3.21 Rust CI and unchanged watcher-probe wake-up repair",
-  "status": "implementation_complete_pending_ci",
+  "status": "ci_terminal_failed",
   "candidate_base_sha": "a0049c751d82540a9eca12e5323c05c673beacf9",
   "predecessor_ci_evidence": ".agents/tasks/2026-10-07/evidence/r3-20-r3-19-terminal-ci-repair-ci.json",
   "objective": "Repair all terminal R3.20 exact-SHA CI failures in one bounded milestone: restore Rust CI compilation/formatting and make the unchanged watcher-probe request reach the idle OpenObsidian UI on Linux, macOS, and Windows without changing reconciliation behavior or weakening assertions.",
@@ -51,9 +51,9 @@
   "implementation_started_from_sha": "a0049c751d82540a9eca12e5323c05c673beacf9",
   "implementation_complete": true,
   "implementation_review_status": "Approved as a complete milestone by r320_integrated_review, r320_roundtrip_repair_analysis, and a590_attempt3_rust_ci; ready for one push after exact-base/no-active-batch preflight.",
-  "pushed_once": false,
+  "pushed_once": true,
   "milestone_achieved": false,
-  "next_action": "Pass the exact-base/no-active-batch preflight, commit the reviewed milestone locally, and push it once to origin/main. Then hold main at the submitted SHA until all required workflows, jobs, and artifacts are terminal and reconciled.",
+  "next_action": "R3.21 is terminal-failed and fully reconciled. Define, independently review, and implement one consolidated R3.22 repair milestone on base SHA ccfbd24ac68afdbcb8eb79ce6ffad489f01689fb; keep all work local until the complete milestone is reviewed, then submit once.",
   "reviewed_by": [
     "r320_integrated_review",
     "r320_roundtrip_repair_analysis",
@@ -66,5 +66,48 @@
     "r320_roundtrip_repair_analysis",
     "a590_attempt3_rust_ci"
   ],
-  "implementation_reviewed_at": "2026-10-16T23:42:38Z"
+  "implementation_reviewed_at": "2026-10-16T23:42:38Z",
+  "implementation_sha": "ccfbd24ac68afdbcb8eb79ce6ffad489f01689fb",
+  "submitted_sha": "ccfbd24ac68afdbcb8eb79ce6ffad489f01689fb",
+  "submitted_at": "2026-10-16T23:44:44Z",
+  "ci_evidence": ".agents/tasks/2026-10-07/evidence/r3-21-r3-20-terminal-ci-repair-ci.json",
+  "ci_status": "terminal_failed",
+  "ci_run_ids": [
+    38982900556,
+    38982900518,
+    38982900472,
+    38982900474,
+    38982900426,
+    38982900390,
+    38982900378
+  ],
+  "ci_workflow_counts": {
+    "observed": 7,
+    "terminal": 7,
+    "passed": 5,
+    "failed": 2,
+    "cancelled": 0,
+    "queued": 0,
+    "in_progress": 0
+  },
+  "ci_job_counts": {
+    "observed": 20,
+    "terminal": 20,
+    "passed": 14,
+    "failed": 6,
+    "cancelled": 0,
+    "queued": 0,
+    "in_progress": 0
+  },
+  "ci_last_polled_at": "2026-10-16T23:57:49Z",
+  "ci_findings_summary": "R3.21 is terminal failed on exact SHA ccfbd24ac68afdbcb8eb79ce6ffad489f01689fb: 5/7 workflows and 14/20 jobs passed; 2 workflows and 6 jobs failed. All 12 artifact records are reconciled; nine non-preview archive digests match GitHub API and three large previews remain metadata-only. The unchanged watcher probe passed on all three OSes; later failures are Canvas log selection on Linux/macOS, Windows picker focus/cancel, Clippy argument count on Ubuntu/Windows, and macOS readiness-sentinel delivery.",
+  "ci_terminal_at": "2026-10-16T23:57:49Z",
+  "ci_all_required_jobs_terminal": true,
+  "ci_artifact_records_observed": 12,
+  "ci_artifacts_reconciled": true,
+  "terminal_failure_findings": {
+    "unchanged_watcher_probe": "Passed on Linux, macOS, and Windows: request-correlated rescan, hint and unchanged probe; baseline revision matched; timer_due_before_poll=false; zero correlated full-refresh requests/results.",
+    "linux_macos_later_failure": "Canvas manual-refresh helper read the default global app log and returned on an earlier stage request; the subsequent strict wait inspected the Canvas-specific log and timed out without a current Canvas request.",
+    "windows_later_failure": "Native folder picker remained open after Escape; the cancellation code activates by application PID immediately before SendKeys, which can focus the main application window instead of the exact picker HWND."
+  }
 }

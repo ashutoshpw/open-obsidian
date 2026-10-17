@@ -352,7 +352,8 @@ pub use rename_transaction::{
     VaultRenameRecoveryIssue, VaultRenameRecoveryReport, VaultRenameResult,
 };
 pub use watcher::{
-    VaultWatchError, VaultWatchEventBatch, VaultWatchHint, VaultWatchPoll, VaultWatcher,
+    VaultWatchError, VaultWatchEventBatch, VaultWatchEventKind, VaultWatchHint, VaultWatchPoll,
+    VaultWatcher,
 };
 pub use write_recovery::{VaultWriteRecoveryIssue, VaultWriteRecoveryReport};
 

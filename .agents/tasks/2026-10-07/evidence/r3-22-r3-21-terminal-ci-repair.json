@@ -1,0 +1,122 @@
+{
+  "schema_version": 1,
+  "plan_id": "R3.22-R3.21-TERMINAL-CI-REPAIR",
+  "milestone_id": "R3.22",
+  "name": "R3.22 consolidated Rust and cross-platform round-trip CI repair",
+  "status": "implementation_complete",
+  "candidate_base_sha": "ccfbd24ac68afdbcb8eb79ce6ffad489f01689fb",
+  "predecessor_ci_evidence": ".agents/tasks/2026-10-07/evidence/r3-21-r3-20-terminal-ci-repair-ci.json",
+  "objective": "Repair all six terminal R3.21 job failures in one bounded, independently reviewed milestone: resolve the Rust Clippy argument-count failure, make the real watcher readiness sentinel reliable on macOS without weakening the assertion, make Canvas refresh detection use the Canvas-stage log, and reliably cancel the Windows native folder picker by targeting its exact foreground HWND.",
+  "scope": [
+    "In crates/vault/src/watcher.rs, refactor enqueue_event_hint metadata to satisfy Clippy 8/7 on Ubuntu and Windows without suppressing the lint or changing rescan, batch lineage, notify-error attribution, or wake semantics.",
+    "In the macOS watcher readiness test in crates/ui-egui/src/lib.rs, diagnose and correct the sentinel delivery boundary exposed at the first create phase. Keep real filesystem create/remove events, distinct exact paths for those phases, exact callback-to-batch-to-wake-to-polled-UI-batch correlation, UI reconciliation assertions, the original ten-second deadline, and baseline/periodic-timer invariants. Add actionable diagnostics that distinguish watcher registration return, accepted/filtered path, callback enqueue, wake receipt, and UI polling. Do not use unrelated callbacks, mutation retries, synthetic wake, manual refresh, or timer fallback as success evidence. If a production watcher registration/path-filter defect is confirmed, include the narrow production fix and regression.",
+    "In .agents/tasks/2026-10-07/audit-obsidian-vault-roundtrip.ts, pass the Canvas stage logPath into clickManualRefreshUntilRequested and use that same log for all diagnostics and waits; preserve strict request correlation and timeout behavior.",
+    "In the Windows native folder-picker cancellation path in the round-trip audit harness, immediately before Escape verify the detected HWND is still a live, visible top-level window owned by the expected OpenObsidian process, retarget that exact HWND, verify GetForegroundWindow() equals it before SendKeys, and preserve the existing exact-handle closure assertion. Do not fall back to process-ID activation for the Escape step.",
+    "Update the exact-SHA tracker and evidence locally with the reviewed plan, source findings, CI runs and artifacts. Do not push evidence-only or status-only updates."
+  ],
+  "out_of_scope": [
+    "Changing unrelated watcher behavior, reconciliation timing, probe semantics, refresh policy, the unchanged watcher-probe assertions or its successful platform evidence.",
+    "Weakening or deleting the real sentinel event, Canvas manual-refresh correlation, or native picker-close assertions; increasing timeouts to mask these failures; using local tests or runtime probes.",
+    "Claiming Rust parity for C07 or changing plugin compatibility claims, dependency stack, release scope, or unrelated work queued behind the pending repair."
+  ],
+  "implementation_criteria": [
+    "The Clippy failure is resolved structurally and no lint suppression is introduced; batching, rescan flag, notify-error count, root-change signal, and wake callback behavior remain intact.",
+    "The macOS sentinel test proves real create and remove callbacks for distinct exact paths and phases from the intended vault watcher, the UI refreshes to the expected note counts, baseline is established, and target mutation remains before the original periodic reconciliation deadline. For each accepted callback, correlate its batch ID with the same ID passed to the wake callback and later observed in a polled UI batch. Distinct create/remove paths must prevent a delayed create callback from being relabeled as Remove. No unrelated event or mutation retry may count as readiness success, and no synthetic wake may substitute for the filesystem callback. If diagnosis confirms a production watcher registration or path-filter defect, include a narrow production fix and regression; a harness-only accommodation is allowed only when the watcher path is functioning correctly.",
+    "Canvas manual refresh is detected only from the Canvas stage log, then the strict Canvas log wait confirms the matching result; earlier log records cannot satisfy the helper.",
+    "Windows Escape is sent only after the exact picker HWND is confirmed live, visible, owned by the expected app PID, and foreground; the same exact HWND is observed closed afterward; no process-ID activation is used immediately before SendKeys.",
+    "All six R3.21 failed jobs have directly corresponding acceptance coverage; no local executable validation is run."
+  ],
+  "required_workflows": [
+    "OpenObsidian Rust CI",
+    "Rust migration inventory",
+    "Obsidian vault round-trip acceptance",
+    "OpenObsidian desktop build",
+    "OpenObsidian quality",
+    "OpenObsidian plugin renderer matrix",
+    "OpenObsidian loaded plugin workflows"
+  ],
+  "required_platforms": [
+    "ubuntu-latest",
+    "macos-latest",
+    "windows-latest",
+    "minimum supported Rust 1.95"
+  ],
+  "ci_acceptance": [
+    "All required workflows and jobs pass for the exact submitted SHA; no skipped, missing, canceled, failed, or untriggered required job counts as a pass.",
+    "Rust tests, Clippy, formatting, layering and MSRV checks pass on their required runners.",
+    "Linux, macOS and Windows round-trip reports show the unchanged-probe acceptance remains passed, the Canvas manual refresh is correlated from its stage log, and exact native picker cancellation succeeds where applicable.",
+    "All required artifacts are enumerated by run, SHA, API digest and size; non-preview archive digests and report payload identity are reconciled; large desktop previews remain metadata-only."
+  ],
+  "submission_gate": "Keep R3.22 local until all four repairs are implemented and the complete milestone is independently reviewed. Immediately before its single push, verify origin/main is still ccfbd24ac68afdbcb8eb79ce6ffad489f01689fb and no R3.21 CI batch remains active. Push the completed reviewed milestone to origin/main exactly once, then hold main at that submitted SHA until all seven required workflows, jobs and artifacts are terminal and reconciled.",
+  "local_executable_validation": false,
+  "implementation_started": true,
+  "implementation_complete": true,
+  "pushed_once": false,
+  "milestone_achieved": false,
+  "review_status": "The complete R3.22 source and tracker diff was independently reviewed and approved by a590_attempt3_rust_ci, r320_integrated_review, and r320_roundtrip_repair_analysis. No source blocker remains; only exact-base/no-active-batch preflight and the single milestone push remain.",
+  "implementation_reviewed_at": "2026-10-17T00:19:14Z",
+  "implementation_reviewed_by": [
+    "a590_attempt3_rust_ci",
+    "r320_integrated_review",
+    "r320_roundtrip_repair_analysis"
+  ],
+  "next_action": "Commit the reviewed R3.22 source and tracker changes locally. Immediately before submission, verify origin/main still equals ccfbd24ac68afdbcb8eb79ce6ffad489f01689fb and no CI batch is active; then push R3.22 once and wait for all seven workflows, jobs, and artifacts to become terminal and reconciled. Run no local executable validation.",
+  "implementation_notes": [
+    "Local source commits: dbc5e73 Refactor watcher event hint metadata; 048fca4 fix: scope round-trip refresh and picker checks. Both remain ahead of origin/main and unpushed.",
+    "The watcher diagnostic observer is opt-in and runs after enqueue but immediately before wake. It records raw event kind/path, production classifier result, exact coalesced batch ID, notification-error status, observed phase, and file-existence state. The diagnostic wake callback receives that same batch ID; acceptance requires the ID in both the wake receipt and a polled UI batch.",
+    "Create and remove readiness use distinct paths: the create note is created after registration, and a separate pre-existing Markdown note is removed for the remove phase. A delayed create callback cannot satisfy the remove-path assertion even if the backend reports Modify and callbacks arrive asynchronously.",
+    "A one-second macOS backend startup-settling interval is a hypothesis, not a confirmed root cause. It is inside the existing ten-second readiness deadline, does not count as readiness evidence, and does not extend the deadline; exact real sentinel callbacks and UI reconciliation remain required."
+  ],
+  "failure_to_repair_crosswalk": [
+    {
+      "job_id": 117247619742,
+      "run_id": 38982900390,
+      "platform": "ubuntu-latest",
+      "failure": "Clippy too_many_arguments (8/7) for enqueue_event_hint",
+      "repair": "Structural metadata grouping in crates/vault/src/watcher.rs"
+    },
+    {
+      "job_id": 117247619786,
+      "run_id": 38982900390,
+      "platform": "windows-latest",
+      "failure": "Same enqueue_event_hint Clippy diagnostic",
+      "repair": "Same structural metadata grouping"
+    },
+    {
+      "job_id": 117247619710,
+      "run_id": 38982900390,
+      "platform": "macos-latest",
+      "failure": "Readiness sentinel create phase timed out before a real watcher wake",
+      "repair": "Diagnose registration/filter/callback/wake path; make narrowly scoped repair while preserving real-event proof"
+    },
+    {
+      "job_id": 117247620096,
+      "run_id": 38982900518,
+      "platform": "ubuntu-24.04",
+      "failure": "Canvas manual-refresh helper read a prior-stage request from the global log; strict Canvas log wait timed out",
+      "repair": "Pass Canvas stage logPath through helper and use it consistently"
+    },
+    {
+      "job_id": 117247620205,
+      "run_id": 38982900518,
+      "platform": "macos-latest",
+      "failure": "Same Canvas log-selection failure as Linux",
+      "repair": "Same stage-specific logPath propagation"
+    },
+    {
+      "job_id": 117247620369,
+      "run_id": 38982900518,
+      "platform": "windows-latest",
+      "failure": "Folder picker remained open after Escape",
+      "repair": "Verify exact picker HWND foreground immediately before Escape, then verify same HWND closes"
+    }
+  ],
+  "reviewed_by": [
+    "a590_attempt3_rust_ci",
+    "r320_integrated_review",
+    "r320_roundtrip_repair_analysis"
+  ],
+  "reviewed_at": "2026-10-17T00:00:33Z",
+  "implementation_started_at": "2026-10-17T00:00:33Z",
+  "implementation_started_from_sha": "ccfbd24ac68afdbcb8eb79ce6ffad489f01689fb"
+}

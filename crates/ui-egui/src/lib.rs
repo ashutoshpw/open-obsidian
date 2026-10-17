@@ -12,7 +12,8 @@ use openobsidian_engine::{
     VaultError, VaultHistoryCleanup, VaultHistoryKind, VaultHistoryPlan, VaultHistoryPolicy,
     VaultHistoryRecord, VaultInlineImage, VaultLinkResolution, VaultNoteEmbedDisposition,
     VaultNoteEmbedNode, VaultNoteEmbedReport, VaultRenamePreview, VaultRenameRecoveryReport,
-    VaultRenameResult, VaultSession, VaultWatchEventBatch, VaultWatcher, VaultWriteRecoveryReport,
+    VaultRenameResult, VaultSession, VaultWatchEventBatch, VaultWatchEventKind, VaultWatcher,
+    VaultWriteRecoveryReport,
     VaultWriteRequest, analyze_markdown_preview, plan_history_retention,
 };
 use sha2::{Digest, Sha256};
@@ -10884,6 +10885,46 @@ mod tests {
 
     #[test]
     fn egui_reconciles_an_external_note_change_from_the_watcher_without_manual_refresh() {
+        #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+        enum SentinelPhase {
+            Create,
+            Remove,
+        }
+
+        #[derive(Clone, Debug)]
+        struct WatcherEventObservation {
+            phase: Option<SentinelPhase>,
+            observed_at: Instant,
+            kind: VaultWatchEventKind,
+            paths: Vec<std::path::PathBuf>,
+            hint: Option<openobsidian_engine::VaultWatchHint>,
+            batch: Option<VaultWatchEventBatch>,
+            notify_error: bool,
+            sentinel_exists: bool,
+        }
+
+        #[derive(Clone, Copy, Debug)]
+        struct WatcherWakeObservation {
+            batch_id: u64,
+            woke_at: Instant,
+        }
+
+        #[derive(Clone, Copy)]
+        struct ReadinessWindow {
+            registered_at: Instant,
+            started_at: Instant,
+            deadline: Instant,
+        }
+
+        struct SentinelTransition {
+            path: std::path::PathBuf,
+            phase: SentinelPhase,
+            mutation_at: Instant,
+            expected_note_count: usize,
+            minimum_refresh_generation: u64,
+            expected_sentinel_exists: bool,
+        }
+
         fn current_watcher_batches(state: &OpenObsidianApp) -> Vec<VaultWatchEventBatch> {
             let mut batches = state.vault_rescan_event_batches.clone();
             if let Some(batch) = &state.vault_snapshot_probe_batch {
@@ -10921,42 +10962,56 @@ mod tests {
 
         fn wait_for_sentinel_transition(
             harness: &mut Harness<'_, OpenObsidianApp>,
-            wake_receiver: &Receiver<Instant>,
-            mutation_at: Instant,
-            expected_note_count: usize,
-            minimum_refresh_generation: u64,
-            readiness_started_at: Instant,
-            readiness_deadline: Instant,
+            wake_receiver: &Receiver<WatcherWakeObservation>,
+            transition: SentinelTransition,
+            readiness: ReadinessWindow,
             readiness_batch_ids: &mut Vec<u64>,
+            watcher_events: &std::sync::Mutex<Vec<WatcherEventObservation>>,
         ) {
-            let expected_status =
-                format!("Note list refreshed: {expected_note_count} Markdown files found.");
-            let mut phase_batch_seen = false;
-            loop {
-                let remaining = readiness_deadline.saturating_duration_since(Instant::now());
-                let callback_woke_at = wake_receiver
-                    .recv_timeout(remaining)
-                    .expect("a real sentinel filesystem event wakes the same vault watcher");
-                assert!(callback_woke_at < readiness_deadline);
-                if callback_woke_at >= mutation_at {
-                    break;
+            let expected_status = format!(
+                "Note list refreshed: {} Markdown files found.",
+                transition.expected_note_count
+            );
+            let event_snapshot = || {
+                watcher_events
+                    .lock()
+                    .unwrap_or_else(std::sync::PoisonError::into_inner)
+                    .clone()
+            };
+            let mut phase_wake_batch_ids = Vec::new();
+            let first_wake = loop {
+                let remaining = readiness.deadline.saturating_duration_since(Instant::now());
+                let wake = match wake_receiver.recv_timeout(remaining) {
+                    Ok(wake) => wake,
+                    Err(error) => panic!(
+                        "real {} sentinel event did not wake the same vault watcher before its ten-second deadline: {error}; registered_at={:?}; target_path={}; observed_events={:?}",
+                        match transition.phase {
+                            SentinelPhase::Create => "create",
+                            SentinelPhase::Remove => "remove",
+                        },
+                        readiness.registered_at,
+                        transition.path.display(),
+                        event_snapshot(),
+                    ),
+                };
+                assert!(wake.woke_at < readiness.deadline);
+                if wake.woke_at >= transition.mutation_at {
+                    phase_wake_batch_ids.push(wake.batch_id);
+                    break wake;
                 }
                 harness.step();
                 let ui_poll_completed_at = Instant::now();
-                assert!(ui_poll_completed_at < readiness_deadline);
+                assert!(ui_poll_completed_at < readiness.deadline);
                 let state = harness.state();
                 remember_readiness_batches(
                     state,
                     readiness_batch_ids,
-                    readiness_started_at,
-                    readiness_deadline,
+                    readiness.started_at,
+                    readiness.deadline,
                     ui_poll_completed_at,
                 );
                 assert!(state.vault_refresh_error.is_none());
-                phase_batch_seen |= current_watcher_batches(state)
-                    .iter()
-                    .any(|batch| batch.enqueued_at >= mutation_at);
-            }
+            };
 
             let quiet_window = Duration::from_millis(100);
             let mut quiet_until = None;
@@ -10964,18 +11019,15 @@ mod tests {
                 harness.step();
                 let ui_poll_completed_at = Instant::now();
                 assert!(
-                    ui_poll_completed_at < readiness_deadline,
+                    ui_poll_completed_at < readiness.deadline,
                     "watcher readiness sentinel work exhausted its single ten-second deadline"
                 );
                 let state = harness.state();
-                phase_batch_seen |= current_watcher_batches(state)
-                    .iter()
-                    .any(|batch| batch.enqueued_at >= mutation_at);
                 remember_readiness_batches(
                     state,
                     readiness_batch_ids,
-                    readiness_started_at,
-                    readiness_deadline,
+                    readiness.started_at,
+                    readiness.deadline,
                     ui_poll_completed_at,
                 );
                 assert!(
@@ -10993,9 +11045,9 @@ mod tests {
                     .entries()
                     .len();
                 let transition_ready = reconciliation_settled
-                    && state.vault_refresh_generation >= minimum_refresh_generation
+                    && state.vault_refresh_generation >= transition.minimum_refresh_generation
                     && state.vault_refresh_status.as_deref() == Some(expected_status.as_str())
-                    && note_count == expected_note_count;
+                    && note_count == transition.expected_note_count;
                 if transition_ready {
                     let quiet_deadline =
                         quiet_until.get_or_insert_with(|| Instant::now() + quiet_window);
@@ -11003,8 +11055,11 @@ mod tests {
                         let mut drained_wake = false;
                         loop {
                             match wake_receiver.try_recv() {
-                                Ok(woke_at) => {
-                                    assert!(woke_at < readiness_deadline);
+                                Ok(wake) => {
+                                    assert!(wake.woke_at < readiness.deadline);
+                                    if wake.woke_at >= transition.mutation_at {
+                                        phase_wake_batch_ids.push(wake.batch_id);
+                                    }
                                     drained_wake = true;
                                 }
                                 Err(TryRecvError::Empty) => break,
@@ -11014,9 +11069,40 @@ mod tests {
                             }
                         }
                         if !drained_wake {
+                            let observed_events = event_snapshot();
+                            let sentinel_event_seen = observed_events.iter().any(|event| {
+                                let Some(batch) = event.batch else {
+                                    return false;
+                                };
+                                let expected_kind = match transition.phase {
+                                    SentinelPhase::Create => matches!(
+                                        event.kind,
+                                        VaultWatchEventKind::Create | VaultWatchEventKind::Modify
+                                    ),
+                                    SentinelPhase::Remove => matches!(
+                                        event.kind,
+                                        VaultWatchEventKind::Remove | VaultWatchEventKind::Modify
+                                    ),
+                                };
+                                event.phase == Some(transition.phase)
+                                    && event.observed_at >= transition.mutation_at
+                                    && event.paths.iter().any(|path| path == &transition.path)
+                                    && event.hint.is_some()
+                                    && !event.notify_error
+                                    && event.sentinel_exists
+                                        == transition.expected_sentinel_exists
+                                    && expected_kind
+                                    && phase_wake_batch_ids.contains(&batch.id)
+                                    && readiness_batch_ids.contains(&batch.id)
+                            });
                             assert!(
-                                phase_batch_seen,
-                                "each sentinel mutation must enqueue and poll a real watcher batch"
+                                sentinel_event_seen,
+                                "each phase must link the exact sentinel callback and production classification to its enqueued batch, its wake receipt, and a polled UI batch; phase={:?}; target_path={}; wake_batch_ids={:?}; polled_batch_ids={:?}; observed_events={:?}",
+                                transition.phase,
+                                transition.path.display(),
+                                phase_wake_batch_ids,
+                                readiness_batch_ids,
+                                observed_events,
                             );
                             return;
                         }
@@ -11026,13 +11112,21 @@ mod tests {
                     quiet_until = None;
                 }
                 assert!(
-                    Instant::now() < readiness_deadline,
-                    "watcher readiness sentinel work did not settle within ten seconds"
+                    Instant::now() < readiness.deadline,
+                    "watcher readiness sentinel work did not settle within ten seconds; phase={:?}; registered_at={:?}; callback_woke_at={:?}; target_path={}; wake_batch_ids={:?}; polled_batch_ids={:?}; observed_events={:?}",
+                    transition.phase,
+                    readiness.registered_at,
+                    first_wake.woke_at,
+                    transition.path.display(),
+                    phase_wake_batch_ids,
+                    readiness_batch_ids,
+                    event_snapshot(),
                 );
                 match wake_receiver.recv_timeout(Duration::from_millis(2)) {
-                    Ok(woke_at) => {
-                        assert!(woke_at < readiness_deadline);
-                        if woke_at >= mutation_at {
+                    Ok(wake) => {
+                        assert!(wake.woke_at < readiness.deadline);
+                        if wake.woke_at >= transition.mutation_at {
+                            phase_wake_batch_ids.push(wake.batch_id);
                             quiet_until = None;
                         }
                     }
@@ -11062,14 +11156,26 @@ mod tests {
         std::fs::create_dir_all(&app_data_path).expect("create separate app-data directory");
         std::fs::write(vault_path.join("Before.md"), b"before\n")
             .expect("write initial vault note");
+        let create_sentinel_path = vault_path.join("Watcher create readiness sentinel.md");
+        let remove_sentinel_path = vault_path.join("Watcher remove readiness sentinel.md");
+        std::fs::write(&remove_sentinel_path, b"# Remove readiness sentinel\n")
+            .expect("write the distinct note used for the real removal callback");
 
         let session = VaultSession::open(&vault_path, &app_data_path)
             .expect("open vault before applying an external filesystem change");
-        assert_eq!(session.entries().len(), 1);
+        assert_eq!(session.entries().len(), 2);
         let (wake_sender, wake_receiver) = mpsc::channel();
         let wake_count = Arc::new(AtomicU64::new(0));
+        let watcher_phase = Arc::new(AtomicU16::new(0));
+        let watcher_events = Arc::new(std::sync::Mutex::new(Vec::new()));
+        let watcher_registered_at = Arc::new(std::sync::Mutex::new(None));
         let watcher_root = vault_path.clone();
         let callback_wake_count = Arc::clone(&wake_count);
+        let callback_watcher_phase = Arc::clone(&watcher_phase);
+        let callback_watcher_events = Arc::clone(&watcher_events);
+        let callback_watcher_registration = Arc::clone(&watcher_registered_at);
+        let callback_create_sentinel_path = create_sentinel_path.clone();
+        let callback_remove_sentinel_path = remove_sentinel_path.clone();
         let app = OpenObsidianApp {
             session: Some(Arc::new(session)),
             next_vault_reconciliation: Some(Instant::now() + Duration::from_secs(60)),
@@ -11081,62 +11187,136 @@ mod tests {
                     let callback_context = ui.ctx().clone();
                     let callback_wake_count = Arc::clone(&callback_wake_count);
                     let callback_wake_sender = wake_sender.clone();
-                    app.vault_watcher = Some(
-                        VaultWatcher::watch_with_wakeup(&watcher_root, move || {
+                    let callback_watcher_phase = Arc::clone(&callback_watcher_phase);
+                    let callback_watcher_events = Arc::clone(&callback_watcher_events);
+                    let callback_watcher_registration = Arc::clone(&callback_watcher_registration);
+                    let callback_create_sentinel_path = callback_create_sentinel_path.clone();
+                    let callback_remove_sentinel_path = callback_remove_sentinel_path.clone();
+                    let watcher = VaultWatcher::watch_with_event_diagnostics(
+                        &watcher_root,
+                        move |kind, paths, hint, batch, notify_error| {
+                            let phase = match callback_watcher_phase.load(Ordering::Acquire) {
+                                1 => Some(SentinelPhase::Create),
+                                2 => Some(SentinelPhase::Remove),
+                                _ => None,
+                            };
+                            let sentinel_exists = if paths
+                                .iter()
+                                .any(|path| path == &callback_create_sentinel_path)
+                            {
+                                callback_create_sentinel_path.exists()
+                            } else if paths
+                                .iter()
+                                .any(|path| path == &callback_remove_sentinel_path)
+                            {
+                                callback_remove_sentinel_path.exists()
+                            } else {
+                                false
+                            };
+                            let observation = WatcherEventObservation {
+                                phase,
+                                observed_at: Instant::now(),
+                                kind,
+                                paths: paths.to_vec(),
+                                hint,
+                                batch,
+                                notify_error,
+                                sentinel_exists,
+                            };
+                            callback_watcher_events
+                                .lock()
+                                .unwrap_or_else(std::sync::PoisonError::into_inner)
+                                .push(observation);
+                        },
+                        move |batch| {
                             callback_context.request_repaint();
                             callback_wake_count.fetch_add(1, Ordering::Relaxed);
-                            let _ = callback_wake_sender.send(Instant::now());
-                        })
-                        .expect("watch the open test vault with a repaint wake callback"),
-                    );
+                            let _ = callback_wake_sender.send(WatcherWakeObservation {
+                                batch_id: batch.id,
+                                woke_at: Instant::now(),
+                            });
+                        },
+                    )
+                    .expect("watch the open test vault with a repaint wake callback");
+                    *callback_watcher_registration
+                        .lock()
+                        .unwrap_or_else(std::sync::PoisonError::into_inner) = Some(Instant::now());
+                    app.vault_watcher = Some(watcher);
                 }
                 app.show_ui(ui)
             },
             app,
         );
         harness.step();
-        harness.get_by_label("1 Markdown files found.");
+        harness.get_by_label("2 Markdown files found.");
+        let watcher_registered_at = watcher_registered_at
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .expect("watcher registration completes before the first sentinel mutation");
         let periodic_reconciliation_deadline = harness
             .state()
             .next_vault_reconciliation
             .expect("the open vault has a periodic reconciliation deadline");
 
         let readiness_started_at = Instant::now();
-        let readiness_deadline = readiness_started_at + Duration::from_secs(10);
-        let sentinel_path = vault_path.join("Watcher readiness sentinel.md");
+        let readiness = ReadinessWindow {
+            registered_at: watcher_registered_at,
+            started_at: readiness_started_at,
+            deadline: readiness_started_at + Duration::from_secs(10),
+        };
+        // Give the macOS backend a bounded startup window without moving or extending the
+        // existing ten-second readiness deadline. The real create/remove callbacks remain
+        // the only readiness evidence.
+        #[cfg(target_os = "macos")]
+        std::thread::sleep(Duration::from_secs(1));
         let mut readiness_batch_ids = Vec::new();
         let readiness_create_generation = harness.state().vault_refresh_generation + 1;
+        watcher_phase.store(1, Ordering::Release);
         let sentinel_created_at = Instant::now();
-        std::fs::write(&sentinel_path, b"# Watcher readiness sentinel\n")
+        std::fs::write(&create_sentinel_path, b"# Create readiness sentinel\n")
             .expect("create a temporary real-filesystem watcher readiness note");
         wait_for_sentinel_transition(
             &mut harness,
             &wake_receiver,
-            sentinel_created_at,
-            2,
-            readiness_create_generation,
-            readiness_started_at,
-            readiness_deadline,
+            SentinelTransition {
+                path: create_sentinel_path.clone(),
+                phase: SentinelPhase::Create,
+                mutation_at: sentinel_created_at,
+                expected_note_count: 3,
+                minimum_refresh_generation: readiness_create_generation,
+                expected_sentinel_exists: true,
+            },
+            readiness,
             &mut readiness_batch_ids,
+            &watcher_events,
         );
 
         let readiness_remove_generation = harness.state().vault_refresh_generation + 1;
+        watcher_phase.store(2, Ordering::Release);
+        std::fs::remove_file(&create_sentinel_path)
+            .expect("remove the distinct create sentinel after its create callback is proven");
         let sentinel_removed_at = Instant::now();
-        std::fs::remove_file(&sentinel_path).expect("remove the watcher readiness sentinel note");
+        std::fs::remove_file(&remove_sentinel_path)
+            .expect("remove the pre-existing note used for the real removal callback");
         wait_for_sentinel_transition(
             &mut harness,
             &wake_receiver,
-            sentinel_removed_at,
-            1,
-            readiness_remove_generation,
-            readiness_started_at,
-            readiness_deadline,
+            SentinelTransition {
+                path: remove_sentinel_path.clone(),
+                phase: SentinelPhase::Remove,
+                mutation_at: sentinel_removed_at,
+                expected_note_count: 1,
+                minimum_refresh_generation: readiness_remove_generation,
+                expected_sentinel_exists: false,
+            },
+            readiness,
             &mut readiness_batch_ids,
+            &watcher_events,
         );
 
         assert!(
-            !sentinel_path.exists(),
-            "readiness sentinel is removed before baseline"
+            !create_sentinel_path.exists() && !remove_sentinel_path.exists(),
+            "both distinct readiness sentinels are removed before baseline"
         );
         assert!(!readiness_batch_ids.is_empty());
         assert!(matches!(wake_receiver.try_recv(), Err(TryRecvError::Empty)));
@@ -11160,14 +11340,14 @@ mod tests {
             .expect("create a note outside OpenObsidian");
         let expected_vault = existing_vault_tree_snapshot(&vault_path);
         let expected_status = "Note list refreshed: 2 Markdown files found.";
-        let callback_woke_at = wake_receiver
+        let callback_wake = wake_receiver
             .recv_timeout(target_deadline.saturating_duration_since(Instant::now()))
             .expect("a real filesystem notification invokes the repaint wake before the timer");
-        assert!(callback_woke_at >= target_write_started_at);
-        assert!(callback_woke_at < target_deadline);
+        assert!(callback_wake.woke_at >= target_write_started_at);
+        assert!(callback_wake.woke_at < target_deadline);
         assert!(wake_count.load(Ordering::Relaxed) > baseline_wake_count);
         assert!(
-            callback_woke_at < periodic_reconciliation_deadline,
+            callback_wake.woke_at < periodic_reconciliation_deadline,
             "the notify callback wake occurred before the periodic timer"
         );
         let mut target_batches: Vec<VaultWatchEventBatch> = Vec::new();
@@ -11300,9 +11480,9 @@ mod tests {
                     let mut drained_wake = false;
                     loop {
                         match wake_receiver.try_recv() {
-                            Ok(woke_at) => {
-                                assert!(woke_at >= target_write_started_at);
-                                assert!(woke_at < target_deadline);
+                            Ok(wake) => {
+                                assert!(wake.woke_at >= target_write_started_at);
+                                assert!(wake.woke_at < target_deadline);
                                 drained_wake = true;
                             }
                             Err(TryRecvError::Empty) => break,
@@ -11325,9 +11505,9 @@ mod tests {
                 "filesystem watcher did not reconcile the external note within fifteen seconds"
             );
             match wake_receiver.recv_timeout(Duration::from_millis(2)) {
-                Ok(woke_at) => {
-                    assert!(woke_at >= target_write_started_at);
-                    assert!(woke_at < target_deadline);
+                Ok(wake) => {
+                    assert!(wake.woke_at >= target_write_started_at);
+                    assert!(wake.woke_at < target_deadline);
                     target_quiet_until = None;
                 }
                 Err(mpsc::RecvTimeoutError::Timeout) => {}
