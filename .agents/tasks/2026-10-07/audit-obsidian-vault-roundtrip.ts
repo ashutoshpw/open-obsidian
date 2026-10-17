@@ -3643,11 +3643,12 @@ async function clickManualRefreshUntilRequested(
   child: ChildProcess,
   windowId: string,
   previousRequestCount: number,
+  logPath = join(reportDirectory, "openobsidian.log"),
 ): Promise<string> {
   const clickActions: string[] = [];
   const deadline = Date.now() + 30_000;
   let lastClickAt = 0;
-  let diagnostics = await readOpenObsidianRefreshDiagnostics();
+  let diagnostics = await readOpenObsidianRefreshDiagnostics(logPath);
   const findManualRequest = (value: OpenObsidianRefreshDiagnostics) => value.requests.find((request, index) => (
     index >= previousRequestCount && request.source === "manual_button"
   ));
@@ -3678,17 +3679,17 @@ async function clickManualRefreshUntilRequested(
       lastClickAt = Date.now();
       // The native click can take long enough for a request to arrive after
       // the pre-click diagnostics snapshot. Always read the log again after it.
-      diagnostics = await readOpenObsidianRefreshDiagnostics();
+      diagnostics = await readOpenObsidianRefreshDiagnostics(logPath);
       const requestAfterClick = findManualRequest(diagnostics);
       if (requestAfterClick) return clickActions.at(-1)!;
     } else {
-      diagnostics = await readOpenObsidianRefreshDiagnostics();
+      diagnostics = await readOpenObsidianRefreshDiagnostics(logPath);
     }
 
     if (Date.now() < deadline) await delay(250);
   }
 
-  diagnostics = await readOpenObsidianRefreshDiagnostics();
+  diagnostics = await readOpenObsidianRefreshDiagnostics(logPath);
   const finalManualRequest = findManualRequest(diagnostics);
   if (finalManualRequest) return clickActions.at(-1) ?? `Manual refresh request observed at log line ${finalManualRequest.line}`;
   throw new Error(
@@ -13832,13 +13833,56 @@ async function cancelOpenObsidianNativePicker(
     await captureAppDataBaselineBeforeCancel();
     const script = `
       $ErrorActionPreference = "Stop"
+      Add-Type -AssemblyName UIAutomationClient
+      Add-Type -AssemblyName UIAutomationTypes
+      Add-Type -TypeDefinition @'
+        using System;
+        using System.Runtime.InteropServices;
+        public static class OpenObsidianPickerEscapeNative {
+          [DllImport("user32.dll")] public static extern bool IsWindow(IntPtr handle);
+          [DllImport("user32.dll")] public static extern bool IsWindowVisible(IntPtr handle);
+          [DllImport("user32.dll")] public static extern IntPtr GetAncestor(IntPtr handle, uint flags);
+          [DllImport("user32.dll")] public static extern uint GetWindowThreadProcessId(IntPtr handle, out int processId);
+          [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr handle);
+          [DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow();
+        }
+'@
+      $pickerHandle = [IntPtr]::new([long]$env:OPENOBSIDIAN_PICKER_WINDOW_HANDLE)
+      $expectedProcessId = [int]$env:OPENOBSIDIAN_EXPECTED_PICKER_PROCESS_ID
+      if (-not [OpenObsidianPickerEscapeNative]::IsWindow($pickerHandle)) { throw "Detected picker HWND is no longer live: $pickerHandle" }
+      if (-not [OpenObsidianPickerEscapeNative]::IsWindowVisible($pickerHandle)) { throw "Detected picker HWND is no longer visible: $pickerHandle" }
+      if ([OpenObsidianPickerEscapeNative]::GetAncestor($pickerHandle, [uint32]2) -ne $pickerHandle) { throw "Detected picker HWND is no longer a top-level window: $pickerHandle" }
+      [int]$nativeProcessId = 0
+      [void][OpenObsidianPickerEscapeNative]::GetWindowThreadProcessId($pickerHandle, [ref]$nativeProcessId)
+      if ($nativeProcessId -ne $expectedProcessId) { throw "Detected picker HWND belongs to process $nativeProcessId, expected $expectedProcessId" }
+      $picker = [System.Windows.Automation.AutomationElement]::FromHandle($pickerHandle)
+      if ($null -eq $picker) { throw "Could not resolve detected picker HWND in UI Automation: $pickerHandle" }
+      $pickerDetails = $picker.Current
+      if ([int]$pickerDetails.ProcessId -ne $expectedProcessId -or
+        [int]$pickerDetails.NativeWindowHandle -ne [int]$pickerHandle.ToInt64() -or
+        [string]$pickerDetails.Name -ne $env:OPENOBSIDIAN_EXPECTED_PICKER_NAME -or
+        [string]$pickerDetails.ClassName -ne $env:OPENOBSIDIAN_EXPECTED_PICKER_CLASS -or
+        [bool]$pickerDetails.IsOffscreen) {
+        throw "Detected picker HWND identity or visibility changed before Escape: pid=$($pickerDetails.ProcessId); hwnd=$($pickerDetails.NativeWindowHandle); name=$($pickerDetails.Name); class=$($pickerDetails.ClassName); offscreen=$($pickerDetails.IsOffscreen)"
+      }
       $shell = New-Object -ComObject WScript.Shell
-      if (-not $shell.AppActivate(${windowsPicker.process_id})) { throw "Could not focus the detected native folder picker" }
-      Start-Sleep -Milliseconds 300
+      $focusRequested = [OpenObsidianPickerEscapeNative]::SetForegroundWindow($pickerHandle)
+      $foregroundHandle = [OpenObsidianPickerEscapeNative]::GetForegroundWindow()
+      if ($foregroundHandle -ne $pickerHandle) { throw "Could not focus the exact native picker HWND before Escape: expected=$pickerHandle; foreground=$foregroundHandle; SetForegroundWindow=$focusRequested" }
       $shell.SendKeys("{ESC}")
-      Write-Output "Sent Escape to the native Windows folder picker."
+      Write-Output "Sent Escape to exact picker HWND=$pickerHandle after verifying visibility, top-level ownership, process=$expectedProcessId, and foreground identity."
     `;
-    const escapeResult = execFileSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", script], {encoding: "utf8", stdio: ["ignore", "pipe", "pipe"]}).trim();
+    const escapeResult = execFileSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", script], {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "pipe"],
+      env: {
+        ...process.env,
+        OPENOBSIDIAN_PICKER_WINDOW_HANDLE: String(windowsPicker.native_window_handle),
+        OPENOBSIDIAN_EXPECTED_PICKER_PROCESS_ID: String(applicationPid),
+        OPENOBSIDIAN_EXPECTED_PICKER_NAME: windowsPicker.name,
+        OPENOBSIDIAN_EXPECTED_PICKER_CLASS: windowsPicker.class_name,
+      },
+    }).trim();
     cancellationInteraction = `${focusedPicker}; ${escapeResult}`;
     remainingWindows = await waitFor("Windows native folder picker to close after Escape", async () => windowsTopLevelWindowInventory(), (windows) => !windows.some((candidate) => candidate.native_window_handle === windowsPicker?.native_window_handle), 10_000);
   } else {
@@ -24673,6 +24717,7 @@ async function runOpenObsidianCanvasTextEdit(
       child,
       window.window_id,
       refreshCountBeforeFocusTimerReset,
+      logPath,
     );
     const settledFocusTimerReset = await waitForOpenObsidianRefreshIdle(
       refreshCountBeforeFocusTimerReset,
