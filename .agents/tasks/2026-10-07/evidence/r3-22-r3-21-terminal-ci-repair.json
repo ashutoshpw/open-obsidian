@@ -60,9 +60,9 @@
     "r320_integrated_review",
     "r320_roundtrip_repair_analysis"
   ],
-  "next_action": "Commit the reviewed R3.22 source and tracker changes locally. Immediately before submission, verify origin/main still equals ccfbd24ac68afdbcb8eb79ce6ffad489f01689fb and no CI batch is active; then push R3.22 once and wait for all seven workflows, jobs, and artifacts to become terminal and reconciled. Run no local executable validation.",
+  "next_action": "Immediately before submission, verify origin/main still equals ccfbd24ac68afdbcb8eb79ce6ffad489f01689fb and no CI batch is active; then push the reviewed R3.22 milestone once and wait for all seven workflows, jobs, and artifacts to become terminal and reconciled. Run no local executable validation.",
   "implementation_notes": [
-    "Local source commits: dbc5e73 Refactor watcher event hint metadata; 048fca4 fix: scope round-trip refresh and picker checks. Both remain ahead of origin/main and unpushed.",
+    "Local source commits: dbc5e73 Refactor watcher event hint metadata; 048fca4 fix: scope round-trip refresh and picker checks; 8c2d0ee87e3a4122f80681a91e2424d14fed6326 complete the reviewed R3.22 source and tracker batch. All are ahead of origin/main and unpushed.",
     "The watcher diagnostic observer is opt-in and runs after enqueue but immediately before wake. It records raw event kind/path, production classifier result, exact coalesced batch ID, notification-error status, observed phase, and file-existence state. The diagnostic wake callback receives that same batch ID; acceptance requires the ID in both the wake receipt and a polled UI batch.",
     "Create and remove readiness use distinct paths: the create note is created after registration, and a separate pre-existing Markdown note is removed for the remove phase. A delayed create callback cannot satisfy the remove-path assertion even if the backend reports Modify and callbacks arrive asynchronously.",
     "A one-second macOS backend startup-settling interval is a hypothesis, not a confirmed root cause. It is inside the existing ten-second readiness deadline, does not count as readiness evidence, and does not extend the deadline; exact real sentinel callbacks and UI reconciliation remain required."

@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "R3.21 exact-SHA CI is terminal-failed and fully reconciled; all 7 workflows and 20 jobs are terminal, 5 workflows and 14 jobs passed, and 6 jobs failed. R3.22 implementation is complete and independently reviewed locally; no new CI batch is active, and its single push is pending exact-base/no-active-batch preflight.",
-  "updated_at": "2026-10-17T00:20:23Z",
+  "updated_at": "2026-10-17T00:20:52Z",
   "branch": "codex/r3.3-tracker",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R3",
   "last_reconciled_head": "ccfbd24ac68afdbcb8eb79ce6ffad489f01689fb",
   "current_milestone": "R3.22 implementation complete and independently reviewed locally from ccfbd24ac68afdbcb8eb79ce6ffad489f01689fb; one push is pending exact-base/no-active-batch preflight.",
-  "next_action": "Commit the reviewed R3.22 source and tracker changes locally. Immediately before submission, verify origin/main still equals ccfbd24ac68afdbcb8eb79ce6ffad489f01689fb and no CI batch is active; then push R3.22 once and wait for all seven workflows, jobs, and artifacts to become terminal and reconciled. Run no local executable validation.",
+  "next_action": "Immediately before submission, verify origin/main still equals ccfbd24ac68afdbcb8eb79ce6ffad489f01689fb and no CI batch is active; then push the reviewed R3.22 milestone once and wait for all seven workflows, jobs, and artifacts to become terminal and reconciled. Run no local executable validation.",
   "push_status": "R3.21 was pushed once to origin/main at ccfbd24ac68afdbcb8eb79ce6ffad489f01689fb. Its seven-workflow, twenty-job batch is terminal-failed and all twelve artifacts are reconciled. R3.22 is complete and independently reviewed, remains unpushed, and is pending the immediate exact-base/no-active-batch preflight for its single milestone push.",
   "blockers": [
     "C07.3 pinned Obsidian reference capture passed all 14 scenarios on first open and reopen across Linux, macOS, and Windows at exact SHA 0a9cb9c00835881a7629c96721974dfa9461cc50; see evidence/r2.8.129-attempt-1-0a9cb9c.json. Rust parity remains pending. Separate mixed-worktree C07.3 edits remain local and are excluded from the C07.4 candidate; review and submit them separately. Do not claim a full-fixture membership oracle from reference UI results.",
@@ -102,7 +102,7 @@
         "macOS": "22e067108d9ceb05889ca6a13e9d0718eda62fbaa8904af898e4ccac66faca12"
       },
       "current_ci_evidence": ".agents/tasks/2026-10-07/evidence/r3-21-r3-20-terminal-ci-repair-ci.json",
-      "updated_at": "2026-10-17T00:20:23Z"
+      "updated_at": "2026-10-17T00:20:52Z"
     },
     "R4": {
       "status": "pending",
@@ -126,7 +126,7 @@
     },
     "milestone_status": "R3.21 at ccfbd24ac68afdbcb8eb79ce6ffad489f01689fb is terminal-failed and fully reconciled: all 7 workflows, 20 jobs and 12 artifacts are accounted for. R3.22 is the current complete and independently reviewed repair milestone, unpushed pending exact-base/no-active-batch preflight.",
     "next_action": "Commit the reviewed R3.22 source and tracker changes locally, immediately verify origin/main remains ccfbd24ac68afdbcb8eb79ce6ffad489f01689fb and no CI batch is active, then push once. Hold main at that SHA until every required exact-SHA job and artifact is terminal and reconciled.",
-    "updated_at": "2026-10-17T00:20:23Z"
+    "updated_at": "2026-10-17T00:20:52Z"
   },
   "completed_actions": [
     "Pushed reviewed C07.3 attempt 3 once to origin/main at 1ded8e1ac2237c7b61ca38b46e1d1d777d0225c5; recorded the initial exact-SHA status in .agents/tasks/2026-10-07/evidence/r2.8.127-attempt-3-1ded8e1.json. Keep origin/main fixed until all seven workflows and 20 jobs are terminal.",
@@ -44326,7 +44326,7 @@
     "implementation_started": true,
     "implementation_started_at": "2026-10-17T00:00:33Z",
     "implementation_started_from_sha": "ccfbd24ac68afdbcb8eb79ce6ffad489f01689fb",
-    "next_action": "Commit the reviewed R3.22 source and tracker changes locally. Immediately before submission, verify origin/main still equals ccfbd24ac68afdbcb8eb79ce6ffad489f01689fb and no CI batch is active; then push R3.22 once and wait for all seven workflows, jobs, and artifacts to become terminal and reconciled. Run no local executable validation."
+    "next_action": "Immediately before submission, verify origin/main still equals ccfbd24ac68afdbcb8eb79ce6ffad489f01689fb and no CI batch is active; then push the reviewed R3.22 milestone once and wait for all seven workflows, jobs, and artifacts to become terminal and reconciled. Run no local executable validation."
   },
   "planned_independent_milestone": {
     "milestone": "unassigned until R3.22 CI is terminal and reconciled, and C07.5 dependency sequencing is settled",
@@ -44438,7 +44438,7 @@
     "implementation_started": true,
     "implementation_started_at": "2026-10-17T00:00:33Z",
     "implementation_started_from_sha": "ccfbd24ac68afdbcb8eb79ce6ffad489f01689fb",
-    "next_action": "Commit the reviewed R3.22 source and tracker changes locally. Immediately before submission, verify origin/main still equals ccfbd24ac68afdbcb8eb79ce6ffad489f01689fb and no CI batch is active; then push R3.22 once and wait for all seven workflows, jobs, and artifacts to become terminal and reconciled. Run no local executable validation."
+    "next_action": "Immediately before submission, verify origin/main still equals ccfbd24ac68afdbcb8eb79ce6ffad489f01689fb and no CI batch is active; then push the reviewed R3.22 milestone once and wait for all seven workflows, jobs, and artifacts to become terminal and reconciled. Run no local executable validation."
   },
   "current_ci_batch": {
     "schema_version": 1,
@@ -45475,7 +45475,7 @@
     "implementation_started": true,
     "implementation_started_at": "2026-10-17T00:00:33Z",
     "implementation_started_from_sha": "ccfbd24ac68afdbcb8eb79ce6ffad489f01689fb",
-    "next_action": "Commit the reviewed R3.22 source and tracker changes locally. Immediately before submission, verify origin/main still equals ccfbd24ac68afdbcb8eb79ce6ffad489f01689fb and no CI batch is active; then push R3.22 once and wait for all seven workflows, jobs, and artifacts to become terminal and reconciled. Run no local executable validation."
+    "next_action": "Immediately before submission, verify origin/main still equals ccfbd24ac68afdbcb8eb79ce6ffad489f01689fb and no CI batch is active; then push the reviewed R3.22 milestone once and wait for all seven workflows, jobs, and artifacts to become terminal and reconciled. Run no local executable validation."
   },
   "previous_r3_18_ci_batch": {
     "superseded_by": "R3.19 current_ci_batch; the R3.18 exact-SHA batch is terminal and reconciled.",
@@ -46634,7 +46634,7 @@
     "implementation_started": true,
     "implementation_started_at": "2026-10-17T00:00:33Z",
     "implementation_started_from_sha": "ccfbd24ac68afdbcb8eb79ce6ffad489f01689fb",
-    "next_action": "Commit the reviewed R3.22 source and tracker changes locally. Immediately before submission, verify origin/main still equals ccfbd24ac68afdbcb8eb79ce6ffad489f01689fb and no CI batch is active; then push R3.22 once and wait for all seven workflows, jobs, and artifacts to become terminal and reconciled. Run no local executable validation."
+    "next_action": "Immediately before submission, verify origin/main still equals ccfbd24ac68afdbcb8eb79ce6ffad489f01689fb and no CI batch is active; then push the reviewed R3.22 milestone once and wait for all seven workflows, jobs, and artifacts to become terminal and reconciled. Run no local executable validation."
   },
   "previous_repair_milestone": {
     "id": "R2.8.149-R3.17-CANVAS-REFRESH-FOCUS-GUARD",
@@ -48828,7 +48828,7 @@
     "implementation_started": true,
     "implementation_started_at": "2026-10-17T00:00:33Z",
     "implementation_started_from_sha": "ccfbd24ac68afdbcb8eb79ce6ffad489f01689fb",
-    "next_action": "Commit the reviewed R3.22 source and tracker changes locally. Immediately before submission, verify origin/main still equals ccfbd24ac68afdbcb8eb79ce6ffad489f01689fb and no CI batch is active; then push R3.22 once and wait for all seven workflows, jobs, and artifacts to become terminal and reconciled. Run no local executable validation."
+    "next_action": "Immediately before submission, verify origin/main still equals ccfbd24ac68afdbcb8eb79ce6ffad489f01689fb and no CI batch is active; then push the reviewed R3.22 milestone once and wait for all seven workflows, jobs, and artifacts to become terminal and reconciled. Run no local executable validation."
   },
   "origin_main_sha_before_push": "a0049c751d82540a9eca12e5323c05c673beacf9",
   "last_submitted_head": "ccfbd24ac68afdbcb8eb79ce6ffad489f01689fb",
