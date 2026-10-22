@@ -167,6 +167,11 @@ impl VaultIndex {
         index
     }
 
+    /// Returns every regular vault file path (slash-separated), sorted.
+    pub fn files(&self) -> &[String] {
+        &self.files
+    }
+
     /// Returns the record for one indexed note.
     pub fn note(&self, path: &str) -> Option<&NoteRecord> {
         self.notes.get(path)

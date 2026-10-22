@@ -15,6 +15,7 @@ pub mod backend;
 pub mod commands;
 pub mod explorer;
 pub mod fuzzy;
+pub mod host;
 pub mod palette;
 pub mod panes;
 pub mod tabs;
@@ -22,6 +23,7 @@ pub mod tabs;
 pub use backend::{BacklinkRow, InMemoryBackend, LinkRow, SearchRow, WorkspaceBackend};
 pub use commands::{Command, CommandContext, CommandRegistry, ids};
 pub use explorer::{ExplorerNodeKind, ExplorerOutcome, ExplorerRow, ExplorerTree, show_explorer};
+pub use host::WorkspaceHost;
 pub use palette::{
     CommandPalette, Palette, PaletteOutcome, QuickSwitcher, QuickSwitcherOutcome,
     show_command_palette, show_quick_switcher,

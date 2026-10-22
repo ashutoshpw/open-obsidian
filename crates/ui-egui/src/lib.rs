@@ -542,6 +542,8 @@ fn run_with_desktop_services_and_session_internal(
                 storage_protection_probe: Some(Box::new(probe)),
                 open_vault_action: Some(Box::new(open_vault)),
                 external_file_opener,
+                workspace_view: std::env::var("OPENOBSIDIAN_VIEW")
+                    .is_ok_and(|view| view.eq_ignore_ascii_case("workspace")),
                 ..OpenObsidianApp::default()
             }))
         }),
@@ -645,6 +647,8 @@ struct OpenObsidianApp {
     rename_status: Option<String>,
     rename_confirmation: bool,
     uninstall_cleanup: UninstallCleanupSelection,
+    workspace_view: bool,
+    workspace_host: workspace::WorkspaceHost,
 }
 
 impl eframe::App for OpenObsidianApp {
@@ -668,10 +672,18 @@ impl OpenObsidianApp {
         self.log_ci_open_vault_availability();
         ui.heading("OpenObsidian");
         ui.label("Native Rust migration is in progress.");
-        eframe::egui::ScrollArea::vertical()
-            .id_salt("openobsidian-main-content")
-            .auto_shrink([false, false])
-            .show(ui, |ui| self.show_ui_content(ui));
+        ui.horizontal(|ui| {
+            ui.selectable_value(&mut self.workspace_view, false, "Inspector");
+            ui.selectable_value(&mut self.workspace_view, true, "Workspace");
+        });
+        if self.workspace_view {
+            self.workspace_host.show(ui, self.session.as_ref());
+        } else {
+            eframe::egui::ScrollArea::vertical()
+                .id_salt("openobsidian-main-content")
+                .auto_shrink([false, false])
+                .show(ui, |ui| self.show_ui_content(ui));
+        }
         self.poll_vault_change_hints(ui);
     }
 
