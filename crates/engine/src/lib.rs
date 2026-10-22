@@ -382,6 +382,61 @@ impl VaultSession {
         self.store.apply_rename_preview(preview)
     }
 
+    /// Creates a new Markdown note (never overwriting) and any missing parent folders.
+    ///
+    /// The cached listing is not changed; call `refresh_entries` afterwards.
+    pub fn create_note(
+        &self,
+        relative_path: impl AsRef<Path>,
+        contents: &[u8],
+    ) -> Result<VaultCreateResult, VaultError> {
+        let relative_path = normalize_portable_path(relative_path.as_ref())?;
+        if !relative_path
+            .extension()
+            .is_some_and(|extension| extension.eq_ignore_ascii_case("md"))
+        {
+            return Err(VaultError::NotMarkdownNote(relative_path));
+        }
+        if let Some(parent) = relative_path
+            .parent()
+            .filter(|parent| !parent.as_os_str().is_empty())
+        {
+            self.store.create_folder(parent)?;
+        }
+        self.store.create_new(VaultCreateRequest {
+            relative_path,
+            bytes: contents.to_vec(),
+        })
+    }
+
+    /// Creates a vault folder and missing parents, returning the normalized path.
+    ///
+    /// The cached listing is not changed; call `refresh_entries` afterwards.
+    pub fn create_folder(&self, relative_path: impl AsRef<Path>) -> Result<PathBuf, VaultError> {
+        let relative_path = normalize_portable_path(relative_path.as_ref())?;
+        self.store.create_folder(relative_path)
+    }
+
+    /// Moves a note into the vault's `.trash/` folder after checking its revision.
+    ///
+    /// Only regular `.md` files are accepted. The cached listing is not changed;
+    /// call `refresh_entries` afterwards.
+    pub fn trash_note(
+        &self,
+        relative_path: impl AsRef<Path>,
+        expected_revision_sha256: &str,
+    ) -> Result<openobsidian_vault::VaultTrashResult, VaultError> {
+        let relative_path = normalize_portable_path(relative_path.as_ref())?;
+        if !relative_path
+            .extension()
+            .is_some_and(|extension| extension.eq_ignore_ascii_case("md"))
+        {
+            return Err(VaultError::NotMarkdownNote(relative_path));
+        }
+        self.store
+            .trash_file(relative_path, expected_revision_sha256)
+    }
+
     /// Refreshes the session's Markdown listing after a committed vault operation.
     pub fn refresh_entries(&mut self) -> Result<(), VaultError> {
         self.entries = self.store.root().scan_markdown()?;

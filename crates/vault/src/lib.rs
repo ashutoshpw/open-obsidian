@@ -78,6 +78,12 @@ pub enum VaultError {
         current_revision: Option<String>,
         preserved_path: PathBuf,
     },
+    #[error("vault entry {relative_path} changed since it was read; reload before retrying")]
+    StaleRevision {
+        relative_path: PathBuf,
+        expected_revision: String,
+        current_revision: String,
+    },
     #[error(
         "create destination already exists at {relative_path}; incoming bytes were preserved at {preserved_path}"
     )]
@@ -338,6 +344,7 @@ pub struct VaultStore {
 mod configuration;
 mod history;
 mod rename_transaction;
+mod trash;
 mod watcher;
 mod write_recovery;
 pub use configuration::{
@@ -351,6 +358,7 @@ pub use history::{
 pub use rename_transaction::{
     VaultRenameRecoveryIssue, VaultRenameRecoveryReport, VaultRenameResult,
 };
+pub use trash::{VAULT_TRASH_DIRECTORY, VaultTrashResult};
 pub use watcher::{
     VaultWatchError, VaultWatchEventBatch, VaultWatchEventKind, VaultWatchHint, VaultWatchPoll,
     VaultWatcher,
@@ -2864,6 +2872,10 @@ fn scan_directory(
         }
         let path = entry.path();
         if file_type.is_dir() {
+            // Trashed notes must not reappear as live vault notes.
+            if directory == root && entry.file_name().as_os_str() == OsStr::new(".trash") {
+                continue;
+            }
             scan_directory(root, &path, output)?;
         } else if file_type.is_file()
             && path
