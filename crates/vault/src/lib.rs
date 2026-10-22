@@ -351,9 +351,9 @@ pub use configuration::{
     VaultConfiguration, VaultConfigurationFile, VaultStyleAsset, VaultStyleAssetKind,
 };
 pub use history::{
-    VaultConflictAction, VaultConflictRead, VaultConflictResolution, VaultHistoryCleanup,
-    VaultHistoryKind, VaultHistoryPlan, VaultHistoryPolicy, VaultHistoryRecord,
-    plan_history_retention,
+    VaultConflictAction, VaultConflictRead, VaultConflictResolution, VaultHistoryCapStatus,
+    VaultHistoryCleanup, VaultHistoryKind, VaultHistoryPlan, VaultHistoryPolicy,
+    VaultHistoryRecord, plan_history_retention,
 };
 pub use rename_transaction::{
     VaultRenameRecoveryIssue, VaultRenameRecoveryReport, VaultRenameResult,

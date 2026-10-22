@@ -62,6 +62,26 @@ impl VaultHistoryPolicy {
     };
 }
 
+impl VaultHistoryPolicy {
+    const BYTES_PER_GIB: u64 = 1024 * 1024 * 1024;
+
+    /// Build a policy with a configurable byte cap and age limit.
+    pub const fn new(max_age_days: u64, max_bytes: u64) -> Self {
+        Self {
+            max_age_days,
+            max_bytes,
+        }
+    }
+
+    /// Keep the default age limit but use a cap expressed in whole GiB.
+    pub const fn with_max_gib(max_gib: u64) -> Self {
+        Self {
+            max_age_days: Self::DEFAULT.max_age_days,
+            max_bytes: max_gib.saturating_mul(Self::BYTES_PER_GIB),
+        }
+    }
+}
+
 impl Default for VaultHistoryPolicy {
     fn default() -> Self {
         Self::DEFAULT
@@ -76,6 +96,38 @@ pub struct VaultHistoryPlan {
     pub retained_bytes: u64,
     pub pruneable_bytes: u64,
     pub warning: bool,
+}
+
+/// How the retained history compares with the configured byte cap.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum VaultHistoryCapStatus {
+    /// Retained history is below the warning threshold.
+    WithinCap,
+    /// Retained history uses at least 80 percent of the cap.
+    ApproachingCap,
+    /// Protected records alone exceed the cap; only explicit resolution can reduce them.
+    ProtectedOverCap,
+}
+
+impl VaultHistoryPlan {
+    /// Bytes held by protected records such as unresolved conflicts.
+    pub fn protected_bytes(&self) -> u64 {
+        self.protected
+            .iter()
+            .fold(0_u64, |total, record| total.saturating_add(record.bytes))
+    }
+
+    /// Classify retained usage against the cap so callers can warn before and after overflow.
+    pub fn cap_status(&self, policy: VaultHistoryPolicy) -> VaultHistoryCapStatus {
+        if self.protected_bytes() > policy.max_bytes {
+            return VaultHistoryCapStatus::ProtectedOverCap;
+        }
+        let threshold = policy.max_bytes / 10 * 8;
+        if policy.max_bytes > 0 && self.retained_bytes >= threshold {
+            return VaultHistoryCapStatus::ApproachingCap;
+        }
+        VaultHistoryCapStatus::WithinCap
+    }
 }
 
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
@@ -259,6 +311,41 @@ impl VaultStore {
         policy: VaultHistoryPolicy,
     ) -> Result<VaultHistoryCleanup, VaultError> {
         self.cleanup_history_at(policy, SystemTime::now())
+    }
+
+    /// Remove only the pruneable records whose ids the caller explicitly acknowledged.
+    /// Unknown ids, protected records and unacknowledged pruneable records are left untouched.
+    pub fn cleanup_history_selected(
+        &self,
+        policy: VaultHistoryPolicy,
+        acknowledged_ids: &[String],
+    ) -> Result<VaultHistoryCleanup, VaultError> {
+        self.cleanup_history_selected_at(policy, acknowledged_ids, SystemTime::now())
+    }
+
+    fn cleanup_history_selected_at(
+        &self,
+        policy: VaultHistoryPolicy,
+        acknowledged_ids: &[String],
+        now: SystemTime,
+    ) -> Result<VaultHistoryCleanup, VaultError> {
+        let plan = self.history_retention_plan(policy, now)?;
+        let mut removed = Vec::new();
+        for record in &plan.pruneable {
+            if acknowledged_ids.contains(&record.id) {
+                self.remove_history_record(record)?;
+                removed.push(record.id.clone());
+            }
+        }
+        Ok(VaultHistoryCleanup {
+            removed,
+            protected: plan
+                .protected
+                .iter()
+                .map(|record| record.id.clone())
+                .collect(),
+            warning: plan.warning,
+        })
     }
 
     fn cleanup_history_at(
@@ -1083,6 +1170,132 @@ mod tests {
                 .count(),
             2
         );
+    }
+
+    #[test]
+    fn configurable_cap_is_expressed_in_bytes_and_gib() {
+        assert_eq!(
+            VaultHistoryPolicy::with_max_gib(2),
+            VaultHistoryPolicy::new(30, 2 * 1024 * 1024 * 1024)
+        );
+        assert_eq!(
+            VaultHistoryPolicy::with_max_gib(5),
+            VaultHistoryPolicy::DEFAULT
+        );
+        assert_eq!(
+            VaultHistoryPolicy::with_max_gib(u64::MAX).max_bytes,
+            u64::MAX
+        );
+    }
+
+    #[test]
+    fn cap_status_warns_when_approaching_and_when_protected_records_overflow() {
+        let now = UNIX_EPOCH + Duration::from_secs(500 * 24 * 60 * 60);
+        let policy = VaultHistoryPolicy::new(30, 100);
+        let recent = |id: &str, bytes: u64, protected: bool| {
+            record(id, now, bytes, VaultHistoryKind::Recovery, protected)
+        };
+
+        let within = plan_history_retention(&[recent("a", 10, false)], policy, now);
+        assert_eq!(within.cap_status(policy), VaultHistoryCapStatus::WithinCap);
+
+        let approaching = plan_history_retention(&[recent("a", 80, false)], policy, now);
+        assert_eq!(
+            approaching.cap_status(policy),
+            VaultHistoryCapStatus::ApproachingCap
+        );
+
+        let overflow =
+            plan_history_retention(&[recent("a", 60, true), recent("b", 60, true)], policy, now);
+        assert_eq!(overflow.protected_bytes(), 120);
+        assert_eq!(
+            overflow.cap_status(policy),
+            VaultHistoryCapStatus::ProtectedOverCap
+        );
+        assert!(overflow.pruneable.is_empty());
+    }
+
+    #[test]
+    fn selected_cleanup_removes_only_acknowledged_pruneable_records() {
+        let (_temp, store, app_data_path) = fixture();
+        let before = store.root.read("note.md").unwrap();
+        store
+            .write(super::super::VaultWriteRequest {
+                relative_path: PathBuf::from("note.md"),
+                expected_revision_sha256: Some(before.revision_sha256),
+                bytes: b"after\n".to_vec(),
+            })
+            .unwrap();
+        let conflict = create_conflict_record(&store, b"incoming\n");
+        let policy = VaultHistoryPolicy::new(30, 0);
+        let now = SystemTime::now();
+        let plan = store.history_retention_plan(policy, now).unwrap();
+        assert_eq!(plan.pruneable.len(), 2);
+        assert_eq!(
+            plan.cap_status(policy),
+            VaultHistoryCapStatus::ProtectedOverCap
+        );
+
+        // Planning alone never mutates history.
+        assert_eq!(store.history_records().unwrap().len(), 3);
+
+        // Acknowledging nothing, an unknown id, or the protected conflict removes nothing.
+        let none = store
+            .cleanup_history_selected_at(policy, &["unknown".to_owned(), conflict.id.clone()], now)
+            .unwrap();
+        assert!(none.removed.is_empty());
+        assert_eq!(store.history_records().unwrap().len(), 3);
+
+        let chosen = plan.pruneable[0].id.clone();
+        let done = store
+            .cleanup_history_selected_at(policy, std::slice::from_ref(&chosen), now)
+            .unwrap();
+        assert_eq!(done.removed, vec![chosen]);
+        assert!(done.warning);
+        assert_eq!(store.history_records().unwrap().len(), 2);
+
+        let read = store
+            .read_conflict(&conflict.id, &conflict.relative_path)
+            .unwrap();
+        assert_eq!(read.bytes, b"incoming\n");
+        assert_eq!(
+            fs::read_dir(app_data_path.join("conflicts"))
+                .unwrap()
+                .count(),
+            2
+        );
+    }
+
+    #[test]
+    fn cleanup_fails_closed_when_a_pruneable_artifact_vanished() {
+        let (_temp, store, app_data_path) = fixture();
+        let before = store.root.read("note.md").unwrap();
+        store
+            .write(super::super::VaultWriteRequest {
+                relative_path: PathBuf::from("note.md"),
+                expected_revision_sha256: Some(before.revision_sha256),
+                bytes: b"after\n".to_vec(),
+            })
+            .unwrap();
+        let conflict = create_conflict_record(&store, b"incoming\n");
+        let policy = VaultHistoryPolicy::new(30, 0);
+        let plan = store
+            .history_retention_plan(policy, SystemTime::now())
+            .unwrap();
+        let victim = plan.pruneable[0].clone();
+        fs::remove_file(
+            app_data_path
+                .join("recovery")
+                .join(format!("{}.bin", victim.id)),
+        )
+        .unwrap();
+
+        let result = store.cleanup_history_selected(policy, &[victim.id.clone()]);
+        assert!(result.is_err());
+        let read = store
+            .read_conflict(&conflict.id, &conflict.relative_path)
+            .unwrap();
+        assert_eq!(read.bytes, b"incoming\n");
     }
 
     #[test]
