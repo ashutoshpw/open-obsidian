@@ -343,6 +343,7 @@ pub struct VaultStore {
 }
 
 mod configuration;
+mod export;
 mod history;
 mod inventory;
 mod rename_transaction;
@@ -351,6 +352,11 @@ mod watcher;
 mod write_recovery;
 pub use configuration::{
     VaultConfiguration, VaultConfigurationFile, VaultStyleAsset, VaultStyleAssetKind,
+};
+pub use export::{
+    MAX_VAULT_EXPORT_FILE_BYTES, MAX_VAULT_EXPORT_FILES, MAX_VAULT_EXPORT_LISTED_SKIPS,
+    MAX_VAULT_EXPORT_TOTAL_BYTES, VaultExportEntry, VaultExportFailure, VaultExportLimits,
+    VaultExportPreview, VaultExportResult, VaultExportSkip, VaultExportSkipReason,
 };
 pub use history::{
     VaultConflictAction, VaultConflictRead, VaultConflictResolution, VaultHistoryCapStatus,

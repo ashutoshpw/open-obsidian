@@ -21,14 +21,16 @@ pub use openobsidian_vault::{
     LinkSubpathSlice, LinkSubpathStatus, MAX_NOTE_SOURCE_PREVIEW_BYTES, MarkdownPreviewAnalysis,
     MarkdownPreviewDisposition, MarkdownUnsupportedSyntax, TransclusionBlockReason,
     TransclusionGuard, VaultBoundedRead, VaultConfiguration, VaultConflictAction,
-    VaultConflictRead, VaultConflictResolution, VaultCreateResult, VaultError, VaultFileInventory,
-    VaultFileStat, VaultHistoryCleanup, VaultHistoryKind, VaultHistoryPlan, VaultHistoryPolicy,
-    VaultHistoryRecord, VaultInlineImage, VaultLinkResolution, VaultNoteEmbedDisposition,
-    VaultNoteEmbedNode, VaultNoteEmbedReport, VaultNoteEmbedResolution, VaultReadPreview,
-    VaultRenamePreview, VaultRenameRecoveryIssue, VaultRenameRecoveryReport, VaultRenameResult,
-    VaultWatchError, VaultWatchEventBatch, VaultWatchEventKind, VaultWatchHint, VaultWatchPoll,
-    VaultWatcher, VaultWriteRecoveryIssue, VaultWriteRecoveryReport, VaultWriteRequest,
-    VaultWriteResult, analyze_markdown_preview, plan_history_retention,
+    VaultConflictRead, VaultConflictResolution, VaultCreateResult, VaultError, VaultExportEntry,
+    VaultExportFailure, VaultExportLimits, VaultExportPreview, VaultExportResult, VaultExportSkip,
+    VaultExportSkipReason, VaultFileInventory, VaultFileStat, VaultHistoryCleanup,
+    VaultHistoryKind, VaultHistoryPlan, VaultHistoryPolicy, VaultHistoryRecord, VaultInlineImage,
+    VaultLinkResolution, VaultNoteEmbedDisposition, VaultNoteEmbedNode, VaultNoteEmbedReport,
+    VaultNoteEmbedResolution, VaultReadPreview, VaultRenamePreview, VaultRenameRecoveryIssue,
+    VaultRenameRecoveryReport, VaultRenameResult, VaultWatchError, VaultWatchEventBatch,
+    VaultWatchEventKind, VaultWatchHint, VaultWatchPoll, VaultWatcher, VaultWriteRecoveryIssue,
+    VaultWriteRecoveryReport, VaultWriteRequest, VaultWriteResult, analyze_markdown_preview,
+    plan_history_retention,
 };
 use openobsidian_vault::{
     VaultCreateRequest, VaultEntry, VaultRead, VaultSnapshotEntryKind, VaultStore,
@@ -184,6 +186,28 @@ impl VaultSession {
         self.store
             .root()
             .read_regular_file_bounded(relative_path, max_bytes)
+    }
+
+    /// Plans an export of notes and Canvas files to `destination` without
+    /// writing anything: files to write, collisions, skipped entries and caps.
+    pub fn preview_export(
+        &self,
+        destination: impl AsRef<Path>,
+        limits: &VaultExportLimits,
+    ) -> Result<VaultExportPreview, VaultError> {
+        self.store.root().preview_export(destination, limits)
+    }
+
+    /// Exports notes and Canvas files byte for byte to `destination` without the
+    /// app database. Never overwrites, never follows symlinks, honors the caps.
+    pub fn export_notes_and_canvas(
+        &self,
+        destination: impl AsRef<Path>,
+        limits: &VaultExportLimits,
+    ) -> Result<VaultExportResult, VaultError> {
+        self.store
+            .root()
+            .export_notes_and_canvas(destination, limits)
     }
 
     /// Returns sorted root `.obsidian` and `.obsidian-*` directory names without writing.
