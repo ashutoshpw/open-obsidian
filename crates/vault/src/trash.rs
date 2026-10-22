@@ -4,6 +4,7 @@ use super::{
     CapabilityDir, Component, VaultError, VaultStore, json_string, next_operation_id,
     normalize_relative_path, path_to_slashes, timestamp,
 };
+use cap_fs_ext::DirExt;
 use std::ffi::OsString;
 use std::io;
 use std::path::{Path, PathBuf};
