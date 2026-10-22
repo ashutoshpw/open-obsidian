@@ -1455,15 +1455,47 @@ fn compare_group_values(
     }
 }
 
-/// Compare JSON numbers with JavaScript `Number` semantics: both operands are
-/// converted to IEEE-754 doubles first, so integers above 2^53 that round to the
-/// same double compare equal. Reference capture of this behavior is pending.
 fn compare_numbers(left: &Number, right: &Number) -> std::cmp::Ordering {
     use std::cmp::Ordering;
 
-    match (left.as_f64(), right.as_f64()) {
-        (Some(left), Some(right)) => left.partial_cmp(&right).unwrap_or(Ordering::Equal),
+    // Keep JSON integer comparisons exact above JavaScript's 2^53 safe range; TS Number rounds.
+    let integer_value = |number: &Number| {
+        number
+            .as_i64()
+            .map(i128::from)
+            .or_else(|| number.as_u64().map(i128::from))
+    };
+    match (
+        integer_value(left),
+        integer_value(right),
+        left.as_f64(),
+        right.as_f64(),
+    ) {
+        (Some(left), Some(right), _, _) => left.cmp(&right),
+        (Some(integer), None, _, Some(float)) => compare_integer_to_float(integer, float),
+        (None, Some(integer), Some(float), _) => compare_integer_to_float(integer, float).reverse(),
+        (_, _, Some(left), Some(right)) => left.partial_cmp(&right).unwrap_or(Ordering::Equal),
         _ => natural_compare(&left.to_string(), &right.to_string()),
+    }
+}
+
+fn compare_integer_to_float(integer: i128, float: f64) -> std::cmp::Ordering {
+    use std::cmp::Ordering;
+
+    const I64_MINIMUM: f64 = -9_223_372_036_854_775_808.0;
+    const U64_UPPER_BOUND: f64 = 18_446_744_073_709_551_616.0;
+    if float < I64_MINIMUM {
+        return Ordering::Greater;
+    }
+    if float >= U64_UPPER_BOUND {
+        return Ordering::Less;
+    }
+
+    let truncated = float.trunc() as i128;
+    match integer.cmp(&truncated) {
+        Ordering::Equal if float.fract() > 0.0 => Ordering::Less,
+        Ordering::Equal if float.fract() < 0.0 => Ordering::Greater,
+        order => order,
     }
 }
 
@@ -3572,13 +3604,12 @@ mod tests {
     }
 
     #[test]
-    fn integers_above_2_pow_53_compare_with_javascript_number_semantics() {
+    fn mixed_integer_float_comparison_keeps_integer_precision_for_sort_and_contains() {
         let integer = serde_json::Number::from(9_007_199_254_740_993_u64);
         let rounded_float = serde_json::Number::from_f64(9_007_199_254_740_992.0)
             .expect("finite fixture float must encode");
-        // JS Number conversion rounds 2^53 + 1 to 2^53, so the two are equal.
-        assert!(compare_numbers(&integer, &rounded_float).is_eq());
-        assert!(array_includes(
+        assert!(compare_numbers(&integer, &rounded_float).is_gt());
+        assert!(!array_includes(
             &[Value::Number(rounded_float.clone())],
             &Value::Number(integer.clone())
         ));
