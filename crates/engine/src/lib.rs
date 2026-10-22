@@ -139,8 +139,10 @@ impl VaultSession {
             .filter(|entry| entry.kind == VaultSnapshotEntryKind::File)
             .map(|entry| index::slash_path(&entry.relative_path))
             .collect();
-        let mut notes = Vec::with_capacity(self.entries.len());
-        for entry in &self.entries {
+        // Scan fresh: the cached listing is stale after notes are created or trashed.
+        let entries = self.store.root().scan_markdown()?;
+        let mut notes = Vec::with_capacity(entries.len());
+        for entry in &entries {
             let read = self.read(&entry.relative_path)?;
             notes.push((
                 index::slash_path(&entry.relative_path),

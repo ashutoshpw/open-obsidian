@@ -670,12 +670,12 @@ impl OpenObsidianApp {
         self.canvas_target_field_focus = CanvasTargetFieldFocus::default();
         self.canvas_focus_observation_request_id = None;
         self.log_ci_open_vault_availability();
-        ui.heading("OpenObsidian");
-        ui.label("Native Rust migration is in progress.");
         ui.horizontal(|ui| {
+            ui.heading("OpenObsidian");
             ui.selectable_value(&mut self.workspace_view, false, "Inspector");
             ui.selectable_value(&mut self.workspace_view, true, "Workspace");
         });
+        ui.label("Native Rust migration is in progress.");
         if self.workspace_view {
             self.workspace_host.show(ui, self.session.as_ref());
         } else {
