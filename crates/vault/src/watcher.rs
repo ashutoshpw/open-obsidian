@@ -171,10 +171,7 @@ impl VaultWatcher {
                     let hint = classify_event_for_roots(&event, &callback_roots);
                     let event_batch = if let Some(hint) = hint {
                         let root_change = hint == VaultWatchHint::RescanRequired
-                            || event
-                                .paths
-                                .iter()
-                                .any(|path| callback_roots.contains(path));
+                            || event.paths.iter().any(|path| callback_roots.contains(path));
                         Some(record_event_hint(
                             &callback_sender,
                             &callback_rescan_pending,
@@ -521,19 +518,17 @@ mod tests {
     #[test]
     fn events_under_the_canonical_form_of_a_symlinked_root_are_hints() {
         let roots = vec![PathBuf::from("/var/vault"), PathBuf::from("/private/var/vault")];
-        let event = Event::new(EventKind::Any).add_path(PathBuf::from("/private/var/vault/Note.md"));
-        let root_event = Event::new(EventKind::Any).add_path(PathBuf::from("/private/var/vault"));
-        let outside = Event::new(EventKind::Any).add_path(PathBuf::from("/private/var/other/Note.md"));
+        let at = |path: &str| Event::new(EventKind::Any).add_path(PathBuf::from(path));
 
         assert_eq!(
-            classify_event_for_roots(&event, &roots),
+            classify_event_for_roots(&at("/private/var/vault/Note.md"), &roots),
             Some(VaultWatchHint::Changed)
         );
         assert_eq!(
-            classify_event_for_roots(&root_event, &roots),
+            classify_event_for_roots(&at("/private/var/vault"), &roots),
             Some(VaultWatchHint::RescanRequired)
         );
-        assert_eq!(classify_event_for_roots(&outside, &roots), None);
+        assert_eq!(classify_event_for_roots(&at("/private/var/other/Note.md"), &roots), None);
     }
 
     #[test]
