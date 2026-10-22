@@ -1,6 +1,7 @@
 //! Native eframe application shell. Product workflows are migrated in later phases.
 
 mod markdown_math;
+pub mod workspace;
 
 use egui_commonmark::{CommonMarkCache, CommonMarkViewer};
 use markdown_math::{MathRendererCache, math_render_callback};
