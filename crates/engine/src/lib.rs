@@ -15,7 +15,11 @@ pub use bookmarks::*;
 pub use index::*;
 pub use properties::*;
 
-use openobsidian_doc::{encode_canvas, parse_canvas};
+use openobsidian_doc::encode_canvas;
+pub use openobsidian_doc::{
+    CanvasDocument, CanvasEdgeProjection, CanvasField, CanvasNodeContent, CanvasNodeProjection,
+    parse_canvas,
+};
 pub use openobsidian_vault::{
     LinkKind, LinkReference, LinkRenameAction, LinkResolution, LinkResolutionStatus,
     LinkSubpathSlice, LinkSubpathStatus, MAX_NOTE_SOURCE_PREVIEW_BYTES, MarkdownPreviewAnalysis,

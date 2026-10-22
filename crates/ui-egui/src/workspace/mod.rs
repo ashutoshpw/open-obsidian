@@ -12,6 +12,7 @@
 //! workspace, call [`Workspace::rename_path`] or [`Workspace::remove_path`].
 
 pub mod backend;
+pub mod canvas_view;
 pub mod commands;
 pub mod explorer;
 pub mod fuzzy;
