@@ -1,8 +1,10 @@
 //! Extension compatibility and capability-policy boundary.
 
+pub mod broker;
 pub mod discovery;
 pub mod manifest;
 
+pub use broker::{Capability, CapabilityBroker, Decision, PluginRef, ProposedChange};
 pub use discovery::{
     ArtifactIdentity, DiscoveredPlugin, DiscoveryLimits, DiscoveryReport, PinStatus,
     PinnedArtifacts, VaultFileSource, discover_plugins,
