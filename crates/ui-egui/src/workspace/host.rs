@@ -11,7 +11,8 @@ use super::{
 use eframe::egui;
 use egui_commonmark::{CommonMarkCache, CommonMarkViewer};
 use openobsidian_engine::{
-    IndexedLinkResolution, VaultError, VaultIndex, VaultSession, VaultWriteRequest,
+    IndexedLinkResolution, VaultError, VaultIndex, VaultRenamePreview, VaultSession,
+    VaultWriteRequest,
 };
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -118,6 +119,14 @@ impl EditorBuffer {
     }
 }
 
+/// An open rename request: the new path is previewed before anything is written.
+struct RenameDialog {
+    from: String,
+    to: String,
+    preview: Option<VaultRenamePreview>,
+    error: Option<String>,
+}
+
 /// Everything the app needs to show and drive the native workspace.
 pub struct WorkspaceHost {
     pub workspace: Workspace,
@@ -131,6 +140,7 @@ pub struct WorkspaceHost {
     editors: HashMap<String, EditorBuffer>,
     markdown_cache: CommonMarkCache,
     status: Option<String>,
+    rename: Option<RenameDialog>,
 }
 
 impl Default for WorkspaceHost {
@@ -147,6 +157,7 @@ impl Default for WorkspaceHost {
             editors: HashMap::new(),
             markdown_cache: CommonMarkCache::default(),
             status: None,
+            rename: None,
         }
     }
 }
@@ -166,11 +177,92 @@ impl WorkspaceHost {
         self.show_status_bar(ui);
         let editors = &mut self.editors;
         let cache = &mut self.markdown_cache;
+        let mut rename_request = None;
         let actions = self.workspace.show_with_editor(ui, &backend, |ui, path| {
-            show_editor(ui, editors, cache, path)
+            show_editor(ui, editors, cache, path, &mut rename_request);
         });
         for action in actions {
             self.apply_action(&session, &backend, action);
+        }
+        if let Some(from) = rename_request {
+            self.rename = Some(RenameDialog {
+                to: from.clone(),
+                from,
+                preview: None,
+                error: None,
+            });
+        }
+        self.show_rename_dialog(ui.ctx(), &session);
+    }
+
+    fn show_rename_dialog(&mut self, ctx: &egui::Context, session: &VaultSession) {
+        let Some(dialog) = &mut self.rename else {
+            return;
+        };
+        let unsaved = self.editors.values().any(EditorBuffer::dirty);
+        let mut preview_requested = false;
+        let mut apply_requested = false;
+        let mut cancel = false;
+        egui::Window::new("Rename note")
+            .collapsible(false)
+            .show(ctx, |ui| {
+                ui.label(format!("Rename {}", dialog.from));
+                if ui.text_edit_singleline(&mut dialog.to).changed() {
+                    dialog.preview = None;
+                    dialog.error = None;
+                }
+                if unsaved {
+                    ui.colored_label(
+                        ui.visuals().error_fg_color,
+                        "Save or reload every open note first; renaming rewrites links.",
+                    );
+                }
+                if let Some(error) = &dialog.error {
+                    ui.colored_label(ui.visuals().error_fg_color, error);
+                }
+                ui.horizontal(|ui| {
+                    preview_requested = ui
+                        .add_enabled(!unsaved, egui::Button::new("Preview"))
+                        .clicked();
+                    apply_requested = ui
+                        .add_enabled(
+                            !unsaved && dialog.preview.is_some(),
+                            egui::Button::new("Apply rename"),
+                        )
+                        .clicked();
+                    cancel = ui.button("Cancel").clicked();
+                });
+                if dialog.preview.is_some() {
+                    ui.label("Preview ready. Links to this note will be updated.");
+                }
+            });
+        if cancel {
+            self.rename = None;
+        } else if preview_requested {
+            match session.build_rename_preview(&dialog.from, &dialog.to) {
+                Ok(preview) => dialog.preview = Some(preview),
+                Err(error) => dialog.error = Some(error.to_string()),
+            }
+        } else if apply_requested && let Some(preview) = dialog.preview.clone() {
+            match session.apply_rename_preview(&preview) {
+                Ok(result) => {
+                    let from = dialog.from.clone();
+                    let to = result.new_path.to_string_lossy().replace('\\', "/");
+                    self.status = Some(format!(
+                        "Renamed to {to}; updated {} link(s), skipped {}",
+                        result.updated_references, result.skipped_references
+                    ));
+                    self.workspace.rename_path(&from, &to);
+                    // Linking notes were rewritten, so every buffer is re-read on demand.
+                    self.editors.clear();
+                    self.rename = None;
+                    self.request_index();
+                    if let Some(active) = self.workspace.tabs.active_path().map(str::to_owned) {
+                        self.ensure_loaded(session, &active);
+                    }
+                }
+                Err(error) => dialog.error = Some(error.to_string()),
+            }
         }
     }
 
@@ -426,10 +518,14 @@ fn show_editor(
     editors: &mut HashMap<String, EditorBuffer>,
     cache: &mut CommonMarkCache,
     path: &str,
+    rename_request: &mut Option<String>,
 ) {
     ui.horizontal(|ui| {
         ui.heading(tab_title(path));
         ui.weak(path);
+        if path.to_ascii_lowercase().ends_with(".md") && ui.button("Rename…").clicked() {
+            *rename_request = Some(path.to_owned());
+        }
     });
     let Some(buffer) = editors.get_mut(path) else {
         ui.label("Loading…");
