@@ -52,6 +52,8 @@ pub enum BaseFilter {
     All(Vec<BaseFilter>),
     Any(Vec<BaseFilter>),
     Not(Box<BaseFilter>),
+    /// A supported expression from the shared bounded grammar, kept as source text.
+    Expression(String),
     Comparison {
         field: String,
         operator: BaseComparisonOperator,
@@ -75,6 +77,8 @@ pub struct BaseView {
     pub sort: Vec<BaseSort>,
     pub group_by: Option<String>,
     pub group_by_descending: Option<bool>,
+    /// Typed `groupOrder` entries in declared order, when a valid list is declared.
+    pub group_order: Option<Vec<Value>>,
     pub limit: Option<usize>,
     pub formulas: BTreeMap<String, String>,
     fatal_invalid_source: bool,
@@ -310,6 +314,7 @@ fn parse_json_view(
         }
     }
     let (group_by, group_by_descending) = parse_json_group_by(raw.get("groupBy"), issues);
+    let group_order = parse_json_group_order(raw.get("groupOrder"), issues);
     let formulas = raw
         .get("formulas")
         .and_then(Value::as_object)
@@ -333,6 +338,7 @@ fn parse_json_view(
         sort,
         group_by,
         group_by_descending,
+        group_order,
         limit,
         formulas,
         fatal_invalid_source: false,
@@ -381,6 +387,83 @@ fn parse_json_group_by(
             ));
             (None, None)
         }
+    }
+}
+
+fn parse_json_group_order(
+    value: Option<&Value>,
+    issues: &mut Vec<BaseIssue>,
+) -> Option<Vec<Value>> {
+    match value {
+        None | Some(Value::Null) => None,
+        Some(Value::Array(entries)) => Some(entries.clone()),
+        Some(other) => {
+            issues.push(BaseIssue::new(
+                BaseIssueKind::InvalidSource,
+                "Unsupported Bases groupOrder; expected a list of values",
+                Some(other.to_string()),
+            ));
+            None
+        }
+    }
+}
+
+fn parse_native_group_order(
+    value: Option<&YamlValue>,
+    issues: &mut Vec<BaseIssue>,
+) -> Option<Vec<Value>> {
+    match value {
+        None | Some(YamlValue::Null) => None,
+        Some(YamlValue::Sequence(entries)) => {
+            let converted = entries
+                .iter()
+                .map(yaml_group_order_value)
+                .collect::<Option<Vec<_>>>();
+            if converted.is_none() {
+                issues.push(BaseIssue::new(
+                    BaseIssueKind::InvalidSource,
+                    "Unsupported Bases groupOrder entry; the list is not applied",
+                    None,
+                ));
+            }
+            converted
+        }
+        Some(other) => {
+            issues.push(BaseIssue::new(
+                BaseIssueKind::InvalidSource,
+                "Unsupported Bases groupOrder; expected a list of values",
+                Some(format!("{other:?}")),
+            ));
+            None
+        }
+    }
+}
+
+fn yaml_group_order_value(value: &YamlValue) -> Option<Value> {
+    match value {
+        YamlValue::Null => Some(Value::Null),
+        YamlValue::Boolean(value) => Some(Value::Bool(*value)),
+        YamlValue::Number(text) => {
+            if !is_native_number(text) {
+                return None;
+            }
+            let number = text.parse::<f64>().ok()?;
+            Number::from_f64(number).map(Value::Number)
+        }
+        YamlValue::String(text) => Some(Value::String(text.clone())),
+        YamlValue::Sequence(values) => values
+            .iter()
+            .map(yaml_group_order_value)
+            .collect::<Option<Vec<_>>>()
+            .map(Value::Array),
+        YamlValue::Mapping(entries) => {
+            let mut map = Map::new();
+            for entry in entries {
+                map.insert(entry.key.clone(), yaml_group_order_value(&entry.value)?);
+            }
+            Some(Value::Object(map))
+        }
+        YamlValue::Unsupported(_) => None,
     }
 }
 
@@ -447,6 +530,13 @@ fn parse_json_filter(value: &Value) -> Option<BaseFilter> {
                 operator,
                 value: object.get("value")?.clone(),
             })
+        }
+        "expression" => {
+            let source = object.get("expression")?.as_str()?;
+            if !expression_is_supported(source) {
+                return None;
+            }
+            Some(BaseFilter::Expression(source.trim().to_owned()))
         }
         _ => None,
     }
@@ -526,6 +616,7 @@ fn parse_native_view(
         .map(str::to_owned);
     let (group_by, group_by_descending, fatal_invalid_source) =
         parse_native_group_by(mapping_get(entries, "groupBy"), name.as_deref(), issues);
+    let group_order = parse_native_group_order(mapping_get(entries, "groupOrder"), issues);
 
     Ok(BaseView {
         view_type,
@@ -534,6 +625,7 @@ fn parse_native_view(
         sort,
         group_by,
         group_by_descending,
+        group_order,
         limit: mapping_get(entries, "limit").and_then(yaml_nonnegative_usize),
         formulas,
         fatal_invalid_source,
@@ -702,13 +794,27 @@ fn invalid_native_filter(message: &str, issues: &mut Vec<BaseIssue>) -> NativeFi
 }
 
 fn native_comparison(expression: &str, issues: &mut Vec<BaseIssue>) -> NativeFilterResult {
+    if let Ok(expr) = parse_expression(expression)
+        && unsupported_nodes(&expr).is_empty()
+        && !is_simple_comparison(&expr)
+    {
+        return NativeFilterResult {
+            filter: Some(BaseFilter::Expression(expression.trim().to_owned())),
+            supported: true,
+        };
+    }
     let Some((field, operator, operand)) = split_native_comparison(expression) else {
-        return invalid_native_filter(
-            &format!(
-                "Native Bases filter is outside the supported comparison subset: {expression}"
-            ),
-            issues,
-        );
+        // Awaiting reference capture: an unsupported filter is reported and, as
+        // before, not applied. It is never silently treated as supported.
+        issues.push(BaseIssue::new(
+            BaseIssueKind::InvalidFilter,
+            format!("Native Bases filter is outside the supported comparison subset: {expression}"),
+            expression_unsupported_detail(expression),
+        ));
+        return NativeFilterResult {
+            filter: None,
+            supported: false,
+        };
     };
     let operator = match operator.to_ascii_lowercase().as_str() {
         "=" | "==" => BaseComparisonOperator::Equals,
@@ -934,19 +1040,38 @@ fn evaluate_selected_base_view(
             issues,
         });
     }
+    let plan = plan_formulas(&view.formulas);
+    for name in &plan.cyclic {
+        let expression = view.formulas.get(name).cloned();
+        push_issue_once(
+            &mut issues,
+            BaseIssue::new(
+                BaseIssueKind::UnsupportedFormula,
+                format!("Bases formula dependency cycle involves formula {name}"),
+                expression,
+            ),
+        );
+    }
+    // Formulas are computed before filtering only when a filter expression can read them.
+    let needs_formulas = view.filter.as_ref().is_some_and(filter_has_expression);
     let filtered = source_rows
         .iter()
-        .filter(|row| {
-            view.filter
-                .as_ref()
-                .is_none_or(|filter| matches_filter(filter, row))
+        .filter(|row| match &view.filter {
+            None => true,
+            Some(filter) if needs_formulas => {
+                let mut scratch = Vec::new();
+                let evaluated = evaluate_row(row, &view, &plan, &mut scratch);
+                matches_filter(filter, row, Some(&evaluated.values))
+            }
+            Some(filter) => matches_filter(filter, row, None),
         })
-        .map(|row| evaluate_row(row, &view, &mut issues))
+        .map(|row| evaluate_row(row, &view, &plan, &mut issues))
         .collect::<Vec<_>>();
     if filtered.is_empty() {
         for expression in view.formulas.values() {
             let trimmed_expression = expression.trim();
             if !is_obviously_unsupported_formula(trimmed_expression)
+                || expression_is_supported(trimmed_expression)
                 || source_rows
                     .iter()
                     .any(|row| field_value(row, trimmed_expression).is_some())
@@ -975,25 +1100,19 @@ fn evaluate_selected_base_view(
     let mut group_sort_values = Vec::<Option<Value>>::new();
     let mut group_indices = BTreeMap::<String, usize>::new();
     if let Some(field) = &view.group_by {
-        let field = normalize_field(field);
         for row in &rows {
-            let value = row
-                .values
-                .get(field)
+            let value = evaluated_value(&row.values, field)
                 .filter(|value| !value.is_null())
                 .cloned();
-            let key = value
-                .as_ref()
-                .map_or_else(|| "missing".to_owned(), |value| format!("value:{value}"));
+            let key = group_identity(value.as_ref());
             let index = match group_indices.get(&key) {
                 Some(index) => *index,
                 None => {
                     let index = groups.len();
                     group_indices.insert(key.clone(), index);
-                    let group_label = value.as_ref().map_or_else(|| "None".to_owned(), js_string);
-                    group_sort_values.push(value);
+                    group_sort_values.push(value.clone());
                     groups.push(BaseGroup {
-                        key: group_label,
+                        key: group_label(value.as_ref()),
                         rows: Vec::new(),
                     });
                     index
@@ -1001,8 +1120,33 @@ fn evaluate_selected_base_view(
             };
             groups[index].rows.push(row.clone());
         }
+        if let Some(order) = &view.group_order {
+            let mut slots = groups.into_iter().map(Some).collect::<Vec<_>>();
+            let mut ordered = Vec::<BaseGroup>::new();
+            let mut seen = Vec::<String>::new();
+            for listed in order {
+                let listed = Some(listed).filter(|value| !value.is_null());
+                let key = group_identity(listed);
+                if seen.contains(&key) {
+                    continue;
+                }
+                seen.push(key.clone());
+                let existing = group_indices
+                    .get(&key)
+                    .and_then(|index| slots.get_mut(*index))
+                    .and_then(Option::take);
+                ordered.push(existing.unwrap_or_else(|| BaseGroup {
+                    key: group_label(listed),
+                    rows: Vec::new(),
+                }));
+            }
+            groups = ordered;
+            group_sort_values.clear();
+        }
     }
-    if let Some(descending) = view.group_by_descending {
+    if view.group_order.is_none()
+        && let Some(descending) = view.group_by_descending
+    {
         let mut ordered_groups = groups
             .into_iter()
             .zip(group_sort_values)
@@ -1017,6 +1161,32 @@ fn evaluate_selected_base_view(
         rows,
         groups,
         issues,
+    })
+}
+
+/// Typed group identity: JS-number equality for numbers, distinct types stay distinct.
+fn group_identity(value: Option<&Value>) -> String {
+    match value {
+        None | Some(Value::Null) => "missing".to_owned(),
+        Some(Value::Number(number)) => format!("number:{}", js_number_value_string(number)),
+        Some(Value::String(text)) => format!("string:{text}"),
+        Some(Value::Bool(flag)) => format!("bool:{flag}"),
+        Some(other) => format!("value:{other}"),
+    }
+}
+
+fn group_label(value: Option<&Value>) -> String {
+    value
+        .filter(|value| !value.is_null())
+        .map_or_else(|| "None".to_owned(), js_string)
+}
+
+/// Look up an evaluated value by field name, accepting `note.` and `formula.` prefixes.
+fn evaluated_value<'a>(values: &'a Map<String, Value>, field: &str) -> Option<&'a Value> {
+    values.get(normalize_field(field)).or_else(|| {
+        field
+            .strip_prefix("formula.")
+            .and_then(|name| values.get(name))
     })
 }
 
@@ -1044,11 +1214,20 @@ fn file_extension(path: &str) -> String {
         .to_owned()
 }
 
-fn matches_filter(filter: &BaseFilter, row: &BaseRow) -> bool {
+fn matches_filter(
+    filter: &BaseFilter,
+    row: &BaseRow,
+    formulas: Option<&Map<String, Value>>,
+) -> bool {
     match filter {
-        BaseFilter::All(filters) => filters.iter().all(|filter| matches_filter(filter, row)),
-        BaseFilter::Any(filters) => filters.iter().any(|filter| matches_filter(filter, row)),
-        BaseFilter::Not(filter) => !matches_filter(filter, row),
+        BaseFilter::All(filters) => filters
+            .iter()
+            .all(|filter| matches_filter(filter, row, formulas)),
+        BaseFilter::Any(filters) => filters
+            .iter()
+            .any(|filter| matches_filter(filter, row, formulas)),
+        BaseFilter::Not(filter) => !matches_filter(filter, row, formulas),
+        BaseFilter::Expression(source) => expression_matches(source, row, formulas),
         BaseFilter::Comparison {
             field,
             operator,
@@ -1101,7 +1280,12 @@ fn array_includes(values: &[Value], needle: &Value) -> bool {
     }
 }
 
-fn evaluate_row(row: &BaseRow, view: &BaseView, issues: &mut Vec<BaseIssue>) -> EvaluatedBaseRow {
+fn evaluate_row(
+    row: &BaseRow,
+    view: &BaseView,
+    plan: &FormulaPlan,
+    issues: &mut Vec<BaseIssue>,
+) -> EvaluatedBaseRow {
     let mut values = row.properties.clone();
     values.insert("file.path".to_owned(), Value::String(row.path.clone()));
     values.insert(
@@ -1112,11 +1296,18 @@ fn evaluate_row(row: &BaseRow, view: &BaseView, issues: &mut Vec<BaseIssue>) -> 
         "file.ext".to_owned(),
         Value::String(file_extension(&row.path)),
     );
-    for (name, expression) in &view.formulas {
-        // A formula owns its output name. If it cannot be evaluated, a
-        // same-named source property must not masquerade as the formula value.
+    // A formula owns its output name. If it cannot be evaluated, a
+    // same-named source property must not masquerade as the formula value.
+    for name in view.formulas.keys() {
         values.remove(name);
-        match formula_value(expression, row) {
+    }
+    for name in &plan.order {
+        let Some(expression) = view.formulas.get(name) else {
+            continue;
+        };
+        let computed = formula_value(expression, row)
+            .or_else(|| expression_formula_value(expression, row, &values));
+        match computed {
             Some(value) => {
                 values.insert(name.clone(), value);
             }
@@ -1220,9 +1411,8 @@ fn compare_rows(
     sorts: &[BaseSort],
 ) -> std::cmp::Ordering {
     for sort in sorts {
-        let field = normalize_field(&sort.field);
-        let left_value = left.values.get(field);
-        let right_value = right.values.get(field);
+        let left_value = evaluated_value(&left.values, &sort.field);
+        let right_value = evaluated_value(&right.values, &sort.field);
         let order = compare_values(left_value, right_value);
         if order != std::cmp::Ordering::Equal {
             return if sort.descending {
@@ -1265,55 +1455,61 @@ fn compare_group_values(
     }
 }
 
+/// Compare JSON numbers with JavaScript `Number` semantics: both operands are
+/// converted to IEEE-754 doubles first, so integers above 2^53 that round to the
+/// same double compare equal. Reference capture of this behavior is pending.
 fn compare_numbers(left: &Number, right: &Number) -> std::cmp::Ordering {
     use std::cmp::Ordering;
 
-    // Keep JSON integer comparisons exact above JavaScript's 2^53 safe range; TS Number rounds.
-    let integer_value = |number: &Number| {
-        number
-            .as_i64()
-            .map(i128::from)
-            .or_else(|| number.as_u64().map(i128::from))
-    };
-    match (
-        integer_value(left),
-        integer_value(right),
-        left.as_f64(),
-        right.as_f64(),
-    ) {
-        (Some(left), Some(right), _, _) => left.cmp(&right),
-        (Some(integer), None, _, Some(float)) => compare_integer_to_float(integer, float),
-        (None, Some(integer), Some(float), _) => compare_integer_to_float(integer, float).reverse(),
-        (_, _, Some(left), Some(right)) => left.partial_cmp(&right).unwrap_or(Ordering::Equal),
+    match (left.as_f64(), right.as_f64()) {
+        (Some(left), Some(right)) => left.partial_cmp(&right).unwrap_or(Ordering::Equal),
         _ => natural_compare(&left.to_string(), &right.to_string()),
     }
 }
 
-fn compare_integer_to_float(integer: i128, float: f64) -> std::cmp::Ordering {
-    use std::cmp::Ordering;
-
-    const I64_MINIMUM: f64 = -9_223_372_036_854_775_808.0;
-    const U64_UPPER_BOUND: f64 = 18_446_744_073_709_551_616.0;
-    if float < I64_MINIMUM {
-        return Ordering::Greater;
+/// Format a double the way JavaScript `String(number)` does for finite values.
+fn js_number_string(value: f64) -> String {
+    if value == 0.0 {
+        return "0".to_owned();
     }
-    if float >= U64_UPPER_BOUND {
-        return Ordering::Less;
+    let magnitude = value.abs();
+    if magnitude >= 1e21 {
+        let text = format!("{value:e}");
+        return match text.find('e') {
+            Some(index) if !text[index + 1..].starts_with('-') => {
+                format!("{}e+{}", &text[..index], &text[index + 1..])
+            }
+            _ => text,
+        };
     }
-
-    let truncated = float.trunc() as i128;
-    match integer.cmp(&truncated) {
-        Ordering::Equal if float.fract() > 0.0 => Ordering::Less,
-        Ordering::Equal if float.fract() < 0.0 => Ordering::Greater,
-        order => order,
+    if magnitude < 1e-6 {
+        return format!("{value:e}");
     }
+    format!("{value}")
 }
+
+fn js_number_value_string(number: &Number) -> String {
+    number
+        .as_f64()
+        .map_or_else(|| number.to_string(), js_number_string)
+}
+
+/// Locale policy for string ordering in Bases comparisons.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum BaseLocalePolicy {
+    /// Unicode lowercase plus natural digit runs, independent of the host locale.
+    DeterministicUnicodeNatural,
+}
+
+/// The locale policy currently applied. ICU-grade collation matching the
+/// reference runtime is awaiting reference capture and is not claimed.
+pub const BASE_LOCALE_POLICY: BaseLocalePolicy = BaseLocalePolicy::DeterministicUnicodeNatural;
 
 fn js_string(value: &Value) -> String {
     match value {
         Value::Null => "null".to_owned(),
         Value::Bool(value) => value.to_string(),
-        Value::Number(value) => value.to_string(),
+        Value::Number(value) => js_number_value_string(value),
         Value::String(value) => value.clone(),
         Value::Array(values) => values
             .iter()
@@ -1385,6 +1581,888 @@ fn digit_run_end(value: &[char], start: usize) -> usize {
         .iter()
         .position(|character| !character.is_ascii_digit())
         .map_or(value.len(), |offset| start + offset)
+}
+
+// ---------------------------------------------------------------------------
+// Bounded shared expression grammar (filters and formulas).
+//
+// Supported set, frozen for this phase (reference parity awaiting capture):
+//   literals: numbers, "strings", 'strings', true, false, null
+//   operators: ! - * / % + - == != > >= < <= && || and parentheses
+//   access: property, note.prop, file.path|name|ext, formula.name, x.y, x["y"], x[0]
+//   functions: if, min, max, number, abs, floor, ceil
+//   methods: contains, startsWith, endsWith, isEmpty, lower, upper, trim,
+//            toString, abs, floor, ceil; `.length` on strings and lists
+// Everything else (dates, durations, plugin functions, `this`) is reported as
+// an unsupported node and never evaluated to null.
+// ---------------------------------------------------------------------------
+
+const MAX_EXPRESSION_BYTES: usize = 2048;
+const MAX_EXPRESSION_DEPTH: usize = 32;
+const MAX_EXPRESSION_NODES: usize = 256;
+const MAX_EXPRESSION_ARGS: usize = 8;
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+enum ExprBinaryOp {
+    Add,
+    Sub,
+    Mul,
+    Div,
+    Rem,
+    Eq,
+    Ne,
+    Gt,
+    Ge,
+    Lt,
+    Le,
+    And,
+    Or,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+enum Expr {
+    Literal(Value),
+    Ident(String),
+    Member(Box<Expr>, String),
+    Index(Box<Expr>, Box<Expr>),
+    Not(Box<Expr>),
+    Negate(Box<Expr>),
+    Binary(ExprBinaryOp, Box<Expr>, Box<Expr>),
+    Call(String, Vec<Expr>),
+    Method(Box<Expr>, String, Vec<Expr>),
+}
+
+#[derive(Clone, Debug, PartialEq)]
+enum ExprToken {
+    Number(f64),
+    Text(String),
+    Ident(String),
+    Punct(&'static str),
+}
+
+fn tokenize_expression(source: &str) -> Result<Vec<ExprToken>, String> {
+    const TWO: &[&str] = &["==", "!=", ">=", "<=", "&&", "||"];
+    const ONE: &[&str] = &[
+        "(", ")", "[", "]", ",", ".", "!", "-", "+", "*", "/", "%", ">", "<",
+    ];
+    let chars = source.chars().collect::<Vec<_>>();
+    let mut tokens = Vec::new();
+    let mut index = 0usize;
+    while index < chars.len() {
+        if tokens.len() > MAX_EXPRESSION_NODES * 2 {
+            return Err("expression has too many tokens".to_owned());
+        }
+        let current = chars[index];
+        if current.is_whitespace() {
+            index += 1;
+            continue;
+        }
+        let next_is_digit = chars.get(index + 1).is_some_and(char::is_ascii_digit);
+        if current.is_ascii_digit() || (current == '.' && next_is_digit) {
+            let start = index;
+            while chars.get(index).is_some_and(char::is_ascii_digit) {
+                index += 1;
+            }
+            if chars.get(index) == Some(&'.') {
+                index += 1;
+                while chars.get(index).is_some_and(char::is_ascii_digit) {
+                    index += 1;
+                }
+            }
+            if matches!(chars.get(index), Some(&'e') | Some(&'E')) {
+                let mut probe = index + 1;
+                if matches!(chars.get(probe), Some(&'+') | Some(&'-')) {
+                    probe += 1;
+                }
+                if chars.get(probe).is_some_and(char::is_ascii_digit) {
+                    while chars.get(probe).is_some_and(char::is_ascii_digit) {
+                        probe += 1;
+                    }
+                    index = probe;
+                }
+            }
+            let text = chars[start..index].iter().collect::<String>();
+            let number = text
+                .parse::<f64>()
+                .map_err(|_| format!("invalid number {text}"))?;
+            if !number.is_finite() {
+                return Err(format!("number {text} is not finite"));
+            }
+            tokens.push(ExprToken::Number(number));
+            continue;
+        }
+        if current == '"' || current == '\'' {
+            let quote = current;
+            index += 1;
+            let mut text = String::new();
+            let mut closed = false;
+            while index < chars.len() {
+                let character = chars[index];
+                index += 1;
+                if character == quote {
+                    closed = true;
+                    break;
+                }
+                if character == '\\' {
+                    let Some(escaped) = chars.get(index) else {
+                        return Err("unterminated escape in string".to_owned());
+                    };
+                    index += 1;
+                    match escaped {
+                        'n' => text.push('\n'),
+                        't' => text.push('\t'),
+                        '\\' | '"' | '\'' => text.push(*escaped),
+                        other => return Err(format!("unsupported string escape \\{other}")),
+                    }
+                } else {
+                    text.push(character);
+                }
+            }
+            if !closed {
+                return Err("unterminated string".to_owned());
+            }
+            tokens.push(ExprToken::Text(text));
+            continue;
+        }
+        if current.is_alphabetic() || current == '_' || current == '$' {
+            let start = index;
+            while chars
+                .get(index)
+                .is_some_and(|c| c.is_alphanumeric() || *c == '_' || *c == '$')
+            {
+                index += 1;
+            }
+            tokens.push(ExprToken::Ident(chars[start..index].iter().collect()));
+            continue;
+        }
+        let pair = chars
+            .get(index..index + 2)
+            .map(|pair| pair.iter().collect::<String>());
+        if let Some(pair) = pair
+            && let Some(found) = TWO.iter().find(|candidate| **candidate == pair)
+        {
+            tokens.push(ExprToken::Punct(*found));
+            index += 2;
+            continue;
+        }
+        let single = current.to_string();
+        if let Some(found) = ONE.iter().find(|candidate| **candidate == single) {
+            tokens.push(ExprToken::Punct(*found));
+            index += 1;
+            continue;
+        }
+        return Err(format!("unsupported character {current:?}"));
+    }
+    Ok(tokens)
+}
+
+struct ExprParser {
+    tokens: Vec<ExprToken>,
+    position: usize,
+    depth: usize,
+    nodes: usize,
+}
+
+impl ExprParser {
+    fn is_punct(&self, text: &str) -> bool {
+        matches!(self.tokens.get(self.position), Some(ExprToken::Punct(found)) if *found == text)
+    }
+
+    fn eat(&mut self, text: &str) -> bool {
+        if self.is_punct(text) {
+            self.position += 1;
+            true
+        } else {
+            false
+        }
+    }
+
+    fn expect(&mut self, text: &str) -> Result<(), String> {
+        if self.eat(text) {
+            Ok(())
+        } else {
+            Err(format!("expected {text}"))
+        }
+    }
+
+    fn count_node(&mut self) -> Result<(), String> {
+        self.nodes += 1;
+        if self.nodes > MAX_EXPRESSION_NODES {
+            Err("expression has too many nodes".to_owned())
+        } else {
+            Ok(())
+        }
+    }
+
+    fn parse_binary_level(&mut self, level: usize) -> Result<Expr, String> {
+        const LEVELS: [&[(&str, ExprBinaryOp)]; 6] = [
+            &[("||", ExprBinaryOp::Or)],
+            &[("&&", ExprBinaryOp::And)],
+            &[("==", ExprBinaryOp::Eq), ("!=", ExprBinaryOp::Ne)],
+            &[
+                (">=", ExprBinaryOp::Ge),
+                ("<=", ExprBinaryOp::Le),
+                (">", ExprBinaryOp::Gt),
+                ("<", ExprBinaryOp::Lt),
+            ],
+            &[("+", ExprBinaryOp::Add), ("-", ExprBinaryOp::Sub)],
+            &[
+                ("*", ExprBinaryOp::Mul),
+                ("/", ExprBinaryOp::Div),
+                ("%", ExprBinaryOp::Rem),
+            ],
+        ];
+        if level >= LEVELS.len() {
+            return self.parse_unary();
+        }
+        let mut left = self.parse_binary_level(level + 1)?;
+        loop {
+            let matched = LEVELS[level]
+                .iter()
+                .find(|entry| self.is_punct(entry.0))
+                .map(|entry| entry.1);
+            let Some(operator) = matched else {
+                break;
+            };
+            self.position += 1;
+            let right = self.parse_binary_level(level + 1)?;
+            self.count_node()?;
+            left = Expr::Binary(operator, Box::new(left), Box::new(right));
+        }
+        Ok(left)
+    }
+
+    fn parse_unary(&mut self) -> Result<Expr, String> {
+        self.depth += 1;
+        if self.depth > MAX_EXPRESSION_DEPTH {
+            return Err("expression is nested too deeply".to_owned());
+        }
+        let result = self.parse_unary_inner();
+        self.depth -= 1;
+        result
+    }
+
+    fn parse_unary_inner(&mut self) -> Result<Expr, String> {
+        if self.eat("!") {
+            let inner = self.parse_unary()?;
+            self.count_node()?;
+            return Ok(Expr::Not(Box::new(inner)));
+        }
+        if self.eat("-") {
+            let inner = self.parse_unary()?;
+            self.count_node()?;
+            return Ok(Expr::Negate(Box::new(inner)));
+        }
+        self.parse_postfix()
+    }
+
+    fn parse_postfix(&mut self) -> Result<Expr, String> {
+        let mut expr = self.parse_primary()?;
+        loop {
+            if self.eat(".") {
+                let Some(ExprToken::Ident(name)) = self.tokens.get(self.position).cloned() else {
+                    return Err("expected a name after '.'".to_owned());
+                };
+                self.position += 1;
+                self.count_node()?;
+                if self.eat("(") {
+                    let args = self.parse_args()?;
+                    expr = Expr::Method(Box::new(expr), name, args);
+                } else {
+                    expr = Expr::Member(Box::new(expr), name);
+                }
+            } else if self.eat("[") {
+                let index = self.parse_binary_level(0)?;
+                self.expect("]")?;
+                self.count_node()?;
+                expr = Expr::Index(Box::new(expr), Box::new(index));
+            } else {
+                break;
+            }
+        }
+        Ok(expr)
+    }
+
+    fn parse_args(&mut self) -> Result<Vec<Expr>, String> {
+        let mut args = Vec::new();
+        if self.eat(")") {
+            return Ok(args);
+        }
+        loop {
+            args.push(self.parse_binary_level(0)?);
+            if args.len() > MAX_EXPRESSION_ARGS {
+                return Err("too many call arguments".to_owned());
+            }
+            if self.eat(",") {
+                continue;
+            }
+            self.expect(")")?;
+            return Ok(args);
+        }
+    }
+
+    fn parse_primary(&mut self) -> Result<Expr, String> {
+        self.count_node()?;
+        let Some(token) = self.tokens.get(self.position).cloned() else {
+            return Err("unexpected end of expression".to_owned());
+        };
+        match token {
+            ExprToken::Number(number) => {
+                self.position += 1;
+                Number::from_f64(number)
+                    .map(|number| Expr::Literal(Value::Number(number)))
+                    .ok_or_else(|| "number is not finite".to_owned())
+            }
+            ExprToken::Text(text) => {
+                self.position += 1;
+                Ok(Expr::Literal(Value::String(text)))
+            }
+            ExprToken::Ident(name) => {
+                self.position += 1;
+                match name.as_str() {
+                    "true" => return Ok(Expr::Literal(Value::Bool(true))),
+                    "false" => return Ok(Expr::Literal(Value::Bool(false))),
+                    "null" => return Ok(Expr::Literal(Value::Null)),
+                    _ => {}
+                }
+                if self.eat("(") {
+                    let args = self.parse_args()?;
+                    Ok(Expr::Call(name, args))
+                } else {
+                    Ok(Expr::Ident(name))
+                }
+            }
+            ExprToken::Punct("(") => {
+                self.position += 1;
+                let inner = self.parse_binary_level(0)?;
+                self.expect(")")?;
+                Ok(inner)
+            }
+            ExprToken::Punct(other) => Err(format!("unexpected token {other}")),
+        }
+    }
+}
+
+/// Parse one expression within the fixed size, depth and node bounds.
+fn parse_expression(source: &str) -> Result<Expr, String> {
+    if source.len() > MAX_EXPRESSION_BYTES {
+        return Err("expression is too long".to_owned());
+    }
+    let tokens = tokenize_expression(source)?;
+    if tokens.is_empty() {
+        return Err("expression is empty".to_owned());
+    }
+    let mut parser = ExprParser {
+        tokens,
+        position: 0,
+        depth: 0,
+        nodes: 0,
+    };
+    let expr = parser.parse_binary_level(0)?;
+    if parser.position != parser.tokens.len() {
+        return Err("unexpected trailing tokens".to_owned());
+    }
+    Ok(expr)
+}
+
+fn is_namespace(name: &str) -> bool {
+    matches!(name, "file" | "note" | "formula")
+}
+
+/// List every node outside the frozen supported set.
+fn unsupported_nodes(expr: &Expr) -> Vec<String> {
+    let mut found = Vec::new();
+    collect_unsupported_nodes(expr, &mut found);
+    found
+}
+
+fn collect_unsupported_nodes(expr: &Expr, found: &mut Vec<String>) {
+    match expr {
+        Expr::Literal(_) => {}
+        Expr::Ident(name) => {
+            if name == "this" {
+                found.push("this (deferred)".to_owned());
+            }
+        }
+        Expr::Member(receiver, name) => {
+            if let Expr::Ident(namespace) = receiver.as_ref()
+                && namespace == "file"
+                && !matches!(name.as_str(), "path" | "name" | "ext")
+            {
+                found.push(format!("file.{name}"));
+            }
+            collect_unsupported_nodes(receiver, found);
+        }
+        Expr::Index(receiver, index) => {
+            collect_unsupported_nodes(receiver, found);
+            collect_unsupported_nodes(index, found);
+        }
+        Expr::Not(inner) | Expr::Negate(inner) => collect_unsupported_nodes(inner, found),
+        Expr::Binary(_, left, right) => {
+            collect_unsupported_nodes(left, found);
+            collect_unsupported_nodes(right, found);
+        }
+        Expr::Call(name, args) => {
+            let arity_ok = match name.as_str() {
+                "if" => args.len() == 3,
+                "min" | "max" => !args.is_empty(),
+                "number" | "abs" | "floor" | "ceil" => args.len() == 1,
+                _ => false,
+            };
+            if !arity_ok {
+                found.push(format!("{name}()"));
+            }
+            for arg in args {
+                collect_unsupported_nodes(arg, found);
+            }
+        }
+        Expr::Method(receiver, name, args) => {
+            let arity_ok = match name.as_str() {
+                "contains" | "startsWith" | "endsWith" => args.len() == 1,
+                "isEmpty" | "lower" | "upper" | "trim" | "toString" | "abs" | "floor" | "ceil" => {
+                    args.is_empty()
+                }
+                _ => false,
+            };
+            if !arity_ok {
+                found.push(format!(".{name}()"));
+            }
+            collect_unsupported_nodes(receiver, found);
+            for arg in args {
+                collect_unsupported_nodes(arg, found);
+            }
+        }
+    }
+}
+
+/// True when the expression parses and uses only supported nodes.
+fn expression_is_supported(source: &str) -> bool {
+    parse_expression(source).is_ok_and(|expr| unsupported_nodes(&expr).is_empty())
+}
+
+/// Describe why an expression is outside the grammar, when it can be said.
+fn expression_unsupported_detail(source: &str) -> Option<String> {
+    match parse_expression(source) {
+        Ok(expr) => {
+            let nodes = unsupported_nodes(&expr);
+            if nodes.is_empty() {
+                None
+            } else {
+                Some(format!("unsupported: {}", nodes.join(", ")))
+            }
+        }
+        Err(reason) => Some(format!("not parsed: {reason}")),
+    }
+}
+
+/// A plain `field OP literal` comparison, handled by the structured comparison path.
+fn is_simple_comparison(expr: &Expr) -> bool {
+    fn is_field(expr: &Expr) -> bool {
+        match expr {
+            Expr::Ident(_) => true,
+            Expr::Member(receiver, _) => {
+                !matches!(receiver.as_ref(), Expr::Ident(name) if name == "formula")
+                    && is_field(receiver)
+            }
+            _ => false,
+        }
+    }
+    match expr {
+        Expr::Binary(operator, left, right) => {
+            matches!(
+                operator,
+                ExprBinaryOp::Eq
+                    | ExprBinaryOp::Ne
+                    | ExprBinaryOp::Gt
+                    | ExprBinaryOp::Ge
+                    | ExprBinaryOp::Lt
+                    | ExprBinaryOp::Le
+            ) && is_field(left)
+                && matches!(right.as_ref(), Expr::Literal(_))
+        }
+        _ => false,
+    }
+}
+
+/// Names of `formula.<name>` references in an expression.
+fn collect_formula_references(expr: &Expr, names: &mut Vec<String>) {
+    match expr {
+        Expr::Literal(_) | Expr::Ident(_) => {}
+        Expr::Member(receiver, name) => {
+            if let Expr::Ident(namespace) = receiver.as_ref()
+                && namespace == "formula"
+            {
+                names.push(name.clone());
+            }
+            collect_formula_references(receiver, names);
+        }
+        Expr::Index(receiver, index) => {
+            if let Expr::Ident(namespace) = receiver.as_ref()
+                && namespace == "formula"
+                && let Expr::Literal(Value::String(name)) = index.as_ref()
+            {
+                names.push(name.clone());
+            }
+            collect_formula_references(receiver, names);
+            collect_formula_references(index, names);
+        }
+        Expr::Not(inner) | Expr::Negate(inner) => collect_formula_references(inner, names),
+        Expr::Binary(_, left, right) => {
+            collect_formula_references(left, names);
+            collect_formula_references(right, names);
+        }
+        Expr::Call(_, args) => {
+            for arg in args {
+                collect_formula_references(arg, names);
+            }
+        }
+        Expr::Method(receiver, _, args) => {
+            collect_formula_references(receiver, names);
+            for arg in args {
+                collect_formula_references(arg, names);
+            }
+        }
+    }
+}
+
+/// Deterministic formula evaluation order; formulas in a cycle (or depending on
+/// one) are listed in `cyclic` and are never evaluated.
+struct FormulaPlan {
+    order: Vec<String>,
+    cyclic: Vec<String>,
+}
+
+fn plan_formulas(formulas: &BTreeMap<String, String>) -> FormulaPlan {
+    let mut remaining = Vec::<(&String, Vec<String>)>::new();
+    for (name, expression) in formulas {
+        let mut references = Vec::new();
+        if let Ok(expr) = parse_expression(expression) {
+            collect_formula_references(&expr, &mut references);
+        }
+        references.retain(|reference| formulas.contains_key(reference));
+        remaining.push((name, references));
+    }
+    let mut order = Vec::<String>::new();
+    loop {
+        let ready = remaining.iter().position(|(_, references)| {
+            references.iter().all(|reference| order.contains(reference))
+        });
+        let Some(position) = ready else {
+            break;
+        };
+        let (name, _) = remaining.remove(position);
+        order.push(name.clone());
+    }
+    let cyclic = remaining
+        .into_iter()
+        .map(|(name, _)| name.clone())
+        .collect();
+    FormulaPlan { order, cyclic }
+}
+
+struct ExprContext<'a> {
+    row: &'a BaseRow,
+    formulas: Option<&'a Map<String, Value>>,
+}
+
+fn is_truthy(value: &Value) -> bool {
+    match value {
+        Value::Null => false,
+        Value::Bool(flag) => *flag,
+        Value::Number(number) => number.as_f64().is_some_and(|number| number != 0.0),
+        Value::String(text) => !text.is_empty(),
+        Value::Array(_) | Value::Object(_) => true,
+    }
+}
+
+fn expr_number(value: &Value) -> Result<f64, String> {
+    value
+        .as_f64()
+        .ok_or_else(|| "operand is not a number".to_owned())
+}
+
+fn number_result(value: f64) -> Result<Value, String> {
+    Number::from_f64(value)
+        .map(Value::Number)
+        .ok_or_else(|| "result is not a finite number".to_owned())
+}
+
+fn values_equal(left: &Value, right: &Value) -> bool {
+    match (left, right) {
+        (Value::Number(left), Value::Number(right)) => compare_numbers(left, right).is_eq(),
+        _ => left == right,
+    }
+}
+
+fn namespace_member(
+    namespace: &str,
+    name: &str,
+    context: &ExprContext<'_>,
+) -> Result<Value, String> {
+    match namespace {
+        "file" => field_value(context.row, &format!("file.{name}"))
+            .filter(|_| matches!(name, "path" | "name" | "ext"))
+            .ok_or_else(|| format!("file.{name} is not supported")),
+        "formula" => context
+            .formulas
+            .and_then(|values| values.get(name))
+            .cloned()
+            .ok_or_else(|| format!("formula {name} is not available")),
+        _ => Ok(context
+            .row
+            .properties
+            .get(name)
+            .cloned()
+            .unwrap_or(Value::Null)),
+    }
+}
+
+fn member_of(value: &Value, name: &str) -> Value {
+    match value {
+        Value::Object(map) => map.get(name).cloned().unwrap_or(Value::Null),
+        Value::String(text) if name == "length" => Value::from(text.encode_utf16().count()),
+        Value::Array(items) if name == "length" => Value::from(items.len()),
+        _ => Value::Null,
+    }
+}
+
+fn eval_expression(expr: &Expr, context: &ExprContext<'_>) -> Result<Value, String> {
+    match expr {
+        Expr::Literal(value) => Ok(value.clone()),
+        Expr::Ident(name) => {
+            if is_namespace(name) || name == "this" {
+                Err(format!("{name} cannot be used as a value"))
+            } else {
+                Ok(context
+                    .row
+                    .properties
+                    .get(name)
+                    .cloned()
+                    .unwrap_or(Value::Null))
+            }
+        }
+        Expr::Member(receiver, name) => {
+            if let Expr::Ident(namespace) = receiver.as_ref()
+                && is_namespace(namespace)
+            {
+                return namespace_member(namespace, name, context);
+            }
+            Ok(member_of(&eval_expression(receiver, context)?, name))
+        }
+        Expr::Index(receiver, index) => {
+            let index = eval_expression(index, context)?;
+            if let Expr::Ident(namespace) = receiver.as_ref()
+                && is_namespace(namespace)
+            {
+                return match index.as_str() {
+                    Some(name) => namespace_member(namespace, name, context),
+                    None => Err("namespace index must be a string".to_owned()),
+                };
+            }
+            let receiver = eval_expression(receiver, context)?;
+            Ok(match (&receiver, &index) {
+                (Value::Object(map), Value::String(name)) => {
+                    map.get(name).cloned().unwrap_or(Value::Null)
+                }
+                (Value::Array(items), Value::Number(number)) => number
+                    .as_f64()
+                    .filter(|number| *number >= 0.0 && number.fract() == 0.0)
+                    .and_then(|number| items.get(number as usize))
+                    .cloned()
+                    .unwrap_or(Value::Null),
+                _ => Value::Null,
+            })
+        }
+        Expr::Not(inner) => Ok(Value::Bool(!is_truthy(&eval_expression(inner, context)?))),
+        Expr::Negate(inner) => number_result(-expr_number(&eval_expression(inner, context)?)?),
+        Expr::Binary(operator, left, right) => eval_binary(*operator, left, right, context),
+        Expr::Call(name, args) => eval_call(name, args, context),
+        Expr::Method(receiver, name, args) => {
+            let receiver = eval_expression(receiver, context)?;
+            let args = args
+                .iter()
+                .map(|arg| eval_expression(arg, context))
+                .collect::<Result<Vec<_>, _>>()?;
+            eval_method(&receiver, name, &args)
+        }
+    }
+}
+
+fn eval_binary(
+    operator: ExprBinaryOp,
+    left: &Expr,
+    right: &Expr,
+    context: &ExprContext<'_>,
+) -> Result<Value, String> {
+    let left = eval_expression(left, context)?;
+    match operator {
+        ExprBinaryOp::And => {
+            return if is_truthy(&left) {
+                eval_expression(right, context)
+            } else {
+                Ok(left)
+            };
+        }
+        ExprBinaryOp::Or => {
+            return if is_truthy(&left) {
+                Ok(left)
+            } else {
+                eval_expression(right, context)
+            };
+        }
+        _ => {}
+    }
+    let right = eval_expression(right, context)?;
+    match operator {
+        ExprBinaryOp::Add => {
+            if left.is_number() && right.is_number() {
+                number_result(expr_number(&left)? + expr_number(&right)?)
+            } else if left.is_string() || right.is_string() {
+                Ok(Value::String(format!(
+                    "{}{}",
+                    js_string(&left),
+                    js_string(&right)
+                )))
+            } else {
+                Err("operands cannot be added".to_owned())
+            }
+        }
+        ExprBinaryOp::Sub => number_result(expr_number(&left)? - expr_number(&right)?),
+        ExprBinaryOp::Mul => number_result(expr_number(&left)? * expr_number(&right)?),
+        ExprBinaryOp::Div => number_result(expr_number(&left)? / expr_number(&right)?),
+        ExprBinaryOp::Rem => number_result(expr_number(&left)? % expr_number(&right)?),
+        ExprBinaryOp::Eq => Ok(Value::Bool(values_equal(&left, &right))),
+        ExprBinaryOp::Ne => Ok(Value::Bool(!values_equal(&left, &right))),
+        ExprBinaryOp::Gt | ExprBinaryOp::Ge | ExprBinaryOp::Lt | ExprBinaryOp::Le => {
+            // Only numbers with numbers and strings with strings are ordered;
+            // other pairings compare false.
+            let order = match (&left, &right) {
+                (Value::Number(left), Value::Number(right)) => Some(compare_numbers(left, right)),
+                (Value::String(left), Value::String(right)) => Some(natural_compare(left, right)),
+                _ => None,
+            };
+            Ok(Value::Bool(order.is_some_and(|order| match operator {
+                ExprBinaryOp::Gt => order.is_gt(),
+                ExprBinaryOp::Ge => order.is_ge(),
+                ExprBinaryOp::Lt => order.is_lt(),
+                _ => order.is_le(),
+            })))
+        }
+        ExprBinaryOp::And | ExprBinaryOp::Or => Err("unreachable logical operator".to_owned()),
+    }
+}
+
+fn eval_call(name: &str, args: &[Expr], context: &ExprContext<'_>) -> Result<Value, String> {
+    match (name, args.len()) {
+        ("if", 3) => {
+            if is_truthy(&eval_expression(&args[0], context)?) {
+                eval_expression(&args[1], context)
+            } else {
+                eval_expression(&args[2], context)
+            }
+        }
+        ("min", count) | ("max", count) if count > 0 => {
+            let mut best = expr_number(&eval_expression(&args[0], context)?)?;
+            for arg in &args[1..] {
+                let next = expr_number(&eval_expression(arg, context)?)?;
+                if (name == "min" && next < best) || (name == "max" && next > best) {
+                    best = next;
+                }
+            }
+            number_result(best)
+        }
+        ("number", 1) => {
+            let value = eval_expression(&args[0], context)?;
+            match &value {
+                Value::Number(_) => Ok(value),
+                Value::Bool(flag) => number_result(if *flag { 1.0 } else { 0.0 }),
+                Value::String(text) => text
+                    .trim()
+                    .parse::<f64>()
+                    .map_err(|_| "text is not a number".to_owned())
+                    .and_then(number_result),
+                _ => Err("value cannot be converted to a number".to_owned()),
+            }
+        }
+        ("abs", 1) | ("floor", 1) | ("ceil", 1) => {
+            let value = eval_expression(&args[0], context)?;
+            eval_method(&value, name, &[])
+        }
+        _ => Err(format!("unsupported function {name}")),
+    }
+}
+
+fn eval_method(receiver: &Value, name: &str, args: &[Value]) -> Result<Value, String> {
+    match (name, receiver) {
+        ("contains", Value::String(text)) => match args.first() {
+            Some(Value::String(needle)) => Ok(Value::Bool(text.contains(needle.as_str()))),
+            _ => Err("contains expects text".to_owned()),
+        },
+        ("contains", Value::Array(items)) => Ok(Value::Bool(
+            args.first()
+                .is_some_and(|needle| array_includes(items, needle)),
+        )),
+        ("startsWith", Value::String(text)) => match args.first() {
+            Some(Value::String(needle)) => Ok(Value::Bool(text.starts_with(needle.as_str()))),
+            _ => Err("startsWith expects text".to_owned()),
+        },
+        ("endsWith", Value::String(text)) => match args.first() {
+            Some(Value::String(needle)) => Ok(Value::Bool(text.ends_with(needle.as_str()))),
+            _ => Err("endsWith expects text".to_owned()),
+        },
+        ("isEmpty", value) => Ok(Value::Bool(match value {
+            Value::Null => true,
+            Value::String(text) => text.is_empty(),
+            Value::Array(items) => items.is_empty(),
+            Value::Object(map) => map.is_empty(),
+            _ => false,
+        })),
+        ("lower", Value::String(text)) => Ok(Value::String(text.to_lowercase())),
+        ("upper", Value::String(text)) => Ok(Value::String(text.to_uppercase())),
+        ("trim", Value::String(text)) => Ok(Value::String(text.trim().to_owned())),
+        ("toString", value) => Ok(Value::String(js_string(value))),
+        ("abs", Value::Number(number)) => number_result(number.as_f64().unwrap_or(0.0).abs()),
+        ("floor", Value::Number(number)) => number_result(number.as_f64().unwrap_or(0.0).floor()),
+        ("ceil", Value::Number(number)) => number_result(number.as_f64().unwrap_or(0.0).ceil()),
+        _ => Err(format!("unsupported method {name} for this value")),
+    }
+}
+
+/// Evaluate a supported filter expression; type errors exclude the row.
+fn expression_matches(source: &str, row: &BaseRow, formulas: Option<&Map<String, Value>>) -> bool {
+    let Ok(expr) = parse_expression(source) else {
+        return false;
+    };
+    let context = ExprContext { row, formulas };
+    eval_expression(&expr, &context).is_ok_and(|value| is_truthy(&value))
+}
+
+fn filter_has_expression(filter: &BaseFilter) -> bool {
+    match filter {
+        BaseFilter::All(filters) | BaseFilter::Any(filters) => {
+            filters.iter().any(filter_has_expression)
+        }
+        BaseFilter::Not(inner) => filter_has_expression(inner),
+        BaseFilter::Comparison { .. } => false,
+        BaseFilter::Expression(_) => true,
+    }
+}
+
+/// Evaluate a formula through the shared grammar, when it is supported.
+fn expression_formula_value(
+    expression: &str,
+    row: &BaseRow,
+    values: &Map<String, Value>,
+) -> Option<Value> {
+    let expr = parse_expression(expression).ok()?;
+    if matches!(expr, Expr::Ident(_)) || !unsupported_nodes(&expr).is_empty() {
+        return None;
+    }
+    let context = ExprContext {
+        row,
+        formulas: Some(values),
+    };
+    eval_expression(&expr, &context).ok()
 }
 
 /// An extracted embedded definition with byte offsets into its Markdown source.
@@ -2494,12 +3572,13 @@ mod tests {
     }
 
     #[test]
-    fn mixed_integer_float_comparison_keeps_integer_precision_for_sort_and_contains() {
+    fn integers_above_2_pow_53_compare_with_javascript_number_semantics() {
         let integer = serde_json::Number::from(9_007_199_254_740_993_u64);
         let rounded_float = serde_json::Number::from_f64(9_007_199_254_740_992.0)
             .expect("finite fixture float must encode");
-        assert!(compare_numbers(&integer, &rounded_float).is_gt());
-        assert!(!array_includes(
+        // JS Number conversion rounds 2^53 + 1 to 2^53, so the two are equal.
+        assert!(compare_numbers(&integer, &rounded_float).is_eq());
+        assert!(array_includes(
             &[Value::Number(rounded_float.clone())],
             &Value::Number(integer.clone())
         ));
@@ -2532,6 +3611,184 @@ mod tests {
                 .collect::<Vec<_>>(),
             ["float.md", "integer.md"]
         );
+    }
+
+    fn group_rows(values: &[(&str, serde_json::Value)]) -> Vec<BaseRow> {
+        values
+            .iter()
+            .map(|(path, team)| {
+                let mut properties = serde_json::Map::new();
+                if !team.is_null() {
+                    properties.insert("team".to_owned(), team.clone());
+                }
+                BaseRow {
+                    path: (*path).to_owned(),
+                    properties,
+                }
+            })
+            .collect()
+    }
+
+    fn group_labels(evaluation: &BaseEvaluation) -> Vec<(String, usize)> {
+        evaluation
+            .groups
+            .iter()
+            .map(|group| (group.key.clone(), group.rows.len()))
+            .collect()
+    }
+
+    #[test]
+    fn js_number_strings_follow_javascript_formatting() {
+        use super::js_number_string;
+        assert_eq!(js_number_string(1.0), "1");
+        assert_eq!(js_number_string(-0.0), "0");
+        assert_eq!(js_number_string(0.5), "0.5");
+        assert_eq!(js_number_string(1e21), "1e+21");
+        assert_eq!(js_number_string(1.5e-7), "1.5e-7");
+        assert_eq!(js_number_string(123456789012.0), "123456789012");
+    }
+
+    #[test]
+    fn group_order_applies_typed_identity_empty_groups_and_null() {
+        let source = br#"{"version":1,"views":[{"type":"table","name":"Ordered","groupBy":"team","groupOrder":["Zulu",1,"Explicitly empty",null,"Zulu"]}]}"#;
+        let document = parse_base(source).expect("groupOrder source parses");
+        assert!(document.issues().is_empty());
+        let rows = group_rows(&[
+            ("a.md", serde_json::json!("Alpha")),
+            ("b.md", serde_json::json!("Zulu")),
+            ("c.md", serde_json::json!(1)),
+            ("d.md", serde_json::json!("1")),
+            ("e.md", serde_json::Value::Null),
+            ("f.md", serde_json::json!(9_007_199_254_740_993_u64)),
+        ]);
+        let result = evaluate_base(&document, "Ordered", &rows).expect("view evaluates");
+        assert_eq!(
+            group_labels(&result),
+            [
+                ("Zulu".to_owned(), 1),
+                ("1".to_owned(), 1),
+                ("Explicitly empty".to_owned(), 0),
+                ("None".to_owned(), 1),
+            ]
+        );
+    }
+
+    #[test]
+    fn group_order_overrides_direction_and_empty_list_hides_all_groups() {
+        let source = "views:\n  - type: table\n    name: Desc\n    groupBy:\n      property: team\n      direction: DESC\n    groupOrder:\n      - Alpha\n      - Zulu\n  - type: table\n    name: Empty\n    groupBy: team\n    groupOrder: []\n";
+        let document = parse_base(source.as_bytes()).expect("native groupOrder parses");
+        let rows = group_rows(&[
+            ("a.md", serde_json::json!("Alpha")),
+            ("z.md", serde_json::json!("Zulu")),
+        ]);
+        let desc = evaluate_base(&document, "Desc", &rows).expect("view evaluates");
+        assert_eq!(
+            group_labels(&desc),
+            [("Alpha".to_owned(), 1), ("Zulu".to_owned(), 1)]
+        );
+        let empty = evaluate_base(&document, "Empty", &rows).expect("view evaluates");
+        assert!(empty.groups.is_empty());
+    }
+
+    #[test]
+    fn malformed_group_order_is_a_visible_issue_and_keeps_default_grouping() {
+        let source = br#"{"version":1,"views":[{"type":"table","name":"Bad","groupBy":"team","groupOrder":"Alpha"}]}"#;
+        let document = parse_base(source).expect("source parses");
+        assert_eq!(document.issues().len(), 1);
+        assert_eq!(document.issues()[0].kind, BaseIssueKind::InvalidSource);
+        let rows = group_rows(&[("a.md", serde_json::json!("Alpha"))]);
+        let result = evaluate_base(&document, "Bad", &rows).expect("view evaluates");
+        assert_eq!(group_labels(&result), [("Alpha".to_owned(), 1)]);
+    }
+
+    #[test]
+    fn formula_dependencies_resolve_in_order_and_feed_group_by() {
+        let source = "formulas:\n  finalLane: formula.initialLane\n  initialLane: lane\nviews:\n  - type: table\n    name: Lanes\n    groupBy: formula.finalLane\n    groupOrder:\n      - Done\n      - To do\n";
+        let document = parse_base(source.as_bytes()).expect("native source parses");
+        let row = |path: &str, lane: &str| BaseRow {
+            path: path.to_owned(),
+            properties: serde_json::json!({ "lane": lane })
+                .as_object()
+                .unwrap()
+                .clone(),
+        };
+        let rows = vec![row("a.md", "To do"), row("b.md", "Done")];
+        let result = evaluate_base(&document, "Lanes", &rows).expect("view evaluates");
+        assert!(result.issues.is_empty());
+        assert_eq!(
+            group_labels(&result),
+            [("Done".to_owned(), 1), ("To do".to_owned(), 1)]
+        );
+    }
+
+    #[test]
+    fn formula_cycles_are_reported_and_not_evaluated() {
+        let source =
+            "formulas:\n  a: formula.b\n  b: formula.a\nviews:\n  - type: table\n    name: Cycle\n";
+        let document = parse_base(source.as_bytes()).expect("native source parses");
+        let rows = vec![BaseRow {
+            path: "a.md".to_owned(),
+            properties: serde_json::Map::new(),
+        }];
+        let result = evaluate_base(&document, "Cycle", &rows).expect("view evaluates");
+        assert_eq!(result.issues.len(), 2);
+        assert!(!result.rows[0].values.contains_key("a"));
+        assert!(!result.rows[0].values.contains_key("b"));
+    }
+
+    #[test]
+    fn expression_filters_support_boolean_arithmetic_and_methods() {
+        let source = "filters:\n  and:\n    - 'price * 2 > 10 && !title.contains(\"draft\")'\n    - formula.double >= 12\nformulas:\n  double: price * 2\nviews:\n  - type: table\n    name: Priced\n";
+        let document = parse_base(source.as_bytes()).expect("native source parses");
+        assert!(document.issues().is_empty(), "{:?}", document.issues());
+        let row = |path: &str, price: u32, title: &str| BaseRow {
+            path: path.to_owned(),
+            properties: serde_json::json!({ "price": price, "title": title })
+                .as_object()
+                .unwrap()
+                .clone(),
+        };
+        let rows = vec![
+            row("keep.md", 6, "final"),
+            row("cheap.md", 3, "final"),
+            row("draft.md", 9, "draft one"),
+        ];
+        let result = evaluate_base(&document, "Priced", &rows).expect("view evaluates");
+        assert_eq!(
+            result
+                .rows
+                .iter()
+                .map(|row| row.path.as_str())
+                .collect::<Vec<_>>(),
+            ["keep.md"]
+        );
+    }
+
+    #[test]
+    fn unsupported_expression_nodes_are_visible_and_malformed_input_does_not_panic() {
+        use super::{parse_expression, unsupported_nodes};
+        let parsed = parse_expression("file.hasTag(\"x\") || date(today) > 1").unwrap();
+        let nodes = unsupported_nodes(&parsed);
+        assert!(nodes.iter().any(|node| node == ".hasTag()"));
+        assert!(nodes.iter().any(|node| node == "date()"));
+        let this = parse_expression("this.x == 1").unwrap();
+        assert_eq!(unsupported_nodes(&this), ["this (deferred)"]);
+        for malformed in [
+            "",
+            "(",
+            "a +",
+            "\"open",
+            "1 2",
+            "a.",
+            "x[1",
+            "#",
+            "((((",
+            "a && && b",
+        ] {
+            assert!(parse_expression(malformed).is_err(), "{malformed}");
+        }
+        let deep = format!("{}1{}", "(".repeat(100), ")".repeat(100));
+        assert!(parse_expression(&deep).is_err());
     }
 
     #[test]
