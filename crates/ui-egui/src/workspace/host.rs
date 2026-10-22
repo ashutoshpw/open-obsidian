@@ -692,7 +692,11 @@ mod tests {
         }
 
         fn act(&mut self, action: WorkspaceAction) {
-            let backend = EngineBackend::new(self.host.index.clone(), self.host.generation);
+            let backend = EngineBackend::new(
+                self.host.index.clone(),
+                self.host.generation,
+                self.host.bookmarks.clone(),
+            );
             let session = self.session.clone();
             self.host.apply_action(&session, &backend, action);
             self.wait_for_index();
