@@ -1,5 +1,14 @@
 //! Extension compatibility and capability-policy boundary.
 
+pub mod discovery;
+pub mod manifest;
+
+pub use discovery::{
+    ArtifactIdentity, DiscoveredPlugin, DiscoveryLimits, DiscoveryReport, PinStatus,
+    PinnedArtifacts, VaultFileSource, discover_plugins,
+};
+pub use manifest::{ManifestIssue, ManifestParse, PluginManifest, parse_manifest};
+
 /// A shared plugin configuration write requested by the legacy plugin host.
 ///
 /// This request is evaluated without accessing the target path. This contract is
