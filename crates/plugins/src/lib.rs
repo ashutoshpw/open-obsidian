@@ -3,6 +3,7 @@
 pub mod broker;
 pub mod discovery;
 pub mod manifest;
+pub mod wasm;
 
 pub use broker::{Capability, CapabilityBroker, Decision, PluginRef, ProposedChange};
 pub use discovery::{

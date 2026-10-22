@@ -38,6 +38,21 @@ This entry records the new direct Rust runtime dependency for this migration
 slice. The Rust application dependency and packaged-artifact notice audit is
 still in progress and remains a release gate.
 
+## Rust runtime addition: bounded WASM extension host
+
+`wasmi` 2.0.0 is used by `crates/plugins` to run Rust-era WASM extensions under
+fuel, memory, table, recursion, output and host-call limits. Default features
+are disabled; the crate selects `std`, `validate`, `stable` and
+`portable-dispatch`. The crates.io archive has SHA-256
+`78693fcdd618e0fc34af59c6b8efa9ac5d58c68df940beff4bedddb6acfe7c27` and records
+upstream source commit
+[`2970aa8`](https://github.com/wasmi-labs/wasmi/tree/2970aa871cc1001b57b267ccecdcd1e42306199e).
+`wasmi` and its `wasmi_*` support crates are licensed under MIT OR Apache-2.0;
+its `wasmparser` dependency is licensed under Apache-2.0 WITH LLVM-exception OR
+Apache-2.0 OR MIT. The `Cargo.lock` checksum must match the archive hash above
+once the lockfile is resolved in CI. The `wat` crate is a test-only
+dev-dependency used to build inline fixtures and is not shipped.
+
 The planned Electron and plugin release pins are recorded separately in
 [`config/dependency-pins.json`](config/dependency-pins.json) and
 [`fixtures/compatibility-manifest.json`](fixtures/compatibility-manifest.json).

@@ -40,6 +40,10 @@ notify = "=8.2.0"
 # OpenObsidian-specific R1.2 candidate for unchanged JavaScript/DOM plugins; not UI replacement.
 wry = "=0.57.0"
 winit = "0.30"
+# Photocraft-aligned bounded WASM extension host (MIT OR Apache-2.0); see goal.md Plugins row.
+wasmi = { version = "2.0.0", default-features = false, features = ["std", "validate", "stable", "portable-dispatch"] }
+# Test-only WAT-to-wasm conversion for inline extension fixtures.
+wat = "1"
 
 # Internal workspace crates
 openobsidian-doc = { path = "crates/doc" }
