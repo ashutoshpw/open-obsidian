@@ -250,8 +250,15 @@ pub fn layout_force(count: usize, edges: &[(usize, usize)], seed: u32) -> Vec<eg
             break;
         }
     }
+    for position in &mut positions {
+        position.x = position.x.clamp(-FORCE_LAYOUT_EXTENT, FORCE_LAYOUT_EXTENT);
+        position.y = position.y.clamp(-FORCE_LAYOUT_EXTENT, FORCE_LAYOUT_EXTENT);
+    }
     positions
 }
+
+/// Force layouts are clamped to this distance from the origin on each axis.
+const FORCE_LAYOUT_EXTENT: f32 = 1_000.0;
 
 /// Layer (depth) per node following edge direction from roots (nodes without incoming edges).
 pub fn layers(count: usize, edges: &[(usize, usize)]) -> Vec<usize> {
