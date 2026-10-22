@@ -1,5 +1,6 @@
 //! Lossless document values shared by the vault engine and native UI.
 
+pub mod appearance;
 mod bases;
 mod canvas;
 mod configuration;
@@ -9,6 +10,13 @@ mod merge;
 mod themes;
 mod yaml;
 
+pub use appearance::{
+    AppearanceAnalysis, AppearanceTokens, AppearanceTruncation, Rgba, StyleSetting,
+    StyleSettingDefault, StyleSettingKind, StyleSettingOption, StyleSettingsBlock,
+    StyleSettingsParse, ThemeMode, UnsupportedEntry, UnsupportedKind, UnsupportedReport,
+    analyze_appearance_css, analyze_appearance_css_with_overrides, parse_css_color,
+    parse_css_length_px, parse_style_settings,
+};
 pub use bases::{
     BaseComparisonOperator, BaseDocument, BaseEvaluation, BaseFilter, BaseGroup, BaseIssue,
     BaseIssueKind, BaseParseError, BaseRawValue, BaseRow, BaseSort, BaseSourceFormat, BaseValue,
