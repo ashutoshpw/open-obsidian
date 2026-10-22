@@ -517,7 +517,10 @@ mod tests {
 
     #[test]
     fn events_under_the_canonical_form_of_a_symlinked_root_are_hints() {
-        let roots = vec![PathBuf::from("/var/vault"), PathBuf::from("/private/var/vault")];
+        let roots = vec![
+            PathBuf::from("/var/vault"),
+            PathBuf::from("/private/var/vault"),
+        ];
         let at = |path: &str| Event::new(EventKind::Any).add_path(PathBuf::from(path));
 
         assert_eq!(
@@ -528,7 +531,10 @@ mod tests {
             classify_event_for_roots(&at("/private/var/vault"), &roots),
             Some(VaultWatchHint::RescanRequired)
         );
-        assert_eq!(classify_event_for_roots(&at("/private/var/other/Note.md"), &roots), None);
+        assert_eq!(
+            classify_event_for_roots(&at("/private/var/other/Note.md"), &roots),
+            None
+        );
     }
 
     #[test]

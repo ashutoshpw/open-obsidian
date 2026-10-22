@@ -190,9 +190,7 @@ impl VaultStore {
             return Err(VaultError::StaleRevision {
                 relative_path,
                 expected_revision: expected_revision_sha256.to_owned(),
-                current_revision: latest
-                    .map(|read| read.revision_sha256)
-                    .unwrap_or_default(),
+                current_revision: latest.map(|read| read.revision_sha256).unwrap_or_default(),
             });
         }
         if let Err(error) = parent.remove_file(&leaf) {
@@ -374,7 +372,10 @@ mod tests {
         assert_eq!(first_result.trashed_path, Path::new(".trash/Note.md"));
         assert_eq!(second_result.trashed_path, Path::new(".trash/Note 1.md"));
         assert_eq!(fs::read(vault.0.join(".trash/Note.md")).unwrap(), b"first");
-        assert_eq!(fs::read(vault.0.join(".trash/Note 1.md")).unwrap(), b"second");
+        assert_eq!(
+            fs::read(vault.0.join(".trash/Note 1.md")).unwrap(),
+            b"second"
+        );
     }
 
     #[test]

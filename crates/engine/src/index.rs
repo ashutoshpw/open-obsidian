@@ -882,7 +882,10 @@ mod tests {
         let expected = vec!["notes/alpha.md", "alps/zeta.md", "gamma.md"];
         assert_eq!(index.quick_switcher("ALP", 10), expected);
         assert_eq!(index.quick_switcher("alp", 1), vec!["notes/alpha.md"]);
-        assert_eq!(index.quick_switcher("", 2), vec!["alps/zeta.md", "gamma.md"]);
+        assert_eq!(
+            index.quick_switcher("", 2),
+            vec!["alps/zeta.md", "gamma.md"]
+        );
     }
 
     #[test]
