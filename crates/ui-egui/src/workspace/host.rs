@@ -5,6 +5,7 @@
 //! revision-checked saves, creation, and trashing go through [`VaultSession`] so every change
 //! keeps the journaling, history, and stale-revision protections of the vault layer.
 
+use super::canvas_view::{CanvasScene, CanvasView, CanvasViewAction};
 use super::{
     BacklinkRow, BookmarkRow, GraphView, HeadingRow, LinkRow, SearchRow, Workspace,
     WorkspaceAction, WorkspaceBackend, tabs::tab_title,
@@ -147,6 +148,16 @@ impl EditorBuffer {
     }
 }
 
+/// A parsed Canvas and its pan/zoom/selection state.
+struct CanvasState {
+    view: CanvasView,
+    scene: Result<CanvasScene, String>,
+}
+
+fn is_canvas_path(path: &str) -> bool {
+    path.to_ascii_lowercase().ends_with(".canvas")
+}
+
 /// An open rename request: the new path is previewed before anything is written.
 struct RenameDialog {
     from: String,
@@ -170,6 +181,9 @@ pub struct WorkspaceHost {
     markdown_cache: CommonMarkCache,
     status: Option<String>,
     rename: Option<RenameDialog>,
+    canvases: HashMap<String, CanvasState>,
+    /// A note the user asked to create from a Canvas card: `(path, text)`, pending confirmation.
+    canvas_create: Option<(String, String)>,
     graph: GraphView,
     graph_open: bool,
     graph_local: bool,
@@ -193,6 +207,8 @@ impl Default for WorkspaceHost {
             markdown_cache: CommonMarkCache::default(),
             status: None,
             rename: None,
+            canvases: HashMap::new(),
+            canvas_create: None,
             graph: GraphView::new(),
             graph_open: false,
             graph_local: false,
@@ -218,13 +234,27 @@ impl WorkspaceHost {
         let graph_action = self.show_graph_window(ui.ctx());
         let editors = &mut self.editors;
         let cache = &mut self.markdown_cache;
+        let canvases = &mut self.canvases;
         let mut rename_request = None;
+        let mut canvas_actions = Vec::new();
         let actions = self.workspace.show_with_editor(ui, &backend, |ui, path| {
-            show_editor(ui, editors, cache, path, &mut rename_request);
+            show_editor(
+                ui,
+                editors,
+                cache,
+                canvases,
+                path,
+                &mut rename_request,
+                &mut canvas_actions,
+            );
         });
         for action in actions.into_iter().chain(graph_action) {
             self.apply_action(&session, &backend, action);
         }
+        for (path, action) in canvas_actions {
+            self.apply_canvas_action(&session, &path, action);
+        }
+        self.show_canvas_create_dialog(ui.ctx(), &session);
         if let Some(from) = rename_request {
             self.rename = Some(RenameDialog {
                 to: from.clone(),
@@ -234,6 +264,79 @@ impl WorkspaceHost {
             });
         }
         self.show_rename_dialog(ui.ctx(), &session);
+    }
+
+    fn apply_canvas_action(
+        &mut self,
+        session: &VaultSession,
+        path: &str,
+        action: CanvasViewAction,
+    ) {
+        match action {
+            CanvasViewAction::EditText { node_id, text } => {
+                let Some(revision) = self
+                    .editors
+                    .get(path)
+                    .and_then(|buffer| buffer.revision_sha256.clone())
+                else {
+                    return;
+                };
+                match session.edit_canvas_text_node(path, &revision, &node_id, &text) {
+                    Ok(_) => {
+                        self.editors.remove(path);
+                        self.canvases.remove(path);
+                        self.ensure_loaded(session, path);
+                        self.status = Some(format!("Saved the card in {}", tab_title(path)));
+                        self.request_index();
+                    }
+                    Err(error) => {
+                        self.status = Some(format!("Could not save the card: {error}"));
+                    }
+                }
+            }
+            CanvasViewAction::OpenNote(target) => self.workspace.open_note(&target),
+            CanvasViewAction::OpenLink(url) => {
+                self.status = Some(format!("Links are not opened from a canvas ({url})"));
+            }
+            CanvasViewAction::CreateNoteFromCard {
+                text,
+                suggested_path,
+                ..
+            } => self.canvas_create = Some((suggested_path, text)),
+        }
+    }
+
+    fn show_canvas_create_dialog(&mut self, ctx: &egui::Context, session: &VaultSession) {
+        let Some((path, text)) = &mut self.canvas_create else {
+            return;
+        };
+        let mut create = false;
+        let mut cancel = false;
+        egui::Window::new("Create note from card")
+            .collapsible(false)
+            .show(ctx, |ui| {
+                ui.label("New note path");
+                ui.text_edit_singleline(path);
+                ui.label(format!(
+                    "{} characters of card text will be written.",
+                    text.chars().count()
+                ));
+                ui.horizontal(|ui| {
+                    create = ui.button("Create note").clicked();
+                    cancel = ui.button("Cancel").clicked();
+                });
+            });
+        if cancel {
+            self.canvas_create = None;
+        } else if create {
+            let mut path = path.clone();
+            let text = text.clone();
+            self.canvas_create = None;
+            if !path.to_ascii_lowercase().ends_with(".md") {
+                path.push_str(".md");
+            }
+            self.create_with_contents(session, path, text.as_bytes());
+        }
     }
 
     fn show_rename_dialog(&mut self, ctx: &egui::Context, session: &VaultSession) {
@@ -552,7 +655,11 @@ impl WorkspaceHost {
     }
 
     fn create(&mut self, session: &VaultSession, path: String) {
-        match session.create_note(&path, b"") {
+        self.create_with_contents(session, path, b"");
+    }
+
+    fn create_with_contents(&mut self, session: &VaultSession, path: String, contents: &[u8]) {
+        match session.create_note(&path, contents) {
             Ok(_) => {
                 self.status = Some(format!("Created {}", tab_title(&path)));
                 self.request_index();
@@ -604,8 +711,10 @@ fn show_editor(
     ui: &mut egui::Ui,
     editors: &mut HashMap<String, EditorBuffer>,
     cache: &mut CommonMarkCache,
+    canvases: &mut HashMap<String, CanvasState>,
     path: &str,
     rename_request: &mut Option<String>,
+    canvas_actions: &mut Vec<(String, CanvasViewAction)>,
 ) {
     ui.horizontal(|ui| {
         ui.heading(tab_title(path));
@@ -620,6 +729,25 @@ fn show_editor(
     };
     if let Some(reason) = &buffer.read_only_reason {
         ui.label(reason);
+        return;
+    }
+    if is_canvas_path(path) {
+        let state = canvases
+            .entry(path.to_owned())
+            .or_insert_with(|| CanvasState {
+                view: CanvasView::new(),
+                scene: CanvasScene::from_source(buffer.text.as_bytes()),
+            });
+        match &state.scene {
+            Ok(scene) => {
+                for action in state.view.show(ui, scene) {
+                    canvas_actions.push((path.to_owned(), action));
+                }
+            }
+            Err(error) => {
+                ui.colored_label(ui.visuals().error_fg_color, error);
+            }
+        }
         return;
     }
     ui.horizontal(|ui| {
