@@ -20,7 +20,9 @@ pub mod palette;
 pub mod panes;
 pub mod tabs;
 
-pub use backend::{BacklinkRow, InMemoryBackend, LinkRow, SearchRow, WorkspaceBackend};
+pub use backend::{
+    BacklinkRow, BookmarkRow, HeadingRow, InMemoryBackend, LinkRow, SearchRow, WorkspaceBackend,
+};
 pub use commands::{Command, CommandContext, CommandRegistry, ids};
 pub use explorer::{ExplorerNodeKind, ExplorerOutcome, ExplorerRow, ExplorerTree, show_explorer};
 pub use host::WorkspaceHost;

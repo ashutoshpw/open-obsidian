@@ -37,6 +37,24 @@ pub struct SearchRow {
     pub preview: String,
 }
 
+/// One heading of the note being inspected.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct HeadingRow {
+    /// Heading level from 1 to 6.
+    pub level: u8,
+    pub text: String,
+    /// One-based source line.
+    pub line: usize,
+}
+
+/// One bookmark from the vault's bookmark list.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct BookmarkRow {
+    pub title: String,
+    /// Vault-relative slash path when the bookmark can be opened as a note.
+    pub path: Option<String>,
+}
+
 /// Synchronous, cheap queries the workspace issues while rendering.
 ///
 /// Implementations should answer from an in-memory index; the workspace caches results per
@@ -72,6 +90,16 @@ pub trait WorkspaceBackend {
 
     /// Notes that use `tag` (with or without the leading `#`).
     fn notes_with_tag(&self, tag: &str) -> Vec<String>;
+
+    /// Headings of `path` in document order. Backends without heading data return none.
+    fn headings(&self, _path: &str) -> Vec<HeadingRow> {
+        Vec::new()
+    }
+
+    /// The vault's bookmarks. Backends without bookmark data return none.
+    fn bookmarks(&self) -> Vec<BookmarkRow> {
+        Vec::new()
+    }
 }
 
 // Engine adapter (to be wired by the integrator once `openobsidian_engine` exposes its vault

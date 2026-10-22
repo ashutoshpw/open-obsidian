@@ -1,6 +1,7 @@
 //! Application services that compose document and vault behavior without UI dependencies.
 
 mod bases;
+mod bookmarks;
 mod index;
 
 pub use bases::{
@@ -9,6 +10,7 @@ pub use bases::{
     EmbeddedBaseListing, EmbeddedBaseListingError, MAX_BASE_FILE_COUNT, MAX_BASE_FILE_SOURCE_BYTES,
     MAX_BASE_NOTE_COUNT, MAX_BASE_NOTE_SOURCE_BYTES, MAX_BASE_TOTAL_SOURCE_BYTES,
 };
+pub use bookmarks::*;
 pub use index::*;
 
 use openobsidian_doc::{encode_canvas, parse_canvas};

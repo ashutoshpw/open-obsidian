@@ -1,7 +1,9 @@
 //! Right-hand side pane: backlinks, outgoing links, tags and vault search.
 
 use super::WorkspaceAction;
-use super::backend::{BacklinkRow, LinkRow, SearchRow, WorkspaceBackend};
+use super::backend::{
+    BacklinkRow, BookmarkRow, HeadingRow, LinkRow, SearchRow, WorkspaceBackend,
+};
 use super::tabs::set_accessible_label;
 use eframe::egui;
 
@@ -16,10 +18,19 @@ pub enum SidePaneTab {
     Outgoing,
     Tags,
     Search,
+    Outline,
+    Bookmarks,
 }
 
 impl SidePaneTab {
-    pub const ALL: [Self; 4] = [Self::Backlinks, Self::Outgoing, Self::Tags, Self::Search];
+    pub const ALL: [Self; 6] = [
+        Self::Backlinks,
+        Self::Outgoing,
+        Self::Outline,
+        Self::Tags,
+        Self::Bookmarks,
+        Self::Search,
+    ];
 
     pub fn title(self) -> &'static str {
         match self {
@@ -27,6 +38,8 @@ impl SidePaneTab {
             Self::Outgoing => "Outgoing links",
             Self::Tags => "Tags",
             Self::Search => "Search",
+            Self::Outline => "Outline",
+            Self::Bookmarks => "Bookmarks",
         }
     }
 }
@@ -53,6 +66,8 @@ pub struct SidePane {
     tags: Vec<(String, usize)>,
     tag_notes: Vec<String>,
     search_results: Vec<SearchRow>,
+    headings: Vec<HeadingRow>,
+    bookmarks: Vec<BookmarkRow>,
 }
 
 impl SidePane {
@@ -102,6 +117,14 @@ impl SidePane {
         &self.search_results
     }
 
+    pub fn headings(&self) -> &[HeadingRow] {
+        &self.headings
+    }
+
+    pub fn bookmarks(&self) -> &[BookmarkRow] {
+        &self.bookmarks
+    }
+
     /// Queries the backend for the current tab when anything relevant changed.
     pub fn refresh(&mut self, active_note: Option<&str>, backend: &dyn WorkspaceBackend) {
         let key = CacheKey {
@@ -119,6 +142,8 @@ impl SidePane {
         self.tags.clear();
         self.tag_notes.clear();
         self.search_results.clear();
+        self.headings.clear();
+        self.bookmarks.clear();
         match key.tab {
             SidePaneTab::Backlinks => {
                 if let Some(active) = &key.active {
@@ -136,6 +161,12 @@ impl SidePane {
                     self.tag_notes = backend.notes_with_tag(tag);
                 }
             }
+            SidePaneTab::Outline => {
+                if let Some(active) = &key.active {
+                    self.headings = backend.headings(active);
+                }
+            }
+            SidePaneTab::Bookmarks => self.bookmarks = backend.bookmarks(),
             SidePaneTab::Search => {
                 if !key.query.is_empty() {
                     self.search_results = backend.search(&key.query, SEARCH_LIMIT);
@@ -184,6 +215,8 @@ pub fn show_side_pane(
             SidePaneTab::Outgoing => show_outgoing(ui, pane, active_note, &mut actions),
             SidePaneTab::Tags => show_tags(ui, pane, &mut actions),
             SidePaneTab::Search => show_search_results(ui, pane, &mut actions),
+            SidePaneTab::Outline => show_outline(ui, pane, active_note),
+            SidePaneTab::Bookmarks => show_bookmarks(ui, pane, &mut actions),
         });
     actions
 }
@@ -271,6 +304,47 @@ fn show_outgoing(
                         actions.push(WorkspaceAction::CreateNoteAt(path));
                     }
                 });
+            }
+        }
+    }
+}
+
+fn show_outline(ui: &mut egui::Ui, pane: &SidePane, active_note: Option<&str>) {
+    if active_note.is_none() {
+        ui.weak("Open a note to see its outline.");
+        return;
+    }
+    if pane.headings().is_empty() {
+        ui.weak("No headings found.");
+    }
+    for heading in pane.headings() {
+        ui.horizontal(|ui| {
+            ui.add_space(f32::from(heading.level.saturating_sub(1)) * 12.0);
+            let response = ui.label(format!("{} (line {})", heading.text, heading.line));
+            set_accessible_label(
+                ui,
+                &response,
+                &format!("Heading level {} {}", heading.level, heading.text),
+            );
+        });
+    }
+}
+
+fn show_bookmarks(ui: &mut egui::Ui, pane: &SidePane, actions: &mut Vec<WorkspaceAction>) {
+    if pane.bookmarks().is_empty() {
+        ui.weak("No bookmarks found.");
+    }
+    for row in pane.bookmarks() {
+        match &row.path {
+            Some(path) => {
+                let response = ui.button(row.title.as_str());
+                set_accessible_label(ui, &response, &format!("Open bookmark {}", row.title));
+                if response.clicked() {
+                    actions.push(WorkspaceAction::OpenNote(path.clone()));
+                }
+            }
+            None => {
+                ui.weak(row.title.as_str());
             }
         }
     }

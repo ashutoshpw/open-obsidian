@@ -6,13 +6,14 @@
 //! keeps the journaling, history, and stale-revision protections of the vault layer.
 
 use super::{
-    BacklinkRow, LinkRow, SearchRow, Workspace, WorkspaceAction, WorkspaceBackend, tabs::tab_title,
+    BacklinkRow, BookmarkRow, HeadingRow, LinkRow, SearchRow, Workspace, WorkspaceAction,
+    WorkspaceBackend, tabs::tab_title,
 };
 use eframe::egui;
 use egui_commonmark::{CommonMarkCache, CommonMarkViewer};
 use openobsidian_engine::{
     IndexedLinkResolution, VaultError, VaultIndex, VaultRenamePreview, VaultSession,
-    VaultWriteRequest,
+    VaultWriteRequest, parse_bookmarks,
 };
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -28,11 +29,16 @@ type IndexResult = Result<VaultIndex, String>;
 pub struct EngineBackend {
     index: Arc<VaultIndex>,
     generation: u64,
+    bookmarks: Arc<Vec<BookmarkRow>>,
 }
 
 impl EngineBackend {
-    fn new(index: Arc<VaultIndex>, generation: u64) -> Self {
-        Self { index, generation }
+    fn new(index: Arc<VaultIndex>, generation: u64, bookmarks: Arc<Vec<BookmarkRow>>) -> Self {
+        Self {
+            index,
+            generation,
+            bookmarks,
+        }
     }
 }
 
@@ -93,6 +99,26 @@ impl WorkspaceBackend for EngineBackend {
     fn notes_with_tag(&self, tag: &str) -> Vec<String> {
         self.index.notes_with_tag(tag)
     }
+
+    fn headings(&self, path: &str) -> Vec<HeadingRow> {
+        self.index
+            .note(path)
+            .map(|note| {
+                note.headings
+                    .iter()
+                    .map(|heading| HeadingRow {
+                        level: heading.level,
+                        text: heading.text.clone(),
+                        line: heading.line,
+                    })
+                    .collect()
+            })
+            .unwrap_or_default()
+    }
+
+    fn bookmarks(&self) -> Vec<BookmarkRow> {
+        self.bookmarks.as_ref().clone()
+    }
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -134,6 +160,7 @@ pub struct WorkspaceHost {
     vault_root: Option<PathBuf>,
     index: Arc<VaultIndex>,
     generation: u64,
+    bookmarks: Arc<Vec<BookmarkRow>>,
     index_receiver: Option<Receiver<IndexResult>>,
     reindex_requested: bool,
     index_error: Option<String>,
@@ -151,6 +178,7 @@ impl Default for WorkspaceHost {
             vault_root: None,
             index: Arc::new(VaultIndex::default()),
             generation: 0,
+            bookmarks: Arc::new(Vec::new()),
             index_receiver: None,
             reindex_requested: false,
             index_error: None,
@@ -173,7 +201,8 @@ impl WorkspaceHost {
             ui.label("Switch to the Inspector view and choose Open vault to start.");
             return;
         };
-        let backend = EngineBackend::new(self.index.clone(), self.generation);
+        let backend =
+            EngineBackend::new(self.index.clone(), self.generation, self.bookmarks.clone());
         self.show_status_bar(ui);
         let editors = &mut self.editors;
         let cache = &mut self.markdown_cache;
@@ -316,6 +345,7 @@ impl WorkspaceHost {
                 match outcome {
                     Ok(index) => {
                         self.index = Arc::new(index);
+                        self.bookmarks = Arc::new(self.load_bookmarks());
                         self.generation += 1;
                         self.index_error = None;
                     }
@@ -333,6 +363,22 @@ impl WorkspaceHost {
                 ctx.request_repaint_after(Duration::from_millis(100));
             }
             None => {}
+        }
+    }
+
+    fn load_bookmarks(&self) -> Vec<BookmarkRow> {
+        let Some(session) = &self.session else {
+            return Vec::new();
+        };
+        match session.read(".obsidian/bookmarks.json") {
+            Ok(read) => parse_bookmarks(read.document.as_bytes())
+                .into_iter()
+                .map(|bookmark| BookmarkRow {
+                    title: bookmark.title,
+                    path: bookmark.path,
+                })
+                .collect(),
+            Err(_) => Vec::new(),
         }
     }
 
@@ -660,7 +706,11 @@ mod tests {
     #[test]
     fn index_feeds_the_backend() {
         let fixture = fixture();
-        let backend = EngineBackend::new(fixture.host.index.clone(), fixture.host.generation);
+        let backend = EngineBackend::new(
+            fixture.host.index.clone(),
+            fixture.host.generation,
+            fixture.host.bookmarks.clone(),
+        );
         assert_eq!(backend.list_paths(), vec!["a.md", "b.md"]);
         assert_eq!(
             backend.backlinks("b.md"),
@@ -673,6 +723,43 @@ mod tests {
         assert_eq!(
             backend.outgoing_links("a.md")[0].resolved.as_deref(),
             Some("b.md")
+        );
+    }
+
+    #[test]
+    fn outline_and_bookmarks_come_from_the_vault() {
+        let dir = TempDir::new();
+        let vault = dir.0.join("vault");
+        let app_data = dir.0.join("app-data");
+        std::fs::create_dir_all(vault.join(".obsidian")).unwrap();
+        std::fs::create_dir_all(&app_data).unwrap();
+        std::fs::write(vault.join("n.md"), "# Top\n## Sub\n").unwrap();
+        std::fs::write(
+            vault.join(".obsidian/bookmarks.json"),
+            r#"{"items":[{"type":"file","path":"n.md","title":"N"}]}"#,
+        )
+        .unwrap();
+        let session = Arc::new(VaultSession::open(&vault, &app_data).unwrap());
+        let mut host = WorkspaceHost::default();
+        host.sync_session(Some(&session));
+        let ctx = egui::Context::default();
+        let deadline = Instant::now() + Duration::from_secs(10);
+        while host.index_receiver.is_some() {
+            assert!(Instant::now() < deadline, "index build did not finish");
+            std::thread::sleep(Duration::from_millis(10));
+            host.poll_index(&ctx);
+        }
+        let backend =
+            EngineBackend::new(host.index.clone(), host.generation, host.bookmarks.clone());
+        let headings = backend.headings("n.md");
+        assert_eq!(headings.len(), 2);
+        assert_eq!((headings[1].level, headings[1].text.as_str()), (2, "Sub"));
+        assert_eq!(
+            backend.bookmarks(),
+            vec![BookmarkRow {
+                title: "N".to_owned(),
+                path: Some("n.md".to_owned())
+            }]
         );
     }
 
