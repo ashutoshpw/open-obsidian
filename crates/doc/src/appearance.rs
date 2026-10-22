@@ -858,12 +858,11 @@ fn classify_selector(selector: &str) -> Option<(u8, u32)> {
             bits &= MODE_LIGHT;
             specificity += 100;
             rest = next;
-        } else if let Some(next) = strip_compound(rest, ".theme-dark", false) {
+        } else {
+            let next = strip_compound(rest, ".theme-dark", false)?;
             bits &= MODE_DARK;
             specificity += 100;
             rest = next;
-        } else {
-            return None;
         }
     }
     Some((bits, specificity))
