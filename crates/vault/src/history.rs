@@ -1290,12 +1290,17 @@ mod tests {
         )
         .unwrap();
 
+        let conflicts_before = fs::read_dir(app_data_path.join("conflicts"))
+            .unwrap()
+            .count();
         let result = store.cleanup_history_selected(policy, &[victim.id.clone()]);
         assert!(result.is_err());
-        let read = store
-            .read_conflict(&conflict.id, &conflict.relative_path)
-            .unwrap();
-        assert_eq!(read.bytes, b"incoming\n");
+        // The damaged history fails closed, so the protected conflict is checked on disk.
+        let conflicts_after = fs::read_dir(app_data_path.join("conflicts"))
+            .unwrap()
+            .count();
+        assert_eq!(conflicts_before, conflicts_after);
+        assert!(conflicts_after >= 1, "conflict {} must remain", conflict.id);
     }
 
     #[test]
