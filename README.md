@@ -14,7 +14,7 @@ The selected folder remains the authoritative vault. OpenObsidian stores its pri
 
 ## Local pre-commit checks
 
-Run `scripts/install-git-hooks.sh` once per clone. The tracked hooks in `.githooks/` run `cargo fmt --check` before each commit (plus Clippy with `OPENOBSIDIAN_PRECOMMIT_CLIPPY=1`) and `cargo fmt --check` plus `cargo clippy -- -D warnings` before each push, so formatting and lint failures surface before a CI batch starts. They skip silently when `cargo` is missing. These are convenience guards only; a local pass is never acceptance evidence.
+Run `.githooks/install.sh` once per clone. The tracked hooks in `.githooks/` run `cargo fmt --check` before each commit (plus Clippy with `OPENOBSIDIAN_PRECOMMIT_CLIPPY=1`) and `cargo fmt --check` plus `cargo clippy -- -D warnings` before each push, so formatting and lint failures surface before a CI batch starts. They skip silently when `cargo` is missing. These are convenience guards only; a local pass is never acceptance evidence.
 
 ## Migration validation
 
