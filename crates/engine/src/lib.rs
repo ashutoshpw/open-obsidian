@@ -1,6 +1,7 @@
 //! Application services that compose document and vault behavior without UI dependencies.
 
 mod bases;
+mod index;
 
 pub use bases::{
     BaseCollectionIssue, BaseFileEvaluation, BaseFileEvaluationError, BaseFileListing,
@@ -8,6 +9,7 @@ pub use bases::{
     EmbeddedBaseListing, EmbeddedBaseListingError, MAX_BASE_FILE_COUNT, MAX_BASE_FILE_SOURCE_BYTES,
     MAX_BASE_NOTE_COUNT, MAX_BASE_NOTE_SOURCE_BYTES, MAX_BASE_TOTAL_SOURCE_BYTES,
 };
+pub use index::*;
 
 use openobsidian_doc::{encode_canvas, parse_canvas};
 pub use openobsidian_vault::{
@@ -23,7 +25,9 @@ pub use openobsidian_vault::{
     VaultWatchPoll, VaultWatcher, VaultWriteRecoveryIssue, VaultWriteRecoveryReport,
     VaultWriteRequest, VaultWriteResult, analyze_markdown_preview, plan_history_retention,
 };
-use openobsidian_vault::{VaultCreateRequest, VaultEntry, VaultRead, VaultStore};
+use openobsidian_vault::{
+    VaultCreateRequest, VaultEntry, VaultRead, VaultSnapshotEntryKind, VaultStore,
+};
 use std::path::{Path, PathBuf};
 use std::time::SystemTime;
 
@@ -121,6 +125,29 @@ impl VaultSession {
             definition_index,
             view_index,
         )
+    }
+
+    /// Builds an in-memory link, tag, heading, graph, and search index of the whole vault.
+    ///
+    /// Snapshotting hashes every regular vault file and every note is read, so call this off
+    /// the UI frame.
+    pub fn build_index(&self) -> Result<VaultIndex, VaultError> {
+        let snapshot = self.store.root().snapshot()?;
+        let all_paths = snapshot
+            .entries
+            .iter()
+            .filter(|entry| entry.kind == VaultSnapshotEntryKind::File)
+            .map(|entry| index::slash_path(&entry.relative_path))
+            .collect();
+        let mut notes = Vec::with_capacity(self.entries.len());
+        for entry in &self.entries {
+            let read = self.read(&entry.relative_path)?;
+            notes.push((
+                index::slash_path(&entry.relative_path),
+                read.document.as_bytes().to_vec(),
+            ));
+        }
+        Ok(VaultIndex::build(all_paths, notes))
     }
 
     /// Returns the recovery outcome processed before the Markdown listing was scanned.
