@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# Catch lint and compile errors before they start a CI batch.
+# Convenience only; CI remains the acceptance gate. Skip with: git push --no-verify
+set -euo pipefail
+
+root="$(git rev-parse --show-toplevel)"
+cd "$root"
+
+if ! command -v cargo >/dev/null 2>&1; then
+  echo "pre-push: cargo not found; skipping local Rust checks (CI will still run them)." >&2
+  exit 0
+fi
+
+echo "pre-push: cargo fmt --all -- --check"
+cargo fmt --all -- --check
+echo "pre-push: cargo clippy --workspace --all-targets --locked -- -D warnings"
+cargo clippy --workspace --all-targets --locked -- -D warnings

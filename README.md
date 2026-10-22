@@ -12,6 +12,10 @@ openobsidian --open-vault "/path/to/Existing Vault"
 
 The selected folder remains the authoritative vault. OpenObsidian stores its private per-vault data outside that folder.
 
+## Local pre-commit checks
+
+Run `scripts/install-git-hooks.sh` once per clone. The tracked hooks in `.githooks/` run `cargo fmt --check` before each commit (plus Clippy with `OPENOBSIDIAN_PRECOMMIT_CLIPPY=1`) and `cargo fmt --check` plus `cargo clippy -- -D warnings` before each push, so formatting and lint failures surface before a CI batch starts. They skip silently when `cargo` is missing. These are convenience guards only; a local pass is never acceptance evidence.
+
 ## Migration validation
 
 GitHub Actions is the only validation environment for the Rust migration. Run tests, builds, formatting checks, Clippy, fixture audits and runtime probes through the repository workflows. Do not substitute local test, build, lint, format or application-launch results for CI. Focused commits accumulate locally until a complete named milestone is ready; push once for that milestone, then wait for its exact-SHA CI batch to finish. Record workflow results and evidence under `.agents/tasks/2026-10-07/`.

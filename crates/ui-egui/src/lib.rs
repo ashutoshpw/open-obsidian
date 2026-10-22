@@ -13,8 +13,8 @@ use openobsidian_engine::{
     VaultError, VaultHistoryCleanup, VaultHistoryKind, VaultHistoryPlan, VaultHistoryPolicy,
     VaultHistoryRecord, VaultInlineImage, VaultLinkResolution, VaultNoteEmbedDisposition,
     VaultNoteEmbedNode, VaultNoteEmbedReport, VaultRenamePreview, VaultRenameRecoveryReport,
-    VaultRenameResult, VaultSession, VaultWatchEventBatch, VaultWatchEventKind, VaultWatcher,
-    VaultWriteRecoveryReport, VaultWriteRequest, analyze_markdown_preview, plan_history_retention,
+    VaultRenameResult, VaultSession, VaultWatchEventBatch, VaultWatcher, VaultWriteRecoveryReport,
+    VaultWriteRequest, analyze_markdown_preview, plan_history_retention,
 };
 use sha2::{Digest, Sha256};
 use std::cell::RefCell;
@@ -4390,6 +4390,7 @@ impl OpenObsidianApp {
         self.note_preview_write_receiver = Some(receiver);
     }
 
+    #[cfg(test)]
     fn start_vault_refresh(&mut self) {
         self.start_vault_refresh_with_request_id(
             None,
@@ -4540,18 +4541,6 @@ impl OpenObsidianApp {
         batch
     }
 
-    fn merge_vault_rescan_batch(&mut self, batch: VaultRescanBatch) {
-        self.vault_rescan_pending = true;
-        self.vault_rescan_origins.merge(batch.origins);
-        merge_watcher_event_batches(
-            &mut self.vault_rescan_event_batches,
-            batch.watcher_event_batches,
-        );
-        if self.vault_rescan_request_id.is_none() {
-            self.vault_rescan_request_id = batch.request_id;
-        }
-    }
-
     fn queue_promoted_vault_rescan_batch(&mut self, batch: VaultRescanBatch) {
         if let Some(promoted) = &mut self.vault_rescan_promoted_batch {
             promoted.origins.merge(batch.origins);
@@ -4669,9 +4658,7 @@ impl OpenObsidianApp {
     }
 
     fn consume_ci_periodic_reconciliation_request(&mut self, now: Instant) -> Option<String> {
-        if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_none() {
-            return None;
-        }
+        std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS")?;
         let request_file =
             std::env::var_os("OPENOBSIDIAN_CI_FORCE_VAULT_RECONCILIATION_REQUEST_FILE")?;
         let request_file = Path::new(&request_file);
@@ -4685,9 +4672,7 @@ impl OpenObsidianApp {
     }
 
     fn consume_ci_watcher_rescan_request(&self) -> Option<String> {
-        if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_none() {
-            return None;
-        }
+        std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS")?;
         let request_file =
             std::env::var_os("OPENOBSIDIAN_CI_FORCE_VAULT_WATCHER_HINT_REQUEST_FILE")?;
         let request_file = Path::new(&request_file);
@@ -4733,13 +4718,11 @@ impl OpenObsidianApp {
             if origin != VaultRescanOrigin::PeriodicTimer || !had_filesystem_watcher {
                 self.vault_rescan_request_id = Some(request_id.to_owned());
             }
-        } else if origin == VaultRescanOrigin::FilesystemWatcher
-            && !had_filesystem_watcher
-            && had_periodic_timer
+        } else if self.vault_rescan_request_id.is_none()
+            || (origin == VaultRescanOrigin::FilesystemWatcher
+                && !had_filesystem_watcher
+                && had_periodic_timer)
         {
-            let sequence = CI_VAULT_RESCAN_REQUEST_SEQUENCE.fetch_add(1, Ordering::Relaxed);
-            self.vault_rescan_request_id = Some(format!("vault-rescan-{sequence}"));
-        } else if self.vault_rescan_request_id.is_none() {
             let sequence = CI_VAULT_RESCAN_REQUEST_SEQUENCE.fetch_add(1, Ordering::Relaxed);
             self.vault_rescan_request_id = Some(format!("vault-rescan-{sequence}"));
         }
@@ -4773,16 +4756,16 @@ impl OpenObsidianApp {
                 || "none".to_owned(),
                 |batch| format!("{}:{}", batch.id, batch.event_count),
             );
-            if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some() {
-                if let Some(batch) = watcher_event_batch {
-                    eprintln!(
-                        "OpenObsidian CI vault watcher callback batch polled: batch_id={}, event_count={}, notify_error_callbacks={}, callback_to_poll_ms={}, timer_due_before_poll={timer_due_before_poll}",
-                        batch.id,
-                        batch.event_count,
-                        batch.notify_error_callbacks,
-                        callback_to_poll_ms.unwrap_or(0),
-                    );
-                }
+            if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some()
+                && let Some(batch) = watcher_event_batch
+            {
+                eprintln!(
+                    "OpenObsidian CI vault watcher callback batch polled: batch_id={}, event_count={}, notify_error_callbacks={}, callback_to_poll_ms={}, timer_due_before_poll={timer_due_before_poll}",
+                    batch.id,
+                    batch.event_count,
+                    batch.notify_error_callbacks,
+                    callback_to_poll_ms.unwrap_or(0),
+                );
             }
             self.mark_vault_rescan_pending_with_event_batch(
                 VaultRescanOrigin::FilesystemWatcher,
@@ -6658,6 +6641,7 @@ mod tests {
         Harness,
         kittest::{NodeT as _, Queryable as _},
     };
+    use openobsidian_engine::VaultWatchEventKind;
     use std::path::{Path, PathBuf};
     use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
 
@@ -11155,8 +11139,14 @@ mod tests {
         std::fs::create_dir_all(&app_data_path).expect("create separate app-data directory");
         std::fs::write(vault_path.join("Before.md"), b"before\n")
             .expect("write initial vault note");
-        let create_sentinel_path = vault_path.join("Watcher create readiness sentinel.md");
-        let remove_sentinel_path = vault_path.join("Watcher remove readiness sentinel.md");
+        // Platform backends such as macOS FSEvents report canonical paths, so compare
+        // callbacks against the canonical form of the sentinel locations.
+        let canonical_vault_path =
+            std::fs::canonicalize(&vault_path).expect("canonicalize the watched vault directory");
+        let create_sentinel_path =
+            canonical_vault_path.join("Watcher create readiness sentinel.md");
+        let remove_sentinel_path =
+            canonical_vault_path.join("Watcher remove readiness sentinel.md");
         std::fs::write(&remove_sentinel_path, b"# Remove readiness sentinel\n")
             .expect("write the distinct note used for the real removal callback");
 
@@ -12037,7 +12027,7 @@ mod tests {
             .snapshot_revision_sha256()
             .expect("capture the first probe's full-vault baseline");
         let (first_probe_sender, first_probe_receiver) = mpsc::channel();
-        let mut watcher = VaultWatcher::watch(&vault_path).expect("watch later-hint vault");
+        let watcher = VaultWatcher::watch(&vault_path).expect("watch later-hint vault");
         watcher.request_rescan();
         let app = OpenObsidianApp {
             session: Some(Arc::new(session)),
