@@ -6,8 +6,8 @@
 //! keeps the journaling, history, and stale-revision protections of the vault layer.
 
 use super::{
-    BacklinkRow, BookmarkRow, HeadingRow, LinkRow, SearchRow, Workspace, WorkspaceAction,
-    WorkspaceBackend, tabs::tab_title,
+    BacklinkRow, BookmarkRow, GraphView, HeadingRow, LinkRow, SearchRow, Workspace,
+    WorkspaceAction, WorkspaceBackend, tabs::tab_title,
 };
 use eframe::egui;
 use egui_commonmark::{CommonMarkCache, CommonMarkViewer};
@@ -170,6 +170,11 @@ pub struct WorkspaceHost {
     markdown_cache: CommonMarkCache,
     status: Option<String>,
     rename: Option<RenameDialog>,
+    graph: GraphView,
+    graph_open: bool,
+    graph_local: bool,
+    /// The index generation and local center last handed to the graph view.
+    graph_applied: Option<(u64, Option<String>)>,
 }
 
 impl Default for WorkspaceHost {
@@ -188,6 +193,10 @@ impl Default for WorkspaceHost {
             markdown_cache: CommonMarkCache::default(),
             status: None,
             rename: None,
+            graph: GraphView::new(),
+            graph_open: false,
+            graph_local: false,
+            graph_applied: None,
         }
     }
 }
@@ -206,13 +215,14 @@ impl WorkspaceHost {
         let backend =
             EngineBackend::new(self.index.clone(), self.generation, self.bookmarks.clone());
         self.show_status_bar(ui);
+        let graph_action = self.show_graph_window(ui.ctx());
         let editors = &mut self.editors;
         let cache = &mut self.markdown_cache;
         let mut rename_request = None;
         let actions = self.workspace.show_with_editor(ui, &backend, |ui, path| {
             show_editor(ui, editors, cache, path, &mut rename_request);
         });
-        for action in actions {
+        for action in actions.into_iter().chain(graph_action) {
             self.apply_action(&session, &backend, action);
         }
         if let Some(from) = rename_request {
@@ -384,7 +394,32 @@ impl WorkspaceHost {
         }
     }
 
-    fn show_status_bar(&self, ui: &mut egui::Ui) {
+    fn show_graph_window(&mut self, ctx: &egui::Context) -> Option<WorkspaceAction> {
+        if !self.graph_open {
+            return None;
+        }
+        let active = self.workspace.tabs.active_path().map(str::to_owned);
+        let center = if self.graph_local { active } else { None };
+        let wanted = (self.generation, center.clone());
+        if self.graph_applied.as_ref() != Some(&wanted) {
+            self.graph.set_graph(self.index.graph());
+            self.graph.set_local(center, 1);
+            self.graph_applied = Some(wanted);
+        }
+        let mut action = None;
+        let mut open = true;
+        egui::Window::new("Graph view")
+            .open(&mut open)
+            .default_size([640.0, 480.0])
+            .show(ctx, |ui| {
+                ui.checkbox(&mut self.graph_local, "Local graph of the active note");
+                action = self.graph.show(ui);
+            });
+        self.graph_open = open;
+        action
+    }
+
+    fn show_status_bar(&mut self, ui: &mut egui::Ui) {
         egui::Panel::bottom(egui::Id::new("openobsidian-workspace-status")).show(ui, |ui| {
             ui.horizontal(|ui| {
                 let index = if self.index_receiver.is_some() {
@@ -395,6 +430,8 @@ impl WorkspaceHost {
                     format!("{} files indexed", self.index.files().len())
                 };
                 ui.label(index);
+                ui.separator();
+                ui.checkbox(&mut self.graph_open, "Graph");
                 if let Some(path) = self.workspace.tabs.active_path()
                     && let Some(buffer) = self.editors.get(path)
                 {
