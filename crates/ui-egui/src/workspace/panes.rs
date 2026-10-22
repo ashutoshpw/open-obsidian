@@ -1,9 +1,7 @@
 //! Right-hand side pane: backlinks, outgoing links, tags and vault search.
 
 use super::WorkspaceAction;
-use super::backend::{
-    BacklinkRow, BookmarkRow, HeadingRow, LinkRow, SearchRow, WorkspaceBackend,
-};
+use super::backend::{BacklinkRow, BookmarkRow, HeadingRow, LinkRow, SearchRow, WorkspaceBackend};
 use super::tabs::set_accessible_label;
 use eframe::egui;
 
