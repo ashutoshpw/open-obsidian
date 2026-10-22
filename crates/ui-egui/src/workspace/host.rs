@@ -13,7 +13,7 @@ use eframe::egui;
 use egui_commonmark::{CommonMarkCache, CommonMarkViewer};
 use openobsidian_engine::{
     IndexedLinkResolution, VaultError, VaultIndex, VaultRenamePreview, VaultSession,
-    VaultWriteRequest, parse_bookmarks,
+    VaultWriteRequest, note_properties, parse_bookmarks, set_note_property,
 };
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -134,6 +134,8 @@ struct EditorBuffer {
     saved_text: String,
     revision_sha256: Option<String>,
     mode: EditorMode,
+    /// Pending text for the property being edited in the Properties panel: `(key, value)`.
+    property_edit: Option<(String, String)>,
     /// Set when the note cannot be edited (unreadable or not UTF-8); the text is then empty.
     read_only_reason: Option<String>,
     error: Option<String>,
@@ -451,6 +453,7 @@ impl WorkspaceHost {
                     text,
                     revision_sha256: Some(read.revision_sha256),
                     mode: EditorMode::Source,
+                    property_edit: None,
                     read_only_reason: None,
                     error: None,
                 },
@@ -554,6 +557,7 @@ fn read_only_buffer(reason: &str) -> EditorBuffer {
         saved_text: String::new(),
         revision_sha256: None,
         mode: EditorMode::Source,
+        property_edit: None,
         read_only_reason: Some(reason.to_owned()),
         error: None,
     }
@@ -588,6 +592,7 @@ fn show_editor(
     if let Some(error) = &buffer.error {
         ui.colored_label(ui.visuals().error_fg_color, error);
     }
+    show_properties(ui, buffer, path);
     egui::ScrollArea::vertical()
         .id_salt(("openobsidian-workspace-editor", path))
         .auto_shrink([false, false])
@@ -605,6 +610,58 @@ fn show_editor(
                 CommonMarkViewer::new().show(ui, cache, &buffer.text);
             }
         });
+}
+
+/// Collapsible list of the note's frontmatter properties; edits change the buffer, not the disk.
+fn show_properties(ui: &mut egui::Ui, buffer: &mut EditorBuffer, path: &str) {
+    let properties = note_properties(&buffer.text);
+    if properties.is_empty() {
+        return;
+    }
+    let mut commit = None;
+    egui::CollapsingHeader::new("Properties")
+        .id_salt(("openobsidian-workspace-properties", path))
+        .show(ui, |ui| {
+            for property in &properties {
+                ui.horizontal(|ui| {
+                    ui.label(property.key.as_str());
+                    let editing = buffer
+                        .property_edit
+                        .as_ref()
+                        .is_some_and(|(key, _)| key == &property.key);
+                    if editing {
+                        if let Some((_, value)) = &mut buffer.property_edit {
+                            let response = ui.text_edit_singleline(value);
+                            let accept = ui.button("Set").clicked()
+                                || (response.lost_focus()
+                                    && ui.input(|input| input.key_pressed(egui::Key::Enter)));
+                            if accept {
+                                commit = Some((property.key.clone(), value.clone()));
+                            }
+                        }
+                        if ui.button("Cancel").clicked() {
+                            buffer.property_edit = None;
+                        }
+                    } else {
+                        ui.weak(property.value.as_str());
+                        if ui.small_button("Edit").clicked() {
+                            buffer.property_edit =
+                                Some((property.key.clone(), property.value.clone()));
+                        }
+                    }
+                });
+            }
+        });
+    if let Some((key, value)) = commit {
+        match set_note_property(&buffer.text, &key, &value) {
+            Ok(text) => {
+                buffer.text = text;
+                buffer.property_edit = None;
+                buffer.error = None;
+            }
+            Err(error) => buffer.error = Some(format!("Could not edit {key}: {error}")),
+        }
+    }
 }
 
 /// `Untitled.md`, `Untitled 1.md`, … in `folder`, skipping names already in the index.

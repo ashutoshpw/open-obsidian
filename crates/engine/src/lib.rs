@@ -3,6 +3,7 @@
 mod bases;
 mod bookmarks;
 mod index;
+mod properties;
 
 pub use bases::{
     BaseCollectionIssue, BaseFileEvaluation, BaseFileEvaluationError, BaseFileListing,
@@ -12,6 +13,7 @@ pub use bases::{
 };
 pub use bookmarks::*;
 pub use index::*;
+pub use properties::*;
 
 use openobsidian_doc::{encode_canvas, parse_canvas};
 pub use openobsidian_vault::{
