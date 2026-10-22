@@ -11139,10 +11139,14 @@ mod tests {
         std::fs::create_dir_all(&app_data_path).expect("create separate app-data directory");
         std::fs::write(vault_path.join("Before.md"), b"before\n")
             .expect("write initial vault note");
-        // Platform backends such as macOS FSEvents report canonical paths, so compare
-        // callbacks against the canonical form of the sentinel locations.
-        let canonical_vault_path =
-            std::fs::canonicalize(&vault_path).expect("canonicalize the watched vault directory");
+        // macOS FSEvents reports canonical paths (`/private/var/...`) for symlinked temporary
+        // directories, so compare callbacks against the canonical sentinel locations there.
+        // Windows canonical paths use a verbatim `\\?\` prefix that its callbacks never report.
+        let canonical_vault_path = if cfg!(target_os = "macos") {
+            std::fs::canonicalize(&vault_path).expect("canonicalize the watched vault directory")
+        } else {
+            vault_path.clone()
+        };
         let create_sentinel_path =
             canonical_vault_path.join("Watcher create readiness sentinel.md");
         let remove_sentinel_path =
