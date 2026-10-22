@@ -1773,13 +1773,13 @@ fn tokenize_expression(source: &str) -> Result<Vec<ExprToken>, String> {
         if let Some(pair) = pair
             && let Some(found) = TWO.iter().find(|candidate| **candidate == pair)
         {
-            tokens.push(ExprToken::Punct(*found));
+            tokens.push(ExprToken::Punct(found));
             index += 2;
             continue;
         }
         let single = current.to_string();
         if let Some(found) = ONE.iter().find(|candidate| **candidate == single) {
-            tokens.push(ExprToken::Punct(*found));
+            tokens.push(ExprToken::Punct(found));
             index += 1;
             continue;
         }

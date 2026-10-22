@@ -18,10 +18,11 @@ pub use appearance::{
     parse_css_length_px, parse_style_settings,
 };
 pub use bases::{
-    BaseComparisonOperator, BaseDocument, BaseEvaluation, BaseFilter, BaseGroup, BaseIssue,
-    BaseIssueKind, BaseParseError, BaseRawValue, BaseRow, BaseSort, BaseSourceFormat, BaseValue,
-    BaseView, BaseViewType, EmbeddedBaseDefinition, EvaluatedBaseRow, encode_base, evaluate_base,
-    evaluate_base_by_view_index, parse_base, parse_embedded_bases,
+    BASE_LOCALE_POLICY, BaseComparisonOperator, BaseDocument, BaseEvaluation, BaseFilter,
+    BaseGroup, BaseIssue, BaseIssueKind, BaseLocalePolicy, BaseParseError, BaseRawValue, BaseRow,
+    BaseSort, BaseSourceFormat, BaseValue, BaseView, BaseViewType, EmbeddedBaseDefinition,
+    EvaluatedBaseRow, encode_base, evaluate_base, evaluate_base_by_view_index, parse_base,
+    parse_embedded_bases,
 };
 pub use canvas::{
     CanvasDocument, CanvasEdgeProjection, CanvasError, CanvasField, CanvasNodeContent,
