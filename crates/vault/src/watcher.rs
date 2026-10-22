@@ -28,15 +28,9 @@ pub enum VaultWatchEventKind {
     Other,
 }
 
-type WatchEventDiagnosticObserver =
-    dyn Fn(
-            VaultWatchEventKind,
-            &[PathBuf],
-            Option<VaultWatchHint>,
-            Option<VaultWatchEventBatch>,
-            bool,
-        ) + Send
-        + Sync;
+type WatchEventDiagnosticObserver = dyn Fn(VaultWatchEventKind, &[PathBuf], Option<VaultWatchHint>, Option<VaultWatchEventBatch>, bool)
+    + Send
+    + Sync;
 type WatchWakeCallback = dyn Fn(VaultWatchEventBatch) + Send + Sync;
 
 /// Identifies relevant filesystem callbacks coalesced before a caller polls the watcher.
@@ -126,17 +120,21 @@ impl VaultWatcher {
     pub fn watch_with_event_diagnostics(
         root: impl AsRef<Path>,
         event_observer: impl Fn(
-                VaultWatchEventKind,
-                &[PathBuf],
-                Option<VaultWatchHint>,
-                Option<VaultWatchEventBatch>,
-                bool,
-            ) + Send
-            + Sync
-            + 'static,
+            VaultWatchEventKind,
+            &[PathBuf],
+            Option<VaultWatchHint>,
+            Option<VaultWatchEventBatch>,
+            bool,
+        ) + Send
+        + Sync
+        + 'static,
         wake_callback: impl Fn(VaultWatchEventBatch) + Send + Sync + 'static,
     ) -> Result<Self, VaultWatchError> {
-        Self::watch_with_callbacks(root, Arc::new(wake_callback), Some(Arc::new(event_observer)))
+        Self::watch_with_callbacks(
+            root,
+            Arc::new(wake_callback),
+            Some(Arc::new(event_observer)),
+        )
     }
 
     fn watch_with_callbacks(
@@ -158,15 +156,25 @@ impl VaultWatcher {
         let callback_root_change_pending = Arc::clone(&root_change_pending);
         let callback_event_batch = Arc::clone(&pending_event_batch);
         let callback_wake = Arc::clone(&wake_callback);
-        let callback_root = root.clone();
+        // Platform backends such as macOS FSEvents report canonical paths (`/private/var/...`)
+        // even when the vault was opened through a symlinked path (`/var/...`).
+        let mut callback_roots = vec![root.clone()];
+        if let Ok(canonical_root) = std::fs::canonicalize(&root)
+            && canonical_root != root
+        {
+            callback_roots.push(canonical_root);
+        }
         let callback_event_observer = event_observer;
         let mut watcher =
             notify::recommended_watcher(move |result: Result<Event, notify::Error>| match result {
                 Ok(event) => {
-                    let hint = classify_event(&event, &callback_root);
+                    let hint = classify_event_for_roots(&event, &callback_roots);
                     let event_batch = if let Some(hint) = hint {
                         let root_change = hint == VaultWatchHint::RescanRequired
-                            || event.paths.iter().any(|path| path == &callback_root);
+                            || event
+                                .paths
+                                .iter()
+                                .any(|path| callback_roots.contains(path));
                         Some(record_event_hint(
                             &callback_sender,
                             &callback_rescan_pending,
@@ -417,6 +425,18 @@ fn diagnostic_event_kind(kind: &EventKind) -> VaultWatchEventKind {
     }
 }
 
+fn classify_event_for_roots(event: &Event, roots: &[PathBuf]) -> Option<VaultWatchHint> {
+    let mut result = None;
+    for root in roots {
+        match classify_event(event, root) {
+            Some(VaultWatchHint::RescanRequired) => return Some(VaultWatchHint::RescanRequired),
+            Some(hint) => result = Some(hint),
+            None => {}
+        }
+    }
+    result
+}
+
 fn classify_event(event: &Event, root: &Path) -> Option<VaultWatchHint> {
     if event.need_rescan() || event.paths.is_empty() {
         return Some(VaultWatchHint::RescanRequired);
@@ -496,6 +516,24 @@ mod tests {
         let event = Event::new(EventKind::Any).add_path(root.join("Note.md"));
 
         assert_eq!(classify_event(&event, root), Some(VaultWatchHint::Changed));
+    }
+
+    #[test]
+    fn events_under_the_canonical_form_of_a_symlinked_root_are_hints() {
+        let roots = vec![PathBuf::from("/var/vault"), PathBuf::from("/private/var/vault")];
+        let event = Event::new(EventKind::Any).add_path(PathBuf::from("/private/var/vault/Note.md"));
+        let root_event = Event::new(EventKind::Any).add_path(PathBuf::from("/private/var/vault"));
+        let outside = Event::new(EventKind::Any).add_path(PathBuf::from("/private/var/other/Note.md"));
+
+        assert_eq!(
+            classify_event_for_roots(&event, &roots),
+            Some(VaultWatchHint::Changed)
+        );
+        assert_eq!(
+            classify_event_for_roots(&root_event, &roots),
+            Some(VaultWatchHint::RescanRequired)
+        );
+        assert_eq!(classify_event_for_roots(&outside, &roots), None);
     }
 
     #[test]

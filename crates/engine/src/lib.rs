@@ -21,8 +21,7 @@ pub use openobsidian_vault::{
     VaultReadPreview, VaultRenamePreview, VaultRenameRecoveryIssue, VaultRenameRecoveryReport,
     VaultRenameResult, VaultWatchError, VaultWatchEventBatch, VaultWatchEventKind, VaultWatchHint,
     VaultWatchPoll, VaultWatcher, VaultWriteRecoveryIssue, VaultWriteRecoveryReport,
-    VaultWriteRequest,
-    VaultWriteResult, analyze_markdown_preview, plan_history_retention,
+    VaultWriteRequest, VaultWriteResult, analyze_markdown_preview, plan_history_retention,
 };
 use openobsidian_vault::{VaultCreateRequest, VaultEntry, VaultRead, VaultStore};
 use std::path::{Path, PathBuf};

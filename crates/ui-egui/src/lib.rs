@@ -13,8 +13,7 @@ use openobsidian_engine::{
     VaultHistoryRecord, VaultInlineImage, VaultLinkResolution, VaultNoteEmbedDisposition,
     VaultNoteEmbedNode, VaultNoteEmbedReport, VaultRenamePreview, VaultRenameRecoveryReport,
     VaultRenameResult, VaultSession, VaultWatchEventBatch, VaultWatchEventKind, VaultWatcher,
-    VaultWriteRecoveryReport,
-    VaultWriteRequest, analyze_markdown_preview, plan_history_retention,
+    VaultWriteRecoveryReport, VaultWriteRequest, analyze_markdown_preview, plan_history_retention,
 };
 use sha2::{Digest, Sha256};
 use std::cell::RefCell;
@@ -11089,8 +11088,7 @@ mod tests {
                                     && event.paths.iter().any(|path| path == &transition.path)
                                     && event.hint.is_some()
                                     && !event.notify_error
-                                    && event.sentinel_exists
-                                        == transition.expected_sentinel_exists
+                                    && event.sentinel_exists == transition.expected_sentinel_exists
                                     && expected_kind
                                     && phase_wake_batch_ids.contains(&batch.id)
                                     && readiness_batch_ids.contains(&batch.id)
