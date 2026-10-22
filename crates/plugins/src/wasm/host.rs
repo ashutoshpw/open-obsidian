@@ -7,8 +7,8 @@ use std::time::{Duration, Instant};
 
 use wasmi::errors::{ErrorKind, HostError, InstantiationError};
 use wasmi::{
-    Caller, CompilationMode, Config, EnforcedLimits, Engine, Extern, Instance, Linker, Memory,
-    Module, Store, StoreLimits, TrapCode, TypedResumableCall,
+    Caller, CompilationMode, Config, EnforcedLimits, Engine, Extern, ExternType, Instance, Linker,
+    Memory, Module, Store, StoreLimits, TrapCode, TypedResumableCall, ValType,
 };
 
 use super::abi::{
@@ -423,8 +423,39 @@ fn check_imports(module: &Module) -> Result<(), ExtensionError> {
                 name: import.name().to_owned(),
             });
         }
+        let ExternType::Func(signature) = import.ty() else {
+            return Err(ExtensionError::AbiMismatch {
+                abi: ABI_MODULE,
+                reason: format!("import `{}` is not a function", import.name()),
+            });
+        };
+        let expected = expected_param_count(import.name());
+        if signature.params().len() != expected
+            || signature
+                .params()
+                .iter()
+                .any(|param| *param != ValType::I32)
+            || signature.results() != [ValType::I32].as_slice()
+        {
+            return Err(ExtensionError::AbiMismatch {
+                abi: ABI_MODULE,
+                reason: format!(
+                    "import `{}` must have {expected} i32 parameters and one i32 result",
+                    import.name()
+                ),
+            });
+        }
     }
     Ok(())
+}
+
+/// Number of `i32` parameters each `openobsidian:ext/1` host function takes.
+fn expected_param_count(name: &str) -> usize {
+    match name {
+        FN_OUTPUT_WRITE => 2,
+        FN_LOG => 3,
+        _ => 4,
+    }
 }
 
 fn classify_instantiation_error(error: &wasmi::Error, limits: &ExtensionLimits) -> ExtensionError {
