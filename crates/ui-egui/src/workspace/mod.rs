@@ -15,6 +15,7 @@ pub mod backend;
 pub mod commands;
 pub mod explorer;
 pub mod fuzzy;
+pub mod graph;
 pub mod host;
 pub mod palette;
 pub mod panes;
@@ -25,6 +26,7 @@ pub use backend::{
 };
 pub use commands::{Command, CommandContext, CommandRegistry, ids};
 pub use explorer::{ExplorerNodeKind, ExplorerOutcome, ExplorerRow, ExplorerTree, show_explorer};
+pub use graph::{GraphFilter, GraphLayoutKind, GraphView};
 pub use host::WorkspaceHost;
 pub use palette::{
     CommandPalette, Palette, PaletteOutcome, QuickSwitcher, QuickSwitcherOutcome,
