@@ -1293,7 +1293,7 @@ mod tests {
         let conflicts_before = fs::read_dir(app_data_path.join("conflicts"))
             .unwrap()
             .count();
-        let result = store.cleanup_history_selected(policy, &[victim.id.clone()]);
+        let result = store.cleanup_history_selected(policy, std::slice::from_ref(&victim.id));
         assert!(result.is_err());
         // The damaged history fails closed, so the protected conflict is checked on disk.
         let conflicts_after = fs::read_dir(app_data_path.join("conflicts"))
