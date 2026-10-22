@@ -258,6 +258,7 @@ pub fn analyze_appearance_css_with_overrides(
     css: &str,
     overrides: &[(String, String)],
 ) -> AppearanceAnalysis {
+    let css = css.strip_prefix('\u{FEFF}').unwrap_or(css);
     let mut truncations = Vec::new();
     let text = bounded_input(css, &mut truncations);
     let (ranges, unterminated) = comment_ranges(text.as_bytes());
