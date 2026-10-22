@@ -28,8 +28,9 @@ pub use canvas::{
     CanvasNodeProjection, encode_canvas, parse_canvas,
 };
 pub use configuration::{
-    AppSettings, AppearanceMode, AppearanceSettings, DailyNoteSettings, TemplateSettings,
-    parse_app_settings, parse_appearance_settings, parse_daily_note_settings,
+    AppSettings, AppearanceMode, AppearanceSettings, CorePluginsSettings, DailyNoteSettings,
+    FilePathProperties, TemplateSettings, file_path_properties, parse_app_settings,
+    parse_appearance_settings, parse_core_plugins_settings, parse_daily_note_settings,
     parse_template_settings,
 };
 pub use hotkeys::{HotkeyBinding, HotkeysSettings, parse_hotkeys_settings};

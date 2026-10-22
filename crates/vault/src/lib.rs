@@ -6,11 +6,12 @@ use cap_std::fs::{
 };
 use image::{ImageFormat, ImageReader, Limits as ImageLimits};
 pub use openobsidian_doc::{
-    AppearanceMode, AppearanceSettings, DailyNoteSettings, HotkeyBinding, HotkeysSettings,
-    LinkKind, LinkReference, LinkRenameAction, LinkResolution, LinkResolutionStatus,
-    LinkSubpathSlice, LinkSubpathStatus, MarkdownPreviewAnalysis, MarkdownPreviewDisposition,
-    MarkdownUnsupportedSyntax, MergeConflict, MergeStatus, TemplateSettings, ThreeWayMergeResult,
-    TransclusionBlockReason, TransclusionGuard, analyze_markdown_preview,
+    AppearanceMode, AppearanceSettings, CorePluginsSettings, DailyNoteSettings, HotkeyBinding,
+    HotkeysSettings, LinkKind, LinkReference, LinkRenameAction, LinkResolution,
+    LinkResolutionStatus, LinkSubpathSlice, LinkSubpathStatus, MarkdownPreviewAnalysis,
+    MarkdownPreviewDisposition, MarkdownUnsupportedSyntax, MergeConflict, MergeStatus,
+    TemplateSettings, ThreeWayMergeResult, TransclusionBlockReason, TransclusionGuard,
+    analyze_markdown_preview,
 };
 use openobsidian_doc::{
     LinkRenamePlan, LinkRenamePlanError, MAX_NOTE_TRANSCLUSION_SOURCE_BYTES, MarkdownSource,
@@ -343,6 +344,7 @@ pub struct VaultStore {
 
 mod configuration;
 mod history;
+mod inventory;
 mod rename_transaction;
 mod trash;
 mod watcher;
@@ -354,6 +356,11 @@ pub use history::{
     VaultConflictAction, VaultConflictRead, VaultConflictResolution, VaultHistoryCapStatus,
     VaultHistoryCleanup, VaultHistoryKind, VaultHistoryPlan, VaultHistoryPolicy,
     VaultHistoryRecord, plan_history_retention,
+};
+pub use inventory::{
+    MAX_VAULT_CONFIGURATION_FILE_BYTES, MAX_VAULT_INVENTORY_COMPONENT_WALKS,
+    MAX_VAULT_INVENTORY_ENTRIES, MAX_VAULT_INVENTORY_FILE_ROWS, MAX_VAULT_INVENTORY_PATH_BYTES,
+    VaultBoundedRead, VaultFileInventory, VaultFileStat,
 };
 pub use rename_transaction::{
     VaultRenameRecoveryIssue, VaultRenameRecoveryReport, VaultRenameResult,

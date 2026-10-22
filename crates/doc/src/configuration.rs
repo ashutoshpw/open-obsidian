@@ -23,6 +23,61 @@ pub fn parse_app_settings(raw: &Map<String, Value>) -> AppSettings {
     }
 }
 
+/// A data-only projection of an Obsidian `core-plugins.json` object.
+///
+/// The source object stays authoritative. Only entries whose value is a JSON
+/// boolean are projected; other values are ignored. Discovery never changes
+/// these settings.
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
+pub struct CorePluginsSettings {
+    /// Plugin ids explicitly stored as `true`, sorted.
+    pub enabled: Vec<String>,
+    /// Plugin ids explicitly stored as `false`, sorted.
+    pub disabled: Vec<String>,
+}
+
+/// Projects explicit boolean core-plugin toggles from a parsed object.
+pub fn parse_core_plugins_settings(raw: &Map<String, Value>) -> CorePluginsSettings {
+    let mut settings = CorePluginsSettings::default();
+    for (id, value) in raw {
+        match value.as_bool() {
+            Some(true) => settings.enabled.push(id.clone()),
+            Some(false) => settings.disabled.push(id.clone()),
+            None => {}
+        }
+    }
+    settings.enabled.sort();
+    settings.disabled.sort();
+    settings
+}
+
+/// Path-derived file properties for any vault file, including attachments.
+///
+/// Values come only from the vault-relative path; no file body is read.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct FilePathProperties {
+    /// Full vault-relative path using `/`.
+    pub path: String,
+    /// File name including extension.
+    pub name: String,
+    /// Extension without the dot, or empty.
+    pub ext: String,
+    /// Parent folder path, or empty for the vault root.
+    pub folder: String,
+}
+
+/// Derives `file.path`, `file.name`, `file.ext` and `file.folder` from a path.
+pub fn file_path_properties(path: &str) -> FilePathProperties {
+    let (folder, name) = path.rsplit_once('/').unwrap_or(("", path));
+    let ext = name.rfind('.').map_or("", |index| &name[index + 1..]);
+    FilePathProperties {
+        path: path.to_owned(),
+        name: name.to_owned(),
+        ext: ext.to_owned(),
+        folder: folder.to_owned(),
+    }
+}
+
 /// A data-only projection of the configured templates folder.
 ///
 /// The source JSON object and bytes remain authoritative. `folder` follows the
@@ -257,10 +312,37 @@ fn is_ecmascript_whitespace(character: char) -> bool {
 mod tests {
     use super::{
         AppSettings, AppearanceMode, AppearanceSettings, DailyNoteSettings, TemplateSettings,
-        parse_app_settings, parse_appearance_settings, parse_daily_note_settings,
-        parse_template_settings,
+        file_path_properties, parse_app_settings, parse_appearance_settings,
+        parse_core_plugins_settings, parse_daily_note_settings, parse_template_settings,
     };
     use serde_json::{Map, Value};
+
+    #[test]
+    fn core_plugins_project_only_boolean_entries() {
+        let value: Value =
+            serde_json::from_str(r#"{"graph":true,"canvas":false,"sync":"x","bases":true}"#)
+                .unwrap();
+        let Value::Object(object) = value else {
+            panic!("object expected");
+        };
+        let settings = parse_core_plugins_settings(&object);
+        assert_eq!(
+            settings.enabled,
+            vec!["bases".to_owned(), "graph".to_owned()]
+        );
+        assert_eq!(settings.disabled, vec!["canvas".to_owned()]);
+    }
+
+    #[test]
+    fn file_path_properties_derive_from_the_path_only() {
+        let nested = file_path_properties("a/b/photo.final.png");
+        assert_eq!(nested.name, "photo.final.png");
+        assert_eq!(nested.ext, "png");
+        assert_eq!(nested.folder, "a/b");
+        let root = file_path_properties("LICENSE");
+        assert_eq!(root.ext, "");
+        assert_eq!(root.folder, "");
+    }
 
     const CONFIGURATION_FIXTURE: &str =
         include_str!("../../../fixtures/configuration-inventory.json");

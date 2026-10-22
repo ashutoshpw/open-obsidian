@@ -2,9 +2,10 @@
 
 use super::{VaultError, VaultRoot, path_to_slashes, sha256_hex};
 use openobsidian_doc::{
-    AppSettings, AppearanceSettings, DailyNoteSettings, HotkeysSettings, TemplateSettings,
-    ThemeStyleAnalysis, analyze_theme_stylesheet, parse_app_settings, parse_appearance_settings,
-    parse_daily_note_settings, parse_hotkeys_settings, parse_template_settings,
+    AppSettings, AppearanceSettings, CorePluginsSettings, DailyNoteSettings, HotkeysSettings,
+    TemplateSettings, ThemeStyleAnalysis, analyze_theme_stylesheet, parse_app_settings,
+    parse_appearance_settings, parse_core_plugins_settings, parse_daily_note_settings,
+    parse_hotkeys_settings, parse_template_settings,
 };
 use serde_json::{Map, Value};
 use std::collections::BTreeMap;
@@ -91,6 +92,8 @@ pub struct VaultConfiguration {
     pub template_settings: BTreeMap<String, TemplateSettings>,
     /// Data-only daily-note settings from root `daily-notes.json` files, keyed by vault-relative path.
     pub daily_note_settings: BTreeMap<String, DailyNoteSettings>,
+    /// Explicit core-plugin toggles from root `core-plugins.json` files, keyed by vault-relative path.
+    pub core_plugins: BTreeMap<String, CorePluginsSettings>,
     /// Raw CSS theme and snippet assets, sorted by vault-relative path.
     pub styles: Vec<VaultStyleAsset>,
 }
@@ -155,7 +158,7 @@ impl VaultRoot {
     }
 }
 
-fn is_configuration_folder(name: &str) -> bool {
+pub(crate) fn is_configuration_folder(name: &str) -> bool {
     name == ".obsidian" || name.starts_with(".obsidian-")
 }
 
@@ -201,6 +204,11 @@ fn discover_directory(
             configuration
                 .app_settings
                 .insert(relative_path.clone(), parse_app_settings(&object));
+        }
+        if is_root_configuration_file(&relative_path, "core-plugins.json") {
+            configuration
+                .core_plugins
+                .insert(relative_path.clone(), parse_core_plugins_settings(&object));
         }
         if is_root_configuration_file(&relative_path, "hotkeys.json") {
             configuration

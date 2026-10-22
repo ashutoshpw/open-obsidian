@@ -20,14 +20,15 @@ pub use openobsidian_vault::{
     LinkKind, LinkReference, LinkRenameAction, LinkResolution, LinkResolutionStatus,
     LinkSubpathSlice, LinkSubpathStatus, MAX_NOTE_SOURCE_PREVIEW_BYTES, MarkdownPreviewAnalysis,
     MarkdownPreviewDisposition, MarkdownUnsupportedSyntax, TransclusionBlockReason,
-    TransclusionGuard, VaultConflictAction, VaultConflictRead, VaultConflictResolution,
-    VaultCreateResult, VaultError, VaultHistoryCleanup, VaultHistoryKind, VaultHistoryPlan,
-    VaultHistoryPolicy, VaultHistoryRecord, VaultInlineImage, VaultLinkResolution,
-    VaultNoteEmbedDisposition, VaultNoteEmbedNode, VaultNoteEmbedReport, VaultNoteEmbedResolution,
-    VaultReadPreview, VaultRenamePreview, VaultRenameRecoveryIssue, VaultRenameRecoveryReport,
-    VaultRenameResult, VaultWatchError, VaultWatchEventBatch, VaultWatchEventKind, VaultWatchHint,
-    VaultWatchPoll, VaultWatcher, VaultWriteRecoveryIssue, VaultWriteRecoveryReport,
-    VaultWriteRequest, VaultWriteResult, analyze_markdown_preview, plan_history_retention,
+    TransclusionGuard, VaultBoundedRead, VaultConfiguration, VaultConflictAction,
+    VaultConflictRead, VaultConflictResolution, VaultCreateResult, VaultError, VaultFileInventory,
+    VaultFileStat, VaultHistoryCleanup, VaultHistoryKind, VaultHistoryPlan, VaultHistoryPolicy,
+    VaultHistoryRecord, VaultInlineImage, VaultLinkResolution, VaultNoteEmbedDisposition,
+    VaultNoteEmbedNode, VaultNoteEmbedReport, VaultNoteEmbedResolution, VaultReadPreview,
+    VaultRenamePreview, VaultRenameRecoveryIssue, VaultRenameRecoveryReport, VaultRenameResult,
+    VaultWatchError, VaultWatchEventBatch, VaultWatchEventKind, VaultWatchHint, VaultWatchPoll,
+    VaultWatcher, VaultWriteRecoveryIssue, VaultWriteRecoveryReport, VaultWriteRequest,
+    VaultWriteResult, analyze_markdown_preview, plan_history_retention,
 };
 use openobsidian_vault::{
     VaultCreateRequest, VaultEntry, VaultRead, VaultSnapshotEntryKind, VaultStore,
@@ -164,6 +165,35 @@ impl VaultSession {
     /// Returns the interrupted single-file write recovery outcome from open.
     pub fn write_recovery_report(&self) -> &VaultWriteRecoveryReport {
         &self.write_recovery
+    }
+
+    /// Lists bounded, no-follow regular-file metadata for the whole vault without
+    /// reading or hashing bodies. `complete` is false when any cap was reached.
+    pub fn inventory_regular_files(&self) -> Result<VaultFileInventory, VaultError> {
+        self.store.root().inventory_regular_files()
+    }
+
+    /// Reads a regular file without following symlinks and refuses to return more
+    /// than `max_bytes`.
+    pub fn read_regular_file_bounded(
+        &self,
+        relative_path: impl AsRef<Path>,
+        max_bytes: u64,
+    ) -> Result<VaultBoundedRead, VaultError> {
+        let relative_path = normalize_portable_path(relative_path.as_ref())?;
+        self.store
+            .root()
+            .read_regular_file_bounded(relative_path, max_bytes)
+    }
+
+    /// Returns sorted root `.obsidian` and `.obsidian-*` directory names without writing.
+    pub fn discover_configuration_folders(&self) -> Result<Vec<String>, VaultError> {
+        self.store.root().discover_configuration_folders()
+    }
+
+    /// Read-only discovery of configuration JSON and style assets. Never writes.
+    pub fn discover_configuration(&self) -> Result<VaultConfiguration, VaultError> {
+        self.store.root().discover_configuration()
     }
 
     /// Returns the canonical vault root path.
